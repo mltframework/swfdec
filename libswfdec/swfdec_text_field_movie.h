@@ -93,7 +93,10 @@ struct _SwfdecTextFieldMovie {
   SwfdecStyleSheet *	style_sheet;
 
   int			scroll;
+  int			scroll_max;
+  int			scroll_bottom;
   int			hscroll;
+  int			hscroll_max;
   gboolean		mouse_wheel_enabled;
 
   const char *		restrict_;
@@ -116,20 +119,12 @@ GType		swfdec_text_field_movie_get_type		(void);
 void		swfdec_text_field_movie_set_text		(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
-void		swfdec_text_field_movie_changed		(SwfdecTextFieldMovie *	text);
+gboolean	swfdec_text_field_movie_auto_size	(SwfdecTextFieldMovie *	text);
+void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 SwfdecTextFormat *	format,
 							 guint			start_index,
 							 guint			end_index);
-void		swfdec_text_field_movie_get_scroll_info	(SwfdecTextFieldMovie *	text,
-							 int *			scroll_last,
-							 int *			scroll_max,
-							 int *			hscroll_last,
-							 int *			hscroll_max);
-void		swfdec_text_field_movie_set_scroll	(SwfdecTextFieldMovie *	text,
-							 int			value);
-void		swfdec_text_field_movie_set_hscroll	(SwfdecTextFieldMovie *	text,
-							 int			value);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);

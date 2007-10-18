@@ -116,6 +116,8 @@ swfdec_text_field_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_value_to_number (cx, &argv[0]);
 
   text->text->html = value;
+
+  // FIXME: resize? invalidate?
 }
 
 static void
@@ -312,7 +314,7 @@ swfdec_text_field_movie_set_selectable (SwfdecAsContext *cx,
 
   text->text->selectable = value;
 
-  // FIXME: If selection made and removing selectable force redraw?
+  // FIXME: invalidate
 }
 
 static void
@@ -349,6 +351,8 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
   } else if (!g_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
     text->text->input = FALSE;
   }
+
+  // FIXME: invalidate
 }
 
 static void
@@ -520,12 +524,10 @@ swfdec_text_field_movie_get_bottomScroll (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  int last;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_movie_get_scroll_info (text, &last, NULL, NULL, NULL);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, last);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll_bottom);
 }
 
 static void
@@ -550,7 +552,11 @@ swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  swfdec_text_field_movie_set_hscroll (text, value);
+  value = CLAMP (value, 0, text->hscroll_max);
+  if (value != text->hscroll) {
+    text->hscroll = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
 }
 
 static void
@@ -559,12 +565,14 @@ swfdec_text_field_movie_get_maxhscroll (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  int max;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_movie_get_scroll_info (text, NULL, NULL, NULL, &max);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, max);
+  if (!text->text->word_wrap) {
+    SWFDEC_AS_VALUE_SET_NUMBER (ret, text->hscroll_max);
+  } else {
+    SWFDEC_AS_VALUE_SET_NUMBER (ret, 0);
+  }
 }
 
 static void
@@ -573,12 +581,10 @@ swfdec_text_field_movie_get_maxscroll (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  int max;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_movie_get_scroll_info (text, NULL, &max, NULL, NULL);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, max);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll_max);
 }
 
 static void
@@ -630,7 +636,11 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  swfdec_text_field_movie_set_scroll (text, value);
+  value = CLAMP (value, 1, text->scroll_max);
+  if (value != text->scroll) {
+    text->scroll = value;
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  }
 }
 
 /*
@@ -700,8 +710,10 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
     text->text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
   }
 
-  if (text->text->auto_size != old)
-    swfdec_text_field_movie_changed (text);
+  if (text->text->auto_size != old) {
+    swfdec_text_field_movie_auto_size (text);
+    // FIXME: fix scrolling
+  }
 }
 
 static void
@@ -760,7 +772,9 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   if (text->text->word_wrap != value) {
     text->text->word_wrap = value;
-    swfdec_text_field_movie_changed (text);
+    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_text_field_movie_auto_size (text);
+    // special case: don't set scrolling
   }
 }
 
@@ -795,6 +809,8 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
     SWFDEC_FIXME ("Using embed fonts in TextField not supported");
 
   text->text->embed_fonts = value;
+
+  // FIXME: resize
 }
 
 static void

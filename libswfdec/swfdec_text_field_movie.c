@@ -679,8 +679,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 }
 
 void
-swfdec_text_field_movie_get_scroll_info (SwfdecTextFieldMovie *text,
-    int *scroll_last, int *scroll_max, int *hscroll_last, int *hscroll_max)
+swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text)
 {
   SwfdecLayout *layouts;
   int i, num, y, visible, all, height;
@@ -729,66 +728,20 @@ swfdec_text_field_movie_get_scroll_info (SwfdecTextFieldMovie *text,
   swfdec_text_field_movie_free_layouts (layouts);
   layouts = NULL;
 
-  if (scroll_last)
-    *scroll_last = text->scroll + (visible > 0 ? visible - 1 : 0);
-  if (scroll_max)
-    *scroll_max = all - visible + 1;
+  text->scroll_max = all - visible + 1;
+  text->scroll = CLAMP(text->scroll, 1, text->scroll_max);
+  text->scroll_bottom = text->scroll + (visible > 0 ? visible - 1 : 0);
 
-  if (hscroll_last)
-    *hscroll_last = text->hscroll + SWFDEC_TWIPS_TO_DOUBLE (width);
-  if (hscroll_max)
-    *hscroll_max = SWFDEC_TWIPS_TO_DOUBLE (width_max - width);
+  text->hscroll_max = SWFDEC_TWIPS_TO_DOUBLE (width_max - width);
+  text->hscroll = CLAMP(text->hscroll, 0, text->hscroll_max);
 }
 
-void
-swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
-{
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-
-  if (value <= 1) {
-    value = 1;
-  } else {
-    int max;
-
-    swfdec_text_field_movie_get_scroll_info (text, NULL, &max, NULL, NULL);
-    if (value > max)
-      value = max;
-  }
-
-  if (text->scroll != value) {
-    text->scroll = value;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
-  }
-}
-
-void
-swfdec_text_field_movie_set_hscroll (SwfdecTextFieldMovie *text, int value)
-{
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-
-  if (value <= 0) {
-    value = 0;
-  } else {
-    int max;
-
-    swfdec_text_field_movie_get_scroll_info (text, NULL, NULL, NULL, &max);
-    if (value > max)
-      value = max;
-  }
-
-  if (text->hscroll != value) {
-    text->hscroll = value;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
-  }
-}
-
-static gboolean
+gboolean
 swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 {
   SwfdecLayout *layouts;
   guint height;
   int i, width, diff;
-  gboolean changed;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
 
@@ -811,6 +764,14 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   swfdec_text_field_movie_free_layouts (layouts);
   layouts = NULL;
 
+  if ((text->text->word_wrap || SWFDEC_MOVIE (text)->original_extents.x1 -
+      SWFDEC_MOVIE (text)->original_extents.x0 == width) &&
+      (SWFDEC_GRAPHIC (text->text)->extents.y1 -
+	SWFDEC_GRAPHIC (text->text)->extents.y0 == height))
+    return FALSE;
+
+  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+
   if (!text->text->word_wrap && SWFDEC_MOVIE (text)->original_extents.x1 -
       SWFDEC_MOVIE (text)->original_extents.x0 != width)
   {
@@ -832,7 +793,6 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
       default:
 	g_assert_not_reached ();
     }
-    changed = TRUE;
   }
 
   if (SWFDEC_GRAPHIC (text->text)->extents.y1 -
@@ -840,24 +800,12 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   {
     SWFDEC_GRAPHIC (text->text)->extents.y1 =
       SWFDEC_GRAPHIC (text->text)->extents.y0 + height;
-    changed = TRUE;
   }
 
-  return changed;
-}
+  swfdec_movie_queue_update (SWFDEC_MOVIE (text),
+      SWFDEC_MOVIE_INVALID_CONTENTS);
 
-void
-swfdec_text_field_movie_changed (SwfdecTextFieldMovie *text)
-{
-  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
-
-  if (swfdec_text_field_movie_auto_size (text)) {
-    swfdec_movie_queue_update (SWFDEC_MOVIE (text),
-	SWFDEC_MOVIE_INVALID_CONTENTS);
-  }
-
-  swfdec_text_field_movie_set_scroll (text, text->scroll);
-  swfdec_text_field_movie_set_hscroll (text, text->hscroll);
+  return TRUE;
 }
 
 static void
@@ -1068,7 +1016,9 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
     }
   }
 
-  swfdec_text_field_movie_changed (text);
+  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_text_field_movie_auto_size (text);
+  swfdec_text_field_movie_update_scroll (text);
 }
 
 static void
@@ -1513,5 +1463,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     }
   }
 
-  swfdec_text_field_movie_changed (text);
+  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_text_field_movie_auto_size (text);
+  swfdec_text_field_movie_update_scroll (text);
 }

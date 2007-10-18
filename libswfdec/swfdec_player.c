@@ -28,6 +28,7 @@
 #include <liboil/liboil.h>
 
 #include "swfdec_player_internal.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_internal.h"
@@ -1656,10 +1657,29 @@ SwfdecLoader *
 swfdec_player_load (SwfdecPlayer *player, const char *url, 
     SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
+  SwfdecAsContext *cx;
+  SwfdecSecurity *sec;
+  SwfdecURL *full;
+
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
   g_assert (player->resource);
+  /* create absolute url first */
+  full = swfdec_url_new_relative (swfdec_loader_get_url (player->resource->loader), url);
+  /* figure out the right security object (FIXME: let the person loading it provide it?) */
+  cx = SWFDEC_AS_CONTEXT (player);
+  if (cx->frame) {
+    sec = cx->frame->security;
+  } else {
+    g_warning ("swfdec_player_load() should only be called from scripts");
+    sec = SWFDEC_SECURITY (player->resource);
+  }
+  if (!swfdec_security_allow_url (sec, full)) {
+    SWFDEC_ERROR ("not allowing access to %s", url);
+    return NULL;
+  }
+
   if (buffer) {
     return swfdec_loader_load (player->resource->loader, url, request, 
 	(const char *) buffer->data, buffer->length);

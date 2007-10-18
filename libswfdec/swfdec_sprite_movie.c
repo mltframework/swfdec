@@ -722,9 +722,11 @@ swfdec_sprite_movie_load (SwfdecSpriteMovie *movie, const char *url, SwfdecLoade
 
   swfdec_sprite_movie_unload (movie);
 
-  /* FIXME: load relative to other movie? */
   loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
       url, request, data);
+  if (loader == NULL)
+    return;
+
   resource = swfdec_resource_new (loader, NULL);
   g_object_unref (SWFDEC_MOVIE (movie)->resource);
   SWFDEC_MOVIE (movie)->resource = resource;

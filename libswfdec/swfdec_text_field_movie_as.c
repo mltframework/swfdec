@@ -928,6 +928,22 @@ swfdec_text_field_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_INT (rval, SWFDEC_MOVIE (text)->depth);
 }
 
+SWFDEC_AS_NATIVE (104, 103, swfdec_text_field_movie_removeTextField)
+void
+swfdec_text_field_movie_removeTextField (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SwfdecTextFieldMovie *text;
+  SwfdecMovie *movie;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  movie = SWFDEC_MOVIE (text);
+  if (swfdec_depth_classify (movie->depth) == SWFDEC_DEPTH_CLASS_DYNAMIC)
+    swfdec_movie_remove (movie);
+}
+
 /*
  * Creating TextFields
  */

@@ -57,21 +57,11 @@ swfdec_resource_check_rights (SwfdecResource *resource)
 {
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (resource);
   SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (resource->decoder);
-  gboolean network;
 
-  if (dec->version < 8 || !swfdec_url_is_local (swfdec_loader_get_url (resource->loader)))
-    return;
-
-  network = dec->use_network;
-  g_print ("enabling %s access for %s\n", network ? "network" : "local",
+  if (dec->use_network && sec->sandbox == SWFDEC_SANDBOX_LOCAL_FILE)
+    sec->sandbox = SWFDEC_SANDBOX_LOCAL_NETWORK;
+  SWFDEC_INFO ("enabling local-with-network sandbox for %s",
       swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
-  SWFDEC_INFO ("enabling %s access for %s", network ? "network" : "local",
-      swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
-  SWFDEC_INFO ("enabling network access for %s",
-      swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
-
-  sec->allow_remote = network;
-  sec->allow_local = !network;
 }
 
 static void
@@ -234,6 +224,8 @@ swfdec_resource_new (SwfdecLoader *loader, const char *variables)
   swf->variables = g_strdup (variables);
   /* set loader (that depends on those vars) */
   swf->loader = g_object_ref (loader);
+  swfdec_flash_security_set_url (SWFDEC_FLASH_SECURITY (swf),
+      swfdec_loader_get_url (loader));
 
   return swf;
 }

@@ -35,10 +35,9 @@ swfdec_flash_security_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
   if (guard == key) {
     return g_object_ref (guard);
   } else if (SWFDEC_IS_SECURITY_ALLOW (key)) {
-    return g_object_ref (guard);
+    return g_object_ref (key);
   } else if (SWFDEC_IS_FLASH_SECURITY (key)) {
-    SWFDEC_FIXME ("merging flash securities - how is this supposed to work?");
-    return key;
+    return g_object_ref (key);
   } else {
     SWFDEC_ERROR ("unknown security %s, denying access", G_OBJECT_TYPE_NAME (key));
     return NULL;
@@ -46,21 +45,54 @@ swfdec_flash_security_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
 }
 
 static gboolean
+swfdec_flash_security_match_domain (const SwfdecURL *guard, const SwfdecURL *key)
+{
+  return g_ascii_strcasecmp (swfdec_url_get_host (guard), swfdec_url_get_host (key)) == 0;
+}
+
+static gboolean
 swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url)
 {
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (guard);
 
-  if (swfdec_url_is_local (url)) {
-    return sec->allow_local;
-  } else {
-    return sec->allow_remote;
+  switch (sec->sandbox) {
+    case SWFDEC_SANDBOX_NONE:
+      return FALSE;
+    case SWFDEC_SANDBOX_REMOTE:
+      if (swfdec_url_is_local (url))
+	return FALSE;
+      return swfdec_flash_security_match_domain (sec->url, url);
+    case SWFDEC_SANDBOX_LOCAL_FILE:
+      return swfdec_url_is_local (url);
+    case SWFDEC_SANDBOX_LOCAL_NETWORK:
+      return !swfdec_url_is_local (url);
+    case SWFDEC_SANDBOX_LOCAL_TRUSTED:
+      return TRUE;
   }
+  g_assert_not_reached ();
+  return FALSE;
+}
+
+static void
+swfdec_flash_security_dispose (GObject *object)
+{
+  SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (object);
+
+  if (sec->url) {
+    swfdec_url_free (sec->url);
+    sec->url = NULL;
+  }
+  sec->sandbox = SWFDEC_SANDBOX_NONE;
+  G_OBJECT_CLASS (swfdec_flash_security_parent_class)->dispose (object);
 }
 
 static void
 swfdec_flash_security_class_init (SwfdecFlashSecurityClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecSecurityClass *security_class = SWFDEC_SECURITY_CLASS (klass);
+
+  object_class->dispose = swfdec_flash_security_dispose;
 
   security_class->allow = swfdec_flash_security_allow;
   security_class->allow_url = swfdec_flash_security_allow_url;
@@ -71,25 +103,19 @@ swfdec_flash_security_init (SwfdecFlashSecurity *sec)
 {
 }
 
-/**
- * swfdec_flash_security_new:
- * @allow_local: %TRUE to allow playback of local files
- * @allow_remote: %TRUE to allow playback of remote files
- *
- * Creates a new Security object that allows everything. These objects are used 
- * by default when no other security object is in use. This is particularly 
- * useful for script engines that are not security sensitive or code injection
- * via debugging.
- *
- * Returns: a new #SwfdecSecurity object
- **/
-SwfdecSecurity *
-swfdec_flash_security_new (gboolean allow_local, gboolean allow_remote)
+void
+swfdec_flash_security_set_url (SwfdecFlashSecurity *sec, const SwfdecURL *url)
 {
-  SwfdecFlashSecurity *ret;
-  
-  ret = g_object_new (SWFDEC_TYPE_FLASH_SECURITY, NULL);
-  ret->allow_local = allow_local;
-  ret->allow_remote = allow_remote;
-  return SWFDEC_SECURITY (ret);
+  g_return_if_fail (SWFDEC_IS_FLASH_SECURITY (sec));
+  g_return_if_fail (sec->url == NULL);
+  g_return_if_fail (url != NULL);
+
+  g_assert (sec->sandbox == SWFDEC_SANDBOX_NONE);
+  sec->url = swfdec_url_copy (url);
+  if (swfdec_url_is_local (url)) {
+    sec->sandbox = SWFDEC_SANDBOX_LOCAL_FILE;
+  } else {
+    sec->sandbox = SWFDEC_SANDBOX_REMOTE;
+  }
 }
+

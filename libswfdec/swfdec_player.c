@@ -1730,23 +1730,6 @@ swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const c
   g_signal_emit (player, signals[LAUNCH], 0, request, url, target, data);
 }
 
-static void
-swfdec_player_create_security (SwfdecPlayer *player, guint version)
-{
-  const SwfdecURL *url;
-  SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (player->resource);
-
-  url = swfdec_loader_get_url (player->resource->loader);
-  if (version > 7) {
-    /* for local files we allow nothing by default, the FileAttributes tag fixes that */
-    sec->allow_local = FALSE;
-    sec->allow_remote = swfdec_url_has_protocol (url, "http");
-  } else {
-    sec->allow_local = swfdec_url_has_protocol (url, "file");
-    sec->allow_remote = TRUE;
-  }
-}
-
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
@@ -1789,7 +1772,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     }
   }
   SWFDEC_INFO ("initializing player to size %ux%u", width, height);
-  swfdec_player_create_security (player, version);
   player->rate = rate;
   player->width = width;
   player->height = height;

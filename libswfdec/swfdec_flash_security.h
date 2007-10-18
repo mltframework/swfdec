@@ -27,6 +27,14 @@ G_BEGIN_DECLS
 typedef struct _SwfdecFlashSecurity SwfdecFlashSecurity;
 typedef struct _SwfdecFlashSecurityClass SwfdecFlashSecurityClass;
 
+typedef enum {
+  SWFDEC_SANDBOX_NONE,
+  SWFDEC_SANDBOX_REMOTE,
+  SWFDEC_SANDBOX_LOCAL_FILE,
+  SWFDEC_SANDBOX_LOCAL_NETWORK,
+  SWFDEC_SANDBOX_LOCAL_TRUSTED
+} SwfdecSandboxType;
+
 #define SWFDEC_TYPE_FLASH_SECURITY                    (swfdec_flash_security_get_type())
 #define SWFDEC_IS_FLASH_SECURITY(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_FLASH_SECURITY))
 #define SWFDEC_IS_FLASH_SECURITY_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_FLASH_SECURITY))
@@ -38,8 +46,8 @@ struct _SwfdecFlashSecurity
 {
   SwfdecSecurity	security;
 
-  gboolean		allow_local;	/* TRUE to allow access to local ressources */
-  gboolean		allow_remote;	/* TRUE to allow access to remote resources */
+  SwfdecSandboxType	sandbox;	/* sandbox we are operating in */
+  SwfdecURL *		url;		/* url this security was loaded from */
 };
 
 struct _SwfdecFlashSecurityClass
@@ -49,8 +57,8 @@ struct _SwfdecFlashSecurityClass
 
 GType			swfdec_flash_security_get_type	(void);
 
-SwfdecSecurity *	swfdec_flash_security_new	(gboolean	allow_local,
-							 gboolean	allow_remote);
+void			swfdec_flash_security_set_url	(SwfdecFlashSecurity *	sec,
+							 const SwfdecURL *	url);
 
 
 G_END_DECLS

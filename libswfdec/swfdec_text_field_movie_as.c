@@ -515,6 +515,20 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
  * Native properties: Scrolling
  */
 static void
+swfdec_text_field_movie_get_bottomScroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int last;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  swfdec_text_field_movie_get_scroll_info (text, &last, NULL, NULL, NULL);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, last);
+}
+
+static void
 swfdec_text_field_movie_do_get_hscroll (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -538,7 +552,35 @@ swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
 
   swfdec_text_field_movie_set_hscroll (text, value);
 }
-  
+
+static void
+swfdec_text_field_movie_get_maxhscroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int max;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  swfdec_text_field_movie_get_scroll_info (text, NULL, NULL, NULL, &max);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, max);
+}
+
+static void
+swfdec_text_field_movie_get_maxscroll (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  int max;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  swfdec_text_field_movie_get_scroll_info (text, NULL, &max, NULL, NULL);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, max);
+}
+
 static void
 swfdec_text_field_movie_get_mouseWheelEnabled (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -1039,18 +1081,18 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
       swfdec_text_field_movie_set_borderColor);
 
   // scrolling
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_bottomScroll,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_bottomScroll,
       swfdec_text_field_movie_get_bottomScroll,
-      swfdec_text_field_movie_set_readonly);*/
+      swfdec_text_field_movie_set_readonly);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_hscroll,
       swfdec_text_field_movie_do_get_hscroll,
       swfdec_text_field_movie_do_set_hscroll);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxhscroll,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxhscroll,
       swfdec_text_field_movie_get_maxhscroll,
-      swfdec_text_field_movie_set_readonly);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxscroll,
+      swfdec_text_field_movie_set_readonly);
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxscroll,
       swfdec_text_field_movie_get_maxscroll,
-      swfdec_text_field_movie_set_readonly);*/
+      swfdec_text_field_movie_set_readonly);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
       swfdec_text_field_movie_get_mouseWheelEnabled,
       swfdec_text_field_movie_set_mouseWheelEnabled);

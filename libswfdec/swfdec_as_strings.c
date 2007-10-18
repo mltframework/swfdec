@@ -412,5 +412,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("restrict")
   SWFDEC_AS_CONSTANT_STRING ("mouseWheelEnabled")
   SWFDEC_AS_CONSTANT_STRING ("hscroll")
+  SWFDEC_AS_CONSTANT_STRING ("maxhscroll")
+  SWFDEC_AS_CONSTANT_STRING ("maxscroll")
+  SWFDEC_AS_CONSTANT_STRING ("bottomScroll")
   /* add more here */
 ;

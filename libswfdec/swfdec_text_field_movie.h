@@ -121,6 +121,11 @@ void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 							 SwfdecTextFormat *	format,
 							 guint			start_index,
 							 guint			end_index);
+void		swfdec_text_field_movie_get_scroll_info	(SwfdecTextFieldMovie *	text,
+							 int *			scroll_last,
+							 int *			scroll_max,
+							 int *			hscroll_last,
+							 int *			hscroll_max);
 void		swfdec_text_field_movie_set_scroll	(SwfdecTextFieldMovie *	text,
 							 int			value);
 void		swfdec_text_field_movie_set_hscroll	(SwfdecTextFieldMovie *	text,

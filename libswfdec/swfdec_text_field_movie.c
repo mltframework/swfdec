@@ -679,17 +679,22 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 }
 
 void
-swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
+swfdec_text_field_movie_get_scroll_info (SwfdecTextFieldMovie *text,
+    int *scroll_last, int *scroll_max, int *hscroll_last, int *hscroll_max)
 {
   SwfdecLayout *layouts;
-  int i, num, y, visible, all, height;
+  int i, num, y, visible, all, height, width, width_max;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
   layouts = swfdec_text_field_movie_get_layouts (text, &num, NULL, NULL, NULL);
 
+  width = SWFDEC_MOVIE (text)->original_extents.x1 -
+    SWFDEC_MOVIE (text)->original_extents.x1;
   height = SWFDEC_MOVIE (text)->original_extents.y1 -
     SWFDEC_MOVIE (text)->original_extents.y0;
+
+  width_max = width;
   y = 0;
   all = 0;
   visible = 0;
@@ -699,6 +704,9 @@ swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
     SwfdecLayout *layout = &layouts[i];
     PangoLayoutIter *iter_line;
     PangoRectangle rect;
+
+    if (layouts[i].width > width_max)
+      width_max = layouts[i].width;
 
     y += layout->height;
 
@@ -713,15 +721,37 @@ swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
 
       all++;
     } while (pango_layout_iter_next_line (iter_line));
+
+    pango_layout_iter_free (iter_line);
   }
 
   swfdec_text_field_movie_free_layouts (layouts);
   layouts = NULL;
 
-  if (value < 1) {
+  if (scroll_last)
+    *scroll_last = text->scroll + visible;
+  if (scroll_max)
+    *scroll_max = all - visible;
+
+  if (hscroll_last)
+    *hscroll_last = text->hscroll + width;
+  if (hscroll_max)
+    *hscroll_max = width_max - width;
+}
+
+void
+swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
+{
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  if (value <= 1) {
     value = 1;
-  } else if (value > all - visible + 1) {
-    value = all - visible + 1;
+  } else {
+    int max;
+
+    swfdec_text_field_movie_get_scroll_info (text, NULL, &max, NULL, NULL);
+    if (value > max)
+      value = max;
   }
 
   if (text->scroll != value) {
@@ -733,29 +763,16 @@ swfdec_text_field_movie_set_scroll (SwfdecTextFieldMovie *text, int value)
 void
 swfdec_text_field_movie_set_hscroll (SwfdecTextFieldMovie *text, int value)
 {
-  SwfdecLayout *layouts;
-  int i, width, width_max;
-
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
-  layouts = swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
-
-  width = SWFDEC_MOVIE (text)->original_extents.x1 -
-    SWFDEC_MOVIE (text)->original_extents.x1;
-
-  width_max = width;
-  for (i = 0; layouts[i].layout != NULL; i++) {
-    if (layouts[i].width > width_max)
-      width_max = layouts[i].width;
-  }
-
-  swfdec_text_field_movie_free_layouts (layouts);
-  layouts = NULL;
-
-  if (value < 0) {
+  if (value <= 0) {
     value = 0;
-  } else if (value > width_max - width) {
-    value = width_max - width;
+  } else {
+    int max;
+
+    swfdec_text_field_movie_get_scroll_info (text, NULL, NULL, NULL, &max);
+    if (value > max)
+      value = max;
   }
 
   if (text->hscroll != value) {
@@ -839,7 +856,7 @@ swfdec_text_field_movie_changed (SwfdecTextFieldMovie *text)
   }
 
   swfdec_text_field_movie_set_scroll (text, text->scroll);
-  swfdec_text_field_movie_set_hscroll (text, text->scroll);
+  swfdec_text_field_movie_set_hscroll (text, text->hscroll);
 }
 
 static void

@@ -86,7 +86,7 @@ swfdec_url_new (const char *string)
   url->url = g_strdup (string);
   s = strstr (string, "://");
   if (s == NULL) {
-    SWFDEC_ERROR ("URL %s has no protocol", string);
+    SWFDEC_INFO ("URL %s has no protocol", string);
     return url;
   }
   url->protocol = g_utf8_strdown (string, s - string);

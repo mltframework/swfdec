@@ -1130,29 +1130,20 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
       swfdec_text_field_movie_set_wordWrap);
 
   // format
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_antiAliasType,
-      swfdec_text_field_movie_get_antiAliasType,
-      swfdec_text_field_movie_set_antiAliasType);*/
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_embedFonts,
       swfdec_text_field_movie_get_embedFonts,
       swfdec_text_field_movie_set_embedFonts);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_gridFitType,
-      swfdec_text_field_movie_get_gridFitType,
-      swfdec_text_field_movie_set_gridFitType);*/
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_sharpness,
-      swfdec_text_field_movie_get_sharpness,
-      swfdec_text_field_movie_set_sharpness);*/
   /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_styleSheet,
       swfdec_text_field_movie_get_styleSheet,
       swfdec_text_field_movie_set_styleSheet);*/
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
       swfdec_text_field_movie_get_textColor,
       swfdec_text_field_movie_set_textColor);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_thickness,
-      swfdec_text_field_movie_get_thickness,
-      swfdec_text_field_movie_set_thickness);*/
 
-  // TODO: filters, menu, tabEnabled, tabIndex
+  // TODO: menu, tabEnabled, tabIndex
+
+  // Version 8 properties have ASnative numbers:
+  // gridFitType, antiAliasType, thickness, sharpness and filters
 }
 
 SWFDEC_AS_NATIVE (104, 0, swfdec_text_field_movie_construct)

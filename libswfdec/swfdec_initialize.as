@@ -287,6 +287,8 @@ TextField.prototype.setTextFormat = ASnative (104, 102);
 TextField.prototype.getNewTextFormat = ASnative (104, 104);
 TextField.prototype.setNewTextFormat = ASnative (104, 105);
 
+AsBroadcaster.initialize (TextField.prototype);
+
 ASSetPropFlags (TextField.prototype, null, 131);
 ASSetPropFlags (TextField, null, 131);
 

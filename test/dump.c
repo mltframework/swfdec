@@ -41,7 +41,7 @@
 #include <libswfdec/swfdec_shape.h>
 #include <libswfdec/swfdec_sound.h>
 #include <libswfdec/swfdec_swf_decoder.h>
-#include <libswfdec/swfdec_swf_instance.h>
+#include <libswfdec/swfdec_resource.h>
 #include <libswfdec/swfdec_tag.h>
 #include <libswfdec/swfdec_text.h>
 
@@ -414,20 +414,20 @@ main (int argc, char *argv[])
   }
 
   player = swfdec_player_new_from_file (argv[1]);
-  if (player->loader->error) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], player->loader->error);
+  if (player->resource->loader->error) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], player->resource->loader->error);
     g_object_unref (player);
     return 1;
   }
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
-  if (swfdec_player_is_initialized (player)) {
+  if (!swfdec_player_is_initialized (player)) {
     g_printerr ("File \"%s\" is not a SWF file\n", argv[1]);
     g_object_unref (player);
     player = NULL;
     return 1;
   }
-  s = (SwfdecSwfDecoder *) SWFDEC_MOVIE (player->roots->data)->swf->decoder;
+  s = (SwfdecSwfDecoder *) SWFDEC_MOVIE (player->roots->data)->resource->decoder;
   /* FIXME: can happen after a _root.loadMovie() call */
   if (!SWFDEC_IS_SWF_DECODER (s)) {
     g_printerr ("Movie already unloaded from \"%s\"\n", argv[1]);

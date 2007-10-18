@@ -20,6 +20,7 @@
 #include <libswfdec/swfdec_bits.h>
 #include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_player.h>
+#include <libswfdec/swfdec_security.h>
 #include <libswfdec/swfdec_types.h>
 
 #ifndef _SWFDEC_EVENT_H_
@@ -63,6 +64,7 @@ void			swfdec_event_list_parse		(SwfdecEventList *    list,
 							 const char *	      description);
 void			swfdec_event_list_execute	(SwfdecEventList *    list,
 							 SwfdecAsObject *     object,
+							 SwfdecSecurity *     sec,
 							 guint		      condition,
 							 guint8		      key);
 gboolean		swfdec_event_list_has_conditions(SwfdecEventList *    list,

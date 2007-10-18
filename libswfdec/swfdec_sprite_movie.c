@@ -55,7 +55,8 @@ swfdec_sprite_movie_remove_child (SwfdecMovie *movie, int depth)
 static void
 swfdec_sprite_movie_run_script (gpointer movie, gpointer data)
 {
-  swfdec_as_object_run (movie, data);
+  swfdec_as_object_run_with_security (movie, data, 
+      SWFDEC_SECURITY (SWFDEC_MOVIE (movie)->resource));
 }
 
 static int

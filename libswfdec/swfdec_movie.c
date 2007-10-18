@@ -387,8 +387,8 @@ swfdec_movie_execute_script (SwfdecMovie *movie, SwfdecEventType condition)
   g_return_if_fail (condition != 0);
 
   if (movie->events) {
-    swfdec_event_list_execute (movie->events, 
-	SWFDEC_AS_OBJECT (movie), condition, 0);
+    swfdec_event_list_execute (movie->events, SWFDEC_AS_OBJECT (movie), 
+	SWFDEC_SECURITY (movie->resource), condition, 0);
   }
   name = swfdec_event_type_get_name (condition);
   if (name != NULL)

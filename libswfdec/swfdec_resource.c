@@ -292,7 +292,8 @@ swfdec_resource_advance (SwfdecResource *instance)
     SwfdecRootAction *action = &g_array_index (array, SwfdecRootAction, i);
     switch (action->type) {
       case SWFDEC_ROOT_ACTION_INIT_SCRIPT:
-	swfdec_as_object_run (SWFDEC_AS_OBJECT (instance->movie), action->data);
+	swfdec_as_object_run_with_security (SWFDEC_AS_OBJECT (instance->movie), 
+	    action->data, SWFDEC_SECURITY (instance));
 	break;
       case SWFDEC_ROOT_ACTION_EXPORT:
 	{

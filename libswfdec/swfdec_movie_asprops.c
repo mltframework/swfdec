@@ -32,7 +32,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
-#include "swfdec_swf_instance.h"
+#include "swfdec_resource.h"
 
 static void
 mc_x_get (SwfdecMovie *movie, SwfdecAsValue *rval)

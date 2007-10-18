@@ -39,7 +39,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
-#include "swfdec_swf_instance.h"
+#include "swfdec_resource.h"
 #include "swfdec_system.h"
 #include "swfdec_utils.h"
 #include "swfdec_load_object.h"

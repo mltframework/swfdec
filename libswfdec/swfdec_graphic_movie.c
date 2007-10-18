@@ -29,7 +29,7 @@
 #include "swfdec_shape.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
-#include "swfdec_swf_instance.h"
+#include "swfdec_resource.h"
 #include "swfdec_text.h"
 
 G_DEFINE_TYPE (SwfdecGraphicMovie, swfdec_graphic_movie, SWFDEC_TYPE_MOVIE)

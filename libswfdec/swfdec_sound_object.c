@@ -32,7 +32,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_swf_instance.h"
+#include "swfdec_resource.h"
 
 /*** SwfdecSoundObject ***/
 

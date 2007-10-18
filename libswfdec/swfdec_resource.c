@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include "swfdec_swf_instance.h"
+#include "swfdec_resource.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_character.h"
 #include "swfdec_debug.h"

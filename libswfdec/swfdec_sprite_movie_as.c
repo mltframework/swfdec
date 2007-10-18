@@ -34,7 +34,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_decoder.h"
-#include "swfdec_swf_instance.h"
+#include "swfdec_resource.h"
 #include "swfdec_as_internal.h"
 
 SWFDEC_AS_NATIVE (900, 12, swfdec_sprite_movie_play)

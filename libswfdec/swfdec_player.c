@@ -44,7 +44,7 @@
 #include "swfdec_movie.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
-#include "swfdec_swf_instance.h"
+#include "swfdec_resource.h"
 #include "swfdec_utils.h"
 
 /*** gtk-doc ***/

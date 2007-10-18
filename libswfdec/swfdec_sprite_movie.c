@@ -35,7 +35,7 @@
 #include "swfdec_ringbuffer.h"
 #include "swfdec_script.h"
 #include "swfdec_sprite.h"
-#include "swfdec_swf_instance.h"
+#include "swfdec_resource.h"
 #include "swfdec_tag.h"
 
 /*** SWFDEC_SPRITE_MOVIE ***/

@@ -1352,12 +1352,6 @@ swfdec_text_field_movie_html_text_append_paragraph (SwfdecTextFieldMovie *text,
 	break;
       }
     }
-    if (iter_font != NULL) {
-      while (fonts != iter_font) {
-	string = g_string_append (string, "</FONT>");
-	fonts = g_slist_remove (fonts, fonts->data);
-      }
-    }
     if (format_prev->underline)
       string = g_string_append (string, "</U>");
     if (format_prev->italic)
@@ -1366,6 +1360,12 @@ swfdec_text_field_movie_html_text_append_paragraph (SwfdecTextFieldMovie *text,
       string = g_string_append (string, "</B>");
     if (format_prev->url != SWFDEC_AS_STR_EMPTY)
       string = g_string_append (string, "</A>");
+    if (iter_font != NULL) {
+      while (fonts != iter_font) {
+	string = g_string_append (string, "</FONT>");
+	fonts = g_slist_remove (fonts, fonts->data);
+      }
+    }
 
     // Open tags
     format_font = (SwfdecTextFormat *)fonts->data;

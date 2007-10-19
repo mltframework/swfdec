@@ -136,10 +136,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserTag *tag,
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_letterSpacing,
 	  &val);
     }
-    else if (name_length == 7 && !g_strncasecmp (name, "kerning", 7))
-    {
-      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_kerning, &val);
-    }
+    // special case: Don't parse kerning
   }
   else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "a", 1))
   {

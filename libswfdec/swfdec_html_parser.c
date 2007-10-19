@@ -44,6 +44,39 @@ typedef struct {
   GSList *		tags_closed;
 } ParserData;
 
+static void
+swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag)
+{
+  if (data->cx->version < 7 &&
+      ((tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) ||
+       (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2))))
+  {
+    GSList *iter;
+
+    for (iter = data->tags_closed; iter != NULL; iter = iter->next) {
+      ParserTag *f = iter->data;
+      if (f->end_index < tag->index)
+	break;
+      if (f->name_length == 4 && !g_strncasecmp (f->name, "font", 4)) {
+	ParserTag *n = g_new0 (ParserTag, 1);
+	n->name = f->name;
+	n->name_length = f->name_length;
+	n->index = data->text->len;
+	n->end_index = data->text->len + 1;
+	n->format = swfdec_text_format_copy (f->format);
+	data->tags_closed = g_slist_prepend (data->tags_closed, n);
+	break;
+      }
+    }
+    data->text = g_string_append_c (data->text, '\r');
+  }
+
+  tag->end_index = data->text->len;
+
+  data->tags_open = g_slist_remove (data->tags_open, tag);
+  data->tags_closed = g_slist_prepend (data->tags_closed, tag);
+}
+
 static const char *
 swfdec_text_field_movie_html_parse_comment (ParserData *data, const char *p)
 {
@@ -246,17 +279,7 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
     if (tag != NULL && name_length == tag->name_length &&
 	!g_strncasecmp (name, tag->name, name_length))
     {
-      if (data->cx->version == 6) {
-	if ((name_length == 1 && !g_strncasecmp (name, "p", 1)) ||
-	    (name_length == 2 && !g_strncasecmp (name, "li", 2))) {
-	  data->text = g_string_append_c (data->text, '\r');
-	}
-      }
-
-      tag->end_index = data->text->len;
-
-      data->tags_open = g_slist_remove (data->tags_open, tag);
-      data->tags_closed = g_slist_prepend (data->tags_closed, tag);
+      swfdec_text_field_movie_html_parse_close_tag (data, tag);
     }
 
     end = strchr (end, '>');
@@ -265,13 +288,29 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
   }
   else
   {
-    if (data->cx->version == 6 &&
+    if (data->cx->version < 7 &&
 	(name_length == 2 && !g_strncasecmp (name, "br", 2))) {
       data->text = g_string_append_c (data->text, '\r');
       tag = NULL;
     } else {
       SwfdecAsObject *object;
       SwfdecAsValue val;
+
+      if (data->cx->version < 7 &&
+	  ((name_length == 1 && !g_strncasecmp (name, "p", 1)) ||
+	   (name_length == 2 && !g_strncasecmp (name, "li", 2))))
+      {
+	GSList *iter;
+
+	for (iter = data->tags_open; iter != NULL; iter = iter->next) {
+	  ParserTag *f = iter->data;
+	  if ((f->name_length == 1 && !g_strncasecmp (f->name, "p", 1)) ||
+	      (f->name_length == 2 && !g_strncasecmp (f->name, "li", 2))) {
+	    data->text = g_string_append_c (data->text, '\r');
+	    break;
+	  }
+	}
+      }
 
       tag = g_new0 (ParserTag, 1);
       tag->name = name;
@@ -386,19 +425,8 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
 
   // close remaining tags
   while (data.tags_open != NULL) {
-    ParserTag *tag = (ParserTag *)data.tags_open->data;
-
-    if (data.cx->version == 6) {
-      if ((tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) ||
-	  (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2))) {
-	data.text = g_string_append_c (data.text, '\r');
-      }
-    }
-
-    tag->end_index = data.text->len;
-
-    data.tags_open = g_slist_remove (data.tags_open, tag);
-    data.tags_closed = g_slist_prepend (data.tags_closed, tag);
+    swfdec_text_field_movie_html_parse_close_tag (&data,
+	(ParserTag *)data.tags_open->data);
   }
 
   // set parsed text

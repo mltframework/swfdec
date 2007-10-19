@@ -1031,6 +1031,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
 	swfdec_text_format_equal (findex->format,
 	  ((SwfdecFormatIndex *)next->data)->format))
     {
+      ((SwfdecFormatIndex *)next->data)->index = findex->index;
       text->formats = g_slist_remove (text->formats, findex);
       findex = findex_prev;
     }

@@ -17,6 +17,7 @@ SUBDIRS= \
 	libswfdec \
 	$(GTK_SUBDIRS) \
 	$(VIVI_SUBDIRS) \
+	data \
 	test
 
 ACLOCAL_FLAGS = -I m4
@@ -31,21 +32,6 @@ EXTRA_DIST=depcomp \
 	m4/as-compiler-flag.m4 \
 	m4/ax_create_stdint_h.m4 \
 	m4/gtk-doc.m4
-
-pkgconfigdir = $(libdir)/pkgconfig
-if WITH_GTK
-pkgconfig_DATA = swfdec-@SWFDEC_MAJORMINOR@.pc swfdec-gtk-@SWFDEC_MAJORMINOR@.pc
-else
-pkgconfig_DATA = swfdec-@SWFDEC_MAJORMINOR@.pc
-endif
-
-CLEANFILES = swfdec-$(SWFDEC_MAJORMINOR).pc swfdec-gtk-$(SWFDEC_MAJORMINOR).pc
-
-swfdec-@SWFDEC_MAJORMINOR@.pc: swfdec.pc
-	cp swfdec.pc swfdec-@SWFDEC_MAJORMINOR@.pc
-
-swfdec-gtk-@SWFDEC_MAJORMINOR@.pc: swfdec-gtk.pc
-	cp swfdec-gtk.pc swfdec-gtk-@SWFDEC_MAJORMINOR@.pc
 
 # build documentation when doing distcheck
 DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc

@@ -19,6 +19,3 @@ libtool
 ltmain.sh
 missing
 stamp-h1
-swfdec-*.pc
-swfdec.pc
-swfdec.spec

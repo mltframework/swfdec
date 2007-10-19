@@ -317,6 +317,9 @@ dnl testsuite/autoplug/Makefile
 dnl testsuite/Makefile
 AC_CONFIG_FILES(
 Makefile
+data/Makefile
+data/swfdec.pc
+data/swfdec-gtk.pc
 doc/Makefile
 libswfdec/Makefile
 libswfdec/jpeg/Makefile
@@ -331,8 +334,6 @@ vivified/Makefile
 vivified/core/Makefile
 vivified/dock/Makefile
 vivified/ui/Makefile
-swfdec.pc
-swfdec-gtk.pc
 )
 
 AC_OUTPUT

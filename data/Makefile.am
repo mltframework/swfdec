@@ -1,3 +1,5 @@
+SUBDIRS = icons
+
 pkgconfigdir = $(libdir)/pkgconfig
 if WITH_GTK
 pkgconfig_DATA = swfdec-@SWFDEC_MAJORMINOR@.pc swfdec-gtk-@SWFDEC_MAJORMINOR@.pc

@@ -703,6 +703,7 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
 
   g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
 
+  /* This function does enough invalidating */
   swfdec_sprite_movie_clear (SWFDEC_AS_OBJECT (movie)->context, 
       SWFDEC_AS_OBJECT (movie), 0, NULL, &hack);
   movie->frame = 0;

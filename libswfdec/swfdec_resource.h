@@ -41,6 +41,7 @@ struct _SwfdecResource
 
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
   guint			parse_frame;	/* next frame to parse */
+  gboolean		initial;	/* TRUE if this is the initial resource */
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder that decoded all the stuff used by us */

@@ -1919,6 +1919,7 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
   player->resource = swfdec_resource_new (loader, variables);
+  player->resource->initial = TRUE;
   movie = swfdec_movie_new (player, -16384, NULL, player->resource, NULL, SWFDEC_AS_STR__level0);
   movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);

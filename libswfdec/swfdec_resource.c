@@ -58,10 +58,12 @@ swfdec_resource_check_rights (SwfdecResource *resource)
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (resource);
   SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (resource->decoder);
 
-  if (dec->use_network && sec->sandbox == SWFDEC_SANDBOX_LOCAL_FILE)
-    sec->sandbox = SWFDEC_SANDBOX_LOCAL_NETWORK;
-  SWFDEC_INFO ("enabling local-with-network sandbox for %s",
-      swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
+  if (resource->initial) {
+    if (dec->use_network && sec->sandbox == SWFDEC_SANDBOX_LOCAL_FILE)
+      sec->sandbox = SWFDEC_SANDBOX_LOCAL_NETWORK;
+    SWFDEC_INFO ("enabling local-with-network sandbox for %s",
+	swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
+  }
 }
 
 static void
@@ -73,14 +75,11 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     return;
 
   if (SWFDEC_IS_SWF_DECODER (instance->decoder)) {
-    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
     SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (instance->decoder);
+
     movie->sprite = dec->main_sprite;
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
-    
-    /* if first instance */
-    if (player->resource == instance)
-      swfdec_resource_check_rights (instance);
+    swfdec_resource_check_rights (instance);
   } else if (SWFDEC_IS_FLV_DECODER (instance->decoder)) {
     /* nothing to do, please move along */
   } else {

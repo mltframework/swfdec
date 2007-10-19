@@ -44,7 +44,7 @@ struct _SwfdecResource
   gboolean		initial;	/* TRUE if this is the initial resource */
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
-  SwfdecDecoder *	decoder;	/* decoder that decoded all the stuff used by us */
+  SwfdecDecoder *	decoder;	/* decoder in use or NULL if not yet created (only happens after loadMovie()) */
   char *		variables;	/* extra variables to be set */
 
   GHashTable *		exports;	/* string->SwfdecCharacter mapping of exported characters */

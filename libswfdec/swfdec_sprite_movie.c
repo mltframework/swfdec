@@ -707,6 +707,7 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
       SWFDEC_AS_OBJECT (movie), 0, NULL, &hack);
   movie->frame = 0;
   movie->n_frames = 0;
+  movie->next_action = 0;
   movie->sprite = NULL;
 }
 

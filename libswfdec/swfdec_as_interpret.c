@@ -285,7 +285,7 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
   frame = data[0] || (data[1] << 8);
   jump = data[2];
   resource = swfdec_movie_get_own_resource (movie);
-  if (resource) {
+  if (resource && resource->decoder) {
     SwfdecDecoder *dec = resource->decoder;
     loaded = dec->frames_loaded;
     if (loaded == dec->frames_total)

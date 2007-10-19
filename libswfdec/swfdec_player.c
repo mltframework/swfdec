@@ -767,6 +767,10 @@ swfdec_player_dispose (GObject *object)
 
   while (player->roots)
     swfdec_movie_destroy (player->roots->data);
+  if (player->resource) {
+    g_object_unref (player->resource);
+    player->resource = NULL;
+  }
 
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
@@ -801,10 +805,6 @@ swfdec_player_dispose (GObject *object)
   g_queue_free (player->init_queue);
   g_queue_free (player->construct_queue);
   swfdec_cache_unref (player->cache);
-  if (player->resource) {
-    g_object_unref (player->resource);
-    player->resource = NULL;
-  }
   if (player->system) {
     g_object_unref (player->system);
     player->system = NULL;

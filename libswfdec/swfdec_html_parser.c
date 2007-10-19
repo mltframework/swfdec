@@ -246,14 +246,14 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
     if (tag != NULL && name_length == tag->name_length &&
 	!g_strncasecmp (name, tag->name, name_length))
     {
-      tag->end_index = data->text->len;
-
       if (data->cx->version == 6) {
 	if ((name_length == 1 && !g_strncasecmp (name, "p", 1)) ||
 	    (name_length == 2 && !g_strncasecmp (name, "li", 2))) {
 	  data->text = g_string_append_c (data->text, '\r');
 	}
       }
+
+      tag->end_index = data->text->len;
 
       data->tags_open = g_slist_remove (data->tags_open, tag);
       data->tags_closed = g_slist_prepend (data->tags_closed, tag);

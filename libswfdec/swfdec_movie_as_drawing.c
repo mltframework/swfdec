@@ -244,6 +244,7 @@ swfdec_sprite_movie_clear (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (movie->draws == NULL)
     return;
   swfdec_movie_invalidate (movie);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
   swfdec_rect_init_empty (&movie->draw_extents);
   g_slist_foreach (movie->draws, (GFunc) g_object_unref, NULL);
   g_slist_free (movie->draws);

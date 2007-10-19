@@ -50,6 +50,7 @@ view_swf (SwfdecPlayer *player, gboolean use_image)
   GtkWidget *window, *widget;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_icon_name (GTK_WINDOW (window), "swfdec");
   widget = swfdec_gtk_widget_new (player);
   if (use_image)
     swfdec_gtk_widget_set_renderer (SWFDEC_GTK_WIDGET (widget), CAIRO_SURFACE_TYPE_IMAGE);

@@ -270,16 +270,17 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 
   if (close)
   {
-    if (data->tags_open != NULL) {
-      tag = (ParserTag *)data->tags_open->data;
-    } else {
-      tag = NULL;
-    }
+    GSList *iter;
 
-    if (tag != NULL && name_length == tag->name_length &&
-	!g_strncasecmp (name, tag->name, name_length))
+    for (iter = data->tags_open; iter != NULL; iter = iter->next)
     {
+      tag = iter->data;
+
       swfdec_text_field_movie_html_parse_close_tag (data, tag);
+
+      if (name_length == tag->name_length &&
+	  !g_strncasecmp (name, tag->name, name_length))
+	break;
     }
 
     end = strchr (end, '>');

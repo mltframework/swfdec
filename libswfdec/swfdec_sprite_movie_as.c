@@ -72,7 +72,7 @@ swfdec_sprite_movie_getBytesLoaded (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
 
   resource = swfdec_movie_get_own_resource (movie);
-  if (resource) {
+  if (resource && resource->decoder) {
     SWFDEC_AS_VALUE_SET_INT (rval, resource->decoder->bytes_loaded);
   } else {
     SWFDEC_AS_VALUE_SET_INT (rval, 0);
@@ -90,7 +90,7 @@ swfdec_sprite_movie_getBytesTotal (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
 
   resource = swfdec_movie_get_own_resource (movie);
-  if (resource) {
+  if (resource && resource->decoder) {
     SWFDEC_AS_VALUE_SET_INT (rval, resource->decoder->bytes_total);
   } else {
     SWFDEC_AS_VALUE_SET_INT (rval, 0);

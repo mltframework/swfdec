@@ -88,9 +88,8 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
 }
 
 static void
-swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_open (SwfdecResource *instance, SwfdecLoader *loader)
 {
-  SwfdecResource *instance = SWFDEC_RESOURCE (target);
   const char *query;
 
   query = swfdec_url_get_query (swfdec_loader_get_url (loader));
@@ -105,9 +104,19 @@ swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *lo
 }
 
 static void
-swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
+
+  if (!instance->initial)
+    return;
+
+  swfdec_resource_open (instance, loader);
+}
+
+static void
+swfdec_resource_parse (SwfdecResource *instance, SwfdecLoader *loader)
+{
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance->movie)->context);
   SwfdecDecoder *dec = instance->decoder;
   SwfdecDecoderClass *klass;
@@ -132,11 +141,6 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
       SWFDEC_FIXME ("implement handling of %s", G_OBJECT_TYPE_NAME (dec));
       g_object_unref (dec);
       swfdec_loader_set_target (loader, NULL);
-      return;
-    }
-    /* HACK for flv playback */
-    if (target != loader->target) {
-      swfdec_loader_target_parse (loader->target, loader);
       return;
     }
   }
@@ -171,11 +175,39 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 }
 
 static void
+swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+{
+  SwfdecResource *instance = SWFDEC_RESOURCE (target);
+
+  if (!instance->initial)
+    return;
+
+  swfdec_resource_parse (instance, loader);
+}
+
+static void
+swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+{
+  SwfdecResource *resource = SWFDEC_RESOURCE (target);
+  SwfdecMovie *movie;
+
+  if (resource->initial)
+    return;
+
+  swfdec_resource_open (resource, loader);
+  swfdec_resource_parse (resource, loader);
+  /* FIXME: This someow initializes the first frame here. Is this ok? */
+  movie = SWFDEC_MOVIE (resource->movie);
+  swfdec_movie_initialize (movie);
+}
+
+static void
 swfdec_resource_loader_target_init (SwfdecLoaderTargetInterface *iface)
 {
   iface->get_player = swfdec_resource_loader_target_get_player;
   iface->open = swfdec_resource_loader_target_open;
   iface->parse = swfdec_resource_loader_target_parse;
+  iface->eof = swfdec_resource_loader_target_eof;
 }
 
 static void

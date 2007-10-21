@@ -25,9 +25,6 @@
 #include <libswfdec/swfdec.h>
 
 #include <libswfdec-gtk/swfdec-gtk.h>
-#if HAVE_GNOMEVFS
-#include <libgnomevfs/gnome-vfs.h>
-#endif
 
 #include "swfdec_slow_loader.h"
 

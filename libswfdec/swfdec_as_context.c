@@ -732,6 +732,8 @@ swfdec_as_context_run (SwfdecAsContext *context)
   context->last_frame = context->frame->next;
   original_version = context->version;
 start:
+  if (!swfdec_as_context_check_continue (context))
+    goto error;
   /* setup data */
   frame = context->frame;
   if (frame == context->last_frame)
@@ -892,6 +894,10 @@ start:
       frame->pc = pc = nextpc;
       check_block = TRUE;
     } else {
+      if (frame->pc < pc &&
+	  !swfdec_as_context_check_continue (context)) {
+	goto error;
+      }
       pc = frame->pc;
       check_block = FALSE;
     }
@@ -1337,5 +1343,30 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
 
   if (context->state == SWFDEC_AS_CONTEXT_NEW)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;
+}
+
+/**
+ * swfdec_as_context_check_continue:
+ * @context: the context that might be running too long
+ *
+ * Checks if the context has been running too long. If it has, it gets aborted.
+ *
+ * Returns: %TRUE if this player aborted.
+ **/
+gboolean
+swfdec_as_context_check_continue (SwfdecAsContext *context)
+{
+  SwfdecAsContextClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), TRUE);
+
+  klass = SWFDEC_AS_CONTEXT_GET_CLASS (context);
+  if (klass->check_continue == NULL)
+    return TRUE;
+  if (!klass->check_continue (context)) {
+    swfdec_as_context_abort (context, "Runtime exceeded");
+    return FALSE;
+  }
+  return TRUE;
 }
 

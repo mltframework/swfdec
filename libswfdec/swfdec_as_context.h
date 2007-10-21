@@ -88,6 +88,8 @@ struct _SwfdecAsContextClass {
   /* overwrite if you want to report a different time than gettimeofday */
   void			(* get_time)		(SwfdecAsContext *      context,
 						 GTimeVal *		tv);
+  /* overwrite if you want to abort on infinite loops */
+  gboolean		(* check_continue)	(SwfdecAsContext *	context);
 };
 
 GType		swfdec_as_context_get_type	(void);

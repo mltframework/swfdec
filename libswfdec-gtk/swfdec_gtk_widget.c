@@ -160,7 +160,7 @@ swfdec_gtk_widget_key_press (GtkWidget *gtkwidget, GdkEventKey *event)
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
-  if (priv->interactive) {
+  if (priv->interactive && priv->player) {
     guint keycode = swfdec_gtk_event_to_keycode (event);
     if (keycode != 0) {
       swfdec_player_key_press (priv->player, keycode, 
@@ -178,7 +178,7 @@ swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
-  if (priv->interactive) {
+  if (priv->interactive && priv->player) {
     guint keycode = swfdec_gtk_event_to_keycode (event);
     if (keycode != 0) {
       swfdec_player_key_release (priv->player, keycode, 

@@ -99,6 +99,11 @@ void		swfdec_player_set_scale_mode	(SwfdecPlayer *		player,
 SwfdecAlignment	swfdec_player_get_alignment	(SwfdecPlayer *		player);
 void		swfdec_player_set_alignment	(SwfdecPlayer *		player,
 						 SwfdecAlignment	align);
+gulong		swfdec_player_get_maximum_runtime
+						(SwfdecPlayer *	player);
+void		swfdec_player_set_maximum_runtime 
+						(SwfdecPlayer *	player,
+						 gulong		msecs);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,

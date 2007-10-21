@@ -546,7 +546,8 @@ enum {
   PROP_HEIGHT,
   PROP_ALIGNMENT,
   PROP_SCALE,
-  PROP_SYSTEM
+  PROP_SYSTEM,
+  PROP_MAX_RUNTIME
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -641,6 +642,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_SYSTEM:
       g_value_set_object (value, player->system);
+      break;
+    case PROP_MAX_RUNTIME:
+      g_value_set_ulong (value, player->max_runtime);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -751,6 +755,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
 	player->system = swfdec_system_new ();
       }
       break;
+    case PROP_MAX_RUNTIME:
+      swfdec_player_set_maximum_runtime (player, g_value_get_ulong (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -811,6 +818,10 @@ swfdec_player_dispose (GObject *object)
   }
   g_array_free (player->invalidations, TRUE);
   player->invalidations = NULL;
+  if (player->runtime) {
+    g_timer_destroy (player->runtime);
+    player->runtime = NULL;
+  }
 }
 
 static void
@@ -1289,6 +1300,16 @@ swfdec_player_get_time (SwfdecAsContext *context, GTimeVal *tv)
   g_time_val_add (tv, SWFDEC_TICKS_TO_MSECS (SWFDEC_PLAYER (context)->time) * 1000);
 }
 
+static gboolean
+swfdec_player_check_continue (SwfdecAsContext *context)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (context);
+
+  if (player->max_runtime == 0)
+    return TRUE;
+  return g_timer_elapsed (player->runtime, NULL) * 1000 > player->max_runtime;
+}
+
 static void
 swfdec_player_class_init (SwfdecPlayerClass *klass)
 {
@@ -1329,6 +1350,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_SCALE,
       g_param_spec_object ("system", "system", "object holding system information",
 	  SWFDEC_TYPE_SYSTEM, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_MAX_RUNTIME,
+      g_param_spec_ulong ("max-runtime", "maximum runtime", "maximum time in msecs scripts may run in the player before aborting",
+	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1471,6 +1495,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 
   context_class->mark = swfdec_player_mark;
   context_class->get_time = swfdec_player_get_time;
+  context_class->check_continue = swfdec_player_check_continue;
 
   klass->advance = swfdec_player_do_advance;
   klass->handle_key = swfdec_player_do_handle_key;
@@ -1488,6 +1513,7 @@ swfdec_player_init (SwfdecPlayer *player)
   player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
   player->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 
+  player->runtime = g_timer_new ();
   player->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -2434,6 +2460,8 @@ swfdec_player_set_alignment (SwfdecPlayer *player, SwfdecAlignment align)
 void
 swfdec_player_set_align_flags (SwfdecPlayer *player, guint flags)
 {
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
   if (flags != player->align_flags) {
     player->align_flags = flags;
     swfdec_player_update_scale (player);
@@ -2441,3 +2469,43 @@ swfdec_player_set_align_flags (SwfdecPlayer *player, guint flags)
   }
 }
 
+/**
+ * swfdec_player_get_maximum_runtime:
+ * @player: a #SwfdecPlayer
+ *
+ * Queries the given @player for how long scripts may run. see 
+ * swfdec_player_set_maximum_runtime() for a longer discussion of this value.
+ *
+ * Returns: the maximum time in milliseconds that scripts are allowed to run or
+ *          0 for infinite.
+ **/
+gulong
+swfdec_player_get_maximum_runtime (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
+
+  return player->max_runtime;
+}
+
+/**
+ * swfdec_player_set_maximum_runtime:
+ * @player: a #SwfdecPlayer
+ * @msecs: time in milliseconds that scripts are allowed to run or 0 for 
+ *         infinite
+ *
+ * Sets the time that the player may use to let internal scripts run. If the 
+ * Flash file that is currently played back does not manage to complete its 
+ * scripts in the given time, it is aborted. You cannot continue the scripts at
+ * a later point in time. However, your application may become unresponsive and
+ * your users annoyed if they cannot interact with it for too long. To give a 
+ * reference point, the Adobe Flash player usually sets this value to 10 
+ * seconds.
+ **/
+void
+swfdec_player_set_maximum_runtime (SwfdecPlayer *player, gulong msecs)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  player->max_runtime = msecs;
+  g_object_notify (G_OBJECT (player), "max-runtime");
+}

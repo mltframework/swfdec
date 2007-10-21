@@ -116,6 +116,8 @@ struct _SwfdecPlayer
   GList *		timeouts;	      	/* list of events, sorted by timestamp */
   guint			tick;			/* next tick */
   SwfdecTimeout		iterate_timeout;      	/* callback for iterating */
+  GTimer *		runtime;		/* for checking how long we've been running */
+  gulong		max_runtime;		/* maximum number of seconds the player may run */
   /* iterating */
   GList *		movies;			/* list of all moveis that want to be iterated */
   SwfdecRingBuffer *	actions;		/* all actions we've queued up so far */

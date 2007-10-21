@@ -112,6 +112,7 @@ IGNORE_HFILES= \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
+	swfdec_resource.h \
 	swfdec_ringbuffer.h \
 	swfdec_root_movie.h \
 	swfdec_root_sprite.h \
@@ -128,7 +129,6 @@ IGNORE_HFILES= \
 	swfdec_stroke.h \
 	swfdec_style_sheet.h \
 	swfdec_swf_decoder.h \
-	swfdec_swf_instance.h \
 	swfdec_tag.h \
 	swfdec_text.h \
 	swfdec_text_format.h \

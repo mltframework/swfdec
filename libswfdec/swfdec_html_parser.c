@@ -39,6 +39,7 @@ typedef struct {
 
 typedef struct {
   SwfdecAsContext	*cx;
+  gboolean		multiline;
   GString *		text;
   GSList *		tags_open;
   GSList *		tags_closed;
@@ -47,7 +48,7 @@ typedef struct {
 static void
 swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag)
 {
-  if (data->cx->version < 7 &&
+  if (data->multiline &&
       ((tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) ||
        (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2))))
   {
@@ -406,6 +407,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
   g_return_if_fail (str != NULL);
 
   data.cx = SWFDEC_AS_OBJECT (text)->context;
+  data.multiline = (data.cx->version < 7 || text->text->multiline);
   data.text = g_string_new ("");
   data.tags_open = NULL;
   data.tags_closed = NULL;

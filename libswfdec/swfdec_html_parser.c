@@ -70,7 +70,7 @@ swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag)
 	break;
       }
     }
-    data->text = g_string_append_c (data->text, '\r');
+    data->text = g_string_append_c (data->text, '\n');
   }
 
   tag->end_index = data->text->len;
@@ -287,7 +287,7 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
   {
     if (data->cx->version < 7 &&
 	(name_length == 2 && !g_strncasecmp (name, "br", 2))) {
-      data->text = g_string_append_c (data->text, '\r');
+      data->text = g_string_append_c (data->text, '\n');
       tag = NULL;
     } else {
       SwfdecAsObject *object;
@@ -303,7 +303,7 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 	  ParserTag *f = iter->data;
 	  if ((f->name_length == 1 && !g_strncasecmp (f->name, "p", 1)) ||
 	      (f->name_length == 2 && !g_strncasecmp (f->name, "li", 2))) {
-	    data->text = g_string_append_c (data->text, '\r');
+	    data->text = g_string_append_c (data->text, '\n');
 	    break;
 	  }
 	}

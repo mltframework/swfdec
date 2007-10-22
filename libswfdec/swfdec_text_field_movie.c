@@ -890,6 +890,11 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 	SWFDEC_AS_VALUE_GET_OBJECT (&val));
   }
 
+  // listen self
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (movie));
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_addListener,
+      1, &val, NULL);
+
   // format
   text->format_new =
     SWFDEC_TEXT_FORMAT (swfdec_text_format_new_no_properties (cx));

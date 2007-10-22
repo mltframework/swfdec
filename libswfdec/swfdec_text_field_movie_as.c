@@ -481,7 +481,7 @@ swfdec_text_field_movie_get_backgroundColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->background_color);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->background_color & 0xffffff);
 }
 
 static void
@@ -495,7 +495,8 @@ swfdec_text_field_movie_set_backgroundColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  color = swfdec_text_field_movie_int_to_color (cx, value);
+  color = (swfdec_text_field_movie_int_to_color (cx, value) & 0xffffff) +
+    (255 << 24);
   if (text->background_color != color) {
     text->background_color = color;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
@@ -541,7 +542,7 @@ swfdec_text_field_movie_get_borderColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->border_color);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->border_color & 0xffffff);
 }
 
 static void
@@ -555,7 +556,8 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  color = swfdec_text_field_movie_int_to_color (cx, value);
+  color = (swfdec_text_field_movie_int_to_color (cx, value) & 0xffffff) +
+    (255 << 24);
   if (text->border_color != color) {
     text->border_color = color;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));

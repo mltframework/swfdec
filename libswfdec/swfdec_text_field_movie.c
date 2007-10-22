@@ -1544,7 +1544,14 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   g_return_if_fail (start_index <= end_index);
   g_return_if_fail (str != NULL);
 
-  text->input = g_string_insert (text->input, start_index, str);
+  text->input = g_string_erase (text->input,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str,
+      g_utf8_offset_to_pointer (text->input->str, end_index) -
+      g_utf8_offset_to_pointer (text->input->str, start_index));
+  text->input = g_string_insert (text->input,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str, str);
 
   first = TRUE;
   prev = NULL;

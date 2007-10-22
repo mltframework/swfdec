@@ -611,7 +611,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	movie->original_extents.y1);
     color = swfdec_color_apply_transform (text_movie->border_color, trans);
     swfdec_color_set_source (cr, color);
-    cairo_set_line_width (cr, 20.0); // FIXME: Is this correct?
+    cairo_set_line_width (cr, SWFDEC_DOUBLE_TO_TWIPS (1));
     cairo_stroke (cr);
   }
 

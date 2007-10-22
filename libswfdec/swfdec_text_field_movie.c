@@ -515,7 +515,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       }
       else
       {
-	if (block->align != PANGO_ALIGN_LEFT) {
+	if (!text->text->word_wrap && block->align != PANGO_ALIGN_LEFT) {
 	  int line_width;
 	  pango_layout_get_pixel_size (playout, &line_width, 0);
 	  if (line_width < width) {
@@ -1237,7 +1237,7 @@ swfdec_text_field_movie_html_text_append_paragraph (SwfdecTextFieldMovie *text,
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), string);
   g_return_val_if_fail (string != NULL, string);
-  g_return_val_if_fail (start_index < end_index, string);
+  g_return_val_if_fail (start_index <= end_index, string);
 
   g_return_val_if_fail (text->formats != NULL, string);
   for (iter = text->formats; iter->next != NULL &&

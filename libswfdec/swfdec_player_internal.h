@@ -155,7 +155,7 @@ void		swfdec_player_add_movie		(SwfdecPlayer *		player,
 void		swfdec_player_remove_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		movie);
 
-void		swfdec_player_lock		(SwfdecPlayer *		player);
+gboolean	swfdec_player_lock		(SwfdecPlayer *		player);
 void		swfdec_player_lock_soft		(SwfdecPlayer *		player);
 void		swfdec_player_unlock		(SwfdecPlayer *		player);
 void		swfdec_player_unlock_soft	(SwfdecPlayer *		player);

@@ -1038,7 +1038,8 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
 {
   g_assert (keycode < 256);
 
-  swfdec_player_lock (player);
+  if (!swfdec_player_lock (player))
+    return FALSE;
   /* set the correct variables */
   player->last_keycode = keycode;
   player->last_character = character;
@@ -1058,7 +1059,9 @@ static gboolean
 swfdec_player_do_handle_mouse (SwfdecPlayer *player, 
     double x, double y, int button)
 {
-  swfdec_player_lock (player);
+  if (!swfdec_player_lock (player))
+    return FALSE;
+
   SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
   if (player->mouse_x != x || player->mouse_y != y) {
     player->mouse_x = x;
@@ -1159,7 +1162,9 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
   SwfdecTick target_time;
   guint frames_now;
   
-  swfdec_player_lock (player);
+  if (!swfdec_player_lock (player))
+    return;
+
   target_time = player->time + SWFDEC_MSECS_TO_TICKS (msecs);
   SWFDEC_DEBUG ("advancing %lu msecs (%u audio frames)", msecs, audio_samples);
 
@@ -1223,14 +1228,18 @@ swfdec_player_lock_soft (SwfdecPlayer *player)
   SWFDEC_DEBUG ("LOCKED");
 }
 
-void
+gboolean
 swfdec_player_lock (SwfdecPlayer *player)
 {
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
   g_assert (swfdec_ring_buffer_get_n_elements (player->actions) == 0);
+
+  if (swfdec_as_context_is_aborted (SWFDEC_AS_CONTEXT (player)))
+    return FALSE;
 
   g_object_ref (player);
   swfdec_player_lock_soft (player);
+  return TRUE;
 }
 
 /* used for breakpoints */

@@ -1477,6 +1477,30 @@ swfdec_text_field_movie_html_text_append_paragraph (SwfdecTextFieldMovie *text,
 }
 
 const char *
+swfdec_text_field_movie_get_text (SwfdecTextFieldMovie *text)
+{
+  char *str, *p;
+
+  str = g_strdup (text->input->str);
+
+  // if input was orginally html, remove all \r
+  if (text->input_html) {
+    p = str;
+    while ((p = strchr (p, '\r')) != NULL) {
+      memmove (p, p + 1, strlen (p));
+    }
+  }
+
+  // change all \n to \r
+  p = str;
+  while ((p = strchr (p, '\n')) != NULL) {
+    *p = '\r';
+  }
+
+  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context, str);
+}
+
+const char *
 swfdec_text_field_movie_get_html_text (SwfdecTextFieldMovie *text)
 {
   const char *p, *end;

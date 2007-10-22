@@ -65,37 +65,15 @@ swfdec_text_field_movie_set_readonly (SwfdecAsContext *cx,
  * Native properties: Text
  */
 static void
-swfdec_text_field_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_field_movie_do_get_text (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  char *str, *p;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->input == NULL) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
-    return;
-  }
-
-  str = g_strdup (text->input->str);
-
-  // if input was orginally html, remove all \r
-  if (text->input_html) {
-    p = str;
-    while ((p = strchr (p, '\r')) != NULL) {
-      memmove (p, p + 1, strlen (p));
-    }
-  }
-
-  // change all \n to \r
-  p = str;
-  while ((p = strchr (p, '\n')) != NULL) {
-    *p = '\r';
-  }
-
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (
-      SWFDEC_AS_OBJECT (text)->context, str));
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_text_field_movie_get_text (text));
 }
 
 static void
@@ -111,8 +89,13 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text (text, value, FALSE);
 
   if (text->variable != NULL) {
-    swfdec_text_field_movie_set_listen_variable_text (text,
-	swfdec_text_field_movie_get_html_text (text));
+    if (text->text->html) {
+      swfdec_text_field_movie_set_listen_variable_text (text,
+	  swfdec_text_field_movie_get_html_text (text));
+    } else {
+      swfdec_text_field_movie_set_listen_variable_text (text,
+	  swfdec_text_field_movie_get_text (text));
+    }
   }
 }
 
@@ -152,13 +135,13 @@ swfdec_text_field_movie_get_htmlText (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (!text->text->html) {
-    swfdec_text_field_movie_get_text (cx, object, argc, argv, ret);
-    return;
+  if (text->text->html) {
+    SWFDEC_AS_VALUE_SET_STRING (ret,
+	swfdec_text_field_movie_get_html_text (text));
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (ret,
+	swfdec_text_field_movie_get_text (text));
   }
-
-  SWFDEC_AS_VALUE_SET_STRING (ret,
-      swfdec_text_field_movie_get_html_text (text));
 }
 
 static void
@@ -174,8 +157,13 @@ swfdec_text_field_movie_set_htmlText (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text (text, value, text->text->html);
 
   if (text->variable != NULL) {
-    swfdec_text_field_movie_set_listen_variable_text (text,
-	swfdec_text_field_movie_get_html_text (text));
+    if (text->text->html) {
+      swfdec_text_field_movie_set_listen_variable_text (text,
+	  swfdec_text_field_movie_get_html_text (text));
+    } else {
+      swfdec_text_field_movie_set_listen_variable_text (text,
+	  swfdec_text_field_movie_get_text (text));
+    }
   }
 }
 
@@ -1223,7 +1211,8 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
 
   // text
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_text,
-      swfdec_text_field_movie_get_text, swfdec_text_field_movie_do_set_text);
+      swfdec_text_field_movie_do_get_text,
+      swfdec_text_field_movie_do_set_text);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_html,
       swfdec_text_field_movie_get_html, swfdec_text_field_movie_set_html);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_htmlText,

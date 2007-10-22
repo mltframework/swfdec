@@ -343,6 +343,7 @@ swfdec_text_field_movie_free_paragraphs (SwfdecParagraph *paragraphs)
   {
     for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next) {
       pango_tab_array_free (((SwfdecBlock *)(iter->data))->tab_stops);
+      g_free (iter->data);
     }
     g_list_free (paragraphs[i].blocks);
 

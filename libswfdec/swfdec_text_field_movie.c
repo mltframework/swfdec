@@ -729,16 +729,36 @@ swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text,
   swfdec_text_field_movie_free_layouts (layouts);
   layouts = NULL;
 
-  text->scroll_max = all - visible + 1;
-  text->hscroll_max = SWFDEC_TWIPS_TO_DOUBLE (width_max - width);
+  if (text->scroll_max != all - visible + 1) {
+    text->scroll_max = all - visible + 1;
+    text->scroll_changed = TRUE;
+  }
+  if (text->hscroll_max != SWFDEC_TWIPS_TO_DOUBLE (width_max - width)) {
+    text->hscroll_max = SWFDEC_TWIPS_TO_DOUBLE (width_max - width);
+    text->scroll_changed = TRUE;
+  }
 
   if (check_limits) {
-    text->scroll = CLAMP(text->scroll, 1, text->scroll_max);
-    text->scroll_bottom = text->scroll + (visible > 0 ? visible - 1 : 0);
-    text->hscroll = CLAMP(text->hscroll, 0, text->hscroll_max);
+    if (text->scroll != CLAMP(text->scroll, 1, text->scroll_max)) {
+      text->scroll = CLAMP(text->scroll, 1, text->scroll_max);
+      text->scroll_changed = TRUE;
+    }
+    if (text->scroll_bottom != text->scroll + (visible > 0 ? visible - 1 : 0))
+    {
+      text->scroll_bottom = text->scroll + (visible > 0 ? visible - 1 : 0);
+      text->scroll_changed = TRUE;
+    }
+    if (text->hscroll != CLAMP(text->hscroll, 0, text->hscroll_max)) {
+      text->hscroll = CLAMP(text->hscroll, 0, text->hscroll_max);
+      text->scroll_changed = TRUE;
+    }
   } else {
-    text->scroll_bottom = MAX (CLAMP(text->scroll, 1, text->scroll_max) +
-      (visible > 0 ? visible - 1 : 0), text->scroll);
+    if (text->scroll_bottom != MAX (CLAMP(text->scroll, 1, text->scroll_max) +
+      (visible > 0 ? visible - 1 : 0), text->scroll)) {
+      text->scroll_bottom = MAX (CLAMP(text->scroll, 1, text->scroll_max) +
+	(visible > 0 ? visible - 1 : 0), text->scroll);
+      text->scroll_changed = TRUE;
+    }
   }
 }
 
@@ -940,6 +960,23 @@ swfdec_text_field_movie_finish_movie (SwfdecMovie *movie)
 }
 
 static void
+swfdec_text_field_movie_iterate (SwfdecMovie *movie)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+
+  if (text->scroll_changed) {
+    SwfdecAsValue argv[2];
+
+    SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
+    SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (movie));
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie),
+	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);
+
+    text->scroll_changed = FALSE;
+  }
+}
+
+static void
 swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -952,6 +989,7 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 
   movie_class->init_movie = swfdec_text_field_movie_init_movie;
   movie_class->finish_movie = swfdec_text_field_movie_finish_movie;
+  movie_class->iterate_start = swfdec_text_field_movie_iterate;
   movie_class->update_extents = swfdec_text_field_movie_update_extents;
   movie_class->render = swfdec_text_field_movie_render;
 }

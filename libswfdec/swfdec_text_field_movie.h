@@ -92,6 +92,7 @@ struct _SwfdecTextFieldMovie {
   gboolean		embed_fonts;
   SwfdecStyleSheet *	style_sheet;
 
+  gboolean		scroll_changed; /* if any of the scroll attributes have changed and we haven't fired the event yet */
   int			scroll;
   int			scroll_max;
   int			scroll_bottom;

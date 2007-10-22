@@ -587,6 +587,7 @@ swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
   value = CLAMP (value, 0, text->hscroll_max);
   if (value != text->hscroll) {
     text->hscroll = value;
+    text->scroll_changed = TRUE;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }
@@ -672,6 +673,7 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
   if (value != text->scroll) {
     text->scroll_bottom += value - text->scroll;
     text->scroll = value;
+    text->scroll_changed = TRUE;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }

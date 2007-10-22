@@ -56,6 +56,8 @@ swfdec_as_script_function_dispose (GObject *object)
     swfdec_script_unref (script->script);
     script->script = NULL;
   }
+  g_slist_free (script->scope_chain);
+  script->scope_chain = NULL;
 
   G_OBJECT_CLASS (swfdec_as_script_function_parent_class)->dispose (object);
 }

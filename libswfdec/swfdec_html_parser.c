@@ -329,6 +329,9 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
       } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
 	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
+      } else if (tag->name_length == 3 && !g_strncasecmp (tag->name, "img", 3))
+      {
+	SWFDEC_FIXME ("IMG tag support for TextField's HTML input missing");
       }
     }
 

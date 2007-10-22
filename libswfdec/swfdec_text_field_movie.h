@@ -81,6 +81,7 @@ struct _SwfdecTextFieldMovie {
   SwfdecTextField *	text;		/* the text_field object we render */
 
   const char *		text_display;
+  gboolean		input_html;	/* whether orginal input was given as HTML */
 
   const char *		variable;
 

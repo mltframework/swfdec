@@ -1605,6 +1605,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   block->format = swfdec_text_format_copy (text->format_new);
   text->formats = g_slist_prepend (text->formats, block);
 
+  text->input_html = html;
   if (html) {
     swfdec_text_field_movie_html_parse (text, str);
   } else {

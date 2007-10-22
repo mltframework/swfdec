@@ -69,6 +69,7 @@ swfdec_text_field_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
+  char *str, *p;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
@@ -77,20 +78,24 @@ swfdec_text_field_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  // change all \n to \r
-  if (strchr (text->text_display, '\n') != NULL) {
-    char *str, *p;
+  str = g_strdup (text->text_display);
 
-    str = g_strdup (text->text_display);
+  // if input was orginally html, remove all \r
+  if (text->input_html) {
     p = str;
-    while ((p = strchr (p, '\n')) != NULL) {
-      *p = '\r';
+    while ((p = strchr (p, '\r')) != NULL) {
+      memmove (p, p + 1, strlen (p));
     }
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (
-	SWFDEC_AS_OBJECT (text)->context, str));
-  } else {
-    SWFDEC_AS_VALUE_SET_STRING (ret, text->text_display);
   }
+
+  // change all \n to \r
+  p = str;
+  while ((p = strchr (p, '\n')) != NULL) {
+    *p = '\r';
+  }
+
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (
+      SWFDEC_AS_OBJECT (text)->context, str));
 }
 
 static void

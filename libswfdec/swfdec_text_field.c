@@ -113,7 +113,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   text->word_wrap = swfdec_bits_getbit (b);
   text->multiline = swfdec_bits_getbit (b);
   text->password = swfdec_bits_getbit (b);
-  text->input = !swfdec_bits_getbit (b);
+  text->editable = !swfdec_bits_getbit (b);
   has_color = swfdec_bits_getbit (b);
   has_max_length = swfdec_bits_getbit (b);
   has_font = swfdec_bits_getbit (b);

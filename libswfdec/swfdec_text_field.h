@@ -52,7 +52,7 @@ struct _SwfdecTextField
 
   gboolean		html;
 
-  gboolean		input;
+  gboolean		editable;
   gboolean		password;
   int			max_chars;
   gboolean		selectable;

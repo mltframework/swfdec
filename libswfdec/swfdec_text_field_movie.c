@@ -115,9 +115,9 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_assert (paragraph != NULL);
   g_assert (start_index <= end_index);
-  g_assert (end_index <= strlen (text->text_display));
+  g_assert (end_index <= text->input->len);
 
-  paragraph->text = text->text_display + start_index;
+  paragraph->text = text->input->str + start_index;
   paragraph->text_length = end_index - start_index;
 
   paragraph->blocks = NULL;
@@ -299,7 +299,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
   count = 0;
-  p = text->text_display;
+  p = text->input->str;
   while (p != NULL && *p != '\0') {
     count++;
     p = strpbrk (p, "\r\n");
@@ -311,7 +311,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
     *num = count;
 
   i = 0;
-  p = text->text_display;
+  p = text->input->str;
   while (*p != '\0') {
     g_assert (i < count);
     end = strpbrk (p, "\r\n");
@@ -319,7 +319,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
       end = strchr (p, '\0');
 
     swfdec_text_field_movie_generate_paragraph (text, &paragraphs[i],
-	p - text->text_display, end - text->text_display);
+	p - text->input->str, end - text->input->str);
 
     p = end;
     if (*p != '\0') p++;
@@ -876,7 +876,6 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
-  swfdec_as_string_mark (text->text_display);
   if (text->variable != NULL)
     swfdec_as_string_mark (text->variable);
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
@@ -998,6 +997,7 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
   text->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
   text->cr = cairo_create (text->surface);
 
+  text->input = g_string_new ("");
   text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;
 }
@@ -1013,7 +1013,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (SWFDEC_IS_TEXT_FORMAT (format));
   g_return_if_fail (start_index < end_index);
-  g_return_if_fail (end_index <= strlen (text->text_display));
+  g_return_if_fail (end_index <= text->input->len);
 
   g_assert (text->formats != NULL);
   g_assert (text->formats->data != NULL);
@@ -1031,7 +1031,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
       findex_end_index =
 	((SwfdecFormatIndex *)iter->next->data)->index;
     } else {
-      findex_end_index = strlen (text->text_display);
+      findex_end_index = text->input->len;
     }
 
     if (findex_end_index <= start_index)
@@ -1093,7 +1093,7 @@ swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *text,
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_assert (start_index < end_index);
-  g_assert (end_index <= strlen (text->text_display));
+  g_assert (end_index <= text->input->len);
 
   g_assert (text->formats != NULL);
   g_assert (text->formats->data != NULL);
@@ -1361,7 +1361,7 @@ swfdec_text_field_movie_html_text_append_paragraph (SwfdecTextFieldMovie *text,
     index_ = ((SwfdecFormatIndex *)(iter->data))->index;
     format = ((SwfdecFormatIndex *)(iter->data))->format;
 
-    escaped = swfdec_xml_escape_len (text->text_display + index_prev,
+    escaped = swfdec_xml_escape_len (text->input->str + index_prev,
 	index_ - index_prev);
     string = g_string_append (string, escaped);
     g_free (escaped);
@@ -1449,7 +1449,7 @@ swfdec_text_field_movie_html_text_append_paragraph (SwfdecTextFieldMovie *text,
       string = g_string_append (string, "<U>");
   }
 
-  escaped = swfdec_xml_escape_len (text->text_display + index_,
+  escaped = swfdec_xml_escape_len (text->input->str + index_,
       end_index - index_);
   string = g_string_append (string, escaped);
   g_free (escaped);
@@ -1485,22 +1485,19 @@ swfdec_text_field_movie_get_html_text (SwfdecTextFieldMovie *text)
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text),
       SWFDEC_AS_STR_EMPTY);
 
-  if (text->text_display == NULL)
+  if (text->input == NULL)
     return SWFDEC_AS_STR_EMPTY;
-
-  if (text->text->html == FALSE)
-    return text->text_display;
 
   string = g_string_new ("");
 
-  p = text->text_display;
+  p = text->input->str;
   while (*p != '\0') {
     end = strpbrk (p, "\r\n");
     if (end == NULL)
       end = strchr (p, '\0');
 
     string = swfdec_text_field_movie_html_text_append_paragraph (text, string,
-	p - text->text_display, end - text->text_display);
+	p - text->input->str, end - text->input->str);
 
     p = end;
     if (*p != '\0') p++;
@@ -1515,23 +1512,15 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     guint start_index, guint end_index, const char *str)
 {
   SwfdecFormatIndex *findex;
-  char *text_new;
   GSList *iter, *prev;
   gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (end_index <= strlen (text->text_display));
+  g_return_if_fail (end_index <= text->input->len);
   g_return_if_fail (start_index <= end_index);
   g_return_if_fail (str != NULL);
 
-  text_new = g_malloc (strlen (text->text_display) -
-      (end_index - start_index) + strlen (str) + 1);
-
-  memcpy (text_new, text->text_display, start_index);
-  memcpy (text_new + start_index, str, strlen (str));
-  memcpy (text_new + start_index + strlen (str),
-      text->text_display + end_index,
-      strlen (text->text_display + end_index) + 1);
+  text->input = g_string_insert (text->input, start_index, str);
 
   first = TRUE;
   prev = NULL;
@@ -1540,7 +1529,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     findex = iter->data;
 
     if (findex->index >= start_index) {
-      if (end_index == strlen (text->text_display) || (iter->next != NULL &&
+      if (end_index == text->input->len || (iter->next != NULL &&
 	  ((SwfdecFormatIndex *)iter->next->data)->index <= end_index))
       {
 	g_free (iter->data);
@@ -1558,7 +1547,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     }
     prev = iter;
   }
-  if (end_index == strlen (text->text_display)) {
+  if (end_index == text->input->len) {
     if (SWFDEC_AS_OBJECT (text)->context->version < 8) {
       SWFDEC_FIXME ("replaceText to the end of the TextField might use wrong text format on version 7");
     }
@@ -1568,9 +1557,6 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
 	((SwfdecFormatIndex *)text->formats->data)->format);
     text->formats = g_slist_append (text->formats, findex);
   }
-
-  text->text_display =
-    swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context, text_new);
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);
@@ -1609,7 +1595,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   if (html) {
     swfdec_text_field_movie_html_parse (text, str);
   } else {
-    text->text_display = str;
+    text->input = g_string_assign (text->input, str);
   }
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));

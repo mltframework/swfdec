@@ -396,10 +396,12 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
 
+  text->input = g_string_assign (text->input, "");
+
   data.cx = SWFDEC_AS_OBJECT (text)->context;
   data.multiline = (data.cx->version < 7 || text->text->multiline);
   data.condense_white = text->condense_white;
-  data.text = g_string_new ("");
+  data.text = text->input;
   data.tags_open = NULL;
   data.tags_closed = NULL;
 
@@ -421,10 +423,6 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
     swfdec_text_field_movie_html_parse_close_tag (&data,
 	(ParserTag *)data.tags_open->data);
   }
-
-  // set parsed text
-  text->text_display =
-    swfdec_as_context_give_string (data.cx, g_string_free (data.text, FALSE));
 
   // add parsed styles
   while (data.tags_closed != NULL) {

@@ -73,12 +73,12 @@ swfdec_text_field_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text_display == NULL) {
+  if (text->input == NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
     return;
   }
 
-  str = g_strdup (text->text_display);
+  str = g_strdup (text->input->str);
 
   // if input was orginally html, remove all \r
   if (text->input_html) {
@@ -182,7 +182,7 @@ swfdec_text_field_movie_get_length (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_strlen (text->text_display, -1));
+  SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_strlen (text->input->str, -1));
 }
 
 /*
@@ -349,7 +349,7 @@ swfdec_text_field_movie_do_get_type (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text->input) {
+  if (text->text->editable) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_input);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_dynamic);
@@ -370,9 +370,9 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   if (!g_strcasecmp (value, SWFDEC_AS_STR_input)) {
-    text->text->input = TRUE;
+    text->text->editable = TRUE;
   } else if (!g_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
-    text->text->input = FALSE;
+    text->text->editable = FALSE;
   }
 
   // FIXME: invalidate
@@ -949,16 +949,15 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   i = 0;
   if (argc >= 2) {
     start_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    start_index = CLAMP (start_index, 0, (int)strlen (text->text_display));
+    start_index = CLAMP (start_index, 0, (int)text->input->len);
   } else {
     start_index = 0;
   }
   if (argc >= 3) {
     end_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    end_index = CLAMP (end_index, start_index,
-	(int)strlen (text->text_display));
+    end_index = CLAMP (end_index, start_index, (int)text->input->len);
   } else {
-    end_index = (int)strlen (text->text_display);
+    end_index = text->input->len;
   }
   if (start_index == end_index)
     return;
@@ -987,15 +986,15 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
 
   if (argc == 0) {
     start_index = 0;
-    end_index = strlen (text->text_display);
+    end_index = text->input->len;
   } else {
     start_index = swfdec_as_value_to_integer (cx, &argv[0]);
-    start_index = MIN (start_index, strlen (text->text_display));
+    start_index = MIN (start_index, text->input->len);
     if (argc == 1) {
       end_index = start_index + 1;
     } else {
       end_index = swfdec_as_value_to_integer (cx, &argv[1]);
-      end_index = CLAMP (end_index, start_index, strlen (text->text_display));
+      end_index = CLAMP (end_index, start_index, text->input->len);
     }
   }
 
@@ -1019,11 +1018,11 @@ swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "iis", &start_index,
       &end_index, &str);
 
-  start_index = MIN (start_index, (int)strlen (text->text_display));
+  start_index = MIN (start_index, (int)text->input->len);
   if (start_index < 0)
     return;
 
-  end_index = MIN (end_index, (int)strlen (text->text_display));
+  end_index = MIN (end_index, (int)text->input->len);
   if (end_index < start_index)
     return;
 
@@ -1111,7 +1110,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
 
   edittext = g_object_new (SWFDEC_TYPE_TEXT_FIELD, NULL);
   edittext->html = FALSE;
-  edittext->input = FALSE;
+  edittext->editable = FALSE;
   edittext->password = FALSE;
   edittext->selectable = TRUE;
   edittext->font = NULL; // FIXME

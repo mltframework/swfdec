@@ -942,15 +942,16 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   i = 0;
   if (argc >= 2) {
     start_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    start_index = CLAMP (start_index, 0, (int)text->input->len);
+    start_index = CLAMP (start_index, 0, g_utf8_strlen (text->input->str, -1));
   } else {
     start_index = 0;
   }
   if (argc >= 3) {
     end_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    end_index = CLAMP (end_index, start_index, (int)text->input->len);
+    end_index =
+      CLAMP (end_index, start_index, g_utf8_strlen (text->input->str, -1));
   } else {
-    end_index = text->input->len;
+    end_index = g_utf8_strlen (text->input->str, -1);
   }
   if (start_index == end_index)
     return;
@@ -979,15 +980,16 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
 
   if (argc == 0) {
     start_index = 0;
-    end_index = text->input->len;
+    end_index = g_utf8_strlen (text->input->str, -1);
   } else {
     start_index = swfdec_as_value_to_integer (cx, &argv[0]);
-    start_index = MIN (start_index, text->input->len);
+    start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
     if (argc == 1) {
       end_index = start_index + 1;
     } else {
       end_index = swfdec_as_value_to_integer (cx, &argv[1]);
-      end_index = CLAMP (end_index, start_index, text->input->len);
+      end_index =
+	CLAMP (end_index, start_index, g_utf8_strlen (text->input->str, -1));
     }
   }
 
@@ -1011,11 +1013,11 @@ swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "iis", &start_index,
       &end_index, &str);
 
-  start_index = MIN (start_index, (int)text->input->len);
+  start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
   if (start_index < 0)
     return;
 
-  end_index = MIN (end_index, (int)text->input->len);
+  end_index = MIN (end_index, g_utf8_strlen (text->input->str, -1));
   if (end_index < start_index)
     return;
 

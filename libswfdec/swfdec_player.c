@@ -1219,6 +1219,7 @@ swfdec_player_lock_soft (SwfdecPlayer *player)
   g_assert (swfdec_rectangle_is_empty (&player->invalid_extents));
 
   g_object_freeze_notify (G_OBJECT (player));
+  g_timer_start (player->runtime);
   SWFDEC_DEBUG ("LOCKED");
 }
 
@@ -1239,6 +1240,7 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   SWFDEC_DEBUG ("UNLOCK");
+  g_timer_stop (player->runtime);
   swfdec_player_update_mouse_cursor (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);
@@ -1307,7 +1309,7 @@ swfdec_player_check_continue (SwfdecAsContext *context)
 
   if (player->max_runtime == 0)
     return TRUE;
-  return g_timer_elapsed (player->runtime, NULL) * 1000 > player->max_runtime;
+  return g_timer_elapsed (player->runtime, NULL) * 1000 <= player->max_runtime;
 }
 
 static void
@@ -2499,7 +2501,9 @@ swfdec_player_get_maximum_runtime (SwfdecPlayer *player)
  * a later point in time. However, your application may become unresponsive and
  * your users annoyed if they cannot interact with it for too long. To give a 
  * reference point, the Adobe Flash player usually sets this value to 10 
- * seconds.
+ * seconds. Note that this time determines the maximum time calling 
+ * swfdec_player_advance() may take, even if it is called with a large value.
+ * Also note that this setting is ignored when running inside a debugger.
  **/
 void
 swfdec_player_set_maximum_runtime (SwfdecPlayer *player, gulong msecs)

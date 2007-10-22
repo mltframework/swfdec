@@ -97,6 +97,7 @@ GType		swfdec_as_context_get_type	(void);
 void		swfdec_as_context_startup     	(SwfdecAsContext *	context,
 						 guint			version);
 
+gboolean	swfdec_as_context_is_aborted	(SwfdecAsContext *	context);
 gboolean	swfdec_as_context_is_constructing
 						(SwfdecAsContext *	context);
 SwfdecAsFrame *	swfdec_as_context_get_frame	(SwfdecAsContext *	context);

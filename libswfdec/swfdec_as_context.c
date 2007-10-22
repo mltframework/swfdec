@@ -170,6 +170,7 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 
   SWFDEC_ERROR ("%s", reason);
   context->state = SWFDEC_AS_CONTEXT_ABORTED;
+  g_object_notify (G_OBJECT (context), "aborted");
 }
 
 /*** MEMORY MANAGEMENT ***/
@@ -431,6 +432,7 @@ enum {
 enum {
   PROP_0,
   PROP_DEBUGGER,
+  PROP_ABORTED,
   PROP_UNTIL_GC
 };
 
@@ -447,6 +449,9 @@ swfdec_as_context_get_property (GObject *object, guint param_id, GValue *value,
   switch (param_id) {
     case PROP_DEBUGGER:
       g_value_set_object (value, context->debugger);
+      break;
+    case PROP_ABORTED:
+      g_value_set_boolean (value, context->state == SWFDEC_AS_CONTEXT_ABORTED);
       break;
     case PROP_UNTIL_GC:
       g_value_set_ulong (value, (gulong) context->memory_until_gc);
@@ -512,6 +517,9 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
   g_object_class_install_property (object_class, PROP_DEBUGGER,
       g_param_spec_object ("debugger", "debugger", "debugger used in this player",
 	  SWFDEC_TYPE_AS_DEBUGGER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_ABORTED,
+      g_param_spec_boolean ("aborted", "aborted", "set when the script engine aborts due to an error",
+	FALSE, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_UNTIL_GC,
       g_param_spec_ulong ("memory-until-gc", "memory until gc", 
 	  "amount of bytes that need to be allocated before garbage collection triggers",
@@ -1368,5 +1376,24 @@ swfdec_as_context_check_continue (SwfdecAsContext *context)
     return FALSE;
   }
   return TRUE;
+}
+
+/**
+ * swfdec_as_context_is_aborted:
+ * @context: a #SwfdecAsContext
+ *
+ * Determines if the given context is aborted. An aborted context is not able
+ * to execute any scripts. Aborting can happen if the script engine detects bad 
+ * scripts that cause excessive memory usage, infinite loops or other problems.
+ * In that case the script engine aborts for safety reasons.
+ *
+ * Returns: %TRUE if the player is aborted, %FALSE if it runs normally.
+ **/
+gboolean
+swfdec_as_context_is_aborted (SwfdecAsContext *context)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), TRUE);
+
+  return context->state == SWFDEC_AS_CONTEXT_ABORTED;
 }
 

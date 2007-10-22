@@ -300,6 +300,7 @@ SWFDEC_AS_VALUE_IS_OBJECT
 SwfdecAsContext
 swfdec_as_context_startup
 swfdec_as_context_abort
+swfdec_as_context_is_aborted
 swfdec_as_context_get_string
 swfdec_as_context_give_string
 swfdec_as_context_use_mem

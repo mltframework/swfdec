@@ -876,8 +876,6 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
-  if (text->text_input != NULL)
-    swfdec_as_string_mark (text->text_input);
   swfdec_as_string_mark (text->text_display);
   if (text->variable != NULL)
     swfdec_as_string_mark (text->variable);
@@ -1591,8 +1589,6 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
-
-  text->text_input = str;
 
   // remove old formatting info
   iter = text->formats;

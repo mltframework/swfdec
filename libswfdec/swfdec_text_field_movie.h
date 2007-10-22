@@ -80,7 +80,6 @@ struct _SwfdecTextFieldMovie {
 
   SwfdecTextField *	text;		/* the text_field object we render */
 
-  const char *		text_input;
   const char *		text_display;
 
   const char *		variable;

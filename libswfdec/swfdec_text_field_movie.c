@@ -302,7 +302,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
   p = text->text_display;
   while (p != NULL && *p != '\0') {
     count++;
-    p = strchr (p, '\r');
+    p = strpbrk (p, "\r\n");
     if (p != NULL) p++;
   }
 
@@ -314,7 +314,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
   p = text->text_display;
   while (*p != '\0') {
     g_assert (i < count);
-    end = strchr (p, '\r');
+    end = strpbrk (p, "\r\n");
     if (end == NULL)
       end = strchr (p, '\0');
 
@@ -322,7 +322,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
 	p - text->text_display, end - text->text_display);
 
     p = end;
-    if (*p == '\r') p++;
+    if (*p != '\0') p++;
 
     i++;
   }
@@ -1495,18 +1495,15 @@ swfdec_text_field_movie_get_html_text (SwfdecTextFieldMovie *text)
 
   p = text->text_display;
   while (*p != '\0') {
-    end = strchr (p, '\r');
+    end = strpbrk (p, "\r\n");
     if (end == NULL)
       end = strchr (p, '\0');
 
     string = swfdec_text_field_movie_html_text_append_paragraph (text, string,
 	p - text->text_display, end - text->text_display);
 
-    if (*end == '\r') {
-      p = end + 1;
-    } else {
-      p = end;
-    }
+    p = end;
+    if (*p != '\0') p++;
   }
 
   return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context,
@@ -1611,20 +1608,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   if (html) {
     swfdec_text_field_movie_html_parse (text, str);
   } else {
-    // change all \n to \r
-    if (strchr (str, '\n') != NULL) {
-      char *string, *p;
-
-      string = g_strdup (str);
-      p = string;
-      while ((p = strchr (p, '\n')) != NULL) {
-	*p = '\r';
-      }
-      text->text_display = swfdec_as_context_give_string (
-	  SWFDEC_AS_OBJECT (text)->context, string);
-    } else {
-      text->text_display = str;
-    }
+    text->text_display = str;
   }
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));

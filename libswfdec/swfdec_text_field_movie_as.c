@@ -72,8 +72,25 @@ swfdec_text_field_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_STRING (ret, (text->text_display != NULL ?
-	text->text_display : SWFDEC_AS_STR_EMPTY));
+  if (text->text_display == NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
+    return;
+  }
+
+  // change all \n to \r
+  if (strchr (text->text_display, '\n') != NULL) {
+    char *str, *p;
+
+    str = g_strdup (text->text_display);
+    p = str;
+    while ((p = strchr (p, '\n')) != NULL) {
+      *p = '\r';
+    }
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (
+	SWFDEC_AS_OBJECT (text)->context, str));
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (ret, text->text_display);
+  }
 }
 
 static void

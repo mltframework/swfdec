@@ -40,6 +40,7 @@ typedef struct {
 typedef struct {
   SwfdecAsContext	*cx;
   gboolean		multiline;
+  gboolean		condense_white;
   GString *		text;
   GSList *		tags_open;
   GSList *		tags_closed;
@@ -351,8 +352,7 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 }
 
 static const char *
-swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p,
-    gboolean condense_white)
+swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
 {
   const char *end;
   char *unescaped;
@@ -363,29 +363,26 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p,
 
   // get the text
   // if condense_white: all whitespace blocks are converted to a single space
-  // if not: all \n are converted to \r
-  while (*p != '\0' && *p != '<') {
-    if (condense_white) {
+  if (data->condense_white) {
+    while (*p != '\0' && *p != '<') {
       end = p + strcspn (p, "< \n\r\t");
-    } else {
-      end = p + strcspn (p, "<\n");
-    }
 
-    unescaped = swfdec_xml_unescape_len (data->cx, p, end - p);
-    data->text = g_string_append (data->text, unescaped);
-    g_free (unescaped);
+      unescaped = swfdec_xml_unescape_len (data->cx, p, end - p);
+      data->text = g_string_append (data->text, unescaped);
+      g_free (unescaped);
 
-    if (g_ascii_isspace (*end)) {
-      if (condense_white) {
+      if (g_ascii_isspace (*end)) {
 	data->text = g_string_append_c (data->text, ' ');
 	p = end + strspn (end, " \n\r\t");
       } else {
-	data->text = g_string_append_c (data->text, '\r');
-	p = end + 1;
+	p = end;
       }
-    } else {
-      p = end;
     }
+  } else {
+    end = strchr (p, '<');
+    if (end == NULL)
+      end = strchr (p, '\0');
+    p = end;
   }
 
   return p;
@@ -402,6 +399,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
 
   data.cx = SWFDEC_AS_OBJECT (text)->context;
   data.multiline = (data.cx->version < 7 || text->text->multiline);
+  data.condense_white = text->condense_white;
   data.text = g_string_new ("");
   data.tags_open = NULL;
   data.tags_closed = NULL;
@@ -415,8 +413,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
 	p = swfdec_text_field_movie_html_parse_tag (&data, p);
       }
     } else {
-      p = swfdec_text_field_movie_html_parse_text (&data, p,
-	  text->condense_white);
+      p = swfdec_text_field_movie_html_parse_text (&data, p);
     }
   }
 

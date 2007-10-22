@@ -861,9 +861,15 @@ swfdec_text_field_movie_dispose (GObject *object)
     text->formats->data = NULL;
   }
   g_slist_free (text->formats);
+  text->formats = NULL;
+
+  g_string_free (text->input, TRUE);
+  text->input = NULL;
 
   cairo_destroy (text->cr);
+  text->cr = NULL;
   cairo_surface_destroy (text->surface);
+  text->surface = NULL;
 
   G_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->dispose (object);
 }

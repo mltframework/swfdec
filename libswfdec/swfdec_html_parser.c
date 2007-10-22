@@ -363,26 +363,25 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
 
   // get the text
   // if condense_white: all whitespace blocks are converted to a single space
-  if (data->condense_white) {
-    while (*p != '\0' && *p != '<') {
+  while (*p != '\0' && *p != '<') {
+    if (data->condense_white) {
       end = p + strcspn (p, "< \n\r\t");
-
-      unescaped = swfdec_xml_unescape_len (data->cx, p, end - p);
-      data->text = g_string_append (data->text, unescaped);
-      g_free (unescaped);
-
-      if (g_ascii_isspace (*end)) {
-	data->text = g_string_append_c (data->text, ' ');
-	p = end + strspn (end, " \n\r\t");
-      } else {
-	p = end;
-      }
+    } else {
+      end = strchr (p, '<');
+      if (end == NULL)
+	end = strchr (p, '\0');
     }
-  } else {
-    end = strchr (p, '<');
-    if (end == NULL)
-      end = strchr (p, '\0');
-    p = end;
+
+    unescaped = swfdec_xml_unescape_len (data->cx, p, end - p);
+    data->text = g_string_append (data->text, unescaped);
+    g_free (unescaped);
+
+    if (data->condense_white && g_ascii_isspace (*end)) {
+      data->text = g_string_append_c (data->text, ' ');
+      p = end + strspn (end, " \n\r\t");
+    } else {
+      p = end;
+    }
   }
 
   return p;

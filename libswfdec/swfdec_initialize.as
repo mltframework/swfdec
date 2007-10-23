@@ -320,6 +320,7 @@ TextField.StyleSheet.prototype._copy = function (o) {
 TextField.StyleSheet.prototype.clear = function () {
   this._css = {};
   this._styles = {};
+  this.update ();
 };
 
 TextField.StyleSheet.prototype.getStyle = function (name) {
@@ -332,6 +333,7 @@ TextField.StyleSheet.prototype.setStyle = function (name, style) {
 
   this._css[name] = this._copy (style);
   this.doTransform (name);
+  this.update ();
 };
 
 TextField.StyleSheet.prototype.getStyleNames = function () {
@@ -432,6 +434,7 @@ TextField.StyleSheet.prototype.parseCSS = function (css) {
     this._css[prop] = this._copy (result[prop]);
     this.doTransform (prop);
   }
+  this.update ();
 
   return true;
 };
@@ -453,9 +456,7 @@ TextField.StyleSheet.prototype.onData = function (src) {
   }
 };
 
-TextField.StyleSheet.prototype.parseCSSInternal = ASnative (113, 101);
-TextField.StyleSheet.prototype.parseCSSFontFamily = ASnative (113, 102);
-TextField.StyleSheet.prototype.parseColor = ASnative (113, 103);
+ASSetNative (TextField.StyleSheet.prototype, 113, "7update, 7parseCSSInternal, 7parseCSSFontFamily, 7parseColor", 100);
 ASSetPropFlags (TextField.StyleSheet.prototype, null, 1027);
 ASSetPropFlags (TextField, "StyleSheet", 1027);
 

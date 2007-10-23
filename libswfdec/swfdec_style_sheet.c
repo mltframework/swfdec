@@ -242,6 +242,25 @@ swfdec_style_sheet_parse (SwfdecAsContext *cx, const char *css)
   return object;
 }
 
+SWFDEC_AS_NATIVE (113, 100, swfdec_style_sheet_update)
+void
+swfdec_style_sheet_update (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecStyleSheet *style;
+  SwfdecTextFieldMovie *text;
+  GSList *iter;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_STYLESHEET, &style, "");
+
+  for (iter = style->listeners; iter != NULL; iter = iter->next) {
+    g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (iter->data));
+    text = iter->data;
+    g_assert (text->style_sheet_input != NULL);
+    swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
+  }
+}
+
 SWFDEC_AS_NATIVE (113, 101, swfdec_style_sheet_parseCSSInternal)
 void
 swfdec_style_sheet_parseCSSInternal (SwfdecAsContext *cx,

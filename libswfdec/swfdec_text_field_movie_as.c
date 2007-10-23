@@ -135,7 +135,9 @@ swfdec_text_field_movie_get_htmlText (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text->html) {
+  if (text->style_sheet_input) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, text->style_sheet_input);
+  } else if (text->text->html) {
     SWFDEC_AS_VALUE_SET_STRING (ret,
 	swfdec_text_field_movie_get_html_text (text));
   } else {

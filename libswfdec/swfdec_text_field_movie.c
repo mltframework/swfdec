@@ -893,6 +893,8 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
   if (text->style_sheet != NULL)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->style_sheet));
+  if (text->style_sheet_input != NULL)
+    swfdec_as_string_mark (text->style_sheet_input);
   if (text->restrict_ != NULL)
     swfdec_as_string_mark (text->restrict_);
 
@@ -1551,6 +1553,11 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   g_return_if_fail (start_index <= end_index);
   g_return_if_fail (str != NULL);
 
+  /* if there was a style sheet set when setting the text, modifications are
+   * not allowed */
+  if (text->style_sheet_input)
+    return;
+
   text->input = g_string_erase (text->input,
       g_utf8_offset_to_pointer (text->input->str, start_index) -
       text->input->str,
@@ -1631,10 +1638,17 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   text->formats = g_slist_prepend (text->formats, block);
 
   text->input_html = html;
-  if (html) {
+
+  if (text->style_sheet) {
+    text->style_sheet_input = str;
     swfdec_text_field_movie_html_parse (text, str);
   } else {
-    text->input = g_string_assign (text->input, str);
+    text->style_sheet_input = NULL;
+    if (html) {
+      swfdec_text_field_movie_html_parse (text, str);
+    } else {
+      text->input = g_string_assign (text->input, str);
+    }
   }
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));

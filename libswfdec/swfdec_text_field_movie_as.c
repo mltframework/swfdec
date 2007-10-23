@@ -868,6 +868,45 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
 }
 
 static void
+swfdec_text_field_movie_get_styleSheet (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (text->style_sheet != NULL) {
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (text->style_sheet));
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (ret);
+  }
+}
+
+static void
+swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  SwfdecAsObject *value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "o", &value);
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  if (!SWFDEC_IS_STYLESHEET (value))
+    return;
+
+  if (text->style_sheet == SWFDEC_STYLESHEET (value))
+    return;
+
+  text->style_sheet = SWFDEC_STYLESHEET (value);
+  if (text->style_sheet_input)
+    swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
+}
+
+static void
 swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -1307,9 +1346,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_embedFonts,
       swfdec_text_field_movie_get_embedFonts,
       swfdec_text_field_movie_set_embedFonts);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_styleSheet,
+  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_styleSheet,
       swfdec_text_field_movie_get_styleSheet,
-      swfdec_text_field_movie_set_styleSheet);*/
+      swfdec_text_field_movie_set_styleSheet);
   swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
       swfdec_text_field_movie_get_textColor,
       swfdec_text_field_movie_set_textColor);

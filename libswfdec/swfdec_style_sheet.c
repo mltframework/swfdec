@@ -28,6 +28,7 @@
 #include "swfdec_as_array.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_text_format.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_as_internal.h"
@@ -297,10 +298,25 @@ swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 static SwfdecTextFormat *
 swfdec_style_sheet_get_format (SwfdecStyleSheet *style, const char *name)
 {
+  SwfdecAsObject *styles;
+  SwfdecAsValue val;
+
   g_return_val_if_fail (SWFDEC_IS_STYLESHEET (style), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  return NULL;
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (style),
+      SWFDEC_AS_STR__styles, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  styles = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_get_variable (styles, name, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+    return NULL;
+
+  return SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&val));
 }
 
 SwfdecTextFormat *

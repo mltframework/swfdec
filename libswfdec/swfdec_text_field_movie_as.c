@@ -891,30 +891,36 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
   SwfdecTextFieldMovie *text;
   SwfdecAsObject *value;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "o", &value);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_as_value_to_number (cx, &argv[0]);
-  swfdec_as_value_to_string (cx, &argv[0]);
-
-  if (value == NULL || !SWFDEC_IS_STYLESHEET (value)) {
-    style_sheet = NULL;
-  } else {
-    style_sheet = SWFDEC_STYLESHEET (value);
-  }
-
-  if (text->style_sheet == style_sheet)
+  if (argc < 1)
     return;
 
-  if (text->style_sheet != NULL)
-    swfdec_style_sheet_remove_listener (text->style_sheet, object);
+  swfdec_as_value_to_number (cx, &argv[0]);
 
-  text->style_sheet = style_sheet;
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
+    value = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+    if (SWFDEC_IS_MOVIE (value))
+      value = NULL;
+  } else {
+    value = NULL;
+  }
 
-  if (style_sheet != NULL) {
+  if (text->style_sheet == value)
+    return;
+
+  if (text->style_sheet != NULL && SWFDEC_IS_STYLESHEET (text->style_sheet)) {
+    swfdec_style_sheet_remove_listener (SWFDEC_STYLESHEET (text->style_sheet),
+	object);
+  }
+
+  text->style_sheet = value;
+
+  if (value != NULL && SWFDEC_IS_STYLESHEET (value)) {
     if (text->style_sheet_input)
       swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
 
-    swfdec_style_sheet_add_listener (text->style_sheet, object);
+    swfdec_style_sheet_add_listener (SWFDEC_STYLESHEET (value), object);
   }
 }
 

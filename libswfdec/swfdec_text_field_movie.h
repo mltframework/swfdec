@@ -91,7 +91,7 @@ struct _SwfdecTextFieldMovie {
   gboolean		condense_white;
   gboolean		embed_fonts;
 
-  SwfdecStyleSheet *	style_sheet;
+  SwfdecAsObject *	style_sheet;
   const char *		style_sheet_input; /* saved input, so it can be used to apply stylesheet again */
 
   gboolean		scroll_changed; /* if any of the scroll attributes have changed and we haven't fired the event yet */

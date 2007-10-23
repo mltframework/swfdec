@@ -858,8 +858,10 @@ swfdec_text_field_movie_dispose (GObject *object)
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
   if (text->style_sheet) {
-    swfdec_style_sheet_remove_listener (text->style_sheet,
-	SWFDEC_AS_OBJECT (text));
+    if (SWFDEC_IS_STYLESHEET (text->style_sheet)) {
+      swfdec_style_sheet_remove_listener (
+	  SWFDEC_STYLESHEET (text->style_sheet), SWFDEC_AS_OBJECT (text));
+    }
     text->style_sheet = NULL;
   }
 
@@ -898,7 +900,7 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
   }
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
   if (text->style_sheet != NULL)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->style_sheet));
+    swfdec_as_object_mark (text->style_sheet);
   if (text->style_sheet_input != NULL)
     swfdec_as_string_mark (text->style_sheet_input);
   if (text->restrict_ != NULL)
@@ -1645,7 +1647,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
 
   text->input_html = html;
 
-  if (text->style_sheet) {
+  if (text->style_sheet != NULL && SWFDEC_IS_STYLESHEET (text->style_sheet)) {
     text->style_sheet_input = str;
     swfdec_text_field_movie_html_parse (text, str);
   } else {

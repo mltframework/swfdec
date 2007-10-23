@@ -456,7 +456,7 @@ TextField.StyleSheet.prototype.onData = function (src) {
   }
 };
 
-ASSetNative (TextField.StyleSheet.prototype, 113, "7update, 7parseCSSInternal, 7parseCSSFontFamily, 7parseColor", 100);
+ASSetNative (TextField.StyleSheet.prototype, 113, "7update,7parseCSSInternal,7parseCSSFontFamily,7parseColor", 100);
 ASSetPropFlags (TextField.StyleSheet.prototype, null, 1027);
 ASSetPropFlags (TextField, "StyleSheet", 1027);
 

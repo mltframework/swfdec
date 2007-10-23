@@ -293,3 +293,34 @@ swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   g_assert (SWFDEC_IS_STYLESHEET (object));
 }
+
+static SwfdecTextFormat *
+swfdec_style_sheet_get_format (SwfdecStyleSheet *style, const char *name)
+{
+  g_return_val_if_fail (SWFDEC_IS_STYLESHEET (style), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  return NULL;
+}
+
+SwfdecTextFormat *
+swfdec_style_sheet_get_tag_format (SwfdecStyleSheet *style, const char *name)
+{
+  return swfdec_style_sheet_get_format (style, name);
+}
+
+SwfdecTextFormat *
+swfdec_style_sheet_get_class_format (SwfdecStyleSheet *style, const char *name)
+{
+  char *name_full;
+
+  g_return_val_if_fail (SWFDEC_IS_STYLESHEET (style), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  name_full = g_malloc (1 + strlen (name) + 1);
+  name_full[0] = '.';
+  memcpy (name_full + 1, name, strlen (name) + 1);
+
+  return swfdec_style_sheet_get_format (style, swfdec_as_context_give_string (
+	SWFDEC_AS_OBJECT (style)->context, name_full));
+}

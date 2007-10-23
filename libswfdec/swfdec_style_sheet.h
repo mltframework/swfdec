@@ -24,6 +24,7 @@
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/swfdec_script.h>
+#include <libswfdec/swfdec_text_format.h>
 
 G_BEGIN_DECLS
 
@@ -46,6 +47,11 @@ struct _SwfdecStyleSheetClass {
 };
 
 GType		swfdec_style_sheet_get_type	(void);
+
+SwfdecTextFormat *swfdec_style_sheet_get_tag_format	(SwfdecStyleSheet *	style,
+							 const char *		name);
+SwfdecTextFormat *swfdec_style_sheet_get_class_format	(SwfdecStyleSheet *	style,
+							 const char *		name);
 
 G_END_DECLS
 #endif

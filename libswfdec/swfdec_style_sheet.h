@@ -24,6 +24,7 @@
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_types.h>
 #include <libswfdec/swfdec_script.h>
+#include <libswfdec/swfdec_text_format.h>
 
 G_BEGIN_DECLS
 
@@ -39,6 +40,8 @@ typedef struct _SwfdecStyleSheetClass SwfdecStyleSheetClass;
 
 struct _SwfdecStyleSheet {
   SwfdecAsObject	object;
+
+  GSList		*listeners;	/* text fields to update */
 };
 
 struct _SwfdecStyleSheetClass {
@@ -46,6 +49,17 @@ struct _SwfdecStyleSheetClass {
 };
 
 GType		swfdec_style_sheet_get_type	(void);
+
+// FIXME: Take SwfdecTextFieldMovie
+void		swfdec_style_sheet_add_listener		(SwfdecStyleSheet *		style,
+							 SwfdecAsObject *		listener);
+void		swfdec_style_sheet_remove_listener	(SwfdecStyleSheet 	*	style,
+							 SwfdecAsObject *		listener);
+
+SwfdecTextFormat *swfdec_style_sheet_get_tag_format	(SwfdecStyleSheet *	style,
+							 const char *		name);
+SwfdecTextFormat *swfdec_style_sheet_get_class_format	(SwfdecStyleSheet *	style,
+							 const char *		name);
 
 G_END_DECLS
 #endif

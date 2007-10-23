@@ -12,6 +12,8 @@ values.push ("input");
 names.push ("(" + (values.length - 1) + ") input (string)");
 values.push (34000000);
 names.push ("(" + (values.length - 1) + ") 34000000 (number)");
+values.push (new TextField.StyleSheet ());
+names.push ("(" + (values.length - 1) + ") " + values[values.length - 1] + " (StyleSheet)");
 values.push (-34000000);
 names.push ("(" + (values.length - 1) + ") -34000000 (number)");
 values.push ("dynamic");
@@ -63,7 +65,7 @@ var properties = [
   "embedFonts",
   //"gridFitType",
   //"sharpness",
-  //"styleSheet",
+  "styleSheet",
   "textColor"//,
   //"thickness",
 

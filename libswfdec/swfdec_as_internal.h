@@ -78,6 +78,10 @@ void		swfdec_as_object_run_with_security
 						(SwfdecAsObject *	object,
 						 SwfdecScript *		script,
 						 SwfdecSecurity *	sec);
+void		swfdec_as_object_add_native_variable (SwfdecAsObject *	object,
+						 const char *		variable,
+						 SwfdecAsNative		get,
+						 SwfdecAsNative		set);
 
 
 G_END_DECLS

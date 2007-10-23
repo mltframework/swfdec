@@ -80,8 +80,8 @@ struct _SwfdecTextFieldMovie {
 
   SwfdecTextField *	text;		/* the text_field object we render */
 
-  const char *		text_input;
-  const char *		text_display;
+  GString *		input;
+  gboolean		input_html;	/* whether orginal input was given as HTML */
 
   const char *		variable;
 
@@ -90,8 +90,11 @@ struct _SwfdecTextFieldMovie {
 
   gboolean		condense_white;
   gboolean		embed_fonts;
-  SwfdecStyleSheet *	style_sheet;
 
+  SwfdecAsObject *	style_sheet;
+  const char *		style_sheet_input; /* saved input, so it can be used to apply stylesheet again */
+
+  gboolean		scroll_changed; /* if any of the scroll attributes have changed and we haven't fired the event yet */
   int			scroll;
   int			scroll_max;
   int			scroll_bottom;
@@ -132,6 +135,7 @@ void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
 SwfdecTextFormat *swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *	text,
 							 guint			start_index,
 							 guint			end_index);
+const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *		text);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);

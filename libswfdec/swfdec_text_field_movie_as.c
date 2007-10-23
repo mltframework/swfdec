@@ -65,15 +65,15 @@ swfdec_text_field_movie_set_readonly (SwfdecAsContext *cx,
  * Native properties: Text
  */
 static void
-swfdec_text_field_movie_get_text (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_field_movie_do_get_text (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_STRING (ret, (text->text_display != NULL ?
-	text->text_display : SWFDEC_AS_STR_EMPTY));
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_text_field_movie_get_text (text));
 }
 
 static void
@@ -89,8 +89,13 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text (text, value, FALSE);
 
   if (text->variable != NULL) {
-    swfdec_text_field_movie_set_listen_variable_text (text,
-	swfdec_text_field_movie_get_html_text (text));
+    if (text->text->html) {
+      swfdec_text_field_movie_set_listen_variable_text (text,
+	  swfdec_text_field_movie_get_html_text (text));
+    } else {
+      swfdec_text_field_movie_set_listen_variable_text (text,
+	  swfdec_text_field_movie_get_text (text));
+    }
   }
 }
 
@@ -130,8 +135,15 @@ swfdec_text_field_movie_get_htmlText (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_STRING (ret,
-      swfdec_text_field_movie_get_html_text (text));
+  if (text->style_sheet_input) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, text->style_sheet_input);
+  } else if (text->text->html) {
+    SWFDEC_AS_VALUE_SET_STRING (ret,
+	swfdec_text_field_movie_get_html_text (text));
+  } else {
+    SWFDEC_AS_VALUE_SET_STRING (ret,
+	swfdec_text_field_movie_get_text (text));
+  }
 }
 
 static void
@@ -147,8 +159,13 @@ swfdec_text_field_movie_set_htmlText (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text (text, value, text->text->html);
 
   if (text->variable != NULL) {
-    swfdec_text_field_movie_set_listen_variable_text (text,
-	swfdec_text_field_movie_get_html_text (text));
+    if (text->text->html) {
+      swfdec_text_field_movie_set_listen_variable_text (text,
+	  swfdec_text_field_movie_get_html_text (text));
+    } else {
+      swfdec_text_field_movie_set_listen_variable_text (text,
+	  swfdec_text_field_movie_get_text (text));
+    }
   }
 }
 
@@ -160,7 +177,7 @@ swfdec_text_field_movie_get_length (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_strlen (text->text_display, -1));
+  SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_strlen (text->input->str, -1));
 }
 
 /*
@@ -327,7 +344,7 @@ swfdec_text_field_movie_do_get_type (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text->input) {
+  if (text->text->editable) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_input);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_dynamic);
@@ -348,9 +365,9 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   if (!g_strcasecmp (value, SWFDEC_AS_STR_input)) {
-    text->text->input = TRUE;
+    text->text->editable = TRUE;
   } else if (!g_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
-    text->text->input = FALSE;
+    text->text->editable = FALSE;
   }
 
   // FIXME: invalidate
@@ -466,7 +483,7 @@ swfdec_text_field_movie_get_backgroundColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->background_color);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->background_color & 0xffffff);
 }
 
 static void
@@ -480,7 +497,8 @@ swfdec_text_field_movie_set_backgroundColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  color = swfdec_text_field_movie_int_to_color (cx, value);
+  color = (swfdec_text_field_movie_int_to_color (cx, value) & 0xffffff) +
+    (255 << 24);
   if (text->background_color != color) {
     text->background_color = color;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
@@ -526,7 +544,7 @@ swfdec_text_field_movie_get_borderColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->border_color);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->border_color & 0xffffff);
 }
 
 static void
@@ -540,7 +558,8 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  color = swfdec_text_field_movie_int_to_color (cx, value);
+  color = (swfdec_text_field_movie_int_to_color (cx, value) & 0xffffff) +
+    (255 << 24);
   if (text->border_color != color) {
     text->border_color = color;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
@@ -587,6 +606,7 @@ swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
   value = CLAMP (value, 0, text->hscroll_max);
   if (value != text->hscroll) {
     text->hscroll = value;
+    text->scroll_changed = TRUE;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }
@@ -672,6 +692,7 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
   if (value != text->scroll) {
     text->scroll_bottom += value - text->scroll;
     text->scroll = value;
+    text->scroll_changed = TRUE;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }
@@ -847,6 +868,63 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
 }
 
 static void
+swfdec_text_field_movie_get_styleSheet (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (text->style_sheet != NULL) {
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (text->style_sheet));
+  } else {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
+  }
+}
+
+static void
+swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SwfdecTextFieldMovie *text;
+  SwfdecAsObject *value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
+
+  if (argc < 1)
+    return;
+
+  swfdec_as_value_to_number (cx, &argv[0]);
+
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
+    value = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+    if (SWFDEC_IS_MOVIE (value))
+      value = NULL;
+  } else {
+    value = NULL;
+  }
+
+  if (text->style_sheet == value)
+    return;
+
+  if (text->style_sheet != NULL && SWFDEC_IS_STYLESHEET (text->style_sheet)) {
+    swfdec_style_sheet_remove_listener (SWFDEC_STYLESHEET (text->style_sheet),
+	object);
+  }
+
+  text->style_sheet = value;
+
+  if (value != NULL && SWFDEC_IS_STYLESHEET (value)) {
+    if (text->style_sheet_input)
+      swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
+
+    swfdec_style_sheet_add_listener (SWFDEC_STYLESHEET (value), object);
+  }
+}
+
+static void
 swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -925,16 +1003,16 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   i = 0;
   if (argc >= 2) {
     start_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    start_index = CLAMP (start_index, 0, (int)strlen (text->text_display));
+    start_index = CLAMP (start_index, 0, g_utf8_strlen (text->input->str, -1));
   } else {
     start_index = 0;
   }
   if (argc >= 3) {
     end_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    end_index = CLAMP (end_index, start_index,
-	(int)strlen (text->text_display));
+    end_index =
+      CLAMP (end_index, start_index, g_utf8_strlen (text->input->str, -1));
   } else {
-    end_index = (int)strlen (text->text_display);
+    end_index = g_utf8_strlen (text->input->str, -1);
   }
   if (start_index == end_index)
     return;
@@ -963,15 +1041,16 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
 
   if (argc == 0) {
     start_index = 0;
-    end_index = strlen (text->text_display);
+    end_index = g_utf8_strlen (text->input->str, -1);
   } else {
     start_index = swfdec_as_value_to_integer (cx, &argv[0]);
-    start_index = MIN (start_index, strlen (text->text_display));
+    start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
     if (argc == 1) {
       end_index = start_index + 1;
     } else {
       end_index = swfdec_as_value_to_integer (cx, &argv[1]);
-      end_index = CLAMP (end_index, start_index, strlen (text->text_display));
+      end_index =
+	CLAMP (end_index, start_index, g_utf8_strlen (text->input->str, -1));
     }
   }
 
@@ -995,11 +1074,11 @@ swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "iis", &start_index,
       &end_index, &str);
 
-  start_index = MIN (start_index, (int)strlen (text->text_display));
+  start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
   if (start_index < 0)
     return;
 
-  end_index = MIN (end_index, (int)strlen (text->text_display));
+  end_index = MIN (end_index, g_utf8_strlen (text->input->str, -1));
   if (end_index < start_index)
     return;
 
@@ -1087,7 +1166,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
 
   edittext = g_object_new (SWFDEC_TYPE_TEXT_FIELD, NULL);
   edittext->html = FALSE;
-  edittext->input = FALSE;
+  edittext->editable = FALSE;
   edittext->password = FALSE;
   edittext->selectable = TRUE;
   edittext->font = NULL; // FIXME
@@ -1151,31 +1230,6 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   swfdec_as_context_run (cx);
 }
 
-static void
-swfdec_text_field_movie_add_variable (SwfdecAsObject *object,
-    const char *variable, SwfdecAsNative get, SwfdecAsNative set)
-{
-  SwfdecAsFunction *get_func, *set_func;
-
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (variable != NULL);
-  g_return_if_fail (get != NULL);
-
-  get_func =
-    swfdec_as_native_function_new (object->context, variable, get, 0, NULL);
-  if (get_func == NULL)
-    return;
-
-  if (set != NULL) {
-    set_func =
-      swfdec_as_native_function_new (object->context, variable, set, 0, NULL);
-  } else {
-    set_func = NULL;
-  }
-
-  swfdec_as_object_add_variable (object, variable, get_func, set_func, 0);
-}
-
 void
 swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
 {
@@ -1194,100 +1248,101 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
   // text
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_text,
-      swfdec_text_field_movie_get_text, swfdec_text_field_movie_do_set_text);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_html,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_text,
+      swfdec_text_field_movie_do_get_text,
+      swfdec_text_field_movie_do_set_text);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_html,
       swfdec_text_field_movie_get_html, swfdec_text_field_movie_set_html);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_htmlText,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_htmlText,
       swfdec_text_field_movie_get_htmlText,
       swfdec_text_field_movie_set_htmlText);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_length,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_length,
       swfdec_text_field_movie_get_length,
       swfdec_text_field_movie_set_readonly);
 
   // input
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_condenseWhite,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_condenseWhite,
       swfdec_text_field_movie_get_condenseWhite,
       swfdec_text_field_movie_set_condenseWhite);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxChars,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_maxChars,
       swfdec_text_field_movie_get_maxChars,
       swfdec_text_field_movie_set_maxChars);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_multiline,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_multiline,
       swfdec_text_field_movie_get_multiline,
       swfdec_text_field_movie_set_multiline);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_restrict,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_restrict,
       swfdec_text_field_movie_get_restrict,
       swfdec_text_field_movie_set_restrict);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_selectable,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_selectable,
       swfdec_text_field_movie_get_selectable,
       swfdec_text_field_movie_set_selectable);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_type,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_type,
       swfdec_text_field_movie_do_get_type,
       swfdec_text_field_movie_do_set_type);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_variable,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_variable,
       swfdec_text_field_movie_do_get_variable,
       swfdec_text_field_movie_do_set_variable);
 
   // info
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textHeight,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_textHeight,
       swfdec_text_field_movie_get_textHeight,
       swfdec_text_field_movie_set_readonly);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textWidth,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_textWidth,
       swfdec_text_field_movie_get_textWidth,
       swfdec_text_field_movie_set_readonly);
 
   // border & background
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_background,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_background,
       swfdec_text_field_movie_get_background,
       swfdec_text_field_movie_set_background);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_backgroundColor,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_backgroundColor,
       swfdec_text_field_movie_get_backgroundColor,
       swfdec_text_field_movie_set_backgroundColor);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_border,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_border,
       swfdec_text_field_movie_get_border, swfdec_text_field_movie_set_border);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_borderColor,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_borderColor,
       swfdec_text_field_movie_get_borderColor,
       swfdec_text_field_movie_set_borderColor);
 
   // scrolling
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_bottomScroll,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_bottomScroll,
       swfdec_text_field_movie_get_bottomScroll,
       swfdec_text_field_movie_set_readonly);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_hscroll,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_hscroll,
       swfdec_text_field_movie_do_get_hscroll,
       swfdec_text_field_movie_do_set_hscroll);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxhscroll,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_maxhscroll,
       swfdec_text_field_movie_get_maxhscroll,
       swfdec_text_field_movie_set_readonly);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_maxscroll,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_maxscroll,
       swfdec_text_field_movie_get_maxscroll,
       swfdec_text_field_movie_set_readonly);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
       swfdec_text_field_movie_get_mouseWheelEnabled,
       swfdec_text_field_movie_set_mouseWheelEnabled);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_scroll,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_scroll,
       swfdec_text_field_movie_do_get_scroll,
       swfdec_text_field_movie_do_set_scroll);
 
   // display
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_autoSize,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_autoSize,
       swfdec_text_field_movie_get_autoSize,
       swfdec_text_field_movie_set_autoSize);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_password,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_password,
       swfdec_text_field_movie_get_password,
       swfdec_text_field_movie_set_password);
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_wordWrap,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_wordWrap,
       swfdec_text_field_movie_get_wordWrap,
       swfdec_text_field_movie_set_wordWrap);
 
   // format
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_embedFonts,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_embedFonts,
       swfdec_text_field_movie_get_embedFonts,
       swfdec_text_field_movie_set_embedFonts);
-  /*swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_styleSheet,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_styleSheet,
       swfdec_text_field_movie_get_styleSheet,
-      swfdec_text_field_movie_set_styleSheet);*/
-  swfdec_text_field_movie_add_variable (proto, SWFDEC_AS_STR_textColor,
+      swfdec_text_field_movie_set_styleSheet);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_textColor,
       swfdec_text_field_movie_get_textColor,
       swfdec_text_field_movie_set_textColor);
 
@@ -1318,6 +1373,8 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   swfdec_text_field_movie_init_properties (cx);
+
+  // FIXME: do object.addListener (object);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

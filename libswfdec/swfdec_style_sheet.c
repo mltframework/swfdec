@@ -28,6 +28,8 @@
 #include "swfdec_as_array.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_text_format.h"
+#include "swfdec_text_field_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_as_internal.h"
@@ -36,8 +38,35 @@
 G_DEFINE_TYPE (SwfdecStyleSheet, swfdec_style_sheet, SWFDEC_TYPE_AS_OBJECT)
 
 static void
+swfdec_style_sheet_dispose (GObject *object)
+{
+  SwfdecStyleSheet *style = SWFDEC_STYLESHEET (object);
+
+  if (style->listeners != NULL) {
+    g_slist_free (style->listeners);
+    style->listeners = NULL;
+  }
+}
+
+static void
+swfdec_style_sheet_mark (SwfdecAsObject *object)
+{
+  SwfdecStyleSheet *style = SWFDEC_STYLESHEET (object);
+  GSList *iter;
+
+  for (iter = style->listeners; iter != NULL; iter = iter->next) {
+    swfdec_as_object_mark (iter->data);
+  }
+}
+
+static void
 swfdec_style_sheet_class_init (SwfdecStyleSheetClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+
+  object_class->dispose = swfdec_style_sheet_dispose;
+  asobject_class->mark = swfdec_style_sheet_mark;
 }
 
 static void
@@ -213,6 +242,25 @@ swfdec_style_sheet_parse (SwfdecAsContext *cx, const char *css)
   return object;
 }
 
+SWFDEC_AS_NATIVE (113, 100, swfdec_style_sheet_update)
+void
+swfdec_style_sheet_update (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecStyleSheet *style;
+  SwfdecTextFieldMovie *text;
+  GSList *iter;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_STYLESHEET, &style, "");
+
+  for (iter = style->listeners; iter != NULL; iter = iter->next) {
+    g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (iter->data));
+    text = iter->data;
+    g_assert (text->style_sheet_input != NULL);
+    swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
+  }
+}
+
 SWFDEC_AS_NATIVE (113, 101, swfdec_style_sheet_parseCSSInternal)
 void
 swfdec_style_sheet_parseCSSInternal (SwfdecAsContext *cx,
@@ -292,4 +340,74 @@ swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   g_assert (SWFDEC_IS_STYLESHEET (object));
+}
+
+void
+swfdec_style_sheet_add_listener (SwfdecStyleSheet *style,
+    SwfdecAsObject *listener)
+{
+  g_return_if_fail (SWFDEC_IS_STYLESHEET (style));
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (listener));
+
+  g_return_if_fail (g_slist_find (style->listeners, listener) == NULL);
+
+  style->listeners = g_slist_prepend (style->listeners, listener);
+}
+
+void
+swfdec_style_sheet_remove_listener (SwfdecStyleSheet *style,
+    SwfdecAsObject *listener)
+{
+  g_return_if_fail (SWFDEC_IS_STYLESHEET (style));
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (listener));
+
+  g_return_if_fail (g_slist_find (style->listeners, listener) != NULL);
+
+  style->listeners = g_slist_remove (style->listeners, listener);
+}
+
+static SwfdecTextFormat *
+swfdec_style_sheet_get_format (SwfdecStyleSheet *style, const char *name)
+{
+  SwfdecAsObject *styles;
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_STYLESHEET (style), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (style),
+      SWFDEC_AS_STR__styles, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  styles = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_get_variable (styles, name, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return NULL;
+  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+    return NULL;
+
+  return SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&val));
+}
+
+SwfdecTextFormat *
+swfdec_style_sheet_get_tag_format (SwfdecStyleSheet *style, const char *name)
+{
+  return swfdec_style_sheet_get_format (style, name);
+}
+
+SwfdecTextFormat *
+swfdec_style_sheet_get_class_format (SwfdecStyleSheet *style, const char *name)
+{
+  char *name_full;
+
+  g_return_val_if_fail (SWFDEC_IS_STYLESHEET (style), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  name_full = g_malloc (1 + strlen (name) + 1);
+  name_full[0] = '.';
+  memcpy (name_full + 1, name, strlen (name) + 1);
+
+  return swfdec_style_sheet_get_format (style, swfdec_as_context_give_string (
+	SWFDEC_AS_OBJECT (style)->context, name_full));
 }

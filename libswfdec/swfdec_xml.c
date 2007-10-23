@@ -754,31 +754,6 @@ swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
 }
 
-static void
-swfdec_xml_add_variable (SwfdecAsObject *object, const char *variable,
-    SwfdecAsNative get, SwfdecAsNative set)
-{
-  SwfdecAsFunction *get_func, *set_func;
-
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (variable != NULL);
-  g_return_if_fail (get != NULL);
-
-  get_func =
-    swfdec_as_native_function_new (object->context, variable, get, 0, NULL);
-  if (get_func == NULL)
-    return;
-
-  if (set != NULL) {
-    set_func =
-      swfdec_as_native_function_new (object->context, variable, set, 0, NULL);
-  } else {
-    set_func = NULL;
-  }
-
-  swfdec_as_object_add_variable (object, variable, get_func, set_func, 0);
-}
-
 SWFDEC_AS_CONSTRUCTOR (253, 9, swfdec_xml_construct, swfdec_xml_get_type)
 void
 swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
@@ -799,18 +774,18 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
     proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
-    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_ignoreWhite,
+    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_ignoreWhite,
 	swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);
-    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_status,
+    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_status,
 	swfdec_xml_get_status, swfdec_xml_set_status);
-    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_xmlDecl,
+    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_xmlDecl,
 	swfdec_xml_get_xmlDecl, swfdec_xml_set_xmlDecl);
-    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_docTypeDecl,
+    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_docTypeDecl,
 	swfdec_xml_get_docTypeDecl, swfdec_xml_set_docTypeDecl);
 
-    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_contentType,
+    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_contentType,
 	swfdec_xml_get_contentType, swfdec_xml_set_contentType);
-    swfdec_xml_add_variable (proto, SWFDEC_AS_STR_loaded,
+    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_loaded,
 	swfdec_xml_get_loaded, swfdec_xml_set_loaded);
 
     SWFDEC_PLAYER (cx)->xml_properties_initialized = TRUE;

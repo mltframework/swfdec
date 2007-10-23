@@ -421,5 +421,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("Monospace")
   SWFDEC_AS_CONSTANT_STRING ("textHeight")
   SWFDEC_AS_CONSTANT_STRING ("textWidth")
+  SWFDEC_AS_CONSTANT_STRING ("onScroller")
+  SWFDEC_AS_CONSTANT_STRING ("styleSheet")
+  SWFDEC_AS_CONSTANT_STRING ("_styles")
   /* add more here */
 ;

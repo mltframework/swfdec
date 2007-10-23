@@ -1264,6 +1264,31 @@ swfdec_as_object_add_variable (SwfdecAsObject *object, const char *variable,
   var->set = set;
 }
 
+void
+swfdec_as_object_add_native_variable (SwfdecAsObject *object,
+    const char *variable, SwfdecAsNative get, SwfdecAsNative set)
+{
+  SwfdecAsFunction *get_func, *set_func;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (variable != NULL);
+  g_return_if_fail (get != NULL);
+
+  get_func =
+    swfdec_as_native_function_new (object->context, variable, get, 0, NULL);
+  if (get_func == NULL)
+    return;
+
+  if (set != NULL) {
+    set_func =
+      swfdec_as_native_function_new (object->context, variable, set, 0, NULL);
+  } else {
+    set_func = NULL;
+  }
+
+  swfdec_as_object_add_variable (object, variable, get_func, set_func, 0);
+}
+
 /*** AS CODE ***/
 
 SWFDEC_AS_NATIVE (101, 2, swfdec_as_object_addProperty)

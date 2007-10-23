@@ -46,20 +46,18 @@ swfdec_security_init (SwfdecSecurity *security)
  * Asks @guard to check if the given @key allows accessing it. If so, a
  * key for accessing the operation is returned.
  *
- * Returns: %NULL if access was not granted, otherwise the new security 
- *          priviliges for accessing the operation. Use g_object_unref() after
- *          use.
+ * Returns: %TRUE if access was granted, %FALSE otherwise.
  **/
-SwfdecSecurity *
+gboolean
 swfdec_security_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
 {
   SwfdecSecurityClass *klass;
 
-  g_return_val_if_fail (SWFDEC_IS_SECURITY (guard), NULL);
-  g_return_val_if_fail (SWFDEC_IS_SECURITY (key), NULL);
+  g_return_val_if_fail (SWFDEC_IS_SECURITY (guard), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_SECURITY (key), FALSE);
 
   klass = SWFDEC_SECURITY_GET_CLASS (guard);
-  g_return_val_if_fail (klass->allow, NULL);
+  g_return_val_if_fail (klass->allow, FALSE);
   return klass->allow (guard, key);
 }
 

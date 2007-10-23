@@ -44,7 +44,7 @@ struct _SwfdecSecurityClass
 {
   GObjectClass		object_class;
 
-  SwfdecSecurity *	(* allow)			(SwfdecSecurity *	guard,
+  gboolean		(* allow)			(SwfdecSecurity *	guard,
 							 SwfdecSecurity *	from);
   gboolean		(* allow_url)			(SwfdecSecurity *	guard,
 							 const SwfdecURL *	url);
@@ -52,7 +52,7 @@ struct _SwfdecSecurityClass
 
 GType			swfdec_security_get_type	(void);
 
-SwfdecSecurity *	swfdec_security_allow		(SwfdecSecurity *	guard,
+gboolean		swfdec_security_allow		(SwfdecSecurity *	guard,
 							 SwfdecSecurity *	key);
 gboolean		swfdec_security_allow_url	(SwfdecSecurity *	guard,
 							 const SwfdecURL *	url);

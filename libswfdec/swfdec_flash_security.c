@@ -29,20 +29,20 @@
 
 G_DEFINE_TYPE (SwfdecFlashSecurity, swfdec_flash_security, SWFDEC_TYPE_SECURITY)
 
-static SwfdecSecurity *
+static gboolean
 swfdec_flash_security_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
 {
   if (guard == key) {
-    return g_object_ref (guard);
+    return TRUE;
   } else if (SWFDEC_IS_SECURITY_ALLOW (key)) {
     /* This only happens when calling functions (I hope) */
-    return g_object_ref (guard);
+    return TRUE;
   } else if (SWFDEC_IS_FLASH_SECURITY (key)) {
-    /* FIXME: what do we do here? */
-    return g_object_ref (key);
+    SWFDEC_FIXME ("implement security checking");
+    return TRUE;
   } else {
     SWFDEC_ERROR ("unknown security %s, denying access", G_OBJECT_TYPE_NAME (key));
-    return NULL;
+    return FALSE;
   }
 }
 

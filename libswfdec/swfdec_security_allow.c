@@ -28,10 +28,10 @@
 
 G_DEFINE_TYPE (SwfdecSecurityAllow, swfdec_security_allow, SWFDEC_TYPE_SECURITY)
 
-static SwfdecSecurity *
+static gboolean
 swfdec_security_allow_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
 {
-  return g_object_ref (key);
+  return TRUE;
 }
 
 static gboolean

@@ -1056,6 +1056,32 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
   g_object_unref (sec);
 }
 
+void
+swfdec_as_object_call_with_security (SwfdecAsObject *object, SwfdecSecurity *sec,
+    const char *name, guint argc, SwfdecAsValue *argv, SwfdecAsValue *return_value) 
+{
+  static SwfdecAsValue tmp; /* ignored */
+  SwfdecAsFunction *fun;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_SECURITY (sec));
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (argc == 0 || argv != NULL);
+  g_return_if_fail (argc == 0 || argv != NULL);
+
+  if (return_value)
+    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+  swfdec_as_object_get_variable (object, name, &tmp);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
+    return;
+  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&tmp);
+  if (!SWFDEC_IS_AS_FUNCTION (fun))
+    return;
+  swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
+  swfdec_as_frame_set_security (object->context->frame, sec);
+  swfdec_as_context_run (object->context);
+}
+
 /**
  * swfdec_as_object_call:
  * @object: a #SwfdecAsObject
@@ -1075,23 +1101,15 @@ void
 swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc, 
     SwfdecAsValue *argv, SwfdecAsValue *return_value)
 {
-  static SwfdecAsValue tmp; /* ignored */
-  SwfdecAsFunction *fun;
+  SwfdecSecurity *sec;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (name != NULL);
   g_return_if_fail (argc == 0 || argv != NULL);
 
-  if (return_value)
-    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
-  swfdec_as_object_get_variable (object, name, &tmp);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
-    return;
-  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&tmp);
-  if (!SWFDEC_IS_AS_FUNCTION (fun))
-    return;
-  swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
-  swfdec_as_context_run (object->context);
+  sec = swfdec_security_allow_new ();
+  swfdec_as_object_call_with_security (object, sec, name, argc, argv, return_value);
+  g_object_unref (sec);
 }
 
 /**

@@ -391,8 +391,10 @@ swfdec_movie_execute_script (SwfdecMovie *movie, SwfdecEventType condition)
 	SWFDEC_SECURITY (movie->resource), condition, 0);
   }
   name = swfdec_event_type_get_name (condition);
-  if (name != NULL)
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
+  if (name != NULL) {
+    swfdec_as_object_call_with_security (SWFDEC_AS_OBJECT (movie), 
+	SWFDEC_SECURITY (movie->resource), name, 0, NULL, NULL);
+  }
 }
 
 static void

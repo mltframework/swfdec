@@ -901,9 +901,14 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
   if (text->style_sheet == SWFDEC_STYLESHEET (value))
     return;
 
+  if (text->style_sheet != NULL)
+    swfdec_style_sheet_remove_listener (text->style_sheet, object);
+
   text->style_sheet = SWFDEC_STYLESHEET (value);
   if (text->style_sheet_input)
     swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
+
+  swfdec_style_sheet_add_listener (text->style_sheet, object);
 }
 
 static void

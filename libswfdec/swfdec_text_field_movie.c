@@ -857,6 +857,12 @@ swfdec_text_field_movie_dispose (GObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
+  if (text->style_sheet) {
+    swfdec_style_sheet_remove_listener (text->style_sheet,
+	SWFDEC_AS_OBJECT (text));
+    text->style_sheet = NULL;
+  }
+
   for (iter = text->formats; iter != NULL; iter = iter->next) {
     g_free (text->formats->data);
     text->formats->data = NULL;

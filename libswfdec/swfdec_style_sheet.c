@@ -29,6 +29,7 @@
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_text_format.h"
+#include "swfdec_text_field_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_as_internal.h"
@@ -37,8 +38,35 @@
 G_DEFINE_TYPE (SwfdecStyleSheet, swfdec_style_sheet, SWFDEC_TYPE_AS_OBJECT)
 
 static void
+swfdec_style_sheet_dispose (GObject *object)
+{
+  SwfdecStyleSheet *style = SWFDEC_STYLESHEET (object);
+
+  if (style->listeners != NULL) {
+    g_slist_free (style->listeners);
+    style->listeners = NULL;
+  }
+}
+
+static void
+swfdec_style_sheet_mark (SwfdecAsObject *object)
+{
+  SwfdecStyleSheet *style = SWFDEC_STYLESHEET (object);
+  GSList *iter;
+
+  for (iter = style->listeners; iter != NULL; iter = iter->next) {
+    swfdec_as_object_mark (iter->data);
+  }
+}
+
+static void
 swfdec_style_sheet_class_init (SwfdecStyleSheetClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+
+  object_class->dispose = swfdec_style_sheet_dispose;
+  asobject_class->mark = swfdec_style_sheet_mark;
 }
 
 static void
@@ -293,6 +321,30 @@ swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   g_assert (SWFDEC_IS_STYLESHEET (object));
+}
+
+void
+swfdec_style_sheet_add_listener (SwfdecStyleSheet *style,
+    SwfdecAsObject *listener)
+{
+  g_return_if_fail (SWFDEC_IS_STYLESHEET (style));
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (listener));
+
+  g_return_if_fail (g_slist_find (style->listeners, listener) == NULL);
+
+  style->listeners = g_slist_prepend (style->listeners, listener);
+}
+
+void
+swfdec_style_sheet_remove_listener (SwfdecStyleSheet *style,
+    SwfdecAsObject *listener)
+{
+  g_return_if_fail (SWFDEC_IS_STYLESHEET (style));
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (listener));
+
+  g_return_if_fail (g_slist_find (style->listeners, listener) != NULL);
+
+  style->listeners = g_slist_remove (style->listeners, listener);
 }
 
 static SwfdecTextFormat *

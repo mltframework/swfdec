@@ -26,6 +26,7 @@
 
 #include "swfdec_text_field_movie.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_style_sheet.h"
 #include "swfdec_xml.h"
 #include "swfdec_debug.h"
 
@@ -41,6 +42,7 @@ typedef struct {
   SwfdecAsContext	*cx;
   gboolean		multiline;
   gboolean		condense_white;
+  SwfdecStyleSheet	*style_sheet;
   GString *		text;
   GSList *		tags_open;
   GSList *		tags_closed;
@@ -97,8 +99,9 @@ swfdec_text_field_movie_html_parse_comment (ParserData *data, const char *p)
 }
 
 static void
-swfdec_text_field_movie_html_tag_set_attribute (ParserTag *tag,
-    const char *name, int name_length, const char *value, int value_length)
+swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
+    ParserTag *tag, const char *name, int name_length, const char *value,
+    int value_length)
 {
   SwfdecAsValue val;
   SwfdecAsObject *object;
@@ -184,10 +187,24 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserTag *tag,
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_target, &val);
     }
   }
+
+  if (data->style_sheet &&
+      ((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
+      (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1))))
+  {
+    if (name_length == 5 && !g_strncasecmp (name, "class", 5)) {
+      SwfdecTextFormat *format = swfdec_style_sheet_get_class_format (
+	  data->style_sheet, swfdec_as_context_give_string (data->cx,
+	      g_strndup (value, value_length)));
+      if (format != NULL)
+	swfdec_text_format_add (tag->format, format);
+    }
+  }
 }
 
 static const char *
-swfdec_text_field_movie_html_parse_attribute (ParserTag *tag, const char *p)
+swfdec_text_field_movie_html_parse_attribute (ParserData *data, ParserTag *tag,
+    const char *p)
 {
   const char *end, *name, *value;
   int name_length, value_length;
@@ -222,8 +239,8 @@ swfdec_text_field_movie_html_parse_attribute (ParserTag *tag, const char *p)
   value_length = end - (p + 1);
 
   if (tag != NULL) {
-    swfdec_text_field_movie_html_tag_set_attribute (tag, name, name_length,
-	value, value_length);
+    swfdec_text_field_movie_html_tag_set_attribute (data, tag, name,
+	name_length, value, value_length);
   }
 
   g_return_val_if_fail (end + 1 > p, NULL);
@@ -333,12 +350,22 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
       {
 	SWFDEC_FIXME ("IMG tag support for TextField's HTML input missing");
       }
+
+      if (data->style_sheet &&
+	  ((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
+	  (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)))) {
+	SwfdecTextFormat *format = swfdec_style_sheet_get_tag_format (
+	    data->style_sheet, swfdec_as_context_give_string (data->cx,
+		g_strndup (tag->name, tag->name_length)));
+	if (format != NULL)
+	  swfdec_text_format_add (tag->format, format);
+      }
     }
 
     // parse attributes
     end = end + strspn (end, " \r\n\t");
     while (*end != '\0' && *end != '>' && (*end != '/' || *(end + 1) != '>')) {
-      end = swfdec_text_field_movie_html_parse_attribute (tag, end);
+      end = swfdec_text_field_movie_html_parse_attribute (data, tag, end);
       if (end == NULL)
 	break;
       end = end + strspn (end, " \r\n\t");
@@ -404,6 +431,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
   data.cx = SWFDEC_AS_OBJECT (text)->context;
   data.multiline = (data.cx->version < 7 || text->text->multiline);
   data.condense_white = text->condense_white;
+  data.style_sheet = text->style_sheet;
   data.text = text->input;
   data.tags_open = NULL;
   data.tags_closed = NULL;

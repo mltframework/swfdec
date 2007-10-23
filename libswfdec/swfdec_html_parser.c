@@ -190,6 +190,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
 
   if (data->style_sheet &&
       ((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
+      (tag->name_length == 4 && !g_strncasecmp (tag->name, "span", 4)) ||
       (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1))))
   {
     if (name_length == 5 && !g_strncasecmp (name, "class", 5)) {

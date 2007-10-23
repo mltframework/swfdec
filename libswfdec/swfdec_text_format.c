@@ -874,31 +874,6 @@ swfdec_text_format_do_set_url (SwfdecAsContext *cx, SwfdecAsObject *object,
       argv);
 }
 
-static void
-swfdec_text_format_add_variable (SwfdecAsObject *object, const char *variable,
-    SwfdecAsNative get, SwfdecAsNative set)
-{
-  SwfdecAsFunction *get_func, *set_func;
-
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (variable != NULL);
-  g_return_if_fail (get != NULL);
-
-  get_func =
-    swfdec_as_native_function_new (object->context, variable, get, 0, NULL);
-  if (get_func == NULL)
-    return;
-
-  if (set != NULL) {
-    set_func =
-      swfdec_as_native_function_new (object->context, variable, set, 0, NULL);
-  } else {
-    set_func = NULL;
-  }
-
-  swfdec_as_object_add_variable (object, variable, get_func, set_func, 0);
-}
-
 void
 swfdec_text_format_add (SwfdecTextFormat *format, const SwfdecTextFormat *from)
 {
@@ -1137,51 +1112,51 @@ swfdec_text_format_init_properties (SwfdecAsContext *cx)
     return;
   proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_align,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_align,
       swfdec_text_format_do_get_align, swfdec_text_format_do_set_align);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_blockIndent,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_blockIndent,
       swfdec_text_format_do_get_block_indent,
       swfdec_text_format_do_set_block_indent);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_bold,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_bold,
       swfdec_text_format_do_get_bold, swfdec_text_format_do_set_bold);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_bullet,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_bullet,
       swfdec_text_format_do_get_bullet, swfdec_text_format_do_set_bullet);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_color,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_color,
       swfdec_text_format_do_get_color, swfdec_text_format_do_set_color);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_display,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_display,
       swfdec_text_format_do_get_display, swfdec_text_format_do_set_display);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_font,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_font,
       swfdec_text_format_do_get_font, swfdec_text_format_do_set_font);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_indent,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_indent,
       swfdec_text_format_do_get_indent, swfdec_text_format_do_set_indent);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_italic,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_italic,
       swfdec_text_format_do_get_italic, swfdec_text_format_do_set_italic);
   if (cx->version >= 8) {
-    swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_kerning,
+    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_kerning,
 	swfdec_text_format_do_get_kerning, swfdec_text_format_do_set_kerning);
   }
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_leading,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_leading,
       swfdec_text_format_do_get_leading, swfdec_text_format_do_set_leading);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_leftMargin,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_leftMargin,
       swfdec_text_format_do_get_left_margin,
       swfdec_text_format_do_set_left_margin);
   if (cx->version >= 8) {
-    swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_letterSpacing,
+    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_letterSpacing,
 	swfdec_text_format_do_get_letter_spacing,
 	swfdec_text_format_do_set_letter_spacing);
   }
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_rightMargin,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_rightMargin,
       swfdec_text_format_do_get_right_margin,
       swfdec_text_format_do_set_right_margin);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_size,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_size,
       swfdec_text_format_do_get_size, swfdec_text_format_do_set_size);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_tabStops,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_tabStops,
       swfdec_text_format_do_get_tab_stops, swfdec_text_format_do_set_tab_stops);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_target,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_target,
       swfdec_text_format_do_get_target, swfdec_text_format_do_set_target);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_underline,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_underline,
       swfdec_text_format_do_get_underline, swfdec_text_format_do_set_underline);
-  swfdec_text_format_add_variable (proto, SWFDEC_AS_STR_url,
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_url,
       swfdec_text_format_do_get_url, swfdec_text_format_do_set_url);
 }
 

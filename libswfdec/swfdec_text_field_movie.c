@@ -1647,10 +1647,14 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
 
   text->input_html = html;
 
-  if (text->style_sheet != NULL) {
+  if (SWFDEC_AS_OBJECT (text)->context->version >= 7 &&
+      text->style_sheet != NULL)
+  {
     text->style_sheet_input = str;
     swfdec_text_field_movie_html_parse (text, str);
-  } else {
+  }
+  else
+  {
     text->style_sheet_input = NULL;
     if (html) {
       swfdec_text_field_movie_html_parse (text, str);

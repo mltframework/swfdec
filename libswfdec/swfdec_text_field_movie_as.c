@@ -1317,12 +1317,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_maxscroll,
       swfdec_text_field_movie_get_maxscroll,
       swfdec_text_field_movie_set_readonly);
-  if (cx->version >= 7) {
-    swfdec_as_object_add_native_variable (proto,
-	SWFDEC_AS_STR_mouseWheelEnabled,
-	swfdec_text_field_movie_get_mouseWheelEnabled,
-	swfdec_text_field_movie_set_mouseWheelEnabled);
-  }
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_mouseWheelEnabled,
+      swfdec_text_field_movie_get_mouseWheelEnabled,
+      swfdec_text_field_movie_set_mouseWheelEnabled);
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_scroll,
       swfdec_text_field_movie_do_get_scroll,
       swfdec_text_field_movie_do_set_scroll);
@@ -1342,11 +1339,9 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_embedFonts,
       swfdec_text_field_movie_get_embedFonts,
       swfdec_text_field_movie_set_embedFonts);
-  if (cx->version >= 7) {
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_styleSheet,
-	swfdec_text_field_movie_get_styleSheet,
-	swfdec_text_field_movie_set_styleSheet);
-  }
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_styleSheet,
+      swfdec_text_field_movie_get_styleSheet,
+      swfdec_text_field_movie_set_styleSheet);
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_textColor,
       swfdec_text_field_movie_get_textColor,
       swfdec_text_field_movie_set_textColor);

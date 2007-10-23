@@ -1100,6 +1100,11 @@ swfdec_text_format_set_defaults (SwfdecTextFormat *format)
   format->underline = FALSE;
 
   format->values_set = (1 << PROP_TOTAL) - 1;
+
+  if (SWFDEC_AS_OBJECT (format)->context->version < 8) {
+    swfdec_text_format_mark_unset (format, PROP_KERNING);
+    swfdec_text_format_mark_unset (format, PROP_LETTER_SPACING);
+  }
 }
 
 static void

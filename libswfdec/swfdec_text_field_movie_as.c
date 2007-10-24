@@ -1236,6 +1236,10 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   SwfdecAsValue val;
   SwfdecAsObject *object, *proto;
 
+  // FIXME: We should only initialize if the prototype Object has not been
+  // initialized by any object's constructor with native properties
+  // (TextField, TextFormat, XML, XMLNode at least)
+
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);

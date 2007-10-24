@@ -970,6 +970,50 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
   node->childNodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
 }
 
+static void
+swfdec_xml_node_init_properties (SwfdecAsContext *cx)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *node, *proto;
+
+  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_XMLNode, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  node = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_get_variable (node, SWFDEC_AS_STR_prototype, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nodeType,
+      swfdec_xml_node_get_nodeType, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nodeValue,
+      swfdec_xml_node_get_nodeValue, swfdec_xml_node_set_nodeValue);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nodeName,
+      swfdec_xml_node_get_nodeName, swfdec_xml_node_set_nodeName);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_prefix,
+      swfdec_xml_node_do_get_prefix, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_localName,
+      swfdec_xml_node_get_localName, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_namespaceURI,
+      swfdec_xml_node_get_namespaceURI, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_attributes,
+      swfdec_xml_node_get_attributes, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_parentNode,
+      swfdec_xml_node_get_parentNode, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_previousSibling,
+      swfdec_xml_node_get_previousSibling, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nextSibling,
+      swfdec_xml_node_get_nextSibling, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_firstChild,
+      swfdec_xml_node_get_firstChild, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_lastChild,
+      swfdec_xml_node_get_lastChild, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_childNodes,
+      swfdec_xml_node_get_childNodes, NULL);
+}
+
 SwfdecXmlNode *
 swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
     const char* value)
@@ -1008,44 +1052,6 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   g_assert (SWFDEC_IS_XML_NODE (object));
 
-  if (!SWFDEC_PLAYER (cx)->xml_node_properties_initialized) {
-    SwfdecAsValue val;
-    SwfdecAsObject *proto;
-
-    swfdec_as_object_get_variable (object, SWFDEC_AS_STR___proto__, &val);
-    g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
-    proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nodeType,
-	swfdec_xml_node_get_nodeType, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nodeValue,
-	swfdec_xml_node_get_nodeValue, swfdec_xml_node_set_nodeValue);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nodeName,
-	swfdec_xml_node_get_nodeName, swfdec_xml_node_set_nodeName);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_prefix,
-	swfdec_xml_node_do_get_prefix, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_localName,
-	swfdec_xml_node_get_localName, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_namespaceURI,
-	swfdec_xml_node_get_namespaceURI, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_attributes,
-	swfdec_xml_node_get_attributes, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_parentNode,
-	swfdec_xml_node_get_parentNode, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_previousSibling,
-	swfdec_xml_node_get_previousSibling, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nextSibling,
-	swfdec_xml_node_get_nextSibling, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_firstChild,
-	swfdec_xml_node_get_firstChild, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_lastChild,
-	swfdec_xml_node_get_lastChild, NULL);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_childNodes,
-	swfdec_xml_node_get_childNodes, NULL);
-
-    SWFDEC_PLAYER (cx)->xml_node_properties_initialized = TRUE;
-  }
-
   if (argc < 2)
     return;
 
@@ -1053,6 +1059,8 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))
     return;
+
+  swfdec_xml_node_init_properties (cx);
 
   swfdec_xml_node_init_values (SWFDEC_XML_NODE (object),
       swfdec_as_value_to_integer (cx, &argv[0]),

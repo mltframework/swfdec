@@ -1040,6 +1040,8 @@ swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
     return NULL;
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (node), SWFDEC_AS_VALUE_GET_OBJECT (&val));
 
+  swfdec_xml_node_init_properties (context);
+
   swfdec_xml_node_init_values (node, type,
       swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context, value));
 
@@ -1051,10 +1053,8 @@ void
 swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!swfdec_as_context_is_constructing (cx)) {
-    SWFDEC_FIXME ("What do we do if not constructing?");
+  if (!swfdec_as_context_is_constructing (cx))
     return;
-  }
 
   g_assert (SWFDEC_IS_XML_NODE (object));
 

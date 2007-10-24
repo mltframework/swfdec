@@ -2041,6 +2041,15 @@ EXTRA_DIST = \
 	xml-node-6.swf.trace \
 	xml-node-7.swf \
 	xml-node-7.swf.trace \
+	xml-node-init.as \
+	xml-node-init-5.swf \
+	xml-node-init-5.swf.trace \
+	xml-node-init-6.swf \
+	xml-node-init-6.swf.trace \
+	xml-node-init-7.swf \
+	xml-node-init-7.swf.trace \
+	xml-node-init-8.swf \
+	xml-node-init-8.swf.trace \
 	xml-other.as \
 	xml-other-5.swf \
 	xml-other-5.swf.trace \

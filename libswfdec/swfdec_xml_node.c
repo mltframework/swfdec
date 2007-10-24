@@ -947,8 +947,7 @@ swfdec_xml_node_do_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 void
-swfdec_xml_node_init_properties (SwfdecXmlNode *node, int type,
-    const char* value)
+swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
 {
   SwfdecAsObject *object;
 
@@ -959,7 +958,6 @@ swfdec_xml_node_init_properties (SwfdecXmlNode *node, int type,
 
   node->valid = TRUE;
   node->parent = NULL;
-  // FIXME: use _global.Array constructor?
   node->children = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
   node->attributes = swfdec_as_object_new_empty (object->context);
   node->type = type;
@@ -992,7 +990,7 @@ swfdec_xml_node_new (SwfdecAsContext *context, SwfdecXmlNodeType type,
     return NULL;
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (node), SWFDEC_AS_VALUE_GET_OBJECT (&val));
 
-  swfdec_xml_node_init_properties (node, type,
+  swfdec_xml_node_init_values (node, type,
       swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context, value));
 
   return node;
@@ -1056,7 +1054,7 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))
     return;
 
-  swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
+  swfdec_xml_node_init_values (SWFDEC_XML_NODE (object),
       swfdec_as_value_to_integer (cx, &argv[0]),
       swfdec_as_value_to_string (cx, &argv[1]));
 

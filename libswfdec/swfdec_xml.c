@@ -560,8 +560,8 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 
   // create the new element
   if (!close) {
-    child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (*node)->context,
-	SWFDEC_XML_NODE_ELEMENT, name);
+    child = swfdec_xml_node_new_no_properties (
+	SWFDEC_AS_OBJECT (*node)->context, SWFDEC_XML_NODE_ELEMENT, name);
     g_free (name);
   }
 
@@ -640,8 +640,8 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
     text = g_strndup (p, end - p);
     unescaped = swfdec_xml_unescape (SWFDEC_AS_OBJECT (xml)->context, text);
     g_free (text);
-    child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (node)->context,
-	SWFDEC_XML_NODE_TEXT, unescaped);
+    child = swfdec_xml_node_new_no_properties (
+	SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT, unescaped);
     g_free (unescaped);
     swfdec_xml_node_appendChild (node, child);
   }

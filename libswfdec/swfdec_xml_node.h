@@ -83,6 +83,9 @@ GType		swfdec_xml_node_get_type	(void);
 SwfdecXmlNode *	swfdec_xml_node_new		(SwfdecAsContext *	context,
 						 SwfdecXmlNodeType	type,
 						 const char *		value);
+SwfdecXmlNode *	swfdec_xml_node_new_no_properties (SwfdecAsContext *	context,
+						 SwfdecXmlNodeType	type,
+						 const char *		value);
 void		swfdec_xml_node_removeNode	(SwfdecXmlNode *	node);
 void		swfdec_xml_node_appendChild	(SwfdecXmlNode *	node,
 						 SwfdecXmlNode *	child);

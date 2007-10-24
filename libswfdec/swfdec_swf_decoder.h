@@ -35,23 +35,6 @@ G_BEGIN_DECLS
 //typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
 typedef struct _SwfdecSwfDecoderClass SwfdecSwfDecoderClass;
 typedef int (* SwfdecTagFunc) (SwfdecSwfDecoder *, guint);
-typedef struct _SwfdecRootExportData SwfdecRootExportData;
-
-typedef enum {
-  SWFDEC_ROOT_ACTION_EXPORT,		/* contains a SwfdecExportData */
-  SWFDEC_ROOT_ACTION_INIT_SCRIPT,	/* contains a SwfdecScript */
-} SwfdecRootActionType;
-
-typedef struct _SwfdecRootAction SwfdecRootAction;
-struct _SwfdecRootAction {
-  guint type;
-  gpointer data;
-};
-
-struct _SwfdecRootExportData {
-  char *		name;
-  SwfdecCharacter *	character;
-};
 
 #define SWFDEC_TYPE_SWF_DECODER                    (swfdec_swf_decoder_get_type())
 #define SWFDEC_IS_SWF_DECODER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SWF_DECODER))
@@ -79,7 +62,6 @@ struct _SwfdecSwfDecoder
   GHashTable *		characters;   	/* list of all objects with an id (called characters) */
   SwfdecSprite *	main_sprite;	/* the root sprite */
   SwfdecSprite *	parse_sprite;	/* the sprite that parsed at the moment */
-  GArray **		root_actions; 	/* actions to be executed by the root sprite */
   GHashTable *		scripts;      	/* buffer -> script mapping for all scripts */
 
   gboolean		use_network;	/* allow network or local access */
@@ -102,9 +84,6 @@ gpointer	swfdec_swf_decoder_create_character	(SwfdecSwfDecoder *	s,
 							 guint	        	id,
 							 GType			type);
 
-void		swfdec_swf_decoder_add_root_action	(SwfdecSwfDecoder *	s,
-							 SwfdecRootActionType	type,
-							 gpointer		data);
 void		swfdec_swf_decoder_add_script		(SwfdecSwfDecoder *	s,
 							 SwfdecScript *		script);
 SwfdecScript *	swfdec_swf_decoder_get_script		(SwfdecSwfDecoder *	s,

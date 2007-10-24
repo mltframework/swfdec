@@ -525,69 +525,6 @@ tag_func_file_attributes (SwfdecSwfDecoder *s, guint tag)
 }
 
 static int
-tag_func_export_assets (SwfdecSwfDecoder * s, guint tag)
-{
-  SwfdecBits *bits = &s->b;
-  guint count, i;
-
-  count = swfdec_bits_get_u16 (bits);
-  SWFDEC_LOG ("exporting %u assets", count);
-  for (i = 0; i < count && swfdec_bits_left (bits); i++) {
-    guint id;
-    SwfdecCharacter *object;
-    char *name;
-    id = swfdec_bits_get_u16 (bits);
-    object = swfdec_swf_decoder_get_character (s, id);
-    name = swfdec_bits_get_string_with_version (bits, s->version);
-    if (object == NULL) {
-      SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
-      g_free (name);
-    } else if (name == NULL) {
-      SWFDEC_ERROR ("cannot export id %u, no name was given", id);
-    } else {
-      SwfdecRootExportData *data = g_new (SwfdecRootExportData, 1);
-      data->name = name;
-      data->character = object;
-      SWFDEC_LOG ("exporting %s %u as %s", G_OBJECT_TYPE_NAME (object), id, name);
-      g_object_ref (object);
-      swfdec_swf_decoder_add_root_action (s, SWFDEC_ROOT_ACTION_EXPORT, data);
-    }
-  }
-
-  return SWFDEC_STATUS_OK;
-}
-
-static int
-tag_func_do_init_action (SwfdecSwfDecoder * s, guint tag)
-{
-  SwfdecBits *bits = &s->b;
-  guint id;
-  SwfdecSprite *sprite;
-  char *name;
-
-  id = swfdec_bits_get_u16 (bits);
-  SWFDEC_LOG ("  id = %u", id);
-  sprite = swfdec_swf_decoder_get_character (s, id);
-  if (!SWFDEC_IS_SPRITE (sprite)) {
-    SWFDEC_ERROR ("character %u is not a sprite", id);
-    return SWFDEC_STATUS_OK;
-  }
-  if (sprite->init_action != NULL) {
-    SWFDEC_ERROR ("sprite %u already has an init action", id);
-    return SWFDEC_STATUS_OK;
-  }
-  name = g_strdup_printf ("InitAction %u", id);
-  sprite->init_action = swfdec_script_new_from_bits (bits, name, s->version);
-  g_free (name);
-  if (sprite->init_action) {
-    swfdec_script_ref (sprite->init_action);
-    swfdec_swf_decoder_add_root_action (s, SWFDEC_ROOT_ACTION_INIT_SCRIPT, sprite->init_action);
-  }
-
-  return SWFDEC_STATUS_OK;
-}
-
-static int
 tag_func_enqueue (SwfdecSwfDecoder *s, guint tag)
 {
   SwfdecBuffer *buffer;
@@ -694,10 +631,10 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_TEMPLATECOMMAND] = {"TemplateCommand", NULL, 0},
   [SWFDEC_TAG_GENERATOR3] = {"Generator3", NULL, 0},
   [SWFDEC_TAG_EXTERNALFONT] = {"ExternalFont", NULL, 0},
-  [SWFDEC_TAG_EXPORTASSETS] = {"ExportAssets", tag_func_export_assets, 0},
+  [SWFDEC_TAG_EXPORTASSETS] = {"ExportAssets", tag_func_enqueue, 0},
   [SWFDEC_TAG_IMPORTASSETS] = {"ImportAssets", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
-  [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SWFDEC_TAG_DEFINE_SPRITE },
+  [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEVIDEOSTREAM] = {"DefineVideoStream", tag_func_define_video, 0},
   [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", tag_func_video_frame, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info, 0},

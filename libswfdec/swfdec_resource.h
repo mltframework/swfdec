@@ -63,8 +63,9 @@ SwfdecResource *swfdec_resource_new			(SwfdecLoader *		loader,
 void		swfdec_resource_set_movie		(SwfdecResource *	resource,
 							 SwfdecSpriteMovie *	movie);
 
-void		swfdec_resource_advance			(SwfdecResource *	instance);
-
+void		swfdec_resource_add_export		(SwfdecResource *	instance,
+							 SwfdecCharacter *	character,
+							 char *			name);
 gpointer	swfdec_resource_get_export		(SwfdecResource *	root,
 							 const char *		name);
 const char *	swfdec_resource_get_export_name    	(SwfdecResource *	root,

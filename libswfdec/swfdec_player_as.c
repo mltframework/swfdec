@@ -277,12 +277,14 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   const char *name;
   
+  g_print ("WOOT!\n");
   name = swfdec_as_value_to_string (cx, &argv[0]);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
     return;
   }
   
+  g_print ("exporting %p as %s\n", SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]), name);
   swfdec_player_set_export_class (SWFDEC_PLAYER (cx), name, 
       SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]));
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);

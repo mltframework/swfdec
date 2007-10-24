@@ -33,7 +33,7 @@
 #include "swfdec_graphic_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_ringbuffer.h"
-#include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_resource.h"
 #include "swfdec_tag.h"
@@ -298,7 +298,7 @@ swfdec_sprite_movie_start_sound (SwfdecMovie *movie, SwfdecBits *bits)
 
 static gboolean
 swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, SwfdecBuffer *buffer,
-    gboolean skip_scripts)
+    gboolean skip_scripts, gboolean first_time)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
@@ -347,6 +347,70 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	SWFDEC_ERROR ("too many ShowFrame tags");
       }
       return FALSE;
+    case SWFDEC_TAG_EXPORTASSETS:
+      {
+	SwfdecResource *resource = swfdec_movie_get_own_resource (mov);
+	guint i, count;
+
+	g_assert (resource); /* must hold, ExportAssets can only be in root movies */
+	if (!first_time)
+	  return TRUE;
+	count = swfdec_bits_get_u16 (&bits);
+	SWFDEC_LOG ("exporting %u assets", count);
+	for (i = 0; i < count && swfdec_bits_left (&bits); i++) {
+	  guint id;
+	  SwfdecCharacter *object;
+	  char *name;
+	  id = swfdec_bits_get_u16 (&bits);
+	  object = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (resource->decoder), id);
+	  name = swfdec_bits_get_string_with_version (&bits, SWFDEC_AS_CONTEXT (player)->version);
+	  if (object == NULL) {
+	    SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
+	    g_free (name);
+	  } else if (name == NULL) {
+	    SWFDEC_ERROR ("cannot export id %u, no name was given", id);
+	  } else {
+	    SWFDEC_LOG ("exporting %s %u as %s", G_OBJECT_TYPE_NAME (object), id, name);
+	    g_print ("exporting %s %u as %s\n", G_OBJECT_TYPE_NAME (object), id, name);
+	    g_object_ref (object);
+	    swfdec_resource_add_export (resource, object, name); 
+	  }
+	}
+      }
+      return TRUE;
+    case SWFDEC_TAG_DOINITACTION:
+      if (!first_time)
+	return TRUE;
+      if (!swfdec_movie_get_own_resource (mov)) {
+	SWFDEC_FIXME ("behavior of init actions in DefineSprite untested");
+      }
+      {
+	guint id;
+	SwfdecSprite *sprite;
+	char *name;
+
+	id = swfdec_bits_get_u16 (&bits);
+	SWFDEC_LOG ("InitAction");
+	SWFDEC_LOG ("  id = %u", id);
+	sprite = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (mov->resource->decoder), id);
+	if (!SWFDEC_IS_SPRITE (sprite)) {
+	  SWFDEC_ERROR ("character %u is not a sprite", id);
+	  return TRUE;
+	}
+	if (sprite->init_action != NULL) {
+	  SWFDEC_ERROR ("sprite %u already has an init action", id);
+	  return TRUE;
+	}
+	name = g_strdup_printf ("InitAction %u", id);
+	sprite->init_action = swfdec_script_new_from_bits (&bits, name, SWFDEC_AS_CONTEXT (player)->version);
+	g_free (name);
+	if (sprite->init_action) {
+	  g_print ("Executing init action for sprite %u\n", id);
+	  swfdec_as_object_run_with_security (SWFDEC_AS_OBJECT (mov), 
+	      sprite->init_action, SWFDEC_SECURITY (mov->resource));
+	}
+      }
+      return TRUE;
     default:
       g_assert_not_reached ();
       return FALSE;
@@ -437,15 +501,18 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
   }
   while (n) {
     guint tag;
+    gboolean first_time;
     SwfdecBuffer *buffer;
-    SwfdecResource *resource = swfdec_movie_get_own_resource (mov);
-    /* FIXME: These actions should probably just be added to the action queue */
-    if (resource && resource->parse_frame <= movie->frame)
-      swfdec_resource_advance (resource);
     if (!swfdec_sprite_get_action (movie->sprite, movie->next_action, &tag, &buffer))
       break;
     movie->next_action++;
-    if (!swfdec_sprite_movie_perform_one_action (movie, tag, buffer, n > 1))
+    if (movie->next_action > movie->max_action) {
+      first_time = TRUE;
+      movie->max_action = movie->next_action;
+    } else {
+      first_time = FALSE;
+    }
+    if (!swfdec_sprite_movie_perform_one_action (movie, tag, buffer, n > 1, first_time))
       n--;
   }
   /* now try to copy eventual movies */
@@ -532,6 +599,7 @@ swfdec_sprite_movie_do_init_movie (SwfdecSpriteMovie *movie)
       constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
 	  name);
     }
+    g_print ("setting constructor for %u to %s %p\n", SWFDEC_CHARACTER (movie->sprite)->id, name, constructor);
   }
   if (constructor == NULL)
     constructor = SWFDEC_PLAYER (context)->MovieClip;
@@ -709,6 +777,7 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
   movie->frame = 0;
   movie->n_frames = 0;
   movie->next_action = 0;
+  movie->max_action = 0;
   movie->sprite = NULL;
 }
 

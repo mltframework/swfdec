@@ -3,11 +3,7 @@
 function trace_scroll_properties () {
   trace ("bottomScroll: " + t.bottomScroll);
   trace ("hscroll: " + t.hscroll);
-  if (t.maxhscroll > 100) {
-    trace ("maxhscroll: ~" + (t.maxhscroll - t.maxhscroll % 100));
-  } else {
-    trace ("maxhscroll: " + t.maxhscroll);
-  }
+  trace ("maxhscroll > 0: " + (t.maxhscroll > 0));
   trace ("maxscroll: " + t.maxscroll);
   trace ("scroll: " + t.scroll);
 }

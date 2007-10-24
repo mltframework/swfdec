@@ -1030,7 +1030,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (SWFDEC_IS_TEXT_FORMAT (format));
   g_return_if_fail (start_index < end_index);
-  g_return_if_fail (end_index <= g_utf8_strlen (text->input->str, -1));
+  g_return_if_fail (end_index <= (guint) g_utf8_strlen (text->input->str, -1));
 
   g_assert (text->formats != NULL);
   g_assert (text->formats->data != NULL);
@@ -1110,7 +1110,7 @@ swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *text,
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_assert (start_index < end_index);
-  g_assert (end_index <= g_utf8_strlen (text->input->str, -1));
+  g_assert (end_index <= (guint) g_utf8_strlen (text->input->str, -1));
 
   g_assert (text->formats != NULL);
   g_assert (text->formats->data != NULL);
@@ -1557,7 +1557,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (end_index <= g_utf8_strlen (text->input->str, -1));
+  g_return_if_fail (end_index <= (guint) g_utf8_strlen (text->input->str, -1));
   g_return_if_fail (start_index <= end_index);
   g_return_if_fail (str != NULL);
 
@@ -1582,7 +1582,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     findex = iter->data;
 
     if (findex->index >= start_index) {
-      if (end_index == g_utf8_strlen (text->input->str, -1) ||
+      if (end_index == (guint) g_utf8_strlen (text->input->str, -1) ||
 	  (iter->next != NULL &&
 	   ((SwfdecFormatIndex *)iter->next->data)->index <= end_index))
       {
@@ -1601,7 +1601,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     }
     prev = iter;
   }
-  if (end_index == g_utf8_strlen (text->input->str, -1)) {
+  if (end_index == (guint) g_utf8_strlen (text->input->str, -1)) {
     if (SWFDEC_AS_OBJECT (text)->context->version < 8) {
       SWFDEC_FIXME ("replaceText to the end of the TextField might use wrong text format on version 7");
     }

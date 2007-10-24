@@ -1035,7 +1035,7 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
   SwfdecTextFormat *format;
-  guint start_index, end_index;
+  guint start_index, end_index, len;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
@@ -1044,13 +1044,13 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
     end_index = g_utf8_strlen (text->input->str, -1);
   } else {
     start_index = swfdec_as_value_to_integer (cx, &argv[0]);
-    start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
+    len = g_utf8_strlen (text->input->str, -1);
+    start_index = MIN (start_index, len);
     if (argc == 1) {
       end_index = start_index + 1;
     } else {
       end_index = swfdec_as_value_to_integer (cx, &argv[1]);
-      end_index =
-	CLAMP (end_index, start_index, g_utf8_strlen (text->input->str, -1));
+      end_index = CLAMP (end_index, start_index, len);
     }
   }
 

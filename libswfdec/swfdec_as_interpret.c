@@ -2200,6 +2200,7 @@ swfdec_action_instance_of (SwfdecAsContext *cx, guint action,
   if (object == NULL || constructor == NULL)
     return;
 
+  // FIXME: propflag tests are wrong, and we shouldn't get __proto__.prototype
   swfdec_as_object_get_variable (constructor, SWFDEC_AS_STR_prototype, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;

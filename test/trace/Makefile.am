@@ -911,6 +911,15 @@ EXTRA_DIST = \
 	mouse-show-hide-6.swf.trace \
 	mouse-show-hide-7.swf \
 	mouse-show-hide-7.swf.trace \
+	movieclip-set-prototype.c \
+	movieclip-set-prototype-5.swf \
+	movieclip-set-prototype-5.swf.trace \
+	movieclip-set-prototype-6.swf \
+	movieclip-set-prototype-6.swf.trace \
+	movieclip-set-prototype-7.swf \
+	movieclip-set-prototype-7.swf.trace \
+	movieclip-set-prototype-8.swf \
+	movieclip-set-prototype-8.swf.trace \
 	movieclip-target.as \
 	movieclip-target-5.swf \
 	movieclip-target-5.swf.trace \

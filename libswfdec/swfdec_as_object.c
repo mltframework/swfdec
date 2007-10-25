@@ -1553,13 +1553,10 @@ swfdec_as_object_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
 void
 swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
 {
+  SwfdecAsContext *cx = object->context;
   SwfdecAsValue val;
   char **varlist, *p;
   guint i;
-
-  str = swfdec_as_string_unescape (object->context, str);
-  if (str == NULL)
-    return;
 
   varlist = g_strsplit (str, "&", -1);
 
@@ -1573,13 +1570,16 @@ swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
 
     if (p != NULL) {
       SWFDEC_AS_VALUE_SET_STRING (&val,
-	  swfdec_as_context_get_string (object->context, p));
+	  swfdec_as_context_give_string (object->context, 
+	    swfdec_as_string_unescape (cx, p)));
     } else {
       SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_EMPTY);
     }
     swfdec_as_object_set_variable (object,
-	swfdec_as_context_get_string (object->context, varlist[i]), &val);
+	swfdec_as_context_give_string (object->context, 
+	  swfdec_as_string_unescape (cx, varlist[i])), &val);
   }
+  g_strfreev (varlist);
 }
 
 void

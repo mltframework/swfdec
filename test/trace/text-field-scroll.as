@@ -4,7 +4,7 @@ function trace_scroll_properties () {
   trace ("bottomScroll: " + t.bottomScroll);
   trace ("hscroll: " + t.hscroll);
   trace ("maxhscroll > 0: " + (t.maxhscroll > 0));
-  trace ("maxscroll: " + t.maxscroll);
+  trace ("maxscroll > 0: " + (t.maxscroll > 0));
   trace ("scroll: " + t.scroll);
 }
 

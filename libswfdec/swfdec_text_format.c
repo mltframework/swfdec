@@ -934,10 +934,10 @@ swfdec_text_format_remove_different (SwfdecTextFormat *format,
   set = format->values_set & from->values_set;
 
   if (set & (1 << PROP_ALIGN) && format->align != from->align)
-    set &= ~PROP_ALIGN;
+    set &= ~(1 << PROP_ALIGN);
   if (set & (1 << PROP_BLOCK_INDENT) &&
       format->block_indent != from->block_indent) {
-    set &= ~PROP_BLOCK_INDENT;
+    set &= ~(1 << PROP_BLOCK_INDENT);
   }
   if (set & (1 << PROP_BOLD) && format->bold != from->bold)
     set &= ~(1 << PROP_BOLD);

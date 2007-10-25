@@ -443,6 +443,7 @@ swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
   if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
     return SWFDEC_AS_DELETE_NOT_DELETED;
 
+  // special case: in version > 6 deleting doesn't stop __proto__ from working
   if (variable == SWFDEC_AS_STR___proto__ && object->context->version <= 6) {
     object->prototype = NULL;
     object->prototype_flags = 0;

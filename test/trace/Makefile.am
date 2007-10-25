@@ -1884,6 +1884,15 @@ EXTRA_DIST = \
 	text-field-length-7.swf.trace \
 	text-field-length-8.swf \
 	text-field-length-8.swf.trace \
+	text-field-set-text-format.as \
+	text-field-set-text-format-5.swf \
+	text-field-set-text-format-5.swf.trace \
+	text-field-set-text-format-6.swf \
+	text-field-set-text-format-6.swf.trace \
+	text-field-set-text-format-7.swf \
+	text-field-set-text-format-7.swf.trace \
+	text-field-set-text-format-8.swf \
+	text-field-set-text-format-8.swf.trace \
 	text-field-scroll.as \
 	text-field-scroll-5.swf \
 	text-field-scroll-5.swf.trace \

@@ -1089,13 +1089,13 @@ swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "iis", &start_index,
       &end_index, &str);
 
-  start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
   if (start_index < 0)
     return;
-
-  end_index = MIN (end_index, g_utf8_strlen (text->input->str, -1));
   if (end_index < start_index)
     return;
+
+  start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
+  end_index = MIN (end_index, g_utf8_strlen (text->input->str, -1));
 
   swfdec_text_field_movie_replace_text (text, start_index, end_index, str);
 }

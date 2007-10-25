@@ -1566,15 +1566,6 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   if (text->style_sheet_input)
     return;
 
-  text->input = g_string_erase (text->input,
-      g_utf8_offset_to_pointer (text->input->str, start_index) -
-      text->input->str,
-      g_utf8_offset_to_pointer (text->input->str, end_index) -
-      g_utf8_offset_to_pointer (text->input->str, start_index));
-  text->input = g_string_insert (text->input,
-      g_utf8_offset_to_pointer (text->input->str, start_index) -
-      text->input->str, str);
-
   first = TRUE;
   prev = NULL;
   for (iter = text->formats; iter != NULL; iter = iter->next)
@@ -1601,6 +1592,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     }
     prev = iter;
   }
+
   if (end_index == g_utf8_strlen (text->input->str, -1)) {
     if (SWFDEC_AS_OBJECT (text)->context->version < 8) {
       SWFDEC_FIXME ("replaceText to the end of the TextField might use wrong text format on version 7");
@@ -1611,6 +1603,15 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
 	((SwfdecFormatIndex *)text->formats->data)->format);
     text->formats = g_slist_append (text->formats, findex);
   }
+
+  text->input = g_string_erase (text->input,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str,
+      g_utf8_offset_to_pointer (text->input->str, end_index) -
+      g_utf8_offset_to_pointer (text->input->str, start_index));
+  text->input = g_string_insert (text->input,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str, str);
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);

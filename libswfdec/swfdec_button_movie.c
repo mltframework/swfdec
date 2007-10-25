@@ -99,12 +99,12 @@ swfdec_button_movie_execute (SwfdecButtonMovie *movie,
   const char *name;
 
   if (movie->button->menubutton) {
-    g_assert ((condition & (SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN \
-                         | SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN \
-                         | SWFDEC_BUTTON_OUT_DOWN_TO_IDLE)) == 0);
+    g_assert ((condition & ((1 << SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN) \
+                         | (1 << SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN) \
+                         | (1 << SWFDEC_BUTTON_OUT_DOWN_TO_IDLE))) == 0);
   } else {
-    g_assert ((condition & (SWFDEC_BUTTON_IDLE_TO_OVER_DOWN \
-                         | SWFDEC_BUTTON_OVER_DOWN_TO_IDLE)) == 0);
+    g_assert ((condition & ((1 << SWFDEC_BUTTON_IDLE_TO_OVER_DOWN) \
+                         | (1 << SWFDEC_BUTTON_OVER_DOWN_TO_IDLE))) == 0);
   }
   if (movie->button->events)
     swfdec_event_list_execute (movie->button->events, 

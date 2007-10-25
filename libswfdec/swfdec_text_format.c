@@ -934,10 +934,10 @@ swfdec_text_format_remove_different (SwfdecTextFormat *format,
   set = format->values_set & from->values_set;
 
   if (set & (1 << PROP_ALIGN) && format->align != from->align)
-    set &= ~PROP_ALIGN;
+    set &= ~(1 << PROP_ALIGN);
   if (set & (1 << PROP_BLOCK_INDENT) &&
       format->block_indent != from->block_indent) {
-    set &= ~PROP_BLOCK_INDENT;
+    set &= ~(1 << PROP_BLOCK_INDENT);
   }
   if (set & (1 << PROP_BOLD) && format->bold != from->bold)
     set &= ~(1 << PROP_BOLD);
@@ -1095,11 +1095,15 @@ swfdec_text_format_clear (SwfdecTextFormat *format)
   swfdec_text_format_mark_set (format, PROP_DISPLAY);
 }
 
-static void
+void
 swfdec_text_format_init_properties (SwfdecAsContext *cx)
 {
   SwfdecAsValue val;
   SwfdecAsObject *proto;
+
+  // FIXME: We should only initialize if the prototype Object has not been
+  // initialized by any object's constructor with native properties
+  // (TextField, TextFormat, XML, XMLNode at least)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
@@ -1215,7 +1219,8 @@ swfdec_text_format_copy (const SwfdecTextFormat *copy_from)
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FORMAT (copy_from), NULL);
 
-  object_to = swfdec_text_format_new (SWFDEC_AS_OBJECT (copy_from)->context);
+  object_to = swfdec_text_format_new_no_properties (
+      SWFDEC_AS_OBJECT (copy_from)->context);
   if (object_to == NULL)
     return NULL;
   copy_to = SWFDEC_TEXT_FORMAT (object_to);

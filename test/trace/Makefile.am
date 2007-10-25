@@ -1859,6 +1859,15 @@ EXTRA_DIST = \
 	targetpath-6.swf.trace \
 	targetpath-7.swf \
 	targetpath-7.swf.trace \
+	text-field-get-text-format.as \
+	text-field-get-text-format-5.swf \
+	text-field-get-text-format-5.swf.trace \
+	text-field-get-text-format-6.swf \
+	text-field-get-text-format-6.swf.trace \
+	text-field-get-text-format-7.swf \
+	text-field-get-text-format-7.swf.trace \
+	text-field-get-text-format-8.swf \
+	text-field-get-text-format-8.swf.trace \
 	text-field-html-input.as \
 	text-field-html-input-6.swf \
 	text-field-html-input-6.swf.trace \
@@ -1866,6 +1875,13 @@ EXTRA_DIST = \
 	text-field-html-input-7.swf.trace \
 	text-field-html-input-8.swf \
 	text-field-html-input-8.swf.trace \
+	text-field-init.as \
+	text-field-init-6.swf \
+	text-field-init-6.swf.trace \
+	text-field-init-7.swf \
+	text-field-init-7.swf.trace \
+	text-field-init-8.swf \
+	text-field-init-8.swf.trace \
 	text-field-length.as \
 	text-field-length-5.swf \
 	text-field-length-5.swf.trace \
@@ -1875,6 +1891,15 @@ EXTRA_DIST = \
 	text-field-length-7.swf.trace \
 	text-field-length-8.swf \
 	text-field-length-8.swf.trace \
+	text-field-set-text-format.as \
+	text-field-set-text-format-5.swf \
+	text-field-set-text-format-5.swf.trace \
+	text-field-set-text-format-6.swf \
+	text-field-set-text-format-6.swf.trace \
+	text-field-set-text-format-7.swf \
+	text-field-set-text-format-7.swf.trace \
+	text-field-set-text-format-8.swf \
+	text-field-set-text-format-8.swf.trace \
 	text-field-scroll.as \
 	text-field-scroll-5.swf \
 	text-field-scroll-5.swf.trace \
@@ -1911,6 +1936,15 @@ EXTRA_DIST = \
 	textformat-7.swf.trace \
 	textformat-8.swf \
 	textformat-8.swf.trace \
+	textformat-properties.as \
+	textformat-properties-5.swf \
+	textformat-properties-5.swf.trace \
+	textformat-properties-6.swf \
+	textformat-properties-6.swf.trace \
+	textformat-properties-7.swf \
+	textformat-properties-7.swf.trace \
+	textformat-properties-8.swf \
+	textformat-properties-8.swf.trace \
 	textformat-valueof.as \
 	textformat-valueof-5.swf \
 	textformat-valueof-5.swf.trace \
@@ -2013,13 +2047,6 @@ EXTRA_DIST = \
 	with-prototypes-6.swf.trace \
 	with-prototypes-7.swf \
 	with-prototypes-7.swf.trace \
-	xml-constructor-properties.as \
-	xml-constructor-properties-5.swf \
-	xml-constructor-properties-5.swf.trace \
-	xml-constructor-properties-6.swf \
-	xml-constructor-properties-6.swf.trace \
-	xml-constructor-properties-7.swf \
-	xml-constructor-properties-7.swf.trace \
 	xml-errors.as \
 	xml-errors-5.swf \
 	xml-errors-5.swf.trace \
@@ -2034,6 +2061,15 @@ EXTRA_DIST = \
 	xml-escape-6.swf.trace \
 	xml-escape-7.swf \
 	xml-escape-7.swf.trace \
+	xml-init.as \
+	xml-init-5.swf \
+	xml-init-5.swf.trace \
+	xml-init-6.swf \
+	xml-init-6.swf.trace \
+	xml-init-7.swf \
+	xml-init-7.swf.trace \
+	xml-init-8.swf \
+	xml-init-8.swf.trace \
 	xml-node.as \
 	xml-node-5.swf \
 	xml-node-5.swf.trace \
@@ -2041,6 +2077,15 @@ EXTRA_DIST = \
 	xml-node-6.swf.trace \
 	xml-node-7.swf \
 	xml-node-7.swf.trace \
+	xml-node-init.as \
+	xml-node-init-5.swf \
+	xml-node-init-5.swf.trace \
+	xml-node-init-6.swf \
+	xml-node-init-6.swf.trace \
+	xml-node-init-7.swf \
+	xml-node-init-7.swf.trace \
+	xml-node-init-8.swf \
+	xml-node-init-8.swf.trace \
 	xml-other.as \
 	xml-other-5.swf \
 	xml-other-5.swf.trace \

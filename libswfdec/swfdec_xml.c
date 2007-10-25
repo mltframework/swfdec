@@ -560,8 +560,8 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 
   // create the new element
   if (!close) {
-    child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (*node)->context,
-	SWFDEC_XML_NODE_ELEMENT, name);
+    child = swfdec_xml_node_new_no_properties (
+	SWFDEC_AS_OBJECT (*node)->context, SWFDEC_XML_NODE_ELEMENT, name);
     g_free (name);
   }
 
@@ -640,8 +640,8 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
     text = g_strndup (p, end - p);
     unescaped = swfdec_xml_unescape (SWFDEC_AS_OBJECT (xml)->context, text);
     g_free (text);
-    child = swfdec_xml_node_new (SWFDEC_AS_OBJECT (node)->context,
-	SWFDEC_XML_NODE_TEXT, unescaped);
+    child = swfdec_xml_node_new_no_properties (
+	SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT, unescaped);
     g_free (unescaped);
     swfdec_xml_node_appendChild (node, child);
   }
@@ -754,6 +754,43 @@ swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
 }
 
+static void
+swfdec_xml_init_properties (SwfdecAsContext *cx)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *xml, *proto;
+
+  // FIXME: We should only initialize if the prototype Object has not been
+  // initialized by any object's constructor with native properties
+  // (TextField, TextFormat, XML, XMLNode at least)
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
+
+  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_XML, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  xml = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_get_variable (xml, SWFDEC_AS_STR_prototype, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_ignoreWhite,
+      swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_status,
+      swfdec_xml_get_status, swfdec_xml_set_status);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_xmlDecl,
+      swfdec_xml_get_xmlDecl, swfdec_xml_set_xmlDecl);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_docTypeDecl,
+      swfdec_xml_get_docTypeDecl, swfdec_xml_set_docTypeDecl);
+
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_contentType,
+      swfdec_xml_get_contentType, swfdec_xml_set_contentType);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_loaded,
+      swfdec_xml_get_loaded, swfdec_xml_set_loaded);
+}
+
 SWFDEC_AS_CONSTRUCTOR (253, 9, swfdec_xml_construct, swfdec_xml_get_type)
 void
 swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
@@ -766,32 +803,9 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   g_assert (SWFDEC_IS_XML (object));
 
-  if (!SWFDEC_PLAYER (cx)->xml_properties_initialized) {
-    SwfdecAsValue val;
-    SwfdecAsObject *proto;
+  swfdec_xml_init_properties (cx);
 
-    swfdec_as_object_get_variable (object, SWFDEC_AS_STR___proto__, &val);
-    g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
-    proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_ignoreWhite,
-	swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_status,
-	swfdec_xml_get_status, swfdec_xml_set_status);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_xmlDecl,
-	swfdec_xml_get_xmlDecl, swfdec_xml_set_xmlDecl);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_docTypeDecl,
-	swfdec_xml_get_docTypeDecl, swfdec_xml_set_docTypeDecl);
-
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_contentType,
-	swfdec_xml_get_contentType, swfdec_xml_set_contentType);
-    swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_loaded,
-	swfdec_xml_get_loaded, swfdec_xml_set_loaded);
-
-    SWFDEC_PLAYER (cx)->xml_properties_initialized = TRUE;
-  }
-
-  swfdec_xml_node_init_properties (SWFDEC_XML_NODE (object),
+  swfdec_xml_node_init_values (SWFDEC_XML_NODE (object),
       SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
 
   SWFDEC_AS_VALUE_SET_STRING (&SWFDEC_XML (object)->contentType,

@@ -963,6 +963,8 @@ swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
+  swfdec_text_format_init_properties (cx);
+
   SWFDEC_AS_VALUE_SET_OBJECT (ret,
       SWFDEC_AS_OBJECT (swfdec_text_format_copy (text->format_new)));
 }
@@ -992,8 +994,8 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
   SwfdecTextFormat *format;
-  int start_index, end_index;
-  int i;
+  int val, start_index, end_index;
+  guint i;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
@@ -1001,18 +1003,23 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
     return;
 
   i = 0;
-  if (argc >= 2) {
-    start_index = swfdec_as_value_to_integer (cx, &argv[i++]);
-    start_index = CLAMP (start_index, 0, g_utf8_strlen (text->input->str, -1));
-  } else {
+  if (argc <= i + 1) {
     start_index = 0;
-  }
-  if (argc >= 3) {
-    end_index = swfdec_as_value_to_integer (cx, &argv[i++]);
+    end_index = g_utf8_strlen (text->input->str, -1);
+  } else {
+    start_index = val = swfdec_as_value_to_integer (cx, &argv[i++]);
+    start_index = CLAMP (start_index, 0, g_utf8_strlen (text->input->str, -1));
+    if (argc <= i + 1) {
+      if (val < 0) { // fail
+	start_index = end_index = 0;
+      } else{
+	end_index = start_index + 1;
+      }
+    } else {
+      end_index = swfdec_as_value_to_integer (cx, &argv[i++]);
+    }
     end_index =
       CLAMP (end_index, start_index, g_utf8_strlen (text->input->str, -1));
-  } else {
-    end_index = g_utf8_strlen (text->input->str, -1);
   }
   if (start_index == end_index)
     return;
@@ -1035,7 +1042,7 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
 {
   SwfdecTextFieldMovie *text;
   SwfdecTextFormat *format;
-  guint start_index, end_index, len;
+  int val, start_index, end_index;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
@@ -1043,19 +1050,27 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
     start_index = 0;
     end_index = g_utf8_strlen (text->input->str, -1);
   } else {
-    start_index = swfdec_as_value_to_integer (cx, &argv[0]);
-    len = g_utf8_strlen (text->input->str, -1);
-    start_index = MIN (start_index, len);
+    start_index = val = swfdec_as_value_to_integer (cx, &argv[0]);
+    start_index = CLAMP (start_index, 0, g_utf8_strlen (text->input->str, -1));
     if (argc == 1) {
-      end_index = start_index + 1;
+      if (val < 0) { // fail
+	start_index = end_index = 0;
+      } else{
+	end_index = start_index + 1;
+      }
     } else {
       end_index = swfdec_as_value_to_integer (cx, &argv[1]);
-      end_index = CLAMP (end_index, start_index, len);
     }
+    end_index =
+      CLAMP (end_index, start_index, g_utf8_strlen (text->input->str, -1));
   }
 
-  format =
-    swfdec_text_field_movie_get_text_format (text, start_index, end_index);
+  if (start_index == end_index) {
+    format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
+  } else {
+    format =
+      swfdec_text_field_movie_get_text_format (text, start_index, end_index);
+  }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
 }
@@ -1235,6 +1250,10 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
 {
   SwfdecAsValue val;
   SwfdecAsObject *object, *proto;
+
+  // FIXME: We should only initialize if the prototype Object has not been
+  // initialized by any object's constructor with native properties
+  // (TextField, TextFormat, XML, XMLNode at least)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 

@@ -1054,8 +1054,12 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
     }
   }
 
-  format =
-    swfdec_text_field_movie_get_text_format (text, start_index, end_index);
+  if (start_index == end_index) {
+    format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
+  } else {
+    format =
+      swfdec_text_field_movie_get_text_format (text, start_index, end_index);
+  }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
 }

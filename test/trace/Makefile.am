@@ -757,6 +757,15 @@ EXTRA_DIST = \
 	if-6.swf.trace \
 	if-7.swf \
 	if-7.swf.trace \
+	initaction-queue.c \
+	initaction-queue-5.swf \
+	initaction-queue-5.swf.trace \
+	initaction-queue-6.swf \
+	initaction-queue-6.swf.trace \
+	initaction-queue-7.swf \
+	initaction-queue-7.swf.trace \
+	initaction-queue-8.swf \
+	initaction-queue-8.swf.trace \
 	initobject-stack.as \
 	initobject-stack-5.swf \
 	initobject-stack-5.swf.trace \

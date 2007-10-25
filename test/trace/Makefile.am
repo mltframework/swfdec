@@ -1261,6 +1261,15 @@ EXTRA_DIST = \
 	prototype-addProperty-7.swf.trace \
 	prototype-addProperty-8.swf \
 	prototype-addProperty-8.swf.trace \
+	prototype-handling.as \
+	prototype-handling-5.swf \
+	prototype-handling-5.swf.trace \
+	prototype-handling-6.swf \
+	prototype-handling-6.swf.trace \
+	prototype-handling-7.swf \
+	prototype-handling-7.swf.trace \
+	prototype-handling-8.swf \
+	prototype-handling-8.swf.trace \
 	prototype-movie.as \
 	prototype-movie-5.swf \
 	prototype-movie-5.swf.trace \

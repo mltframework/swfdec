@@ -363,7 +363,6 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	    SWFDEC_ERROR ("cannot export id %u, no name was given", id);
 	  } else {
 	    SWFDEC_LOG ("exporting %s %u as %s", G_OBJECT_TYPE_NAME (object), id, name);
-	    g_print ("exporting %s %u as %s\n", G_OBJECT_TYPE_NAME (object), id, name);
 	    g_object_ref (object);
 	    swfdec_resource_add_export (resource, object, name); 
 	  }
@@ -397,7 +396,6 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	sprite->init_action = swfdec_script_new_from_bits (&bits, name, SWFDEC_AS_CONTEXT (player)->version);
 	g_free (name);
 	if (sprite->init_action) {
-	  g_print ("Executing init action for sprite %u\n", id);
 	  swfdec_player_add_action_script (player, mov, sprite->init_action, 0);
 	}
       }

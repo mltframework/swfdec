@@ -278,7 +278,6 @@ swfdec_resource_get_export (SwfdecResource *instance, const char *name)
   g_return_val_if_fail (SWFDEC_IS_RESOURCE (instance), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  g_print ("export for %s\n", name);
   return g_hash_table_lookup (instance->exports, name);
 }
 
@@ -288,7 +287,6 @@ swfdec_resource_get_export_name (SwfdecResource *instance, SwfdecCharacter *char
   g_return_val_if_fail (SWFDEC_IS_RESOURCE (instance), NULL);
   g_return_val_if_fail (SWFDEC_IS_CHARACTER (character), NULL);
 
-  g_print ("export name for %u\n", character->id);
   return g_hash_table_lookup (instance->export_names, character);
 }
 

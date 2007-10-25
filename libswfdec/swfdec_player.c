@@ -1913,7 +1913,6 @@ swfdec_player_get_export_class (SwfdecPlayer *player, const char *name)
   SwfdecAsObject *ret;
   
   ret = g_hash_table_lookup (player->registered_classes, name);
-  g_print ("found registered class %p for %p %s\n", ret, name, name);
   if (ret) {
     SWFDEC_LOG ("found registered class %p for %s", ret, name);
     return ret;
@@ -1937,7 +1936,6 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
   g_return_if_fail (name != NULL);
   g_return_if_fail (object == NULL || SWFDEC_IS_AS_OBJECT (object));
 
-  g_print ("setting class %p for %p %s\n", object, name, name);
   if (object) {
     SWFDEC_LOG ("setting class %p for %s", object, name);
     g_hash_table_insert (player->registered_classes, (gpointer) name, object);

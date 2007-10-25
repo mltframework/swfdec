@@ -1875,6 +1875,13 @@ EXTRA_DIST = \
 	text-field-html-input-7.swf.trace \
 	text-field-html-input-8.swf \
 	text-field-html-input-8.swf.trace \
+	text-field-init.as \
+	text-field-init-6.swf \
+	text-field-init-6.swf.trace \
+	text-field-init-7.swf \
+	text-field-init-7.swf.trace \
+	text-field-init-8.swf \
+	text-field-init-8.swf.trace \
 	text-field-length.as \
 	text-field-length-5.swf \
 	text-field-length-5.swf.trace \

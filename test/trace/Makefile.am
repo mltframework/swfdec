@@ -762,6 +762,15 @@ EXTRA_DIST = \
 	instance-name-loaded-6.swf.trace \
 	instance-name-loaded-7.swf \
 	instance-name-loaded-7.swf.trace \
+	instance-of.as \
+	instance-of-5.swf \
+	instance-of-5.swf.trace \
+	instance-of-6.swf \
+	instance-of-6.swf.trace \
+	instance-of-7.swf \
+	instance-of-7.swf.trace \
+	instance-of-8.swf \
+	instance-of-8.swf.trace \
 	invalid-variable-name.as \
 	invalid-variable-name-5.swf \
 	invalid-variable-name-5.swf.trace \

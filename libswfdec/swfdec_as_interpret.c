@@ -2239,18 +2239,17 @@ swfdec_action_cast (SwfdecAsContext *cx, guint action, const guint8 *data,
 
   val = swfdec_as_stack_pop (cx);
   if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
-    constructor = SWFDEC_AS_VALUE_GET_OBJECT (val);
-  } else {
-    constructor = NULL;
-  }
-
-  val = swfdec_as_stack_pop (cx);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     object = SWFDEC_AS_VALUE_GET_OBJECT (val);
   } else {
     object = NULL;
   }
-
+ 
+  val = swfdec_as_stack_pop (cx);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    constructor = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  } else {
+    constructor = NULL;
+  }
 
   if (object == NULL || constructor == NULL) {
     SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_push (cx));

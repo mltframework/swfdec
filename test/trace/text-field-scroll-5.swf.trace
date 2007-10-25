@@ -2,53 +2,53 @@
 bottomScroll: 
 hscroll: 
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 
 # WITH TEXT
 bottomScroll: 
 hscroll: 200
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 3
 # WITH WORD WRAP
 bottomScroll: 
 hscroll: 200
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 3
 # WITHOUT WORD WRAP
 bottomScroll: 
 hscroll: 200
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 3
 # WITH WORD WRAP - SCROLL RESET
 bottomScroll: 
 hscroll: 200
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 3
 # WITH WORD WRAP - FORMAT RESET
 bottomScroll: 
 hscroll: 200
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 3
 # WITH WORD WRAP - TEXT RESET
 bottomScroll: 
 hscroll: 200
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 3
 # WITHOUT WORD WRAP - FORMAT RESET
 bottomScroll: 
 hscroll: 200
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 30
 # WITHOUT WORD WRAP - TEXT RESET
 bottomScroll: 
 hscroll: 200
 maxhscroll > 0: false
-maxscroll: 
+maxscroll > 0: false
 scroll: 30

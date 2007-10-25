@@ -239,6 +239,15 @@ EXTRA_DIST = \
 	case1-6.swf.trace \
 	case1-7.swf \
 	case1-7.swf.trace \
+	cast.as \
+	cast-5.swf \
+	cast-5.swf.trace \
+	cast-6.swf \
+	cast-6.swf.trace \
+	cast-7.swf \
+	cast-7.swf.trace \
+	cast-8.swf \
+	cast-8.swf.trace \
 	charat.as \
 	charat-5.swf \
 	charat-5.swf.trace \

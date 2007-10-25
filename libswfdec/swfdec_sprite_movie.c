@@ -358,14 +358,13 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	  name = swfdec_bits_get_string_with_version (&bits, SWFDEC_AS_CONTEXT (player)->version);
 	  if (object == NULL) {
 	    SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
-	    g_free (name);
 	  } else if (name == NULL) {
 	    SWFDEC_ERROR ("cannot export id %u, no name was given", id);
 	  } else {
 	    SWFDEC_LOG ("exporting %s %u as %s", G_OBJECT_TYPE_NAME (object), id, name);
-	    g_object_ref (object);
 	    swfdec_resource_add_export (resource, object, name); 
 	  }
+	  g_free (name);
 	}
       }
       return TRUE;

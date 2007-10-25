@@ -369,6 +369,8 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
 
   /* special cases */
   if (condition == SWFDEC_EVENT_CONSTRUCT) {
+    if (SWFDEC_AS_OBJECT (movie)->context->version <= 5)
+      return;
     swfdec_movie_set_constructor (SWFDEC_SPRITE_MOVIE (movie));
   } else if (condition == SWFDEC_EVENT_ENTER) {
     if (movie->will_be_removed)

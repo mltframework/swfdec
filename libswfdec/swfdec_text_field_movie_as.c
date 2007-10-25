@@ -963,6 +963,8 @@ swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
+  swfdec_text_format_init_properties (cx);
+
   SWFDEC_AS_VALUE_SET_OBJECT (ret,
       SWFDEC_AS_OBJECT (swfdec_text_format_copy (text->format_new)));
 }

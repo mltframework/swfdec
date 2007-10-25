@@ -95,6 +95,7 @@ gboolean	swfdec_text_format_equal_or_undefined	(const SwfdecTextFormat *a,
 						 const SwfdecTextFormat *b);
 void		swfdec_text_format_remove_different (SwfdecTextFormat *		format,
 						 const SwfdecTextFormat *	from);
+void		swfdec_text_format_init_properties (SwfdecAsContext *		cx);
 
 G_END_DECLS
 #endif

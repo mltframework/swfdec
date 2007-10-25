@@ -1095,7 +1095,7 @@ swfdec_text_format_clear (SwfdecTextFormat *format)
   swfdec_text_format_mark_set (format, PROP_DISPLAY);
 }
 
-static void
+void
 swfdec_text_format_init_properties (SwfdecAsContext *cx)
 {
   SwfdecAsValue val;
@@ -1219,7 +1219,8 @@ swfdec_text_format_copy (const SwfdecTextFormat *copy_from)
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FORMAT (copy_from), NULL);
 
-  object_to = swfdec_text_format_new (SWFDEC_AS_OBJECT (copy_from)->context);
+  object_to = swfdec_text_format_new_no_properties (
+      SWFDEC_AS_OBJECT (copy_from)->context);
   if (object_to == NULL)
     return NULL;
   copy_to = SWFDEC_TEXT_FORMAT (object_to);

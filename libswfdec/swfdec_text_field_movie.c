@@ -1126,6 +1126,7 @@ swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *text,
       continue;
 
     if (format == NULL) {
+      swfdec_text_format_init_properties (SWFDEC_AS_OBJECT (text)->context);
       format =
 	swfdec_text_format_copy (((SwfdecFormatIndex *)iter->data)->format);
     } else {

@@ -21,12 +21,17 @@ tmp.parse (".a { text-size: 4; }");
 check_and_reset ();
 
 this.createTextField ("t", 0, 0, 0, 100, 100);
+t.text = "hello";
 check_and_reset ();
 t.getNewTextFormat ();
 check_and_reset ();
 t.setNewTextFormat (new Object ());
 check_and_reset ();
 t.getTextFormat ();
+check_and_reset ();
+t.getTextFormat (20, 21);
+check_and_reset ();
+t.getTextFormat (1, 2);
 check_and_reset ();
 t.setTextFormat (new Object ());
 check_and_reset ();

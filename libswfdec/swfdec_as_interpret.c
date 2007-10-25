@@ -2174,45 +2174,60 @@ swfdec_action_get_time (SwfdecAsContext *cx, guint action, const guint8 *data, g
   SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_push (cx), diff);
 }
 
-static void
-swfdec_action_instance_of (SwfdecAsContext *cx, guint action,
-    const guint8 *data, guint len)
+static gboolean
+swfdec_action_is_instance_of (SwfdecAsObject *object,
+    SwfdecAsObject *constructor)
 {
-  SwfdecAsValue val, *val_p;
-  SwfdecAsObject *object, *class, *constructor, *prototype;
+  SwfdecAsValue val;
+  SwfdecAsObject *class, *prototype;
 
-  val_p = swfdec_as_stack_pop (cx);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val_p)) {
-    constructor = SWFDEC_AS_VALUE_GET_OBJECT (val_p);
-  } else {
-    constructor = NULL;
-  }
-
-  val_p = swfdec_as_stack_pop (cx);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val_p)) {
-    object = SWFDEC_AS_VALUE_GET_OBJECT (val_p);
-  } else {
-    object = NULL;
-  }
-
-  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_push (cx), FALSE);
-
-  if (object == NULL || constructor == NULL)
-    return;
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (constructor), FALSE);
 
   // FIXME: propflag tests are wrong, and we shouldn't get __proto__.prototype
   swfdec_as_object_get_variable (constructor, SWFDEC_AS_STR_prototype, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return;
+    return FALSE;
   prototype = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
   class = object;
   while ((class = swfdec_as_object_get_prototype (class)) != NULL) {
-    if (class == prototype) {
-      SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), TRUE);
-      break;
-    }
+    if (class == prototype)
+      return TRUE;
   }
+
+  return FALSE;
+}
+
+static void
+swfdec_action_instance_of (SwfdecAsContext *cx, guint action,
+    const guint8 *data, guint len)
+{
+  SwfdecAsValue *val;
+  SwfdecAsObject *object, *constructor;
+
+  val = swfdec_as_stack_pop (cx);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    constructor = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  } else {
+    constructor = NULL;
+  }
+
+  val = swfdec_as_stack_pop (cx);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    object = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  } else {
+    object = NULL;
+  }
+
+
+  if (object == NULL || constructor == NULL) {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_push (cx), FALSE);
+    return;
+  }
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_push (cx),
+      swfdec_action_is_instance_of (object, constructor));
 }
 
 static void

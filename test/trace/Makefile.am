@@ -1963,15 +1963,15 @@ EXTRA_DIST = \
 	textformat-7.swf.trace \
 	textformat-8.swf \
 	textformat-8.swf.trace \
-	textformat-properties.as \
-	textformat-properties-5.swf \
-	textformat-properties-5.swf.trace \
-	textformat-properties-6.swf \
-	textformat-properties-6.swf.trace \
-	textformat-properties-7.swf \
-	textformat-properties-7.swf.trace \
-	textformat-properties-8.swf \
-	textformat-properties-8.swf.trace \
+	textformat-init.as \
+	textformat-init-5.swf \
+	textformat-init-5.swf.trace \
+	textformat-init-6.swf \
+	textformat-init-6.swf.trace \
+	textformat-init-7.swf \
+	textformat-init-7.swf.trace \
+	textformat-init-8.swf \
+	textformat-init-8.swf.trace \
 	textformat-valueof.as \
 	textformat-valueof-5.swf \
 	textformat-valueof-5.swf.trace \

@@ -1373,29 +1373,6 @@ EXTRA_DIST = \
 	round-direction-7.swf.trace \
 	round-direction-8.swf \
 	round-direction-8.swf.trace \
-	settarget.as \
-	settarget-5.swf \
-	settarget-5.swf.trace \
-	settarget-6.swf \
-	settarget-6.swf.trace \
-	settarget-7.swf \
-	settarget-7.swf.trace \
-	settarget-tostring-5.swf
-	settarget-tostring-5.swf.trace
-	settarget-tostring-6.swf
-	settarget-tostring-6.swf.trace
-	settarget-tostring-7.swf
-	settarget-tostring-7.swf.trace
-	settarget-tostring-8.swf
-	settarget-tostring-8.swf.trace
-	settarget-tostring.as
-	settimeout.as \
-	settimeout-5.swf \
-	settimeout-5.swf.trace \
-	settimeout-6.swf \
-	settimeout-6.swf.trace \
-	settimeout-7.swf \
-	settimeout-7.swf.trace \
 	scalemode.as \
 	scalemode-5.swf \
 	scalemode-5.swf.trace \
@@ -1558,6 +1535,22 @@ EXTRA_DIST = \
 	settarget2-tostring-7.swf.trace \
 	settarget2-tostring-8.swf \
 	settarget2-tostring-8.swf.trace \
+	settarget.as \
+	settarget-5.swf \
+	settarget-5.swf.trace \
+	settarget-6.swf \
+	settarget-6.swf.trace \
+	settarget-7.swf \
+	settarget-7.swf.trace \
+	settarget-tostring-5.swf
+	settarget-tostring-5.swf.trace
+	settarget-tostring-6.swf
+	settarget-tostring-6.swf.trace
+	settarget-tostring-7.swf
+	settarget-tostring-7.swf.trace
+	settarget-tostring-8.swf
+	settarget-tostring-8.swf.trace
+	settarget-tostring.as
 	settarget-delimiters.as \
 	settarget-delimiters-5.swf \
 	settarget-delimiters-5.swf.trace \
@@ -1585,6 +1578,13 @@ EXTRA_DIST = \
 	settarget-relative-7.swf.trace \
 	settarget-relative-8.swf \
 	settarget-relative-8.swf.trace \
+	settimeout.as \
+	settimeout-5.swf \
+	settimeout-5.swf.trace \
+	settimeout-6.swf \
+	settimeout-6.swf.trace \
+	settimeout-7.swf \
+	settimeout-7.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	setvariable-callback.as \

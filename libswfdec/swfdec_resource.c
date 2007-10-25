@@ -238,7 +238,8 @@ swfdec_resource_class_init (SwfdecResourceClass *klass)
 static void
 swfdec_resource_init (SwfdecResource *instance)
 {
-  instance->exports = g_hash_table_new (swfdec_str_case_hash, swfdec_str_case_equal);
+  instance->exports = g_hash_table_new_full (swfdec_str_case_hash, 
+      swfdec_str_case_equal, g_free, g_object_unref);
   instance->export_names = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
       g_object_unref, g_free);
 }
@@ -290,15 +291,14 @@ swfdec_resource_get_export_name (SwfdecResource *instance, SwfdecCharacter *char
   return g_hash_table_lookup (instance->export_names, character);
 }
 
-/* NB: Takes ownership of name and character */
 void
-swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character, char *name)
+swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character, const char *name)
 {
   g_return_if_fail (SWFDEC_IS_RESOURCE (instance));
   g_return_if_fail (SWFDEC_IS_CHARACTER (character));
   g_return_if_fail (name != NULL);
 
-  g_hash_table_insert (instance->exports, (char *) name, character);
-  g_hash_table_insert (instance->export_names, character, (char *) name);
+  g_hash_table_insert (instance->exports, g_strdup (name), g_object_ref (character));
+  g_hash_table_insert (instance->export_names, g_object_ref (character), g_strdup (name));
 }
 

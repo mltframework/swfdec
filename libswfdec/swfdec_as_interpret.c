@@ -2175,6 +2175,50 @@ swfdec_action_get_time (SwfdecAsContext *cx, guint action, const guint8 *data, g
 }
 
 static void
+swfdec_action_instance_of (SwfdecAsContext *cx, guint action,
+    const guint8 *data, guint len)
+{
+  SwfdecAsValue val, *val_p;
+  SwfdecAsObject *object, *class, *constructor, *prototype;
+
+  val_p = swfdec_as_stack_pop (cx);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val_p)) {
+    constructor = SWFDEC_AS_VALUE_GET_OBJECT (val_p);
+  } else {
+    constructor = NULL;
+  }
+
+  val_p = swfdec_as_stack_pop (cx);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val_p)) {
+    object = SWFDEC_AS_VALUE_GET_OBJECT (val_p);
+  } else {
+    object = NULL;
+  }
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_push (cx), FALSE);
+
+  if (object == NULL || constructor == NULL)
+    return;
+
+  swfdec_as_object_get_variable (constructor, SWFDEC_AS_STR_prototype, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  prototype = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  class = object;
+  swfdec_as_object_get_variable (class, SWFDEC_AS_STR___proto__, &val);
+  while (SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  {
+    class = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+    if (class == prototype) {
+      SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), TRUE);
+      break;
+    }
+    swfdec_as_object_get_variable (class, SWFDEC_AS_STR___proto__, &val);
+  }
+}
+
+static void
 swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *superclass, *subclass, proto;
@@ -2856,7 +2900,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_CALL_METHOD] = { "CallMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_call_method, swfdec_action_call_method, swfdec_action_call_method } },
   [SWFDEC_AS_ACTION_NEW_METHOD] = { "NewMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_new_method, swfdec_action_new_method, swfdec_action_new_method } },
   /* version 6 */
-  [SWFDEC_AS_ACTION_INSTANCE_OF] = { "InstanceOf", NULL },
+  [SWFDEC_AS_ACTION_INSTANCE_OF] = { "InstanceOf", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_instance_of, swfdec_action_instance_of } },
   [SWFDEC_AS_ACTION_ENUMERATE2] = { "Enumerate2", NULL, 1, -1, { NULL, NULL, NULL, swfdec_action_enumerate2, swfdec_action_enumerate2 } },
   [SWFDEC_AS_ACTION_BREAKPOINT] = { "Breakpoint", NULL, },
   /* version 5 */

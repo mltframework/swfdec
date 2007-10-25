@@ -1380,6 +1380,15 @@ EXTRA_DIST = \
 	settarget-6.swf.trace \
 	settarget-7.swf \
 	settarget-7.swf.trace \
+	settarget-tostring-5.swf
+	settarget-tostring-5.swf.trace
+	settarget-tostring-6.swf
+	settarget-tostring-6.swf.trace
+	settarget-tostring-7.swf
+	settarget-tostring-7.swf.trace
+	settarget-tostring-8.swf
+	settarget-tostring-8.swf.trace
+	settarget-tostring.as
 	settimeout.as \
 	settimeout-5.swf \
 	settimeout-5.swf.trace \

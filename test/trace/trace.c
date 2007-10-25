@@ -133,13 +133,15 @@ run_test (gpointer testp, gpointer unused)
     /* FIXME: will not do 10 iterations if there's other stuff loaded */
     glong advance = swfdec_player_get_next_event (player);
 
-    g_assert (advance >= 0);
     if (inter) {
       int t = swfdec_interaction_get_next_event (inter);
       g_assert (t >= 0);
-      advance = MIN (advance, t);
+      if (advance < 0)
+	advance = t;
+      else
+	advance = MIN (advance, t);
     }
-    if ((guint) advance > time_left)
+    if (advance < 0 || (guint) advance > time_left)
       break;
     time_left -= advance;
     swfdec_player_advance (player, advance);

@@ -242,7 +242,7 @@ swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *
   }
   val = cx->fp->sp[-1];
   cx->fp->sp--;
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target))
+  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
     SwfdecMovie *movie = SWFDEC_MOVIE (cx->frame->target);
     int frame = swfdec_value_to_frame (cx, movie, val);
     guint jump = data[2];

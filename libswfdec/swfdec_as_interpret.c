@@ -2467,12 +2467,6 @@ swfdec_action_clone_sprite (SwfdecAsContext *cx, guint action, const guint8 *dat
     new_movie = swfdec_movie_duplicate (movie, new_name, depth);
     if (new_movie) {
       SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new_movie->name, new_movie->depth);
-      if (SWFDEC_IS_SPRITE_MOVIE (new_movie)) {
-	g_queue_push_tail (SWFDEC_PLAYER (cx)->init_queue, new_movie);
-	swfdec_movie_queue_script (new_movie, SWFDEC_EVENT_LOAD);
-	swfdec_movie_run_construct (new_movie);
-      }
-      swfdec_movie_initialize (new_movie);
     }
   }
   swfdec_as_stack_pop_n (cx, 3);

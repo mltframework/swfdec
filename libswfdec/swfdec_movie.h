@@ -240,7 +240,7 @@ void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans,
 						 const SwfdecRect *	inval);
-void		swfdec_movie_execute_script	(SwfdecMovie *		movie,
+void		swfdec_movie_execute		(SwfdecMovie *		movie,
 						 SwfdecEventType	condition);
 gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
   						 SwfdecEventType	condition);
@@ -256,8 +256,6 @@ int		swfdec_movie_compare_depths	(gconstpointer		a,
 SwfdecDepthClass
 		swfdec_depth_classify		(int			depth);
 
-void		swfdec_movie_run_init		(SwfdecMovie *		movie);
-void		swfdec_movie_run_construct	(SwfdecMovie *		movie);
 /* in swfdec_movie_asprops.c */
 gboolean	swfdec_movie_set_asprop		(SwfdecMovie *		movie,
 						 const char *		name,

@@ -78,6 +78,8 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (instance->decoder);
 
     movie->sprite = dec->main_sprite;
+    g_assert (movie->sprite->parse_frame > 0);
+    movie->n_frames = movie->sprite->n_frames;
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
     swfdec_resource_check_rights (instance);
   } else if (SWFDEC_IS_FLV_DECODER (instance->decoder)) {
@@ -85,6 +87,7 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
   } else {
     g_assert_not_reached ();
   }
+  swfdec_movie_initialize (SWFDEC_MOVIE (movie));
 }
 
 static void
@@ -189,16 +192,12 @@ static void
 swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
-  SwfdecMovie *movie;
 
   if (resource->initial)
     return;
 
   swfdec_resource_open (resource, loader);
   swfdec_resource_parse (resource, loader);
-  /* FIXME: This someow initializes the first frame here. Is this ok? */
-  movie = SWFDEC_MOVIE (resource->movie);
-  swfdec_movie_initialize (movie);
 }
 
 static void

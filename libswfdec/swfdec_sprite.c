@@ -172,6 +172,7 @@ swfdec_sprite_create_movie (SwfdecGraphic *graphic, gsize *size)
   SwfdecSpriteMovie *ret = g_object_new (SWFDEC_TYPE_SPRITE_MOVIE, NULL);
 
   ret->sprite = SWFDEC_SPRITE (graphic);
+  ret->n_frames = ret->sprite->n_frames;
   *size = sizeof (SwfdecSpriteMovie);
 
   return SWFDEC_MOVIE (ret);

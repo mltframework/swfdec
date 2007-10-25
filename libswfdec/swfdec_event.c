@@ -145,56 +145,14 @@ swfdec_event_list_free (SwfdecEventList *list)
   g_free (list);
 }
 
-static const char *
-swfdec_event_list_condition_name (guint conditions)
-{
-  if (conditions & SWFDEC_EVENT_LOAD)
-    return "Load";
-  if (conditions & SWFDEC_EVENT_ENTER)
-    return "Enter";
-  if (conditions & SWFDEC_EVENT_UNLOAD)
-    return "Unload";
-  if (conditions & SWFDEC_EVENT_MOUSE_MOVE)
-    return "MouseMove";
-  if (conditions & SWFDEC_EVENT_MOUSE_DOWN)
-    return "MouseDown";
-  if (conditions & SWFDEC_EVENT_MOUSE_UP)
-    return "MouseUp";
-  if (conditions & SWFDEC_EVENT_KEY_UP)
-    return "KeyUp";
-  if (conditions & SWFDEC_EVENT_KEY_DOWN)
-    return "KeyDown";
-  if (conditions & SWFDEC_EVENT_DATA)
-    return "Data";
-  if (conditions & SWFDEC_EVENT_INITIALIZE)
-    return "Initialize";
-  if (conditions & SWFDEC_EVENT_PRESS)
-    return "Press";
-  if (conditions & SWFDEC_EVENT_RELEASE)
-    return "Release";
-  if (conditions & SWFDEC_EVENT_RELEASE_OUTSIDE)
-    return "ReleaseOutside";
-  if (conditions & SWFDEC_EVENT_ROLL_OVER)
-    return "RollOver";
-  if (conditions & SWFDEC_EVENT_ROLL_OUT)
-    return "RollOut";
-  if (conditions & SWFDEC_EVENT_DRAG_OVER)
-    return "DragOver";
-  if (conditions & SWFDEC_EVENT_DRAG_OUT)
-    return "DragOut";
-  if (conditions & SWFDEC_EVENT_KEY_PRESS)
-    return "KeyPress";
-  if (conditions & SWFDEC_EVENT_CONSTRUCT)
-    return "Construct";
-  return "No Event";
-}
-
+#define N_CONDITIONS 19
 void
 swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
     guint conditions, guint8 key, const char *description)
 {
   SwfdecEvent event;
   char *name;
+  guint i;
 
   g_return_if_fail (list != NULL);
   g_return_if_fail (list->refcount == 1);
@@ -202,8 +160,9 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
 
   event.conditions = conditions;
   event.key = key;
-  name = g_strconcat (description, ".", 
-      swfdec_event_list_condition_name (conditions), NULL);
+  i = g_bit_nth_lsf (conditions, -1);
+  name = g_strconcat (description, ".", i < N_CONDITIONS ? 
+      swfdec_event_type_get_name (i) : "???", NULL);
   event.script = swfdec_script_new_from_bits (bits, name, version);
   g_free (name);
   if (event.script) 
@@ -219,7 +178,9 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecAsObject *object,
   g_return_if_fail (list != NULL);
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (SWFDEC_IS_SECURITY (sec));
+  g_return_if_fail (condition < N_CONDITIONS);
 
+  condition = (1 << condition);
   /* FIXME: Do we execute all events if the event list is gone already? */
   /* need to ref here because followup code could free all references to the list */
   list = swfdec_event_list_copy (list);
@@ -239,20 +200,18 @@ swfdec_event_list_has_conditions (SwfdecEventList *list, SwfdecAsObject *object,
     guint condition, guint8 key)
 {
   guint i;
-  const char *name;
 
   g_return_val_if_fail (list != NULL, FALSE);
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
+  g_return_val_if_fail (condition < N_CONDITIONS, FALSE);
 
+  condition = 1 << condition;
   for (i = 0; i < list->events->len; i++) {
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
     if ((event->conditions & condition) &&
 	event->key == key)
       return TRUE;
   }
-  name = swfdec_event_type_get_name (condition);
-  if (name)
-    return swfdec_as_object_has_function (object, name);
   return FALSE;
 }
 

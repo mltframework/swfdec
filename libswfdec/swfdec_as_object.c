@@ -290,10 +290,20 @@ swfdec_as_watch_unref (SwfdecAsWatch *watch)
   }
 }
 
-SwfdecAsObject *
-swfdec_as_object_prototype_for_version (SwfdecAsObject *object, guint version,
-    gboolean check7)
+/*
+ * Like swfdec_as_object_get_prototype, but doesn't check 8_UP flag when
+ * version is 7 and doesn't check if the property has been deleted if version
+ * is 6 or earlier
+ */
+static SwfdecAsObject *
+swfdec_as_object_get_prototype_internal (SwfdecAsObject *object)
 {
+  int version;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+
+  version = object->context->version;
+
   if (object->prototype == NULL)
     return NULL;
 
@@ -302,14 +312,44 @@ swfdec_as_object_prototype_for_version (SwfdecAsObject *object, guint version,
   // don't check for NOT_6 flag
   if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && version < 7)
     return NULL;
-  // only check 8_UP for version < 6
+  // don't check 8_UP for version 6 or 7
   if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP &&
       version < 6)
     return NULL;
-  if (check7) {
-    if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && version == 7)
-      return NULL;
-  }
+  // check that it exists, if version < 7
+  if (version < 7 &&
+      !swfdec_as_object_hash_lookup (object, SWFDEC_AS_STR___proto__))
+    return NULL;
+
+  return object->prototype;
+}
+
+/*
+ * Get's the object->prototype, if propflags allow it for current version and
+ * if it hasn't been deleted from the object already
+ */
+SwfdecAsObject *
+swfdec_as_object_get_prototype (SwfdecAsObject *object)
+{
+  int version;
+  SwfdecAsObject *prototype;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+
+  version = object->context->version;
+
+  prototype = swfdec_as_object_get_prototype_internal (object);
+
+  if (prototype == NULL)
+    return NULL;
+  // check 8_UP for version 7, still not for version 6
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP &&
+      version == 7)
+    return NULL;
+  // require it to exist even on version >= 7
+  if (version >= 7 &&
+      !swfdec_as_object_hash_lookup (object, SWFDEC_AS_STR___proto__))
+    return NULL;
 
   return object->prototype;
 }
@@ -329,15 +369,13 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     guint i;
     SwfdecAsObject *proto;
 
-    proto = swfdec_as_object_prototype_for_version (object,
-	object->context->version, FALSE);
+    proto = swfdec_as_object_get_prototype (object);
 
     for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && proto; i++) {
       var = swfdec_as_object_hash_lookup (proto, variable);
       if (var && var->get)
 	break;
-      proto = swfdec_as_object_prototype_for_version (proto,
-	  proto->context->version, FALSE);
+      proto = swfdec_as_object_get_prototype (proto);
       var = NULL;
     }
     if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
@@ -443,11 +481,8 @@ swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
   if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
     return SWFDEC_AS_DELETE_NOT_DELETED;
 
-  // special case: in version > 6 deleting doesn't stop __proto__ from working
-  if (variable == SWFDEC_AS_STR___proto__ && object->context->version <= 6) {
-    object->prototype = NULL;
-    object->prototype_flags = 0;
-  }
+  // Note: We won't remove object->prototype, even if __proto__ is deleted
+
   swfdec_as_object_free_property (NULL, var, object);
   if (!g_hash_table_remove (object->properties, variable)) {
     g_assert_not_reached ();
@@ -826,8 +861,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
       *pobject = cur;
       return TRUE;
     }
-    cur = swfdec_as_object_prototype_for_version (cur, cur->context->version,
-	FALSE);
+    cur = swfdec_as_object_get_prototype_internal (cur);
   }
   if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
@@ -1409,7 +1443,7 @@ swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
   if (class == NULL)
     return;
 
-  while ((class = swfdec_as_object_prototype_for_version (class, cx->version, TRUE)) != NULL) {
+  while ((class = swfdec_as_object_get_prototype (class)) != NULL) {
     if (object == class) {
       SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
       return;

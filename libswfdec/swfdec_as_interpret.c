@@ -2206,15 +2206,11 @@ swfdec_action_instance_of (SwfdecAsContext *cx, guint action,
   prototype = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
   class = object;
-  swfdec_as_object_get_variable (class, SWFDEC_AS_STR___proto__, &val);
-  while (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-  {
-    class = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  while ((class = swfdec_as_object_get_prototype (class)) != NULL) {
     if (class == prototype) {
       SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), TRUE);
       break;
     }
-    swfdec_as_object_get_variable (class, SWFDEC_AS_STR___proto__, &val);
   }
 }
 
@@ -2275,7 +2271,7 @@ swfdec_action_do_enumerate (SwfdecAsContext *cx, SwfdecAsObject *object)
   
   for (i = 0; i < 256 && object; i++) {
     swfdec_as_object_foreach (object, swfdec_action_enumerate_foreach, &list);
-    object = swfdec_as_object_prototype_for_version (object, cx->version, TRUE);
+    object = swfdec_as_object_get_prototype (object);
   }
   if (i == 256) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");

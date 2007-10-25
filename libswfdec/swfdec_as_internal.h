@@ -71,9 +71,7 @@ void		swfdec_as_object_init_context	(SwfdecAsContext *	context,
 					      	 guint			version);
 void		swfdec_as_object_decode		(SwfdecAsObject *	obj,
 						 const char *		str);
-SwfdecAsObject * swfdec_as_object_prototype_for_version (SwfdecAsObject *object,
-						 guint			version,
-						 gboolean		check7);
+SwfdecAsObject * swfdec_as_object_get_prototype (SwfdecAsObject *	object);
 void		swfdec_as_object_run_with_security 
 						(SwfdecAsObject *	object,
 						 SwfdecScript *		script,

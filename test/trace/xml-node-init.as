@@ -8,6 +8,10 @@ function check_and_reset () {
 
 trace ("Check when XMLNode's native properties are initialized");
 
+// FIXME: Not tested yet: The properties should only be created if the
+// prototype Object has not been initialized by any object's constructor with
+// native properties (TextField, TextFormat, XML, XMLNode at least)
+
 check_and_reset ();
 var tmp = new XMLNode (1, "test");
 check_and_reset ();

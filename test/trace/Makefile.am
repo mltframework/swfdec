@@ -2031,13 +2031,6 @@ EXTRA_DIST = \
 	with-prototypes-6.swf.trace \
 	with-prototypes-7.swf \
 	with-prototypes-7.swf.trace \
-	xml-constructor-properties.as \
-	xml-constructor-properties-5.swf \
-	xml-constructor-properties-5.swf.trace \
-	xml-constructor-properties-6.swf \
-	xml-constructor-properties-6.swf.trace \
-	xml-constructor-properties-7.swf \
-	xml-constructor-properties-7.swf.trace \
 	xml-errors.as \
 	xml-errors-5.swf \
 	xml-errors-5.swf.trace \
@@ -2052,6 +2045,15 @@ EXTRA_DIST = \
 	xml-escape-6.swf.trace \
 	xml-escape-7.swf \
 	xml-escape-7.swf.trace \
+	xml-init.as \
+	xml-init-5.swf \
+	xml-init-5.swf.trace \
+	xml-init-6.swf \
+	xml-init-6.swf.trace \
+	xml-init-7.swf \
+	xml-init-7.swf.trace \
+	xml-init-8.swf \
+	xml-init-8.swf.trace \
 	xml-node.as \
 	xml-node-5.swf \
 	xml-node-5.swf.trace \

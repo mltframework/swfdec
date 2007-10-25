@@ -417,12 +417,6 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj
   if (new == NULL)
     return;
   swfdec_sprite_movie_copy_props (new, movie);
-  if (SWFDEC_IS_SPRITE_MOVIE (new)) {
-    g_queue_push_tail (SWFDEC_PLAYER (cx)->init_queue, new);
-    swfdec_movie_queue_script (new, SWFDEC_EVENT_LOAD);
-    swfdec_movie_run_construct (new);
-  }
-  swfdec_movie_initialize (new);
   SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new->name, new->depth);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (new));
 }

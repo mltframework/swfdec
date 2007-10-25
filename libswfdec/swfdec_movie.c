@@ -269,10 +269,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
   swfdec_movie_invalidate (movie);
   swfdec_movie_set_depth (movie, -32769 - movie->depth); /* don't ask me why... */
 
-  if (SWFDEC_IS_SPRITE_MOVIE (movie))
-    return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
-  else
-    return TRUE;
+  return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
 }
 
 /**
@@ -327,8 +324,6 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   }
   /* FIXME: figure out how to handle destruction pre-init/construct.
    * This is just a stop-gap measure to avoid dead movies in those queues */
-  g_queue_remove (player->init_queue, movie);
-  g_queue_remove (player->construct_queue, movie);
   swfdec_player_remove_all_actions (player, movie);
   if (klass->finish_movie)
     klass->finish_movie (movie);
@@ -339,52 +334,46 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   g_object_unref (movie);
 }
 
-/**
- * swfdec_movie_run_init:
- * @movie: a #SwfdecMovie
- *
- * Runs onClipEvent(initialize) on the given @movie.
- */
-void
-swfdec_movie_run_init (SwfdecMovie *movie)
+static void
+swfdec_movie_set_constructor (SwfdecSpriteMovie *movie)
 {
-  SwfdecPlayer *player;
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  SwfdecAsContext *context = SWFDEC_AS_OBJECT (movie)->context;
+  SwfdecAsObject *constructor = NULL;
 
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_assert (mov->resource != NULL);
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  g_queue_remove (player->init_queue, movie);
-  swfdec_movie_execute_script (movie, SWFDEC_EVENT_INITIALIZE);
-}
+  if (movie->sprite) {
+    const char *name;
 
-/**
- * swfdec_movie_run_construct:
- * @movie: a #SwfdecMovie
- *
- * Runs the constructors for @movie. This is (in the given order) 
- * onClipEvent(construct), movie.onConstruct and the constructor registered
- * via Object.registerClass.
- **/
-void
-swfdec_movie_run_construct (SwfdecMovie *movie)
-{
-  SwfdecPlayer *player;
+    name = swfdec_resource_get_export_name (mov->resource,
+	SWFDEC_CHARACTER (movie->sprite));
+    if (name != NULL) {
+      name = swfdec_as_context_get_string (context, name);
+      constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
+	  name);
+    }
+  }
+  if (constructor == NULL)
+    constructor = SWFDEC_PLAYER (context)->MovieClip;
 
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  g_queue_remove (player->construct_queue, movie);
-  swfdec_movie_execute_script (movie, SWFDEC_EVENT_CONSTRUCT);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_constructor, 0, NULL, NULL);
+  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
 }
 
 void
-swfdec_movie_execute_script (SwfdecMovie *movie, SwfdecEventType condition)
+swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
 {
   const char *name;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (condition != 0);
+
+  /* special cases */
+  if (condition == SWFDEC_EVENT_CONSTRUCT) {
+    swfdec_movie_set_constructor (SWFDEC_SPRITE_MOVIE (movie));
+  } else if (condition == SWFDEC_EVENT_ENTER) {
+    if (movie->will_be_removed)
+      return;
+  }
 
   if (movie->events) {
     swfdec_event_list_execute (movie->events, SWFDEC_AS_OBJECT (movie), 
@@ -395,12 +384,8 @@ swfdec_movie_execute_script (SwfdecMovie *movie, SwfdecEventType condition)
     swfdec_as_object_call_with_security (SWFDEC_AS_OBJECT (movie), 
 	SWFDEC_SECURITY (movie->resource), name, 0, NULL, NULL);
   }
-}
-
-static void
-swfdec_movie_do_execute_script (gpointer movie, gpointer condition)
-{
-  swfdec_movie_execute_script (movie, GPOINTER_TO_UINT (condition));
+  if (condition == SWFDEC_EVENT_CONSTRUCT)
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_constructor, 0, NULL, NULL);
 }
 
 /**
@@ -416,25 +401,40 @@ gboolean
 swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
 {
   SwfdecPlayer *player;
+  gboolean ret = FALSE;
+  guint importance;
   
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
-  g_return_val_if_fail (condition != 0, FALSE);
 
-  if (movie->events) {
-    if (!swfdec_event_list_has_conditions (movie->events, 
-	  SWFDEC_AS_OBJECT (movie), condition, 0))
-      return FALSE;
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie))
+    return FALSE;
+
+  switch (condition) {
+    case SWFDEC_EVENT_INITIALIZE:
+      importance = 0;
+      break;
+    case SWFDEC_EVENT_CONSTRUCT:
+      importance = 1;
+      break;
+    default:
+      importance = 2;
+      break;
+  }
+
+  if (movie->events &&
+      swfdec_event_list_has_conditions (movie->events, 
+	  SWFDEC_AS_OBJECT (movie), condition, 0)) {
+      ret = TRUE;
   } else {
     const char *name = swfdec_event_type_get_name (condition);
-    if (name == NULL ||
-	!swfdec_as_object_has_function (SWFDEC_AS_OBJECT (movie), name))
-      return FALSE;
+    if (name != NULL &&
+	swfdec_as_object_has_function (SWFDEC_AS_OBJECT (movie), name))
+      ret = TRUE;
   }
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  swfdec_player_add_action (player, movie, swfdec_movie_do_execute_script, 
-      GUINT_TO_POINTER (condition));
-  return TRUE;
+  swfdec_player_add_action (player, movie, condition, importance);
+  return ret;
 }
 
 /**
@@ -1391,6 +1391,12 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
       &movie->original_ctrans, movie->original_ratio, movie->clip_depth, 
       movie->blend_mode, movie->events);
+  if (SWFDEC_IS_SPRITE_MOVIE (copy)) {
+    swfdec_movie_queue_script (copy, SWFDEC_EVENT_INITIALIZE);
+    swfdec_movie_queue_script (copy, SWFDEC_EVENT_LOAD);
+    swfdec_movie_execute (copy, SWFDEC_EVENT_CONSTRUCT);
+  }
+  swfdec_movie_initialize (movie);
   return copy;
 }
 
@@ -1413,8 +1419,8 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
       content->has_color_transform ? &content->color_transform : NULL, 
       content->ratio, content->clip_depth, content->blend_mode, content->events);
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    g_queue_push_tail (player->init_queue, movie);
-    g_queue_push_tail (player->construct_queue, movie);
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_INITIALIZE);
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_CONSTRUCT);
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
   }
   swfdec_movie_initialize (movie);

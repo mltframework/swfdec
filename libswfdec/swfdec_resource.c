@@ -78,6 +78,8 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (instance->decoder);
 
     movie->sprite = dec->main_sprite;
+    g_assert (movie->sprite->parse_frame > 0);
+    movie->n_frames = movie->sprite->n_frames;
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
     swfdec_resource_check_rights (instance);
   } else if (SWFDEC_IS_FLV_DECODER (instance->decoder)) {
@@ -85,6 +87,7 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
   } else {
     g_assert_not_reached ();
   }
+  swfdec_movie_initialize (SWFDEC_MOVIE (movie));
 }
 
 static void
@@ -189,16 +192,12 @@ static void
 swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
-  SwfdecMovie *movie;
 
   if (resource->initial)
     return;
 
   swfdec_resource_open (resource, loader);
   swfdec_resource_parse (resource, loader);
-  /* FIXME: This someow initializes the first frame here. Is this ok? */
-  movie = SWFDEC_MOVIE (resource->movie);
-  swfdec_movie_initialize (movie);
 }
 
 static void
@@ -240,7 +239,8 @@ static void
 swfdec_resource_init (SwfdecResource *instance)
 {
   instance->exports = g_hash_table_new (swfdec_str_case_hash, swfdec_str_case_equal);
-  instance->export_names = g_hash_table_new (g_direct_hash, g_direct_equal);
+  instance->export_names = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
+      g_object_unref, g_free);
 }
 
 SwfdecResource *
@@ -290,8 +290,9 @@ swfdec_resource_get_export_name (SwfdecResource *instance, SwfdecCharacter *char
   return g_hash_table_lookup (instance->export_names, character);
 }
 
-static void
-swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character, const char *name)
+/* NB: Takes ownership of name and character */
+void
+swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character, char *name)
 {
   g_return_if_fail (SWFDEC_IS_RESOURCE (instance));
   g_return_if_fail (SWFDEC_IS_CHARACTER (character));
@@ -299,43 +300,5 @@ swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character
 
   g_hash_table_insert (instance->exports, (char *) name, character);
   g_hash_table_insert (instance->export_names, character, (char *) name);
-}
-
-void
-swfdec_resource_advance (SwfdecResource *instance)
-{
-  SwfdecSwfDecoder *s;
-  GArray *array;
-  guint i;
-
-  g_return_if_fail (SWFDEC_IS_RESOURCE (instance));
-
-  s = SWFDEC_SWF_DECODER (instance->decoder);
-  SWFDEC_LOG ("performing actions for frame %u", instance->parse_frame);
-  if (s->root_actions) {
-    array = s->root_actions[instance->parse_frame];
-  } else {
-    array = NULL;
-  }
-  instance->parse_frame++;
-  if (array == NULL)
-    return;
-  for (i = 0; i < array->len; i++) {
-    SwfdecRootAction *action = &g_array_index (array, SwfdecRootAction, i);
-    switch (action->type) {
-      case SWFDEC_ROOT_ACTION_INIT_SCRIPT:
-	swfdec_as_object_run_with_security (SWFDEC_AS_OBJECT (instance->movie), 
-	    action->data, SWFDEC_SECURITY (instance));
-	break;
-      case SWFDEC_ROOT_ACTION_EXPORT:
-	{
-	  SwfdecRootExportData *data = action->data;
-	  swfdec_resource_add_export (instance, data->character, data->name);
-	}
-	break;
-      default:
-	g_assert_not_reached ();
-    }
-  }
 }
 

@@ -54,38 +54,6 @@ static void
 swfdec_swf_decoder_dispose (GObject *object)
 {
   SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (object);
-  guint i,j;
-
-  if (s->root_actions) {
-    for (i = 0; i < s->main_sprite->n_frames; i++) {
-      GArray *array = s->root_actions[i];
-      if (array) {
-	for (j = 0; j < array->len; j++) {
-	  SwfdecRootAction *action = &g_array_index (array, SwfdecRootAction, j);
-
-	  switch (action->type) {
-	    case SWFDEC_ROOT_ACTION_EXPORT:
-	      {
-		SwfdecRootExportData *data = action->data;
-		g_free (data->name);
-		g_object_unref (data->character);
-		g_free (data);
-	      }
-	      break;
-	    case SWFDEC_ROOT_ACTION_INIT_SCRIPT:
-	      swfdec_script_unref (action->data);
-	      break;
-	    default:
-	      g_assert_not_reached ();
-	      break;
-	  }
-	}
-	g_array_free (array, TRUE);
-      }
-    }
-    g_free (s->root_actions);
-    s->root_actions = NULL;
-  }
 
   g_hash_table_destroy (s->characters);
   g_object_unref (s->main_sprite);
@@ -443,32 +411,6 @@ swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, guint id, GType type)
   }
 
   return result;
-}
-
-void
-swfdec_swf_decoder_add_root_action (SwfdecSwfDecoder *s,
-    SwfdecRootActionType type, gpointer data)
-{
-  SwfdecSprite *sprite;
-  GArray *array;
-  SwfdecRootAction action;
-
-  g_return_if_fail (SWFDEC_IS_SWF_DECODER (s));
-  sprite = s->main_sprite;
-  g_return_if_fail (sprite->parse_frame < sprite->n_frames);
-
-  if (s->root_actions == NULL)
-    s->root_actions = g_new0 (GArray *, sprite->n_frames);
-
-  array = s->root_actions[sprite->parse_frame];
-  if (array == NULL) {
-    s->root_actions[sprite->parse_frame] = 
-      g_array_new (FALSE, FALSE, sizeof (SwfdecRootAction));
-    array = s->root_actions[sprite->parse_frame];
-  }
-  action.type = type;
-  action.data = data;
-  g_array_append_val (array, action);
 }
 
 void

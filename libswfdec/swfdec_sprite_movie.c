@@ -33,7 +33,7 @@
 #include "swfdec_graphic_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_ringbuffer.h"
-#include "swfdec_script.h"
+#include "swfdec_script_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_resource.h"
 #include "swfdec_tag.h"
@@ -50,13 +50,6 @@ swfdec_sprite_movie_remove_child (SwfdecMovie *movie, int depth)
 
   swfdec_movie_remove (child);
   return TRUE;
-}
-
-static void
-swfdec_sprite_movie_run_script (gpointer movie, gpointer data)
-{
-  swfdec_as_object_run_with_security (movie, data, 
-      SWFDEC_SECURITY (SWFDEC_MOVIE (movie)->resource));
 }
 
 static int
@@ -213,15 +206,16 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
       SwfdecBits action_bits;
 
       swfdec_bits_init_bits (&action_bits, bits, length);
-      if (event_flags & SWFDEC_EVENT_KEY_PRESS)
+      if (event_flags & (1<<SWFDEC_EVENT_KEY_PRESS))
 	key_code = swfdec_bits_get_u8 (&action_bits);
       else
 	key_code = 0;
 
       SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
 #define SWFDEC_IMPLEMENTED_EVENTS \
-  (SWFDEC_EVENT_LOAD | SWFDEC_EVENT_UNLOAD | SWFDEC_EVENT_ENTER | SWFDEC_EVENT_INITIALIZE | SWFDEC_EVENT_CONSTRUCT | \
-   SWFDEC_EVENT_MOUSE_DOWN | SWFDEC_EVENT_MOUSE_MOVE | SWFDEC_EVENT_MOUSE_UP)
+  ((1<< SWFDEC_EVENT_LOAD) | (1<<SWFDEC_EVENT_UNLOAD) | (1<<SWFDEC_EVENT_ENTER) | \
+   (1<< SWFDEC_EVENT_INITIALIZE) | (1<<SWFDEC_EVENT_CONSTRUCT) | \
+   (1<< SWFDEC_EVENT_MOUSE_DOWN) | (1<<SWFDEC_EVENT_MOUSE_MOVE) | (1<<SWFDEC_EVENT_MOUSE_UP))
       if (event_flags & ~SWFDEC_IMPLEMENTED_EVENTS) {
 	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & ~SWFDEC_IMPLEMENTED_EVENTS);
       }
@@ -266,11 +260,9 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     cur = swfdec_movie_new (player, depth, mov, mov->resource, graphic, name);
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
 	has_ctrans ? &ctrans : NULL, ratio, clip_depth, blend_mode, events);
-    if (SWFDEC_IS_SPRITE_MOVIE (cur)) {
-      g_queue_push_tail (player->init_queue, cur);
-      g_queue_push_tail (player->construct_queue, cur);
-      swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
-    }
+    swfdec_movie_queue_script (cur, SWFDEC_EVENT_INITIALIZE);
+    swfdec_movie_queue_script (cur, SWFDEC_EVENT_CONSTRUCT);
+    swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
     swfdec_movie_initialize (cur);
   }
 
@@ -298,7 +290,7 @@ swfdec_sprite_movie_start_sound (SwfdecMovie *movie, SwfdecBits *bits)
 
 static gboolean
 swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, SwfdecBuffer *buffer,
-    gboolean skip_scripts)
+    gboolean skip_scripts, gboolean first_time)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
@@ -316,7 +308,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	SwfdecScript *script = swfdec_swf_decoder_get_script (
 	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data);
 	g_assert (script);
-	swfdec_player_add_action (player, mov, swfdec_sprite_movie_run_script, script);
+	swfdec_player_add_action_script (player, mov, script, 2);
       }
       return TRUE;
     case SWFDEC_TAG_PLACEOBJECT2:
@@ -347,6 +339,67 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	SWFDEC_ERROR ("too many ShowFrame tags");
       }
       return FALSE;
+    case SWFDEC_TAG_EXPORTASSETS:
+      {
+	SwfdecResource *resource = swfdec_movie_get_own_resource (mov);
+	guint i, count;
+
+	g_assert (resource); /* must hold, ExportAssets can only be in root movies */
+	if (!first_time)
+	  return TRUE;
+	count = swfdec_bits_get_u16 (&bits);
+	SWFDEC_LOG ("exporting %u assets", count);
+	for (i = 0; i < count && swfdec_bits_left (&bits); i++) {
+	  guint id;
+	  SwfdecCharacter *object;
+	  char *name;
+	  id = swfdec_bits_get_u16 (&bits);
+	  object = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (resource->decoder), id);
+	  name = swfdec_bits_get_string_with_version (&bits, SWFDEC_AS_CONTEXT (player)->version);
+	  if (object == NULL) {
+	    SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
+	    g_free (name);
+	  } else if (name == NULL) {
+	    SWFDEC_ERROR ("cannot export id %u, no name was given", id);
+	  } else {
+	    SWFDEC_LOG ("exporting %s %u as %s", G_OBJECT_TYPE_NAME (object), id, name);
+	    g_object_ref (object);
+	    swfdec_resource_add_export (resource, object, name); 
+	  }
+	}
+      }
+      return TRUE;
+    case SWFDEC_TAG_DOINITACTION:
+      if (!first_time)
+	return TRUE;
+      if (!swfdec_movie_get_own_resource (mov)) {
+	SWFDEC_FIXME ("behavior of init actions in DefineSprite untested");
+      }
+      {
+	guint id;
+	SwfdecSprite *sprite;
+	char *name;
+
+	id = swfdec_bits_get_u16 (&bits);
+	SWFDEC_LOG ("InitAction");
+	SWFDEC_LOG ("  id = %u", id);
+	sprite = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (mov->resource->decoder), id);
+	if (!SWFDEC_IS_SPRITE (sprite)) {
+	  SWFDEC_ERROR ("character %u is not a sprite", id);
+	  return TRUE;
+	}
+	if (sprite->init_action != NULL) {
+	  SWFDEC_ERROR ("sprite %u already has an init action", id);
+	  return TRUE;
+	}
+	name = g_strdup_printf ("InitAction %u", id);
+	sprite->init_action = swfdec_script_new_from_bits (&bits, name, SWFDEC_AS_CONTEXT (player)->version);
+	g_free (name);
+	if (sprite->init_action) {
+	  swfdec_player_add_action_script (player, mov, sprite->init_action, 0);
+	}
+      }
+      return TRUE;
     default:
       g_assert_not_reached ();
       return FALSE;
@@ -437,15 +490,18 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
   }
   while (n) {
     guint tag;
+    gboolean first_time;
     SwfdecBuffer *buffer;
-    SwfdecResource *resource = swfdec_movie_get_own_resource (mov);
-    /* FIXME: These actions should probably just be added to the action queue */
-    if (resource && resource->parse_frame <= movie->frame)
-      swfdec_resource_advance (resource);
     if (!swfdec_sprite_get_action (movie->sprite, movie->next_action, &tag, &buffer))
       break;
     movie->next_action++;
-    if (!swfdec_sprite_movie_perform_one_action (movie, tag, buffer, n > 1))
+    if (movie->next_action > movie->max_action) {
+      first_time = TRUE;
+      movie->max_action = movie->next_action;
+    } else {
+      first_time = FALSE;
+    }
+    if (!swfdec_sprite_movie_perform_one_action (movie, tag, buffer, n > 1, first_time))
       n--;
   }
   /* now try to copy eventual movies */
@@ -504,46 +560,20 @@ swfdec_sprite_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_sprite_movie_do_enter_frame (gpointer movie, gpointer unused)
-{
-  if (SWFDEC_MOVIE (movie)->will_be_removed)
-    return;
-  swfdec_movie_execute_script (movie, SWFDEC_EVENT_ENTER);
-}
-
-static void
-swfdec_sprite_movie_do_init_movie (SwfdecSpriteMovie *movie)
-{
-  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-  SwfdecAsContext *context = SWFDEC_AS_OBJECT (movie)->context;
-  SwfdecAsObject *constructor = NULL;
-
-  g_assert (mov->resource != NULL);
-
-  if (movie->sprite) {
-    const char *name;
-
-    g_assert (movie->sprite->parse_frame > 0);
-    movie->n_frames = movie->sprite->n_frames;
-    name = swfdec_resource_get_export_name (mov->resource,
-	SWFDEC_CHARACTER (movie->sprite));
-    if (name != NULL) {
-      name = swfdec_as_context_get_string (context, name);
-      constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
-	  name);
-    }
-  }
-  if (constructor == NULL)
-    constructor = SWFDEC_PLAYER (context)->MovieClip;
-
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
-}
-
-static void
 swfdec_sprite_movie_init_movie (SwfdecMovie *movie)
 {
-  swfdec_sprite_movie_do_init_movie (SWFDEC_SPRITE_MOVIE (movie)); 
   swfdec_sprite_movie_goto (SWFDEC_SPRITE_MOVIE (movie), 1);
+}
+
+static void
+swfdec_sprite_movie_add (SwfdecAsObject *object)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
+
+  if (player->MovieClip)
+    swfdec_as_object_set_constructor (object, player->MovieClip);
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->add (object);
 }
 
 static void
@@ -556,10 +586,7 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
   if (mov->will_be_removed)
     return;
 
-  if (movie->sprite != NULL && movie->frame == 0)
-    swfdec_sprite_movie_do_init_movie (movie);
-
-  swfdec_player_add_action (player, movie, swfdec_sprite_movie_do_enter_frame, NULL);
+  swfdec_player_add_action (player, mov, SWFDEC_EVENT_ENTER, 2);
   if (movie->playing && movie->sprite != NULL) {
     if (movie->frame == movie->n_frames)
       goto_frame = 1;
@@ -672,6 +699,7 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   object_class->dispose = swfdec_sprite_movie_dispose;
 
+  asobject_class->add = swfdec_sprite_movie_add;
   asobject_class->mark = swfdec_sprite_movie_mark;
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
@@ -709,6 +737,7 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
   movie->frame = 0;
   movie->n_frames = 0;
   movie->next_action = 0;
+  movie->max_action = 0;
   movie->sprite = NULL;
 }
 

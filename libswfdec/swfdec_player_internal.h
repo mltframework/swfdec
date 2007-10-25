@@ -23,6 +23,7 @@
 #include <libswfdec/swfdec_player.h>
 #include <libswfdec/swfdec_as_context.h>
 #include <libswfdec/swfdec_audio.h>
+#include <libswfdec/swfdec_event.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
 #include <libswfdec/swfdec_security.h>
@@ -46,6 +47,8 @@ struct _SwfdecTimeout {
   void			(* callback)		(SwfdecTimeout *advance);
   void			(* free)		(SwfdecTimeout *advance);
 };
+
+#define SWFDEC_PLAYER_N_ACTION_QUEUES 4
 
 struct _SwfdecPlayer
 {
@@ -116,13 +119,11 @@ struct _SwfdecPlayer
   SwfdecTimeout		iterate_timeout;      	/* callback for iterating */
   GTimer *		runtime;		/* for checking how long we've been running */
   gulong		max_runtime;		/* maximum number of seconds the player may run */
-  /* iterating */
-  GList *		movies;			/* list of all moveis that want to be iterated */
-  SwfdecRingBuffer *	actions;		/* all actions we've queued up so far */
   SwfdecRingBuffer *	external_actions;     	/* external actions we've queued up, like resize or loader stuff */
   SwfdecTimeout		external_timeout;      	/* callback for iterating */
-  GQueue *		init_queue;		/* all movies that require an init event */
-  GQueue *		construct_queue;      	/* all movies that require an construct event */
+  /* iterating */
+  GList *		movies;			/* list of all movies that want to be iterated */
+  SwfdecRingBuffer *	actions[SWFDEC_PLAYER_N_ACTION_QUEUES]; /* all actions we've queued up so far */
 };
 
 struct _SwfdecPlayerClass
@@ -180,11 +181,15 @@ void		swfdec_player_remove_all_external_actions
 						(SwfdecPlayer *      	player,
 						 gpointer		object);
 void		swfdec_player_add_action	(SwfdecPlayer *		player,
-						 gpointer		object,
-						 SwfdecActionFunc   	action_func,
-						 gpointer		action_data);
+						 SwfdecMovie *		movie,
+						 SwfdecEventType	type,
+						 guint			importance);
+void		swfdec_player_add_action_script	(SwfdecPlayer *		player,
+						 SwfdecMovie *		movie,
+						 SwfdecScript *		script,
+						 guint			importance);
 void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
-						 gpointer		object);
+						 SwfdecMovie *		movie);
 
 void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecMovie *		drag,

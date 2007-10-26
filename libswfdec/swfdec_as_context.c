@@ -818,7 +818,8 @@ start:
       pc = frame->pc;
     }
     if (context->throwing) {
-      swfdec_as_context_abort (context, "Unhandled exception");
+      SWFDEC_ERROR ("Unhandled exception: %s",
+	  swfdec_as_value_to_string (context, &context->throw_value));
       goto error;
     }
     if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {

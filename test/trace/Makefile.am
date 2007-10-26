@@ -2054,6 +2054,13 @@ EXTRA_DIST = \
 	transform2.swf \
 	transform2.swf.trace \
 	transform2.swf.trace.org \
+	try-throw-in-finally.as \
+	try-throw-in-finally-6.swf \
+	try-throw-in-finally-6.swf.trace \
+	try-throw-in-finally-7.swf \
+	try-throw-in-finally-7.swf.trace \
+	try-throw-in-finally-8.swf \
+	try-throw-in-finally-8.swf.trace \
 	undefined-tostring.swf \
 	undefined-tostring.swf.trace \
 	undefined1.swf \

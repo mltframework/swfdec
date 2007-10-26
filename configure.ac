@@ -201,7 +201,7 @@ if test "$enable_mad" = "yes"; then
 	  AC_MSG_ERROR([Couldn't find mad. You might need to install the libmad0-dev package.])
 	fi
 else
-	AC_MSG_WARN([*** mad audio support was not enabled. ***])
+	AC_MSG_NOTICE([mad audio support was not enabled.])
 fi
 AM_CONDITIONAL(HAVE_MAD, [test "x$HAVE_MAD" = xyes])
 
@@ -225,7 +225,7 @@ if test "$enable_ffmpeg" = "yes"; then
 	  AC_MSG_ERROR([Couldn't find ffmpeg. You might need to install the libavcodec-dev and libswscale-dev packages.])
 	fi
 else
-	AC_MSG_WARN([*** ffmpeg support was not enabled. ***])
+	AC_MSG_NOTICE([ffmpeg support was not enabled.])
 fi
 AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 AC_ARG_ENABLE(gstreamer,
@@ -243,7 +243,7 @@ if test "$enable_gstreamer" = "yes"; then
 	  AC_MSG_ERROR([Couldn't find GStreamer $GST_REQUIRED.])
 	fi
 else
-	AC_MSG_WARN([*** GStreamer support was not enabled. ***])
+	AC_MSG_NOTICE([GStreamer support was not enabled.])
 fi
 AM_CONDITIONAL(HAVE_GST, [test "x$HAVE_GST" = xyes])
 
@@ -262,7 +262,7 @@ if test "$enable_libsoup" = "yes"; then
 	  AC_MSG_ERROR([Couldn't find libsoup-2.2.])
 	fi
 else
-	AC_MSG_WARN([*** libsoup HTTP support was not enabled. ***])
+	AC_MSG_NOTICE([libsoup HTTP support was not enabled.])
 fi
 AM_CONDITIONAL(HAVE_HTTP, [test "x$HAVE_HTTP" = xyes])
 
@@ -281,7 +281,7 @@ if test "$enable_vivi" = "yes"; then
 	  AC_MSG_ERROR([Vivified requirements not met. You need libming >= $MING_REQUIRED and Gtk+ >= $VIVI_GTK_REQUIRED.])
 	fi
 else
-	AC_MSG_WARN([*** Vivified was not enabled. ***])
+	AC_MSG_NOTICE([Vivified was not enabled.])
 fi
 AM_CONDITIONAL(HAVE_VIVI, [test "x$HAVE_VIVI" = xyes])
 

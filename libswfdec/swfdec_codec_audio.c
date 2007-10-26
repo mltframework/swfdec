@@ -167,7 +167,7 @@ swfdec_audio_decoder_new (SwfdecAudioCodec codec, SwfdecAudioFormat format)
 	break;
     }
   } else {
-    char **split = g_strsplit (list, ":", -1);
+    char **split = g_strsplit (list, ",", -1);
     guint i, j;
     ret = NULL;
     SWFDEC_LOG ("codecs limited to \"%s\"", list);

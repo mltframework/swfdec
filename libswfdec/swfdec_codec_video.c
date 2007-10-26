@@ -80,7 +80,7 @@ swfdec_video_decoder_new (SwfdecVideoCodec codec)
 	break;
     }
   } else {
-    char **split = g_strsplit (list, ":", -1);
+    char **split = g_strsplit (list, ",", -1);
     guint i, j;
     ret = NULL;
     SWFDEC_LOG ("codecs limited to \"%s\"", list);

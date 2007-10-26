@@ -2538,25 +2538,151 @@ static void
 swfdec_action_throw (SwfdecAsContext *cx, guint action, const guint8 *data,
     guint len)
 {
-  SwfdecAsValue *val;
-  SwfdecAsObject *object;
+  cx->throwing = TRUE;
+  cx->throw_value = *swfdec_as_stack_pop (cx);
+}
 
-  val = swfdec_as_stack_pop (cx);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
-    object = SWFDEC_AS_VALUE_GET_OBJECT (val);
-  } else {
-    object = NULL;
+typedef struct {
+  const guint8 *	start;
+  gboolean		catch;
+  gboolean		finally;
+  guint			catch_size;
+  guint			finally_size;
+
+  gboolean		use_register;
+  union {
+    guint		register_number;
+    char *		variable_name;
+  };
+} TryData;
+
+static void
+swfdec_action_try_free_data (TryData *try_data)
+{
+  g_return_if_fail (try_data != NULL);
+
+  if (!try_data->use_register)
+    g_free (try_data->variable_name);
+  g_free (try_data);
+}
+
+static void
+swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
+{
+  SwfdecAsValue *error = data;
+  SwfdecAsContext *cx;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (error));
+
+  swfdec_as_frame_pop_block (frame);
+
+  cx = SWFDEC_AS_OBJECT (frame)->context;
+
+  if (!cx->throwing) {
+    cx->throwing = TRUE;
+    cx->throw_value = *error;
+  }
+}
+
+static void
+swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
+{
+  TryData *try_data = data;
+  SwfdecAsContext *cx;
+  SwfdecAsValue *error;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (try_data != NULL);
+
+  cx = SWFDEC_AS_OBJECT (frame)->context;
+
+  swfdec_as_frame_pop_block (frame);
+
+  if (cx->throwing) {
+    error = g_malloc (sizeof (SwfdecAsValue));
+    *error = cx->throw_value;
+
+    swfdec_as_frame_push_block (frame, try_data->start + try_data->catch_size,
+	try_data->start + try_data->catch_size + try_data->finally_size,
+	swfdec_action_try_end_finally, error, g_free);
+
+    cx->throwing = FALSE;
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&cx->throw_value);
   }
 
-  SWFDEC_FIXME ("Throw action not implemented");
+  swfdec_action_try_free_data (try_data);
+}
+
+static void
+swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
+{
+  TryData *try_data = data;
+  SwfdecAsContext *cx;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (try_data != NULL);
+
+  if (!try_data->catch) {
+    swfdec_action_try_end_catch (frame, try_data);
+    return;
+  }
+
+  cx = SWFDEC_AS_OBJECT (frame)->context;
+
+  swfdec_as_frame_pop_block (frame);
+
+  if (!cx->throwing) {
+    swfdec_action_try_free_data (try_data);
+  } else {
+    if (try_data->use_register) {
+      if (swfdec_action_has_register (cx, try_data->register_number)) {
+	cx->frame->registers[try_data->register_number] = cx->throw_value;
+      } else {
+	SWFDEC_ERROR ("cannot set Error to register %u: not enough registers",
+	    try_data->register_number);
+      }
+    } else {
+      // FIXME: this is duplicate of SetVariable
+      SwfdecAsObject *object;
+      const char *s, *rest;
+
+      s = swfdec_as_context_get_string (cx, try_data->variable_name);
+      if (swfdec_action_get_movie_by_path (cx, s, &object, &rest)) {
+	if (object && rest) {
+	  swfdec_as_object_set_variable (object,
+	      swfdec_as_context_get_string (cx, rest), &cx->throw_value);
+	} else {
+	  if (object) {
+	    rest = s;
+	  } else {
+	    rest = swfdec_as_context_get_string (cx, rest);
+	  }
+	  swfdec_as_frame_set_variable (frame, rest, &cx->throw_value);
+	}
+      }
+      else
+      {
+	SWFDEC_ERROR ("cannot set Error to variable %s",
+	    try_data->variable_name);
+      }
+    }
+
+    swfdec_as_frame_push_block (frame, try_data->start,
+	try_data->start + try_data->catch_size, swfdec_action_try_end_catch,
+	try_data, NULL);
+
+    cx->throwing = FALSE;
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&cx->throw_value);
+  }
 }
 
 static void
 swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecBits bits;
-  gboolean catch, finally, use_register;
-  guint try_size, catch_size, finally_size;
+  TryData *try_data;
+  guint try_size;
 
   if (len <= 8) {
     SWFDEC_ERROR ("With action requires a length of at least 8, but got %u",
@@ -2565,28 +2691,33 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
     return;
   }
 
+  try_data = g_malloc (sizeof (TryData));
+
   swfdec_bits_init_data (&bits, data, len);
 
   swfdec_bits_getbits (&bits, 5); // reserved
-  use_register = swfdec_bits_getbit (&bits);
-  finally = swfdec_bits_getbit (&bits);
-  catch = swfdec_bits_getbit (&bits);
+  try_data->use_register = swfdec_bits_getbit (&bits);
+  try_data->finally = swfdec_bits_getbit (&bits);
+  try_data->catch = swfdec_bits_getbit (&bits);
 
   try_size = swfdec_bits_get_u16 (&bits);
-  catch_size = swfdec_bits_get_u16 (&bits);
-  finally_size = swfdec_bits_get_u16 (&bits);
+  try_data->catch_size = swfdec_bits_get_u16 (&bits);
+  try_data->finally_size = swfdec_bits_get_u16 (&bits);
+  try_data->start = data + len + try_size;
 
-  if (use_register) {
-    swfdec_bits_get_u8 (&bits);
+  if (try_data->use_register) {
+    try_data->register_number = swfdec_bits_get_u8 (&bits);
   } else {
-    swfdec_bits_get_string_with_version (&bits, cx->version);
+    try_data->variable_name =
+      swfdec_bits_get_string_with_version (&bits, cx->version);
   }
 
   if (swfdec_bits_left (&bits)) {
     SWFDEC_WARNING ("leftover bytes in Try action");
   }
 
-  SWFDEC_FIXME ("Try action not implemented");
+  swfdec_as_frame_push_block (cx->frame, data + len, data + len + try_size,
+      swfdec_action_try_end_try, try_data, NULL);
 }
 
 static void

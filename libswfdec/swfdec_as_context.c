@@ -809,6 +809,15 @@ start:
   check_block = TRUE;
 
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
+    while (context->throwing && frame->blocks->len > 0) {
+      frame->pc = frame->block_end;
+      swfdec_as_frame_check_block (frame);
+      pc = frame->pc;
+    }
+    if (context->throwing) {
+      swfdec_as_context_abort (context, "Unhandled exception");
+      goto error;
+    }
     if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {
       SWFDEC_LOG ("code exited block");
       swfdec_as_frame_check_block (frame);

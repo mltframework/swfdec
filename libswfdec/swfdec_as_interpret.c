@@ -2543,6 +2543,7 @@ swfdec_action_throw (SwfdecAsContext *cx, guint action, const guint8 *data,
 }
 
 typedef struct {
+  int			ref_count;
   const guint8 *	start;
   gboolean		catch;
   gboolean		finally;
@@ -2557,9 +2558,24 @@ typedef struct {
 } TryData;
 
 static void
-swfdec_action_try_free_data (TryData *try_data)
+swfdec_action_try_data_ref (gpointer data)
 {
+  TryData *try_data = data;
+
   g_return_if_fail (try_data != NULL);
+
+  try_data->ref_count++;
+}
+
+static void
+swfdec_action_try_data_unref (gpointer data)
+{
+  TryData *try_data = data;
+
+  g_return_if_fail (try_data != NULL);
+
+  if (--try_data->ref_count > 0)
+    return;
 
   if (!try_data->use_register)
     g_free (try_data->variable_name);
@@ -2575,14 +2591,15 @@ swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (SWFDEC_IS_AS_VALUE (error));
 
-  swfdec_as_frame_pop_block (frame);
-
   cx = SWFDEC_AS_OBJECT (frame)->context;
 
+  // finally has ended and we had exception stored, throw it
   if (!cx->throwing) {
     cx->throwing = TRUE;
     cx->throw_value = *error;
   }
+
+  swfdec_as_frame_pop_block (frame);
 }
 
 static void
@@ -2597,9 +2614,15 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
 
   cx = SWFDEC_AS_OBJECT (frame)->context;
 
+  swfdec_action_try_data_ref (try_data);
   swfdec_as_frame_pop_block (frame);
 
-  if (cx->throwing) {
+  if (cx->throwing)
+  {
+    // we got an exception while in catch block:
+    // create new block for finally, passing the exception
+    // clear exception from the context
+
     error = g_malloc (sizeof (SwfdecAsValue));
     *error = cx->throw_value;
 
@@ -2611,7 +2634,7 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
     SWFDEC_AS_VALUE_SET_UNDEFINED (&cx->throw_value);
   }
 
-  swfdec_action_try_free_data (try_data);
+  swfdec_action_try_data_unref (try_data);
 }
 
 static void
@@ -2623,6 +2646,8 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (try_data != NULL);
 
+  // if we don't have a catch block, we handle try block exactly like it was
+  // catch block
   if (!try_data->catch) {
     swfdec_action_try_end_catch (frame, try_data);
     return;
@@ -2630,19 +2655,26 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
 
   cx = SWFDEC_AS_OBJECT (frame)->context;
 
+  swfdec_action_try_data_ref (try_data);
   swfdec_as_frame_pop_block (frame);
 
-  if (!cx->throwing) {
-    swfdec_action_try_free_data (try_data);
-  } else {
-    if (try_data->use_register) {
+  if (cx->throwing)
+  {
+    // we got an exception while in try block:
+    // set the error variable
+    // add new block for catch
+    // clear exception from context
+    if (try_data->use_register)
+    {
       if (swfdec_action_has_register (cx, try_data->register_number)) {
 	cx->frame->registers[try_data->register_number] = cx->throw_value;
       } else {
 	SWFDEC_ERROR ("cannot set Error to register %u: not enough registers",
 	    try_data->register_number);
       }
-    } else {
+    }
+    else
+    {
       // FIXME: this is duplicate of SetVariable
       SwfdecAsObject *object;
       const char *s, *rest;
@@ -2668,13 +2700,16 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
       }
     }
 
+    swfdec_action_try_data_ref (try_data);
     swfdec_as_frame_push_block (frame, try_data->start,
 	try_data->start + try_data->catch_size, swfdec_action_try_end_catch,
-	try_data, NULL);
+	try_data, swfdec_action_try_data_unref);
 
     cx->throwing = FALSE;
     SWFDEC_AS_VALUE_SET_UNDEFINED (&cx->throw_value);
   }
+
+  swfdec_action_try_data_unref (try_data);
 }
 
 static void
@@ -2691,7 +2726,7 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
     return;
   }
 
-  try_data = g_malloc (sizeof (TryData));
+  try_data = g_malloc0 (sizeof (TryData));
 
   swfdec_bits_init_data (&bits, data, len);
 
@@ -2716,8 +2751,9 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
     SWFDEC_WARNING ("leftover bytes in Try action");
   }
 
+  swfdec_action_try_data_ref (try_data);
   swfdec_as_frame_push_block (cx->frame, data + len, data + len + try_size,
-      swfdec_action_try_end_try, try_data, NULL);
+      swfdec_action_try_end_try, try_data, swfdec_action_try_data_unref);
 }
 
 static void

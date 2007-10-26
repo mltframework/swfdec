@@ -809,6 +809,8 @@ start:
   check_block = TRUE;
 
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
+    // in case of an exception, skip blocks until exception is cleared or we
+    // run out of blocks
     while (context->throwing && frame->blocks->len > 0) {
       frame->pc = frame->block_end;
       swfdec_as_frame_check_block (frame);

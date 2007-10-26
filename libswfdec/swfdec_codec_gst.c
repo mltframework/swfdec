@@ -272,7 +272,16 @@ static gboolean
 swfdec_gst_decoder_push (SwfdecGstDecoder *dec, GstBuffer *buffer)
 {
   GstFlowReturn ret;
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (dec->src));
+  GstCaps *caps;
+
+  /* set caps if none set yet */
+  caps = gst_buffer_get_caps (buffer);
+  if (caps) {
+    gst_caps_unref (caps);
+  } else {
+    gst_buffer_set_caps (buffer, GST_PAD_CAPS (dec->src));
+  }
+
   ret = gst_pad_push (dec->src, buffer);
   if (GST_FLOW_IS_SUCCESS (ret))
     return TRUE;

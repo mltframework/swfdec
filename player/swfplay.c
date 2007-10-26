@@ -155,6 +155,8 @@ main (int argc, char *argv[])
   }
   loop = g_main_loop_new (NULL, TRUE);
   player = swfdec_gtk_player_new (NULL);
+  /* this allows the player to continue fine when running in gdb */
+  swfdec_player_set_maximum_runtime (player, 0);
   if (gc)
     g_object_set (player, "memory-until-gc", (gulong) 0, NULL);
   if (trace)

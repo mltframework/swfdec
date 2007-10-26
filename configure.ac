@@ -119,7 +119,7 @@ if test "$enable_gtk" = "yes"; then
 	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_VER])
 	fi
 else
-	AC_MSG_WARN([*** Gtk support was not enabled. ***])
+	AC_MSG_NOTICE([Gtk support was not enabled.])
 fi
 AM_CONDITIONAL(WITH_GTK, [test "x$HAVE_GTK" = xyes])
 

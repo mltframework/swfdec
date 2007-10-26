@@ -113,6 +113,11 @@ const char *	swfdec_as_context_give_string	(SwfdecAsContext *	context,
 void		swfdec_as_context_abort		(SwfdecAsContext *	context,
 						 const char *		reason);
 
+void		swfdec_as_context_throw		(SwfdecAsContext *	context,
+						 const SwfdecAsValue *	value);
+gboolean	swfdec_as_context_catch		(SwfdecAsContext *	context,
+						 SwfdecAsValue *	value);
+
 gboolean	swfdec_as_context_use_mem     	(SwfdecAsContext *	context, 
 						 gsize			bytes);
 void		swfdec_as_context_unuse_mem   	(SwfdecAsContext *	context,

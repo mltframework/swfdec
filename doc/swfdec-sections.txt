@@ -307,6 +307,8 @@ swfdec_as_context_use_mem
 swfdec_as_context_gc
 swfdec_as_context_maybe_gc
 swfdec_as_context_run
+swfdec_as_context_throw
+swfdec_as_context_catch
 swfdec_as_context_unuse_mem
 swfdec_as_context_eval
 swfdec_as_context_eval_set

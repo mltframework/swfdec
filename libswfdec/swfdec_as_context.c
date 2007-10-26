@@ -673,6 +673,52 @@ swfdec_as_context_get_frame (SwfdecAsContext *context)
 }
 
 /**
+ * swfdec_as_context_throw:
+ * @context: a #SwfdecAsContext
+ * @value: a #SwfdecAsValue to be thrown
+ *
+ * Throws a new exception in the @context using the given @value. This function
+ * can only be called if the @context is not already throwing an exception.
+ **/
+void
+swfdec_as_context_throw (SwfdecAsContext *context, const SwfdecAsValue *value)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
+  g_return_if_fail (context->throwing);
+
+  context->throwing = TRUE;
+  context->throw_value = *value;
+}
+
+/**
+ * swfdec_as_context_catch:
+ * @context: a #SwfdecAsContext
+ * @value: a #SwfdecAsValue to be thrown
+ *
+ * Removes the currently thrown exception from @context and sets @value to the
+ * thrown value
+ *
+ * Returns: %TRUE if an exception was catched, %FALSE otherwise
+ **/
+gboolean
+swfdec_as_context_catch (SwfdecAsContext *context, SwfdecAsValue *value)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+
+  if (!context->throwing)
+    return FALSE;
+
+  if (value != NULL)
+    *value = context->throw_value;
+
+  context->throwing = FALSE;
+  SWFDEC_AS_VALUE_SET_UNDEFINED (&context->throw_value);
+
+  return TRUE;
+}
+
+/**
  * swfdec_as_context_get_time:
  * @context: a #SwfdecAsContext
  * @tv: a #GTimeVal to be set to the context's time

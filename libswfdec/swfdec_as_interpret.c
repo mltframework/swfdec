@@ -2544,9 +2544,8 @@ swfdec_action_throw (SwfdecAsContext *cx, guint action, const guint8 *data,
 
 typedef struct {
   int			ref_count;
-  const guint8 *	start;
-  gboolean		catch;
-  gboolean		finally;
+  const guint8 *	catch_start;
+  const guint8 *	finally_start;
   guint			catch_size;
   guint			finally_size;
 
@@ -2626,8 +2625,8 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
     error = g_malloc (sizeof (SwfdecAsValue));
     *error = cx->throw_value;
 
-    swfdec_as_frame_push_block (frame, try_data->start + try_data->catch_size,
-	try_data->start + try_data->catch_size + try_data->finally_size,
+    swfdec_as_frame_push_block (frame, try_data->finally_start,
+	try_data->finally_start + try_data->finally_size,
 	swfdec_action_try_end_finally, error, g_free);
 
     cx->throwing = FALSE;
@@ -2648,7 +2647,7 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
 
   // if we don't have a catch block, we handle try block exactly like it was
   // catch block
-  if (!try_data->catch) {
+  if (!try_data->catch_start) {
     swfdec_action_try_end_catch (frame, try_data);
     return;
   }
@@ -2701,9 +2700,9 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
     }
 
     swfdec_action_try_data_ref (try_data);
-    swfdec_as_frame_push_block (frame, try_data->start,
-	try_data->start + try_data->catch_size, swfdec_action_try_end_catch,
-	try_data, swfdec_action_try_data_unref);
+    swfdec_as_frame_push_block (frame, try_data->catch_start,
+	try_data->catch_start + try_data->catch_size,
+	swfdec_action_try_end_catch, try_data, swfdec_action_try_data_unref);
 
     cx->throwing = FALSE;
     SWFDEC_AS_VALUE_SET_UNDEFINED (&cx->throw_value);
@@ -2718,6 +2717,7 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
   SwfdecBits bits;
   TryData *try_data;
   guint try_size;
+  gboolean use_finally, use_catch;
 
   if (len <= 8) {
     SWFDEC_ERROR ("With action requires a length of at least 8, but got %u",
@@ -2727,18 +2727,22 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
   }
 
   try_data = g_malloc0 (sizeof (TryData));
+  swfdec_action_try_data_ref (try_data);
 
   swfdec_bits_init_data (&bits, data, len);
 
   swfdec_bits_getbits (&bits, 5); // reserved
   try_data->use_register = swfdec_bits_getbit (&bits);
-  try_data->finally = swfdec_bits_getbit (&bits);
-  try_data->catch = swfdec_bits_getbit (&bits);
+  use_finally = swfdec_bits_getbit (&bits);
+  use_catch = swfdec_bits_getbit (&bits);
 
   try_size = swfdec_bits_get_u16 (&bits);
   try_data->catch_size = swfdec_bits_get_u16 (&bits);
   try_data->finally_size = swfdec_bits_get_u16 (&bits);
-  try_data->start = data + len + try_size;
+  if (use_catch)
+    try_data->catch_start = data + len + try_size;
+  if (use_finally)
+    try_data->finally_start = try_data->catch_start + try_data->catch_size;
 
   if (try_data->use_register) {
     try_data->register_number = swfdec_bits_get_u8 (&bits);
@@ -2751,9 +2755,13 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
     SWFDEC_WARNING ("leftover bytes in Try action");
   }
 
-  swfdec_action_try_data_ref (try_data);
-  swfdec_as_frame_push_block (cx->frame, data + len, data + len + try_size,
-      swfdec_action_try_end_try, try_data, swfdec_action_try_data_unref);
+  if (try_data->catch_start || try_data->finally_start) {
+    swfdec_as_frame_push_block (cx->frame, data + len, data + len + try_size,
+	swfdec_action_try_end_try, try_data, swfdec_action_try_data_unref);
+  } else {
+    SWFDEC_ERROR ("Try without neither catch or finally block");
+    swfdec_action_try_data_unref (try_data);
+  }
 }
 
 static void

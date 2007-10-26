@@ -1785,8 +1785,8 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   char *function_name;
   const char *name = NULL;
   guint i, n_args, size, n_registers;
-  SwfdecBuffer *buffer;
   SwfdecBits bits;
+  SwfdecBuffer *buffer;
   SwfdecAsFunction *fun;
   SwfdecAsFrame *frame;
   SwfdecScript *script;
@@ -2535,6 +2535,61 @@ swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint
 }
 
 static void
+swfdec_action_throw (SwfdecAsContext *cx, guint action, const guint8 *data,
+    guint len)
+{
+  SwfdecAsValue *val;
+  SwfdecAsObject *object;
+
+  val = swfdec_as_stack_pop (cx);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    object = SWFDEC_AS_VALUE_GET_OBJECT (val);
+  } else {
+    object = NULL;
+  }
+
+  SWFDEC_FIXME ("Throw action not implemented");
+}
+
+static void
+swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecBits bits;
+  gboolean catch, finally, use_register;
+  guint try_size, catch_size, finally_size;
+
+  if (len <= 8) {
+    SWFDEC_ERROR ("With action requires a length of at least 8, but got %u",
+	len);
+    swfdec_as_stack_pop (cx);
+    return;
+  }
+
+  swfdec_bits_init_data (&bits, data, len);
+
+  swfdec_bits_getbits (&bits, 5); // reserved
+  use_register = swfdec_bits_getbit (&bits);
+  finally = swfdec_bits_getbit (&bits);
+  catch = swfdec_bits_getbit (&bits);
+
+  try_size = swfdec_bits_get_u16 (&bits);
+  catch_size = swfdec_bits_get_u16 (&bits);
+  finally_size = swfdec_bits_get_u16 (&bits);
+
+  if (use_register) {
+    swfdec_bits_get_u8 (&bits);
+  } else {
+    swfdec_bits_get_string_with_version (&bits, cx->version);
+  }
+
+  if (swfdec_bits_left (&bits)) {
+    SWFDEC_WARNING ("leftover bytes in Try action");
+  }
+
+  SWFDEC_FIXME ("Try action not implemented");
+}
+
+static void
 swfdec_action_pop_with (SwfdecAsFrame *frame, gpointer with_object)
 {
   g_assert (frame->scope_chain->data == with_object);
@@ -2959,7 +3014,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_END_DRAG] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
   [SWFDEC_AS_ACTION_STRING_LESS] = { "StringLess", NULL, 2, 1, { NULL, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare } },
   /* version 7 */
-  [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL },
+  [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL, 1, 0, { NULL, NULL, NULL, NULL, swfdec_action_throw } },
   [SWFDEC_AS_ACTION_CAST] = { "Cast", NULL, 2, 1, { NULL, NULL, NULL, NULL, swfdec_action_cast } },
   [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL, -1, 0, { NULL, NULL, NULL, NULL, swfdec_action_implements } },
   /* version 4 */
@@ -3032,7 +3087,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   /* version 7 */
   [SWFDEC_AS_ACTION_DEFINE_FUNCTION2] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, swfdec_action_define_function, swfdec_action_define_function } },
-  [SWFDEC_AS_ACTION_TRY] = { "Try", NULL },
+  [SWFDEC_AS_ACTION_TRY] = { "Try", NULL, 0, 0, { NULL, NULL, NULL, NULL, swfdec_action_try } },
   /* version 5 */
   [SWFDEC_AS_ACTION_WITH] = { "With", swfdec_action_print_with, 1, 0, { NULL, NULL, swfdec_action_with, swfdec_action_with, swfdec_action_with } },
   /* version 4 */

@@ -361,6 +361,7 @@ static void
 swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   swfdec_as_object_mark (context->global);
+  swfdec_as_value_mark (&context->throw_value);
   swfdec_as_object_mark (context->Function);
   swfdec_as_object_mark (context->Function_prototype);
   swfdec_as_object_mark (context->Object);

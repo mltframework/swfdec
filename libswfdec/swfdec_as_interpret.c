@@ -2625,6 +2625,7 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
     error = g_malloc (sizeof (SwfdecAsValue));
     *error = cx->throw_value;
 
+    // FIXME: the error value is not marked while finally block runs
     swfdec_as_frame_push_block (frame, try_data->finally_start,
 	try_data->finally_start + try_data->finally_size,
 	swfdec_action_try_end_finally, error, g_free);

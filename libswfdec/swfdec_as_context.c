@@ -685,7 +685,7 @@ swfdec_as_context_throw (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
-  g_return_if_fail (context->throwing);
+  g_return_if_fail (!context->throwing);
 
   context->throwing = TRUE;
   context->throw_value = *value;

@@ -65,6 +65,7 @@ struct _SwfdecAsObject {
   GHashTable *		watches;	/* string->WatchData mapping or NULL when not watching anything */
   guint8		flags;		/* GC flags */
   gsize			size;		/* size reserved in GC */
+  GSList *		interfaces;	/* list of interfaces this object implements */
 };
 
 struct _SwfdecAsObjectClass {

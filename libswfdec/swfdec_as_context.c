@@ -361,7 +361,7 @@ static void
 swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   swfdec_as_object_mark (context->global);
-  swfdec_as_value_mark (&context->throw_value);
+  swfdec_as_value_mark (&context->exception_value);
   swfdec_as_object_mark (context->Function);
   swfdec_as_object_mark (context->Function_prototype);
   swfdec_as_object_mark (context->Object);
@@ -685,10 +685,10 @@ swfdec_as_context_throw (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
-  g_return_if_fail (!context->throwing);
+  g_return_if_fail (!context->exception);
 
-  context->throwing = TRUE;
-  context->throw_value = *value;
+  context->exception = TRUE;
+  context->exception_value = *value;
 }
 
 /**
@@ -706,14 +706,14 @@ swfdec_as_context_catch (SwfdecAsContext *context, SwfdecAsValue *value)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
 
-  if (!context->throwing)
+  if (!context->exception)
     return FALSE;
 
   if (value != NULL)
-    *value = context->throw_value;
+    *value = context->exception_value;
 
-  context->throwing = FALSE;
-  SWFDEC_AS_VALUE_SET_UNDEFINED (&context->throw_value);
+  context->exception = FALSE;
+  SWFDEC_AS_VALUE_SET_UNDEFINED (&context->exception_value);
 
   return TRUE;
 }
@@ -858,14 +858,14 @@ start:
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
     // in case of an exception, skip blocks until exception is cleared or we
     // run out of blocks
-    while (context->throwing && frame->blocks->len > 0) {
+    while (context->exception && frame->blocks->len > 0) {
       frame->pc = frame->block_end;
       swfdec_as_frame_check_block (frame);
       pc = frame->pc;
     }
-    if (context->throwing) {
+    if (context->exception) {
       SWFDEC_ERROR ("Unhandled exception: %s",
-	  swfdec_as_value_to_string (context, &context->throw_value));
+	  swfdec_as_value_to_string (context, &context->exception_value));
       goto error;
     }
     if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {

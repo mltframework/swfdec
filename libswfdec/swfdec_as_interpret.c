@@ -2583,17 +2583,17 @@ swfdec_action_try_data_unref (gpointer data)
 static void
 swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
 {
-  SwfdecAsValue *exception = data;
+  SwfdecAsValue *exception_value = data;
   SwfdecAsContext *cx;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (exception));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (exception_value));
 
   cx = SWFDEC_AS_OBJECT (frame)->context;
 
   // finally has ended and we had exception stored, throw it
-  if (!cx->throwing)
-    swfdec_as_context_throw (cx, exception);
+  if (!cx->exception)
+    swfdec_as_context_throw (cx, exception_value);
 
   swfdec_as_frame_pop_block (frame);
 }
@@ -2603,7 +2603,7 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
 {
   TryData *try_data = data;
   SwfdecAsContext *cx;
-  SwfdecAsValue *exception, val;
+  SwfdecAsValue *exception_value, val;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (try_data != NULL);
@@ -2619,13 +2619,13 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
     // create new block for finally, passing the exception
     // clear exception from the context
 
-    exception = g_malloc (sizeof (SwfdecAsValue));
-    *exception = val;
+    exception_value = g_malloc (sizeof (SwfdecAsValue));
+    *exception_value = val;
 
     // FIXME: the exception value is not marked while finally block runs
     swfdec_as_frame_push_block (frame, try_data->finally_start,
 	try_data->finally_start + try_data->finally_size,
-	swfdec_action_try_end_finally, exception, g_free);
+	swfdec_action_try_end_finally, exception_value, g_free);
   }
 
   swfdec_action_try_data_unref (try_data);

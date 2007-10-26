@@ -271,7 +271,13 @@ swfdec_gst_decoder_finish (SwfdecGstDecoder *dec)
 static gboolean
 swfdec_gst_decoder_push (SwfdecGstDecoder *dec, GstBuffer *buffer)
 {
-  return GST_FLOW_IS_SUCCESS (gst_pad_push (dec->src, buffer));
+  GstFlowReturn ret;
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (dec->src));
+  ret = gst_pad_push (dec->src, buffer);
+  if (GST_FLOW_IS_SUCCESS (ret))
+    return TRUE;
+  SWFDEC_ERROR ("error %d pushing data", (int) ret);
+  return FALSE;
 }
 
 static void
@@ -412,65 +418,27 @@ error:
 
 /*** VIDEO ***/
 
-#if 0
-#define swfdec_cond_wait(cond, mutex) G_STMT_START { \
-  g_print ("waiting at %s\n", G_STRLOC); \
-  g_cond_wait (cond, mutex); \
-  g_print ("   done at %s\n", G_STRLOC); \
-}G_STMT_END
-#else
-#define swfdec_cond_wait g_cond_wait
-#endif
-
+/* NB: We don't put a colorspace tansform here, we just assume that the codecs
+ * in GStreamer decode to the native format that we enforce. */
 typedef struct _SwfdecGstVideo SwfdecGstVideo;
 struct _SwfdecGstVideo {
   SwfdecVideoDecoder	decoder;
 
-  GMutex *	  	mutex;		/* mutex that blocks everything below (NB: locked by default) */
-  GCond *		cond;		/* cond used to signal when stuff below changes */
-  volatile int		refcount;	/* refcount (d'oh) */
-
-  GstElement *		pipeline;	/* pipeline that is playing or NULL when done */
-  SwfdecBuffer *	in;		/* next input buffer or NULL */
-  GstBuffer *		out;		/* available output or NULL */
-  int			width;		/* width of last output buffer */
-  int			height;		/* height of last output buffer */
-  GstCaps *		srccaps;	/* caps to set on buffers */
-  gboolean		out_next;	/* wether the pipeline expects input or output */
-  gboolean		error;		/* we're in an error state */
+  gboolean		error;
+  SwfdecGstDecoder	dec;		/* the decoder element */
+  GstBuffer *		last;		/* last decoded buffer */
 };
-
-static void
-swfdec_gst_video_unref (gpointer data, GObject *unused)
-{
-  SwfdecGstVideo *player = data;
-
-  if (!g_atomic_int_dec_and_test (&player->refcount))
-    return;
-  g_cond_free (player->cond);
-  g_mutex_free (player->mutex);
-  gst_caps_unref (player->srccaps);
-  if (player->in)
-    swfdec_buffer_unref (player->in);
-  if (player->out)
-    gst_buffer_unref (player->out);
-  g_slice_free (SwfdecGstVideo, player);
-}
 
 static void
 swfdec_video_decoder_gst_free (SwfdecVideoDecoder *dec)
 {
   SwfdecGstVideo *player = (SwfdecGstVideo *) dec;
-  GstElement *pipeline;
 
-  pipeline = player->pipeline;
-  player->pipeline = NULL;
-  g_cond_signal (player->cond);
-  g_mutex_unlock (player->mutex);
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  g_object_unref (pipeline);
+  swfdec_gst_decoder_finish (&player->dec);
+  if (player->last)
+    gst_buffer_unref (player->last);
 
-  swfdec_gst_video_unref (player, NULL);
+  g_slice_free (SwfdecGstVideo, player);
 }
 
 static gboolean
@@ -479,115 +447,64 @@ swfdec_video_decoder_gst_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
 {
   SwfdecGstVideo *player = (SwfdecGstVideo *) dec;
 #define ALIGN(x, n) (((x) + (n) - 1) & (~((n) - 1)))
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstStructure *structure;
 
-  while (player->in != NULL && !player->error) {
-    swfdec_cond_wait (player->cond, player->mutex);
-  }
-  player->in = swfdec_buffer_ref (buffer);
-  g_cond_signal (player->cond);
-  if (player->out) {
-    gst_buffer_unref (player->out);
-    player->out = NULL;
-  }
-  while (player->out == NULL && !player->error) {
-    swfdec_cond_wait (player->cond, player->mutex);
-  }
   if (player->error)
     return FALSE;
-  image->width = player->width;
-  image->height = player->height;
+  if (player->last) {
+    gst_buffer_unref (player->last);
+    player->last = NULL;
+  }
+
+  buf = swfdec_gst_buffer_new (swfdec_buffer_ref (buffer));
+  if (!swfdec_gst_decoder_push (&player->dec, buf)) {
+    SWFDEC_ERROR ("failed to push buffer");
+    player->error = TRUE;
+    return FALSE;
+  }
+
+  player->last = swfdec_gst_decoder_pull (&player->dec);
+  if (player->last == NULL) {
+    SWFDEC_ERROR ("failed to pull decoded buffer");
+    player->error = TRUE;
+    return FALSE;
+  }
+  while ((buf = swfdec_gst_decoder_pull (&player->dec))) {
+    SWFDEC_WARNING ("too many output buffers!");
+  }
+  caps = gst_buffer_get_caps (player->last);
+  if (caps == NULL) {
+    SWFDEC_ERROR ("no caps on decoded buffer");
+    player->error = TRUE;
+    return FALSE;
+  }
+  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (structure, "width", (int *) &image->width) ||
+      !gst_structure_get_int (structure, "height", (int *) &image->height)) {
+    SWFDEC_ERROR ("invalid caps on decoded buffer");
+    player->error = TRUE;
+    return FALSE;
+  }
   image->mask = NULL;
+  buf = player->last;
   switch (swfdec_video_codec_get_format (dec->codec)) {
     case SWFDEC_VIDEO_FORMAT_RGBA:
-      image->plane[0] = player->out->data;
-      image->rowstride[0] = player->width * 4;
+      image->plane[0] = buf->data;
+      image->rowstride[0] = image->width * 4;
       break;
     case SWFDEC_VIDEO_FORMAT_I420:
-      image->plane[0] = player->out->data;
-      image->rowstride[0] = ALIGN (player->width, 4);
-      image->plane[1] = image->plane[0] + image->rowstride[0] * ALIGN (player->height, 2);
-      image->rowstride[1] = ALIGN (player->width, 8) / 2;
-      image->plane[2] = image->plane[1] + image->rowstride[1] * ALIGN (player->height, 2) / 2;
+      image->plane[0] = buf->data;
+      image->rowstride[0] = ALIGN (image->width, 4);
+      image->plane[1] = image->plane[0] + image->rowstride[0] * ALIGN (image->height, 2);
+      image->rowstride[1] = ALIGN (image->width, 8) / 2;
+      image->plane[2] = image->plane[1] + image->rowstride[1] * ALIGN (image->height, 2) / 2;
       image->rowstride[2] = image->rowstride[1];
-      g_assert (image->plane[2] + image->rowstride[2] * ALIGN (player->height, 2) / 2 == image->plane[0] + player->out->size);
+      g_assert (image->plane[2] + image->rowstride[2] * ALIGN (image->height, 2) / 2 == image->plane[0] + buf->size);
       break;
   }
   return TRUE;
-}
-
-static void
-swfdec_video_decoder_gst_fakesrc_handoff (GstElement *fakesrc, GstBuffer *buf, 
-    GstPad *pad, SwfdecGstVideo *player)
-{
-  g_mutex_lock (player->mutex);
-  if (player->out_next) {
-    player->error = TRUE;
-    g_cond_signal (player->cond);
-    g_mutex_unlock (player->mutex);
-    return;
-  }
-  while (player->pipeline != NULL && player->in == NULL)
-    swfdec_cond_wait (player->cond, player->mutex);
-  if (player->pipeline == NULL) {
-    g_mutex_unlock (player->mutex);
-    return;
-  }
-  buf->data = g_memdup (player->in->data, player->in->length);
-  buf->malloc_data = buf->data;
-  buf->size = player->in->length;
-  gst_buffer_set_caps (buf, player->srccaps);
-  swfdec_buffer_unref (player->in);
-  player->in = NULL;
-  player->out_next = TRUE;
-  g_cond_signal (player->cond);
-  g_mutex_unlock (player->mutex);
-}
-
-static void
-swfdec_video_decoder_gst_fakesink_handoff (GstElement *fakesrc, GstBuffer *buf, 
-    GstPad *pad, SwfdecGstVideo *player)
-{
-  GstCaps *caps;
-
-  g_mutex_lock (player->mutex);
-  if (!player->out_next) {
-    player->error = TRUE;
-    g_cond_signal (player->cond);
-    g_mutex_unlock (player->mutex);
-    return;
-  }
-  caps = gst_buffer_get_caps (buf);
-  if (caps) {
-    GstStructure *structure = gst_caps_get_structure (caps, 0);
-    if (!gst_structure_get_int (structure, "width", &player->width) ||
-        !gst_structure_get_int (structure, "height", &player->height)) {
-      player->width = 0;
-      player->height = 0;
-    }
-    gst_caps_unref (caps);
-  }
-  if (player->pipeline == NULL) {
-    g_mutex_unlock (player->mutex);
-    return;
-  }
-  if (player->out != NULL)
-    gst_buffer_unref (player->out);
-  player->out = gst_buffer_ref (buf);
-  player->out_next = FALSE;
-  g_cond_signal (player->cond);
-  g_mutex_unlock (player->mutex);
-}
-
-static void
-swfdec_video_decoder_gst_link (GstElement *src, GstPad *pad, GstElement *sink)
-{
-  GstCaps *caps;
-  
-  caps = g_object_get_data (G_OBJECT (sink), "swfdec-caps");
-  g_assert (caps);
-  if (!gst_element_link_filtered (src, sink, caps)) {
-    SWFDEC_ERROR ("no delayed link");
-  }
 }
 
 static GstCaps *
@@ -613,84 +530,37 @@ SwfdecVideoDecoder *
 swfdec_video_decoder_gst_new (SwfdecVideoCodec codec)
 {
   SwfdecGstVideo *player;
-  GstElement *fakesrc, *fakesink, *decoder;
-  GstCaps *caps;
+  GstCaps *srccaps, *sinkcaps;
 
   if (!gst_init_check (NULL, NULL, NULL))
     return NULL;
 
   switch (codec) {
     case SWFDEC_VIDEO_CODEC_H263:
-      caps = gst_caps_from_string ("video/x-flash-video");
+      srccaps = gst_caps_from_string ("video/x-flash-video");
       break;
     case SWFDEC_VIDEO_CODEC_VP6:
-      caps = gst_caps_from_string ("video/x-vp6-flash");
+      srccaps = gst_caps_from_string ("video/x-vp6-flash");
       break;
     default:
       return NULL;
   }
-  g_assert (caps);
+  g_assert (srccaps);
+  sinkcaps = swfdec_video_decoder_get_sink_caps (codec);
 
-  player = g_slice_new0 (SwfdecGstVideo);
+  player = g_slice_new (SwfdecGstVideo);
   player->decoder.decode = swfdec_video_decoder_gst_decode;
   player->decoder.free = swfdec_video_decoder_gst_free;
-  player->pipeline = gst_pipeline_new ("pipeline");
-  player->refcount = 1;
-  g_assert (player->pipeline);
-  player->mutex = g_mutex_new ();
-  g_mutex_lock (player->mutex);
-  player->cond = g_cond_new ();
-  player->srccaps = caps;
-  fakesrc = gst_element_factory_make ("fakesrc", NULL);
-  if (fakesrc == NULL) {
-    SWFDEC_ERROR ("failed to create fakesrc");
-    swfdec_video_decoder_gst_free (&player->decoder);
-    return NULL;
-  }
-  g_object_set (fakesrc, "signal-handoffs", TRUE, 
-      "can-activate-pull", FALSE, NULL);
-  g_signal_connect (fakesrc, "handoff", 
-      G_CALLBACK (swfdec_video_decoder_gst_fakesrc_handoff), player);
-  g_atomic_int_inc (&player->refcount);
-  g_object_weak_ref (G_OBJECT (fakesrc), swfdec_gst_video_unref, player);
-  gst_bin_add (GST_BIN (player->pipeline), fakesrc);
-  fakesink = gst_element_factory_make ("fakesink", NULL);
-  if (fakesink == NULL) {
-    SWFDEC_ERROR ("failed to create fakesink");
-    swfdec_video_decoder_gst_free (&player->decoder);
-    return NULL;
-  }
-  g_object_set (fakesink, "signal-handoffs", TRUE, NULL);
-  g_signal_connect (fakesink, "handoff", 
-      G_CALLBACK (swfdec_video_decoder_gst_fakesink_handoff), player);
-  caps = swfdec_video_decoder_get_sink_caps (codec);
-  g_assert (caps);
-  g_object_set_data_full (G_OBJECT (fakesink), "swfdec-caps", caps, 
-      (GDestroyNotify) gst_caps_unref);
-  g_atomic_int_inc (&player->refcount);
-  g_object_weak_ref (G_OBJECT (fakesink), swfdec_gst_video_unref, player);
-  gst_bin_add (GST_BIN (player->pipeline), fakesink);
-  decoder = gst_element_factory_make ("decodebin", NULL);
-  if (decoder == NULL) {
-    SWFDEC_ERROR ("failed to create decoder");
-    swfdec_video_decoder_gst_free (&player->decoder);
-    return NULL;
-  }
-  gst_bin_add (GST_BIN (player->pipeline), decoder);
-  g_signal_connect (decoder, "pad-added", 
-      G_CALLBACK (swfdec_video_decoder_gst_link), fakesink);
 
-  if (!gst_element_link_filtered (fakesrc, decoder, player->srccaps)) {
-    SWFDEC_ERROR ("linking failed");
+  if (!swfdec_gst_decoder_init (&player->dec, NULL, srccaps, sinkcaps)) {
     swfdec_video_decoder_gst_free (&player->decoder);
-    return NULL;
-  }
-  if (gst_element_set_state (player->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    SWFDEC_ERROR ("failed to change sate");
-    swfdec_video_decoder_gst_free (&player->decoder);
+    gst_caps_unref (srccaps);
+    gst_caps_unref (sinkcaps);
     return NULL;
   }
 
+  gst_caps_unref (srccaps);
+  gst_caps_unref (sinkcaps);
   return &player->decoder;
 }
 

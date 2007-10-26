@@ -2180,6 +2180,7 @@ swfdec_action_is_instance_of (SwfdecAsObject *object,
 {
   SwfdecAsValue val;
   SwfdecAsObject *class, *prototype;
+  GSList *iter;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (constructor), FALSE);
@@ -2194,6 +2195,10 @@ swfdec_action_is_instance_of (SwfdecAsObject *object,
   while ((class = swfdec_as_object_get_prototype (class)) != NULL) {
     if (class == prototype)
       return TRUE;
+    for (iter = class->interfaces; iter != NULL; iter = iter->next) {
+      if (iter->data == prototype)
+	return TRUE;
+    }
   }
 
   return FALSE;
@@ -2260,6 +2265,55 @@ swfdec_action_cast (SwfdecAsContext *cx, guint action, const guint8 *data,
     SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (cx), object);
   } else {
     SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_push (cx));
+  }
+}
+
+static void
+swfdec_action_implements (SwfdecAsContext *cx, guint action,
+    const guint8 *data, guint len)
+{
+  SwfdecAsValue *val, *argv;
+  SwfdecAsObject *object, *proto, *interface;
+  int argc, i;
+
+  swfdec_as_stack_ensure_size (cx, 2);
+
+  val = swfdec_as_stack_pop (cx);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    object = SWFDEC_AS_VALUE_GET_OBJECT (val);
+    swfdec_as_object_get_variable (object, SWFDEC_AS_STR_prototype, val);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+      proto = SWFDEC_AS_VALUE_GET_OBJECT (val);
+    } else {
+      proto = NULL;
+    }
+  } else {
+    object = NULL;
+    proto = NULL;
+  }
+
+  val = swfdec_as_stack_pop (cx);
+  argc = swfdec_as_value_to_integer (cx, val);
+
+  if (argc > 0) {
+    swfdec_as_stack_ensure_size (cx, argc);
+    argv = swfdec_as_stack_pop_n (cx, argc);
+  } else {
+    argv = NULL;
+  }
+
+  if (proto == NULL)
+    return;
+
+  for (i = 0; i < argc; i++) {
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[i]))
+      continue;
+    interface = SWFDEC_AS_VALUE_GET_OBJECT (&argv[i]);
+    swfdec_as_object_get_variable (interface, SWFDEC_AS_STR_prototype, val);
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (val))
+      continue;
+    proto->interfaces =
+      g_slist_prepend (proto->interfaces, SWFDEC_AS_VALUE_GET_OBJECT (val));
   }
 }
 
@@ -2907,7 +2961,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   /* version 7 */
   [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL },
   [SWFDEC_AS_ACTION_CAST] = { "Cast", NULL, 2, 1, { NULL, NULL, NULL, NULL, swfdec_action_cast } },
-  [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL },
+  [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL, -1, 0, { NULL, NULL, NULL, NULL, swfdec_action_implements } },
   /* version 4 */
   [0x30] = { "RandomNumber", NULL, 1, 1, { NULL, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number } },
   [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL },

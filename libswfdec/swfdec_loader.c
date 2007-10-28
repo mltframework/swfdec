@@ -540,15 +540,15 @@ swfdec_loader_set_size (SwfdecLoader *loader, gulong size)
  * swfdec_loader_get_size:
  * @loader: a #SwfdecLoader
  *
- * Queries the amount of bytes inside @loader. If the size is unknown, 0 is 
- * returned.
+ * Queries the amount of bytes inside @loader. If the size is unknown, -1 is 
+ * returned. Otherwise the number is greater or equal to 0.
  *
- * Returns: the total number of bytes for this loader or 0 if unknown
+ * Returns: the total number of bytes for this loader or -1 if unknown
  **/
 glong
 swfdec_loader_get_size (SwfdecLoader *loader)
 {
-  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), 0);
+  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), -1);
 
   return loader->size;
 }

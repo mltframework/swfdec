@@ -217,6 +217,8 @@ swfdec_audio_decoder_free (SwfdecAudioDecoder *decoder)
  * @decoder: a #SwfdecAudioDecoder
  *
  * Queries the format that is used by the decoder for its produced output.
+ * The format will only be valid after swfdec_audio_decoder_pull () has been
+ * called at least once.
  *
  * Returns: the format of the decoded data
  **/
@@ -224,6 +226,7 @@ SwfdecAudioFormat
 swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *decoder)
 {
   g_return_val_if_fail (decoder != NULL, 0);
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (decoder->format), 0);
 
   return decoder->format;
 }

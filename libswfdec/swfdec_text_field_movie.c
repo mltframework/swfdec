@@ -796,51 +796,48 @@ swfdec_text_field_get_size (SwfdecTextFieldMovie *text, int *width,
 gboolean
 swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 {
+  SwfdecGraphic *graphic;
   int height, width, diff;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
+
+  graphic = SWFDEC_GRAPHIC (text->text);
 
   if (text->text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return FALSE;
 
   swfdec_text_field_get_size (text, &width, &height);
 
-  if ((text->text->word_wrap || SWFDEC_MOVIE (text)->original_extents.x1 -
-      SWFDEC_MOVIE (text)->original_extents.x0 == width) &&
-      (SWFDEC_GRAPHIC (text->text)->extents.y1 -
-	SWFDEC_GRAPHIC (text->text)->extents.y0 == height))
+  if ((text->text->word_wrap ||
+	graphic->extents.x1 - graphic->extents.x0 == width) &&
+      graphic->extents.y1 - graphic->extents.y0 == height)
     return FALSE;
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));
 
-  if (!text->text->word_wrap && SWFDEC_MOVIE (text)->original_extents.x1 -
-      SWFDEC_MOVIE (text)->original_extents.x0 != width)
+  if (!text->text->word_wrap && graphic->extents.x1 -
+      graphic->extents.x0 != width)
   {
     switch (text->text->auto_size) {
       case SWFDEC_AUTO_SIZE_LEFT:
-	SWFDEC_GRAPHIC (text->text)->extents.x1 =
-	  SWFDEC_GRAPHIC (text->text)->extents.x0 + width;
+	graphic->extents.x1 = graphic->extents.x0 + width;
 	break;
       case SWFDEC_AUTO_SIZE_RIGHT:
-	SWFDEC_GRAPHIC (text->text)->extents.x0 =
-	  SWFDEC_GRAPHIC (text->text)->extents.x1 - width;
+	graphic->extents.x0 = graphic->extents.x1 - width;
 	break;
       case SWFDEC_AUTO_SIZE_CENTER:
-	diff = width - (SWFDEC_GRAPHIC (text->text)->extents.x1 -
-	  SWFDEC_GRAPHIC (text->text)->extents.x0);
-	SWFDEC_GRAPHIC (text->text)->extents.x0 += floor (width / 2.0);
-	SWFDEC_GRAPHIC (text->text)->extents.x1 += ceil (width / 2.0);
+	diff = (graphic->extents.x1 - graphic->extents.x0) - width;
+	graphic->extents.x0 += floor (diff / 2.0);
+	graphic->extents.x1 = graphic->extents.x0 + width;
 	break;
       default:
 	g_assert_not_reached ();
     }
   }
 
-  if (SWFDEC_GRAPHIC (text->text)->extents.y1 -
-      SWFDEC_GRAPHIC (text->text)->extents.y0 != height)
+  if (graphic->extents.y1 - graphic->extents.y0 != height)
   {
-    SWFDEC_GRAPHIC (text->text)->extents.y1 =
-      SWFDEC_GRAPHIC (text->text)->extents.y0 + height;
+    graphic->extents.y1 = graphic->extents.y0 + height;
   }
 
   swfdec_movie_queue_update (SWFDEC_MOVIE (text),

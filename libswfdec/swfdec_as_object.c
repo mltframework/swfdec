@@ -1113,6 +1113,8 @@ swfdec_as_object_call_with_security (SwfdecAsObject *object, SwfdecSecurity *sec
   if (!SWFDEC_IS_AS_FUNCTION (fun))
     return;
   swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
+  if (swfdec_as_context_is_aborted (object->context))
+    return;
   swfdec_as_frame_set_security (object->context->frame, sec);
   swfdec_as_context_run (object->context);
 }

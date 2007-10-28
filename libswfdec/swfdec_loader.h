@@ -58,7 +58,7 @@ struct _SwfdecLoader
   /*< private >*/
   guint			state;		/* SwfdecLoaderState the loader is currently in */
   SwfdecURL *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
-  gulong		size;		/* number of bytes in stream or 0 if unknown */
+  glong			size;		/* number of bytes in stream or -1 if unknown */
   char *		error;		/* error message if in error state or NULL */
   gpointer		target;		/* SwfdecLoaderTarget that gets notified about loading progress */
   gpointer		player;		/* SwfdecPlayer belonging to target or %NULL */
@@ -93,7 +93,7 @@ const SwfdecURL *
 		swfdec_loader_get_url		(SwfdecLoader *		loader);
 void		swfdec_loader_set_size		(SwfdecLoader *		loader,
 						 gulong			size);
-gulong		swfdec_loader_get_size		(SwfdecLoader *		loader);
+glong		swfdec_loader_get_size		(SwfdecLoader *		loader);
 gulong		swfdec_loader_get_loaded	(SwfdecLoader *		loader);
 char *  	swfdec_loader_get_filename	(SwfdecLoader *		loader);
 SwfdecLoaderDataType

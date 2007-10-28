@@ -276,6 +276,8 @@ swfdec_audio_decoder_pull (SwfdecAudioDecoder *decoder)
   g_return_val_if_fail (decoder != NULL, NULL);
 
   ret = decoder->pull (decoder);
+  if (ret == NULL)
+    return NULL;
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (decoder->format), ret);
   return ret;
 }

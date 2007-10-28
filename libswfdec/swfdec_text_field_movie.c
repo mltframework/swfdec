@@ -918,6 +918,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 
   cx = SWFDEC_AS_OBJECT (movie)->context;
 
+  swfdec_text_field_movie_init_properties (cx);
+
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
     swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie),

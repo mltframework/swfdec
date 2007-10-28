@@ -361,6 +361,7 @@ static void
 swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   swfdec_as_object_mark (context->global);
+  swfdec_as_value_mark (&context->exception_value);
   swfdec_as_object_mark (context->Function);
   swfdec_as_object_mark (context->Function_prototype);
   swfdec_as_object_mark (context->Object);
@@ -672,6 +673,52 @@ swfdec_as_context_get_frame (SwfdecAsContext *context)
 }
 
 /**
+ * swfdec_as_context_throw:
+ * @context: a #SwfdecAsContext
+ * @value: a #SwfdecAsValue to be thrown
+ *
+ * Throws a new exception in the @context using the given @value. This function
+ * can only be called if the @context is not already throwing an exception.
+ **/
+void
+swfdec_as_context_throw (SwfdecAsContext *context, const SwfdecAsValue *value)
+{
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
+  g_return_if_fail (!context->exception);
+
+  context->exception = TRUE;
+  context->exception_value = *value;
+}
+
+/**
+ * swfdec_as_context_catch:
+ * @context: a #SwfdecAsContext
+ * @value: a #SwfdecAsValue to be thrown
+ *
+ * Removes the currently thrown exception from @context and sets @value to the
+ * thrown value
+ *
+ * Returns: %TRUE if an exception was catched, %FALSE otherwise
+ **/
+gboolean
+swfdec_as_context_catch (SwfdecAsContext *context, SwfdecAsValue *value)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+
+  if (!context->exception)
+    return FALSE;
+
+  if (value != NULL)
+    *value = context->exception_value;
+
+  context->exception = FALSE;
+  SWFDEC_AS_VALUE_SET_UNDEFINED (&context->exception_value);
+
+  return TRUE;
+}
+
+/**
  * swfdec_as_context_get_time:
  * @context: a #SwfdecAsContext
  * @tv: a #GTimeVal to be set to the context's time
@@ -809,6 +856,18 @@ start:
   check_block = TRUE;
 
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
+    // in case of an exception, skip blocks until exception is cleared or we
+    // run out of blocks
+    while (context->exception && frame->blocks->len > 0) {
+      frame->pc = frame->block_end;
+      swfdec_as_frame_check_block (frame);
+      pc = frame->pc;
+    }
+    if (context->exception) {
+      SWFDEC_ERROR ("Unhandled exception: %s",
+	  swfdec_as_value_to_string (context, &context->exception_value));
+      goto error;
+    }
     if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {
       SWFDEC_LOG ("code exited block");
       swfdec_as_frame_check_block (frame);

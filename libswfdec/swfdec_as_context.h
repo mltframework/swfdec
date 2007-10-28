@@ -63,6 +63,8 @@ struct _SwfdecAsContext {
   unsigned int		call_depth;   	/* current depth of call stack (equals length of frame list) */
   SwfdecAsFrame *	frame;		/* topmost stack frame */
   SwfdecAsFrame *	last_frame;   	/* last frame before calling context_run */
+  gboolean		exception;	/* whether we are throwing an exception */
+  SwfdecAsValue		exception_value; /* value of the exception being thrown, can be anything including undefined */
 
   /* stack */
   SwfdecAsValue	*	base;		/* stack base */
@@ -110,6 +112,11 @@ const char *	swfdec_as_context_give_string	(SwfdecAsContext *	context,
 
 void		swfdec_as_context_abort		(SwfdecAsContext *	context,
 						 const char *		reason);
+
+void		swfdec_as_context_throw		(SwfdecAsContext *	context,
+						 const SwfdecAsValue *	value);
+gboolean	swfdec_as_context_catch		(SwfdecAsContext *	context,
+						 SwfdecAsValue *	value);
 
 gboolean	swfdec_as_context_use_mem     	(SwfdecAsContext *	context, 
 						 gsize			bytes);

@@ -1785,8 +1785,8 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   char *function_name;
   const char *name = NULL;
   guint i, n_args, size, n_registers;
-  SwfdecBuffer *buffer;
   SwfdecBits bits;
+  SwfdecBuffer *buffer;
   SwfdecAsFunction *fun;
   SwfdecAsFrame *frame;
   SwfdecScript *script;
@@ -2535,6 +2535,229 @@ swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint
 }
 
 static void
+swfdec_action_throw (SwfdecAsContext *cx, guint action, const guint8 *data,
+    guint len)
+{
+  swfdec_as_context_throw (cx, swfdec_as_stack_pop (cx));
+}
+
+typedef struct {
+  int			ref_count;
+  const guint8 *	catch_start;
+  const guint8 *	finally_start;
+  guint			catch_size;
+  guint			finally_size;
+
+  gboolean		use_register;
+  union {
+    guint		register_number;
+    char *		variable_name;
+  };
+} TryData;
+
+static void
+swfdec_action_try_data_ref (gpointer data)
+{
+  TryData *try_data = data;
+
+  g_return_if_fail (try_data != NULL);
+
+  try_data->ref_count++;
+}
+
+static void
+swfdec_action_try_data_unref (gpointer data)
+{
+  TryData *try_data = data;
+
+  g_return_if_fail (try_data != NULL);
+
+  if (--try_data->ref_count > 0)
+    return;
+
+  if (!try_data->use_register)
+    g_free (try_data->variable_name);
+  g_free (try_data);
+}
+
+static void
+swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
+{
+  SwfdecAsValue *exception_value = data;
+  SwfdecAsContext *cx;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (SWFDEC_IS_AS_VALUE (exception_value));
+
+  cx = SWFDEC_AS_OBJECT (frame)->context;
+
+  // finally has ended and we had exception stored, throw it
+  if (!cx->exception)
+    swfdec_as_context_throw (cx, exception_value);
+
+  swfdec_as_frame_pop_block (frame);
+}
+
+static void
+swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
+{
+  TryData *try_data = data;
+  SwfdecAsContext *cx;
+  SwfdecAsValue *exception_value, val;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (try_data != NULL);
+
+  cx = SWFDEC_AS_OBJECT (frame)->context;
+
+  swfdec_action_try_data_ref (try_data);
+  swfdec_as_frame_pop_block (frame);
+
+  if (swfdec_as_context_catch (cx, &val))
+  {
+    // we got an exception while in catch block:
+    // create new block for finally, passing the exception
+    // clear exception from the context
+
+    exception_value = g_malloc (sizeof (SwfdecAsValue));
+    *exception_value = val;
+
+    // FIXME: the exception value is not marked while finally block runs
+    swfdec_as_frame_push_block (frame, try_data->finally_start,
+	try_data->finally_start + try_data->finally_size,
+	swfdec_action_try_end_finally, exception_value, g_free);
+  }
+
+  swfdec_action_try_data_unref (try_data);
+}
+
+static void
+swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
+{
+  TryData *try_data = data;
+  SwfdecAsContext *cx;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (try_data != NULL);
+
+  // if we don't have a catch block, we handle try block exactly like it was
+  // catch block
+  if (!try_data->catch_start) {
+    swfdec_action_try_end_catch (frame, try_data);
+    return;
+  }
+
+  cx = SWFDEC_AS_OBJECT (frame)->context;
+
+  swfdec_action_try_data_ref (try_data);
+  swfdec_as_frame_pop_block (frame);
+
+  if (swfdec_as_context_catch (cx, &val))
+  {
+    // we got an exception while in try block:
+    // set the exception variable
+    // add new block for catch
+    // clear exception from context
+    if (try_data->use_register)
+    {
+      if (swfdec_action_has_register (cx, try_data->register_number)) {
+	cx->frame->registers[try_data->register_number] = val;
+      } else {
+	SWFDEC_ERROR ("cannot set Error to register %u: not enough registers",
+	    try_data->register_number);
+      }
+    }
+    else
+    {
+      // FIXME: this is duplicate of SetVariable
+      SwfdecAsObject *object;
+      const char *s, *rest;
+
+      s = swfdec_as_context_get_string (cx, try_data->variable_name);
+      if (swfdec_action_get_movie_by_path (cx, s, &object, &rest)) {
+	if (object && rest) {
+	  swfdec_as_object_set_variable (object,
+	      swfdec_as_context_get_string (cx, rest), &val);
+	} else {
+	  if (object) {
+	    rest = s;
+	  } else {
+	    rest = swfdec_as_context_get_string (cx, rest);
+	  }
+	  swfdec_as_frame_set_variable (frame, rest, &val);
+	}
+      }
+      else
+      {
+	SWFDEC_ERROR ("cannot set Error to variable %s",
+	    try_data->variable_name);
+      }
+    }
+
+    swfdec_action_try_data_ref (try_data);
+    swfdec_as_frame_push_block (frame, try_data->catch_start,
+	try_data->catch_start + try_data->catch_size,
+	swfdec_action_try_end_catch, try_data, swfdec_action_try_data_unref);
+  }
+
+  swfdec_action_try_data_unref (try_data);
+}
+
+static void
+swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  SwfdecBits bits;
+  TryData *try_data;
+  guint try_size;
+  gboolean use_finally, use_catch;
+
+  if (len <= 8) {
+    SWFDEC_ERROR ("With action requires a length of at least 8, but got %u",
+	len);
+    swfdec_as_stack_pop (cx);
+    return;
+  }
+
+  try_data = g_malloc0 (sizeof (TryData));
+  swfdec_action_try_data_ref (try_data);
+
+  swfdec_bits_init_data (&bits, data, len);
+
+  swfdec_bits_getbits (&bits, 5); // reserved
+  try_data->use_register = swfdec_bits_getbit (&bits);
+  use_finally = swfdec_bits_getbit (&bits);
+  use_catch = swfdec_bits_getbit (&bits);
+
+  try_size = swfdec_bits_get_u16 (&bits);
+  try_data->catch_size = swfdec_bits_get_u16 (&bits);
+  try_data->finally_size = swfdec_bits_get_u16 (&bits);
+  if (use_catch)
+    try_data->catch_start = data + len + try_size;
+  if (use_finally)
+    try_data->finally_start = try_data->catch_start + try_data->catch_size;
+
+  if (try_data->use_register) {
+    try_data->register_number = swfdec_bits_get_u8 (&bits);
+  } else {
+    try_data->variable_name =
+      swfdec_bits_get_string_with_version (&bits, cx->version);
+  }
+
+  if (swfdec_bits_left (&bits)) {
+    SWFDEC_WARNING ("leftover bytes in Try action");
+  }
+
+  if (try_data->catch_start || try_data->finally_start) {
+    swfdec_as_frame_push_block (cx->frame, data + len, data + len + try_size,
+	swfdec_action_try_end_try, try_data, swfdec_action_try_data_unref);
+  } else {
+    SWFDEC_ERROR ("Try without neither catch or finally block");
+    swfdec_action_try_data_unref (try_data);
+  }
+}
+
+static void
 swfdec_action_pop_with (SwfdecAsFrame *frame, gpointer with_object)
 {
   g_assert (frame->scope_chain->data == with_object);
@@ -2959,7 +3182,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_END_DRAG] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
   [SWFDEC_AS_ACTION_STRING_LESS] = { "StringLess", NULL, 2, 1, { NULL, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare } },
   /* version 7 */
-  [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL },
+  [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL, 1, 0, { NULL, NULL, NULL, NULL, swfdec_action_throw } },
   [SWFDEC_AS_ACTION_CAST] = { "Cast", NULL, 2, 1, { NULL, NULL, NULL, NULL, swfdec_action_cast } },
   [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL, -1, 0, { NULL, NULL, NULL, NULL, swfdec_action_implements } },
   /* version 4 */
@@ -3032,7 +3255,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
 #endif
   /* version 7 */
   [SWFDEC_AS_ACTION_DEFINE_FUNCTION2] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, swfdec_action_define_function, swfdec_action_define_function } },
-  [SWFDEC_AS_ACTION_TRY] = { "Try", NULL },
+  [SWFDEC_AS_ACTION_TRY] = { "Try", NULL, 0, 0, { NULL, NULL, NULL, NULL, swfdec_action_try } },
   /* version 5 */
   [SWFDEC_AS_ACTION_WITH] = { "With", swfdec_action_print_with, 1, 0, { NULL, NULL, swfdec_action_with, swfdec_action_with, swfdec_action_with } },
   /* version 4 */

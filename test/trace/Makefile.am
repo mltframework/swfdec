@@ -248,6 +248,13 @@ EXTRA_DIST = \
 	cast-7.swf.trace \
 	cast-8.swf \
 	cast-8.swf.trace \
+	catch-in-caller.as \
+	catch-in-caller-6.swf \
+	catch-in-caller-6.swf.trace \
+	catch-in-caller-7.swf \
+	catch-in-caller-7.swf.trace \
+	catch-in-caller-8.swf \
+	catch-in-caller-8.swf.trace \
 	charat.as \
 	charat-5.swf \
 	charat-5.swf.trace \

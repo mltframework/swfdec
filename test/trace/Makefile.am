@@ -380,6 +380,9 @@ EXTRA_DIST = \
 	crash-0.5.2-startdrag.as \
 	crash-0.5.2-startdrag.swf \
 	crash-0.5.2-startdrag.swf.trace \
+	crash-0.5.3-divide-by-zero.as \
+	crash-0.5.3-divide-by-zero.swf \
+	crash-0.5.3-divide-by-zero.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	date.as \

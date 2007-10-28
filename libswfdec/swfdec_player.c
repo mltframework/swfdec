@@ -1624,7 +1624,8 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
   guint i;
 
   if (swfdec_rect_is_empty (rect)) {
-    g_assert_not_reached ();
+    SWFDEC_ERROR ("called with an empty rectanle. In theory this shouldn't happen.");
+    SWFDEC_ERROR ("  However, degenerate matrixes can cause this. We need a fix for that.");
     return;
   }
 

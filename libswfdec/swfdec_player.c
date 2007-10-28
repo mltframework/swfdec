@@ -2059,6 +2059,8 @@ swfdec_init (void)
 
   _inited = TRUE;
 
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
   g_type_init ();
   oil_init ();
 

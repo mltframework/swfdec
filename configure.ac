@@ -73,20 +73,14 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 GLIB_VER=2.10
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_VER gobject-2.0 >= $GLIB_VER,
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_VER gobject-2.0 >= $GLIB_VER gthread-2.0 >= $GLIB_VER,
 		HAVE_GLIB=yes, HAVE_GLIB=no)
 if test "$HAVE_GLIB" = "no"; then
-  AC_MSG_ERROR([glib-2.0 >= $GLIB_VER and gobject-2.0 >= $GLIB_VER are required to build swfdec])
+  AC_MSG_ERROR([glib-2.0, gobject-2.0 and gthread-2.0 >= $GLIB_VER are required to build swfdec])
 fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_VER)
-dnl we detect gthread seperately for now, since we don't want to link libswfdec to it (yet)
-PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= $GLIB_VER,
-		HAVE_GLIB=yes, HAVE_GLIB=no)
-if test "$HAVE_GTHREAD" = "no"; then
-  AC_MSG_ERROR([gthread-2.0 >= $GLIB_VER is required to build swfdec])
-fi
 dnl FIXME: detect these executables correctly
 GLIB_GENMARSHAL=glib-genmarshal
 AC_SUBST(GLIB_GENMARSHAL)

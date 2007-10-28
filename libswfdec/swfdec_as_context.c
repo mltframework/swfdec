@@ -856,15 +856,11 @@ start:
   check_block = TRUE;
 
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
-    while (context->exception && frame->blocks->len > 0) {
-      frame->pc = frame->block_end;
-      swfdec_as_frame_check_block (frame);
-      pc = frame->pc;
-    }
     if (context->exception) {
       swfdec_as_frame_handle_exception (frame);
       if (frame != context->frame)
 	goto start;
+      pc = frame->pc;
       continue;
     }
     if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {

@@ -1580,6 +1580,7 @@ swfdec_player_init (SwfdecPlayer *player)
   player->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 
   player->runtime = g_timer_new ();
+  g_timer_stop (player->runtime);
   player->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;

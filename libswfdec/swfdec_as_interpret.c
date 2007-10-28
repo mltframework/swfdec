@@ -948,6 +948,7 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
     case SWFDEC_AS_ACTION_DIVIDE:
       if (cx->version < 5) {
 	if (r == 0) {
+	  swfdec_as_stack_pop (cx);
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx, 1), SWFDEC_AS_STR__ERROR_);
 	  return;
 	}

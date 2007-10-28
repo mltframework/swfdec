@@ -194,6 +194,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   while ((tmp = swfdec_audio_decoder_pull (decoder))) {
     swfdec_buffer_queue_push (queue, tmp);
   }
+  sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
   swfdec_audio_decoder_free (decoder);
   depth = swfdec_buffer_queue_get_depth (queue);
   if (depth == 0) {
@@ -204,7 +205,6 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   tmp = swfdec_buffer_queue_pull (queue, depth);
   swfdec_buffer_queue_unref (queue);
 
-  sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
   sample_bytes = swfdec_audio_format_get_bytes_per_sample (sound->decoded_format);
   n_samples = sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format);
 

@@ -1262,13 +1262,14 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
 
   ret = g_object_new (SWFDEC_TYPE_TEXT_FORMAT, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecTextFormat));
+
+  swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (ret));
+
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_TextFormat,
       &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return NULL;
+    return ret;
   swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
-
-  swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (ret));
 
   return ret;
 }

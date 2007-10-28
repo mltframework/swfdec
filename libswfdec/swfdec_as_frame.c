@@ -799,7 +799,7 @@ swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
 
   /* pop blocks in the hope that we are inside a Try block */
   while (cx->exception && frame->blocks->len) {
-    swfdec_as_frame_pop_block (frame);
+    swfdec_as_frame_check_block (frame);
   }
   /* exit frame, nothing caught the exception */
   if (cx->exception) {

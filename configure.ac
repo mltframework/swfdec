@@ -188,9 +188,9 @@ fi
 
 AC_ARG_ENABLE(mad,
 	AS_HELP_STRING([--enable-mad],
-			[enable mad audio (default=yes)])],
+			[enable mad audio (default=no)])],
 	enable_mad=$enableval,
-	enable_mad="yes")
+	enable_mad="no")
 
 if test "$enable_mad" = "yes"; then
 	AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
@@ -211,9 +211,9 @@ dnl  So you'll have to update your ffmpeg checkout if compilation fails.
 dnl  Or you submit a patch that detects ffmpeg reliably on the distros.
 AC_ARG_ENABLE(ffmpeg,
 	AS_HELP_STRING([--enable-ffmpeg],
-			[enable ffmpeg support (default=yes)])],
+			[enable ffmpeg support (default=no)])],
 	enable_ffmpeg=$enableval,
-	enable_ffmpeg="yes")
+	enable_ffmpeg="no")
 
 if test "$enable_ffmpeg" = "yes"; then
 	PKG_CHECK_MODULES(FFMPEG, libavcodec libswscale, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)

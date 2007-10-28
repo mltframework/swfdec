@@ -856,17 +856,16 @@ start:
   check_block = TRUE;
 
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
-    // in case of an exception, skip blocks until exception is cleared or we
-    // run out of blocks
     while (context->exception && frame->blocks->len > 0) {
       frame->pc = frame->block_end;
       swfdec_as_frame_check_block (frame);
       pc = frame->pc;
     }
     if (context->exception) {
-      SWFDEC_ERROR ("Unhandled exception: %s",
-	  swfdec_as_value_to_string (context, &context->exception_value));
-      goto error;
+      swfdec_as_frame_handle_exception (frame);
+      if (frame != context->frame)
+	goto start;
+      continue;
     }
     if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {
       SWFDEC_LOG ("code exited block");

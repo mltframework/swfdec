@@ -105,6 +105,7 @@ void		swfdec_as_frame_push_block	(SwfdecAsFrame *	frame,
 						 GDestroyNotify		destroy);
 void		swfdec_as_frame_pop_block	(SwfdecAsFrame *	frame);
 void		swfdec_as_frame_check_block	(SwfdecAsFrame *	frame);
+void		swfdec_as_frame_handle_exception(SwfdecAsFrame *	frame);
 
 
 G_END_DECLS

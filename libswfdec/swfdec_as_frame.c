@@ -788,6 +788,25 @@ out:
   }
 }
 
+void
+swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
+{
+  SwfdecAsContext *cx;
+
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  cx = SWFDEC_AS_OBJECT (frame)->context;
+  g_return_if_fail (cx->exception);
+
+  /* pop blocks in the hope that we are inside a Try block */
+  while (cx->exception && frame->blocks->len) {
+    swfdec_as_frame_pop_block (frame);
+  }
+  /* exit frame, nothing caught the exception */
+  if (cx->exception) {
+    swfdec_as_frame_return (frame, NULL);
+  }
+}
+
 /**
  * swfdec_as_frame_get_next:
  * @frame: a #SwfdecAsFrame

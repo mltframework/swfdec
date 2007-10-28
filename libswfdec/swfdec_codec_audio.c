@@ -126,11 +126,11 @@ struct {
   SwfdecAudioDecoder *	(* func) (SwfdecAudioCodec, SwfdecAudioFormat);
 } audio_codecs[] = {
   { "builtin",	swfdec_audio_decoder_builtin_new },
-#ifdef HAVE_MAD
-  { "mad",	swfdec_audio_decoder_mad_new },
-#endif
 #ifdef HAVE_GST
   { "gst",	swfdec_audio_decoder_gst_new },
+#endif
+#ifdef HAVE_MAD
+  { "mad",	swfdec_audio_decoder_mad_new },
 #endif
 #ifdef HAVE_FFMPEG
   { "ffmpeg",	swfdec_audio_decoder_ffmpeg_new },

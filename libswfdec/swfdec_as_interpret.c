@@ -2712,10 +2712,9 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
   guint try_size;
   gboolean use_finally, use_catch;
 
-  if (len <= 8) {
+  if (len < 8) {
     SWFDEC_ERROR ("With action requires a length of at least 8, but got %u",
 	len);
-    swfdec_as_stack_pop (cx);
     return;
   }
 
@@ -2752,7 +2751,7 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
     swfdec_as_frame_push_block (cx->frame, data + len, data + len + try_size,
 	swfdec_action_try_end_try, try_data, swfdec_action_try_data_unref);
   } else {
-    SWFDEC_ERROR ("Try without neither catch or finally block");
+    SWFDEC_WARNING ("Try with neither catch nor finally block");
     swfdec_action_try_data_unref (try_data);
   }
 }

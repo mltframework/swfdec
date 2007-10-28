@@ -865,7 +865,7 @@ start:
     }
     if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {
       SWFDEC_LOG ("code exited block");
-      swfdec_as_frame_check_block (frame);
+      swfdec_as_frame_pop_block (frame);
       pc = frame->pc;
       if (frame != context->frame)
 	goto start;

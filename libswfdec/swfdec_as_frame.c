@@ -203,16 +203,28 @@ swfdec_as_stack_iterator_next (SwfdecAsStackIterator *iter)
 typedef struct {
   const guint8 *		start;	/* start of block */
   const guint8 *		end;	/* end of block (hitting this address will exit the block) */
-  SwfdecAsFrameBlockFunc	func;	/* function to call when block is exited */
+  SwfdecAsFrameBlockFunc	func;	/* function to call when block is exited (or frame is destroyed) */
   gpointer			data;	/* data to pass to function */
-  GDestroyNotify		destroy;/* destroy function called for data */
 } SwfdecAsFrameBlock;
 
+/**
+ * swfdec_as_frame_push_block:
+ * @frame: a #SwfdecAsFrame
+ * @start: start of block
+ * @end: byte after end of block
+ * @func: function to call when block gets exited
+ * @data: data to pass to @func
+ *
+ * Registers a function that guards a block of memory. When the function 
+ * exits this block of memory, it will call this function. This can happen
+ * either when the program counter leaves the guarded region, when the function
+ * returns or when the context aborted due to an unrecoverable error.
+ **/
 void
 swfdec_as_frame_push_block (SwfdecAsFrame *frame, const guint8 *start, 
-    const guint8 *end, SwfdecAsFrameBlockFunc func, gpointer data, GDestroyNotify destroy)
+    const guint8 *end, SwfdecAsFrameBlockFunc func, gpointer data)
 {
-  SwfdecAsFrameBlock block = { start, end, func, data, destroy };
+  SwfdecAsFrameBlock block = { start, end, func, data };
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (start <= end);
@@ -228,14 +240,16 @@ swfdec_as_frame_push_block (SwfdecAsFrame *frame, const guint8 *start,
 void
 swfdec_as_frame_pop_block (SwfdecAsFrame *frame)
 {
+  SwfdecAsFrameBlockFunc func;
+  gpointer data;
   SwfdecAsFrameBlock *block;
 
-  g_assert (frame->blocks->len > 0);
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame->blocks->len > 0);
 
   block = &g_array_index (frame->blocks, SwfdecAsFrameBlock, frame->blocks->len - 1);
-  if (block->destroy) {
-    block->destroy (block->data);
-  }
+  func = block->func;
+  data = block->data;
   g_array_set_size (frame->blocks, frame->blocks->len - 1);
   if (frame->blocks->len) {
     block--;
@@ -245,19 +259,8 @@ swfdec_as_frame_pop_block (SwfdecAsFrame *frame)
     frame->block_start = frame->script->buffer->data;
     frame->block_end = frame->script->buffer->data + frame->script->buffer->length;
   }
-}
-
-void
-swfdec_as_frame_check_block (SwfdecAsFrame *frame)
-{
-  SwfdecAsFrameBlock *block;
-
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  if (frame->blocks->len == 0)
-    return;
-
-  block = &g_array_index (frame->blocks, SwfdecAsFrameBlock, frame->blocks->len - 1);
-  block->func (frame, block->data);
+  /* only call function after we popped the block, so the block can push a new one */
+  func (frame, data);
 }
 
 /*** FRAME ***/
@@ -269,6 +272,11 @@ swfdec_as_frame_dispose (GObject *object)
 {
   SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
 
+  /* pop blocks while state is intact */
+  while (frame->blocks->len > 0)
+    swfdec_as_frame_pop_block (frame);
+
+  /* clean up */
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
   if (frame->security) {
     g_object_unref (frame->security);
@@ -282,8 +290,6 @@ swfdec_as_frame_dispose (GObject *object)
     swfdec_buffer_unref (frame->constant_pool_buffer);
     frame->constant_pool_buffer = NULL;
   }
-  while (frame->blocks->len > 0)
-    swfdec_as_frame_pop_block (frame);
   g_array_free (frame->blocks, TRUE);
   g_slist_free (frame->scope_chain);
   if (frame->script) {
@@ -799,9 +805,9 @@ swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
 
   /* pop blocks in the hope that we are inside a Try block */
   while (cx->exception && frame->blocks->len) {
-    swfdec_as_frame_check_block (frame);
+    swfdec_as_frame_pop_block (frame);
   }
-  /* exit frame, nothing caught the exception */
+  /* no Try blocks caught it, exit frame */
   if (cx->exception) {
     swfdec_as_frame_return (frame, NULL);
   }

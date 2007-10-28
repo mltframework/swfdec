@@ -101,10 +101,8 @@ void		swfdec_as_frame_push_block	(SwfdecAsFrame *	frame,
 						 const guint8 *		start,
 						 const guint8 *		end,
 						 SwfdecAsFrameBlockFunc	func,
-						 gpointer		data,
-						 GDestroyNotify		destroy);
+						 gpointer		data);
 void		swfdec_as_frame_pop_block	(SwfdecAsFrame *	frame);
-void		swfdec_as_frame_check_block	(SwfdecAsFrame *	frame);
 void		swfdec_as_frame_handle_exception(SwfdecAsFrame *	frame);
 
 

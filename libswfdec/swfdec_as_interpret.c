@@ -2601,8 +2601,8 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
   if (swfdec_as_context_catch (cx, &val))
   {
     // we got an exception while in catch block:
-    // create new block for finally, passing the exception
-    // clear exception from the context
+    // create new block for finally to pass on the exception
+    // jump to that block
 
     exception_value = g_malloc (sizeof (SwfdecAsValue));
     *exception_value = val;
@@ -2611,6 +2611,7 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
     swfdec_as_frame_push_block (frame, try_data->finally_start,
 	try_data->finally_start + try_data->finally_size,
 	swfdec_action_try_end_finally, exception_value);
+    frame->pc = try_data->finally_start;
   }
 
   swfdec_action_try_data_free (try_data);
@@ -2639,8 +2640,8 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
   {
     // we got an exception while in try block:
     // set the exception variable
-    // add new block for catch
-    // clear exception from context
+    // add new block for catch and jump to it
+
     if (try_data->use_register)
     {
       if (swfdec_action_has_register (cx, try_data->register_number)) {
@@ -2680,8 +2681,9 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
     swfdec_as_frame_push_block (frame, try_data->catch_start,
 	try_data->catch_start + try_data->catch_size,
 	swfdec_action_try_end_catch, try_data);
-  } 
-  else 
+    frame->pc = try_data->catch_start;
+  }
+  else
   {
     swfdec_action_try_data_free (try_data);
   }

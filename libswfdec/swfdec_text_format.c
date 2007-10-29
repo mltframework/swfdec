@@ -378,51 +378,48 @@ swfdec_text_format_do_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static void
-swfdec_text_format_do_get_block_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_get_block_indent (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_integer (object,
-      PROP_BLOCK_INDENT, ret);
+  swfdec_text_format_get_integer (object, PROP_BLOCK_INDENT, ret);
 }
 
 static void
-swfdec_text_format_do_set_block_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_set_block_indent (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_integer (object,
-      PROP_BLOCK_INDENT, argc, argv, cx->version >= 8);
+  swfdec_text_format_set_integer (object, PROP_BLOCK_INDENT, argc, argv,
+      cx->version >= 8);
 }
 
 static void
 swfdec_text_format_do_get_bold (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_boolean (object, PROP_BOLD,
-      ret);
+  swfdec_text_format_get_boolean (object, PROP_BOLD, ret);
 }
 
 static void
 swfdec_text_format_do_set_bold (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_boolean (object, PROP_BOLD,
-      argc, argv);
+  swfdec_text_format_set_boolean (object, PROP_BOLD, argc, argv);
 }
 
 static void
 swfdec_text_format_do_get_bullet (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_boolean (object, PROP_BULLET,
-      ret);
+  swfdec_text_format_get_boolean (object, PROP_BULLET, ret);
 }
 
 static void
 swfdec_text_format_do_set_bullet (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_boolean (object, PROP_BULLET,
-      argc, argv);
+  swfdec_text_format_set_boolean (object, PROP_BULLET, argc, argv);
 }
 
 static void
@@ -455,7 +452,6 @@ swfdec_text_format_do_set_color (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc < 1)
     return;
-
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
@@ -540,32 +536,29 @@ static void
 swfdec_text_format_do_get_font (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_string (object, PROP_FONT,
-      ret);
+  swfdec_text_format_get_string (object, PROP_FONT, ret);
 }
 
 static void
 swfdec_text_format_do_set_font (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_string (object, PROP_FONT,
-      argc, argv);
+  swfdec_text_format_set_string (object, PROP_FONT, argc, argv);
 }
 
 static void
 swfdec_text_format_do_get_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_integer (object, PROP_INDENT,
-      ret);
+  swfdec_text_format_get_integer (object, PROP_INDENT, ret);
 }
 
 static void
 swfdec_text_format_do_set_indent (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_integer (object, PROP_INDENT,
-      argc, argv, cx->version >= 8);
+  swfdec_text_format_set_integer (object, PROP_INDENT, argc, argv,
+      cx->version >= 8);
 }
 
 static void
@@ -579,56 +572,52 @@ static void
 swfdec_text_format_do_set_italic (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_boolean (object, PROP_ITALIC,
-      argc, argv);
+  swfdec_text_format_set_boolean (object, PROP_ITALIC, argc, argv);
 }
 
 static void
 swfdec_text_format_do_get_kerning (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_boolean (object, PROP_KERNING,
-      ret);
+  swfdec_text_format_get_boolean (object, PROP_KERNING, ret);
 }
 
 static void
 swfdec_text_format_do_set_kerning (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_boolean (object, PROP_KERNING,
-      argc, argv);
+  swfdec_text_format_set_boolean (object, PROP_KERNING, argc, argv);
 }
 
 static void
 swfdec_text_format_do_get_leading (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_integer (object, PROP_LEADING,
-      ret);
+  swfdec_text_format_get_integer (object, PROP_LEADING, ret);
 }
 
 static void
 swfdec_text_format_do_set_leading (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_integer (object, PROP_LEADING,
-      argc, argv, cx->version >= 8);
+  swfdec_text_format_set_integer (object, PROP_LEADING, argc, argv,
+      cx->version >= 8);
 }
 
 static void
-swfdec_text_format_do_get_left_margin (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_get_left_margin (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_integer (object,
-      PROP_LEFT_MARGIN, ret);
+  swfdec_text_format_get_integer (object, PROP_LEFT_MARGIN, ret);
 }
 
 static void
-swfdec_text_format_do_set_left_margin (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_set_left_margin (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_integer (object,
-      PROP_LEFT_MARGIN, argc, argv, FALSE);
+  swfdec_text_format_set_integer (object, PROP_LEFT_MARGIN, argc, argv, FALSE);
 }
 
 static void
@@ -642,9 +631,7 @@ swfdec_text_format_do_get_letter_spacing (SwfdecAsContext *cx,
     return;
   format = SWFDEC_TEXT_FORMAT (object);
 
-  if (!swfdec_text_format_is_set (format,
-	PROP_LETTER_SPACING))
-  {
+  if (!swfdec_text_format_is_set (format, PROP_LETTER_SPACING)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
     return;
   }
@@ -686,40 +673,40 @@ swfdec_text_format_do_set_letter_spacing (SwfdecAsContext *cx,
 }
 
 static void
-swfdec_text_format_do_get_right_margin (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_get_right_margin (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_integer (object,
-      PROP_RIGHT_MARGIN, ret);
+  swfdec_text_format_get_integer (object, PROP_RIGHT_MARGIN, ret);
 }
 
 static void
-swfdec_text_format_do_set_right_margin (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_set_right_margin (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_integer (object,
-      PROP_RIGHT_MARGIN, argc, argv, FALSE);
+  swfdec_text_format_set_integer (object, PROP_RIGHT_MARGIN, argc, argv,
+      FALSE);
 }
 
 static void
 swfdec_text_format_do_get_size (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_integer (object, PROP_SIZE,
-      ret);
+  swfdec_text_format_get_integer (object, PROP_SIZE, ret);
 }
 
 static void
 swfdec_text_format_do_set_size (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_integer (object, PROP_SIZE,
-      argc, argv, TRUE);
+  swfdec_text_format_set_integer (object, PROP_SIZE, argc, argv, TRUE);
 }
 
 static void
-swfdec_text_format_do_get_tab_stops (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_get_tab_stops (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
 
@@ -727,9 +714,7 @@ swfdec_text_format_do_get_tab_stops (SwfdecAsContext *cx, SwfdecAsObject *object
     return;
   format = SWFDEC_TEXT_FORMAT (object);
 
-  if (!swfdec_text_format_is_set (format,
-	PROP_TAB_STOPS))
-  {
+  if (!swfdec_text_format_is_set (format, PROP_TAB_STOPS)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
     return;
   }
@@ -739,8 +724,9 @@ swfdec_text_format_do_get_tab_stops (SwfdecAsContext *cx, SwfdecAsObject *object
 }
 
 static void
-swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SwfdecTextFormat *format;
 
@@ -773,9 +759,7 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx, SwfdecAsObject *object
     array = SWFDEC_AS_ARRAY (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
     len = swfdec_as_array_get_length (array);
 
-    if (!swfdec_text_format_is_set (format,
-	  PROP_TAB_STOPS))
-    {
+    if (!swfdec_text_format_is_set (format, PROP_TAB_STOPS)) {
       // special case, if we have null and array is empty, keep it at null
       if (len == 0)
 	return;
@@ -818,8 +802,7 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx, SwfdecAsObject *object
       }
     }
   }
-  else if (swfdec_text_format_is_set (format,
-	PROP_TAB_STOPS))
+  else if (swfdec_text_format_is_set (format, PROP_TAB_STOPS))
   {
     swfdec_as_array_set_length (format->tab_stops, 0);
     swfdec_text_format_mark_set (format,
@@ -831,32 +814,30 @@ static void
 swfdec_text_format_do_get_target (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_string (object, PROP_TARGET,
-      ret);
+  swfdec_text_format_get_string (object, PROP_TARGET, ret);
 }
 
 static void
 swfdec_text_format_do_set_target (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_string (object, PROP_TARGET,
-      argc, argv);
+  swfdec_text_format_set_string (object, PROP_TARGET, argc, argv);
 }
 
 static void
-swfdec_text_format_do_get_underline (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_get_underline (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
-  swfdec_text_format_get_boolean (object,
-      PROP_UNDERLINE, ret);
+  swfdec_text_format_get_boolean (object, PROP_UNDERLINE, ret);
 }
 
 static void
-swfdec_text_format_do_set_underline (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_text_format_do_set_underline (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_boolean (object,
-      PROP_UNDERLINE, argc, argv);
+  swfdec_text_format_set_boolean (object, PROP_UNDERLINE, argc, argv);
 }
 
 static void
@@ -870,8 +851,7 @@ static void
 swfdec_text_format_do_set_url (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  swfdec_text_format_set_string (object, PROP_URL, argc,
-      argv);
+  swfdec_text_format_set_string (object, PROP_URL, argc, argv);
 }
 
 void
@@ -1155,11 +1135,13 @@ swfdec_text_format_init_properties (SwfdecAsContext *cx)
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_size,
       swfdec_text_format_do_get_size, swfdec_text_format_do_set_size);
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_tabStops,
-      swfdec_text_format_do_get_tab_stops, swfdec_text_format_do_set_tab_stops);
+      swfdec_text_format_do_get_tab_stops,
+      swfdec_text_format_do_set_tab_stops);
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_target,
       swfdec_text_format_do_get_target, swfdec_text_format_do_set_target);
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_underline,
-      swfdec_text_format_do_get_underline, swfdec_text_format_do_set_underline);
+      swfdec_text_format_do_get_underline,
+      swfdec_text_format_do_set_underline);
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_url,
       swfdec_text_format_do_get_url, swfdec_text_format_do_set_url);
 }

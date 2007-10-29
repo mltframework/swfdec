@@ -593,7 +593,7 @@ swfdec_video_decoder_gst_new (SwfdecVideoCodec codec)
   g_assert (srccaps);
   sinkcaps = swfdec_video_decoder_get_sink_caps (codec);
 
-  player = g_slice_new (SwfdecGstVideo);
+  player = g_slice_new0 (SwfdecGstVideo);
   player->decoder.decode = swfdec_video_decoder_gst_decode;
   player->decoder.free = swfdec_video_decoder_gst_free;
 

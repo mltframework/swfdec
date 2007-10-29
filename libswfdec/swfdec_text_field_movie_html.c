@@ -54,6 +54,9 @@ typedef struct {
 static void
 swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag)
 {
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (tag != NULL);
+
   if (data->multiline &&
       ((tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) ||
        (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2))))
@@ -93,7 +96,7 @@ swfdec_text_field_movie_html_parse_comment (ParserData *data, const char *p)
   g_return_val_if_fail (p != NULL, NULL);
   g_return_val_if_fail (strncmp (p, "<!--", strlen ("<!--")) == 0, NULL);
 
-  end = strstr (p, "-->");
+  end = strstr (p + strlen ("<!--"), "-->");
   if (end != NULL)
     end += strlen("-->");
 
@@ -108,6 +111,13 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
 {
   SwfdecAsValue val;
   SwfdecAsObject *object;
+
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (tag != NULL);
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (name_length >= 0);
+  g_return_if_fail (value != NULL);
+  g_return_if_fail (value_length >= 0);
 
   object = SWFDEC_AS_OBJECT (tag->format);
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
@@ -213,7 +223,9 @@ swfdec_text_field_movie_html_parse_attribute (ParserData *data, ParserTag *tag,
   const char *end, *name, *value;
   int name_length, value_length;
 
-  g_return_val_if_fail ((*p != '>' && *p != '\0'), p);
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (tag != NULL, NULL);
+  g_return_val_if_fail ((*p != '>' && *p != '\0'), NULL);
 
   end = p + strcspn (p, "=> \r\n\t");
   if (end - p <= 0)
@@ -720,6 +732,7 @@ swfdec_text_field_movie_html_text_append_paragraph (SwfdecTextFieldMovie *text,
 
   return string;
 }
+
 const char *
 swfdec_text_field_movie_get_html_text (SwfdecTextFieldMovie *text)
 {

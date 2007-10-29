@@ -318,19 +318,19 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
   }
   else
   {
-    if (data->cx->version < 7 &&
-	(name_length == 2 && !g_strncasecmp (name, "br", 2))) {
-      data->text = g_string_append_c (data->text, '\n');
-      tag = NULL;
-    } else {
-      SwfdecAsObject *object;
-      SwfdecAsValue val;
+    SwfdecAsObject *object;
+    SwfdecAsValue val;
 
-      if (data->cx->version < 7 &&
-	  ((name_length == 1 && !g_strncasecmp (name, "p", 1)) ||
-	   (name_length == 2 && !g_strncasecmp (name, "li", 2))))
+    if (data->multiline) {
+      if (name_length == 2 && !g_strncasecmp (name, "br", 2))
       {
-	GSList *iter;
+	data->text = g_string_append_c (data->text, '\n');
+      }
+      else if ((name_length == 1 && !g_strncasecmp (name, "p", 1)) ||
+	  (name_length == 2 && !g_strncasecmp (name, "li", 2)) ||
+	  (name_length == 2 && !g_strncasecmp (name, "br", 2)))
+      {
+	    GSList *iter;
 
 	for (iter = data->tags_open; iter != NULL; iter = iter->next) {
 	  ParserTag *f = iter->data;
@@ -341,41 +341,40 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 	  }
 	}
       }
+    }
 
-      tag = g_new0 (ParserTag, 1);
-      tag->name = name;
-      tag->name_length = name_length;
-      tag->format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (data->cx));
-      tag->index = g_utf8_strlen (data->text->str, -1);
+    tag = g_new0 (ParserTag, 1);
+    tag->name = name;
+    tag->name_length = name_length;
+    tag->format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (data->cx));
+    tag->index = g_utf8_strlen (data->text->str, -1);
 
-      data->tags_open = g_slist_prepend (data->tags_open, tag);
+    data->tags_open = g_slist_prepend (data->tags_open, tag);
 
-      // set format based on tag
-      object = SWFDEC_AS_OBJECT (tag->format);
-      SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
+    // set format based on tag
+    object = SWFDEC_AS_OBJECT (tag->format);
+    SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
 
-      if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bullet, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "b", 1)) {
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "i", 1)) {
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
-	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
-      } else if (tag->name_length == 3 && !g_strncasecmp (tag->name, "img", 3))
-      {
-	SWFDEC_FIXME ("IMG tag support for TextField's HTML input missing");
-      }
+    if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bullet, &val);
+    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "b", 1)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &val);
+    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "i", 1)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
+    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
+      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
+    } else if (tag->name_length == 3 && !g_strncasecmp (tag->name, "img", 3)) {
+      SWFDEC_FIXME ("IMG tag support for TextField's HTML input missing");
+    }
 
-      if (data->style_sheet &&
-	  ((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
-	  (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)))) {
-	SwfdecTextFormat *format = swfdec_style_sheet_get_tag_format (
-	    data->style_sheet, swfdec_as_context_give_string (data->cx,
-		g_strndup (tag->name, tag->name_length)));
-	if (format != NULL)
-	  swfdec_text_format_add (tag->format, format);
-      }
+    if (data->style_sheet &&
+	((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
+	(tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)))) {
+      SwfdecTextFormat *format = swfdec_style_sheet_get_tag_format (
+	  data->style_sheet, swfdec_as_context_give_string (data->cx,
+	      g_strndup (tag->name, tag->name_length)));
+      if (format != NULL)
+	swfdec_text_format_add (tag->format, format);
     }
 
     // parse attributes

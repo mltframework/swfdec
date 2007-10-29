@@ -60,6 +60,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_text_field.c \
 	swfdec_text_field_movie.c \
 	swfdec_text_field_movie_as.c \
+	swfdec_text_field_movie_html.c \
 	swfdec_enums.c \
 	swfdec_event.c \
 	swfdec_file_loader.c \
@@ -70,7 +71,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_font.c \
 	swfdec_graphic.c \
 	swfdec_graphic_movie.c \
-	swfdec_html_parser.c \
 	swfdec_image.c \
 	swfdec_interval.c \
 	swfdec_key_as.c \

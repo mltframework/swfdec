@@ -134,7 +134,6 @@ SwfdecTextFormat *swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie 
 							 guint			start_index,
 							 guint			end_index);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *		text);
-const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);
 void		swfdec_text_field_movie_set_listen_variable_text (SwfdecTextFieldMovie		*text,
@@ -150,6 +149,7 @@ void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);
 /* implemented in swfdec_html_parser.c */
 void		swfdec_text_field_movie_html_parse	(SwfdecTextFieldMovie *	text, 
 							 const char *		str);
+const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 
 G_END_DECLS
 #endif

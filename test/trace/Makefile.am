@@ -2100,6 +2100,13 @@ EXTRA_DIST = \
 	try-7.swf.trace \
 	try-8.swf \
 	try-8.swf.trace \
+	try-jump.as \
+	try-jump-6.swf \
+	try-jump-6.swf.trace \
+	try-jump-7.swf \
+	try-jump-7.swf.trace \
+	try-jump-8.swf \
+	try-jump-8.swf.trace \
 	try-throw-in-finally.as \
 	try-throw-in-finally-6.swf \
 	try-throw-in-finally-6.swf.trace \

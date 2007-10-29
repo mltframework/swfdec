@@ -2093,6 +2093,13 @@ EXTRA_DIST = \
 	transform2.swf \
 	transform2.swf.trace \
 	transform2.swf.trace.org \
+	try.as \
+	try-6.swf \
+	try-6.swf.trace \
+	try-7.swf \
+	try-7.swf.trace \
+	try-8.swf \
+	try-8.swf.trace \
 	try-throw-in-finally.as \
 	try-throw-in-finally-6.swf \
 	try-throw-in-finally-6.swf.trace \

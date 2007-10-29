@@ -349,6 +349,51 @@ swfdec_text_field_movie_free_paragraphs (SwfdecParagraph *paragraphs)
 /*
  * Rendering
  */
+static PangoAttrList *
+swfdec_text_field_movie_paragraph_get_attr_list (
+    const SwfdecParagraph *paragraph, guint index_,
+    const SwfdecColorTransform *trans)
+{
+  PangoAttrList *attr_list;
+  GSList *iter;
+
+  attr_list = pango_attr_list_new ();
+
+  for (iter = paragraph->attrs; iter != NULL; iter = iter->next)
+  {
+    PangoAttribute *attr;
+
+    if (((PangoAttribute *)iter->data)->end_index <= index_)
+      continue;
+
+    attr = pango_attribute_copy ((PangoAttribute *)iter->data);
+
+    if (attr->klass->type == PANGO_ATTR_FOREGROUND && trans != NULL &&
+	!swfdec_color_transform_is_identity (trans))
+    {
+      SwfdecColor color;
+      PangoColor color_p;
+
+      color_p = ((PangoAttrColor *)attr)->color;
+
+      color = SWFDEC_COLOR_COMBINE (color_p.red >> 8, color_p.green >> 8,
+	  color_p.blue >> 8, 255);
+      color = swfdec_color_apply_transform (color, trans);
+
+      color_p.red = SWFDEC_COLOR_R (color) << 8;
+      color_p.green = SWFDEC_COLOR_G (color) << 8;
+      color_p.blue = SWFDEC_COLOR_B (color) << 8;
+    }
+
+    attr->start_index =
+      (attr->start_index > index_ ? attr->start_index - index_ : 0);
+    attr->end_index = attr->end_index - index_;
+    pango_attr_list_insert (attr_list, attr);
+  }
+
+  return attr_list;
+}
+
 static SwfdecLayout *
 swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
     cairo_t *cr, const SwfdecParagraph *paragraphs,
@@ -383,7 +428,6 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       SwfdecLayout layout;
       PangoLayout *playout;
       PangoAttrList *attr_list;
-      GSList *iter_attrs;
       SwfdecBlock *block;
       int width;
       guint length;
@@ -440,39 +484,8 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       pango_layout_set_tabs (playout, block->tab_stops);
 
       // set text attributes
-      attr_list = pango_attr_list_new ();
-
-      for (iter_attrs = paragraphs[i].attrs; iter_attrs != NULL;
-	  iter_attrs = iter_attrs->next)
-      {
-	PangoAttribute *attr;
-
-	attr = (PangoAttribute *)iter_attrs->data;
-
-	if (attr->end_index <= block->index_ + skip)
-	  continue;
-
-	attr = pango_attribute_copy (attr);
-	if (attr->klass->type == PANGO_ATTR_FOREGROUND && trans != NULL &&
-	    !swfdec_color_transform_is_identity (trans))
-	{
-	  SwfdecColor color;
-	  PangoColor pcolor;
-
-	  pcolor = ((PangoAttrColor *)attr)->color;
-	  color = SWFDEC_COLOR_COMBINE (pcolor.red >> 8, pcolor.green >> 8,
-	      pcolor.blue >> 8, 255);
-	  color = swfdec_color_apply_transform (color, trans);
-	  pcolor.red = SWFDEC_COLOR_R (color) << 8;
-	  pcolor.green = SWFDEC_COLOR_G (color) << 8;
-	  pcolor.blue = SWFDEC_COLOR_B (color) << 8;
-	  ((PangoAttrColor *)attr)->color = pcolor;
-	}
-	attr->start_index = (attr->start_index > block->index_ + skip ?
-	    attr->start_index - (block->index_ + skip) : 0);
-	attr->end_index = attr->end_index - (block->index_ + skip);
-	pango_attr_list_insert (attr_list, attr);
-      }
+      attr_list = swfdec_text_field_movie_paragraph_get_attr_list (
+	  &paragraphs[i], block->index_ + skip, trans);
       pango_layout_set_attributes (playout, attr_list);
       pango_attr_list_unref (attr_list);
 

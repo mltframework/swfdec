@@ -40,7 +40,7 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 
 typedef struct {
   PangoLayout *		layout;
-  int			render_offset_x;
+  int			offset_x;
   int			height;
   int			width;
 } SwfdecLayout;
@@ -64,14 +64,12 @@ typedef struct {
   gboolean		bullet;
   int			indent;
 
-  GList *		blocks;		// SwfdecBlock
-
-  GList *		attrs;	// PangoAttribute
-  PangoAttrList *	attrs_list;
+  GSList *		blocks;		// SwfdecBlock
+  GSList *		attrs;		// PangoAttribute
 } SwfdecParagraph;
 
 typedef struct {
-  guint			index;
+  guint			index_;
   SwfdecTextFormat *	format;
 } SwfdecFormatIndex;
 

@@ -1191,7 +1191,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   edittext->border = FALSE;
   edittext->size = 240; // FIXME: Correct?
 
-  edittext->text_input = NULL;
+  edittext->input = NULL;
   edittext->variable = NULL;
   edittext->color = 0;
   edittext->align = SWFDEC_TEXT_ALIGN_LEFT;

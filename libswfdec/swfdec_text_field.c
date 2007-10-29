@@ -43,7 +43,8 @@ static SwfdecMovie *
 swfdec_text_field_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
   SwfdecTextField *text = SWFDEC_TEXT_FIELD (graphic);
-  SwfdecTextFieldMovie *ret = g_object_new (SWFDEC_TYPE_TEXT_FIELD_MOVIE, NULL);
+  SwfdecTextFieldMovie *ret =
+    g_object_new (SWFDEC_TYPE_TEXT_FIELD_MOVIE, NULL);
 
   ret->text = text;
 
@@ -57,9 +58,9 @@ swfdec_text_field_dispose (GObject *object)
 {
   SwfdecTextField *text = SWFDEC_TEXT_FIELD (object);
 
-  if (text->text_input != NULL) {
-    g_free (text->text_input);
-    text->text_input = NULL;
+  if (text->input != NULL) {
+    g_free (text->input);
+    text->input = NULL;
   }
   if (text->variable != NULL) {
     g_free (text->variable);
@@ -109,6 +110,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
       SWFDEC_GRAPHIC (text)->extents.x0, SWFDEC_GRAPHIC (text)->extents.y0,
       SWFDEC_GRAPHIC (text)->extents.x1, SWFDEC_GRAPHIC (text)->extents.y1);
   swfdec_bits_syncbits (b);
+
   has_text = swfdec_bits_getbit (b);
   text->word_wrap = swfdec_bits_getbit (b);
   text->multiline = swfdec_bits_getbit (b);
@@ -128,6 +130,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   text->embed_fonts = swfdec_bits_getbit (b);
   if (text->embed_fonts)
     SWFDEC_FIXME ("Using embed fonts in TextField is not supported");
+
   if (has_font) {
     SwfdecCharacter *font;
 
@@ -142,6 +145,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->size = swfdec_bits_get_u16 (b);
     SWFDEC_LOG ("  size = %u", text->size);
   }
+
   if (has_color) {
     text->color = swfdec_bits_get_rgba (b);
     SWFDEC_LOG ("  color = %u", text->color);
@@ -149,11 +153,13 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     SWFDEC_WARNING ("FIXME: figure out default color");
     text->color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
   }
+
   if (has_max_length) {
     text->max_chars = swfdec_bits_get_u16 (b);
   } else {
     text->max_chars = 0;
   }
+
   if (has_layout) {
     guint align = swfdec_bits_get_u8 (b);
     switch (align) {
@@ -178,13 +184,15 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->indent = swfdec_bits_get_u16 (b);
     text->leading = swfdec_bits_get_s16 (b);
   }
+
   text->variable = swfdec_bits_get_string (b);
   if (text->variable && *text->variable == 0) {
     g_free (text->variable);
     text->variable = NULL;
   }
+
   if (has_text)
-    text->text_input = swfdec_bits_get_string (b);
+    text->input = swfdec_bits_get_string (b);
 
   return SWFDEC_STATUS_OK;
 }

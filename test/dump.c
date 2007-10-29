@@ -225,7 +225,7 @@ dump_shape (SwfdecShape *shape)
 static void
 dump_text_field (SwfdecTextField *text)
 {
-  g_print ("  %s\n", text->text_input ? text->text_input : "");
+  g_print ("  %s\n", text->input ? text->input : "");
   if (verbose) {
     if (text->variable)
       g_print ("  variable %s\n", text->variable);

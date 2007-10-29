@@ -308,7 +308,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
       end = strchr (p, '\0');
 
     swfdec_text_field_movie_generate_paragraph (text, &paragraph,
-	p - text->input->str, end - text->input->str);
+	p - text->input->str, end - p);
     paragraphs = g_array_append_val (paragraphs, paragraph);
 
     p = end;

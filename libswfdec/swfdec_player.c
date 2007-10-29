@@ -337,6 +337,25 @@ typedef struct {
   gpointer             data;
 } SwfdecPlayerExternalAction;
 
+static void
+swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
+{
+  SwfdecPlayerAction *action, tmp;
+  guint i = 0;
+
+  for (i = swfdec_ring_buffer_get_n_elements (buffer) + 1; i > 0; i--) {
+    action = swfdec_ring_buffer_pop (buffer);
+    g_assert (action);
+    if (action->movie == NULL)
+      continue;
+    tmp = *action;
+    action = swfdec_ring_buffer_push (buffer);
+    *action = tmp;
+  }
+  SWFDEC_INFO ("compresed action queue to %u elements", 
+      swfdec_ring_buffer_get_n_elements (buffer));
+}
+
 /**
  * swfdec_player_add_event:
  * @player: a #SwfdecPlayer
@@ -362,17 +381,22 @@ swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecEventT
   SWFDEC_LOG ("adding action %s %u", movie->name, type);
   action = swfdec_ring_buffer_push (player->actions[importance]);
   if (action == NULL) {
-    /* FIXME: limit number of actions to not get inf loops due to scripts? */
+    /* try to get rid of freed actions */
     if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
-      /* FIXME: try to remove empty entries first? */
-      swfdec_as_context_abort (SWFDEC_AS_CONTEXT (player), 
-	  "256 levels of recursion were exceeded in one action list.");
-      return;
+      swfdec_player_compress_actions (player->actions[importance]);
+      action = swfdec_ring_buffer_push (player->actions[importance]);
+      /* if it doesn't get smaller, bail */
+      if (action == NULL) {
+	swfdec_as_context_abort (SWFDEC_AS_CONTEXT (player), 
+	    "256 levels of recursion were exceeded in one action list.");
+	return;
+      }
+    } else {
+      swfdec_ring_buffer_set_size (player->actions[importance],
+	  swfdec_ring_buffer_get_size (player->actions[importance]) + 16);
+      action = swfdec_ring_buffer_push (player->actions[importance]);
+      g_assert (action);
     }
-    swfdec_ring_buffer_set_size (player->actions[importance],
-	swfdec_ring_buffer_get_size (player->actions[importance]) + 16);
-    action = swfdec_ring_buffer_push (player->actions[importance]);
-    g_assert (action);
   }
   action->movie = movie;
   action->script = NULL;

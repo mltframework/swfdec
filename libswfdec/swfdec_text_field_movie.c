@@ -783,6 +783,12 @@ swfdec_text_field_movie_get_text_size (SwfdecTextFieldMovie *text, int *width,
       *height += layouts[i].height;
   }
 
+  // align to get integer amount after TWIPS_TO_DOUBLE
+  if (width != NULL && *width % SWFDEC_TWIPS_SCALE_FACTOR != 0)
+    *width += SWFDEC_TWIPS_SCALE_FACTOR - *width % SWFDEC_TWIPS_SCALE_FACTOR;
+  if (height != NULL && *height % SWFDEC_TWIPS_SCALE_FACTOR != 0)
+    *height += SWFDEC_TWIPS_SCALE_FACTOR - *height % SWFDEC_TWIPS_SCALE_FACTOR;
+
   swfdec_text_field_movie_free_layouts (layouts);
 }
 
@@ -800,8 +806,8 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
     return FALSE;
 
   swfdec_text_field_movie_get_text_size (text, &width, &height);
-  width += 2 * EXTRA_MARGIN;
-  height += 2 * EXTRA_MARGIN;
+  width += SWFDEC_DOUBLE_TO_TWIPS (2 * EXTRA_MARGIN);
+  height += SWFDEC_DOUBLE_TO_TWIPS (2 * EXTRA_MARGIN);
 
   if ((text->text->word_wrap ||
 	graphic->extents.x1 - graphic->extents.x0 == width) &&

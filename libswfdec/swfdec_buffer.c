@@ -240,9 +240,9 @@ swfdec_buffer_free_mapped (unsigned char *data, gpointer priv)
  * @filename: file to read
  * @error: return location for a #GError or %NULL
  *
- * Tries to create a buffer for the given @filename using a #GMappedFile. If
- * the creation fails, %NULL is returned and @error is set. The error can be
- * any of the errors that are valid from g_mapped_file_new().
+ * Creates a buffer containing the contents of the given file. If loading the
+ * file fails, %NULL is returned and @error is set. The error can be
+ * any of the errors that are valid for g_file_get_contents().
  *
  * Returns: a new #SwfdecBuffer or %NULL on failure
  **/
@@ -250,22 +250,25 @@ SwfdecBuffer *
 swfdec_buffer_new_from_file (const char *filename, GError **error)
 {
   GMappedFile *file;
-  SwfdecBuffer *buffer;
+  char *data;
+  gsize length;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
-  file = g_mapped_file_new (filename, FALSE, error);
-  if (file == NULL) {
-    return NULL;
+  file = g_mapped_file_new (filename, FALSE, NULL);
+  if (file != NULL) {
+    SwfdecBuffer *buffer = swfdec_buffer_new ();
+    buffer->data = (unsigned char *) g_mapped_file_get_contents (file), 
+    buffer->length = g_mapped_file_get_length (file);
+    buffer->free = swfdec_buffer_free_mapped;
+    buffer->priv = file;
+    return buffer;
   }
 
-  buffer = swfdec_buffer_new ();
-  buffer->data = (unsigned char *) g_mapped_file_get_contents (file), 
-  buffer->length = g_mapped_file_get_length (file);
-  buffer->free = swfdec_buffer_free_mapped;
-  buffer->priv = file;
+  if (!g_file_get_contents (filename, &data, &length, error))
+    return NULL;
 
-  return buffer;
+  return swfdec_buffer_new_for_data ((guint8 *) data, length);
 }
 
 /**

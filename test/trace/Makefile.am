@@ -383,6 +383,15 @@ EXTRA_DIST = \
 	crash-0.5.3-divide-by-zero.as \
 	crash-0.5.3-divide-by-zero.swf \
 	crash-0.5.3-divide-by-zero.swf.trace \
+	crash-0.5.3-text-field-root-variable.c \
+	crash-0.5.3-text-field-root-variable-5.swf \
+	crash-0.5.3-text-field-root-variable-5.swf.trace \
+	crash-0.5.3-text-field-root-variable-6.swf \
+	crash-0.5.3-text-field-root-variable-6.swf.trace \
+	crash-0.5.3-text-field-root-variable-7.swf \
+	crash-0.5.3-text-field-root-variable-7.swf.trace \
+	crash-0.5.3-text-field-root-variable-8.swf \
+	crash-0.5.3-text-field-root-variable-8.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	date.as \

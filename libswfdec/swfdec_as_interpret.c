@@ -481,7 +481,8 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char 
   }
 
   if (path[0] == '/') {
-    o = cx->frame->target;
+    if (o == NULL)
+      o = cx->frame->target;
     if (!SWFDEC_IS_MOVIE (o))
       return NULL;
     o = SWFDEC_AS_OBJECT (swfdec_movie_get_root (SWFDEC_MOVIE (o)));

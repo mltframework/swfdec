@@ -38,7 +38,9 @@ var texts = [
   "a\r\nb",
   "a\r\rb",
   "a<p align='right'>b</p>c",
-  "a<p align='right'>ä</p>c"
+  "a<p align='right'>ä</p>c",
+  "a<!-- b -->c",
+  "a<!--->b"
 ];
 
 t.html = true;

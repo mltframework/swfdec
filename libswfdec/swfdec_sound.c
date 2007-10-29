@@ -187,11 +187,6 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   decoder = swfdec_audio_decoder_new (sound->codec, sound->format);
   if (decoder == NULL)
     return NULL;
-  sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
-  sample_bytes = swfdec_audio_format_get_bytes_per_sample (sound->decoded_format);
-  n_samples = sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format);
-  /* FIXME: The size is only a guess */
-  swfdec_cached_load (SWFDEC_CACHED (sound), n_samples * sample_bytes);
 
   swfdec_audio_decoder_push (decoder, sound->encoded);
   swfdec_audio_decoder_push (decoder, NULL);
@@ -199,15 +194,19 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   while ((tmp = swfdec_audio_decoder_pull (decoder))) {
     swfdec_buffer_queue_push (queue, tmp);
   }
+  sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
   swfdec_audio_decoder_free (decoder);
   depth = swfdec_buffer_queue_get_depth (queue);
   if (depth == 0) {
     SWFDEC_ERROR ("decoding didn't produce any data, bailing");
-    swfdec_cached_unload (SWFDEC_CACHED (sound));
     return NULL;
   }
+  swfdec_cached_load (SWFDEC_CACHED (sound), depth);
   tmp = swfdec_buffer_queue_pull (queue, depth);
   swfdec_buffer_queue_unref (queue);
+
+  sample_bytes = swfdec_audio_format_get_bytes_per_sample (sound->decoded_format);
+  n_samples = sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format);
 
   SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
       tmp->length / sample_bytes, n_samples, sound->skip);

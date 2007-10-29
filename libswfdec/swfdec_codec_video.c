@@ -44,11 +44,11 @@ struct {
   SwfdecVideoDecoder *	(* func) (SwfdecVideoCodec);
 } video_codecs[] = {
   { "builtin",	swfdec_video_decoder_builtin_new },
-#ifdef HAVE_FFMPEG
-  { "ffmpeg",	swfdec_video_decoder_ffmpeg_new },
-#endif
 #ifdef HAVE_GST
   { "gst",	swfdec_video_decoder_gst_new },
+#endif
+#ifdef HAVE_FFMPEG
+  { "ffmpeg",	swfdec_video_decoder_ffmpeg_new },
 #endif
   { NULL, }
 };

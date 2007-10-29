@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 
 typedef guint SwfdecAudioFormat;
 #define SWFDEC_IS_AUDIO_FORMAT(format) ((format) <= 0xF)
+#define SWFDEC_AUDIO_FORMAT_INVALID ((SwfdecAudioFormat) -1)
 
 
 struct _SwfdecAudio {

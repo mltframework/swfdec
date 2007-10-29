@@ -948,6 +948,7 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
     case SWFDEC_AS_ACTION_DIVIDE:
       if (cx->version < 5) {
 	if (r == 0) {
+	  swfdec_as_stack_pop (cx);
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx, 1), SWFDEC_AS_STR__ERROR_);
 	  return;
 	}
@@ -2542,7 +2543,6 @@ swfdec_action_throw (SwfdecAsContext *cx, guint action, const guint8 *data,
 }
 
 typedef struct {
-  int			ref_count;
   const guint8 *	catch_start;
   const guint8 *	finally_start;
   guint			catch_size;
@@ -2556,24 +2556,11 @@ typedef struct {
 } TryData;
 
 static void
-swfdec_action_try_data_ref (gpointer data)
+swfdec_action_try_data_free (gpointer data)
 {
   TryData *try_data = data;
 
   g_return_if_fail (try_data != NULL);
-
-  try_data->ref_count++;
-}
-
-static void
-swfdec_action_try_data_unref (gpointer data)
-{
-  TryData *try_data = data;
-
-  g_return_if_fail (try_data != NULL);
-
-  if (--try_data->ref_count > 0)
-    return;
 
   if (!try_data->use_register)
     g_free (try_data->variable_name);
@@ -2595,7 +2582,7 @@ swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
   if (!cx->exception)
     swfdec_as_context_throw (cx, exception_value);
 
-  swfdec_as_frame_pop_block (frame);
+  g_free (data);
 }
 
 static void
@@ -2610,9 +2597,6 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
 
   cx = SWFDEC_AS_OBJECT (frame)->context;
 
-  swfdec_action_try_data_ref (try_data);
-  swfdec_as_frame_pop_block (frame);
-
   if (swfdec_as_context_catch (cx, &val))
   {
     // we got an exception while in catch block:
@@ -2625,10 +2609,10 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
     // FIXME: the exception value is not marked while finally block runs
     swfdec_as_frame_push_block (frame, try_data->finally_start,
 	try_data->finally_start + try_data->finally_size,
-	swfdec_action_try_end_finally, exception_value, g_free);
+	swfdec_action_try_end_finally, exception_value);
   }
 
-  swfdec_action_try_data_unref (try_data);
+  swfdec_action_try_data_free (try_data);
 }
 
 static void
@@ -2649,9 +2633,6 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
   }
 
   cx = SWFDEC_AS_OBJECT (frame)->context;
-
-  swfdec_action_try_data_ref (try_data);
-  swfdec_as_frame_pop_block (frame);
 
   if (swfdec_as_context_catch (cx, &val))
   {
@@ -2695,13 +2676,14 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
       }
     }
 
-    swfdec_action_try_data_ref (try_data);
     swfdec_as_frame_push_block (frame, try_data->catch_start,
 	try_data->catch_start + try_data->catch_size,
-	swfdec_action_try_end_catch, try_data, swfdec_action_try_data_unref);
+	swfdec_action_try_end_catch, try_data);
+  } 
+  else 
+  {
+    swfdec_action_try_data_free (try_data);
   }
-
-  swfdec_action_try_data_unref (try_data);
 }
 
 static void
@@ -2719,7 +2701,6 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
   }
 
   try_data = g_malloc0 (sizeof (TryData));
-  swfdec_action_try_data_ref (try_data);
 
   swfdec_bits_init_data (&bits, data, len);
 
@@ -2749,10 +2730,10 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
 
   if (try_data->catch_start || try_data->finally_start) {
     swfdec_as_frame_push_block (cx->frame, data + len, data + len + try_size,
-	swfdec_action_try_end_try, try_data, swfdec_action_try_data_unref);
+	swfdec_action_try_end_try, try_data);
   } else {
     SWFDEC_WARNING ("Try with neither catch nor finally block");
-    swfdec_action_try_data_unref (try_data);
+    swfdec_action_try_data_free (try_data);
   }
 }
 
@@ -2761,7 +2742,6 @@ swfdec_action_pop_with (SwfdecAsFrame *frame, gpointer with_object)
 {
   g_assert (frame->scope_chain->data == with_object);
   frame->scope_chain = g_slist_delete_link (frame->scope_chain, frame->scope_chain);
-  swfdec_as_frame_pop_block (frame);
 }
 
 static void
@@ -2783,7 +2763,7 @@ swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   } else {
     cx->frame->scope_chain = g_slist_prepend (cx->frame->scope_chain, object);
     swfdec_as_frame_push_block (cx->frame, data + len, data + len + offset,
-	swfdec_action_pop_with, object, NULL);
+	swfdec_action_pop_with, object);
   }
   swfdec_as_stack_pop (cx);
 }

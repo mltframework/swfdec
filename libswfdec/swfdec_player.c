@@ -1580,6 +1580,7 @@ swfdec_player_init (SwfdecPlayer *player)
   player->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 
   player->runtime = g_timer_new ();
+  g_timer_stop (player->runtime);
   player->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -1624,7 +1625,8 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
   guint i;
 
   if (swfdec_rect_is_empty (rect)) {
-    g_assert_not_reached ();
+    SWFDEC_ERROR ("called with an empty rectanle. In theory this shouldn't happen.");
+    SWFDEC_ERROR ("  However, degenerate matrixes can cause this. We need a fix for that.");
     return;
   }
 
@@ -2057,6 +2059,8 @@ swfdec_init (void)
 
   _inited = TRUE;
 
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
   g_type_init ();
   oil_init ();
 

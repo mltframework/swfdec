@@ -41,14 +41,18 @@ static void
 swfdec_load_object_loader_target_parse (SwfdecLoaderTarget *target,
     SwfdecLoader *loader)
 {
-  SwfdecAsValue val;
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
+  SwfdecAsValue val;
+  glong size;
 
-  SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_loaded (loader));
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, swfdec_loader_get_loaded (loader));
   swfdec_as_object_set_variable_and_flags (load_object->target,
       SWFDEC_AS_STR__bytesLoaded, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, swfdec_loader_get_size (loader));
+  size = swfdec_loader_get_size (loader);
+  if (size < 0) 
+    size = swfdec_loader_get_loaded (loader);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, size);
   swfdec_as_object_set_variable_and_flags (load_object->target,
       SWFDEC_AS_STR__bytesTotal, &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }

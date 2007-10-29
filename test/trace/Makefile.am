@@ -9,8 +9,8 @@ trace_SOURCES = \
 noinst_HEADERS = \
 	swfdec_interaction.h
 
-trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) $(GTHREAD_CFLAGS)
-trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS) $(GTHREAD_LIBS)
+trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
+trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
@@ -380,6 +380,9 @@ EXTRA_DIST = \
 	crash-0.5.2-startdrag.as \
 	crash-0.5.2-startdrag.swf \
 	crash-0.5.2-startdrag.swf.trace \
+	crash-0.5.3-divide-by-zero.as \
+	crash-0.5.3-divide-by-zero.swf \
+	crash-0.5.3-divide-by-zero.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	date.as \

@@ -73,20 +73,14 @@ dnl Check for essential libraries first:
 dnl ====================================
 
 GLIB_VER=2.10
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_VER gobject-2.0 >= $GLIB_VER,
+PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_VER gobject-2.0 >= $GLIB_VER gthread-2.0 >= $GLIB_VER,
 		HAVE_GLIB=yes, HAVE_GLIB=no)
 if test "$HAVE_GLIB" = "no"; then
-  AC_MSG_ERROR([glib-2.0 >= $GLIB_VER and gobject-2.0 >= $GLIB_VER are required to build swfdec])
+  AC_MSG_ERROR([glib-2.0, gobject-2.0 and gthread-2.0 >= $GLIB_VER are required to build swfdec])
 fi
 AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_VER)
-dnl we detect gthread seperately for now, since we don't want to link libswfdec to it (yet)
-PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= $GLIB_VER,
-		HAVE_GLIB=yes, HAVE_GLIB=no)
-if test "$HAVE_GTHREAD" = "no"; then
-  AC_MSG_ERROR([gthread-2.0 >= $GLIB_VER is required to build swfdec])
-fi
 dnl FIXME: detect these executables correctly
 GLIB_GENMARSHAL=glib-genmarshal
 AC_SUBST(GLIB_GENMARSHAL)
@@ -188,9 +182,9 @@ fi
 
 AC_ARG_ENABLE(mad,
 	AS_HELP_STRING([--enable-mad],
-			[enable mad audio (default=yes)])],
+			[enable mad audio (default=no)])],
 	enable_mad=$enableval,
-	enable_mad="yes")
+	enable_mad="no")
 
 if test "$enable_mad" = "yes"; then
 	AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
@@ -211,9 +205,9 @@ dnl  So you'll have to update your ffmpeg checkout if compilation fails.
 dnl  Or you submit a patch that detects ffmpeg reliably on the distros.
 AC_ARG_ENABLE(ffmpeg,
 	AS_HELP_STRING([--enable-ffmpeg],
-			[enable ffmpeg support (default=yes)])],
+			[enable ffmpeg support (default=no)])],
 	enable_ffmpeg=$enableval,
-	enable_ffmpeg="yes")
+	enable_ffmpeg="no")
 
 if test "$enable_ffmpeg" = "yes"; then
 	PKG_CHECK_MODULES(FFMPEG, libavcodec libswscale, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)

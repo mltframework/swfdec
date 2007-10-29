@@ -412,19 +412,19 @@ swfdec_net_stream_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     if (stream->loader == NULL)
       SWFDEC_AS_VALUE_SET_INT (val, 0);
     else
-      SWFDEC_AS_VALUE_SET_INT (val, swfdec_loader_get_loaded (stream->loader));
+      SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_loader_get_loaded (stream->loader));
     *flags = 0;
     return TRUE;
   } else if (variable == SWFDEC_AS_STR_bytesTotal) {
-    guint bytes;
+    glong bytes;
     if (stream->loader == NULL) {
       bytes = 0;
     } else { 
       bytes = swfdec_loader_get_size (stream->loader);
-      if (bytes == 0)
+      if (bytes < 0)
 	bytes = swfdec_loader_get_loaded (stream->loader);
     }
-    SWFDEC_AS_VALUE_SET_INT (val, bytes);
+    SWFDEC_AS_VALUE_SET_NUMBER (val, bytes);
     *flags = 0;
     return TRUE;
   }

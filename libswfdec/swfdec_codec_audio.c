@@ -126,11 +126,11 @@ struct {
   SwfdecAudioDecoder *	(* func) (SwfdecAudioCodec, SwfdecAudioFormat);
 } audio_codecs[] = {
   { "builtin",	swfdec_audio_decoder_builtin_new },
-#ifdef HAVE_MAD
-  { "mad",	swfdec_audio_decoder_mad_new },
-#endif
 #ifdef HAVE_GST
   { "gst",	swfdec_audio_decoder_gst_new },
+#endif
+#ifdef HAVE_MAD
+  { "mad",	swfdec_audio_decoder_mad_new },
 #endif
 #ifdef HAVE_FFMPEG
   { "ffmpeg",	swfdec_audio_decoder_ffmpeg_new },
@@ -185,7 +185,6 @@ swfdec_audio_decoder_new (SwfdecAudioCodec codec, SwfdecAudioFormat format)
 
   if (ret) {
     ret->codec = codec;
-    g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (ret->format), NULL);
     g_return_val_if_fail (ret->push, NULL);
     g_return_val_if_fail (ret->pull, NULL);
     g_return_val_if_fail (ret->free, NULL);
@@ -217,6 +216,8 @@ swfdec_audio_decoder_free (SwfdecAudioDecoder *decoder)
  * @decoder: a #SwfdecAudioDecoder
  *
  * Queries the format that is used by the decoder for its produced output.
+ * The format will only be valid after swfdec_audio_decoder_pull () has been
+ * called at least once.
  *
  * Returns: the format of the decoded data
  **/
@@ -224,6 +225,7 @@ SwfdecAudioFormat
 swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *decoder)
 {
   g_return_val_if_fail (decoder != NULL, 0);
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (decoder->format), 0);
 
   return decoder->format;
 }
@@ -269,8 +271,14 @@ swfdec_audio_decoder_push (SwfdecAudioDecoder *decoder, SwfdecBuffer *buffer)
 SwfdecBuffer *
 swfdec_audio_decoder_pull (SwfdecAudioDecoder *decoder)
 {
+  SwfdecBuffer *ret;
+
   g_return_val_if_fail (decoder != NULL, NULL);
 
-  return decoder->pull (decoder);
+  ret = decoder->pull (decoder);
+  if (ret == NULL)
+    return NULL;
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (decoder->format), ret);
+  return ret;
 }
 

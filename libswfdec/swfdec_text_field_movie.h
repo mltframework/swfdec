@@ -58,8 +58,8 @@ typedef struct {
 } SwfdecBlock;
 
 typedef struct {
-  const char		*text;
-  guint			text_length;
+  guint			index_;
+  guint			length;
 
   gboolean		bullet;
   int			indent;

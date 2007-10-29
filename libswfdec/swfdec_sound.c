@@ -351,6 +351,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
     chunk->loop_count = 1;
   }
   if (has_envelope) {
+    SWFDEC_FIXME ("support for sound envelopes not implemented");
     chunk->n_envelopes = swfdec_bits_get_u8 (b);
     chunk->envelope = g_new (SwfdecSoundEnvelope, chunk->n_envelopes);
     SWFDEC_LOG ("  n_envelopes = %u", chunk->n_envelopes);
@@ -366,7 +367,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
     if (i > 0 && chunk->envelope[i].offset <=
 	chunk->envelope[i-1].offset) {
       /* FIXME: figure out how to handle this */
-      SWFDEC_ERROR ("sound evelope offsets not sorted");
+      SWFDEC_FIXME ("sound envelope offsets not sorted");
     }
     for (j = 0; j < 2; j++) {
       chunk->envelope[i].volume[j] = swfdec_bits_get_u16 (b);

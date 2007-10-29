@@ -494,6 +494,15 @@ EXTRA_DIST = \
 	duplicate-names-6.swf.trace \
 	duplicate-names-7.swf \
 	duplicate-names-7.swf.trace \
+	error-properties.as \
+	error-properties-5.swf \
+	error-properties-5.swf.trace \
+	error-properties-6.swf \
+	error-properties-6.swf.trace \
+	error-properties-7.swf \
+	error-properties-7.swf.trace \
+	error-properties-8.swf \
+	error-properties-8.swf.trace \
 	event-order.swf \
 	empty-function.as \
 	empty-function-5.swf \

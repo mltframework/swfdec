@@ -37,6 +37,8 @@
 
 G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_MOVIE)
 
+#define EXTRA_MARGIN 2
+
 static void
 swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
@@ -611,8 +613,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   first = TRUE;
   linenum = 0;
-  x = movie->original_extents.x0 + text_movie->hscroll;
-  y = movie->original_extents.y0 + 1;
+  x = movie->original_extents.x0 + EXTRA_MARGIN + text_movie->hscroll;
+  y = movie->original_extents.y0 + EXTRA_MARGIN;
   cairo_move_to (cr, x, y);
 
   for (i = 0; layouts[i].layout != NULL/* && y < limit.y1*/; i++)
@@ -755,7 +757,7 @@ swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text,
 }
 
 void
-swfdec_text_field_get_size (SwfdecTextFieldMovie *text, int *width,
+swfdec_text_field_movie_get_text_size (SwfdecTextFieldMovie *text, int *width,
     int *height)
 {
   SwfdecLayout *layouts;
@@ -764,7 +766,7 @@ swfdec_text_field_get_size (SwfdecTextFieldMovie *text, int *width,
   if (width != NULL)
     *width = 0;
   if (height != NULL)
-    *height = 3;
+    *height = 0;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (width != NULL || height != NULL);
@@ -797,7 +799,9 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   if (text->text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return FALSE;
 
-  swfdec_text_field_get_size (text, &width, &height);
+  swfdec_text_field_movie_get_text_size (text, &width, &height);
+  width += 2 * EXTRA_MARGIN;
+  height += 2 * EXTRA_MARGIN;
 
   if ((text->text->word_wrap ||
 	graphic->extents.x1 - graphic->extents.x0 == width) &&

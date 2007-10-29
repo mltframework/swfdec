@@ -423,7 +423,7 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_get_size (text, NULL, &height);
+  swfdec_text_field_movie_get_text_size (text, NULL, &height);
   SWFDEC_AS_VALUE_SET_NUMBER (ret, height);
 }
 
@@ -437,7 +437,7 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_get_size (text, &width, NULL);
+  swfdec_text_field_movie_get_text_size (text, &width, NULL);
   SWFDEC_AS_VALUE_SET_NUMBER (ret, width);
 }
 

@@ -67,7 +67,7 @@ struct _SwfdecTextField
   gboolean		background;
 
   /* only to be passed to the movie object */
-  char *		text_input;
+  char *		input;
   char *		variable;
   char *		font;
   guint			size;

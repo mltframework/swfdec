@@ -383,6 +383,15 @@ EXTRA_DIST = \
 	crash-0.5.3-divide-by-zero.as \
 	crash-0.5.3-divide-by-zero.swf \
 	crash-0.5.3-divide-by-zero.swf.trace \
+	crash-0.5.3-text-field-root-variable.c \
+	crash-0.5.3-text-field-root-variable-5.swf \
+	crash-0.5.3-text-field-root-variable-5.swf.trace \
+	crash-0.5.3-text-field-root-variable-6.swf \
+	crash-0.5.3-text-field-root-variable-6.swf.trace \
+	crash-0.5.3-text-field-root-variable-7.swf \
+	crash-0.5.3-text-field-root-variable-7.swf.trace \
+	crash-0.5.3-text-field-root-variable-8.swf \
+	crash-0.5.3-text-field-root-variable-8.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	date.as \
@@ -494,6 +503,15 @@ EXTRA_DIST = \
 	duplicate-names-6.swf.trace \
 	duplicate-names-7.swf \
 	duplicate-names-7.swf.trace \
+	error-properties.as \
+	error-properties-5.swf \
+	error-properties-5.swf.trace \
+	error-properties-6.swf \
+	error-properties-6.swf.trace \
+	error-properties-7.swf \
+	error-properties-7.swf.trace \
+	error-properties-8.swf \
+	error-properties-8.swf.trace \
 	event-order.swf \
 	empty-function.as \
 	empty-function-5.swf \
@@ -2075,6 +2093,20 @@ EXTRA_DIST = \
 	transform2.swf \
 	transform2.swf.trace \
 	transform2.swf.trace.org \
+	try.as \
+	try-6.swf \
+	try-6.swf.trace \
+	try-7.swf \
+	try-7.swf.trace \
+	try-8.swf \
+	try-8.swf.trace \
+	try-jump.as \
+	try-jump-6.swf \
+	try-jump-6.swf.trace \
+	try-jump-7.swf \
+	try-jump-7.swf.trace \
+	try-jump-8.swf \
+	try-jump-8.swf.trace \
 	try-throw-in-finally.as \
 	try-throw-in-finally-6.swf \
 	try-throw-in-finally-6.swf.trace \

@@ -40,7 +40,7 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 
 typedef struct {
   PangoLayout *		layout;
-  int			render_offset_x;
+  int			offset_x;
   int			height;
   int			width;
 } SwfdecLayout;
@@ -58,20 +58,18 @@ typedef struct {
 } SwfdecBlock;
 
 typedef struct {
-  const char		*text;
-  guint			text_length;
+  guint			index_;
+  guint			length;
 
   gboolean		bullet;
   int			indent;
 
-  GList *		blocks;		// SwfdecBlock
-
-  GList *		attrs;	// PangoAttribute
-  PangoAttrList *	attrs_list;
+  GSList *		blocks;		// SwfdecBlock
+  GSList *		attrs;		// PangoAttribute
 } SwfdecParagraph;
 
 typedef struct {
-  guint			index;
+  guint			index_;
   SwfdecTextFormat *	format;
 } SwfdecFormatIndex;
 
@@ -122,7 +120,7 @@ GType		swfdec_text_field_movie_get_type		(void);
 void		swfdec_text_field_movie_set_text		(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
-void		swfdec_text_field_get_size		(SwfdecTextFieldMovie *	text,
+void		swfdec_text_field_movie_get_text_size	(SwfdecTextFieldMovie *	text,
 							 int *			width,
 							 int *			height);
 gboolean	swfdec_text_field_movie_auto_size	(SwfdecTextFieldMovie *	text);
@@ -136,7 +134,6 @@ SwfdecTextFormat *swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie 
 							 guint			start_index,
 							 guint			end_index);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *		text);
-const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);
 void		swfdec_text_field_movie_set_listen_variable_text (SwfdecTextFieldMovie		*text,
@@ -152,6 +149,7 @@ void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);
 /* implemented in swfdec_html_parser.c */
 void		swfdec_text_field_movie_html_parse	(SwfdecTextFieldMovie *	text, 
 							 const char *		str);
+const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 
 G_END_DECLS
 #endif

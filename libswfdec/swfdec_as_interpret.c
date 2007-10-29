@@ -481,7 +481,8 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char 
   }
 
   if (path[0] == '/') {
-    o = cx->frame->target;
+    if (o == NULL)
+      o = cx->frame->target;
     if (!SWFDEC_IS_MOVIE (o))
       return NULL;
     o = SWFDEC_AS_OBJECT (swfdec_movie_get_root (SWFDEC_MOVIE (o)));
@@ -2600,8 +2601,8 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
   if (swfdec_as_context_catch (cx, &val))
   {
     // we got an exception while in catch block:
-    // create new block for finally, passing the exception
-    // clear exception from the context
+    // create new block for finally to pass on the exception
+    // jump to that block
 
     exception_value = g_malloc (sizeof (SwfdecAsValue));
     *exception_value = val;
@@ -2610,6 +2611,7 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
     swfdec_as_frame_push_block (frame, try_data->finally_start,
 	try_data->finally_start + try_data->finally_size,
 	swfdec_action_try_end_finally, exception_value);
+    frame->pc = try_data->finally_start;
   }
 
   swfdec_action_try_data_free (try_data);
@@ -2638,8 +2640,8 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
   {
     // we got an exception while in try block:
     // set the exception variable
-    // add new block for catch
-    // clear exception from context
+    // add new block for catch and jump to it
+
     if (try_data->use_register)
     {
       if (swfdec_action_has_register (cx, try_data->register_number)) {
@@ -2679,8 +2681,9 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
     swfdec_as_frame_push_block (frame, try_data->catch_start,
 	try_data->catch_start + try_data->catch_size,
 	swfdec_action_try_end_catch, try_data);
-  } 
-  else 
+    frame->pc = try_data->catch_start;
+  }
+  else
   {
     swfdec_action_try_data_free (try_data);
   }
@@ -2694,10 +2697,9 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
   guint try_size;
   gboolean use_finally, use_catch;
 
-  if (len <= 8) {
+  if (len < 8) {
     SWFDEC_ERROR ("With action requires a length of at least 8, but got %u",
 	len);
-    swfdec_as_stack_pop (cx);
     return;
   }
 
@@ -2733,7 +2735,7 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
     swfdec_as_frame_push_block (cx->frame, data + len, data + len + try_size,
 	swfdec_action_try_end_try, try_data);
   } else {
-    SWFDEC_ERROR ("Try without neither catch or finally block");
+    SWFDEC_WARNING ("Try with neither catch nor finally block");
     swfdec_action_try_data_free (try_data);
   }
 }

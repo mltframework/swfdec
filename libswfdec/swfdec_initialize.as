@@ -28,6 +28,17 @@ ASSetNativeAccessor = ASnative (4, 1);
 Object.registerClass = ASnative(101, 8);
 ASSetPropFlags (Object, null, 7);
 
+/*** Error ***/
+
+function Error (msg) {
+  if (typeof (msg) != "undefined")
+    this.message = msg;
+}
+Error.prototype.name = Error.prototype.message = "Error";
+Error.prototype.toString = function () {
+      return this.message;
+};
+
 /*** ASBROADCASTER ***/
 
 function AsBroadcaster () { };

@@ -423,8 +423,8 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_get_size (text, NULL, &height);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, height);
+  swfdec_text_field_movie_get_text_size (text, NULL, &height);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, SWFDEC_TWIPS_TO_DOUBLE (height));
 }
 
 static void
@@ -437,8 +437,8 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_get_size (text, &width, NULL);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, width);
+  swfdec_text_field_movie_get_text_size (text, &width, NULL);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, SWFDEC_TWIPS_TO_DOUBLE (width));
 }
 
 /*
@@ -1191,7 +1191,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   edittext->border = FALSE;
   edittext->size = 240; // FIXME: Correct?
 
-  edittext->text_input = NULL;
+  edittext->input = NULL;
   edittext->variable = NULL;
   edittext->color = 0;
   edittext->align = SWFDEC_TEXT_ALIGN_LEFT;

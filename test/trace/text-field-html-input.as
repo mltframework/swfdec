@@ -40,7 +40,8 @@ var texts = [
   "a<p align='right'>b</p>c",
   "a<p align='right'>ä</p>c",
   "a<!-- b -->c",
-  "a<!--->b"
+  "a<!--->b",
+  "a<br><li>b</li>c<p>d</p>e<br>"
 ];
 
 t.html = true;

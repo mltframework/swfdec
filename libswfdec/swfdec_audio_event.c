@@ -69,7 +69,7 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest,
     swfdec_sound_buffer_render	(dest, event->decoded, event->decoded_format,
 	loop == 0 ? NULL : event->decoded, offset, samples);
     n_samples -= samples;
-    dest += samples * 4;
+    dest += samples * 2;
     offset = 0;
   }
 }

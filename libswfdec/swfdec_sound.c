@@ -303,7 +303,8 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
   int has_loops;
   int has_out_point;
   int has_in_point;
-  guint i, j;
+  guint i, j, n_envelopes;
+  GArray *envelopes;
   SwfdecSound *sound;
   SwfdecSoundChunk *chunk;
 
@@ -351,35 +352,47 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
     chunk->loop_count = 1;
   }
   if (has_envelope) {
-    SWFDEC_FIXME ("support for sound envelopes not implemented");
-    chunk->n_envelopes = swfdec_bits_get_u8 (b);
-    chunk->envelope = g_new (SwfdecSoundEnvelope, chunk->n_envelopes);
+    n_envelopes = swfdec_bits_get_u8 (b);
+    if (n_envelopes > 0) {
+      envelopes = g_array_sized_new (FALSE, FALSE,
+	  sizeof (SwfdecSoundEnvelope), n_envelopes);
+    }
     SWFDEC_LOG ("  n_envelopes = %u", chunk->n_envelopes);
+  } else {
+    n_envelopes = 0;
   }
 
-  for (i = 0; i < chunk->n_envelopes; i++) {
-    chunk->envelope[i].offset = swfdec_bits_get_u32 (b);
-    if (chunk->envelope[i].offset < chunk->start_sample) {
-      SWFDEC_WARNING ("envelope entry offset too small (%d vs %d)",
-	  chunk->envelope[i].offset, chunk->start_sample);
-      chunk->envelope[i].offset = chunk->start_sample;
-    }
-    if (i > 0 && chunk->envelope[i].offset <=
-	chunk->envelope[i-1].offset) {
-      /* FIXME: figure out how to handle this */
-      SWFDEC_FIXME ("sound envelope offsets not sorted");
-    }
+  for (i = 0; i < n_envelopes; i++) {
+    SwfdecSoundEnvelope envelope;
+
+    envelope.offset = swfdec_bits_get_u32 (b);
     for (j = 0; j < 2; j++) {
-      chunk->envelope[i].volume[j] = swfdec_bits_get_u16 (b);
-      if (chunk->envelope[i].volume[j] > 32768) {
-	SWFDEC_ERROR ("envelope volume too big: %u > 32768", 
-	    chunk->envelope[i].volume[j]);
-	chunk->envelope[i].volume[j] = 32768;
+      envelope.volume[j] = swfdec_bits_get_u16 (b);
+      if (envelope.volume[j] > 32768) {
+	SWFDEC_ERROR ("envelope volume too big: %u > 32768",
+	    envelope.volume[j]);
+	envelope.volume[j] = 32768;
       }
     }
+
+    if (envelopes->len > 0 && envelope.offset <= g_array_index (envelopes,
+	  SwfdecSoundEnvelope, envelopes->len - 1).offset) {
+      /* FIXME: what to do if == */
+      SWFDEC_ERROR ("sound envelope offset not sorted, ignoring");
+      continue;
+    }
+
+    envelopes = g_array_append_val (envelopes, envelope);
+
     SWFDEC_LOG ("    envelope = %u { %u, %u }", chunk->envelope[i].offset,
 	(guint) chunk->envelope[i].volume[0], (guint) chunk->envelope[i].volume[1]);
     /* FIXME: check that mono sound gets averaged and then do this here? */
+  }
+
+  if (n_envelopes > 0) {
+    SWFDEC_FIXME ("Support for sound envelopes missing");
+    chunk->n_envelopes = envelopes->len;
+    chunk->envelope = (SwfdecSoundEnvelope *)g_array_free (envelopes, FALSE);
   }
 
   return chunk;

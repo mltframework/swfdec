@@ -48,7 +48,7 @@ static const SwfdecButtonCondition event_table[2][4][4] = {
     { SWFDEC_BUTTON_OVER_UP_TO_IDLE, -1, -1, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN },
     { -1, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP, -1 } },
   { { -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_UP, -1 },
-    { 0, -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN },
+    { -2, -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN },
     { SWFDEC_BUTTON_OVER_UP_TO_IDLE, -1, -1, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN },
     { -1, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP, -1 } }
 };
@@ -156,7 +156,7 @@ swfdec_button_movie_change_state (SwfdecButtonMovie *movie, SwfdecButtonState st
 static void
 swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, int button)
 {
-  SwfdecButtonCondition event;
+  int event;
   int sound;
 
   if (movie->mouse_in == mouse_in &&
@@ -173,14 +173,14 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
 		     [(mouse_in ? 2 : 0) + button];
 
 #ifndef G_DISABLE_ASSERT
-  if (event == (guint) -1) {
+  if (event == -1) {
     g_error ("Unhandled event for %s: %u => %u",
 	movie->button->menubutton ? "menu" : "button",
 	(movie->mouse_in ? 2 : 0) + movie->mouse_button,
 	(mouse_in ? 2 : 0) + button);
   }
 #endif
-  if (event != 0) {
+  if (event >= 0) {
     SWFDEC_LOG ("emitting event for condition %u", event);
     swfdec_button_movie_execute (movie, event);
   }

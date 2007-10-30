@@ -28,10 +28,10 @@ int main (int argc, char **argv)
   CFLAGS="$save_CFLAGS"
 
   if test "X$flag_ok" = Xyes ; then
-    $2
+    m4_ifvaln([$2],[$2])
     true
   else
-    $3
+    m4_ifvaln([$3],[$3])
     true
   fi
   AC_MSG_RESULT([$flag_ok])

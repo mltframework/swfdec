@@ -133,7 +133,7 @@ swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
       if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
 	    strlen (xml_entities[i].escaped))) {
 	// FIXME: Do this cleaner
-	if (cx->version > 5 && xml_entities[i].character == '\xa0')
+	if (xml_entities[i].character == '\xa0')
 	  string = g_string_append_c (string, '\xc2');
 	string = g_string_append_c (string, xml_entities[i].character);
 	p += strlen (xml_entities[i].escaped);

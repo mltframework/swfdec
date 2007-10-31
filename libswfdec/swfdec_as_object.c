@@ -1557,7 +1557,7 @@ swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
 {
   SwfdecAsContext *cx = object->context;
   SwfdecAsValue val;
-  char **varlist, *p;
+  char **varlist, *p, *unescaped;
   guint i;
 
   varlist = g_strsplit (str, "&", -1);
@@ -1571,15 +1571,21 @@ swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
     }
 
     if (p != NULL) {
-      SWFDEC_AS_VALUE_SET_STRING (&val,
-	  swfdec_as_context_give_string (object->context, 
-	    swfdec_as_string_unescape (cx, p)));
+      unescaped = swfdec_as_string_unescape (cx, p);
+      if (unescaped != NULL) {
+	SWFDEC_AS_VALUE_SET_STRING (&val,
+	    swfdec_as_context_give_string (cx, unescaped));
+      } else {
+	SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_EMPTY);
+      }
     } else {
       SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_EMPTY);
     }
-    swfdec_as_object_set_variable (object,
-	swfdec_as_context_give_string (object->context, 
-	  swfdec_as_string_unescape (cx, varlist[i])), &val);
+    unescaped = swfdec_as_string_unescape (cx, varlist[i]);
+    if (unescaped != NULL) {
+      swfdec_as_object_set_variable (object,
+	  swfdec_as_context_give_string (cx, unescaped), &val);
+    }
   }
   g_strfreev (varlist);
 }

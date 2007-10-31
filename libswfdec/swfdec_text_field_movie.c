@@ -1033,7 +1033,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (SWFDEC_IS_TEXT_FORMAT (format));
   g_return_if_fail (start_index < end_index);
-  g_return_if_fail (end_index <= (guint) g_utf8_strlen (text->input->str, -1));
+  g_return_if_fail (end_index <= text->input->len);
 
   g_assert (text->formats != NULL);
   g_assert (text->formats->data != NULL);
@@ -1051,7 +1051,7 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
       findex_end_index =
 	((SwfdecFormatIndex *)iter->next->data)->index_;
     } else {
-      findex_end_index = g_utf8_strlen (text->input->str, -1);
+      findex_end_index = text->input->len;
     }
 
     if (findex_end_index <= start_index)
@@ -1113,7 +1113,7 @@ swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *text,
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_assert (start_index < end_index);
-  g_assert (end_index <= (guint) g_utf8_strlen (text->input->str, -1));
+  g_assert (end_index <= text->input->len);
 
   g_assert (text->formats != NULL);
   g_assert (text->formats->data != NULL);
@@ -1288,7 +1288,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (end_index <= (guint) g_utf8_strlen (text->input->str, -1));
+  g_return_if_fail (end_index <= text->input->len);
   g_return_if_fail (start_index <= end_index);
   g_return_if_fail (str != NULL);
 
@@ -1304,8 +1304,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     findex = iter->data;
 
     if (findex->index_ >= start_index) {
-      if (end_index == (guint) g_utf8_strlen (text->input->str, -1) ||
-	  (iter->next != NULL &&
+      if (end_index == text->input->len ||(iter->next != NULL &&
 	   ((SwfdecFormatIndex *)iter->next->data)->index_ <= end_index))
       {
 	g_free (iter->data);
@@ -1324,7 +1323,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     prev = iter;
   }
 
-  if (end_index == (guint) g_utf8_strlen (text->input->str, -1)) {
+  if (end_index == text->input->len) {
     if (SWFDEC_AS_OBJECT (text)->context->version < 8) {
       SWFDEC_FIXME ("replaceText to the end of the TextField might use wrong text format on version 7");
     }
@@ -1335,14 +1334,9 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     text->formats = g_slist_append (text->formats, findex);
   }
 
-  text->input = g_string_erase (text->input,
-      g_utf8_offset_to_pointer (text->input->str, start_index) -
-      text->input->str,
-      g_utf8_offset_to_pointer (text->input->str, end_index) -
-      g_utf8_offset_to_pointer (text->input->str, start_index));
-  text->input = g_string_insert (text->input,
-      g_utf8_offset_to_pointer (text->input->str, start_index) -
-      text->input->str, str);
+  text->input = g_string_erase (text->input, start_index,
+      end_index - start_index);
+  text->input = g_string_insert (text->input, start_index, str);
 
   swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);

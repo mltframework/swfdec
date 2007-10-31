@@ -71,7 +71,7 @@ swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag)
 	ParserTag *n = g_new0 (ParserTag, 1);
 	n->name = f->name;
 	n->name_length = f->name_length;
-	n->index = g_utf8_strlen (data->text->str, -1);
+	n->index = data->text->len;
 	n->end_index = n->index + 1;
 	n->format = swfdec_text_format_copy (f->format);
 	data->tags_closed = g_slist_prepend (data->tags_closed, n);
@@ -81,7 +81,7 @@ swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag)
     data->text = g_string_append_c (data->text, '\n');
   }
 
-  tag->end_index = g_utf8_strlen (data->text->str, -1);
+  tag->end_index = data->text->len;
 
   data->tags_open = g_slist_remove (data->tags_open, tag);
   data->tags_closed = g_slist_prepend (data->tags_closed, tag);
@@ -347,7 +347,7 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
     tag->name = name;
     tag->name_length = name_length;
     tag->format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (data->cx));
-    tag->index = g_utf8_strlen (data->text->str, -1);
+    tag->index = data->text->len;
 
     data->tags_open = g_slist_prepend (data->tags_open, tag);
 

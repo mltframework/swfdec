@@ -1031,7 +1031,11 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
 
   format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i]));
 
-  swfdec_text_field_movie_set_text_format (text, format, start_index, end_index);
+  swfdec_text_field_movie_set_text_format (text, format,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str,
+      g_utf8_offset_to_pointer (text->input->str, end_index) -
+      text->input->str);
 }
 
 SWFDEC_AS_NATIVE (104, 101, swfdec_text_field_movie_getTextFormat)
@@ -1068,8 +1072,11 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
   if (start_index == end_index) {
     format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
   } else {
-    format =
-      swfdec_text_field_movie_get_text_format (text, start_index, end_index);
+    format = swfdec_text_field_movie_get_text_format (text,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str,
+      g_utf8_offset_to_pointer (text->input->str, end_index) -
+      text->input->str);
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
@@ -1097,7 +1104,11 @@ swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
   start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
   end_index = MIN (end_index, g_utf8_strlen (text->input->str, -1));
 
-  swfdec_text_field_movie_replace_text (text, start_index, end_index, str);
+  swfdec_text_field_movie_replace_text (text,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str,
+      g_utf8_offset_to_pointer (text->input->str, end_index) -
+      text->input->str, str);
 }
 
 // static

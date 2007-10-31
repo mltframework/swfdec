@@ -380,6 +380,7 @@ mc_target_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   }
   if (s->len == 0) {
     SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_SLASH);
+    g_string_free (s, TRUE);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_give_string (
 	  SWFDEC_AS_OBJECT (movie)->context, g_string_free (s, FALSE)));

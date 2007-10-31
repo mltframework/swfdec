@@ -50,27 +50,80 @@ swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
     return 0;
 }
 
+static guint16
+swfdec_audio_event_get_envelop_volume (SwfdecAudioEvent *event, guint pos,
+    guint offset, guint channel)
+{
+  double distance;
+
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_EVENT (event), 32768);
+  g_return_val_if_fail (pos <= event->n_envelopes, 32768);
+  g_return_val_if_fail (channel == 0 || channel == 1, 32768);
+
+  if (event->n_envelopes == 0)
+    return 32768;
+
+  if (pos == 0)
+    return event->envelope[pos].volume[channel];
+
+  if (pos == event->n_envelopes)
+    return event->envelope[pos - 1].volume[channel];
+
+  distance = event->envelope[pos].offset - event->envelope[pos - 1].offset;
+  g_return_val_if_fail (offset >= event->envelope[pos - 1].offset, 32768);
+  offset -= event->envelope[pos - 1].offset;
+  g_return_val_if_fail (offset < distance, 32768);
+
+  return event->envelope[pos - 1].volume[channel] * (1 - offset / distance) +
+    event->envelope[pos].volume[channel] * (offset / distance);
+}
+
 static void
-swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest,
-    guint start, guint n_samples)
+swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
+    guint n_samples)
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
   guint offset = event->offset + start;
-  guint loop;
-  guint samples;
+  guint loop, samples, global_offset, pos, i, granularity, channels;
+  gint16 *dest_end;
 
   if (event->n_samples == 0)
     return;
 
+  granularity = swfdec_audio_format_get_granularity (event->decoded_format);
+  channels = swfdec_audio_format_get_channels (event->decoded_format);
+
+  global_offset = (channels - 1) * granularity * (event->loop *
+    ((event->stop_sample != 0 ? event->stop_sample : event->n_samples) -
+     event->start_sample) + event->offset - event->start_sample);
+
+  dest_end = dest;
   loop = event->loop + offset / event->n_samples;
   offset %= event->n_samples;
   for (; loop < event->n_loops && n_samples > 0; loop++) {
     samples = MIN (n_samples, event->n_samples - offset);
-    swfdec_sound_buffer_render	(dest, event->decoded, event->decoded_format,
-	loop == 0 ? NULL : event->decoded, offset, samples);
+    swfdec_sound_buffer_render (dest_end, event->decoded,
+	event->decoded_format, loop == 0 ? NULL : event->decoded, offset,
+	samples);
     n_samples -= samples;
-    dest += samples * 4;
+    dest_end += samples * 4;
     offset = 0;
+  }
+
+  pos = 0;
+  for (i = 0; i < (dest_end - dest) / 2; i++) {
+    while (pos < event->n_envelopes &&
+	event->envelope[pos].offset <= global_offset + i)
+      pos++;
+    if (channels == 1) {
+      dest[i] *= (swfdec_audio_event_get_envelop_volume (event, pos,
+	  global_offset + i, 0) * 0.5 +
+	  swfdec_audio_event_get_envelop_volume (event, pos, global_offset + i,
+	    0) * 0.5) / 32768.0;
+    } else {
+      dest[i] *= swfdec_audio_event_get_envelop_volume (event, pos,
+	  global_offset + i, i % 2) / 32768.0;
+    }
   }
 }
 

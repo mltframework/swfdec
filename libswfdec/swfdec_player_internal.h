@@ -212,8 +212,6 @@ SwfdecSpriteMovie *
 						(SwfdecPlayer *		player,
 						 SwfdecResource *	resource,
 						 int			level);
-void		swfdec_player_remove_level	(SwfdecPlayer *		player,
-						 guint			depth);
 gboolean	swfdec_player_fscommand		(SwfdecPlayer *		player,
 						 const char *		command,
 						 const char *		value);

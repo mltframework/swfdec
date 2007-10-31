@@ -1775,30 +1775,6 @@ swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
   return NULL;
 }
 
-void
-swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
-{
-  GList *walk;
-  int real_depth;
-
-  real_depth = (int) depth - 16384;
-
-  for (walk = player->roots; walk; walk = walk->next) {
-    SwfdecMovie *movie = walk->data;
-
-    if (movie->depth < real_depth)
-      continue;
-
-    if (movie->depth == real_depth) {
-      SWFDEC_DEBUG ("remove existing movie _level%u", depth);
-      swfdec_movie_remove (movie);
-      return;
-    }
-    break;
-  }
-  SWFDEC_LOG ("no movie to remove at level %u", depth);
-}
-
 static gboolean
 is_ascii (const char *s)
 {

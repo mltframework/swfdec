@@ -356,7 +356,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
     SWFDEC_LOG ("  n_envelopes = %u", chunk->n_envelopes);
   }
 
-  for (i = 0; i < chunk->n_envelopes; i++) {
+  for (i = 0; i < chunk->n_envelopes && swfdec_bits_left (b); i++) {
     chunk->envelope[i].offset = swfdec_bits_get_u32 (b);
     if (i > 0 && chunk->envelope[i-1].offset > chunk->envelope[i].offset) {
       SWFDEC_ERROR ("unordered sound envelopes");
@@ -375,6 +375,9 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
     SWFDEC_LOG ("    envelope = %u { %u, %u }", chunk->envelope[i].offset,
 	(guint) chunk->envelope[i].volume[0], (guint) chunk->envelope[i].volume[1]);
   }
+
+  if (i < chunk->n_envelopes)
+    SWFDEC_ERROR ("out of bits when reading sound envelopes");
 
   return chunk;
 }

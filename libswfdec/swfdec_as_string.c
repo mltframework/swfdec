@@ -638,12 +638,12 @@ swfdec_as_string_unescape_5 (SwfdecAsContext *cx, const char *msg)
 #define APPEND(chr) G_STMT_START{ \
   g_byte_array_append (array, (guchar *) chr, 1); \
 }G_STMT_END
-  array = g_byte_array_new ();
   in = s = g_convert (msg, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
   if (s == NULL) {
     SWFDEC_FIXME ("%s can not be converted to utf8 - is this Flash 5 or what?", msg);
     return NULL;
   }
+  array = g_byte_array_new ();
   while (*s != 0) {
     if (decoding) {
       decoding++;
@@ -673,8 +673,10 @@ swfdec_as_string_unescape_5 (SwfdecAsContext *cx, const char *msg)
     s++;
   }
   g_free (in);
-  if (array->len == 0)
+  if (array->len == 0) {
+    g_byte_array_free (array, TRUE);
     return NULL;
+  }
   cur = 0;
   g_byte_array_append (array, (guchar *) &cur, 1);
   out = g_convert ((char *) array->data, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);

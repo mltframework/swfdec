@@ -96,6 +96,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_rect.c \
 	swfdec_rectangle.c \
 	swfdec_resource.c \
+	swfdec_resource_request.c \
 	swfdec_ringbuffer.c \
 	swfdec_script.c \
 	swfdec_security.c \
@@ -219,6 +220,7 @@ noinst_HEADERS = \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_resource.h \
+	swfdec_resource_request.h \
 	swfdec_ringbuffer.h \
 	swfdec_script_internal.h \
 	swfdec_security.h \

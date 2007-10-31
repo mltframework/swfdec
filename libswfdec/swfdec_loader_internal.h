@@ -35,7 +35,7 @@ typedef enum {
 } SwfdecLoaderState;
 
 SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
-							 const char *		url,
+							 const SwfdecURL *    	url,
 							 SwfdecLoaderRequest	request,
 							 const char *		data,
 							 gsize			data_len);

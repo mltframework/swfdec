@@ -29,9 +29,9 @@
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
 
-SWFDEC_AS_NATIVE (301, 0, swfdec_load_object_load)
+SWFDEC_AS_NATIVE (301, 0, swfdec_load_object_as_load)
 void
-swfdec_load_object_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
+swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   const char *url;

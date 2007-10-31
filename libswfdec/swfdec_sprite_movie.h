@@ -68,10 +68,6 @@ void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
 							 guint			goto_frame);
 
 void		swfdec_sprite_movie_unload		(SwfdecSpriteMovie *	movie);
-void		swfdec_sprite_movie_load		(SwfdecSpriteMovie *  	movie,
-							 const char *		url,
-					  		 SwfdecLoaderRequest	request,
-							 SwfdecBuffer *		data);
 
 
 G_END_DECLS

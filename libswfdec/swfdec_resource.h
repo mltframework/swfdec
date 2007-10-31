@@ -71,5 +71,10 @@ gpointer	swfdec_resource_get_export		(SwfdecResource *	root,
 const char *	swfdec_resource_get_export_name    	(SwfdecResource *	root,
 							 SwfdecCharacter *	character);
 
+void		swfdec_resource_load			(SwfdecPlayer *		player,
+							 const char *		target,
+							 const char *		url,
+							 SwfdecLoaderRequest	request,
+							 SwfdecBuffer *		buffer);
 G_END_DECLS
 #endif

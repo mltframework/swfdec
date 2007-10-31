@@ -25,7 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "swfdec_resource.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_internal.h"
+#include "swfdec_as_interpret.h"
 #include "swfdec_character.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
@@ -34,6 +36,7 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_resource_request.h"
 #include "swfdec_script.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
@@ -302,3 +305,72 @@ swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character
   g_hash_table_insert (instance->export_names, g_object_ref (character), g_strdup (name));
 }
 
+static void
+swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer targetp)
+{
+  SwfdecSpriteMovie *movie;
+  SwfdecResource *resource;
+  SwfdecMovie *mov;
+  int level = -1;
+  char *target = targetp;
+
+  if (loader == NULL) {
+    /* *** Security Sandbox Violation *** */
+    return;
+  }
+
+  movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (SWFDEC_AS_CONTEXT (player),
+      player->roots->data, target, target + strlen (target));
+  resource = swfdec_resource_new (loader, NULL);
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    level = swfdec_player_get_level (player, target);
+    if (level < 0)
+      goto fail;
+    movie = swfdec_player_get_movie_at_level (player, level);
+  }
+  if (movie == NULL) {
+    movie = swfdec_player_create_movie_at_level (player, resource, level);
+    mov = SWFDEC_MOVIE (movie);
+  } else {
+    mov = SWFDEC_MOVIE (movie);
+    swfdec_sprite_movie_unload (movie);
+    g_object_unref (mov->resource);
+    mov->resource = resource;
+    swfdec_resource_set_movie (mov->resource, movie);
+  }
+  g_object_unref (loader);
+  return;
+
+fail:
+  SWFDEC_WARNING ("%s does not reference a movie, not loading %s", target,
+      swfdec_url_get_url (swfdec_loader_get_url (loader)));
+  swfdec_loader_close (loader);
+  g_object_unref (loader);
+  return;
+}
+
+/* NB: must be called from a script */
+void
+swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url, 
+    SwfdecLoaderRequest request, SwfdecBuffer *buffer)
+{
+  SwfdecSpriteMovie *movie;
+  char *path;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (target != NULL);
+  g_return_if_fail (url != NULL);
+
+  g_assert (SWFDEC_AS_CONTEXT (player)->frame != NULL);
+  movie = (SwfdecSpriteMovie *) swfdec_player_get_movie_from_string (player, target);
+  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    path = swfdec_movie_get_path (SWFDEC_MOVIE (movie), TRUE);
+  } else if (swfdec_player_get_level (player, target) >= 0) {
+    path = g_strdup (target);
+  } else {
+    SWFDEC_WARNING ("%s does not reference a movie, not loading %s", target, url);
+    return;
+  }
+  swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
+      url, request, buffer, swfdec_resource_do_load, path, g_free);
+}

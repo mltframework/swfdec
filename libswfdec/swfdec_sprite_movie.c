@@ -721,7 +721,8 @@ swfdec_sprite_movie_clear (SwfdecAsContext *cx, SwfdecAsObject *object,
  * swfdec_sprite_movie_unload:
  * @movie: a #SwfdecMovie
  *
- * Unloads all contents from the given movie.
+ * Clears all contents from the given movie. This means deleting all
+ * variables and removing all children movie clips.
  **/
 void
 swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
@@ -738,29 +739,5 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
   movie->next_action = 0;
   movie->max_action = 0;
   movie->sprite = NULL;
-}
-
-void
-swfdec_sprite_movie_load (SwfdecSpriteMovie *movie, const char *url, SwfdecLoaderRequest request, 
-    SwfdecBuffer *data)
-{
-  SwfdecResource *resource;
-  SwfdecLoader *loader;
-
-  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
-  g_return_if_fail (url != NULL);
-
-  swfdec_sprite_movie_unload (movie);
-
-  loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
-      url, request, data);
-  if (loader == NULL)
-    return;
-
-  resource = swfdec_resource_new (loader, NULL);
-  g_object_unref (SWFDEC_MOVIE (movie)->resource);
-  SWFDEC_MOVIE (movie)->resource = resource;
-  swfdec_resource_set_movie (resource, movie);
-  g_object_unref (loader);
 }
 

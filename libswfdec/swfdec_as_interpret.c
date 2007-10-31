@@ -1151,16 +1151,8 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     SWFDEC_ERROR ("GetURL without a SwfdecPlayer");
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
-  } else {
-    SwfdecSecurity *sec = cx->frame->security;
-    SwfdecSpriteMovie *movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, 
-	SWFDEC_IS_RESOURCE (sec) ? SWFDEC_RESOURCE (sec) : NULL);
-    if (movie) {
-      swfdec_sprite_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
-    } else {
-      swfdec_player_launch (SWFDEC_PLAYER (cx), SWFDEC_LOADER_REQUEST_DEFAULT, 
-	  url, target, NULL);
-    }
+  } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
   }
   g_free (url);
   g_free (target);
@@ -1195,26 +1187,15 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SWFDEC_ERROR ("GetURL2 action requires a SwfdecPlayer");
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
-  } else if (internal || variables) {
-    SwfdecSecurity *sec = cx->frame->security;
-    SwfdecSpriteMovie *movie;
+  } else if (variables) {
+    SwfdecMovie *movie;
     
-    /* FIXME: This code looks wrong - figure out how levels are handled */
-    movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, 
-	(SWFDEC_IS_RESOURCE (sec) && !variables) ? SWFDEC_RESOURCE (sec) : NULL);
-    if (movie == NULL) {
-      movie = (SwfdecSpriteMovie *) swfdec_player_get_movie_from_string (
-	SWFDEC_PLAYER (cx), target);
-      if (!SWFDEC_IS_SPRITE_MOVIE (movie))
-	movie = NULL;
+    movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
+    if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+      swfdec_movie_load_variables (movie, url, method, NULL);
     }
-    if (movie == NULL) {
-      /* swfdec_player_get_movie_from_value() should have warned already */
-    } else if (variables) {
-      swfdec_movie_load_variables (SWFDEC_MOVIE (movie), url, method, NULL);
-    } else {
-      swfdec_sprite_movie_load (movie, url, method, NULL);
-    }
+  } else if (internal) {
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL);
   } else {
     /* load an external file */
     swfdec_player_launch (SWFDEC_PLAYER (cx), method, url, target, NULL);

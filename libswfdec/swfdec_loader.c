@@ -240,22 +240,19 @@ swfdec_loader_perform_push (gpointer loaderp, gpointer unused)
 }
 
 SwfdecLoader *
-swfdec_loader_load (SwfdecLoader *loader, const char *url_string,
+swfdec_loader_load (SwfdecLoader *loader, const SwfdecURL *url,
     SwfdecLoaderRequest request, const char *data, gsize data_len)
 {
   SwfdecLoader *ret;
   SwfdecLoaderClass *klass;
-  SwfdecURL *url;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
-  g_return_val_if_fail (url_string != NULL, NULL);
+  g_return_val_if_fail (url != NULL, NULL);
   g_return_val_if_fail (data != NULL || data_len == 0, NULL);
 
   klass = SWFDEC_LOADER_GET_CLASS (loader);
   g_return_val_if_fail (klass->load != NULL, NULL);
-  url = swfdec_url_new_relative (loader->url, url_string);
   ret = g_object_new (G_OBJECT_CLASS_TYPE (klass), "url", url, NULL);
-  swfdec_url_free (url);
   klass->load (ret, loader, request, data, data_len);
   return ret;
 }

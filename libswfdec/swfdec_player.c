@@ -43,9 +43,10 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
+#include "swfdec_resource.h"
+#include "swfdec_resource_request.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
-#include "swfdec_resource.h"
 #include "swfdec_utils.h"
 
 /*** gtk-doc ***/
@@ -836,6 +837,7 @@ swfdec_player_dispose (GObject *object)
   guint i;
 
   swfdec_player_stop_all_sounds (player);
+  swfdec_player_resource_request_finish (player);
   g_hash_table_destroy (player->registered_classes);
 
   while (player->roots)
@@ -1611,6 +1613,8 @@ swfdec_player_init (SwfdecPlayer *player)
   player->iterate_timeout.callback = swfdec_player_iterate;
   player->stage_width = -1;
   player->stage_height = -1;
+
+  swfdec_player_resource_request_init (player);
 }
 
 void
@@ -1690,42 +1694,75 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 /**
  * swfdec_player_get_level:
  * @player: a #SwfdecPlayer
- * @name: name of the level to request
- * @create: resource to create the movie with if it doesn't exist
+ * @name: a name that is supposed to refer to a level
  *
- * This function is used to look up root movies in the given @player. The 
- * algorithm used is like this: First, check that @name actually references a
- * root level movie. If it does not, return %NULL. If the movie for the given 
- * level already exists, return it. If it does not, create it when @create was 
- * set to %TRUE and return the newly created movie. Otherwise return %NULL.
+ * Checks if the given @name refers to a level, and if so, returns the level.
+ * An example for such a name is "_level5". These strings are used to refer to
+ * root movies inside the Flash player.
  *
- * Returns: the #SwfdecMovie referenced by the given @name or %NULL if no such
- *          movie exists. Note that if a new movie is created, it will not be
- *          fully initialized (yes, this function sucks).
+ * Returns: the level referred to by @name or -1 if none
  **/
-SwfdecSpriteMovie *
-swfdec_player_get_level (SwfdecPlayer *player, const char *name, SwfdecResource *create)
+int
+swfdec_player_get_level (SwfdecPlayer *player, const char *name)
 {
-  SwfdecSpriteMovie *movie;
-  GList *walk;
-  const char *s;
   char *end;
-  int depth;
   gulong l;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), -1);
+  g_return_val_if_fail (name != NULL, -1);
 
   /* check name starts with "_level" */
   if (swfdec_strncmp (SWFDEC_AS_CONTEXT (player)->version, name, "_level", 6) != 0)
-    return NULL;
+    return -1;
   name += 6;
   /* extract depth from rest string (or fail if it's not a depth) */
   errno = 0;
   l = strtoul (name, &end, 10);
   if (errno != 0 || *end != 0 || l > G_MAXINT)
+    return -1;
+  return l;
+}
+
+SwfdecSpriteMovie *
+swfdec_player_create_movie_at_level (SwfdecPlayer *player, SwfdecResource *resource,
+    int level)
+{
+  SwfdecMovie *movie;
+  const char *s;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (level >= 0, NULL);
+  g_return_val_if_fail (swfdec_player_get_movie_at_level (player, level) == NULL, NULL);
+
+  /* create new root movie */
+  s = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%d", level));
+  movie = swfdec_movie_new (player, level - 16384, NULL, resource, NULL, s);
+  if (movie == NULL)
     return NULL;
-  depth = l - 16384;
+  movie->name = SWFDEC_AS_STR_EMPTY;
+  return SWFDEC_SPRITE_MOVIE (movie);
+}
+
+/**
+ * swfdec_player_get_movie_at_level:
+ * @player: a #SwfdecPlayer
+ * @level: number of the level
+ *
+ * This function is used to look up root movies in the given @player. 
+ *
+ * Returns: the #SwfdecMovie located at the given level or %NULL if there is no
+ *          movie at that level.
+ **/
+SwfdecSpriteMovie *
+swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
+{
+  GList *walk;
+  int depth;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (level >= 0, NULL);
+
+  depth = level - 16384;
   /* find movie */
   for (walk = player->roots; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
@@ -1735,14 +1772,7 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name, SwfdecResource 
       return SWFDEC_SPRITE_MOVIE (cur);
     break;
   }
-  /* bail if create isn't set*/
-  if (create == NULL)
-    return NULL;
-  /* create new root movie */
-  s = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%lu", l));
-  movie = SWFDEC_SPRITE_MOVIE (swfdec_movie_new (player, depth, NULL, create, NULL, s));
-  SWFDEC_MOVIE (movie)->name = SWFDEC_AS_STR_EMPTY;
-  return movie;
+  return NULL;
 }
 
 void
@@ -1767,41 +1797,6 @@ swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
     break;
   }
   SWFDEC_LOG ("no movie to remove at level %u", depth);
-}
-
-SwfdecLoader *
-swfdec_player_load (SwfdecPlayer *player, const char *url, 
-    SwfdecLoaderRequest request, SwfdecBuffer *buffer)
-{
-  SwfdecAsContext *cx;
-  SwfdecSecurity *sec;
-  SwfdecURL *full;
-
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
-
-  g_assert (player->resource);
-  /* create absolute url first */
-  full = swfdec_url_new_relative (swfdec_loader_get_url (player->resource->loader), url);
-  /* figure out the right security object (FIXME: let the person loading it provide it?) */
-  cx = SWFDEC_AS_CONTEXT (player);
-  if (cx->frame) {
-    sec = cx->frame->security;
-  } else {
-    g_warning ("swfdec_player_load() should only be called from scripts");
-    sec = SWFDEC_SECURITY (player->resource);
-  }
-  if (!swfdec_security_allow_url (sec, full)) {
-    SWFDEC_ERROR ("not allowing access to %s", url);
-    return NULL;
-  }
-
-  if (buffer) {
-    return swfdec_loader_load (player->resource->loader, url, request, 
-	(const char *) buffer->data, buffer->length);
-  } else {
-    return swfdec_loader_load (player->resource->loader, url, request, NULL, 0);
-  }
 }
 
 static gboolean

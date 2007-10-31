@@ -3,10 +3,14 @@ SUBDIRS = image sound trace various
 
 if WITH_GTK
 noinst_LTLIBRARIES = libswfedit.la
-noinst_PROGRAMS = swfdec-extract dump swfedit swfscript
+noinst_PROGRAMS = swfdec-extract dump swfedit swfscript crashfinder
 else
-noinst_PROGRAMS = swfdec-extract dump
+noinst_PROGRAMS = swfdec-extract dump crashfinder
 endif
+
+crashfinder_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
+crashfinder_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
+crashfinder_SOURCES = crashfinder.c
 
 dump_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) $(PANGO_CFLAGS)
 dump_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS)

@@ -36,7 +36,7 @@ swfdec_load_object_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
 {
   const char *url;
 
-  if (argc < 1) {
+  if (argc < 1 || obj == NULL) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
     return;
   }

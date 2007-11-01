@@ -24,8 +24,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
-#include <time.h>
 #include <math.h>
 
 #include "swfdec_as_date.h"
@@ -1049,11 +1047,11 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc == 0) // current time, local
   {
-    struct timeval tp;
+    GTimeVal tv;
 
-    gettimeofday (&tp, NULL);
+    swfdec_as_context_get_time (cx, &tv);
     swfdec_as_date_set_milliseconds_local (date,
-	tp.tv_sec * 1000 + tp.tv_usec / 1000);
+	tv.tv_sec * 1000 + tv.tv_usec / 1000);
   }
   else if (argc == 1) // milliseconds from epoch, local
   {

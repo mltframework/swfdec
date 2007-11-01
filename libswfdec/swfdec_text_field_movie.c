@@ -591,19 +591,23 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   cairo_clip (cr);
 
   if (text->background) {
-    cairo_rectangle (cr, limit.x0, limit.y0, limit.x1, limit.y1);
+    cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0, limit.y1 - limit.y0);
     color = swfdec_color_apply_transform (text_movie->background_color, trans);
     swfdec_color_set_source (cr, color);
     cairo_fill (cr);
   }
 
   if (text->border) {
-    cairo_rectangle (cr, movie->original_extents.x0,
-	movie->original_extents.y0, movie->original_extents.x1,
-	movie->original_extents.y1);
+    cairo_rectangle (cr, movie->original_extents.x0 + SWFDEC_DOUBLE_TO_TWIPS (1),
+	movie->original_extents.y0, movie->original_extents.x1 -
+	movie->original_extents.x0 - SWFDEC_DOUBLE_TO_TWIPS (1),
+	movie->original_extents.y1 - movie->original_extents.y0 -
+	SWFDEC_DOUBLE_TO_TWIPS (1));
     color = swfdec_color_apply_transform (text_movie->border_color, trans);
     swfdec_color_set_source (cr, color);
     cairo_set_line_width (cr, SWFDEC_DOUBLE_TO_TWIPS (1));
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
     cairo_stroke (cr);
   }
 

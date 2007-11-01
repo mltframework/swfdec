@@ -2321,7 +2321,7 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   super = SWFDEC_AS_VALUE_GET_OBJECT (superclass);
   prototype = swfdec_as_object_new_empty (cx);
   if (prototype == NULL)
-    return;
+    goto fail;
   swfdec_as_object_get_variable (super, SWFDEC_AS_STR_prototype, &proto);
   swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___proto__, &proto);
   if (cx->version > 5) {

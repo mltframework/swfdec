@@ -1887,7 +1887,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
   player->initialized = TRUE;
   if (rate) {
-    player->iterate_timeout.timestamp = player->time;//+ SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
+    player->iterate_timeout.timestamp = player->time;
     swfdec_player_add_timeout (player, &player->iterate_timeout);
     SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
 	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);

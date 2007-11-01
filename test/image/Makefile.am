@@ -120,6 +120,13 @@ EXTRA_DIST = \
 	text-field-autosize-7.swf.png \
 	text-field-autosize-8.swf \
 	text-field-autosize-8.swf.png
+	text-field-color-transform.as \
+	text-field-color-transform-6.swf \
+	text-field-color-transform-6.swf.png \
+	text-field-color-transform-7.swf \
+	text-field-color-transform-7.swf.png \
+	text-field-color-transform-8.swf \
+	text-field-color-transform-8.swf.png
 	text-field-empty.as \
 	text-field-empty-6.swf \
 	text-field-empty-6.swf.png \

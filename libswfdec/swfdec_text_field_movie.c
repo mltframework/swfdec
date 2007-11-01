@@ -1063,6 +1063,10 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
       findex_new = g_new (SwfdecFormatIndex, 1);
       findex_new->index_ = end_index;
       findex_new->format = swfdec_text_format_copy (findex->format);
+      if (findex_new->format == NULL) {
+	g_free (findex_new);
+	break;
+      }
 
       iter = g_slist_insert (iter, findex_new, 1);
     }
@@ -1071,6 +1075,10 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
       findex_new = g_new (SwfdecFormatIndex, 1);
       findex_new->index_ = start_index;
       findex_new->format = swfdec_text_format_copy (findex->format);
+      if (findex_new->format == NULL) {
+	g_free (findex_new);
+	break;
+      }
       swfdec_text_format_add (findex_new->format, format);
 
       iter = g_slist_insert (iter, findex_new, 1);
@@ -1352,6 +1360,11 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
 
+  if (text->format_new == NULL) {
+    text->input = g_string_truncate (text->input, 0);
+    return;
+  }
+
   // remove old formatting info
   iter = text->formats;
   while (iter) {
@@ -1368,6 +1381,11 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   block->index_ = 0;
   g_assert (SWFDEC_IS_TEXT_FORMAT (text->format_new));
   block->format = swfdec_text_format_copy (text->format_new);
+  if (block->format == NULL) {
+    g_free (block);
+    text->input = g_string_truncate (text->input, 0);
+    return;
+  }
   text->formats = g_slist_prepend (text->formats, block);
 
   text->input_html = html;

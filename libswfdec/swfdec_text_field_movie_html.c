@@ -352,19 +352,23 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
     data->tags_open = g_slist_prepend (data->tags_open, tag);
 
     // set format based on tag
-    object = SWFDEC_AS_OBJECT (tag->format);
-    SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
+    if (tag->format != NULL) {
+      object = SWFDEC_AS_OBJECT (tag->format);
+      SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
 
-    if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {
-      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bullet, &val);
-    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "b", 1)) {
-      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &val);
-    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "i", 1)) {
-      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
-    } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
-      swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
-    } else if (tag->name_length == 3 && !g_strncasecmp (tag->name, "img", 3)) {
-      SWFDEC_FIXME ("IMG tag support for TextField's HTML input missing");
+      if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bullet, &val);
+      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "b", 1)) {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &val);
+      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "i", 1)) {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
+      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
+	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
+      }
+      else if (tag->name_length == 3 && !g_strncasecmp (tag->name, "img", 3))
+      {
+	SWFDEC_FIXME ("IMG tag support for TextField's HTML input missing");
+      }
     }
 
     if (data->style_sheet &&
@@ -478,7 +482,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
   while (data.tags_closed != NULL) {
     ParserTag *tag = (ParserTag *)data.tags_closed->data;
 
-    if (tag->index != tag->end_index) {
+    if (tag->index != tag->end_index && tag->format != NULL) {
       swfdec_text_field_movie_set_text_format (text, tag->format, tag->index,
 	  tag->end_index);
     }

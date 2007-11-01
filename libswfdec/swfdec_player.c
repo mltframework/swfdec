@@ -1342,6 +1342,7 @@ swfdec_player_unlock (SwfdecPlayer *player)
   context = SWFDEC_AS_CONTEXT (player);
   g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_INTERRUPTED);
 
+  swfdec_player_resource_request_perform (player);
   if (context->state == SWFDEC_AS_CONTEXT_RUNNING)
     swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
   swfdec_player_unlock_soft (player);
@@ -1886,7 +1887,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
   player->initialized = TRUE;
   if (rate) {
-    player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
+    player->iterate_timeout.timestamp = player->time;//+ SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
     swfdec_player_add_timeout (player, &player->iterate_timeout);
     SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
 	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);

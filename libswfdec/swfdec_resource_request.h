@@ -54,6 +54,7 @@ void		swfdec_player_request_resource		(SwfdecPlayer *		player,
 
 /* private api for swfdec_player.c */
 void		swfdec_player_resource_request_init	(SwfdecPlayer *		player);
+void		swfdec_player_resource_request_perform	(SwfdecPlayer *		player);
 void		swfdec_player_resource_request_finish	(SwfdecPlayer *		player);
 
 G_END_DECLS

@@ -45,7 +45,7 @@ struct _SwfdecSpriteMovie
   /* frame information */
   guint			next_action;	/* next action in sprite to perform */
   guint			max_action;	/* next action in sprite tthat has never ben executed (used to detect first-time execution) */
-  guint			frame;		/* current frame */
+  guint			frame;		/* current frame or -1 if none */
   guint			n_frames;	/* amount of frames */
   gboolean		playing;	/* TRUE if the movie automatically advances */
 

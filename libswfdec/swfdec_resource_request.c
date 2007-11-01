@@ -69,10 +69,10 @@ swfdec_request_resource_perform_one (gpointer requestp, gpointer playerp)
   swfdec_resource_request_free (request);
 }
 
-static void
-swfdec_request_resource_perform (gpointer playerp, gpointer unused)
+void
+swfdec_player_resource_request_perform (SwfdecPlayer *player)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (playerp);
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   g_slist_foreach (player->resource_requests, swfdec_request_resource_perform_one, player);
   g_slist_free (player->resource_requests);
@@ -101,9 +101,6 @@ swfdec_player_request_resource (SwfdecPlayer *player, SwfdecSecurity *security,
   request->destroy = destroy;
   request->data = data;
 
-  if (player->resource_requests == NULL) {
-    swfdec_player_add_external_action (player, player, swfdec_request_resource_perform, NULL);
-  }
   player->resource_requests = g_slist_append (player->resource_requests, request);
 }
 

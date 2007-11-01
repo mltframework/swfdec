@@ -90,7 +90,6 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
   } else {
     g_assert_not_reached ();
   }
-  swfdec_movie_initialize (SWFDEC_MOVIE (movie));
 }
 
 static void

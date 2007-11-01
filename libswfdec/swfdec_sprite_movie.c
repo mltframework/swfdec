@@ -559,9 +559,13 @@ swfdec_sprite_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_sprite_movie_init_movie (SwfdecMovie *movie)
+swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
 {
-  swfdec_sprite_movie_goto (SWFDEC_SPRITE_MOVIE (movie), 1);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+
+  g_assert (movie->frame == (guint) -1);
+  movie->frame = 0;
+  swfdec_sprite_movie_goto (movie, 1);
 }
 
 static void
@@ -584,6 +588,9 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 
   if (mov->will_be_removed)
     return;
+
+  if (movie->sprite && movie->frame == (guint) -1)
+    movie->frame = 0;
 
   swfdec_player_add_action (player, mov, SWFDEC_EVENT_ENTER, 2);
   if (movie->playing && movie->sprite != NULL) {
@@ -711,6 +718,7 @@ static void
 swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
 {
   movie->playing = TRUE;
+  movie->frame = (guint) -1;
 }
 
 /* cute little hack */

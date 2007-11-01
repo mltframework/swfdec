@@ -330,6 +330,7 @@ swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer ta
   if (movie == NULL) {
     movie = swfdec_player_create_movie_at_level (player, resource, level);
     mov = SWFDEC_MOVIE (movie);
+    g_object_unref (resource);
   } else {
     mov = SWFDEC_MOVIE (movie);
     swfdec_sprite_movie_unload (movie);

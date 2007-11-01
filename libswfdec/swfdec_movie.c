@@ -1398,7 +1398,7 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
     swfdec_movie_queue_script (copy, SWFDEC_EVENT_LOAD);
     swfdec_movie_execute (copy, SWFDEC_EVENT_CONSTRUCT);
   }
-  swfdec_movie_initialize (movie);
+  swfdec_movie_initialize (copy);
   return copy;
 }
 

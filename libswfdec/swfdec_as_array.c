@@ -761,6 +761,8 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   const char *var;
 
   object_new = swfdec_as_array_new (cx);
+  if (object_new == NULL)
+    return;
   array_new = SWFDEC_AS_ARRAY (object_new);
 
   swfdec_as_array_append_array (array_new, object);
@@ -814,6 +816,8 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   }
 
   object_new = swfdec_as_array_new (cx);
+  if (object_new == NULL)
+    return;
   array_new = SWFDEC_AS_ARRAY (object_new);
 
   swfdec_as_array_append_array_range (array_new, object, start_index, num);
@@ -851,6 +855,8 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   num_add = (argc > 2 ? argc - 2 : 0);
 
   object_new = swfdec_as_array_new (cx);
+  if (object_new == NULL)
+    return;
   array_new = SWFDEC_AS_ARRAY (object_new);
 
   swfdec_as_array_append_array_range (array_new, object, start_index,
@@ -1228,11 +1234,13 @@ swfdec_as_array_do_sort (SwfdecAsObject *object, gint32 options,
   if (fdata.options & ARRAY_SORT_OPTION_RETURNINDEXEDARRAY) {
     // make a new array and fill it with numbers based on the order
     fdata.object_new = swfdec_as_array_new (object->context);
-    swfdec_as_object_foreach (object, swfdec_as_array_foreach_sort_indexedarray,
-       &fdata);
-    // we only have the elements that have been set so far, fill in the blanks
-    swfdec_as_array_sort_set_undefined_indexedarray (object, &fdata);
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, fdata.object_new);
+    if (fdata.object_new != NULL) {
+      swfdec_as_object_foreach (object, swfdec_as_array_foreach_sort_indexedarray,
+	 &fdata);
+      // we only have the elements that have been set so far, fill in the blanks
+      swfdec_as_array_sort_set_undefined_indexedarray (object, &fdata);
+      SWFDEC_AS_VALUE_SET_OBJECT (ret, fdata.object_new);
+    }
   } else {
     // rename properties based on the new order
     swfdec_as_object_foreach_rename (object,

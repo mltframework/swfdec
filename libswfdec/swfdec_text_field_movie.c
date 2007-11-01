@@ -51,8 +51,7 @@ static void
 swfdec_text_paragraph_add_attribute (SwfdecParagraph *paragraph,
     PangoAttribute *attr)
 {
-  paragraph->attrs =
-    g_slist_prepend (paragraph->attrs, pango_attribute_copy (attr));
+  paragraph->attrs = g_slist_prepend (paragraph->attrs, attr);
 }
 
 static void

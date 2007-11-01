@@ -169,8 +169,10 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
   g_return_if_fail (context);
 
   SWFDEC_ERROR ("%s", reason);
-  context->state = SWFDEC_AS_CONTEXT_ABORTED;
-  g_object_notify (G_OBJECT (context), "aborted");
+  if (context->state != SWFDEC_AS_CONTEXT_ABORTED) {
+    context->state = SWFDEC_AS_CONTEXT_ABORTED;
+    g_object_notify (G_OBJECT (context), "aborted");
+  }
 }
 
 /*** MEMORY MANAGEMENT ***/

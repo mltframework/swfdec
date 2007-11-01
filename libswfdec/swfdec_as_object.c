@@ -1178,15 +1178,16 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  * @fun: constructor
  * @n_args: number of arguments
  * @args: arguments to pass to constructor
+ * @return_value: pointer for return value or %NULL to push the return value to 
+ *                the stack
  *
  * Creates a new object for the given constructor and pushes the constructor on
  * top of the stack. To actually run the constructor, you need to call 
- * swfdec_as_context_run(). After the constructor has been run, the new object 
- * will be pushed to the top of the stack.
+ * swfdec_as_context_run().
  **/
 void
 swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
-    const SwfdecAsValue *args)
+    const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
   SwfdecAsValue val;
   SwfdecAsObject *new;
@@ -1225,26 +1226,25 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);
   }
-  if (swfdec_as_context_use_mem (context, size)) {
-    new = g_object_new (type, NULL);
-    swfdec_as_object_add (new, context, size);
-    /* set initial variables */
-    if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val)) {
-	swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___proto__,
-	    &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-    }
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
-    if (context->version < 7) {
-      swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
-	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
-    }
-    swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
-	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
-  } else {
-    /* need to do this, since we must push something to the frame stack */
-    new = NULL;
+  if (!swfdec_as_context_use_mem (context, size))
+    return;
+
+  new = g_object_new (type, NULL);
+  swfdec_as_object_add (new, context, size);
+  /* set initial variables */
+  if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val)) {
+      swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___proto__,
+	  &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
-  swfdec_as_function_call (fun, new, n_args, args, NULL);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
+  if (context->version < 7) {
+    swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
+	&val, SWFDEC_AS_VARIABLE_HIDDEN);
+  }
+  swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
+
+  swfdec_as_function_call (fun, new, n_args, args, return_value);
   context->frame->construct = TRUE;
 }
 

@@ -73,7 +73,11 @@ swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag)
 	n->name_length = f->name_length;
 	n->index = data->text->len;
 	n->end_index = n->index + 1;
-	n->format = swfdec_text_format_copy (f->format);
+	if (f->format != NULL) {
+	  n->format = swfdec_text_format_copy (f->format);
+	} else {
+	  n->format = NULL;
+	}
 	data->tags_closed = g_slist_prepend (data->tags_closed, n);
 	break;
       }
@@ -118,6 +122,9 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
   g_return_if_fail (name_length >= 0);
   g_return_if_fail (value != NULL);
   g_return_if_fail (value_length >= 0);
+
+  if (!tag->format)
+    return;
 
   object = SWFDEC_AS_OBJECT (tag->format);
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (

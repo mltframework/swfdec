@@ -1,4 +1,5 @@
-/* Copyright (C) 2007 Pekka Lampila <pekka.lampila@iki.fi>
+/* Swfdec
+ * Copyright (C) 2007 Pekka Lampila <pekka.lampila@iki.fi>
  *               2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or

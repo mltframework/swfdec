@@ -976,8 +976,10 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
 
   node->childNodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
 
-  if (node->children == NULL || node->attributes == NULL || node->childNodes)
+  if (node->children == NULL || node->attributes == NULL ||
+      node->childNodes == NULL) {
     node->valid = FALSE;
+  }
 }
 
 static void

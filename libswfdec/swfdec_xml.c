@@ -561,8 +561,9 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   // create the new element
   if (!close) {
     child = swfdec_xml_node_new_no_properties (
-	SWFDEC_AS_OBJECT (*node)->context, SWFDEC_XML_NODE_ELEMENT, name);
-    g_free (name);
+	SWFDEC_AS_OBJECT (*node)->context, SWFDEC_XML_NODE_ELEMENT,
+	swfdec_as_context_give_string (SWFDEC_AS_OBJECT (*node)->context,
+	  name));
     if (child == NULL)
       return strchr (p, '\0');
   }

@@ -804,6 +804,11 @@ swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
 
   if (text->text->password != value) {
     text->text->password = value;
+    if (!value && text->asterisks != NULL) {
+      g_free (text->asterisks);
+      text->asterisks = NULL;
+      text->asterisks_length = 0;
+    }
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }

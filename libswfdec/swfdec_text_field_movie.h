@@ -79,6 +79,8 @@ struct _SwfdecTextFieldMovie {
   SwfdecTextField *	text;		/* the text_field object we render */
 
   GString *		input;
+  char *		asterisks; /* bunch of asterisks that we display when password mode is enabled */
+  guint			asterisks_length;
   gboolean		input_html;	/* whether orginal input was given as HTML */
 
   const char *		variable;

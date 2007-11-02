@@ -48,6 +48,24 @@ swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
 }
 
 static void
+swfdec_text_field_movie_ensure_asterisks (SwfdecTextFieldMovie *text,
+    guint length)
+{
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  if (text->asterisks_length >= length)
+    return;
+
+  if (text->asterisks != NULL)
+    g_free (text->asterisks);
+
+  text->asterisks = g_malloc (length + 1);
+  memset (text->asterisks, '*', length);
+  text->asterisks[length] = 0;
+  text->asterisks_length = length;
+}
+
+static void
 swfdec_text_paragraph_add_attribute (SwfdecParagraph *paragraph,
     PangoAttribute *attr)
 {
@@ -294,17 +312,22 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
   GArray *paragraphs;
   SwfdecParagraph paragraph;
   const char *p, *end;
+  guint max_length;
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
   paragraphs = g_array_new (TRUE, TRUE, sizeof (SwfdecParagraph));
 
+  max_length = 0;
   p = text->input->str;
   while (*p != '\0')
   {
     end = strpbrk (p, "\r\n");
     if (end == NULL)
       end = strchr (p, '\0');
+
+    if (end - p > max_length)
+      max_length = end - p;
 
     swfdec_text_field_movie_generate_paragraph (text, &paragraph,
 	p - text->input->str, end - p);
@@ -316,6 +339,9 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
 
   if (num != NULL)
     *num = paragraphs->len;
+
+  if (text->text->password)
+    swfdec_text_field_movie_ensure_asterisks (text, max_length);
 
   return (SwfdecParagraph *)g_array_free (paragraphs, FALSE);
 }
@@ -487,9 +513,14 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       pango_layout_set_attributes (playout, attr_list);
       pango_attr_list_unref (attr_list);
 
-      pango_layout_set_text (playout,
-	  text->input->str + paragraphs[i].index_ + block->index_ + skip,
-	  paragraphs[i].length - block->index_ - skip);
+      if (text->text->password) {
+	pango_layout_set_text (playout, text->asterisks,
+	    paragraphs[i].length - block->index_ - skip);
+      } else {
+	pango_layout_set_text (playout,
+	    text->input->str + paragraphs[i].index_ + block->index_ + skip,
+	    paragraphs[i].length - block->index_ - skip);
+      }
 
       if (iter->next != NULL && text->text->word_wrap)
       {

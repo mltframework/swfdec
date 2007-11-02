@@ -735,14 +735,20 @@ swfdec_sprite_movie_clear (SwfdecAsContext *cx, SwfdecAsObject *object,
 void
 swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
 {
+  SwfdecMovie *mov;
   SwfdecAsValue hack;
 
   g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
 
+  mov = SWFDEC_MOVIE (movie);
   /* This function does enough invalidating */
   swfdec_sprite_movie_clear (SWFDEC_AS_OBJECT (movie)->context, 
       SWFDEC_AS_OBJECT (movie), 0, NULL, &hack);
-  movie->frame = 0;
+  /* FIXME: destroy or unload? */
+  while (mov->list)
+    swfdec_movie_destroy (mov->list->data);
+  swfdec_as_object_clear_variables (SWFDEC_AS_OBJECT (movie));
+  movie->frame = (guint) -1;
   movie->n_frames = 0;
   movie->next_action = 0;
   movie->max_action = 0;

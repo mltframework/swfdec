@@ -1052,8 +1052,7 @@ swfdec_xml_node_new_no_properties (SwfdecAsContext *context,
 	SWFDEC_AS_VALUE_GET_OBJECT (&val));
   }
 
-  swfdec_xml_node_init_values (node, type,
-      swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context, value));
+  swfdec_xml_node_init_values (node, type, value);
 
   return node;
 }

@@ -643,8 +643,9 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
     unescaped = swfdec_xml_unescape (SWFDEC_AS_OBJECT (xml)->context, text);
     g_free (text);
     child = swfdec_xml_node_new_no_properties (
-	SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT, unescaped);
-    g_free (unescaped);
+	SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT,
+	swfdec_as_context_give_string (SWFDEC_AS_OBJECT (xml)->context,
+	  unescaped));
     if (child == NULL)
       return strchr (p, '\0');
     swfdec_xml_node_appendChild (node, child);

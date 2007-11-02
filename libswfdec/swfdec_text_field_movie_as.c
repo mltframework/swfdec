@@ -486,7 +486,10 @@ swfdec_text_field_movie_get_backgroundColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->background_color);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+      SWFDEC_COLOR_R (text->background_color) << 16 |
+      SWFDEC_COLOR_G (text->background_color) << 8 |
+      SWFDEC_COLOR_B (text->background_color));
 }
 
 static void
@@ -546,7 +549,11 @@ swfdec_text_field_movie_get_borderColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->border_color & 0xffffff);
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+      SWFDEC_COLOR_R (text->border_color) << 16 |
+      SWFDEC_COLOR_G (text->border_color) << 8 |
+      SWFDEC_COLOR_B (text->border_color));
 }
 
 static void

@@ -755,3 +755,30 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
   movie->sprite = NULL;
 }
 
+/**
+ * swfdec_sprite_movie_get_frames_loaded:
+ * @movie: a #SwfdecSpriteMovie
+ *
+ * Computes the number of loaded frames as used by the _framesloaded property
+ * or the WaitForFrame actions. If the @movie is fully loaded, this is the 
+ * amount of total frames of the sprite it displays, or 0 if it has no sprite.
+ * If the movie is not fully loaded, it is the amount of frames that are 
+ * completely loaded minus one. Welcome to the world of Flash.
+ *
+ * Returns: The number of loaded frames as reported by ActionScript.
+ **/
+int
+swfdec_sprite_movie_get_frames_loaded (SwfdecSpriteMovie *movie)
+{
+  SwfdecSprite *sprite;
+
+  g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), 0);
+
+  sprite = movie->sprite;
+  if (sprite == 0)
+    return 0;
+  if (sprite->parse_frame == sprite->n_frames)
+    return sprite->n_frames;
+
+  return sprite->parse_frame - 1;
+}

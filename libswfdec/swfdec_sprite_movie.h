@@ -64,9 +64,10 @@ struct _SwfdecSpriteMovieClass
 
 GType		swfdec_sprite_movie_get_type		(void);
 
+int		swfdec_sprite_movie_get_frames_loaded	(SwfdecSpriteMovie *	movie);
+
 void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
 							 guint			goto_frame);
-
 void		swfdec_sprite_movie_unload		(SwfdecSpriteMovie *	movie);
 
 

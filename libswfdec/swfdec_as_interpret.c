@@ -269,32 +269,25 @@ swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *
 static void
 swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecMovie *movie;
-  SwfdecResource *resource;
-  guint frame, jump, loaded;
+  SwfdecSpriteMovie *movie;
+  guint jump;
+  int frame, loaded;
 
   if (len != 3) {
     SWFDEC_ERROR ("WaitForFrame action length invalid (is %u, should be 3", len);
     return;
   }
-  if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
+  if (!SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
     SWFDEC_ERROR ("no movie for WaitForFrame");
     return;
   }
 
-  movie = SWFDEC_MOVIE (cx->frame->target);
+  movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
   frame = data[0] || (data[1] << 8);
   jump = data[2];
-  resource = swfdec_movie_get_own_resource (movie);
-  if (resource && resource->decoder) {
-    SwfdecDecoder *dec = resource->decoder;
-    loaded = dec->frames_loaded;
-    if (loaded == dec->frames_total)
-      loaded = G_MAXUINT;
-  } else {
-    loaded = G_MAXUINT;
-  }
-  if (loaded <= frame)
+  loaded = swfdec_sprite_movie_get_frames_loaded (movie);
+  if (loaded < (int) movie->n_frames &&
+      loaded <= frame)
     swfdec_script_skip_actions (cx, jump);
 }
 

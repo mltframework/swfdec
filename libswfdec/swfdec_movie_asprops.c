@@ -147,11 +147,9 @@ static void
 mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  if (movie->sprite) {
-    SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->sprite->parse_frame);
-    return;
-  }
-  SWFDEC_AS_VALUE_SET_INT (rval, movie->n_frames);
+
+  SWFDEC_AS_VALUE_SET_INT (rval, 
+      swfdec_sprite_movie_get_frames_loaded (movie));
 }
 
 static void

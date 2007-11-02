@@ -354,15 +354,13 @@ swfdec_as_object_get_prototype (SwfdecAsObject *object)
   return object->prototype;
 }
 
-static void
-swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
-    const SwfdecAsValue *val, guint flags)
+static SwfdecAsVariable *
+swfdec_as_object_hash_lookup_with_prototype (SwfdecAsObject *object,
+    const char *variable)
 {
   SwfdecAsVariable *var;
-  SwfdecAsWatch *watch;
 
-  if (!swfdec_as_variable_name_is_valid (variable))
-    return;
+  g_return_val_if_fail (swfdec_as_variable_name_is_valid (variable), NULL);
 
   var = swfdec_as_object_hash_lookup (object, variable);
   if (var == NULL && variable != SWFDEC_AS_STR___proto__) {
@@ -380,9 +378,27 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     }
     if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
       swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
-      return;
+      return NULL;
     }
   }
+
+  return var;
+}
+
+static void
+swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
+    const SwfdecAsValue *val, guint flags)
+{
+  SwfdecAsVariable *var;
+  SwfdecAsWatch *watch;
+
+  if (!swfdec_as_variable_name_is_valid (variable))
+    return;
+
+  var = swfdec_as_object_hash_lookup_with_prototype (object, variable);
+  if (swfdec_as_context_is_aborted (object->context))
+    return;
+
   if (var == NULL) {
     var = swfdec_as_object_hash_create (object, variable, flags);
     if (var == NULL)
@@ -417,9 +433,13 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
       swfdec_as_function_call (watch->watch, object, 4, args, &ret);
       swfdec_as_context_run (object->context);
       swfdec_as_watch_unref (watch);
-      var = swfdec_as_object_hash_lookup (object, variable);
-      if (var == NULL)
+      var = swfdec_as_object_hash_lookup_with_prototype (object, variable);
+      if (swfdec_as_context_is_aborted (object->context))
 	return;
+      if (var == NULL) {
+	SWFDEC_INFO ("watch removed variable %s", variable);
+	return;
+      }
     }
 
     var->value = ret;

@@ -1110,11 +1110,6 @@ swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
       findex = findex_prev;
     }
   }
-
-  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
-  swfdec_text_field_movie_auto_size (text);
-  // special case: update the max values, not the current values
-  swfdec_text_field_movie_update_scroll (text, FALSE);
 }
 
 SwfdecTextFormat *

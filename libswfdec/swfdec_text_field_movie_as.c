@@ -1036,6 +1036,11 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
       text->input->str,
       g_utf8_offset_to_pointer (text->input->str, end_index) -
       text->input->str);
+
+  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_text_field_movie_auto_size (text);
+  // special case: update the max values, not the current values
+  swfdec_text_field_movie_update_scroll (text, FALSE);
 }
 
 SWFDEC_AS_NATIVE (104, 101, swfdec_text_field_movie_getTextFormat)

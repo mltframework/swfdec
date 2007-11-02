@@ -563,6 +563,8 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
     child = swfdec_xml_node_new_no_properties (
 	SWFDEC_AS_OBJECT (*node)->context, SWFDEC_XML_NODE_ELEMENT, name);
     g_free (name);
+    if (child == NULL)
+      return strchr (p, '\0');
   }
 
   if (close) {
@@ -643,6 +645,8 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
     child = swfdec_xml_node_new_no_properties (
 	SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT, unescaped);
     g_free (unescaped);
+    if (child == NULL)
+      return strchr (p, '\0');
     swfdec_xml_node_appendChild (node, child);
   }
 
@@ -700,6 +704,9 @@ swfdec_xml_do_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   if (!SWFDEC_IS_XML (object))
     return;
 
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
+    return;
+
   if (argc < 1)
     return;
 
@@ -729,6 +736,9 @@ swfdec_xml_createElement (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT,
       swfdec_as_value_to_string (cx, &argv[0]));
+  if (node == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
 }
 
@@ -751,6 +761,9 @@ swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_TEXT,
       swfdec_as_value_to_string (cx, &argv[0]));
+  if (node == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
 }
 
@@ -812,6 +825,9 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       SWFDEC_AS_STR_application_x_www_form_urlencoded);
 
   SWFDEC_XML_NODE (object)->name = NULL;
+
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
+    return;
 
   if (argc >= 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     swfdec_xml_parseXML (SWFDEC_XML (object),

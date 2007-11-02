@@ -617,6 +617,8 @@ swfdec_xml_node_clone (SwfdecAsContext *cx, SwfdecXmlNode *node, gboolean deep)
   g_assert (SWFDEC_IS_VALID_XML_NODE (node));
 
   new = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
+  if (new == NULL)
+    return NULL;
 
   new->valid = TRUE;
   new->type = node->type;
@@ -635,6 +637,8 @@ swfdec_xml_node_clone (SwfdecAsContext *cx, SwfdecXmlNode *node, gboolean deep)
     for (i = 0; i < num; i++) {
       child = swfdec_xml_node_get_child (node, i);
       child_new = swfdec_xml_node_clone (cx, child, TRUE);
+      if (child_new == NULL)
+	return NULL;
       child_new->parent = new;
       SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (child_new));
       swfdec_as_array_push (new->children, &val);
@@ -664,6 +668,9 @@ swfdec_xml_node_cloneNode (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   new = swfdec_xml_node_clone (cx, SWFDEC_XML_NODE (object), deep);
+  if (new == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (new));
 }
 
@@ -968,6 +975,9 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
   }
 
   node->childNodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
+
+  if (node->children == NULL || node->attributes == NULL || node->childNodes)
+    node->valid = FALSE;
 }
 
 static void

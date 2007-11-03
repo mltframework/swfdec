@@ -32,6 +32,7 @@ swfdec_cached_dispose (GObject *object)
 {
   SwfdecCached * cached = SWFDEC_CACHED (object);
 
+  swfdec_cached_unload (cached);
   swfdec_cached_set_cache (cached, NULL);
 
   G_OBJECT_CLASS (swfdec_cached_parent_class)->dispose (object);

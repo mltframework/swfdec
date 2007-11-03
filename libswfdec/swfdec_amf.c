@@ -51,7 +51,7 @@ swfdec_amf_parse_string (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsVal
   s = swfdec_bits_get_string_length (bits, len);
   if (s == NULL)
     return FALSE;
-  SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (context, s));
+  SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_give_string (context, s));
   return TRUE;
 }
 

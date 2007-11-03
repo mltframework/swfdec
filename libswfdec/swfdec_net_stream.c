@@ -65,6 +65,10 @@ swfdec_net_stream_decode_video (SwfdecNetStream *stream, SwfdecBuffer *buffer)
       decoder->codec == SWFDEC_VIDEO_CODEC_VP6_ALPHA) {
     guint wsub, hsub;
     SwfdecBuffer *tmp;
+    if (buffer->length == 0) {
+      SWFDEC_ERROR ("0-byte VP6 video image buffer?");
+      return NULL;
+    }
     wsub = *buffer->data;
     hsub = wsub & 0xF;
     wsub >>= 4;

@@ -417,7 +417,7 @@ super_special_movie_lookup_magic (SwfdecAsContext *cx, SwfdecAsObject *o, const 
       return NULL;
   }
   if (SWFDEC_IS_MOVIE (o)) {
-    SwfdecMovie *ret = swfdec_movie_get_by_name (SWFDEC_MOVIE (o), name);
+    SwfdecMovie *ret = swfdec_movie_get_by_name (SWFDEC_MOVIE (o), name, TRUE);
     if (ret)
       return SWFDEC_AS_OBJECT (ret);
   }

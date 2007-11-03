@@ -494,6 +494,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
 	  tag->end_index);
     }
 
+    g_free (tag);
     data.tags_closed = g_slist_remove (data.tags_closed, tag);
   }
 }

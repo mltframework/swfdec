@@ -653,7 +653,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   y = movie->original_extents.y0 + EXTRA_MARGIN;
   cairo_move_to (cr, x, y);
 
-  for (i = 0; layouts[i].layout != NULL/* && y < limit.y1*/; i++)
+  for (i = 0; layouts[i].layout != NULL && y < limit.y1; i++)
   {
     SwfdecLayout *layout = &layouts[i];
     PangoLayoutIter *iter_line;

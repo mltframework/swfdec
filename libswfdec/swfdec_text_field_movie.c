@@ -330,7 +330,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
       end++;
     }
 
-    if (end - p > max_length)
+    if ((guint) (end - p) > max_length)
       max_length = end - p;
 
     swfdec_text_field_movie_generate_paragraph (text, &paragraph,

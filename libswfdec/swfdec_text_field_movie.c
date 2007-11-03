@@ -323,8 +323,11 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
   while (*p != '\0')
   {
     end = strpbrk (p, "\r\n");
-    if (end == NULL)
+    if (end == NULL) {
       end = strchr (p, '\0');
+    } else {
+      end++;
+    }
 
     if (end - p > max_length)
       max_length = end - p;
@@ -334,7 +337,6 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
     paragraphs = g_array_append_val (paragraphs, paragraph);
 
     p = end;
-    if (*p != '\0') p++;
   }
 
   if (num != NULL)
@@ -511,7 +513,6 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       attr_list = swfdec_text_field_movie_paragraph_get_attr_list (
 	  &paragraphs[i], block->index_ + skip, trans);
       pango_layout_set_attributes (playout, attr_list);
-      pango_attr_list_unref (attr_list);
 
       if (text->text->password) {
 	pango_layout_set_text (playout, text->asterisks,
@@ -558,6 +559,50 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       pango_layout_get_pixel_size (playout, &layout.width, &layout.height);
       layout.width += layout.offset_x + block->right_margin;
+
+      // figure out if we need to add extra height because of the size of the
+      // line break character
+      if (pango_layout_get_text (playout)[strlen (pango_layout_get_text (playout)) - 1] == '\n')
+      {
+	PangoAttrIterator *attr_iter;
+	PangoFontDescription *desc;
+	PangoFontMap *fontmap;
+	PangoFont *font;
+	PangoFontMetrics *metrics;
+	PangoContext *pcontext;
+	int end, ascent, descent;
+
+	attr_iter = pango_attr_list_get_iterator (attr_list);
+	pango_attr_iterator_range (attr_iter, NULL, &end);
+	while ((guint)end < paragraphs[i].length - block->index_ - skip &&
+	    pango_attr_iterator_next (attr_iter)) {
+	  pango_attr_iterator_range (attr_iter, NULL, &end);
+	}
+	desc = pango_font_description_new ();
+	pango_attr_iterator_get_font (attr_iter, desc, NULL, NULL);
+	fontmap = pango_cairo_font_map_get_default ();
+	pcontext =
+	  pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
+	font = pango_font_map_load_font (fontmap, pcontext, desc);
+	metrics = pango_font_get_metrics (font, NULL);
+
+	ascent = pango_font_metrics_get_ascent (metrics) / PANGO_SCALE;
+	descent = pango_font_metrics_get_descent (metrics) / PANGO_SCALE;
+
+	g_object_unref (pcontext);
+	pango_font_metrics_unref (metrics);
+	pango_font_description_free (desc);
+	pango_attr_iterator_destroy (attr_iter);
+
+	if (ascent + descent > layout.height) {
+	  g_print (":: %i -> %i\n", layout.height, ascent + descent);
+	  layout.height = ascent + descent;
+	}
+      }
+
+      pango_attr_list_unref (attr_list);
+
+      // add leading to last line too
       layout.height += block->leading / PANGO_SCALE;
 
       layouts = g_array_append_val (layouts, layout);

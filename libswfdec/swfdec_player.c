@@ -355,8 +355,6 @@ swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
   }
   SWFDEC_INFO ("compresed action queue to %u elements", 
       swfdec_ring_buffer_get_n_elements (buffer));
-  g_print ("compresed action queue to %u elements\n", 
-      swfdec_ring_buffer_get_n_elements (buffer));
   for (i = 0; i < swfdec_ring_buffer_get_n_elements (buffer); i++) {
     action = swfdec_ring_buffer_peek_nth (buffer, i);
     g_assert (action->movie != NULL);
@@ -371,13 +369,7 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
     /* try to get rid of freed actions */
     if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
       swfdec_player_compress_actions (player->actions[importance]);
-      g_print ("%u/%u elements\n", 
-	  swfdec_ring_buffer_get_n_elements (player->actions[importance]), 
-	  swfdec_ring_buffer_get_size (player->actions[importance]));
       action = swfdec_ring_buffer_push (player->actions[importance]);
-      g_print ("%u/%u elements: action %p\n", 
-	  swfdec_ring_buffer_get_n_elements (player->actions[importance]), 
-	  swfdec_ring_buffer_get_size (player->actions[importance]), action);
       /* if it doesn't get smaller, bail */
       if (action == NULL) {
 	swfdec_as_context_abort (SWFDEC_AS_CONTEXT (player), 

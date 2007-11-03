@@ -891,6 +891,12 @@ swfdec_text_field_movie_dispose (GObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
+  if (text->asterisks != NULL) {
+    g_free (text->asterisks);
+    text->asterisks = NULL;
+    text->asterisks_length = 0;
+  }
+
   if (text->style_sheet) {
     if (SWFDEC_IS_STYLESHEET (text->style_sheet)) {
       swfdec_style_sheet_remove_listener (

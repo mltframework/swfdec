@@ -789,6 +789,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       y += layout->height - skipped;
       skipped = 0;
     }
+
+    pango_layout_iter_free (iter_line);
   }
 
   swfdec_text_field_movie_free_layouts (layouts);

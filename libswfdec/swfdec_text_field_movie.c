@@ -420,6 +420,68 @@ swfdec_text_field_movie_paragraph_get_attr_list (
   return attr_list;
 }
 
+static int
+swfdec_text_field_movie_layout_get_last_line_baseline (PangoLayout *playout)
+{
+  int baseline;
+  PangoLayoutIter *iter;
+
+  g_return_val_if_fail (playout != NULL, 0);
+
+  iter = pango_layout_get_iter (playout);
+  while (!pango_layout_iter_at_last_line (iter))
+    pango_layout_iter_next_line (iter);
+
+  baseline = pango_layout_iter_get_baseline (iter) / PANGO_SCALE;
+
+  pango_layout_iter_free (iter);
+
+  return baseline;
+}
+
+static void
+swfdec_text_field_movie_attr_list_get_ascent_descent (PangoAttrList *attr_list,
+    guint pos, int *ascent, int *descent)
+{
+  PangoAttrIterator *attr_iter;
+  PangoFontDescription *desc;
+  PangoFontMap *fontmap;
+  PangoFont *font;
+  PangoFontMetrics *metrics;
+  PangoContext *pcontext;
+  int end;
+
+  if (ascent != NULL)
+    *ascent = 0;
+  if (descent != NULL)
+    *descent = 0;
+
+  g_return_if_fail (attr_list != NULL);
+
+  attr_iter = pango_attr_list_get_iterator (attr_list);
+  pango_attr_iterator_range (attr_iter, NULL, &end);
+  while ((guint)end < pos && pango_attr_iterator_next (attr_iter)) {
+    pango_attr_iterator_range (attr_iter, NULL, &end);
+  }
+  desc = pango_font_description_new ();
+  pango_attr_iterator_get_font (attr_iter, desc, NULL, NULL);
+  fontmap = pango_cairo_font_map_get_default ();
+  pcontext =
+    pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
+  font = pango_font_map_load_font (fontmap, pcontext, desc);
+  metrics = pango_font_get_metrics (font, NULL);
+
+  if (ascent != NULL)
+    *ascent = pango_font_metrics_get_ascent (metrics) / PANGO_SCALE;
+  if (descent != NULL)
+    *descent = pango_font_metrics_get_descent (metrics) / PANGO_SCALE;
+
+  g_object_unref (pcontext);
+  pango_font_metrics_unref (metrics);
+  pango_font_description_free (desc);
+  pango_attr_iterator_destroy (attr_iter);
+}
+
 static SwfdecLayout *
 swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
     cairo_t *cr, const SwfdecParagraph *paragraphs,
@@ -559,43 +621,21 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       pango_layout_get_pixel_size (playout, &layout.width, &layout.height);
       layout.width += layout.offset_x + block->right_margin;
+      layout.last_line_offset_y = 0;
 
       // figure out if we need to add extra height because of the size of the
       // line break character
       if (pango_layout_get_text (playout)[strlen (pango_layout_get_text (playout)) - 1] == '\n')
       {
-	PangoAttrIterator *attr_iter;
-	PangoFontDescription *desc;
-	PangoFontMap *fontmap;
-	PangoFont *font;
-	PangoFontMetrics *metrics;
-	PangoContext *pcontext;
-	int end, ascent, descent;
+	int ascent, descent;
 
-	attr_iter = pango_attr_list_get_iterator (attr_list);
-	pango_attr_iterator_range (attr_iter, NULL, &end);
-	while ((guint)end < paragraphs[i].length - block->index_ - skip &&
-	    pango_attr_iterator_next (attr_iter)) {
-	  pango_attr_iterator_range (attr_iter, NULL, &end);
-	}
-	desc = pango_font_description_new ();
-	pango_attr_iterator_get_font (attr_iter, desc, NULL, NULL);
-	fontmap = pango_cairo_font_map_get_default ();
-	pcontext =
-	  pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
-	font = pango_font_map_load_font (fontmap, pcontext, desc);
-	metrics = pango_font_get_metrics (font, NULL);
-
-	ascent = pango_font_metrics_get_ascent (metrics) / PANGO_SCALE;
-	descent = pango_font_metrics_get_descent (metrics) / PANGO_SCALE;
-
-	g_object_unref (pcontext);
-	pango_font_metrics_unref (metrics);
-	pango_font_description_free (desc);
-	pango_attr_iterator_destroy (attr_iter);
+	swfdec_text_field_movie_attr_list_get_ascent_descent (attr_list,
+	    strlen (pango_layout_get_text (playout)), &ascent, &descent);
 
 	if (ascent + descent > layout.height) {
-	  g_print (":: %i -> %i\n", layout.height, ascent + descent);
+	  int baseline =
+	    swfdec_text_field_movie_layout_get_last_line_baseline (playout);
+	  layout.last_line_offset_y = ascent - baseline;
 	  layout.height = ascent + descent;
 	}
       }
@@ -719,8 +759,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       if (linenum == text_movie->scroll)
 	skipped = rect.y;
 
-      if (!first &&
-	  y + rect.y + rect.height > movie->original_extents.y1)
+      if (!first && y + rect.y + rect.height > movie->original_extents.y1)
 	break;
 
       first = FALSE;
@@ -733,12 +772,16 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	  x + layout->offset_x + rect.x + rect.width < limit.x0)
 	continue;
 
+      if (pango_layout_iter_at_last_line (iter_line))
+	cairo_rel_move_to (cr, 0, layout->last_line_offset_y);
       cairo_rel_move_to (cr, layout->offset_x + rect.x,
 	  pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped);
       line = pango_layout_iter_get_line_readonly (iter_line);
       pango_cairo_show_layout_line (cr, line);
       cairo_rel_move_to (cr, -(layout->offset_x + rect.x),
 	  -(pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped));
+      if (pango_layout_iter_at_last_line (iter_line))
+	cairo_rel_move_to (cr, 0, -layout->last_line_offset_y);
     } while (pango_layout_iter_next_line (iter_line));
 
     if (linenum >= text_movie->scroll) {

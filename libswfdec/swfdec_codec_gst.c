@@ -62,6 +62,7 @@ swfdec_gst_buffer_new (SwfdecBuffer *buffer)
   
   ret = gst_buffer_new_and_alloc (buffer->length);
   memcpy (GST_BUFFER_DATA (ret), buffer->data, buffer->length);
+  swfdec_buffer_unref (buffer);
 
   return ret;
 }

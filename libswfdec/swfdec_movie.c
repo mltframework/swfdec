@@ -949,6 +949,10 @@ swfdec_movie_dispose (GObject *object)
   g_slist_free (movie->variable_listeners);
   movie->variable_listeners = NULL;
 
+  g_slist_foreach (movie->draws, (GFunc) g_object_unref, NULL);
+  g_slist_free (movie->draws);
+  movie->draws = NULL;
+
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }
 

@@ -542,9 +542,12 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       // set rendering position
       layout.offset_x = block->left_margin + block->block_indent;
+      if (paragraphs[i].bullet)
+	layout.offset_x += 36 * 20;
+
       width = SWFDEC_MOVIE (text)->original_extents.x1 -
-	SWFDEC_MOVIE (text)->original_extents.x0 - block->left_margin -
-	block->right_margin - block->block_indent;
+	SWFDEC_MOVIE (text)->original_extents.x0 - block->right_margin -
+	layout.offset_x;
 
       if (block->index_ == 0 && paragraphs[i].indent < 0) {
 	// limit negative indent to not go over leftMargin + blockIndent

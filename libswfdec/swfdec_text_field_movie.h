@@ -44,6 +44,7 @@ typedef struct {
   int			last_line_offset_y;
   int			height;
   int			width;
+  gboolean		bullet;
 } SwfdecLayout;
 
 typedef struct {

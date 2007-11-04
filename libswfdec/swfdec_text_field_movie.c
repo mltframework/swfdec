@@ -38,6 +38,7 @@
 G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_MOVIE)
 
 #define EXTRA_MARGIN 2
+#define BULLET_MARGIN 36
 
 static void
 swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
@@ -543,7 +544,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       // set rendering position
       layout.offset_x = block->left_margin + block->block_indent;
       if (paragraphs[i].bullet)
-	layout.offset_x += 36 * 20;
+	layout.offset_x += SWFDEC_DOUBLE_TO_TWIPS (BULLET_MARGIN);
 
       width = SWFDEC_MOVIE (text)->original_extents.x1 -
 	SWFDEC_MOVIE (text)->original_extents.x0 - block->right_margin -
@@ -569,9 +570,10 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       // set paragraph styles
       if (block->index_ == 0) {
 	pango_layout_set_indent (playout, paragraphs[i].indent);
-	// TODO: bullet
+	layout.bullet = paragraphs[i].bullet;
       } else {
 	pango_layout_set_indent (playout, 0);
+	layout.bullet = FALSE;
       }
 
       // set block styles
@@ -748,7 +750,6 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   linenum = 0;
   x = movie->original_extents.x0 + EXTRA_MARGIN + text_movie->hscroll;
   y = movie->original_extents.y0 + EXTRA_MARGIN;
-  cairo_move_to (cr, x, y);
 
   for (i = 0; layouts[i].layout != NULL && y < limit.y1; i++)
   {
@@ -759,6 +760,37 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     int skipped;
 
     iter_line = pango_layout_get_iter (layout->layout);
+
+    if (layout->bullet && linenum + 1 >= text_movie->scroll) {
+      PangoColor color_p;
+      PangoAttribute *attr;
+      PangoAttrIterator *attr_iter;
+
+      pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
+      pango_extents_to_pixels (NULL, &rect);
+
+      cairo_new_sub_path (cr);
+
+      // get current color
+      attr_iter = pango_attr_list_get_iterator (
+	  pango_layout_get_attributes (layout->layout));
+      attr = pango_attr_iterator_get (attr_iter, PANGO_ATTR_FOREGROUND);
+      color_p = ((PangoAttrColor *)attr)->color;
+      color = SWFDEC_COLOR_COMBINE (color_p.red >> 8, color_p.green >> 8,
+	  color_p.blue >> 8, 255);
+      color = swfdec_color_apply_transform (color, trans);
+      pango_attr_iterator_destroy (attr_iter);
+
+      swfdec_color_set_source (cr, color);
+
+      cairo_arc (cr, x + layout->offset_x +
+	  pango_layout_get_indent (layout->layout) -
+	  SWFDEC_DOUBLE_TO_TWIPS (BULLET_MARGIN) / 2,
+	  y + rect.height / 2, rect.height / 8, 20, 2 * M_PI);
+      cairo_fill (cr);
+    }
+
+    cairo_move_to (cr, x, y);
 
     skipped = 0;
     do {

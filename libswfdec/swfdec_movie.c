@@ -477,11 +477,11 @@ swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
       g_free (value);
       break;
     }
+    SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
     asname = swfdec_as_context_give_string (as->context, name);
     SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (as->context, value));
     g_free (value);
     swfdec_as_object_set_variable (as, asname, &val);
-    SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
   }
 }
 

@@ -136,6 +136,7 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
 
   paragraph->index_ = start_index;
   paragraph->length = length;
+  paragraph->newline = (text->input->str[start_index + length - 1] == '\n');
 
   paragraph->blocks = NULL;
   paragraph->attrs = NULL;
@@ -519,6 +520,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       SwfdecBlock *block;
       int width;
       guint length;
+      gboolean end_of_paragraph;
 
       block = (SwfdecBlock *)iter->data;
       if (iter->next != NULL) {
@@ -526,6 +528,8 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	  ((SwfdecBlock *)(iter->next->data))->index_ - block->index_;
       } else {
 	length = paragraphs[i].length - block->index_;
+	if (paragraphs[i].newline)
+	  length -= 1;
       }
 
       if (skip > length) {
@@ -577,14 +581,16 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       pango_layout_set_attributes (playout, attr_list);
 
       if (text->text->password) {
-	pango_layout_set_text (playout, text->asterisks,
-	    paragraphs[i].length - block->index_ - skip);
+	pango_layout_set_text (playout, text->asterisks, paragraphs[i].length -
+	    block->index_ - skip - (paragraphs[i].newline ? 1 : 0));
       } else {
 	pango_layout_set_text (playout,
 	    text->input->str + paragraphs[i].index_ + block->index_ + skip,
-	    paragraphs[i].length - block->index_ - skip);
+	    paragraphs[i].length - block->index_ - skip -
+	    (paragraphs[i].newline ? 1 : 0));
       }
 
+      end_of_paragraph = TRUE;
       if (iter->next != NULL && text->text->word_wrap)
       {
 	PangoLayoutLine *line;
@@ -593,12 +599,15 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
 	pango_layout_index_to_line_x (playout, length - skip, FALSE, &line_num,
 	    NULL);
-	line = pango_layout_get_line_readonly (playout, line_num);
-	skip_new = line->start_index + line->length - (length - skip);
-	pango_layout_set_text (playout,
-	    text->input->str + paragraphs[i].index_ + block->index_ + skip,
-	    length - skip + skip_new);
-	skip = skip_new;
+	if (line_num < pango_layout_get_line_count (playout) - 1) {
+	  end_of_paragraph = FALSE;
+	  line = pango_layout_get_line_readonly (playout, line_num);
+	  skip_new = line->start_index + line->length - (length - skip);
+	  pango_layout_set_text (playout,
+	      text->input->str + paragraphs[i].index_ + block->index_ + skip,
+	      length - skip + skip_new);
+	  skip = skip_new;
+	}
       }
       else
       {
@@ -625,12 +634,12 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       // figure out if we need to add extra height because of the size of the
       // line break character
-      if (pango_layout_get_text (playout)[strlen (pango_layout_get_text (playout)) - 1] == '\n')
+      if (end_of_paragraph && paragraphs[i].newline)
       {
 	int ascent, descent;
 
 	swfdec_text_field_movie_attr_list_get_ascent_descent (attr_list,
-	    strlen (pango_layout_get_text (playout)), &ascent, &descent);
+	    paragraphs[i].length - block->index_ - skip, &ascent, &descent);
 
 	if (ascent + descent > layout.height) {
 	  int baseline =

@@ -61,6 +61,7 @@ typedef struct {
 typedef struct {
   guint			index_;
   guint			length;
+  gboolean		newline;	// ends in newline
 
   gboolean		bullet;
   int			indent;

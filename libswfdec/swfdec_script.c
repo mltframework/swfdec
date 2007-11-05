@@ -230,12 +230,10 @@ swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
    * DefineFunction and friends override this */
   script->flags = SWFDEC_SCRIPT_SUPPRESS_ARGS;
 
-  len -= swfdec_bits_left (bits) / 8;
-  if (len == 0) {
+  buffer = swfdec_bits_get_buffer (&org, -1);
+  if (buffer == NULL)
     buffer = swfdec_buffer_new ();
-  } else {
-    buffer = swfdec_bits_get_buffer (&org, len);
-  }
+
   script->main = buffer->data;
   script->exit = buffer->data + buffer->length;
   script->buffer = swfdec_buffer_ref (swfdec_buffer_get_super (buffer));

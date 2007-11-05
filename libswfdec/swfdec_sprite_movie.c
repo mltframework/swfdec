@@ -63,6 +63,74 @@ swfdec_get_clipeventflags (SwfdecMovie *movie, SwfdecBits * bits)
 }
 
 static gboolean
+swfdec_sprite_movie_perform_old_place (SwfdecSpriteMovie *movie,
+    SwfdecBits *bits, guint tag)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  SwfdecMovie *cur;
+  SwfdecSwfDecoder *dec;
+  int depth;
+  cairo_matrix_t transform;
+  gboolean has_ctrans;
+  SwfdecColorTransform ctrans;
+  guint id;
+  SwfdecGraphic *graphic;
+
+  dec = SWFDEC_SWF_DECODER (mov->resource->decoder);
+
+  SWFDEC_LOG ("performing PlaceObject on movie %s", mov->name);
+
+  id = swfdec_bits_get_u16 (bits);
+  SWFDEC_LOG ("  id = %d", id);
+
+  depth = swfdec_bits_get_u16 (bits);
+  if (depth >= 16384) {
+    SWFDEC_FIXME ("depth of placement too high: %u >= 16384", depth);
+  }
+  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
+  depth -= 16384;
+
+  swfdec_bits_get_matrix (bits, &transform, NULL);
+  SWFDEC_LOG ("  matrix = { %g %g, %g %g } + { %g %g }",
+      transform.xx, transform.yx,
+      transform.xy, transform.yy,
+      transform.x0, transform.y0);
+
+  if (swfdec_bits_left (bits)) {
+    has_ctrans = TRUE;
+    swfdec_bits_get_color_transform (bits, &ctrans);
+    SWFDEC_LOG ("  color transform = %d %d  %d %d  %d %d  %d %d",
+	ctrans.ra, ctrans.rb,
+	ctrans.ga, ctrans.gb,
+	ctrans.ba, ctrans.bb,
+	ctrans.aa, ctrans.ab);
+  } else {
+    has_ctrans = FALSE;
+  }
+
+  /* 3) perform the actions depending on the set properties */
+  cur = swfdec_movie_find (mov, depth);
+  graphic = swfdec_swf_decoder_get_character (dec, id);
+
+  if (!SWFDEC_IS_GRAPHIC (graphic)) {
+    SWFDEC_FIXME ("character %u is not a graphic (does it even exist?), aborting", id);
+    return FALSE;
+  }
+
+  cur = swfdec_movie_new (player, depth, mov, mov->resource, graphic, NULL);
+  swfdec_movie_set_static_properties (cur, &transform,
+      has_ctrans ? &ctrans : NULL, -1, 0, 0, NULL);
+  swfdec_movie_queue_script (cur, SWFDEC_EVENT_INITIALIZE);
+  swfdec_movie_queue_script (cur, SWFDEC_EVENT_CONSTRUCT);
+  swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
+  swfdec_movie_initialize (cur);
+
+  return TRUE;
+}
+
+
+static gboolean
 swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, guint tag)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
@@ -77,7 +145,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   gboolean has_transform;
   gboolean has_character;
   gboolean move;
-  gboolean depth;
+  int depth;
   gboolean cache;
   gboolean has_blend_mode = 0;
   gboolean has_filter = 0;
@@ -311,6 +379,8 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	swfdec_player_add_action_script (player, mov, script, 2);
       }
       return TRUE;
+    case SWFDEC_TAG_PLACEOBJECT:
+      return swfdec_sprite_movie_perform_old_place (movie, &bits, tag);
     case SWFDEC_TAG_PLACEOBJECT2:
     case SWFDEC_TAG_PLACEOBJECT3:
       return swfdec_sprite_movie_perform_place (movie, &bits, tag);

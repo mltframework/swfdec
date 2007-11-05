@@ -3129,7 +3129,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   /* version 3 */
   [SWFDEC_AS_ACTION_SET_TARGET2] = { "SetTarget2", NULL, 1, 0, swfdec_action_set_target2, 3 },
   /* version 4 */
-  [0x21] = { "StringAdd", NULL, 2, 1, swfdec_action_string_add, 4 },
+  [SWFDEC_AS_ACTION_STRING_ADD] = { "StringAdd", NULL, 2, 1, swfdec_action_string_add, 4 },
   [SWFDEC_AS_ACTION_GET_PROPERTY] = { "GetProperty", NULL, 2, 1, swfdec_action_get_property, 4 },
   [SWFDEC_AS_ACTION_SET_PROPERTY] = { "SetProperty", NULL, 3, 0, swfdec_action_set_property, 4 },
   [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL, 3, 0, swfdec_action_clone_sprite, 4 },
@@ -3143,7 +3143,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_CAST] = { "Cast", NULL, 2, 1, swfdec_action_cast, 7 },
   [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL, -1, 0, swfdec_action_implements, 7 },
   /* version 4 */
-  [0x30] = { "RandomNumber", NULL, 1, 1, swfdec_action_random_number, 4 },
+  [SWFDEC_AS_ACTION_RANDOM] = { "RandomNumber", NULL, 1, 1, swfdec_action_random_number, 4 },
   [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL, -1, -1, NULL, 4 },
   [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL, 1, 1, swfdec_action_char_to_ascii, 4 },
   [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL, 1, 1, swfdec_action_ascii_to_char, 4 },

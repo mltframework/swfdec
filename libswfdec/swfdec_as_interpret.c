@@ -3101,13 +3101,14 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
 /*** BIG FUNCTION TABLE ***/
 
 const SwfdecActionSpec swfdec_as_actions[256] = {
-  /* version 3 */
-  [SWFDEC_AS_ACTION_NEXT_FRAME] = { "NextFrame", NULL, 0, 0, swfdec_action_next_frame, 3 },
-  [SWFDEC_AS_ACTION_PREVIOUS_FRAME] = { "PreviousFrame", NULL, 0, 0, swfdec_action_previous_frame, 3 },
-  [SWFDEC_AS_ACTION_PLAY] = { "Play", NULL, 0, 0, swfdec_action_play, 3 },
-  [SWFDEC_AS_ACTION_STOP] = { "Stop", NULL, 0, 0, swfdec_action_stop, 3 },
-  [SWFDEC_AS_ACTION_TOGGLE_QUALITY] = { "ToggleQuality", NULL, -1, -1, NULL, 3 },
-  [SWFDEC_AS_ACTION_STOP_SOUNDS] = { "StopSounds", NULL, 0, 0, swfdec_action_stop_sounds, 3 },
+  /* version 1 */
+  [SWFDEC_AS_ACTION_NEXT_FRAME] = { "NextFrame", NULL, 0, 0, swfdec_action_next_frame, 1 },
+  [SWFDEC_AS_ACTION_PREVIOUS_FRAME] = { "PreviousFrame", NULL, 0, 0, swfdec_action_previous_frame, 1 },
+  [SWFDEC_AS_ACTION_PLAY] = { "Play", NULL, 0, 0, swfdec_action_play, 1 },
+  [SWFDEC_AS_ACTION_STOP] = { "Stop", NULL, 0, 0, swfdec_action_stop, 1 },
+  [SWFDEC_AS_ACTION_TOGGLE_QUALITY] = { "ToggleQuality", NULL, -1, -1, NULL, 1 },
+  /* version 2 */
+  [SWFDEC_AS_ACTION_STOP_SOUNDS] = { "StopSounds", NULL, 0, 0, swfdec_action_stop_sounds, 2 },
   /* version 4 */
   [SWFDEC_AS_ACTION_ADD] = { "Add", NULL, 2, 1, swfdec_action_binary, 4 },
   [SWFDEC_AS_ACTION_SUBTRACT] = { "Subtract", NULL, 2, 1, swfdec_action_binary, 4 },
@@ -3196,16 +3197,17 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL, -1, -1, NULL, 6 },
   /* version 7 */
   [SWFDEC_AS_ACTION_EXTENDS] = { "Extends", NULL, 2, 0, swfdec_action_extends, 7 },
-  /* version 3 */
-  [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, swfdec_action_goto_frame, 3 },
-  [SWFDEC_AS_ACTION_GET_URL] = { "GetURL", swfdec_action_print_get_url, 0, 0, swfdec_action_get_url, 3 },
+  /* version 1 */
+  [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, swfdec_action_goto_frame, 1 },
+  [SWFDEC_AS_ACTION_GET_URL] = { "GetURL", swfdec_action_print_get_url, 0, 0, swfdec_action_get_url, 1 },
   /* version 5 */
   [SWFDEC_AS_ACTION_STORE_REGISTER] = { "StoreRegister", swfdec_action_print_store_register, 1, 1, swfdec_action_store_register, 5 },
   [SWFDEC_AS_ACTION_CONSTANT_POOL] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, swfdec_action_constant_pool, 5 },
+  [SWFDEC_AS_ACTION_STRICT_MODE] = { "StrictMode", NULL, -1, -1, NULL, 5 },
+  /* version 1 */
+  [SWFDEC_AS_ACTION_WAIT_FOR_FRAME] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, swfdec_action_wait_for_frame, 1 },
+  [SWFDEC_AS_ACTION_SET_TARGET] = { "SetTarget", swfdec_action_print_set_target, 0, 0, swfdec_action_set_target, 1 },
   /* version 3 */
-  [SWFDEC_AS_ACTION_STRICT_MODE] = { "StrictMode", NULL, -1, -1, NULL, 3 },
-  [SWFDEC_AS_ACTION_WAIT_FOR_FRAME] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, swfdec_action_wait_for_frame, 3 },
-  [SWFDEC_AS_ACTION_SET_TARGET] = { "SetTarget", swfdec_action_print_set_target, 0, 0, swfdec_action_set_target, 3 },
   [SWFDEC_AS_ACTION_GOTO_LABEL] = { "GotoLabel", swfdec_action_print_goto_label, 0, 0, swfdec_action_goto_label, 3 },
 #if 0
   /* version 4 */

@@ -24,19 +24,13 @@
 
 G_BEGIN_DECLS
 
-/* defines minimum and maximum versions for which we have seperate scripts */
-#define SWFDEC_AS_MIN_SCRIPT_VERSION 3
-#define SWFDEC_AS_MAX_SCRIPT_VERSION 7
-#define SWFDEC_AS_EXTRACT_SCRIPT_VERSION(v) MIN ((v) - SWFDEC_AS_MIN_SCRIPT_VERSION, SWFDEC_AS_MAX_SCRIPT_VERSION - SWFDEC_AS_MIN_SCRIPT_VERSION)
-
-typedef void (* SwfdecActionExec) (SwfdecAsContext *cx, guint action, const guint8 *data, guint len);
 typedef struct {
   const char *		name;		/* name identifying the action */
   char *		(* print)	(guint action, const guint8 *data, guint len);
   int			remove;		/* values removed from stack or -1 for dynamic */
   int			add;		/* values added to the stack or -1 for dynamic */
-  SwfdecActionExec	exec[SWFDEC_AS_MAX_SCRIPT_VERSION - SWFDEC_AS_MIN_SCRIPT_VERSION + 1];
-					/* array is for version 3, 4, 5, 6, 7+ */
+  void			(* exec)	(SwfdecAsContext *cx, guint action, const guint8 *data, guint len);
+  int			version;	/* the version this action was introduced in */
 } SwfdecActionSpec;
 
 extern const SwfdecActionSpec swfdec_as_actions[256];

@@ -762,14 +762,12 @@ swfdec_as_context_run (SwfdecAsContext *context)
   SwfdecAsFrame *frame, *last_frame;
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
-  SwfdecActionExec exec;
   const guint8 *startpc, *pc, *endpc, *nextpc, *exitpc;
 #ifndef G_DISABLE_ASSERT
   SwfdecAsValue *check;
 #endif
   guint action, len;
   const guint8 *data;
-  int version;
   guint original_version;
   void (* step) (SwfdecAsDebugger *debugger, SwfdecAsContext *context);
   gboolean check_block; /* some opcodes avoid a scope check */
@@ -849,7 +847,6 @@ start:
   g_assert (frame->script);
   g_assert (frame->target);
   script = frame->script;
-  version = SWFDEC_AS_EXTRACT_SCRIPT_VERSION (script->version);
   context->version = script->version;
   startpc = script->buffer->data;
   endpc = startpc + script->buffer->length;
@@ -916,24 +913,16 @@ start:
       nextpc = pc + 1;
     }
     /* check action is valid */
-    exec = spec->exec[version];
-    if (!exec) {
-      guint real_version;
-      for (real_version = version + 1; !exec && 
-	  real_version <= SWFDEC_AS_MAX_SCRIPT_VERSION - SWFDEC_AS_MIN_SCRIPT_VERSION; 
-	  real_version++) {
-	exec = spec->exec[real_version];
-      }
-      if (!exec) {
-	SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, skipping it", action,
-	    action, spec->name ? spec->name : "Unknown", script->version);
-	frame->pc = pc = nextpc;
-	check_block = TRUE;
-	continue;
-      }
-      SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, using version %u instead", 
-	  action, action, spec->name ? spec->name : "Unknown", script->version, 
-	  script->version + real_version - version);
+    if (!spec->exec) {
+      SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, skipping it", action,
+	  action, spec->name ? spec->name : "Unknown", script->version);
+      frame->pc = pc = nextpc;
+      check_block = TRUE;
+      continue;
+    }
+    if (script->version < spec->version) {
+      SWFDEC_WARNING ("cannot interpret action %3u 0x%02X %s for version %u, using version %u instead",
+	  action, action, spec->name ? spec->name : "Unknown", script->version, spec->version);
     }
     if (spec->remove > 0) {
       if (spec->add > spec->remove)
@@ -951,7 +940,7 @@ start:
     check = (spec->add >= 0 && spec->remove >= 0) ? context->cur + spec->add - spec->remove : NULL;
 #endif
     /* execute action */
-    exec (context, action, data, len);
+    spec->exec (context, action, data, len);
     /* adapt the pc if the action did not, otherwise, leave it alone */
     /* FIXME: do this via flag? */
     if (frame->pc == pc) {

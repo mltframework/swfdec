@@ -2413,7 +2413,6 @@ swfdec_action_enumerate (SwfdecAsContext *cx, guint action, const guint8 *data, 
 static void
 swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue *val;
   gboolean l, r;
 
   if (cx->version <= 4) {
@@ -2421,16 +2420,16 @@ swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     // don't call second parameter if not necessary
     if ((action == SWFDEC_AS_ACTION_AND && !l) ||
 	(action != SWFDEC_AS_ACTION_AND && l)) {
-      val = swfdec_as_stack_peek (cx, 2);
-      r = (swfdec_as_value_to_number (cx, val) != 0);
+      r = (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 2)) != 0);
+    } else {
+      r = FALSE;
     }
   } else {
     l = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1));
-    val = swfdec_as_stack_peek (cx, 2);
-    r = swfdec_as_value_to_boolean (cx, val);
+    r = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 2));
   }
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (val,
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 2),
     (action == SWFDEC_AS_ACTION_AND) ? (l && r) : (l || r));
   swfdec_as_stack_pop (cx);
 }

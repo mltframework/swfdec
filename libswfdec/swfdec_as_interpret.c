@@ -2416,14 +2416,22 @@ swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   SwfdecAsValue *val;
   gboolean l, r;
 
-  if (cx->version <= 4)
-    SWFDEC_FIXME ("Or and And actions work incorrectly in version 4");
+  if (cx->version <= 4) {
+    l = (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1)) != 0);
+    // don't call second parameter if not necessary
+    if ((action == SWFDEC_AS_ACTION_AND && !l) ||
+	(action != SWFDEC_AS_ACTION_AND && l)) {
+      val = swfdec_as_stack_peek (cx, 2);
+      r = (swfdec_as_value_to_number (cx, val) != 0);
+    }
+  } else {
+    l = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1));
+    val = swfdec_as_stack_peek (cx, 2);
+    r = swfdec_as_value_to_boolean (cx, val);
+  }
 
-  l = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1));
-  val = swfdec_as_stack_peek (cx, 2);
-  r = swfdec_as_value_to_boolean (cx, val);
-
-  SWFDEC_AS_VALUE_SET_BOOLEAN (val, (action == 0x10) ? (l && r) : (l || r));
+  SWFDEC_AS_VALUE_SET_BOOLEAN (val,
+    (action == SWFDEC_AS_ACTION_AND) ? (l && r) : (l || r));
   swfdec_as_stack_pop (cx);
 }
 

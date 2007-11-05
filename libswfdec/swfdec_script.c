@@ -183,30 +183,6 @@ swfdec_script_foreach (SwfdecScript *script, SwfdecScriptForeachFunc func, gpoin
   return swfdec_script_foreach_internal (&bits, func, user_data);
 }
 
-static gboolean
-validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint len, gpointer scriptp)
-{
-  SwfdecScript *script = scriptp;
-  int version = SWFDEC_AS_EXTRACT_SCRIPT_VERSION (script->version);
-
-  /* warn if there's no function to execute this opcode */
-  if (swfdec_as_actions[action].exec[version] == NULL) {
-    SWFDEC_ERROR ("no function for %3u 0x%02X %s in v%u", action, action,
-	swfdec_as_actions[action].name ? swfdec_as_actions[action].name : "Unknown",
-	script->version);
-  }
-  /* we might want to do stuff here for certain actions */
-#if 0
-  {
-    char *foo = swfdec_script_print_action (action, data, len);
-    if (foo == NULL)
-      return FALSE;
-    g_print ("%s\n", foo);
-  }
-#endif
-  return TRUE;
-}
-
 /**
  * swfdec_script_new:
  * @buffer: the #SwfdecBuffer containing the script. This function will take
@@ -239,13 +215,8 @@ swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
   SwfdecBuffer *buffer;
   SwfdecBits org;
   guint len;
-  
-  g_return_val_if_fail (bits != NULL, NULL);
 
-  if (version < SWFDEC_AS_MIN_SCRIPT_VERSION) {
-    SWFDEC_ERROR ("swfdec version %u doesn't support scripts", version);
-    return NULL;
-  }
+  g_return_val_if_fail (bits != NULL, NULL);
 
   org = *bits;
   len = swfdec_bits_left (bits) / 8;
@@ -259,10 +230,6 @@ swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
    * DefineFunction and friends override this */
   script->flags = SWFDEC_SCRIPT_SUPPRESS_ARGS;
 
-  if (!swfdec_script_foreach_internal (bits, validate_action, script)) {
-    swfdec_script_unref (script);
-    return NULL;
-  }
   len -= swfdec_bits_left (bits) / 8;
   if (len == 0) {
     buffer = swfdec_buffer_new ();

@@ -30,7 +30,7 @@ typedef struct {
   int			remove;		/* values removed from stack or -1 for dynamic */
   int			add;		/* values added to the stack or -1 for dynamic */
   void			(* exec)	(SwfdecAsContext *cx, guint action, const guint8 *data, guint len);
-  int			version;	/* the version this action was introduced in */
+  guint			version;	/* the version this action was introduced in */
 } SwfdecActionSpec;
 
 extern const SwfdecActionSpec swfdec_as_actions[256];

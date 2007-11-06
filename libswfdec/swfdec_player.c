@@ -2262,6 +2262,9 @@ swfdec_player_get_next_event (SwfdecPlayer *player)
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
+  if (swfdec_as_context_is_aborted (SWFDEC_AS_CONTEXT (player)))
+    return -1;
+
   tick = swfdec_player_get_next_event_time (player);
   if (tick == G_MAXUINT64)
     return -1;

@@ -254,6 +254,12 @@ swfdec_resource_set_movie (SwfdecResource *resource, SwfdecSpriteMovie *movie)
   swfdec_loader_set_target (resource->loader, SWFDEC_LOADER_TARGET (resource));
 }
 
+void
+swfdec_resource_mark (SwfdecResource *resource)
+{
+  g_return_if_fail (SWFDEC_IS_RESOURCE (resource));
+}
+
 gpointer
 swfdec_resource_get_export (SwfdecResource *instance, const char *name)
 {

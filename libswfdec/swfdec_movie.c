@@ -973,6 +973,7 @@ swfdec_movie_mark (SwfdecAsObject *object)
     swfdec_as_object_mark (listener->object);
     swfdec_as_string_mark (listener->name);
   }
+  swfdec_resource_mark (movie->resource);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
 }

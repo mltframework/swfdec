@@ -168,6 +168,13 @@ swfdec_script_foreach_internal (SwfdecBits *bits, SwfdecScriptForeachFunc func, 
   return TRUE;
 }
 
+static gboolean
+validate_action (gconstpointer bytecode, guint action, const guint8 *data, guint len, gpointer scriptp)
+{
+  // TODO: get rid of this function
+  return TRUE;
+}
+
 /*** PUBLIC API ***/
 
 gboolean
@@ -230,9 +237,16 @@ swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
    * DefineFunction and friends override this */
   script->flags = SWFDEC_SCRIPT_SUPPRESS_ARGS;
 
-  buffer = swfdec_bits_get_buffer (&org, -1);
-  if (buffer == NULL)
+  if (!swfdec_script_foreach_internal (bits, validate_action, script)) {
+    swfdec_script_unref (script);
+    return NULL;
+  }
+  len -= swfdec_bits_left (bits) / 8;
+  if (len == 0) {
     buffer = swfdec_buffer_new ();
+  } else {
+    buffer = swfdec_bits_get_buffer (&org, len);
+  }
 
   script->main = buffer->data;
   script->exit = buffer->data + buffer->length;

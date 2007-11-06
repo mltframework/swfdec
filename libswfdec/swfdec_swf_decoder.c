@@ -109,8 +109,9 @@ swfdec_swf_decoder_deflate_all (SwfdecSwfDecoder * s)
       guint max = buffer->length;
 
       if (dec->bytes_loaded + max > s->buffer->length) {
+	SWFDEC_WARNING ("%u bytes more than declared filesize", 
+	    dec->bytes_loaded + max - s->buffer->length);
 	max = s->buffer->length - dec->bytes_loaded;
-	SWFDEC_WARNING ("%u bytes more than declared filesize", max - dec->bytes_loaded);
       }
       memcpy (s->buffer->data + dec->bytes_loaded, buffer->data, max);
       dec->bytes_loaded += max;

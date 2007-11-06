@@ -15,6 +15,7 @@ endif
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
+	swfdec_accessibility.c \
 	swfdec_as_array.c \
 	swfdec_as_boolean.c \
 	swfdec_as_context.c \

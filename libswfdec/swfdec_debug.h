@@ -47,6 +47,8 @@ enum {
 #define SWFDEC_LOG(...) \
   SWFDEC_DEBUG_LEVEL(SWFDEC_LEVEL_LOG, __VA_ARGS__)
 
+#define SWFDEC_STUB() SWFDEC_FIXME ("Not implemented")
+
 #ifdef SWFDEC_DISABLE_DEBUG
 #define SWFDEC_DEBUG_LEVEL(level,...) (void) 0
 #else

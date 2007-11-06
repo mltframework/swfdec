@@ -479,6 +479,12 @@ ASSetNative (TextField.StyleSheet.prototype, 113, "7update,7parseCSSInternal,7pa
 ASSetPropFlags (TextField.StyleSheet.prototype, null, 1027);
 ASSetPropFlags (TextField, "StyleSheet", 1027);
 
+/* Accessibility */
+
+Accessibility = {};
+ASSetNative (Accessibility, 1999, "6isActive,6sendEvent,6updateProperties");
+ASSetPropFlags (Accessibility, null, 6);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

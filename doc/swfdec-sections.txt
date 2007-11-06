@@ -151,6 +151,7 @@ swfdec_buffer_queue_push
 swfdec_buffer_queue_pull
 swfdec_buffer_queue_pull_buffer
 swfdec_buffer_queue_peek
+swfdec_buffer_queue_peek_buffer
 <SUBSECTION Standard>
 SWFDEC_TYPE_BUFFER
 swfdec_buffer_get_type

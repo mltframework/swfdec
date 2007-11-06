@@ -525,6 +525,31 @@ swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length)
 }
 
 /**
+ * swfdec_buffer_queue_peek_buffer:
+ * @queue: a #SwfdecBufferQueue
+ *
+ * Gets the first buffer out of @queue and returns it. This function is 
+ * equivalent to calling swfdec_buffer_queue_peek() with the size of the
+ * first buffer in it.
+ *
+ * Returns: The first buffer in @queue or %NULL if @queue is empty. Use 
+ *          swfdec_buffer_unref() after use.
+ **/
+SwfdecBuffer *
+swfdec_buffer_queue_peek_buffer (SwfdecBufferQueue * queue)
+{
+  SwfdecBuffer *buffer;
+
+  g_return_val_if_fail (queue != NULL, NULL);
+  if (queue->buffers == NULL)
+    return NULL;
+
+  buffer = queue->buffers->data;
+
+  return swfdec_buffer_queue_peek (queue, buffer->length);
+}
+
+/**
  * swfdec_buffer_queue_peek:
  * @queue: a #SwfdecBufferQueue to read from
  * @length: amount of bytes to peek

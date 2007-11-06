@@ -287,7 +287,6 @@ swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer ta
 {
   SwfdecSpriteMovie *movie;
   SwfdecResource *resource;
-  SwfdecMovie *mov;
   int level = -1;
   char *target = targetp;
 
@@ -307,15 +306,24 @@ swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer ta
   }
   if (movie == NULL) {
     movie = swfdec_player_create_movie_at_level (player, resource, level);
-    mov = SWFDEC_MOVIE (movie);
-    g_object_unref (resource);
   } else {
-    mov = SWFDEC_MOVIE (movie);
-    swfdec_sprite_movie_unload (movie);
-    g_object_unref (mov->resource);
-    mov->resource = resource;
-    swfdec_resource_set_movie (mov->resource, movie);
+    /* can't use swfdec_movie_duplicate() here, we copy to same depth */
+    SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+    SwfdecMovie *copy;
+    
+    copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), 
+	mov->depth, mov->parent, resource, NULL, mov->name);
+    if (copy == NULL)
+      return;
+    copy->original_name = mov->original_name;
+    /* FIXME: are events copied? If so, wouldn't that be a security issue? */
+    swfdec_movie_set_static_properties (copy, &mov->original_transform,
+	&mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
+	mov->blend_mode, NULL);
+    swfdec_movie_remove (mov);
+    movie = SWFDEC_SPRITE_MOVIE (copy);
   }
+  g_object_unref (resource);
   g_object_unref (loader);
   return;
 

@@ -74,6 +74,9 @@ void		swfdec_resource_load			(SwfdecPlayer *		player,
 							 const char *		target,
 							 const char *		url,
 							 SwfdecLoaderRequest	request,
-							 SwfdecBuffer *		buffer);
+							 SwfdecBuffer *		buffer,
+							 SwfdecMovieClipLoader *loader);
+
+
 G_END_DECLS
 #endif

@@ -86,6 +86,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_movie.c \
 	swfdec_movie_as_drawing.c \
 	swfdec_movie_asprops.c \
+	swfdec_movie_clip_loader.c \
 	swfdec_net_connection.c \
 	swfdec_net_stream.c \
 	swfdec_net_stream_as.c \
@@ -213,6 +214,7 @@ noinst_HEADERS = \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
+	swfdec_movie_clip_loader.h \
 	swfdec_net_connection.h \
 	swfdec_net_stream.h \
 	swfdec_path.h \

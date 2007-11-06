@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_movie_clip_loader.h"
+#include "swfdec_as_array.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -47,6 +48,20 @@ void
 swfdec_movie_clip_loader_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
+  SwfdecAsValue val;
+  SwfdecAsObject *array;
+
+  if (!swfdec_as_context_is_constructing (cx))
+    return;
+
+  array = swfdec_as_array_new (cx);
+  if (array == NULL)
+    return;
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__listeners, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 
 SWFDEC_AS_NATIVE (112, 100, swfdec_movie_clip_loader_loadClip)

@@ -28,6 +28,7 @@
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_interpret.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_character.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
@@ -104,6 +105,33 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
   }
 }
 
+/* NB: name must be GC'ed */
+static void
+swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, SwfdecAsValue *args, guint n_args)
+{
+  SwfdecAsContext *cx;
+  SwfdecAsObject *movie;
+  SwfdecAsValue vals[n_args + 2];
+
+  if (resource->clip_loader == NULL)
+    return;
+  cx = SWFDEC_AS_OBJECT (resource->clip_loader)->context;
+  g_assert (resource->target);
+  movie = swfdec_action_lookup_object (cx, SWFDEC_PLAYER (cx)->roots->data, 
+      resource->target, resource->target + strlen (resource->target));
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    SWFDEC_FIXME ("figure out if we emit nonetheless");
+    return;
+  }
+
+  SWFDEC_AS_VALUE_SET_STRING (&vals[0], name);
+  SWFDEC_AS_VALUE_SET_OBJECT (&vals[1], movie);
+  if (n_args)
+    memcpy (&vals[2], args, sizeof (SwfdecAsValue) * n_args);
+  swfdec_as_object_call (SWFDEC_AS_OBJECT (resource->clip_loader), SWFDEC_AS_STR_broadcastMessage, 
+      n_args + 2, vals, NULL);
+}
+
 static void
 swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
@@ -119,6 +147,7 @@ swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *lo
     SWFDEC_INFO ("set manual movie variables: %s", instance->variables);
     swfdec_movie_set_variables (SWFDEC_MOVIE (instance->movie), instance->variables);
   }
+  swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadStart, NULL, 0);
 }
 
 static void
@@ -126,6 +155,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 {
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance->movie)->context);
+  SwfdecAsValue vals[2];
   SwfdecDecoder *dec = instance->decoder;
   SwfdecDecoderClass *klass;
 
@@ -180,6 +210,23 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 	return;
     }
   }
+  SWFDEC_AS_VALUE_SET_INT (&vals[0], dec->bytes_loaded);
+  SWFDEC_AS_VALUE_SET_INT (&vals[1], dec->bytes_total);
+  swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadProgress, vals, 2);
+}
+
+static void
+swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+{
+  SwfdecResource *instance = SWFDEC_RESOURCE (target);
+  SwfdecAsValue vals[2];
+
+  SwfdecDecoder *dec = instance->decoder;
+  SWFDEC_AS_VALUE_SET_INT (&vals[0], dec->bytes_loaded);
+  SWFDEC_AS_VALUE_SET_INT (&vals[1], dec->bytes_total);
+  swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadProgress, vals, 2);
+  SWFDEC_AS_VALUE_SET_INT (&vals[0], 0); /* FIXME */
+  swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadComplete, vals, 1);
 }
 
 static void
@@ -188,6 +235,7 @@ swfdec_resource_loader_target_init (SwfdecLoaderTargetInterface *iface)
   iface->get_player = swfdec_resource_loader_target_get_player;
   iface->open = swfdec_resource_loader_target_open;
   iface->parse = swfdec_resource_loader_target_parse;
+  iface->eof = swfdec_resource_loader_target_eof;
 }
 
 static void

@@ -72,11 +72,14 @@ swfdec_request_resource_perform_one (gpointer requestp, gpointer playerp)
 void
 swfdec_player_resource_request_perform (SwfdecPlayer *player)
 {
+  GSList *list;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  g_slist_foreach (player->resource_requests, swfdec_request_resource_perform_one, player);
-  g_slist_free (player->resource_requests);
+  list = player->resource_requests;
   player->resource_requests = NULL;
+  g_slist_foreach (list, swfdec_request_resource_perform_one, player);
+  g_slist_free (list);
 }
 
 void

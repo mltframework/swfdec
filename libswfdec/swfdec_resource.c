@@ -49,6 +49,17 @@ G_DEFINE_TYPE_WITH_CODE (SwfdecResource, swfdec_resource, SWFDEC_TYPE_FLASH_SECU
 
 /*** SWFDEC_LOADER_TARGET interface ***/
 
+static gboolean 
+swfdec_resource_is_root (SwfdecResource *resource)
+{
+  SwfdecPlayer *player;
+
+  g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), FALSE);
+
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource->movie)->context);
+  return resource->movie == player->roots->data;
+}
+
 static SwfdecPlayer *
 swfdec_resource_loader_target_get_player (SwfdecLoaderTarget *target)
 {
@@ -61,7 +72,7 @@ swfdec_resource_check_rights (SwfdecResource *resource)
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (resource);
   SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (resource->decoder);
 
-  if (resource->initial) {
+  if (swfdec_resource_is_root (resource)) {
     if (dec->use_network && sec->sandbox == SWFDEC_SANDBOX_LOCAL_FILE)
       sec->sandbox = SWFDEC_SANDBOX_LOCAL_NETWORK;
     SWFDEC_INFO ("enabling local-with-network sandbox for %s",
@@ -93,8 +104,9 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
 }
 
 static void
-swfdec_resource_open (SwfdecResource *instance, SwfdecLoader *loader)
+swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
+  SwfdecResource *instance = SWFDEC_RESOURCE (target);
   const char *query;
 
   query = swfdec_url_get_query (swfdec_loader_get_url (loader));
@@ -109,19 +121,9 @@ swfdec_resource_open (SwfdecResource *instance, SwfdecLoader *loader)
 }
 
 static void
-swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
-
-  if (!instance->initial)
-    return;
-
-  swfdec_resource_open (instance, loader);
-}
-
-static void
-swfdec_resource_parse (SwfdecResource *instance, SwfdecLoader *loader)
-{
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance->movie)->context);
   SwfdecDecoder *dec = instance->decoder;
   SwfdecDecoderClass *klass;
@@ -180,35 +182,11 @@ swfdec_resource_parse (SwfdecResource *instance, SwfdecLoader *loader)
 }
 
 static void
-swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
-{
-  SwfdecResource *instance = SWFDEC_RESOURCE (target);
-
-  if (!instance->initial)
-    return;
-
-  swfdec_resource_parse (instance, loader);
-}
-
-static void
-swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
-{
-  SwfdecResource *resource = SWFDEC_RESOURCE (target);
-
-  if (resource->initial)
-    return;
-
-  swfdec_resource_open (resource, loader);
-  swfdec_resource_parse (resource, loader);
-}
-
-static void
 swfdec_resource_loader_target_init (SwfdecLoaderTargetInterface *iface)
 {
   iface->get_player = swfdec_resource_loader_target_get_player;
   iface->open = swfdec_resource_loader_target_open;
   iface->parse = swfdec_resource_loader_target_parse;
-  iface->eof = swfdec_resource_loader_target_eof;
 }
 
 static void

@@ -193,17 +193,25 @@ swfdec_resource_loader_target_init (SwfdecLoaderTargetInterface *iface)
 static void
 swfdec_resource_dispose (GObject *object)
 {
-  SwfdecResource *instance = SWFDEC_RESOURCE (object);
+  SwfdecResource *resource = SWFDEC_RESOURCE (object);
 
-  swfdec_loader_set_target (instance->loader, NULL);
-  g_object_unref (instance->loader);
-  if (instance->decoder) {
-    g_object_unref (instance->decoder);
-    instance->decoder = NULL;
+  swfdec_loader_set_target (resource->loader, NULL);
+  if (resource->loader) {
+    g_object_unref (resource->loader);
+    resource->loader = NULL;
   }
-  g_free (instance->variables);
-  g_hash_table_destroy (instance->exports);
-  g_hash_table_destroy (instance->export_names);
+  if (resource->decoder) {
+    g_object_unref (resource->decoder);
+    resource->decoder = NULL;
+  }
+  if (resource->clip_loader) {
+    g_object_unref (resource->clip_loader);
+    resource->clip_loader = NULL;
+  }
+  g_free (resource->target);
+  g_free (resource->variables);
+  g_hash_table_destroy (resource->exports);
+  g_hash_table_destroy (resource->export_names);
 
   G_OBJECT_CLASS (swfdec_resource_parent_class)->dispose (object);
 }
@@ -268,6 +276,9 @@ void
 swfdec_resource_mark (SwfdecResource *resource)
 {
   g_return_if_fail (SWFDEC_IS_RESOURCE (resource));
+
+  if (resource->clip_loader)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->clip_loader));
 }
 
 gpointer
@@ -300,12 +311,11 @@ swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character
 }
 
 static void
-swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer targetp)
+swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer resourcep)
 {
+  SwfdecResource *resource = SWFDEC_RESOURCE (resourcep);
   SwfdecSpriteMovie *movie;
-  SwfdecResource *resource;
   int level = -1;
-  char *target = targetp;
 
   if (loader == NULL) {
     /* *** Security Sandbox Violation *** */
@@ -313,12 +323,15 @@ swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer ta
   }
 
   movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (SWFDEC_AS_CONTEXT (player),
-      player->roots->data, target, target + strlen (target));
-  resource = swfdec_resource_new (loader, NULL);
+      player->roots->data, resource->target, resource->target + strlen (resource->target));
+  swfdec_resource_set_loader (resource, loader);
   if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    level = swfdec_player_get_level (player, target);
-    if (level < 0)
-      goto fail;
+    level = swfdec_player_get_level (player, resource->target);
+    if (level < 0) {
+      SWFDEC_WARNING ("%s does not reference a movie, not loading %s", resource->target,
+	  swfdec_url_get_url (swfdec_loader_get_url (loader)));
+      swfdec_loader_close (loader);
+    }
     movie = swfdec_player_get_movie_at_level (player, level);
   }
   if (movie == NULL) {
@@ -340,14 +353,6 @@ swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer ta
     swfdec_movie_remove (mov);
     movie = SWFDEC_SPRITE_MOVIE (copy);
   }
-  g_object_unref (resource);
-  g_object_unref (loader);
-  return;
-
-fail:
-  SWFDEC_WARNING ("%s does not reference a movie, not loading %s", target,
-      swfdec_url_get_url (swfdec_loader_get_url (loader)));
-  swfdec_loader_close (loader);
   g_object_unref (loader);
   return;
 }
@@ -358,6 +363,7 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     SwfdecLoaderRequest request, SwfdecBuffer *buffer, SwfdecMovieClipLoader *loader)
 {
   SwfdecSpriteMovie *movie;
+  SwfdecResource *resource;
   char *path;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
@@ -375,6 +381,10 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     SWFDEC_WARNING ("%s does not reference a movie, not loading %s", target, url);
     return;
   }
+  resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+  resource->target = path;
+  if (loader)
+    resource->clip_loader = g_object_ref (loader);
   swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
-      url, request, buffer, swfdec_resource_do_load, path, g_free);
+      url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
 }

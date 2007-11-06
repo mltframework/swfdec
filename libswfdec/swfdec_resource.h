@@ -48,6 +48,10 @@ struct _SwfdecResource
 
   GHashTable *		exports;	/* string->SwfdecCharacter mapping of exported characters */
   GHashTable *		export_names;	/* SwfdecCharacter->string mapping of exported characters */
+
+  /* only used while loading */
+  char *		target;		/* target path we use for signalling */
+  SwfdecMovieClipLoader *clip_loader;	/* loader that gets notified about load events */
 };
 
 struct _SwfdecResourceClass

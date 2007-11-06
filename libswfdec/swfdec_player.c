@@ -1193,6 +1193,8 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
     if (!klass->iterate_end (cur))
       swfdec_movie_destroy (cur);
   }
+  swfdec_player_resource_request_perform (player);
+  swfdec_player_perform_actions (player);
   /* add timeout again */
   /* FIXME: rounding issues? */
   player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
@@ -1335,7 +1337,6 @@ swfdec_player_unlock (SwfdecPlayer *player)
   context = SWFDEC_AS_CONTEXT (player);
   g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_INTERRUPTED);
 
-  swfdec_player_resource_request_perform (player);
   if (context->state == SWFDEC_AS_CONTEXT_RUNNING)
     swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
   swfdec_player_unlock_soft (player);

@@ -225,22 +225,32 @@ swfdec_resource_init (SwfdecResource *instance)
       g_object_unref, g_free);
 }
 
+static void
+swfdec_resource_set_loader (SwfdecResource *resource, SwfdecLoader *loader)
+{
+  g_return_if_fail (SWFDEC_IS_RESOURCE (resource));
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  g_return_if_fail (resource->loader == NULL);
+
+  resource->loader = g_object_ref (loader);
+  swfdec_flash_security_set_url (SWFDEC_FLASH_SECURITY (resource),
+      swfdec_loader_get_url (loader));
+}
+
 SwfdecResource *
 swfdec_resource_new (SwfdecLoader *loader, const char *variables)
 {
-  SwfdecResource *swf;
+  SwfdecResource *resource;
 
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
-  swf = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+  resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
   /* set important variables */
-  swf->variables = g_strdup (variables);
+  resource->variables = g_strdup (variables);
   /* set loader (that depends on those vars) */
-  swf->loader = g_object_ref (loader);
-  swfdec_flash_security_set_url (SWFDEC_FLASH_SECURITY (swf),
-      swfdec_loader_get_url (loader));
+  swfdec_resource_set_loader (resource, loader);
 
-  return swf;
+  return resource;
 }
 
 void

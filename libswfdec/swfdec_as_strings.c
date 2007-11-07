@@ -429,5 +429,8 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("onLoadError")
   SWFDEC_AS_CONSTANT_STRING ("onLoadInit")
   SWFDEC_AS_CONSTANT_STRING ("onLoadProgress")
+  SWFDEC_AS_CONSTANT_STRING ("URLNotFound")
+  SWFDEC_AS_CONSTANT_STRING ("IllegalRequest")
+  SWFDEC_AS_CONSTANT_STRING ("LoadNeverCompleted")
   /* add more here */
 ;

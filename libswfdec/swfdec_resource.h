@@ -35,6 +35,14 @@ typedef struct _SwfdecResourceClass SwfdecResourceClass;
 #define SWFDEC_RESOURCE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_RESOURCE, SwfdecResource))
 #define SWFDEC_RESOURCE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_RESOURCE, SwfdecResourceClass))
 
+typedef enum {
+  SWFDEC_RESOURCE_NEW = 0,	      	/* no loader set yet, only the call to _load() was done */
+  SWFDEC_RESOURCE_REQUESTED,		/* the URL has been requested, the request was ok, ->loader is set */
+  SWFDEC_RESOURCE_OPENED,		/* onLoadStart has been called */
+  SWFDEC_RESOURCE_COMPLETE,		/* onLoadComplete has been called */
+  SWFDEC_RESOURCE_DONE			/* onLoadInit has been called, clip_loader is unset */
+} SwfdecResourceState;
+
 struct _SwfdecResource
 {
   SwfdecFlashSecurity	flash_security;
@@ -50,6 +58,7 @@ struct _SwfdecResource
   GHashTable *		export_names;	/* SwfdecCharacter->string mapping of exported characters */
 
   /* only used while loading */
+  SwfdecResourceState	state;		/* state we're in (for determining callbacks */
   char *		target;		/* target path we use for signalling */
   SwfdecMovieClipLoader *clip_loader;	/* loader that gets notified about load events */
 };

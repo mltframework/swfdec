@@ -137,7 +137,12 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
 
   paragraph->index_ = start_index;
   paragraph->length = length;
-  paragraph->newline = (text->input->str[start_index + length - 1] == '\n');
+  if (text->input->str[start_index + length - 1] == '\n' ||
+      text->input->str[start_index + length - 1] == '\r') {
+    paragraph->newline = TRUE;
+  } else {
+    paragraph->newline = FALSE;
+  }
 
   paragraph->blocks = NULL;
   paragraph->attrs = NULL;
@@ -748,7 +753,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   first = TRUE;
   linenum = 0;
-  x = movie->original_extents.x0 + EXTRA_MARGIN + text_movie->hscroll;
+  x = movie->original_extents.x0 + EXTRA_MARGIN +
+    MIN (text_movie->hscroll, text_movie->hscroll_max);
   y = movie->original_extents.y0 + EXTRA_MARGIN;
 
   for (i = 0; layouts[i].layout != NULL && y < limit.y1; i++)
@@ -761,7 +767,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
     iter_line = pango_layout_get_iter (layout->layout);
 
-    if (layout->bullet && linenum + 1 >= text_movie->scroll) {
+    if (layout->bullet && linenum + 1 >=
+	MIN (text_movie->scroll, text_movie->scroll_max)) {
       PangoColor color_p;
       PangoAttribute *attr;
       PangoAttrIterator *attr_iter;
@@ -794,13 +801,13 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
     skipped = 0;
     do {
-      if (++linenum < text_movie->scroll)
+      if (++linenum < MIN (text_movie->scroll, text_movie->scroll_max))
 	continue;
 
       pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
       pango_extents_to_pixels (NULL, &rect);
 
-      if (linenum == text_movie->scroll)
+      if (linenum == MIN (text_movie->scroll, text_movie->scroll_max))
 	skipped = rect.y;
 
       if (!first && y + rect.y + rect.height > movie->original_extents.y1)
@@ -828,7 +835,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	cairo_rel_move_to (cr, 0, -layout->last_line_offset_y);
     } while (pango_layout_iter_next_line (iter_line));
 
-    if (linenum >= text_movie->scroll) {
+    if (linenum >= MIN (text_movie->scroll, text_movie->scroll_max)) {
       cairo_rel_move_to (cr, 0, layout->height - skipped);
       y += layout->height - skipped;
       skipped = 0;
@@ -917,10 +924,9 @@ swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text,
       text->scroll_changed = TRUE;
     }
   } else {
-    if (text->scroll_bottom != MAX (CLAMP(text->scroll, 1, text->scroll_max) +
-      (visible > 0 ? visible - 1 : 0), text->scroll)) {
-      text->scroll_bottom = MAX (CLAMP(text->scroll, 1, text->scroll_max) +
-	(visible > 0 ? visible - 1 : 0), text->scroll);
+    if (text->scroll_bottom < text->scroll ||
+	text->scroll_bottom > text->scroll_max + visible - 1) {
+      text->scroll_bottom = text->scroll;
       text->scroll_changed = TRUE;
     }
   }

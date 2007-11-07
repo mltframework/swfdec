@@ -29,6 +29,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
+#include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
@@ -137,6 +138,18 @@ mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 }
 
 static void
+mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+{
+  SWFDEC_AS_VALUE_SET_STRING (rval, movie->name);
+}
+
+static void
+mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+{
+  movie->name = swfdec_as_value_to_string (SWFDEC_AS_OBJECT (movie)->context, val);
+}
+
+static void
 mc_currentframe (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
@@ -153,22 +166,25 @@ mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
 }
 
 static void
-mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
-{
-  SWFDEC_AS_VALUE_SET_STRING (rval, movie->name);
-}
-
-static void
-mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
-{
-  movie->name = swfdec_as_value_to_string (SWFDEC_AS_OBJECT (movie)->context, val);
-}
-
-static void
 mc_totalframes (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
+  SwfdecResource *resource;
+  SwfdecDecoder *dec;
+  int frames;
+
   g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
-  SWFDEC_AS_VALUE_SET_INT (rval, SWFDEC_SPRITE_MOVIE (movie)->n_frames);
+
+  resource = swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie));
+  if (resource == NULL) {
+    frames = 1;
+  } else {
+    dec = resource->decoder;
+    if (dec == NULL)
+      frames = 0;
+    else
+      frames = dec->frames_total;
+  }
+  SWFDEC_AS_VALUE_SET_INT (rval, frames);
 }
 
 static void

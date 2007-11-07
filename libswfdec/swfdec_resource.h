@@ -41,7 +41,6 @@ struct _SwfdecResource
 
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
   guint			parse_frame;	/* next frame to parse */
-  gboolean		initial;	/* TRUE if this is the initial resource */
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder in use or NULL if not yet created (only happens after loadMovie()) */
@@ -49,6 +48,10 @@ struct _SwfdecResource
 
   GHashTable *		exports;	/* string->SwfdecCharacter mapping of exported characters */
   GHashTable *		export_names;	/* SwfdecCharacter->string mapping of exported characters */
+
+  /* only used while loading */
+  char *		target;		/* target path we use for signalling */
+  SwfdecMovieClipLoader *clip_loader;	/* loader that gets notified about load events */
 };
 
 struct _SwfdecResourceClass
@@ -62,6 +65,7 @@ SwfdecResource *swfdec_resource_new			(SwfdecLoader *		loader,
 							 const char *		variables);
 void		swfdec_resource_set_movie		(SwfdecResource *	resource,
 							 SwfdecSpriteMovie *	movie);
+void		swfdec_resource_mark			(SwfdecResource *	resource);
 
 void		swfdec_resource_add_export		(SwfdecResource *	instance,
 							 SwfdecCharacter *	character,
@@ -75,6 +79,9 @@ void		swfdec_resource_load			(SwfdecPlayer *		player,
 							 const char *		target,
 							 const char *		url,
 							 SwfdecLoaderRequest	request,
-							 SwfdecBuffer *		buffer);
+							 SwfdecBuffer *		buffer,
+							 SwfdecMovieClipLoader *loader);
+
+
 G_END_DECLS
 #endif

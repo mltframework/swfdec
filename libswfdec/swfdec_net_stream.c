@@ -65,6 +65,10 @@ swfdec_net_stream_decode_video (SwfdecNetStream *stream, SwfdecBuffer *buffer)
       decoder->codec == SWFDEC_VIDEO_CODEC_VP6_ALPHA) {
     guint wsub, hsub;
     SwfdecBuffer *tmp;
+    if (buffer->length == 0) {
+      SWFDEC_ERROR ("0-byte VP6 video image buffer?");
+      return NULL;
+    }
     wsub = *buffer->data;
     hsub = wsub & 0xF;
     wsub >>= 4;
@@ -257,7 +261,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
   SwfdecDecoderClass *klass;
-  gboolean recheck = FALSE;
+  SwfdecStatus status;
   
   if (loader->state != SWFDEC_LOADER_STATE_EOF && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
     SWFDEC_INFO ("nothing to do");
@@ -267,7 +271,6 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     /* FIXME: add mp3 support */
     stream->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
     SWFDEC_DECODER (stream->flvdecoder)->player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context);
-    SWFDEC_DECODER (stream->flvdecoder)->queue = loader->queue;
     swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_Start,
 	SWFDEC_AS_STR_status);
     swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_FLV);
@@ -275,31 +278,19 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
   klass = SWFDEC_DECODER_GET_CLASS (stream->flvdecoder);
   g_return_if_fail (klass->parse);
 
-  while (TRUE) {
-    SwfdecStatus status = klass->parse (SWFDEC_DECODER (stream->flvdecoder));
-    switch (status) {
-      case SWFDEC_STATUS_OK:
-	break;
-      case SWFDEC_STATUS_INIT:
-	/* HACK for native flv playback */
-	swfdec_player_initialize (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), 7,
-	    SWFDEC_DECODER (stream->flvdecoder)->rate, 
-	    SWFDEC_DECODER (stream->flvdecoder)->width, 
-	    SWFDEC_DECODER (stream->flvdecoder)->height);
-      case SWFDEC_STATUS_IMAGE:
-	recheck = TRUE;
-	break;
-      case SWFDEC_STATUS_ERROR:
-      case SWFDEC_STATUS_NEEDBITS:
-      case SWFDEC_STATUS_EOF:
-	goto out;
-      default:
-	g_assert_not_reached ();
-	return;
-    }
+  do {
+    SwfdecBuffer *buffer = swfdec_buffer_queue_pull_buffer (loader->queue);
+    status |= klass->parse (SWFDEC_DECODER (stream->flvdecoder), buffer);
+  } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_EOF)) == 0);
+
+  if (status & SWFDEC_STATUS_INIT) {
+      /* HACK for native flv playback */
+      swfdec_player_initialize (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), 7,
+	  SWFDEC_DECODER (stream->flvdecoder)->rate, 
+	  SWFDEC_DECODER (stream->flvdecoder)->width, 
+	  SWFDEC_DECODER (stream->flvdecoder)->height);
   }
-out:
-  if (recheck)
+  if (status & SWFDEC_STATUS_IMAGE)
     swfdec_net_stream_loader_target_recheck (stream);
 }
 

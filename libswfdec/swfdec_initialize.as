@@ -292,6 +292,13 @@ ASSetPropFlags (MovieClip.prototype, "getDepth", 128);
 ASSetNative (MovieClip.prototype, 901, "6createEmptyMovieClip,6beginFill,6beginGradientFill,6moveTo,6lineTo,6curveTo,6lineStyle,6endFill,6clear");
 ASSetPropFlags (MovieClip.prototype, null, 3);
 
+/* MovieClipLoader */
+
+MovieClipLoader = ASconstructor (112, 0);
+ASSetNative(MovieClipLoader.prototype, 112, "7loadClip,7getProgress,7unloadClip", 100);
+AsBroadcaster.initialize(MovieClipLoader.prototype);
+ASSetPropFlags(MovieClipLoader.prototype, null, 1027);
+
 /* TextField */
 
 TextField = ASconstructor (104, 0);

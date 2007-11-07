@@ -71,6 +71,8 @@ swfdec_image_dispose (GObject *object)
   }
 
   G_OBJECT_CLASS (swfdec_image_parent_class)->dispose (object);
+
+  g_assert (image->surface == NULL);
 }
 
 static void

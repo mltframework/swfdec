@@ -982,6 +982,24 @@ EXTRA_DIST = \
 	movieclip-target-6.swf.trace \
 	movieclip-target-7.swf \
 	movieclip-target-7.swf.trace \
+	moviecliploader-getprogress.as \
+	moviecliploader-getprogress-5.swf \
+	moviecliploader-getprogress-5.swf.trace \
+	moviecliploader-getprogress-6.swf \
+	moviecliploader-getprogress-6.swf.trace \
+	moviecliploader-getprogress-7.swf \
+	moviecliploader-getprogress-7.swf.trace \
+	moviecliploader-getprogress-8.swf \
+	moviecliploader-getprogress-8.swf.trace \
+	moviecliploader-properties.as \
+	moviecliploader-properties-5.swf \
+	moviecliploader-properties-5.swf.trace \
+	moviecliploader-properties-6.swf \
+	moviecliploader-properties-6.swf.trace \
+	moviecliploader-properties-7.swf \
+	moviecliploader-properties-7.swf.trace \
+	moviecliploader-properties-8.swf \
+	moviecliploader-properties-8.swf.trace \
 	name.swf \
 	name.swf.trace \
 	name2.swf \

@@ -269,32 +269,25 @@ swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *
 static void
 swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecMovie *movie;
-  SwfdecResource *resource;
-  guint frame, jump, loaded;
+  SwfdecSpriteMovie *movie;
+  guint jump;
+  int frame, loaded;
 
   if (len != 3) {
     SWFDEC_ERROR ("WaitForFrame action length invalid (is %u, should be 3", len);
     return;
   }
-  if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
+  if (!SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
     SWFDEC_ERROR ("no movie for WaitForFrame");
     return;
   }
 
-  movie = SWFDEC_MOVIE (cx->frame->target);
+  movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
   frame = data[0] || (data[1] << 8);
   jump = data[2];
-  resource = swfdec_movie_get_own_resource (movie);
-  if (resource && resource->decoder) {
-    SwfdecDecoder *dec = resource->decoder;
-    loaded = dec->frames_loaded;
-    if (loaded == dec->frames_total)
-      loaded = G_MAXUINT;
-  } else {
-    loaded = G_MAXUINT;
-  }
-  if (loaded <= frame)
+  loaded = swfdec_sprite_movie_get_frames_loaded (movie);
+  if (loaded < (int) movie->n_frames &&
+      loaded <= frame)
     swfdec_script_skip_actions (cx, jump);
 }
 
@@ -424,7 +417,7 @@ super_special_movie_lookup_magic (SwfdecAsContext *cx, SwfdecAsObject *o, const 
       return NULL;
   }
   if (SWFDEC_IS_MOVIE (o)) {
-    SwfdecMovie *ret = swfdec_movie_get_by_name (SWFDEC_MOVIE (o), name);
+    SwfdecMovie *ret = swfdec_movie_get_by_name (SWFDEC_MOVIE (o), name, TRUE);
     if (ret)
       return SWFDEC_AS_OBJECT (ret);
   }
@@ -1149,7 +1142,8 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
+	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL);
   }
   g_free (url);
   g_free (target);
@@ -1192,7 +1186,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
       swfdec_movie_load_variables (movie, url, method, NULL);
     }
   } else if (internal) {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL);
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL);
   } else {
     /* load an external file */
     swfdec_player_launch (SWFDEC_PLAYER (cx), method, url, target, NULL);

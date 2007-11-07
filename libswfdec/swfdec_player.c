@@ -355,32 +355,16 @@ swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
   }
   SWFDEC_INFO ("compresed action queue to %u elements", 
       swfdec_ring_buffer_get_n_elements (buffer));
+  for (i = 0; i < swfdec_ring_buffer_get_n_elements (buffer); i++) {
+    action = swfdec_ring_buffer_peek_nth (buffer, i);
+    g_assert (action->movie != NULL);
+  }
 }
 
-/**
- * swfdec_player_add_event:
- * @player: a #SwfdecPlayer
- * @movie: the movie on which to trigger the event
- * @type: type of the event
- * @importance: importance of the event
- *
- * Adds an action to the @player. Actions are used by Flash player to solve
- * reentrancy issues. Instead of calling back into the Actionscript engine,
- * an action is queued for later execution. So if you're writing code that
- * is calling Actionscript code, you want to do this by using actions.
- **/
-void
-swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecEventType type,
-    guint importance)
+static void
+swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlayerAction *act)
 {
-  SwfdecPlayerAction *action;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
-
-  SWFDEC_LOG ("adding action %s %u", movie->name, type);
-  action = swfdec_ring_buffer_push (player->actions[importance]);
+  SwfdecPlayerAction *action = swfdec_ring_buffer_push (player->actions[importance]);
   if (action == NULL) {
     /* try to get rid of freed actions */
     if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
@@ -399,16 +383,40 @@ swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecEventT
       g_assert (action);
     }
   }
-  action->movie = movie;
-  action->script = NULL;
-  action->event = type;
+  *action = *act;
+}
+
+/**
+ * swfdec_player_add_event:
+ * @player: a #SwfdecPlayer
+ * @movie: the movie on which to trigger the event
+ * @type: type of the event
+ * @importance: importance of the event
+ *
+ * Adds an action to the @player. Actions are used by Flash player to solve
+ * reentrancy issues. Instead of calling back into the Actionscript engine,
+ * an action is queued for later execution. So if you're writing code that
+ * is calling Actionscript code, you want to do this by using actions.
+ **/
+void
+swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecEventType type,
+    guint importance)
+{
+  SwfdecPlayerAction action = { movie, NULL, type };
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
+
+  SWFDEC_LOG ("adding action %s %u", movie->name, type);
+  swfdec_player_do_add_action (player, importance, &action);
 }
 
 void
 swfdec_player_add_action_script	(SwfdecPlayer *player, SwfdecMovie *movie,
     SwfdecScript *script, guint importance)
 {
-  SwfdecPlayerAction *action;
+  SwfdecPlayerAction action = { movie, script, 0 };
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
@@ -416,22 +424,7 @@ swfdec_player_add_action_script	(SwfdecPlayer *player, SwfdecMovie *movie,
   g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
 
   SWFDEC_LOG ("adding action script %s %s", movie->name, script->name);
-  action = swfdec_ring_buffer_push (player->actions[importance]);
-  if (action == NULL) {
-    /* FIXME: limit number of actions to not get inf loops due to scripts? */
-    if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
-      /* FIXME: try to remove empty entries first? */
-      swfdec_as_context_abort (SWFDEC_AS_CONTEXT (player), 
-	  "256 levels of recursion were exceeded in one action list.");
-      return;
-    }
-    swfdec_ring_buffer_set_size (player->actions[importance],
-	swfdec_ring_buffer_get_size (player->actions[importance]) + 16);
-    action = swfdec_ring_buffer_push (player->actions[importance]);
-    g_assert (action);
-  }
-  action->movie = movie;
-  action->script = script;
+  swfdec_player_do_add_action (player, importance, &action);
 }
 
 /**
@@ -523,6 +516,8 @@ swfdec_player_trigger_external_actions (SwfdecTimeout *advance)
 
   player->external_timeout.callback = NULL;
   swfdec_player_perform_external_actions (player);
+  swfdec_player_resource_request_perform (player);
+  swfdec_player_perform_actions (player);
 }
 
 void
@@ -1200,6 +1195,8 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
     if (!klass->iterate_end (cur))
       swfdec_movie_destroy (cur);
   }
+  swfdec_player_resource_request_perform (player);
+  swfdec_player_perform_actions (player);
   /* add timeout again */
   /* FIXME: rounding issues? */
   player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
@@ -1342,7 +1339,6 @@ swfdec_player_unlock (SwfdecPlayer *player)
   context = SWFDEC_AS_CONTEXT (player);
   g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_INTERRUPTED);
 
-  swfdec_player_resource_request_perform (player);
   if (context->state == SWFDEC_AS_CONTEXT_RUNNING)
     swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));
   swfdec_player_unlock_soft (player);
@@ -2007,7 +2003,6 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
   player->resource = swfdec_resource_new (loader, variables);
-  player->resource->initial = TRUE;
   movie = swfdec_movie_new (player, -16384, NULL, player->resource, NULL, SWFDEC_AS_STR__level0);
   movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);
@@ -2266,6 +2261,9 @@ swfdec_player_get_next_event (SwfdecPlayer *player)
   guint ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
+
+  if (swfdec_as_context_is_aborted (SWFDEC_AS_CONTEXT (player)))
+    return -1;
 
   tick = swfdec_player_get_next_event_time (player);
   if (tick == G_MAXUINT64)

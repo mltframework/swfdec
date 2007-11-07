@@ -477,11 +477,11 @@ swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
       g_free (value);
       break;
     }
+    SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
     asname = swfdec_as_context_give_string (as->context, name);
     SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (as->context, value));
     g_free (value);
     swfdec_as_object_set_variable (as, asname, &val);
-    SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
   }
 }
 
@@ -886,6 +886,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_set_source (cr, pattern);
     cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
     cairo_paint (cr);
+    cairo_pattern_destroy (pattern);
   }
   cairo_restore (cr);
 }
@@ -949,6 +950,10 @@ swfdec_movie_dispose (GObject *object)
   g_slist_free (movie->variable_listeners);
   movie->variable_listeners = NULL;
 
+  g_slist_foreach (movie->draws, (GFunc) g_object_unref, NULL);
+  g_slist_free (movie->draws);
+  movie->draws = NULL;
+
   G_OBJECT_CLASS (swfdec_movie_parent_class)->dispose (G_OBJECT (movie));
 }
 
@@ -969,13 +974,14 @@ swfdec_movie_mark (SwfdecAsObject *object)
     swfdec_as_object_mark (listener->object);
     swfdec_as_string_mark (listener->name);
   }
+  swfdec_resource_mark (movie->resource);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
 }
 
 /* FIXME: This function can definitely be implemented easier */
 SwfdecMovie *
-swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name)
+swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed)
 {
   GList *walk;
   int i;
@@ -1003,10 +1009,9 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name)
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
-    if (cur->original_name == SWFDEC_AS_STR_EMPTY)
+    if (cur->original_name == SWFDEC_AS_STR_EMPTY && !unnamed)
       continue;
-    if ((version >= 7 && cur->name == name) ||
-	(version < 7 && swfdec_str_case_equal (cur->name, name)))
+    if (swfdec_strcmp (version, cur->name, name) == 0)
       return cur;
   }
   return NULL;
@@ -1053,7 +1058,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     return TRUE;
   }
   
-  movie = swfdec_movie_get_by_name (movie, variable);
+  movie = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (movie) {
     SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie));
     *flags = 0;

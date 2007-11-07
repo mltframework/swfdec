@@ -85,6 +85,7 @@ sanitize_url (const char *s)
   url = swfdec_url_new (s);
   if (g_str_equal (swfdec_url_get_protocol (url), "error")) {
     char *dir, *full;
+    swfdec_url_free (url);
     if (g_path_is_absolute (s))
       return g_strconcat ("file://", s, NULL);
     dir = g_get_current_dir ();

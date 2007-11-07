@@ -485,6 +485,19 @@ Accessibility = {};
 ASSetNative (Accessibility, 1999, "6isActive,6sendEvent,6updateProperties");
 ASSetPropFlags (Accessibility, null, 6);
 
+/* Camera */
+
+function Camera () {
+}
+
+Camera.get = function (index) {
+  var get_func = ASnative (2102, 200);
+  return get_func (index);
+};
+Camera.addProperty ("names", ASnative (2102, 201), null);
+ASSetNative (Camera.prototype, 2102, "6setMode,6setQuality,6setKeyFrameInterval,6setMotionLevel,6setLoopback,6setCursor");
+ASSetPropFlags (Camera.prototype, null, 3);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

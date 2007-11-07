@@ -330,8 +330,11 @@ swfdec_gtk_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
   if (priv->player == NULL) {
     req->width = req->height = 0;
   } else {
-    swfdec_player_get_image_size (priv->player, 
-	  &req->width, &req->height);
+    guint w, h;
+    swfdec_player_get_default_size (priv->player, &w, &h);
+    /* FIXME: set some sane upper limit here? */
+    req->width = MIN (w, G_MAXINT);
+    req->height = MIN (h, G_MAXINT);
   } 
 }
 

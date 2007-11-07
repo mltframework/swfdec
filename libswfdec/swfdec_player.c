@@ -2320,7 +2320,7 @@ swfdec_player_get_rate (SwfdecPlayer *player)
 }
 
 /**
- * swfdec_player_get_image_size:
+ * swfdec_player_get_default_size:
  * @player: a #SwfdecPlayer
  * @width: integer to store the width in or %NULL
  * @height: integer to store the height in or %NULL
@@ -2329,7 +2329,7 @@ swfdec_player_get_rate (SwfdecPlayer *player)
  * with the size. Otherwise @width and @height are set to 0.
  **/
 void
-swfdec_player_get_image_size (SwfdecPlayer *player, int *width, int *height)
+swfdec_player_get_default_size (SwfdecPlayer *player, guint *width, guint *height)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 

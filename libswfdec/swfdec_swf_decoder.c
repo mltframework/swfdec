@@ -87,35 +87,59 @@ zfree (void *opaque, void *addr)
   g_free (addr);
 }
 
+static SwfdecBuffer *
+swfdec_buffer_merge (const SwfdecBuffer *front, const SwfdecBuffer *end)
+{
+  SwfdecBuffer *new;
+
+  g_return_val_if_fail (front != NULL, NULL);
+  g_return_val_if_fail (end != NULL, NULL);
+
+  new = swfdec_buffer_new_and_alloc (front->length + end->length);
+  if (front->length)
+    memcpy (new->data, front->data, front->length);
+  if (end->length)
+    memcpy (new->data + front->length, end->data, end->length);
+  return new;
+}
+
 static gboolean
-swfdec_swf_decoder_deflate_all (SwfdecSwfDecoder * s)
+swfdec_swf_decoder_deflate (SwfdecSwfDecoder * s, SwfdecBuffer *buffer)
 {
   int ret;
-  SwfdecBuffer *buffer;
   SwfdecDecoder *dec = SWFDEC_DECODER (s);
   
-  while ((buffer = swfdec_buffer_queue_pull_buffer (SWFDEC_DECODER (s)->queue))) {
-    if (s->compressed) {
-      s->z.next_in = buffer->data;
-      s->z.avail_in = buffer->length;
-      ret = inflate (&s->z, Z_SYNC_FLUSH);
-      if (ret < Z_OK) {
-	SWFDEC_ERROR ("error uncompressing data: %s", s->z.msg);
-	return FALSE;
-      }
-
-      dec->bytes_loaded = s->z.total_out + 8;
-    } else {
-      guint max = buffer->length;
-
-      if (dec->bytes_loaded + max > s->buffer->length) {
-	SWFDEC_WARNING ("%u bytes more than declared filesize", 
-	    dec->bytes_loaded + max - s->buffer->length);
-	max = s->buffer->length - dec->bytes_loaded;
-      }
-      memcpy (s->buffer->data + dec->bytes_loaded, buffer->data, max);
-      dec->bytes_loaded += max;
+  if (s->buffer == NULL) {
+    /* never written to */
+    g_assert (s->state == SWFDEC_STATE_INIT1);
+    s->buffer = buffer;
+  } else if (s->state == SWFDEC_STATE_INIT1) {
+    /* not initialized yet */
+    SwfdecBuffer *merge = swfdec_buffer_merge (s->buffer, buffer);
+    swfdec_buffer_unref (s->buffer);
+    swfdec_buffer_unref (buffer);
+    s->buffer = merge;
+  } else if (s->compressed) {
+    s->z.next_in = buffer->data;
+    s->z.avail_in = buffer->length;
+    ret = inflate (&s->z, Z_SYNC_FLUSH);
+    if (ret < Z_OK) {
+      SWFDEC_ERROR ("error uncompressing data: %s", s->z.msg);
+      return FALSE;
     }
+
+    dec->bytes_loaded = s->z.total_out + 8;
+    swfdec_buffer_unref (buffer);
+  } else {
+    guint max = buffer->length;
+
+    if (dec->bytes_loaded + max > s->buffer->length) {
+      SWFDEC_WARNING ("%u bytes more than declared filesize", 
+	  dec->bytes_loaded + max - s->buffer->length);
+      max = s->buffer->length - dec->bytes_loaded;
+    }
+    memcpy (s->buffer->data + dec->bytes_loaded, buffer->data, max);
+    dec->bytes_loaded += max;
     swfdec_buffer_unref (buffer);
   }
 
@@ -163,17 +187,16 @@ swf_parse_header1 (SwfdecSwfDecoder * s)
 {
   SwfdecDecoder *dec = SWFDEC_DECODER (s);
   int sig1, sig2, sig3;
-  SwfdecBuffer *buffer;
+  SwfdecBuffer *buffer, *rest;
   SwfdecBits bits;
   guint8 *data;
 
-  /* NB: we're still reading from the original queue, since deflating is not initialized yet */
-  buffer = swfdec_buffer_queue_pull (dec->queue, 8);
-  if (buffer == NULL) {
+  g_assert (s->buffer != NULL);
+  if (s->buffer->length <= 8) {
     return SWFDEC_STATUS_NEEDBITS;
   }
 
-  swfdec_bits_init (&bits, buffer);
+  swfdec_bits_init (&bits, s->buffer);
 
   sig1 = swfdec_bits_get_u8 (&bits);
   sig2 = swfdec_bits_get_u8 (&bits);
@@ -184,11 +207,21 @@ swf_parse_header1 (SwfdecSwfDecoder * s)
 
   s->version = swfdec_bits_get_u8 (&bits);
   dec->bytes_total = swfdec_bits_get_u32 (&bits);
+  if (dec->bytes_total <= 8) {
+    SWFDEC_ERROR ("Joke? Flash files need to be bigger than %u bytes", dec->bytes_total);
+    dec->bytes_total = 0;
+    return SWFDEC_STATUS_ERROR;
+  }
+  rest = swfdec_bits_get_buffer (&bits, -1);
 
   data = g_try_malloc (dec->bytes_total);
   if (data == NULL)
     return SWFDEC_STATUS_ERROR;
-  s->buffer = swfdec_buffer_new_for_data (data, dec->bytes_total);
+  buffer = swfdec_buffer_new_for_data (data, dec->bytes_total);
+  memcpy (buffer->data, s->buffer->data, 8);
+  swfdec_buffer_unref (s->buffer);
+  s->buffer = buffer;
+
   s->compressed = (sig1 == 'C');
   if (s->compressed) {
     SWFDEC_DEBUG ("compressed");
@@ -197,12 +230,10 @@ swf_parse_header1 (SwfdecSwfDecoder * s)
   } else {
     SWFDEC_DEBUG ("not compressed");
   }
-  memcpy (s->buffer->data, buffer->data, 8);
   SWFDEC_DECODER (s)->bytes_loaded = 8;
   s->bytes_parsed = 8;
-  swfdec_buffer_unref (buffer);
-
   s->state = SWFDEC_STATE_INIT2;
+  swfdec_swf_decoder_deflate (s, rest);
 
   return SWFDEC_STATUS_OK;
 }
@@ -246,21 +277,17 @@ swf_parse_header2 (SwfdecSwfDecoder * s)
 }
 
 static SwfdecStatus
-swfdec_swf_decoder_parse (SwfdecDecoder *dec)
+swfdec_swf_decoder_parse_one (SwfdecSwfDecoder *s)
 {
-  SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (dec);
   int ret = SWFDEC_STATUS_OK;
 
   s->b = s->parse;
-  g_assert (dec->player);
 
   switch (s->state) {
     case SWFDEC_STATE_INIT1:
       ret = swf_parse_header1 (s);
       break;
     case SWFDEC_STATE_INIT2:
-      if (!swfdec_swf_decoder_deflate_all (s))
-	return SWFDEC_STATUS_ERROR;
       ret = swf_parse_header2 (s);
       break;
     case SWFDEC_STATE_PARSE_FIRST_TAG:
@@ -272,9 +299,6 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
       guint tag;
       guint tag_len;
       SwfdecBits bits;
-
-      if (!swfdec_swf_decoder_deflate_all (s))
-	return SWFDEC_STATUS_ERROR;
 
       /* we're parsing tags */
       swfdec_swf_decoder_init_bits (s, &bits);
@@ -336,16 +360,29 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec)
       break;
     }
     case SWFDEC_STATE_EOF:
-      if (s->bytes_parsed < dec->bytes_loaded) {
-	SWFDEC_WARNING ("%u bytes after EOF", dec->bytes_loaded - s->bytes_parsed);
+      if (s->bytes_parsed < SWFDEC_DECODER (s)->bytes_loaded) {
+	SWFDEC_WARNING ("%u bytes after EOF", SWFDEC_DECODER (s)->bytes_loaded - s->bytes_parsed);
       }
       return SWFDEC_STATUS_EOF;
   }
 
   /* copy state */
-  dec->frames_loaded = s->main_sprite->parse_frame;
+  SWFDEC_DECODER (s)->frames_loaded = s->main_sprite->parse_frame;
 
   return ret;
+}
+
+static SwfdecStatus
+swfdec_swf_decoder_parse (SwfdecDecoder *dec, SwfdecBuffer *buffer)
+{
+  SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (dec);
+  SwfdecStatus status = 0;
+
+  swfdec_swf_decoder_deflate (s, buffer);
+  do {
+    status |= swfdec_swf_decoder_parse_one (s);
+  } while ((status & (SWFDEC_STATUS_EOF | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_ERROR)) == 0);
+  return status;
 }
 
 static void

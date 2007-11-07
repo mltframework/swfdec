@@ -88,7 +88,8 @@ swfdec_flv_decoder_dispose (GObject *object)
     g_array_free (flv->data, TRUE);
     flv->data = NULL;
   }
-
+  swfdec_buffer_queue_unref (flv->queue);
+  flv->queue = NULL;
 
   G_OBJECT_CLASS (swfdec_flv_decoder_parent_class)->dispose (object);
 }
@@ -96,14 +97,12 @@ swfdec_flv_decoder_dispose (GObject *object)
 static SwfdecStatus
 swfdec_flv_decoder_parse_header (SwfdecFlvDecoder *flv)
 {
-  SwfdecDecoder *dec = SWFDEC_DECODER (flv);
   SwfdecBuffer *buffer;
   SwfdecBits bits;
   guint version, header_length;
   gboolean has_audio, has_video;
 
-  /* NB: we're still reading from the original queue, since deflating is not initialized yet */
-  buffer = swfdec_buffer_queue_peek (dec->queue, 9);
+  buffer = swfdec_buffer_queue_peek (flv->queue, 9);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
 
@@ -128,7 +127,7 @@ swfdec_flv_decoder_parse_header (SwfdecFlvDecoder *flv)
     /* FIXME: treat as error or ignore? */
     return SWFDEC_STATUS_ERROR;
   }
-  buffer = swfdec_buffer_queue_pull (dec->queue, header_length);
+  buffer = swfdec_buffer_queue_pull (flv->queue, header_length);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
   swfdec_buffer_unref (buffer);
@@ -151,12 +150,11 @@ swfdec_flv_decoder_parse_header (SwfdecFlvDecoder *flv)
 static SwfdecStatus
 swfdec_flv_decoder_parse_last_tag (SwfdecFlvDecoder *flv)
 {
-  SwfdecDecoder *dec = SWFDEC_DECODER (flv);
   SwfdecBuffer *buffer;
   SwfdecBits bits;
   guint last_tag;
 
-  buffer = swfdec_buffer_queue_pull (dec->queue, 4);
+  buffer = swfdec_buffer_queue_pull (flv->queue, 4);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
 
@@ -357,20 +355,19 @@ swfdec_flv_decoder_parse_data_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, guin
 static SwfdecStatus
 swfdec_flv_decoder_parse_tag (SwfdecFlvDecoder *flv)
 {
-  SwfdecDecoder *dec = SWFDEC_DECODER (flv);
   SwfdecBuffer *buffer;
   SwfdecBits bits;
   guint size, type, timestamp;
   SwfdecStatus ret = SWFDEC_STATUS_OK;
 
-  buffer = swfdec_buffer_queue_peek (dec->queue, 4);
+  buffer = swfdec_buffer_queue_peek (flv->queue, 4);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
   swfdec_bits_init (&bits, buffer);
   swfdec_bits_get_u8 (&bits);
   size = swfdec_bits_get_bu24 (&bits);
   swfdec_buffer_unref (buffer);
-  buffer = swfdec_buffer_queue_pull (dec->queue, 11 + size);
+  buffer = swfdec_buffer_queue_pull (flv->queue, 11 + size);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
   swfdec_bits_init (&bits, buffer);
@@ -405,31 +402,35 @@ swfdec_flv_decoder_parse_tag (SwfdecFlvDecoder *flv)
 }
 
 static SwfdecStatus
-swfdec_flv_decoder_parse (SwfdecDecoder *dec)
+swfdec_flv_decoder_parse (SwfdecDecoder *dec, SwfdecBuffer *buffer)
 {
   SwfdecFlvDecoder *flv = SWFDEC_FLV_DECODER (dec);
-  SwfdecStatus ret;
+  SwfdecStatus status = 0;
 
-  switch (flv->state) {
-    case SWFDEC_STATE_HEADER:
-      ret = swfdec_flv_decoder_parse_header (flv);
-      break;
-    case SWFDEC_STATE_LAST_TAG:
-      ret = swfdec_flv_decoder_parse_last_tag (flv);
-      break;
-    case SWFDEC_STATE_TAG:
-      ret = swfdec_flv_decoder_parse_tag (flv);
-      break;
-    case SWFDEC_STATE_EOF:
-      ret = SWFDEC_STATUS_EOF;
-      break;
-    default:
-      g_assert_not_reached ();
-      ret = SWFDEC_STATUS_ERROR;
-      break;
-  }
+  swfdec_buffer_queue_push (flv->queue, buffer);
 
-  return ret;
+  do {
+    switch (flv->state) {
+      case SWFDEC_STATE_HEADER:
+	status |= swfdec_flv_decoder_parse_header (flv);
+	break;
+      case SWFDEC_STATE_LAST_TAG:
+	status |= swfdec_flv_decoder_parse_last_tag (flv);
+	break;
+      case SWFDEC_STATE_TAG:
+	status |= swfdec_flv_decoder_parse_tag (flv);
+	break;
+      case SWFDEC_STATE_EOF:
+	status |= SWFDEC_STATUS_EOF;
+	break;
+      default:
+	g_assert_not_reached ();
+	status |= SWFDEC_STATUS_ERROR;
+	break;
+    }
+  } while ((status & (SWFDEC_STATUS_EOF | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_ERROR)) == 0);
+
+  return status;
 }
 
 static void
@@ -447,6 +448,7 @@ static void
 swfdec_flv_decoder_init (SwfdecFlvDecoder *flv)
 {
   flv->state = SWFDEC_STATE_HEADER;
+  flv->queue = swfdec_buffer_queue_new ();
 }
 
 SwfdecBuffer *

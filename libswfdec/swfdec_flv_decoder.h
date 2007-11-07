@@ -46,6 +46,7 @@ struct _SwfdecFlvDecoder
   GArray *		audio;		/* audio tags */
   GArray *		video;		/* video tags */
   GArray *		data;		/* data tags (if any) */
+  SwfdecBufferQueue *	queue;		/* queue for parsing */
 };
 
 struct _SwfdecFlvDecoderClass {

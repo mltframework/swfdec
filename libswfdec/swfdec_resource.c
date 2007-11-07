@@ -155,14 +155,19 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 {
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance->movie)->context);
+  SwfdecBuffer *buffer;
   SwfdecAsValue vals[2];
   SwfdecDecoder *dec = instance->decoder;
   SwfdecDecoderClass *klass;
+  SwfdecStatus status;
+  guint parsed;
 
   if (dec == NULL) {
-    if (!swfdec_decoder_can_detect (loader->queue))
+    if (swfdec_buffer_queue_get_depth (loader->queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return;
-    dec = swfdec_decoder_new (player, loader->queue);
+    buffer = swfdec_buffer_queue_peek (loader->queue, 4);
+    dec = swfdec_decoder_new (player, buffer);
+    swfdec_buffer_unref (buffer);
     if (dec == NULL) {
       SWFDEC_ERROR ("no decoder found");
       swfdec_loader_set_target (loader, NULL);
@@ -184,35 +189,41 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
   }
   klass = SWFDEC_DECODER_GET_CLASS (dec);
   g_return_if_fail (klass->parse);
-  while (TRUE) {
-    SwfdecStatus status = klass->parse (dec);
-    switch (status) {
-      case SWFDEC_STATUS_ERROR:
-	SWFDEC_ERROR ("parsing error");
-	swfdec_loader_set_target (loader, NULL);
-	return;
-      case SWFDEC_STATUS_OK:
+  while (swfdec_buffer_queue_get_depth (loader->queue)) {
+    parsed = 0;
+    status = 0;
+    do {
+      buffer = swfdec_buffer_queue_peek_buffer (loader->queue);
+      if (buffer == NULL)
 	break;
-      case SWFDEC_STATUS_NEEDBITS:
-	return;
-      case SWFDEC_STATUS_IMAGE:
-	swfdec_resource_loader_target_image (instance);
-	break;
-      case SWFDEC_STATUS_INIT:
-	swfdec_player_initialize (player, 
-	    SWFDEC_IS_SWF_DECODER (dec) ? SWFDEC_SWF_DECODER (dec)->version : 7, /* <-- HACK */
-	    dec->rate, dec->width, dec->height);
-	break;
-      case SWFDEC_STATUS_EOF:
-	return;
-      default:
-	g_assert_not_reached ();
-	return;
+      if (parsed + buffer->length <= 65536) {
+	swfdec_buffer_unref (buffer);
+	buffer = swfdec_buffer_queue_pull_buffer (loader->queue);
+      } else {
+	swfdec_buffer_unref (buffer);
+	buffer = swfdec_buffer_queue_pull (loader->queue, 65536 - parsed);
+      }
+      parsed += buffer->length;
+      status = klass->parse (dec, buffer);
+    } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_EOF)) == 0);
+    if (status & SWFDEC_STATUS_ERROR) {
+      SWFDEC_ERROR ("parsing error");
+      swfdec_loader_set_target (loader, NULL);
+      return;
     }
+    if (status & SWFDEC_STATUS_INIT) {
+      swfdec_player_initialize (player, 
+	  SWFDEC_IS_SWF_DECODER (dec) ? SWFDEC_SWF_DECODER (dec)->version : 7, /* <-- HACK */
+	  dec->rate, dec->width, dec->height);
+    }
+    if (status & SWFDEC_STATUS_IMAGE)
+      swfdec_resource_loader_target_image (instance);
+    SWFDEC_AS_VALUE_SET_INT (&vals[0], dec->bytes_loaded);
+    SWFDEC_AS_VALUE_SET_INT (&vals[1], dec->bytes_total);
+    swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadProgress, vals, 2);
+    if (status & SWFDEC_STATUS_EOF)
+      return;
   }
-  SWFDEC_AS_VALUE_SET_INT (&vals[0], dec->bytes_loaded);
-  SWFDEC_AS_VALUE_SET_INT (&vals[1], dec->bytes_total);
-  swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadProgress, vals, 2);
 }
 
 static void
@@ -220,10 +231,16 @@ swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loa
 {
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
   SwfdecAsValue vals[2];
-
   SwfdecDecoder *dec = instance->decoder;
-  SWFDEC_AS_VALUE_SET_INT (&vals[0], dec->bytes_loaded);
-  SWFDEC_AS_VALUE_SET_INT (&vals[1], dec->bytes_total);
+
+  if (dec == NULL) {
+    SWFDEC_FIXME ("What do we signal if we have no decoder?");
+    SWFDEC_AS_VALUE_SET_INT (&vals[0], 0);
+    SWFDEC_AS_VALUE_SET_INT (&vals[1], 0);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (&vals[0], dec->bytes_loaded);
+    SWFDEC_AS_VALUE_SET_INT (&vals[1], dec->bytes_total);
+  }
   swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadProgress, vals, 2);
   SWFDEC_AS_VALUE_SET_INT (&vals[0], 0); /* FIXME */
   swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadComplete, vals, 1);

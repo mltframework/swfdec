@@ -29,18 +29,18 @@ G_BEGIN_DECLS
 
 
 typedef enum {
-  /* An error occured during parsing */
-  SWFDEC_STATUS_ERROR = 0,
   /* processing continued as expected */
-  SWFDEC_STATUS_OK,
+  SWFDEC_STATUS_OK = 0,
+  /* An error occured during parsing */
+  SWFDEC_STATUS_ERROR = (1 << 0),
   /* more data needs to be made available for processing */
-  SWFDEC_STATUS_NEEDBITS,
-  /* at least one new image is available for display */
-  SWFDEC_STATUS_IMAGE,
-  /* header parsing is complete, framerate, image size etc are known */
-  SWFDEC_STATUS_INIT,
+  SWFDEC_STATUS_NEEDBITS = (1 << 1),
   /* parsing is finished */
-  SWFDEC_STATUS_EOF
+  SWFDEC_STATUS_EOF = (1 << 2),
+  /* header parsing is complete, framerate, image size etc are known */
+  SWFDEC_STATUS_INIT = (1 << 3),
+  /* at least one new image is available for display */
+  SWFDEC_STATUS_IMAGE = (1 << 4)
 } SwfdecStatus;
 
 //typedef struct _SwfdecDecoder SwfdecDecoder;
@@ -65,21 +65,25 @@ struct _SwfdecDecoder
   guint			bytes_total;	/* total bytes in the file or 0 if not known */
   guint			frames_loaded;	/* frames already loaded */
   guint			frames_total;	/* total frames */
-  SwfdecBufferQueue *	queue;		/* the queue containing the data to be parsed */
 };
 
 struct _SwfdecDecoderClass
 {
   GObjectClass		object_class;
 
-  SwfdecStatus		(* parse)		(SwfdecDecoder *	decoder);
+  SwfdecStatus		(* parse)		(SwfdecDecoder *	decoder,
+						 SwfdecBuffer *		buffer);
 };
 
 GType		swfdec_decoder_get_type		(void);
 
-#define swfdec_decoder_can_detect(queue) (swfdec_buffer_queue_get_depth (queue) >= 3)
+#define SWFDEC_DECODER_DETECT_LENGTH 4
 SwfdecDecoder *	swfdec_decoder_new		(SwfdecPlayer *		player,
-						 SwfdecBufferQueue *	queue);
+						 const SwfdecBuffer *	buffer);
+
+SwfdecStatus	swfdec_decoder_parse		(SwfdecDecoder *	decoder,
+						 SwfdecBuffer * 	buffer);
+
 
 G_END_DECLS
 #endif

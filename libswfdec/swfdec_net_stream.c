@@ -278,6 +278,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
   klass = SWFDEC_DECODER_GET_CLASS (stream->flvdecoder);
   g_return_if_fail (klass->parse);
 
+  status = SWFDEC_STATUS_OK;
   do {
     SwfdecBuffer *buffer = swfdec_buffer_queue_pull_buffer (loader->queue);
     status |= klass->parse (SWFDEC_DECODER (stream->flvdecoder), buffer);

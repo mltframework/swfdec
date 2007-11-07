@@ -840,15 +840,18 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
 int
 swfdec_sprite_movie_get_frames_loaded (SwfdecSpriteMovie *movie)
 {
-  SwfdecSprite *sprite;
+  SwfdecResource *resource;
+  SwfdecDecoder *dec;
 
   g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), 0);
 
-  sprite = movie->sprite;
-  if (sprite == 0)
-    return 0;
-  if (sprite->parse_frame == sprite->n_frames)
-    return sprite->n_frames;
-
-  return sprite->parse_frame - 1;
+  resource = swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie));
+  if (resource == NULL)
+    return 1;
+  dec = resource->decoder;
+  if (dec == NULL)
+    return -1;
+  if (dec->frames_loaded < dec->frames_total)
+    return dec->frames_loaded - 1;
+  return dec->frames_total;
 }

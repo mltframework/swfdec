@@ -275,6 +275,7 @@ swfdec_resource_loader_target_error (SwfdecLoaderTarget *target, SwfdecLoader *l
     case SWFDEC_RESOURCE_NEW:
     case SWFDEC_RESOURCE_COMPLETE:
     case SWFDEC_RESOURCE_DONE:
+    default:
       g_assert_not_reached ();
       message = SWFDEC_AS_STR_EMPTY;
       break;

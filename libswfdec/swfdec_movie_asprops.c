@@ -166,25 +166,12 @@ mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
 }
 
 static void
-mc_totalframes (SwfdecMovie *movie, SwfdecAsValue *rval)
+mc_totalframes (SwfdecMovie *mov, SwfdecAsValue *rval)
 {
-  SwfdecResource *resource;
-  SwfdecDecoder *dec;
-  int frames;
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
 
-  g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
-
-  resource = swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie));
-  if (resource == NULL) {
-    frames = 1;
-  } else {
-    dec = resource->decoder;
-    if (dec == NULL)
-      frames = 0;
-    else
-      frames = dec->frames_total;
-  }
-  SWFDEC_AS_VALUE_SET_INT (rval, frames);
+  SWFDEC_AS_VALUE_SET_INT (rval, 
+      swfdec_sprite_movie_get_frames_total (movie));
 }
 
 static void

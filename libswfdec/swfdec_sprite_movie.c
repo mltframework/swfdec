@@ -855,3 +855,20 @@ swfdec_sprite_movie_get_frames_loaded (SwfdecSpriteMovie *movie)
     return dec->frames_loaded - 1;
   return dec->frames_total;
 }
+
+int
+swfdec_sprite_movie_get_frames_total (SwfdecSpriteMovie *movie)
+{
+  SwfdecResource *resource;
+  SwfdecDecoder *dec;
+
+  g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), 0);
+
+  resource = swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie));
+  if (resource == NULL)
+    return 1;
+  dec = resource->decoder;
+  if (dec == NULL)
+    return 0;
+  return dec->frames_total;
+}

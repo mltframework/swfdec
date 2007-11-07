@@ -600,6 +600,9 @@ enum {
   PROP_0,
   PROP_CACHE_SIZE,
   PROP_INITIALIZED,
+  PROP_DEFAULT_WIDTH,
+  PROP_DEFAULT_HEIGHT,
+  PROP_RATE,
   PROP_MOUSE_CURSOR,
   PROP_NEXT_EVENT,
   PROP_BACKGROUND_COLOR,
@@ -682,6 +685,15 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_INITIALIZED:
       g_value_set_boolean (value, swfdec_player_is_initialized (player));
+      break;
+    case PROP_DEFAULT_WIDTH:
+      g_value_set_uint (value, player->width);
+      break;
+    case PROP_DEFAULT_HEIGHT:
+      g_value_set_uint (value, player->height);
+      break;
+    case PROP_RATE:
+      g_value_set_double (value, player->rate / 256.0);
       break;
     case PROP_MOUSE_CURSOR:
       g_value_set_enum (value, player->mouse_cursor);
@@ -1408,6 +1420,15 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_INITIALIZED,
       g_param_spec_boolean ("initialized", "initialized", "TRUE when the player has initialized its basic values",
 	  FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_DEFAULT_WIDTH,
+      g_param_spec_uint ("default-width", "default width", "default width of the movie",
+	  0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_DEFAULT_HEIGHT,
+      g_param_spec_uint ("default-height", "default height", "default height of the movie",
+	  0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_RATE,
+      g_param_spec_double ("rate", "rate", "rate in frames per second",
+	  0.0, 256.0, 0.0, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_MOUSE_CURSOR,
       g_param_spec_enum ("mouse-cursor", "mouse cursor", "how the mouse pointer should be presented",
 	  SWFDEC_TYPE_MOUSE_CURSOR, SWFDEC_MOUSE_CURSOR_NONE, G_PARAM_READABLE));
@@ -1875,7 +1896,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);
     }
   }
-  SWFDEC_INFO ("initializing player to size %ux%u", width, height);
+  SWFDEC_INFO ("initializing player to size %ux%u and rate %u/256", width, height, rate);
   player->rate = rate;
   player->width = width;
   player->height = height;
@@ -1889,6 +1910,9 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
 	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
   }
   g_object_notify (G_OBJECT (player), "initialized");
+  g_object_notify (G_OBJECT (player), "default-width");
+  g_object_notify (G_OBJECT (player), "default-height");
+  g_object_notify (G_OBJECT (player), "rate");
   swfdec_player_update_scale (player);
 }
 

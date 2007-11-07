@@ -284,13 +284,6 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     status |= klass->parse (SWFDEC_DECODER (stream->flvdecoder), buffer);
   } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_EOF)) == 0);
 
-  if (status & SWFDEC_STATUS_INIT) {
-      /* HACK for native flv playback */
-      swfdec_player_initialize (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), 7,
-	  SWFDEC_DECODER (stream->flvdecoder)->rate, 
-	  SWFDEC_DECODER (stream->flvdecoder)->width, 
-	  SWFDEC_DECODER (stream->flvdecoder)->height);
-  }
   if (status & SWFDEC_STATUS_IMAGE)
     swfdec_net_stream_loader_target_recheck (stream);
 }

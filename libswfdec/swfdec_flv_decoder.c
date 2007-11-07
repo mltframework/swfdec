@@ -594,27 +594,6 @@ swfdec_flv_decoder_get_data (SwfdecFlvDecoder *flv, guint timestamp, guint *real
   return tag->buffer;
 }
 
-/*** HACK ***/
-
-/* This is a hack to allow native FLV playback IN SwfdecPlayer */
-
-#include "swfdec_loadertarget.h"
-#include "swfdec_net_stream.h"
-#include "swfdec_sprite.h"
-#include "swfdec_video_movie.h"
-
-#if 0
-static void
-notify_initialized (SwfdecPlayer *player, GParamSpec *pspec, SwfdecVideoMovie *movie)
-{
-  movie->video->width = player->width;
-  movie->video->height = player->height;
-
-  swfdec_movie_queue_update (SWFDEC_MOVIE (movie), SWFDEC_MOVIE_INVALID_MATRIX);
-  swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
-}
-#endif
-
 gboolean
 swfdec_flv_decoder_is_eof (SwfdecFlvDecoder *flv)
 {
@@ -629,41 +608,5 @@ swfdec_flv_decoder_eof (SwfdecFlvDecoder *flv)
   g_return_if_fail (SWFDEC_IS_FLV_DECODER (flv));
 
   flv->state = SWFDEC_STATE_EOF;
-}
-
-SwfdecMovie *
-swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
-{
-  //g_assert_not_reached ();
-  return NULL;
-#if 0
-  SwfdecContent *content = swfdec_content_new (0);
-  SwfdecMovie *movie;
-  SwfdecVideo *video;
-  SwfdecConnection *conn;
-  SwfdecNetStream *stream;
-
-  /* set up the video movie */
-  video = g_object_new (SWFDEC_TYPE_VIDEO, NULL);
-  video->width = G_MAXUINT;
-  video->height = G_MAXUINT;
-  content->graphic = SWFDEC_GRAPHIC (video);
-  content->free = TRUE;
-  movie = swfdec_movie_new (parent, content);
-  g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) g_object_unref, video);
-  g_signal_connect (SWFDEC_ROOT_MOVIE (parent)->player, "notify::initialized",
-      G_CALLBACK (notify_initialized), movie);
-  /* set up the playback stream */
-  conn = swfdec_connection_new (SWFDEC_ROOT_MOVIE (parent)->player->jscx);
-  stream = swfdec_net_stream_new (SWFDEC_ROOT_MOVIE (parent)->player, conn);
-  swfdec_net_stream_set_loader (stream, SWFDEC_ROOT_MOVIE (parent)->loader);
-  stream->flvdecoder = flv;
-  swfdec_video_movie_set_input (SWFDEC_VIDEO_MOVIE (movie), &stream->input);
-  swfdec_net_stream_set_playing (stream, TRUE);
-  g_object_unref (conn);
-  g_object_unref (stream);
-
-  return movie;
-#endif
 }
 

@@ -33,7 +33,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_flash_security.h"
-#include "swfdec_flv_decoder.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
 #include "swfdec_movie_clip_loader.h"
@@ -98,8 +97,6 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     movie->n_frames = movie->sprite->n_frames;
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
     swfdec_resource_check_rights (instance);
-  } else if (SWFDEC_IS_FLV_DECODER (instance->decoder)) {
-    /* nothing to do, please move along */
   } else {
     g_assert_not_reached ();
   }
@@ -174,10 +171,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
       return;
     }
 
-    if (SWFDEC_IS_FLV_DECODER (dec)) {
-      swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_FLV);
-      swfdec_flv_decoder_add_movie (SWFDEC_FLV_DECODER (dec), SWFDEC_MOVIE (instance->movie));
-    } else if (SWFDEC_IS_SWF_DECODER (dec)) {
+    if (SWFDEC_IS_SWF_DECODER (dec)) {
       swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_SWF);
       instance->decoder = dec;
     } else {

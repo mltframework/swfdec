@@ -1995,6 +1995,7 @@ swfdec_player_unroot_object (SwfdecPlayer *player, GObject *object)
 SwfdecPlayer *
 swfdec_player_new (SwfdecAsDebugger *debugger)
 {
+  static const GTimeVal the_beginning = { 1035840244, 0 };
   SwfdecPlayer *player;
 
   g_return_val_if_fail (debugger == NULL || SWFDEC_IS_AS_DEBUGGER (debugger), NULL);
@@ -2003,6 +2004,8 @@ swfdec_player_new (SwfdecAsDebugger *debugger)
   player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
       "max-runtime", 0, 
       "debugger", debugger, NULL);
+  /* FIXME: make this a property or something and don't set it here */
+  SWFDEC_AS_CONTEXT (player)->start_time = the_beginning;
 
   return player;
 }

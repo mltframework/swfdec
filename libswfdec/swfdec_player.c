@@ -1994,8 +1994,11 @@ swfdec_player_new (SwfdecAsDebugger *debugger)
 {
   SwfdecPlayer *player;
 
+  g_return_val_if_fail (debugger == NULL || SWFDEC_IS_AS_DEBUGGER (debugger), NULL);
+
   swfdec_init ();
-  player = g_object_new (SWFDEC_TYPE_PLAYER, "debugger", debugger, NULL);
+  player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
+      "debugger", debugger, NULL);
 
   return player;
 }

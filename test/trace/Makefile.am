@@ -2187,6 +2187,15 @@ EXTRA_DIST = \
 	unescape2-6.swf.trace \
 	unescape2-7.swf \
 	unescape2-7.swf.trace \
+	unreproducable-random.as \
+	unreproducable-random-5.swf \
+	unreproducable-random-5.swf.trace \
+	unreproducable-random-6.swf \
+	unreproducable-random-6.swf.trace \
+	unreproducable-random-7.swf \
+	unreproducable-random-7.swf.trace \
+	unreproducable-random-8.swf \
+	unreproducable-random-8.swf.trace \
 	values.as \
 	video.flv \
 	video-properties.as \

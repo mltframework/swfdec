@@ -1022,6 +1022,13 @@ EXTRA_DIST = \
 	names.swf.trace \
 	netconnection.swf \
 	netconnection.swf.trace \
+	netstream-fscommand.as \
+	netstream-fscommand-6.swf \
+	netstream-fscommand-6.swf.trace \
+	netstream-fscommand-7.swf \
+	netstream-fscommand-7.swf.trace \
+	netstream-fscommand-8.swf \
+	netstream-fscommand-8.swf.trace \
 	netstream-load-loop.as \
 	netstream-load-loop-6.swf \
 	netstream-load-loop-6.swf.trace \

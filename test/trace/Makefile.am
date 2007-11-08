@@ -396,7 +396,7 @@ EXTRA_DIST = \
 	context-menu-item-7.swf.trace \
 	context-menu-item-8.swf \
 	context-menu-item-8.swf.trace \
-	context-menu.as \
+	context-menu-properties.as \
 	context-menu-properties-5.swf \
 	context-menu-properties-5.swf.trace \
 	context-menu-properties-6.swf \

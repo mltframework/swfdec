@@ -1485,7 +1485,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 	  SWFDEC_TYPE_SYSTEM, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_MAX_RUNTIME,
       g_param_spec_ulong ("max-runtime", "maximum runtime", "maximum time in msecs scripts may run in the player before aborting",
-	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
+	  0, G_MAXULONG, 10 * 1000, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1652,6 +1652,7 @@ swfdec_player_init (SwfdecPlayer *player)
 
   player->runtime = g_timer_new ();
   g_timer_stop (player->runtime);
+  player->max_runtime = 10 * 1000;
   player->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -2000,6 +2001,7 @@ swfdec_player_new (SwfdecAsDebugger *debugger)
 
   swfdec_init ();
   player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
+      "max-runtime", 0, 
       "debugger", debugger, NULL);
 
   return player;

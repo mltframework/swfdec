@@ -30,7 +30,7 @@ typedef void (* SwfdecResourceFunc) (SwfdecPlayer *player, SwfdecLoader *loader,
 
 struct _SwfdecResourceRequest
 {
-  SwfdecSecurity *	security;     	/* security context hen loading */
+  SwfdecSecurity *	security;     	/* security context when loading */
 
   char *		url;		/* URL we're gonna load */
   SwfdecLoaderRequest	request;	/* how are we goona load this URL? */

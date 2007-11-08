@@ -504,9 +504,8 @@ swfdec_player_perform_external_actions (SwfdecPlayer *player)
     if (action->object == NULL) 
       continue;
     action->func (action->object, action->data);
+    swfdec_player_perform_actions (player);
   }
-
-  swfdec_player_perform_actions (player);
 }
 
 static void

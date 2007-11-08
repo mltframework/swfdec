@@ -128,7 +128,7 @@ swfdec_interaction_new (const char *data, guint length, GError **error)
   inter->commands = g_array_new (FALSE, FALSE, sizeof (SwfdecCommand));
 
   while ((token = g_scanner_get_next_token (scanner)) != G_TOKEN_EOF) {
-    switch (token) {
+    switch ((SwfdecCommandType)token) {
       case SWFDEC_COMMAND_WAIT:
 	token = g_scanner_get_next_token (scanner);
 	if (token != G_TOKEN_INT) {

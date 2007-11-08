@@ -97,14 +97,14 @@ swfdec_slow_loader_tick (gpointer data)
 static void
 swfdec_slow_loader_initialize (SwfdecSlowLoader *slow, SwfdecLoader *loader, guint duration)
 {
-  gulong size;
+  glong size;
 
   slow->tick_time = 100;
   slow->duration = duration * 1000;
   slow->loader = loader;
   g_signal_connect (loader, "notify", G_CALLBACK (swfdec_slow_loader_notify_cb), slow);
   size = swfdec_loader_get_size (loader);
-  if (size)
+  if (size >= 0)
     swfdec_loader_set_size (SWFDEC_LOADER (slow), size);
   slow->timeout_id = g_timeout_add (slow->tick_time, swfdec_slow_loader_tick, slow);
   swfdec_loader_open (SWFDEC_LOADER (slow), 0);
@@ -119,7 +119,7 @@ swfdec_slow_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
 
   /* FIXME: include request and data */
   new = swfdec_gtk_loader_new (swfdec_url_get_url (swfdec_loader_get_url (loader)));
-  swfdec_slow_loader_initialize (slow, new, slow->duration / 1000);
+  swfdec_slow_loader_initialize (slow, new, SWFDEC_SLOW_LOADER (parent)->duration / 1000);
 }
 
 static void

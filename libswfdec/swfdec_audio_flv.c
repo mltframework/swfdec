@@ -49,7 +49,7 @@ static SwfdecBuffer *
 swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
 {
   SwfdecBuffer *buffer;
-  SwfdecAudioCodec format;
+  guint format;
   SwfdecAudioFormat in;
   guint now, soon;
 

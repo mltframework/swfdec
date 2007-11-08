@@ -1,6 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
- *                    Pekka Lampila <pekka.lampila@iki.fi>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,10 +41,13 @@ static SwfdecColor
 swfdec_text_field_movie_int_to_color (SwfdecAsContext *cx, int value)
 {
   if (value < 0) {
-    return 16777216 + value % 16777216;
+    value = (0xffffff + 1) + value % (0xffffff + 1);
   } else {
-    return value % 16777216;
+    value = value % (0xffffff + 1);
   }
+
+  return SWFDEC_COLOR_COMBINE (value >> 16 & 0xff, value >> 8 & 0xff,
+      value & 0xff, 0);
 }
 
 // does nothing but calls valueOf
@@ -483,7 +486,10 @@ swfdec_text_field_movie_get_backgroundColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->background_color & 0xffffff);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+      SWFDEC_COLOR_R (text->background_color) << 16 |
+      SWFDEC_COLOR_G (text->background_color) << 8 |
+      SWFDEC_COLOR_B (text->background_color));
 }
 
 static void
@@ -497,8 +503,7 @@ swfdec_text_field_movie_set_backgroundColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  color = (swfdec_text_field_movie_int_to_color (cx, value) & 0xffffff) +
-    (255 << 24);
+  color = swfdec_text_field_movie_int_to_color (cx, value);
   if (text->background_color != color) {
     text->background_color = color;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
@@ -544,7 +549,11 @@ swfdec_text_field_movie_get_borderColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->border_color & 0xffffff);
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+      SWFDEC_COLOR_R (text->border_color) << 16 |
+      SWFDEC_COLOR_G (text->border_color) << 8 |
+      SWFDEC_COLOR_B (text->border_color));
 }
 
 static void
@@ -558,8 +567,7 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  color = (swfdec_text_field_movie_int_to_color (cx, value) & 0xffffff) +
-    (255 << 24);
+  color = swfdec_text_field_movie_int_to_color (cx, value);
   if (text->border_color != color) {
     text->border_color = color;
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
@@ -796,6 +804,11 @@ swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
 
   if (text->text->password != value) {
     text->text->password = value;
+    if (!value && text->asterisks != NULL) {
+      g_free (text->asterisks);
+      text->asterisks = NULL;
+      text->asterisks_length = 0;
+    }
     swfdec_movie_invalidate (SWFDEC_MOVIE (text));
   }
 }
@@ -1031,7 +1044,16 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
 
   format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i]));
 
-  swfdec_text_field_movie_set_text_format (text, format, start_index, end_index);
+  swfdec_text_field_movie_set_text_format (text, format,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str,
+      g_utf8_offset_to_pointer (text->input->str, end_index) -
+      text->input->str);
+
+  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_text_field_movie_auto_size (text);
+  // special case: update the max values, not the current values
+  swfdec_text_field_movie_update_scroll (text, FALSE);
 }
 
 SWFDEC_AS_NATIVE (104, 101, swfdec_text_field_movie_getTextFormat)
@@ -1068,8 +1090,11 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
   if (start_index == end_index) {
     format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
   } else {
-    format =
-      swfdec_text_field_movie_get_text_format (text, start_index, end_index);
+    format = swfdec_text_field_movie_get_text_format (text,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str,
+      g_utf8_offset_to_pointer (text->input->str, end_index) -
+      text->input->str);
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
@@ -1097,7 +1122,11 @@ swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
   start_index = MIN (start_index, g_utf8_strlen (text->input->str, -1));
   end_index = MIN (end_index, g_utf8_strlen (text->input->str, -1));
 
-  swfdec_text_field_movie_replace_text (text, start_index, end_index, str);
+  swfdec_text_field_movie_replace_text (text,
+      g_utf8_offset_to_pointer (text->input->str, start_index) -
+      text->input->str,
+      g_utf8_offset_to_pointer (text->input->str, end_index) -
+      text->input->str, str);
 }
 
 // static
@@ -1214,6 +1243,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, parent->resource,
       SWFDEC_GRAPHIC (edittext), name);
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
+  g_object_unref (edittext);
   swfdec_movie_initialize (movie);
   swfdec_movie_update (movie);
 

@@ -86,6 +86,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_movie.c \
 	swfdec_movie_as_drawing.c \
 	swfdec_movie_asprops.c \
+	swfdec_movie_clip_loader.c \
 	swfdec_net_connection.c \
 	swfdec_net_stream.c \
 	swfdec_net_stream_as.c \
@@ -96,6 +97,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_rect.c \
 	swfdec_rectangle.c \
 	swfdec_resource.c \
+	swfdec_resource_request.c \
 	swfdec_ringbuffer.c \
 	swfdec_script.c \
 	swfdec_security.c \
@@ -212,6 +214,7 @@ noinst_HEADERS = \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
+	swfdec_movie_clip_loader.h \
 	swfdec_net_connection.h \
 	swfdec_net_stream.h \
 	swfdec_path.h \
@@ -219,6 +222,7 @@ noinst_HEADERS = \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_resource.h \
+	swfdec_resource_request.h \
 	swfdec_ringbuffer.h \
 	swfdec_script_internal.h \
 	swfdec_security.h \

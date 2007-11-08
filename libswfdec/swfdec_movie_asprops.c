@@ -29,6 +29,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
+#include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
@@ -137,24 +138,6 @@ mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 }
 
 static void
-mc_currentframe (SwfdecMovie *movie, SwfdecAsValue *rval)
-{
-  g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, SWFDEC_SPRITE_MOVIE (movie)->frame);
-}
-
-static void
-mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
-{
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  if (movie->sprite) {
-    SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->sprite->parse_frame);
-    return;
-  }
-  SWFDEC_AS_VALUE_SET_INT (rval, movie->n_frames);
-}
-
-static void
 mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   SWFDEC_AS_VALUE_SET_STRING (rval, movie->name);
@@ -167,10 +150,28 @@ mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 }
 
 static void
-mc_totalframes (SwfdecMovie *movie, SwfdecAsValue *rval)
+mc_currentframe (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
-  SWFDEC_AS_VALUE_SET_INT (rval, SWFDEC_SPRITE_MOVIE (movie)->n_frames);
+  SWFDEC_AS_VALUE_SET_NUMBER (rval, SWFDEC_SPRITE_MOVIE (movie)->frame);
+}
+
+static void
+mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
+{
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+
+  SWFDEC_AS_VALUE_SET_INT (rval, 
+      swfdec_sprite_movie_get_frames_loaded (movie));
+}
+
+static void
+mc_totalframes (SwfdecMovie *mov, SwfdecAsValue *rval)
+{
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+
+  SWFDEC_AS_VALUE_SET_INT (rval, 
+      swfdec_sprite_movie_get_frames_total (movie));
 }
 
 static void
@@ -380,6 +381,7 @@ mc_target_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   }
   if (s->len == 0) {
     SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_SLASH);
+    g_string_free (s, TRUE);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_give_string (
 	  SWFDEC_AS_OBJECT (movie)->context, g_string_free (s, FALSE)));

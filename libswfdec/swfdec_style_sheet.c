@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,6 +58,8 @@ swfdec_style_sheet_mark (SwfdecAsObject *object)
   for (iter = style->listeners; iter != NULL; iter = iter->next) {
     swfdec_as_object_mark (iter->data);
   }
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_style_sheet_parent_class)->mark (object);
 }
 
 static void

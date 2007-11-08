@@ -155,7 +155,7 @@ run_test (const char *filename)
   SwfdecLoader *loader;
   SwfdecPlayer *player = NULL;
   guint i, msecs;
-  int w, h;
+  guint w, h;
   cairo_surface_t *surface;
   cairo_t *cr;
 
@@ -174,7 +174,7 @@ run_test (const char *filename)
     msecs = swfdec_player_get_next_event (player);
     swfdec_player_advance (player, msecs);
   }
-  swfdec_player_get_image_size (player, &w, &h);
+  swfdec_player_get_default_size (player, &w, &h);
   if (w == 0 || h == 0) {
     g_print ("  ERROR: width and height not set\n");
     goto error;

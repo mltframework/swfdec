@@ -43,7 +43,8 @@ swfdec_sound_object_mark (SwfdecAsObject *object)
 {
   SwfdecSoundObject *sound = SWFDEC_SOUND_OBJECT (object);
 
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (sound->target));
+  if (sound->target != NULL)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (sound->target));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_sound_object_parent_class)->mark (object);
 }

@@ -28,7 +28,7 @@
 #include "swfdec_internal.h"
 
 static SwfdecVideoDecoder *
-swfdec_video_decoder_builtin_new (SwfdecVideoCodec codec)
+swfdec_video_decoder_builtin_new (guint codec)
 {
   SwfdecVideoDecoder *ret;
 
@@ -41,7 +41,7 @@ swfdec_video_decoder_builtin_new (SwfdecVideoCodec codec)
 
 struct {
   const char *		name;
-  SwfdecVideoDecoder *	(* func) (SwfdecVideoCodec);
+  SwfdecVideoDecoder *	(* func) (guint);
 } video_codecs[] = {
   { "builtin",	swfdec_video_decoder_builtin_new },
 #ifdef HAVE_GST
@@ -63,7 +63,7 @@ struct {
  * Returns:
  **/
 SwfdecVideoDecoder *
-swfdec_video_decoder_new (SwfdecVideoCodec codec)
+swfdec_video_decoder_new (guint codec)
 {
   SwfdecVideoDecoder *ret;
   const char *list;
@@ -302,15 +302,19 @@ swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
  * Returns: the output format to use for this format
  **/
 SwfdecVideoFormat
-swfdec_video_codec_get_format (SwfdecVideoCodec codec)
+swfdec_video_codec_get_format (guint codec)
 {
   switch (codec) {
     case SWFDEC_VIDEO_CODEC_H263:
     case SWFDEC_VIDEO_CODEC_VP6:
     case SWFDEC_VIDEO_CODEC_VP6_ALPHA:
       return SWFDEC_VIDEO_FORMAT_I420;
-    default:
+    case SWFDEC_VIDEO_CODEC_UNDEFINED:
+    case SWFDEC_VIDEO_CODEC_SCREEN:
+    case SWFDEC_VIDEO_CODEC_SCREEN2:
       return SWFDEC_VIDEO_FORMAT_RGBA;
+    default:
+      g_return_val_if_reached (SWFDEC_VIDEO_FORMAT_RGBA);
   }
 }
 

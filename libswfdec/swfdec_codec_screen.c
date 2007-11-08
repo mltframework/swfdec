@@ -118,7 +118,7 @@ swfdec_video_decoder_screen_free (SwfdecVideoDecoder *dec)
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_screen_new (SwfdecVideoCodec type)
+swfdec_video_decoder_screen_new (guint type)
 {
   SwfdecCodecScreen *screen;
   

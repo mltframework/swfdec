@@ -63,6 +63,74 @@ swfdec_get_clipeventflags (SwfdecMovie *movie, SwfdecBits * bits)
 }
 
 static gboolean
+swfdec_sprite_movie_perform_old_place (SwfdecSpriteMovie *movie,
+    SwfdecBits *bits, guint tag)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  SwfdecMovie *cur;
+  SwfdecSwfDecoder *dec;
+  int depth;
+  cairo_matrix_t transform;
+  gboolean has_ctrans;
+  SwfdecColorTransform ctrans;
+  guint id;
+  SwfdecGraphic *graphic;
+
+  dec = SWFDEC_SWF_DECODER (mov->resource->decoder);
+
+  SWFDEC_LOG ("performing PlaceObject on movie %s", mov->name);
+
+  id = swfdec_bits_get_u16 (bits);
+  SWFDEC_LOG ("  id = %d", id);
+
+  depth = swfdec_bits_get_u16 (bits);
+  if (depth >= 16384) {
+    SWFDEC_FIXME ("depth of placement too high: %u >= 16384", depth);
+  }
+  SWFDEC_LOG ("  depth = %d (=> %d)", depth, depth - 16384);
+  depth -= 16384;
+
+  swfdec_bits_get_matrix (bits, &transform, NULL);
+  SWFDEC_LOG ("  matrix = { %g %g, %g %g } + { %g %g }",
+      transform.xx, transform.yx,
+      transform.xy, transform.yy,
+      transform.x0, transform.y0);
+
+  if (swfdec_bits_left (bits)) {
+    has_ctrans = TRUE;
+    swfdec_bits_get_color_transform (bits, &ctrans);
+    SWFDEC_LOG ("  color transform = %d %d  %d %d  %d %d  %d %d",
+	ctrans.ra, ctrans.rb,
+	ctrans.ga, ctrans.gb,
+	ctrans.ba, ctrans.bb,
+	ctrans.aa, ctrans.ab);
+  } else {
+    has_ctrans = FALSE;
+  }
+
+  /* 3) perform the actions depending on the set properties */
+  cur = swfdec_movie_find (mov, depth);
+  graphic = swfdec_swf_decoder_get_character (dec, id);
+
+  if (!SWFDEC_IS_GRAPHIC (graphic)) {
+    SWFDEC_FIXME ("character %u is not a graphic (does it even exist?), aborting", id);
+    return FALSE;
+  }
+
+  cur = swfdec_movie_new (player, depth, mov, mov->resource, graphic, NULL);
+  swfdec_movie_set_static_properties (cur, &transform,
+      has_ctrans ? &ctrans : NULL, -1, 0, 0, NULL);
+  swfdec_movie_queue_script (cur, SWFDEC_EVENT_INITIALIZE);
+  swfdec_movie_queue_script (cur, SWFDEC_EVENT_CONSTRUCT);
+  swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
+  swfdec_movie_initialize (cur);
+
+  return TRUE;
+}
+
+
+static gboolean
 swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, guint tag)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
@@ -77,7 +145,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   gboolean has_transform;
   gboolean has_character;
   gboolean move;
-  gboolean depth;
+  int depth;
   gboolean cache;
   gboolean has_blend_mode = 0;
   gboolean has_filter = 0;
@@ -311,6 +379,8 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	swfdec_player_add_action_script (player, mov, script, 2);
       }
       return TRUE;
+    case SWFDEC_TAG_PLACEOBJECT:
+      return swfdec_sprite_movie_perform_old_place (movie, &bits, tag);
     case SWFDEC_TAG_PLACEOBJECT2:
     case SWFDEC_TAG_PLACEOBJECT3:
       return swfdec_sprite_movie_perform_place (movie, &bits, tag);
@@ -559,9 +629,13 @@ swfdec_sprite_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_sprite_movie_init_movie (SwfdecMovie *movie)
+swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
 {
-  swfdec_sprite_movie_goto (SWFDEC_SPRITE_MOVIE (movie), 1);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+
+  g_assert (movie->frame == (guint) -1);
+  movie->frame = 0;
+  swfdec_sprite_movie_goto (movie, 1);
 }
 
 static void
@@ -584,6 +658,9 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 
   if (mov->will_be_removed)
     return;
+
+  if (movie->sprite && movie->frame == (guint) -1)
+    movie->frame = 0;
 
   swfdec_player_add_action (player, mov, SWFDEC_EVENT_ENTER, 2);
   if (movie->playing && movie->sprite != NULL) {
@@ -711,6 +788,7 @@ static void
 swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
 {
   movie->playing = TRUE;
+  movie->frame = (guint) -1;
 }
 
 /* cute little hack */
@@ -721,46 +799,76 @@ swfdec_sprite_movie_clear (SwfdecAsContext *cx, SwfdecAsObject *object,
  * swfdec_sprite_movie_unload:
  * @movie: a #SwfdecMovie
  *
- * Unloads all contents from the given movie.
+ * Clears all contents from the given movie. This means deleting all
+ * variables and removing all children movie clips.
  **/
 void
 swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
 {
+  SwfdecMovie *mov;
   SwfdecAsValue hack;
 
   g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
 
+  mov = SWFDEC_MOVIE (movie);
   /* This function does enough invalidating */
   swfdec_sprite_movie_clear (SWFDEC_AS_OBJECT (movie)->context, 
       SWFDEC_AS_OBJECT (movie), 0, NULL, &hack);
-  movie->frame = 0;
+  /* FIXME: destroy or unload? */
+  while (mov->list)
+    swfdec_movie_destroy (mov->list->data);
+  swfdec_as_object_clear_variables (SWFDEC_AS_OBJECT (movie));
+  movie->frame = (guint) -1;
   movie->n_frames = 0;
   movie->next_action = 0;
   movie->max_action = 0;
   movie->sprite = NULL;
 }
 
-void
-swfdec_sprite_movie_load (SwfdecSpriteMovie *movie, const char *url, SwfdecLoaderRequest request, 
-    SwfdecBuffer *data)
+/**
+ * swfdec_sprite_movie_get_frames_loaded:
+ * @movie: a #SwfdecSpriteMovie
+ *
+ * Computes the number of loaded frames as used by the _framesloaded property
+ * or the WaitForFrame actions. If the @movie is fully loaded, this is the 
+ * amount of total frames of the sprite it displays, or 0 if it has no sprite.
+ * If the movie is not fully loaded, it is the amount of frames that are 
+ * completely loaded minus one. Welcome to the world of Flash.
+ *
+ * Returns: The number of loaded frames as reported by ActionScript.
+ **/
+int
+swfdec_sprite_movie_get_frames_loaded (SwfdecSpriteMovie *movie)
 {
   SwfdecResource *resource;
-  SwfdecLoader *loader;
+  SwfdecDecoder *dec;
 
-  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
-  g_return_if_fail (url != NULL);
+  g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), 0);
 
-  swfdec_sprite_movie_unload (movie);
-
-  loader = swfdec_player_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
-      url, request, data);
-  if (loader == NULL)
-    return;
-
-  resource = swfdec_resource_new (loader, NULL);
-  g_object_unref (SWFDEC_MOVIE (movie)->resource);
-  SWFDEC_MOVIE (movie)->resource = resource;
-  swfdec_resource_set_movie (resource, movie);
-  g_object_unref (loader);
+  resource = swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie));
+  if (resource == NULL)
+    return 1;
+  dec = resource->decoder;
+  if (dec == NULL)
+    return -1;
+  if (dec->frames_loaded < dec->frames_total)
+    return dec->frames_loaded - 1;
+  return dec->frames_total;
 }
 
+int
+swfdec_sprite_movie_get_frames_total (SwfdecSpriteMovie *movie)
+{
+  SwfdecResource *resource;
+  SwfdecDecoder *dec;
+
+  g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), 0);
+
+  resource = swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie));
+  if (resource == NULL)
+    return 1;
+  dec = resource->decoder;
+  if (dec == NULL)
+    return 0;
+  return dec->frames_total;
+}

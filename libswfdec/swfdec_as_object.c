@@ -354,15 +354,13 @@ swfdec_as_object_get_prototype (SwfdecAsObject *object)
   return object->prototype;
 }
 
-static void
-swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
-    const SwfdecAsValue *val, guint flags)
+static SwfdecAsVariable *
+swfdec_as_object_hash_lookup_with_prototype (SwfdecAsObject *object,
+    const char *variable)
 {
   SwfdecAsVariable *var;
-  SwfdecAsWatch *watch;
 
-  if (!swfdec_as_variable_name_is_valid (variable))
-    return;
+  g_return_val_if_fail (swfdec_as_variable_name_is_valid (variable), NULL);
 
   var = swfdec_as_object_hash_lookup (object, variable);
   if (var == NULL && variable != SWFDEC_AS_STR___proto__) {
@@ -380,9 +378,27 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     }
     if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
       swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
-      return;
+      return NULL;
     }
   }
+
+  return var;
+}
+
+static void
+swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable, 
+    const SwfdecAsValue *val, guint flags)
+{
+  SwfdecAsVariable *var;
+  SwfdecAsWatch *watch;
+
+  if (!swfdec_as_variable_name_is_valid (variable))
+    return;
+
+  var = swfdec_as_object_hash_lookup_with_prototype (object, variable);
+  if (swfdec_as_context_is_aborted (object->context))
+    return;
+
   if (var == NULL) {
     var = swfdec_as_object_hash_create (object, variable, flags);
     if (var == NULL)
@@ -417,9 +433,13 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
       swfdec_as_function_call (watch->watch, object, 4, args, &ret);
       swfdec_as_context_run (object->context);
       swfdec_as_watch_unref (watch);
-      var = swfdec_as_object_hash_lookup (object, variable);
-      if (var == NULL)
+      var = swfdec_as_object_hash_lookup_with_prototype (object, variable);
+      if (swfdec_as_context_is_aborted (object->context))
 	return;
+      if (var == NULL) {
+	SWFDEC_INFO ("watch removed variable %s", variable);
+	return;
+      }
     }
 
     var->value = ret;
@@ -687,6 +707,8 @@ swfdec_as_object_new (SwfdecAsContext *context)
   g_assert (context->Object_prototype);
   
   object = swfdec_as_object_new_empty (context);
+  if (object == NULL)
+    return NULL;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
@@ -896,6 +918,21 @@ swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
 
   klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
   return klass->del (object, variable);
+}
+
+/**
+ * swfdec_as_object_clear_variables:
+ * @object: a #SwfdecAsObject
+ *
+ * Clears all user-set variables from the given object.
+ **/
+void
+swfdec_as_object_clear_variables (SwfdecAsObject *object)
+{
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+
+  g_hash_table_foreach (object->properties, swfdec_as_object_free_property, object);
+  g_hash_table_remove_all (object->properties);
 }
 
 /**
@@ -1178,15 +1215,16 @@ swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
  * @fun: constructor
  * @n_args: number of arguments
  * @args: arguments to pass to constructor
+ * @return_value: pointer for return value or %NULL to push the return value to 
+ *                the stack
  *
  * Creates a new object for the given constructor and pushes the constructor on
  * top of the stack. To actually run the constructor, you need to call 
- * swfdec_as_context_run(). After the constructor has been run, the new object 
- * will be pushed to the top of the stack.
+ * swfdec_as_context_run().
  **/
 void
 swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
-    const SwfdecAsValue *args)
+    const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
   SwfdecAsValue val;
   SwfdecAsObject *new;
@@ -1225,26 +1263,25 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);
   }
-  if (swfdec_as_context_use_mem (context, size)) {
-    new = g_object_new (type, NULL);
-    swfdec_as_object_add (new, context, size);
-    /* set initial variables */
-    if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val)) {
-	swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___proto__,
-	    &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-    }
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
-    if (context->version < 7) {
-      swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
-	  &val, SWFDEC_AS_VARIABLE_HIDDEN);
-    }
-    swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
-	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
-  } else {
-    /* need to do this, since we must push something to the frame stack */
-    new = NULL;
+  if (!swfdec_as_context_use_mem (context, size))
+    return;
+
+  new = g_object_new (type, NULL);
+  swfdec_as_object_add (new, context, size);
+  /* set initial variables */
+  if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val)) {
+      swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___proto__,
+	  &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
-  swfdec_as_function_call (fun, new, n_args, args, NULL);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
+  if (context->version < 7) {
+    swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR_constructor, 
+	&val, SWFDEC_AS_VARIABLE_HIDDEN);
+  }
+  swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
+
+  swfdec_as_function_call (fun, new, n_args, args, return_value);
   context->frame->construct = TRUE;
 }
 
@@ -1557,7 +1594,7 @@ swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
 {
   SwfdecAsContext *cx = object->context;
   SwfdecAsValue val;
-  char **varlist, *p;
+  char **varlist, *p, *unescaped;
   guint i;
 
   varlist = g_strsplit (str, "&", -1);
@@ -1571,15 +1608,21 @@ swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
     }
 
     if (p != NULL) {
-      SWFDEC_AS_VALUE_SET_STRING (&val,
-	  swfdec_as_context_give_string (object->context, 
-	    swfdec_as_string_unescape (cx, p)));
+      unescaped = swfdec_as_string_unescape (cx, p);
+      if (unescaped != NULL) {
+	SWFDEC_AS_VALUE_SET_STRING (&val,
+	    swfdec_as_context_give_string (cx, unescaped));
+      } else {
+	SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_EMPTY);
+      }
     } else {
       SWFDEC_AS_VALUE_SET_STRING (&val, SWFDEC_AS_STR_EMPTY);
     }
-    swfdec_as_object_set_variable (object,
-	swfdec_as_context_give_string (object->context, 
-	  swfdec_as_string_unescape (cx, varlist[i])), &val);
+    unescaped = swfdec_as_string_unescape (cx, varlist[i]);
+    if (unescaped != NULL) {
+      swfdec_as_object_set_variable (object,
+	  swfdec_as_context_give_string (cx, unescaped), &val);
+    }
   }
   g_strfreev (varlist);
 }

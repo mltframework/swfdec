@@ -189,8 +189,14 @@ swfdec_stream_start (Stream *stream)
 	swfdec_stream_install_handlers (stream);
       }
       break;
+    case SND_PCM_STATE_OPEN:
+    case SND_PCM_STATE_SETUP:
+    case SND_PCM_STATE_RUNNING:
+    case SND_PCM_STATE_DRAINING:
+    case SND_PCM_STATE_PAUSED:
+    case SND_PCM_STATE_DISCONNECTED:
     default:
-      break;
+      g_assert_not_reached ();
   }
 }
 

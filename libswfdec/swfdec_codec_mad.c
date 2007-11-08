@@ -212,7 +212,7 @@ swfdec_audio_decoder_mad_pull (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_mad_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
+swfdec_audio_decoder_mad_new (guint type, SwfdecAudioFormat format)
 {
   MadData *data;
   

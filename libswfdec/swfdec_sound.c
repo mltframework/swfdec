@@ -265,23 +265,25 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
   s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head = sound;
 
   switch (sound->codec) {
-    case 0:
+    case SWFDEC_AUDIO_CODEC_UNDEFINED:
       if (swfdec_audio_format_is_16bit (sound->format)) {
 	SWFDEC_WARNING ("undefined endianness for s16 sound");
 	/* just assume LE and hope it works (FIXME: want a switch for this?) */
 	sound->codec = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       }
       break;
-    case 2:
+    case SWFDEC_AUDIO_CODEC_MP3:
       /* latency seek */
       latency = swfdec_bits_get_s16 (b);
       break;
-    case 1:
-    case 3:
-    case 6:
+    case SWFDEC_AUDIO_CODEC_ADPCM:
+    case SWFDEC_AUDIO_CODEC_UNCOMPRESSED:
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ:
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER:
       break;
     default:
       SWFDEC_WARNING ("unknown codec %d", sound->codec);
+      sound->codec = SWFDEC_AUDIO_CODEC_UNDEFINED;
   }
 
   return SWFDEC_STATUS_OK;
@@ -356,7 +358,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
     SWFDEC_LOG ("  n_envelopes = %u", chunk->n_envelopes);
   }
 
-  for (i = 0; i < chunk->n_envelopes; i++) {
+  for (i = 0; i < chunk->n_envelopes && swfdec_bits_left (b); i++) {
     chunk->envelope[i].offset = swfdec_bits_get_u32 (b);
     if (i > 0 && chunk->envelope[i-1].offset > chunk->envelope[i].offset) {
       SWFDEC_ERROR ("unordered sound envelopes");
@@ -375,6 +377,9 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
     SWFDEC_LOG ("    envelope = %u { %u, %u }", chunk->envelope[i].offset,
 	(guint) chunk->envelope[i].volume[0], (guint) chunk->envelope[i].volume[1]);
   }
+
+  if (i < chunk->n_envelopes)
+    SWFDEC_ERROR ("out of bits when reading sound envelopes");
 
   return chunk;
 }

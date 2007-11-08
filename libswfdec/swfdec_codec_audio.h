@@ -26,19 +26,17 @@
 
 typedef struct _SwfdecAudioDecoder SwfdecAudioDecoder;
 
-typedef enum {
-  SWFDEC_AUDIO_CODEC_UNDEFINED = 0,
-  SWFDEC_AUDIO_CODEC_ADPCM = 1,
-  SWFDEC_AUDIO_CODEC_MP3 = 2,
-  SWFDEC_AUDIO_CODEC_UNCOMPRESSED = 3,
-  SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ = 5,
-  SWFDEC_AUDIO_CODEC_NELLYMOSER = 6
-} SwfdecAudioCodec;
+#define SWFDEC_AUDIO_CODEC_UNDEFINED 0
+#define SWFDEC_AUDIO_CODEC_ADPCM 1
+#define SWFDEC_AUDIO_CODEC_MP3 2
+#define SWFDEC_AUDIO_CODEC_UNCOMPRESSED 3
+#define SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ 5
+#define SWFDEC_AUDIO_CODEC_NELLYMOSER 6
 
-typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (SwfdecAudioCodec type, gboolean width,
+typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (guint type, gboolean width,
     SwfdecAudioFormat format);
 struct _SwfdecAudioDecoder {
-  SwfdecAudioCodec	codec;
+  guint			codec;
   SwfdecAudioFormat	format;
   void			(* push)	(SwfdecAudioDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
@@ -46,7 +44,7 @@ struct _SwfdecAudioDecoder {
   void		  	(* free)	(SwfdecAudioDecoder *	decoder);
 };
 
-SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(SwfdecAudioCodec	codec,
+SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(guint			codec,
 							 SwfdecAudioFormat	format);
 void			swfdec_audio_decoder_free      	(SwfdecAudioDecoder *	decoder);
 SwfdecAudioFormat	swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);

@@ -24,14 +24,12 @@
 #include <cairo.h>
 #include <libswfdec/swfdec_buffer.h>
 
-typedef enum {
-  SWFDEC_VIDEO_CODEC_UNDEFINED = 0,
-  SWFDEC_VIDEO_CODEC_H263 = 2,
-  SWFDEC_VIDEO_CODEC_SCREEN = 3,
-  SWFDEC_VIDEO_CODEC_VP6 = 4,
-  SWFDEC_VIDEO_CODEC_VP6_ALPHA = 5,
-  SWFDEC_VIDEO_CODEC_SCREEN2 = 6
-} SwfdecVideoCodec;
+#define SWFDEC_VIDEO_CODEC_UNDEFINED 0
+#define SWFDEC_VIDEO_CODEC_H263 2
+#define SWFDEC_VIDEO_CODEC_SCREEN 3
+#define SWFDEC_VIDEO_CODEC_VP6 4
+#define SWFDEC_VIDEO_CODEC_VP6_ALPHA 5
+#define SWFDEC_VIDEO_CODEC_SCREEN2 6
 
 typedef enum {
   SWFDEC_VIDEO_FORMAT_RGBA,
@@ -48,7 +46,7 @@ typedef struct {
 } SwfdecVideoImage;
 
 typedef struct _SwfdecVideoDecoder SwfdecVideoDecoder;
-typedef SwfdecVideoDecoder * (SwfdecVideoDecoderNewFunc) (SwfdecVideoCodec format);
+typedef SwfdecVideoDecoder * (SwfdecVideoDecoderNewFunc) (guint format);
 
 /* notes about the decode function:
  * - the data must be in the format specified by swfdec_video_codec_get_format()
@@ -57,16 +55,16 @@ typedef SwfdecVideoDecoder * (SwfdecVideoDecoderNewFunc) (SwfdecVideoCodec forma
  * - you need to explicitly set mask to %NULL.
  */
 struct _SwfdecVideoDecoder {
-  SwfdecVideoCodec	codec;
+  guint			codec;
   gboolean		(* decode)	(SwfdecVideoDecoder *	decoder,
 					 SwfdecBuffer *		buffer,
 					 SwfdecVideoImage *	result);
   void			(* free)	(SwfdecVideoDecoder *	decoder);
 };
 
-SwfdecVideoFormat     	swfdec_video_codec_get_format	(SwfdecVideoCodec	codec);
+SwfdecVideoFormat     	swfdec_video_codec_get_format	(guint			codec);
 
-SwfdecVideoDecoder *	swfdec_video_decoder_new      	(SwfdecVideoCodec	codec);
+SwfdecVideoDecoder *	swfdec_video_decoder_new      	(guint			codec);
 void			swfdec_video_decoder_free	(SwfdecVideoDecoder *   decoder);
 
 cairo_surface_t *     	swfdec_video_decoder_decode	(SwfdecVideoDecoder *	decoder,

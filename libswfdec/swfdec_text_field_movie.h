@@ -1,6 +1,6 @@
 /* Swfdec
  * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
- *                    Pekka Lampila <pekka.lampila@iki.fi>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,8 +41,10 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 typedef struct {
   PangoLayout *		layout;
   int			offset_x;
+  int			last_line_offset_y;
   int			height;
   int			width;
+  gboolean		bullet;
 } SwfdecLayout;
 
 typedef struct {
@@ -60,6 +62,7 @@ typedef struct {
 typedef struct {
   guint			index_;
   guint			length;
+  gboolean		newline;	// ends in newline
 
   gboolean		bullet;
   int			indent;
@@ -79,6 +82,8 @@ struct _SwfdecTextFieldMovie {
   SwfdecTextField *	text;		/* the text_field object we render */
 
   GString *		input;
+  char *		asterisks; /* bunch of asterisks that we display when password mode is enabled */
+  guint			asterisks_length;
   gboolean		input_html;	/* whether orginal input was given as HTML */
 
   const char *		variable;

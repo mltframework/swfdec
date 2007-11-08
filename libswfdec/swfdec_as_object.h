@@ -110,7 +110,8 @@ SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context);
 SwfdecAsObject *swfdec_as_object_new_empty    	(SwfdecAsContext *    	context);
 void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 						 guint			n_args,
-						 const SwfdecAsValue *	args);
+						 const SwfdecAsValue *	args,
+						 SwfdecAsValue *	return_value);
 void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
 						 SwfdecAsObject *	construct);
 SwfdecAsObject *swfdec_as_object_resolve	(SwfdecAsObject *	object);
@@ -145,6 +146,7 @@ gboolean	swfdec_as_object_get_variable_and_flags
 SwfdecAsDeleteReturn
 		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const char *		variable);
+void		swfdec_as_object_clear_variables(SwfdecAsObject *	object);
 void		swfdec_as_object_set_variable_flags
 						(SwfdecAsObject *       object,
 						 const char *		variable,

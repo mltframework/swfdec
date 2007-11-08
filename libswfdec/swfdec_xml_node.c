@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -617,6 +618,8 @@ swfdec_xml_node_clone (SwfdecAsContext *cx, SwfdecXmlNode *node, gboolean deep)
   g_assert (SWFDEC_IS_VALID_XML_NODE (node));
 
   new = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
+  if (new == NULL)
+    return NULL;
 
   new->valid = TRUE;
   new->type = node->type;
@@ -635,6 +638,8 @@ swfdec_xml_node_clone (SwfdecAsContext *cx, SwfdecXmlNode *node, gboolean deep)
     for (i = 0; i < num; i++) {
       child = swfdec_xml_node_get_child (node, i);
       child_new = swfdec_xml_node_clone (cx, child, TRUE);
+      if (child_new == NULL)
+	return NULL;
       child_new->parent = new;
       SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (child_new));
       swfdec_as_array_push (new->children, &val);
@@ -664,6 +669,9 @@ swfdec_xml_node_cloneNode (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   new = swfdec_xml_node_clone (cx, SWFDEC_XML_NODE (object), deep);
+  if (new == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (new));
 }
 
@@ -968,6 +976,11 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
   }
 
   node->childNodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
+
+  if (node->children == NULL || node->attributes == NULL ||
+      node->childNodes == NULL) {
+    node->valid = FALSE;
+  }
 }
 
 static void
@@ -1037,12 +1050,12 @@ swfdec_xml_node_new_no_properties (SwfdecAsContext *context,
   node = g_object_new (SWFDEC_TYPE_XML_NODE, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (node), context, size);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XMLNode, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return NULL;
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (node), SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (node),
+	SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  }
 
-  swfdec_xml_node_init_values (node, type,
-      swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context, value));
+  swfdec_xml_node_init_values (node, type, value);
 
   return node;
 }

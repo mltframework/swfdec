@@ -35,13 +35,21 @@ typedef struct _SwfdecResourceClass SwfdecResourceClass;
 #define SWFDEC_RESOURCE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_RESOURCE, SwfdecResource))
 #define SWFDEC_RESOURCE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_RESOURCE, SwfdecResourceClass))
 
+typedef enum {
+  SWFDEC_RESOURCE_NEW = 0,	      	/* no loader set yet, only the call to _load() was done */
+  SWFDEC_RESOURCE_REQUESTED,		/* the URL has been requested, the request was ok, ->loader is set */
+  SWFDEC_RESOURCE_OPENED,		/* onLoadStart has been called */
+  SWFDEC_RESOURCE_COMPLETE,		/* onLoadComplete has been called */
+  SWFDEC_RESOURCE_DONE			/* onLoadInit has been called, clip_loader is unset */
+} SwfdecResourceState;
+
 struct _SwfdecResource
 {
   SwfdecFlashSecurity	flash_security;
 
+  SwfdecPlayer *	player;		/* player we belong to */
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
   guint			parse_frame;	/* next frame to parse */
-  gboolean		initial;	/* TRUE if this is the initial resource */
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder in use or NULL if not yet created (only happens after loadMovie()) */
@@ -49,6 +57,11 @@ struct _SwfdecResource
 
   GHashTable *		exports;	/* string->SwfdecCharacter mapping of exported characters */
   GHashTable *		export_names;	/* SwfdecCharacter->string mapping of exported characters */
+
+  /* only used while loading */
+  SwfdecResourceState	state;		/* state we're in (for determining callbacks */
+  char *		target;		/* target path we use for signalling */
+  SwfdecMovieClipLoader *clip_loader;	/* loader that gets notified about load events */
 };
 
 struct _SwfdecResourceClass
@@ -58,10 +71,10 @@ struct _SwfdecResourceClass
 
 GType		swfdec_resource_get_type	  	(void);
 
-SwfdecResource *swfdec_resource_new			(SwfdecLoader *		loader,
+SwfdecResource *swfdec_resource_new			(SwfdecPlayer *		player,
+							 SwfdecLoader *		loader,
 							 const char *		variables);
-void		swfdec_resource_set_movie		(SwfdecResource *	resource,
-							 SwfdecSpriteMovie *	movie);
+void		swfdec_resource_mark			(SwfdecResource *	resource);
 
 void		swfdec_resource_add_export		(SwfdecResource *	instance,
 							 SwfdecCharacter *	character,
@@ -70,6 +83,14 @@ gpointer	swfdec_resource_get_export		(SwfdecResource *	root,
 							 const char *		name);
 const char *	swfdec_resource_get_export_name    	(SwfdecResource *	root,
 							 SwfdecCharacter *	character);
+
+void		swfdec_resource_load			(SwfdecPlayer *		player,
+							 const char *		target,
+							 const char *		url,
+							 SwfdecLoaderRequest	request,
+							 SwfdecBuffer *		buffer,
+							 SwfdecMovieClipLoader *loader);
+
 
 G_END_DECLS
 #endif

@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -133,7 +134,7 @@ swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
       if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
 	    strlen (xml_entities[i].escaped))) {
 	// FIXME: Do this cleaner
-	if (cx->version > 5 && xml_entities[i].character == '\xa0')
+	if (xml_entities[i].character == '\xa0')
 	  string = g_string_append_c (string, '\xc2');
 	string = g_string_append_c (string, xml_entities[i].character);
 	p += strlen (xml_entities[i].escaped);
@@ -561,8 +562,11 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   // create the new element
   if (!close) {
     child = swfdec_xml_node_new_no_properties (
-	SWFDEC_AS_OBJECT (*node)->context, SWFDEC_XML_NODE_ELEMENT, name);
-    g_free (name);
+	SWFDEC_AS_OBJECT (*node)->context, SWFDEC_XML_NODE_ELEMENT,
+	swfdec_as_context_give_string (SWFDEC_AS_OBJECT (*node)->context,
+	  name));
+    if (child == NULL)
+      return strchr (p, '\0');
   }
 
   if (close) {
@@ -641,8 +645,11 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
     unescaped = swfdec_xml_unescape (SWFDEC_AS_OBJECT (xml)->context, text);
     g_free (text);
     child = swfdec_xml_node_new_no_properties (
-	SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT, unescaped);
-    g_free (unescaped);
+	SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT,
+	swfdec_as_context_give_string (SWFDEC_AS_OBJECT (xml)->context,
+	  unescaped));
+    if (child == NULL)
+      return strchr (p, '\0');
     swfdec_xml_node_appendChild (node, child);
   }
 
@@ -700,6 +707,9 @@ swfdec_xml_do_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   if (!SWFDEC_IS_XML (object))
     return;
 
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
+    return;
+
   if (argc < 1)
     return;
 
@@ -729,6 +739,9 @@ swfdec_xml_createElement (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT,
       swfdec_as_value_to_string (cx, &argv[0]));
+  if (node == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
 }
 
@@ -751,6 +764,9 @@ swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_TEXT,
       swfdec_as_value_to_string (cx, &argv[0]));
+  if (node == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
 }
 
@@ -812,6 +828,9 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       SWFDEC_AS_STR_application_x_www_form_urlencoded);
 
   SWFDEC_XML_NODE (object)->name = NULL;
+
+  if (!SWFDEC_IS_VALID_XML_NODE (object))
+    return;
 
   if (argc >= 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     swfdec_xml_parseXML (SWFDEC_XML (object),

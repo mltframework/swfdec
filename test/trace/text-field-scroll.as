@@ -1,7 +1,7 @@
 // makeswf -v 7 -r 1 -o test-7.swf test.as
 
 function trace_scroll_properties () {
-  trace ("bottomScroll: " + t.bottomScroll);
+  trace ("bottomScroll > scroll: " + (t.bottomScroll > t.scroll));
   trace ("hscroll: " + t.hscroll);
   trace ("maxhscroll > 0: " + (t.maxhscroll > 0));
   trace ("maxscroll > 0: " + (t.maxscroll > 0));

@@ -61,7 +61,8 @@ struct _SwfdecPlayer
   guint			width;			/* width of movie */
   guint			height;			/* height of movie */
   GList *		roots;			/* all the root movies */
-  GList *		load_objects;		/* all the load objects */
+  GList *		rooted_objects;		/* all the objects we keep track of */
+  GSList *		resource_requests;	/* all external requested URIs - see swfdec_resource_request.[ch] */
   SwfdecCache *		cache;			/* player cache */
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */
@@ -160,6 +161,10 @@ void		swfdec_player_unlock		(SwfdecPlayer *		player);
 void		swfdec_player_unlock_soft	(SwfdecPlayer *		player);
 void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 
+void		swfdec_player_root_object	(SwfdecPlayer *		player,
+						 GObject *		object);
+void		swfdec_player_unroot_object	(SwfdecPlayer *		player,
+						 GObject *		object);
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
 						 const char *		name);
 void		swfdec_player_set_export_class	(SwfdecPlayer *		player,
@@ -201,19 +206,19 @@ void		swfdec_player_stop_sounds	(SwfdecPlayer *		player,
 						 SwfdecAudioRemoveFunc	func,
 						 gpointer		data);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
+gboolean	swfdec_player_get_level		(SwfdecPlayer *		player,
+						 const char *		name);
 SwfdecSpriteMovie *
-		swfdec_player_get_level		(SwfdecPlayer *		player,
-						 const char *		name,
-						 SwfdecResource *	resource);
-void		swfdec_player_remove_level	(SwfdecPlayer *		player,
-						 guint			depth);
+		swfdec_player_get_movie_at_level(SwfdecPlayer *		player,
+						 int			level);
+SwfdecSpriteMovie *
+		swfdec_player_create_movie_at_level 
+						(SwfdecPlayer *		player,
+						 SwfdecResource *	resource,
+						 int			level);
 gboolean	swfdec_player_fscommand		(SwfdecPlayer *		player,
 						 const char *		command,
 						 const char *		value);
-SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *         player,
-						 const char *		url,
-						 SwfdecLoaderRequest	request,
-						 SwfdecBuffer *		buffer);
 void		swfdec_player_launch		(SwfdecPlayer *         player,
 						 SwfdecLoaderRequest	request,
 						 const char *		url,

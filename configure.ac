@@ -23,7 +23,7 @@ dnl if we support them, we set them unconditionally
 AS_COMPILER_FLAG(-Wall, GLOBAL_CFLAGS="-Wall", GLOBAL_CFLAGS="")
 dnl I want this but stupid headers don't let me
 dnl AS_COMPILER_FLAG(-Wshadow, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wshadow")
-AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security")
+AS_COMPILER_FLAG(-Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wswitch-default, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wswitch-default")
 dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_CVS = xyes ; then
   AS_COMPILER_FLAG(-Werror, GLOBAL_CFLAGS="$GLOBAL_CFLAGS -Werror")
@@ -141,6 +141,23 @@ if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
   fi
 fi
 
+dnl Use PA if ALSA wasn't found and we're auto and it's available.
+dnl Disabled for now until the PA backend works.
+if test "$with_audio" = "auto" -o "$with_audio" = "pa"; then
+  PKG_CHECK_MODULES(PA, libpulse-mainloop-glib, AUDIO_TYPE=pa)
+  if test "$AUDIO_TYPE" = "pa"; then
+    with_audio=pa
+    AUDIO_CFLAGS=$PA_CFLAGS
+    AUDIO_LIBS=$PA_LIBS
+  else
+    if test "$with_audio" = "pa"; then
+      AC_MSG_ERROR([no pulseaudio support])
+    else
+      AC_MSG_WARN([no pulseaudio support])
+    fi
+  fi
+fi
+
 dnl Assume OSS is available if ALSA wasn't found and we're "auto".
 if test "$with_audio" = "auto" -o "$with_audio" = "oss"; then
   with_audio="oss"
@@ -149,6 +166,7 @@ if test "$with_audio" = "auto" -o "$with_audio" = "oss"; then
   AUDIO_TYPE=oss
 fi
 
+dnl If all else fails, fall back to none.
 if test "$with_audio" = "auto" -o "$with_audio" = "none"; then
   AUDIO_CFLAGS=
   AUDIO_LIBS=

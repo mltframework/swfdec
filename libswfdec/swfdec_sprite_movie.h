@@ -45,7 +45,7 @@ struct _SwfdecSpriteMovie
   /* frame information */
   guint			next_action;	/* next action in sprite to perform */
   guint			max_action;	/* next action in sprite tthat has never ben executed (used to detect first-time execution) */
-  guint			frame;		/* current frame */
+  guint			frame;		/* current frame or -1 if none */
   guint			n_frames;	/* amount of frames */
   gboolean		playing;	/* TRUE if the movie automatically advances */
 
@@ -64,14 +64,12 @@ struct _SwfdecSpriteMovieClass
 
 GType		swfdec_sprite_movie_get_type		(void);
 
+int		swfdec_sprite_movie_get_frames_loaded	(SwfdecSpriteMovie *	movie);
+int		swfdec_sprite_movie_get_frames_total	(SwfdecSpriteMovie *	movie);
+
 void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
 							 guint			goto_frame);
-
 void		swfdec_sprite_movie_unload		(SwfdecSpriteMovie *	movie);
-void		swfdec_sprite_movie_load		(SwfdecSpriteMovie *  	movie,
-							 const char *		url,
-					  		 SwfdecLoaderRequest	request,
-							 SwfdecBuffer *		data);
 
 
 G_END_DECLS

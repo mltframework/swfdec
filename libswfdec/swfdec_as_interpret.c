@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -268,32 +269,25 @@ swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *
 static void
 swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecMovie *movie;
-  SwfdecResource *resource;
-  guint frame, jump, loaded;
+  SwfdecSpriteMovie *movie;
+  guint jump;
+  int frame, loaded;
 
   if (len != 3) {
     SWFDEC_ERROR ("WaitForFrame action length invalid (is %u, should be 3", len);
     return;
   }
-  if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
+  if (!SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
     SWFDEC_ERROR ("no movie for WaitForFrame");
     return;
   }
 
-  movie = SWFDEC_MOVIE (cx->frame->target);
+  movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
   frame = data[0] || (data[1] << 8);
   jump = data[2];
-  resource = swfdec_movie_get_own_resource (movie);
-  if (resource && resource->decoder) {
-    SwfdecDecoder *dec = resource->decoder;
-    loaded = dec->frames_loaded;
-    if (loaded == dec->frames_total)
-      loaded = G_MAXUINT;
-  } else {
-    loaded = G_MAXUINT;
-  }
-  if (loaded <= frame)
+  loaded = swfdec_sprite_movie_get_frames_loaded (movie);
+  if (loaded < (int) movie->n_frames &&
+      loaded <= frame)
     swfdec_script_skip_actions (cx, jump);
 }
 
@@ -423,7 +417,7 @@ super_special_movie_lookup_magic (SwfdecAsContext *cx, SwfdecAsObject *o, const 
       return NULL;
   }
   if (SWFDEC_IS_MOVIE (o)) {
-    SwfdecMovie *ret = swfdec_movie_get_by_name (SWFDEC_MOVIE (o), name);
+    SwfdecMovie *ret = swfdec_movie_get_by_name (SWFDEC_MOVIE (o), name, TRUE);
     if (ret)
       return SWFDEC_AS_OBJECT (ret);
   }
@@ -1074,19 +1068,15 @@ swfdec_action_new_comparison (SwfdecAsContext *cx, guint action, const guint8 *d
 }
 
 static void
-swfdec_action_not_4 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+swfdec_action_not (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  double d;
-
-  d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1));
-  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1), d == 0 ? 1 : 0);
-}
-
-static void
-swfdec_action_not_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), 
-      !swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1)));
+  if (cx->version <= 4) {
+    double d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1));
+    SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1), d == 0 ? 1 : 0);
+  } else {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), 
+	!swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1)));
+  }
 }
 
 static void
@@ -1151,16 +1141,9 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     SWFDEC_ERROR ("GetURL without a SwfdecPlayer");
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
-  } else {
-    SwfdecSecurity *sec = cx->frame->security;
-    SwfdecSpriteMovie *movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, 
-	SWFDEC_IS_RESOURCE (sec) ? SWFDEC_RESOURCE (sec) : NULL);
-    if (movie) {
-      swfdec_sprite_movie_load (movie, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
-    } else {
-      swfdec_player_launch (SWFDEC_PLAYER (cx), SWFDEC_LOADER_REQUEST_DEFAULT, 
-	  url, target, NULL);
-    }
+  } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
+	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL);
   }
   g_free (url);
   g_free (target);
@@ -1195,26 +1178,15 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SWFDEC_ERROR ("GetURL2 action requires a SwfdecPlayer");
   } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
-  } else if (internal || variables) {
-    SwfdecSecurity *sec = cx->frame->security;
-    SwfdecSpriteMovie *movie;
+  } else if (variables) {
+    SwfdecMovie *movie;
     
-    /* FIXME: This code looks wrong - figure out how levels are handled */
-    movie = swfdec_player_get_level (SWFDEC_PLAYER (cx), target, 
-	(SWFDEC_IS_RESOURCE (sec) && !variables) ? SWFDEC_RESOURCE (sec) : NULL);
-    if (movie == NULL) {
-      movie = (SwfdecSpriteMovie *) swfdec_player_get_movie_from_string (
-	SWFDEC_PLAYER (cx), target);
-      if (!SWFDEC_IS_SPRITE_MOVIE (movie))
-	movie = NULL;
+    movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
+    if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+      swfdec_movie_load_variables (movie, url, method, NULL);
     }
-    if (movie == NULL) {
-      /* swfdec_player_get_movie_from_value() should have warned already */
-    } else if (variables) {
-      swfdec_movie_load_variables (SWFDEC_MOVIE (movie), url, method, NULL);
-    } else {
-      swfdec_sprite_movie_load (movie, url, method, NULL);
-    }
+  } else if (internal) {
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL);
   } else {
     /* load an external file */
     swfdec_player_launch (SWFDEC_PLAYER (cx), method, url, target, NULL);
@@ -1441,7 +1413,7 @@ out:
 }
 
 static void
-swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *rval, *lval;
   SwfdecAsValueType ltype, rtype;
@@ -1528,6 +1500,16 @@ out:
 }
 
 static void
+swfdec_action_equals2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  if (cx->version <= 5) {
+    swfdec_action_equals2_5 (cx, action, data, len);
+  } else {
+    swfdec_action_equals2_6 (cx, action, data, len);
+  }
+}
+
+static void
 swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *rval, *lval;
@@ -1561,6 +1543,7 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
       case SWFDEC_AS_TYPE_OBJECT:
 	cond = SWFDEC_AS_VALUE_GET_OBJECT (rval) == SWFDEC_AS_VALUE_GET_OBJECT (lval);
 	break;
+      case SWFDEC_AS_TYPE_INT:
       default:
 	g_assert_not_reached ();
 	cond = FALSE;
@@ -1681,7 +1664,7 @@ swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data,
   }
 
   swfdec_as_stack_pop_n (cx, 2);
-  swfdec_as_object_create (fun, n_args, NULL);
+  swfdec_as_object_create (fun, n_args, NULL, NULL);
   return;
 
 fail:
@@ -1718,7 +1701,7 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
   }
 
   swfdec_as_stack_pop_n (cx, 3);
-  swfdec_as_object_create (fun, n_args, NULL);
+  swfdec_as_object_create (fun, n_args, NULL, NULL);
   return;
 
 fail:
@@ -2150,6 +2133,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 	}
       }
       break;
+    case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
       type = SWFDEC_AS_STR_EMPTY;
@@ -2340,7 +2324,7 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   super = SWFDEC_AS_VALUE_GET_OBJECT (superclass);
   prototype = swfdec_as_object_new_empty (cx);
   if (prototype == NULL)
-    return;
+    goto fail;
   swfdec_as_object_get_variable (super, SWFDEC_AS_STR_prototype, &proto);
   swfdec_as_object_set_variable (prototype, SWFDEC_AS_STR___proto__, &proto);
   if (cx->version > 5) {
@@ -2425,114 +2409,105 @@ swfdec_action_enumerate (SwfdecAsContext *cx, guint action, const guint8 *data, 
 static void
 swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue *val;
   gboolean l, r;
 
-  l = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1));
-  val = swfdec_as_stack_peek (cx, 2);
-  r = swfdec_as_value_to_boolean (cx, val);
-
-  SWFDEC_AS_VALUE_SET_BOOLEAN (val, (action == 0x10) ? (l && r) : (l || r));
-  swfdec_as_stack_pop (cx);
-}
-
-static void
-swfdec_action_char_to_ascii_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
-  const char *s = swfdec_as_value_to_string (cx, val);
-
-  char *ascii;
-  ascii = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
-  if (ascii == NULL) {
-    /* This can happen if a Flash 5 movie gets loaded into a Flash 7 movie */
-    SWFDEC_FIXME ("Someone threw unconvertible text %s at Flash <= 5", s);
-    SWFDEC_AS_VALUE_SET_INT (val, 0); /* FIXME: what to return??? */
+  if (cx->version <= 4) {
+    l = (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1)) != 0);
+    // don't call second parameter if not necessary
+    if ((action == SWFDEC_AS_ACTION_AND && !l) ||
+	(action != SWFDEC_AS_ACTION_AND && l)) {
+      r = (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 2)) != 0);
+    } else {
+      r = FALSE;
+    }
   } else {
-    SWFDEC_AS_VALUE_SET_INT (val, (guchar) ascii[0]);
-    g_free (ascii);
+    l = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1));
+    r = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 2));
   }
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 2),
+    (action == SWFDEC_AS_ACTION_AND) ? (l && r) : (l || r));
+  swfdec_as_stack_pop (cx);
 }
 
 static void
 swfdec_action_char_to_ascii (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
-  const char *s = swfdec_as_value_to_string(cx, val);
-  gunichar *uni;
-  
-  uni = g_utf8_to_ucs4_fast (s, -1, NULL);
-  if (uni == NULL) {
-    /* This should never happen, everything is valid UTF-8 in here */
-    g_warning ("conversion of character %s failed", s);
-    SWFDEC_AS_VALUE_SET_INT (val, 0);
+  const char *s = swfdec_as_value_to_string (cx, val);
+
+  if (cx->version <= 5) {
+    char *ascii = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
+
+    if (ascii == NULL) {
+      /* This can happen if a Flash 5 movie gets loaded into a Flash 7 movie */
+      SWFDEC_FIXME ("Someone threw unconvertible text %s at Flash <= 5", s);
+      SWFDEC_AS_VALUE_SET_INT (val, 0); /* FIXME: what to return??? */
+    } else {
+      SWFDEC_AS_VALUE_SET_INT (val, (guchar) ascii[0]);
+      g_free (ascii);
+    }
   } else {
-    SWFDEC_AS_VALUE_SET_INT (val, uni[0]);
-    g_free (uni);
+    gunichar *uni = g_utf8_to_ucs4_fast (s, -1, NULL);
+
+    if (uni == NULL) {
+      /* This should never happen, everything is valid UTF-8 in here */
+      g_warning ("conversion of character %s failed", s);
+      SWFDEC_AS_VALUE_SET_INT (val, 0);
+    } else {
+      SWFDEC_AS_VALUE_SET_INT (val, uni[0]);
+      g_free (uni);
+    }
   }
 }
 
 static void
 swfdec_action_ascii_to_char (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  char *s;
   SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
-  gunichar c = ((guint) swfdec_as_value_to_integer (cx, val)) % 65536;
 
-  s = g_ucs4_to_utf8 (&c, 1, NULL, NULL, NULL);
-  if (s == NULL) {
-    g_warning ("conversion of character %u failed", (guint) c);
-    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
-  } else {
-    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, s));
-    g_free (s);
-  }
-}
+  if (cx->version <= 5) {
+    char s[3];
+    char *utf8;
+    guint i;
 
-static void
-swfdec_action_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
-  char s[2];
-  char *utf8;
-  
-  s[0] = ((guint) swfdec_as_value_to_integer (cx, val)) % 256;
-  s[1] = 0;
+    if (action == SWFDEC_AS_ACTION_ASCII_TO_CHAR) {
+      s[0] = ((guint) swfdec_as_value_to_integer (cx, val)) % 256;
+      s[1] = 0;
+    } else {
+      g_assert (action == SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR);
 
-  utf8 = g_convert (s, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
-  if (utf8 == NULL) {
-    g_warning ("conversion of character %u failed", (guint) s[0]);
-    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
-  } else {
-    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, utf8));
-    g_free (utf8);
-  }
-}
+      i = ((guint) swfdec_as_value_to_integer (cx, val));
+      if (i > 255) {
+	s[0] = i / 256;
+	s[1] = i % 256;
+	s[2] = 0;
+      } else {
+	s[0] = i;
+	s[1] = 0;
+      }
+    }
 
-static void
-swfdec_action_mb_ascii_to_char_5 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
-{
-  SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
-  char s[3];
-  char *utf8;
-  guint i;
-  
-  i = ((guint) swfdec_as_value_to_integer (cx, val));
-  if (i > 255) {
-    s[0] = i / 256;
-    s[1] = i % 256;
-    s[2] = 0;
+    utf8 = g_convert (s, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
+    if (utf8 == NULL) {
+      g_warning ("conversion of character %u failed", (guint) s[0]);
+      SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+    } else {
+      SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, utf8));
+      g_free (utf8);
+    }
   } else {
-    s[0] = i;
-    s[1] = 0;
-  }
-  utf8 = g_convert (s, -1, "UTF-8", "LATIN1", NULL, NULL, NULL);
-  if (utf8 == NULL) {
-    g_warning ("conversion of character %u failed", i);
-    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
-  } else {
-    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, utf8));
-    g_free (utf8);
+    char *s;
+    gunichar c = ((guint) swfdec_as_value_to_integer (cx, val)) % 65536;
+
+    s = g_ucs4_to_utf8 (&c, 1, NULL, NULL, NULL);
+    if (s == NULL) {
+      g_warning ("conversion of character %u failed", (guint) c);
+      SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
+    } else {
+      SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (cx, s));
+      g_free (s);
+    }
   }
 }
 
@@ -3129,126 +3104,132 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
 /*** BIG FUNCTION TABLE ***/
 
 const SwfdecActionSpec swfdec_as_actions[256] = {
-  /* version 3 */
-  [SWFDEC_AS_ACTION_NEXT_FRAME] = { "NextFrame", NULL, 0, 0, { swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame, swfdec_action_next_frame } },
-  [SWFDEC_AS_ACTION_PREVIOUS_FRAME] = { "PreviousFrame", NULL, 0, 0, { swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame, swfdec_action_previous_frame } },
-  [SWFDEC_AS_ACTION_PLAY] = { "Play", NULL, 0, 0, { swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play, swfdec_action_play } },
-  [SWFDEC_AS_ACTION_STOP] = { "Stop", NULL, 0, 0, { swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop, swfdec_action_stop } },
-  [SWFDEC_AS_ACTION_TOGGLE_QUALITY] = { "ToggleQuality", NULL },
-  [SWFDEC_AS_ACTION_STOP_SOUNDS] = { "StopSounds", NULL, 0, 0, { swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds, swfdec_action_stop_sounds } },
+  /* version 1 */
+  [SWFDEC_AS_ACTION_NEXT_FRAME] = { "NextFrame", NULL, 0, 0, swfdec_action_next_frame, 1 },
+  [SWFDEC_AS_ACTION_PREVIOUS_FRAME] = { "PreviousFrame", NULL, 0, 0, swfdec_action_previous_frame, 1 },
+  [SWFDEC_AS_ACTION_PLAY] = { "Play", NULL, 0, 0, swfdec_action_play, 1 },
+  [SWFDEC_AS_ACTION_STOP] = { "Stop", NULL, 0, 0, swfdec_action_stop, 1 },
+  [SWFDEC_AS_ACTION_TOGGLE_QUALITY] = { "ToggleQuality", NULL, -1, -1, NULL, 1 },
+  /* version 2 */
+  [SWFDEC_AS_ACTION_STOP_SOUNDS] = { "StopSounds", NULL, 0, 0, swfdec_action_stop_sounds, 2 },
   /* version 4 */
-  [SWFDEC_AS_ACTION_ADD] = { "Add", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
-  [SWFDEC_AS_ACTION_SUBTRACT] = { "Subtract", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
-  [SWFDEC_AS_ACTION_MULTIPLY] = { "Multiply", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
-  [SWFDEC_AS_ACTION_DIVIDE] = { "Divide", NULL, 2, 1, { NULL, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary, swfdec_action_binary } },
-  [SWFDEC_AS_ACTION_EQUALS] = { "Equals", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
-  [SWFDEC_AS_ACTION_LESS] = { "Less", NULL, 2, 1, { NULL, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare, swfdec_action_old_compare } },
-  [SWFDEC_AS_ACTION_AND] = { "And", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
-  [SWFDEC_AS_ACTION_OR] = { "Or", NULL, 2, 1, { NULL, /* FIXME */NULL, swfdec_action_logical, swfdec_action_logical, swfdec_action_logical } },
-  [SWFDEC_AS_ACTION_NOT] = { "Not", NULL, 1, 1, { NULL, swfdec_action_not_4, swfdec_action_not_5, swfdec_action_not_5, swfdec_action_not_5 } },
-  [SWFDEC_AS_ACTION_STRING_EQUALS] = { "StringEquals", NULL, 2, 1, { NULL, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare } },
-  [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL, 1, 1, { NULL, swfdec_action_string_length, swfdec_action_string_length, swfdec_action_string_length, swfdec_action_string_length } },
-  [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL, 3, 1, { NULL, swfdec_action_string_extract, swfdec_action_string_extract, swfdec_action_string_extract, swfdec_action_string_extract } },
-  [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, { NULL, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop, swfdec_action_pop } },
-  [SWFDEC_AS_ACTION_TO_INTEGER] = { "ToInteger", NULL, 1, 1, { NULL, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer, swfdec_action_to_integer } },
-  [SWFDEC_AS_ACTION_GET_VARIABLE] = { "GetVariable", NULL, 1, 1, { NULL, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable, swfdec_action_get_variable } },
-  [SWFDEC_AS_ACTION_SET_VARIABLE] = { "SetVariable", NULL, 2, 0, { NULL, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable, swfdec_action_set_variable } },
-  [SWFDEC_AS_ACTION_SET_TARGET2] = { "SetTarget2", NULL, 1, 0, { swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2, swfdec_action_set_target2 } },
-  [0x21] = { "StringAdd", NULL, 2, 1, { NULL, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add, swfdec_action_string_add } },
-  [SWFDEC_AS_ACTION_GET_PROPERTY] = { "GetProperty", NULL, 2, 1, { NULL, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property, swfdec_action_get_property } },
-  [SWFDEC_AS_ACTION_SET_PROPERTY] = { "SetProperty", NULL, 3, 0, { NULL, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property, swfdec_action_set_property } },
-  [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL, 3, 0, { NULL, swfdec_action_clone_sprite, swfdec_action_clone_sprite, swfdec_action_clone_sprite, swfdec_action_clone_sprite } },
-  [SWFDEC_AS_ACTION_REMOVE_SPRITE] = { "RemoveSprite", NULL, 1, 0, { NULL, swfdec_action_remove_sprite, swfdec_action_remove_sprite, swfdec_action_remove_sprite, swfdec_action_remove_sprite } },
-  [SWFDEC_AS_ACTION_TRACE] = { "Trace", NULL, 1, 0, { NULL, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace, swfdec_action_trace } },
-  [SWFDEC_AS_ACTION_START_DRAG] = { "StartDrag", NULL, -1, 0, { NULL, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag, swfdec_action_start_drag } },
-  [SWFDEC_AS_ACTION_END_DRAG] = { "EndDrag", NULL, 0, 0, { NULL, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag, swfdec_action_end_drag } },
-  [SWFDEC_AS_ACTION_STRING_LESS] = { "StringLess", NULL, 2, 1, { NULL, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare, swfdec_action_string_compare } },
-  /* version 7 */
-  [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL, 1, 0, { NULL, NULL, NULL, NULL, swfdec_action_throw } },
-  [SWFDEC_AS_ACTION_CAST] = { "Cast", NULL, 2, 1, { NULL, NULL, NULL, NULL, swfdec_action_cast } },
-  [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL, -1, 0, { NULL, NULL, NULL, NULL, swfdec_action_implements } },
+  [SWFDEC_AS_ACTION_ADD] = { "Add", NULL, 2, 1, swfdec_action_binary, 4 },
+  [SWFDEC_AS_ACTION_SUBTRACT] = { "Subtract", NULL, 2, 1, swfdec_action_binary, 4 },
+  [SWFDEC_AS_ACTION_MULTIPLY] = { "Multiply", NULL, 2, 1, swfdec_action_binary, 4 },
+  [SWFDEC_AS_ACTION_DIVIDE] = { "Divide", NULL, 2, 1, swfdec_action_binary, 4 },
+  [SWFDEC_AS_ACTION_EQUALS] = { "Equals", NULL, 2, 1, swfdec_action_old_compare, 4 },
+  [SWFDEC_AS_ACTION_LESS] = { "Less", NULL, 2, 1, swfdec_action_old_compare, 4 },
+  [SWFDEC_AS_ACTION_AND] = { "And", NULL, 2, 1, swfdec_action_logical, 4 },
+  [SWFDEC_AS_ACTION_OR] = { "Or", NULL, 2, 1, swfdec_action_logical, 4 },
+  [SWFDEC_AS_ACTION_NOT] = { "Not", NULL, 1, 1, swfdec_action_not, 4 },
+  [SWFDEC_AS_ACTION_STRING_EQUALS] = { "StringEquals", NULL, 2, 1, swfdec_action_string_compare, 4 },
+  [SWFDEC_AS_ACTION_STRING_LENGTH] = { "StringLength", NULL, 1, 1, swfdec_action_string_length, 4 },
+  [SWFDEC_AS_ACTION_STRING_EXTRACT] = { "StringExtract", NULL, 3, 1, swfdec_action_string_extract, 4 },
+  [SWFDEC_AS_ACTION_POP] = { "Pop", NULL, 1, 0, swfdec_action_pop, 4 },
+  [SWFDEC_AS_ACTION_TO_INTEGER] = { "ToInteger", NULL, 1, 1, swfdec_action_to_integer, 4 },
+  [SWFDEC_AS_ACTION_GET_VARIABLE] = { "GetVariable", NULL, 1, 1, swfdec_action_get_variable, 4 },
+  [SWFDEC_AS_ACTION_SET_VARIABLE] = { "SetVariable", NULL, 2, 0, swfdec_action_set_variable, 4 },
+  /* version 3 */
+  [SWFDEC_AS_ACTION_SET_TARGET2] = { "SetTarget2", NULL, 1, 0, swfdec_action_set_target2, 3 },
   /* version 4 */
-  [0x30] = { "RandomNumber", NULL, 1, 1, { NULL, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number, swfdec_action_random_number } },
-  [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL },
-  [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL, 1, 1, { NULL, swfdec_action_char_to_ascii_5, swfdec_action_char_to_ascii_5, swfdec_action_char_to_ascii, swfdec_action_char_to_ascii } },
-  [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL, 1, 1, { NULL, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char } },
-  [SWFDEC_AS_ACTION_GET_TIME] = { "GetTime", NULL, 0, 1, { NULL, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time, swfdec_action_get_time } },
-  [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL, 3, 1, { NULL, swfdec_action_string_extract, swfdec_action_string_extract, swfdec_action_string_extract, swfdec_action_string_extract } },
-  [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL },
-  [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL, 1, 1, { NULL, swfdec_action_mb_ascii_to_char_5, swfdec_action_mb_ascii_to_char_5, swfdec_action_ascii_to_char, swfdec_action_ascii_to_char }  },
-  /* version 5 */
-  [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 1, { NULL, NULL, swfdec_action_delete, swfdec_action_delete, swfdec_action_delete } },
-  [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 1, { NULL, NULL, swfdec_action_delete2, swfdec_action_delete2, swfdec_action_delete2 } },
-  [SWFDEC_AS_ACTION_DEFINE_LOCAL] = { "DefineLocal", NULL, 2, 0, { NULL, NULL, swfdec_action_define_local, swfdec_action_define_local, swfdec_action_define_local } },
-  [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, { NULL, NULL, swfdec_action_call_function, swfdec_action_call_function, swfdec_action_call_function } },
-  [SWFDEC_AS_ACTION_RETURN] = { "Return", NULL, 1, 0, { NULL, NULL, swfdec_action_return, swfdec_action_return, swfdec_action_return } },
-  [SWFDEC_AS_ACTION_MODULO] = { "Modulo", NULL, 2, 1, { NULL, NULL, swfdec_action_modulo, swfdec_action_modulo, swfdec_action_modulo } },
-  [SWFDEC_AS_ACTION_NEW_OBJECT] = { "NewObject", NULL, -1, 1, { NULL, NULL, swfdec_action_new_object, swfdec_action_new_object, swfdec_action_new_object } },
-  [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = { "DefineLocal2", NULL, 1, 0, { NULL, NULL, swfdec_action_define_local2, swfdec_action_define_local2, swfdec_action_define_local2 } },
-  [SWFDEC_AS_ACTION_INIT_ARRAY] = { "InitArray", NULL, -1, 1, { NULL, NULL, swfdec_action_init_array, swfdec_action_init_array, swfdec_action_init_array } },
-  [SWFDEC_AS_ACTION_INIT_OBJECT] = { "InitObject", NULL, -1, 1, { NULL, NULL, swfdec_action_init_object, swfdec_action_init_object, swfdec_action_init_object } },
-  [SWFDEC_AS_ACTION_TYPE_OF] = { "TypeOf", NULL, 1, 1, { NULL, NULL, swfdec_action_type_of, swfdec_action_type_of, swfdec_action_type_of } },
-  [SWFDEC_AS_ACTION_TARGET_PATH] = { "TargetPath", NULL, 1, 1, { NULL, NULL, swfdec_action_target_path, swfdec_action_target_path, swfdec_action_target_path } },
-  [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL, 1, -1, { NULL, NULL, swfdec_action_enumerate, swfdec_action_enumerate, swfdec_action_enumerate } },
-  [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, { NULL, NULL, swfdec_action_add2, swfdec_action_add2, swfdec_action_add2 } },
-  [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, { NULL, NULL, swfdec_action_new_comparison, swfdec_action_new_comparison, swfdec_action_new_comparison } },
-  [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, { NULL, NULL, swfdec_action_equals2_5, swfdec_action_equals2, swfdec_action_equals2 } },
-  [SWFDEC_AS_ACTION_TO_NUMBER] = { "ToNumber", NULL, 1, 1, { NULL, NULL, swfdec_action_to_number, swfdec_action_to_number, swfdec_action_to_number } },
-  [SWFDEC_AS_ACTION_TO_STRING] = { "ToString", NULL, 1, 1, { NULL, NULL, swfdec_action_to_string, swfdec_action_to_string, swfdec_action_to_string } },
-  [SWFDEC_AS_ACTION_PUSH_DUPLICATE] = { "PushDuplicate", NULL, 1, 2, { NULL, NULL, swfdec_action_push_duplicate, swfdec_action_push_duplicate, swfdec_action_push_duplicate } },
-  [SWFDEC_AS_ACTION_SWAP] = { "Swap", NULL, 2, 2, { NULL, NULL, swfdec_action_swap, swfdec_action_swap, swfdec_action_swap } },
-  [SWFDEC_AS_ACTION_GET_MEMBER] = { "GetMember", NULL, 2, 1, { NULL, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member, swfdec_action_get_member } },
-  [SWFDEC_AS_ACTION_SET_MEMBER] = { "SetMember", NULL, 3, 0, { NULL, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member, swfdec_action_set_member } },
-  [SWFDEC_AS_ACTION_INCREMENT] = { "Increment", NULL, 1, 1, { NULL, NULL, swfdec_action_increment, swfdec_action_increment, swfdec_action_increment } },
-  [SWFDEC_AS_ACTION_DECREMENT] = { "Decrement", NULL, 1, 1, { NULL, NULL, swfdec_action_decrement, swfdec_action_decrement, swfdec_action_decrement } },
-  [SWFDEC_AS_ACTION_CALL_METHOD] = { "CallMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_call_method, swfdec_action_call_method, swfdec_action_call_method } },
-  [SWFDEC_AS_ACTION_NEW_METHOD] = { "NewMethod", NULL, -1, 1, { NULL, NULL, swfdec_action_new_method, swfdec_action_new_method, swfdec_action_new_method } },
-  /* version 6 */
-  [SWFDEC_AS_ACTION_INSTANCE_OF] = { "InstanceOf", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_instance_of, swfdec_action_instance_of } },
-  [SWFDEC_AS_ACTION_ENUMERATE2] = { "Enumerate2", NULL, 1, -1, { NULL, NULL, NULL, swfdec_action_enumerate2, swfdec_action_enumerate2 } },
-  [SWFDEC_AS_ACTION_BREAKPOINT] = { "Breakpoint", NULL, },
-  /* version 5 */
-  [SWFDEC_AS_ACTION_BIT_AND] = { "BitAnd", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
-  [SWFDEC_AS_ACTION_BIT_OR] = { "BitOr", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
-  [SWFDEC_AS_ACTION_BIT_XOR] = { "BitXor", NULL, 2, 1, { NULL, NULL, swfdec_action_bitwise, swfdec_action_bitwise, swfdec_action_bitwise } },
-  [SWFDEC_AS_ACTION_BIT_LSHIFT] = { "BitLShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-  [SWFDEC_AS_ACTION_BIT_RSHIFT] = { "BitRShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-  [SWFDEC_AS_ACTION_BIT_URSHIFT] = { "BitURShift", NULL, 2, 1, { NULL, NULL, swfdec_action_shift, swfdec_action_shift, swfdec_action_shift } },
-  /* version 6 */
-  [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_strict_equals, swfdec_action_strict_equals } },
-  [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, { NULL, NULL, NULL, swfdec_action_new_comparison, swfdec_action_new_comparison } },
-  [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL },
+  [SWFDEC_AS_ACTION_STRING_ADD] = { "StringAdd", NULL, 2, 1, swfdec_action_string_add, 4 },
+  [SWFDEC_AS_ACTION_GET_PROPERTY] = { "GetProperty", NULL, 2, 1, swfdec_action_get_property, 4 },
+  [SWFDEC_AS_ACTION_SET_PROPERTY] = { "SetProperty", NULL, 3, 0, swfdec_action_set_property, 4 },
+  [SWFDEC_AS_ACTION_CLONE_SPRITE] = { "CloneSprite", NULL, 3, 0, swfdec_action_clone_sprite, 4 },
+  [SWFDEC_AS_ACTION_REMOVE_SPRITE] = { "RemoveSprite", NULL, 1, 0, swfdec_action_remove_sprite, 4 },
+  [SWFDEC_AS_ACTION_TRACE] = { "Trace", NULL, 1, 0, swfdec_action_trace, 4 },
+  [SWFDEC_AS_ACTION_START_DRAG] = { "StartDrag", NULL, -1, 0, swfdec_action_start_drag, 4 },
+  [SWFDEC_AS_ACTION_END_DRAG] = { "EndDrag", NULL, 0, 0, swfdec_action_end_drag, 4 },
+  [SWFDEC_AS_ACTION_STRING_LESS] = { "StringLess", NULL, 2, 1, swfdec_action_string_compare, 4 },
   /* version 7 */
-  [SWFDEC_AS_ACTION_EXTENDS] = { "Extends", NULL, 2, 0, { NULL, NULL, NULL, swfdec_action_extends, swfdec_action_extends } },
-  /* version 3 */
-  [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, { swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame, swfdec_action_goto_frame } },
-  [SWFDEC_AS_ACTION_GET_URL] = { "GetURL", swfdec_action_print_get_url, 0, 0, { swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url, swfdec_action_get_url } },
+  [SWFDEC_AS_ACTION_THROW] = { "Throw", NULL, 1, 0, swfdec_action_throw, 7 },
+  [SWFDEC_AS_ACTION_CAST] = { "Cast", NULL, 2, 1, swfdec_action_cast, 7 },
+  [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL, -1, 0, swfdec_action_implements, 7 },
+  /* version 4 */
+  [SWFDEC_AS_ACTION_RANDOM] = { "RandomNumber", NULL, 1, 1, swfdec_action_random_number, 4 },
+  [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL, -1, -1, NULL, 4 },
+  [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL, 1, 1, swfdec_action_char_to_ascii, 4 },
+  [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL, 1, 1, swfdec_action_ascii_to_char, 4 },
+  [SWFDEC_AS_ACTION_GET_TIME] = { "GetTime", NULL, 0, 1, swfdec_action_get_time, 4 },
+  [SWFDEC_AS_ACTION_MB_STRING_EXTRACT] = { "MBStringExtract", NULL, 3, 1, swfdec_action_string_extract, 4 },
+  [SWFDEC_AS_ACTION_MB_CHAR_TO_ASCII] = { "MBCharToAscii", NULL, -1, -1, NULL, 4 },
+  [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = { "MBAsciiToChar", NULL, 1, 1, swfdec_action_ascii_to_char, 4 },
   /* version 5 */
-  [SWFDEC_AS_ACTION_STORE_REGISTER] = { "StoreRegister", swfdec_action_print_store_register, 1, 1, { NULL, NULL, swfdec_action_store_register, swfdec_action_store_register, swfdec_action_store_register } },
-  [SWFDEC_AS_ACTION_CONSTANT_POOL] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, { NULL, NULL, swfdec_action_constant_pool, swfdec_action_constant_pool, swfdec_action_constant_pool } },
+  [SWFDEC_AS_ACTION_DELETE] = { "Delete", NULL, 2, 1, swfdec_action_delete, 5 },
+  [SWFDEC_AS_ACTION_DELETE2] = { "Delete2", NULL, 1, 1, swfdec_action_delete2, 5 },
+  [SWFDEC_AS_ACTION_DEFINE_LOCAL] = { "DefineLocal", NULL, 2, 0, swfdec_action_define_local, 5 },
+  [SWFDEC_AS_ACTION_CALL_FUNCTION] = { "CallFunction", NULL, -1, 1, swfdec_action_call_function, 5 },
+  [SWFDEC_AS_ACTION_RETURN] = { "Return", NULL, 1, 0, swfdec_action_return, 5 },
+  [SWFDEC_AS_ACTION_MODULO] = { "Modulo", NULL, 2, 1, swfdec_action_modulo, 5 },
+  [SWFDEC_AS_ACTION_NEW_OBJECT] = { "NewObject", NULL, -1, 1, swfdec_action_new_object, 5 },
+  [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = { "DefineLocal2", NULL, 1, 0, swfdec_action_define_local2, 5 },
+  [SWFDEC_AS_ACTION_INIT_ARRAY] = { "InitArray", NULL, -1, 1, swfdec_action_init_array, 5 },
+  [SWFDEC_AS_ACTION_INIT_OBJECT] = { "InitObject", NULL, -1, 1, swfdec_action_init_object, 5 },
+  [SWFDEC_AS_ACTION_TYPE_OF] = { "TypeOf", NULL, 1, 1, swfdec_action_type_of, 5 },
+  [SWFDEC_AS_ACTION_TARGET_PATH] = { "TargetPath", NULL, 1, 1, swfdec_action_target_path, 5 },
+  [SWFDEC_AS_ACTION_ENUMERATE] = { "Enumerate", NULL, 1, -1, swfdec_action_enumerate, 5 },
+  [SWFDEC_AS_ACTION_ADD2] = { "Add2", NULL, 2, 1, swfdec_action_add2, 5 },
+  [SWFDEC_AS_ACTION_LESS2] = { "Less2", NULL, 2, 1, swfdec_action_new_comparison, 5 },
+  [SWFDEC_AS_ACTION_EQUALS2] = { "Equals2", NULL, 2, 1, swfdec_action_equals2, 5 },
+  [SWFDEC_AS_ACTION_TO_NUMBER] = { "ToNumber", NULL, 1, 1, swfdec_action_to_number, 5 },
+  [SWFDEC_AS_ACTION_TO_STRING] = { "ToString", NULL, 1, 1, swfdec_action_to_string, 5 },
+  [SWFDEC_AS_ACTION_PUSH_DUPLICATE] = { "PushDuplicate", NULL, 1, 2, swfdec_action_push_duplicate, 5 },
+  [SWFDEC_AS_ACTION_SWAP] = { "Swap", NULL, 2, 2, swfdec_action_swap, 5 },
+  /* version 4 */
+  [SWFDEC_AS_ACTION_GET_MEMBER] = { "GetMember", NULL, 2, 1, swfdec_action_get_member, 4 },
+  [SWFDEC_AS_ACTION_SET_MEMBER] = { "SetMember", NULL, 3, 0, swfdec_action_set_member, 4 },
+  /* version 5 */
+  [SWFDEC_AS_ACTION_INCREMENT] = { "Increment", NULL, 1, 1, swfdec_action_increment, 5 },
+  [SWFDEC_AS_ACTION_DECREMENT] = { "Decrement", NULL, 1, 1, swfdec_action_decrement, 5 },
+  [SWFDEC_AS_ACTION_CALL_METHOD] = { "CallMethod", NULL, -1, 1, swfdec_action_call_method, 5 },
+  [SWFDEC_AS_ACTION_NEW_METHOD] = { "NewMethod", NULL, -1, 1, swfdec_action_new_method, 5 },
+  /* version 6 */
+  [SWFDEC_AS_ACTION_INSTANCE_OF] = { "InstanceOf", NULL, 2, 1, swfdec_action_instance_of, 6 },
+  [SWFDEC_AS_ACTION_ENUMERATE2] = { "Enumerate2", NULL, 1, -1, swfdec_action_enumerate2, 6 },
+  [SWFDEC_AS_ACTION_BREAKPOINT] = { "Breakpoint", NULL, -1, -1, NULL, 6 },
+  /* version 5 */
+  [SWFDEC_AS_ACTION_BIT_AND] = { "BitAnd", NULL, 2, 1, swfdec_action_bitwise, 5 },
+  [SWFDEC_AS_ACTION_BIT_OR] = { "BitOr", NULL, 2, 1, swfdec_action_bitwise, 5 },
+  [SWFDEC_AS_ACTION_BIT_XOR] = { "BitXor", NULL, 2, 1, swfdec_action_bitwise, 5 },
+  [SWFDEC_AS_ACTION_BIT_LSHIFT] = { "BitLShift", NULL, 2, 1, swfdec_action_shift, 5 },
+  [SWFDEC_AS_ACTION_BIT_RSHIFT] = { "BitRShift", NULL, 2, 1, swfdec_action_shift, 5 },
+  [SWFDEC_AS_ACTION_BIT_URSHIFT] = { "BitURShift", NULL, 2, 1, swfdec_action_shift, 5 },
+  /* version 6 */
+  [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL, 2, 1, swfdec_action_strict_equals, 6 },
+  [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, swfdec_action_new_comparison, 6 },
+  [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL, -1, -1, NULL, 6 },
+  /* version 7 */
+  [SWFDEC_AS_ACTION_EXTENDS] = { "Extends", NULL, 2, 0, swfdec_action_extends, 7 },
+  /* version 1 */
+  [SWFDEC_AS_ACTION_GOTO_FRAME] = { "GotoFrame", swfdec_action_print_goto_frame, 0, 0, swfdec_action_goto_frame, 1 },
+  [SWFDEC_AS_ACTION_GET_URL] = { "GetURL", swfdec_action_print_get_url, 0, 0, swfdec_action_get_url, 1 },
+  /* version 5 */
+  [SWFDEC_AS_ACTION_STORE_REGISTER] = { "StoreRegister", swfdec_action_print_store_register, 1, 1, swfdec_action_store_register, 5 },
+  [SWFDEC_AS_ACTION_CONSTANT_POOL] = { "ConstantPool", swfdec_action_print_constant_pool, 0, 0, swfdec_action_constant_pool, 5 },
+  [SWFDEC_AS_ACTION_STRICT_MODE] = { "StrictMode", NULL, -1, -1, NULL, 5 },
+  /* version 1 */
+  [SWFDEC_AS_ACTION_WAIT_FOR_FRAME] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, swfdec_action_wait_for_frame, 1 },
+  [SWFDEC_AS_ACTION_SET_TARGET] = { "SetTarget", swfdec_action_print_set_target, 0, 0, swfdec_action_set_target, 1 },
   /* version 3 */
-  [SWFDEC_AS_ACTION_STRICT_MODE] = { "StrictMode", NULL, },
-  [SWFDEC_AS_ACTION_WAIT_FOR_FRAME] = { "WaitForFrame", swfdec_action_print_wait_for_frame, 0, 0, { swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame, swfdec_action_wait_for_frame } },
-  [SWFDEC_AS_ACTION_SET_TARGET] = { "SetTarget", swfdec_action_print_set_target, 0, 0, { swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target, swfdec_action_set_target } },
-  [SWFDEC_AS_ACTION_GOTO_LABEL] = { "GotoLabel", swfdec_action_print_goto_label, 0, 0, { swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label, swfdec_action_goto_label } },
+  [SWFDEC_AS_ACTION_GOTO_LABEL] = { "GotoLabel", swfdec_action_print_goto_label, 0, 0, swfdec_action_goto_label, 3 },
 #if 0
   /* version 4 */
   [0x8d] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, { NULL, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2 } },
 #endif
   /* version 7 */
-  [SWFDEC_AS_ACTION_DEFINE_FUNCTION2] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, { NULL, NULL, NULL, swfdec_action_define_function, swfdec_action_define_function } },
-  [SWFDEC_AS_ACTION_TRY] = { "Try", NULL, 0, 0, { NULL, NULL, NULL, NULL, swfdec_action_try } },
+  [SWFDEC_AS_ACTION_DEFINE_FUNCTION2] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, swfdec_action_define_function, 7 },
+  [SWFDEC_AS_ACTION_TRY] = { "Try", NULL, 0, 0, swfdec_action_try, 7 },
   /* version 5 */
-  [SWFDEC_AS_ACTION_WITH] = { "With", swfdec_action_print_with, 1, 0, { NULL, NULL, swfdec_action_with, swfdec_action_with, swfdec_action_with } },
+  [SWFDEC_AS_ACTION_WITH] = { "With", swfdec_action_print_with, 1, 0, swfdec_action_with, 5 },
   /* version 4 */
-  [SWFDEC_AS_ACTION_PUSH] = { "Push", swfdec_action_print_push, 0, -1, { NULL, swfdec_action_push, swfdec_action_push, swfdec_action_push, swfdec_action_push } },
-  [SWFDEC_AS_ACTION_JUMP] = { "Jump", swfdec_action_print_jump, 0, 0, { NULL, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump, swfdec_action_jump } },
-  [SWFDEC_AS_ACTION_GET_URL2] = { "GetURL2", swfdec_action_print_get_url2, 2, 0, { NULL, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2, swfdec_action_get_url2 } },
+  [SWFDEC_AS_ACTION_PUSH] = { "Push", swfdec_action_print_push, 0, -1, swfdec_action_push, 4 },
+  [SWFDEC_AS_ACTION_JUMP] = { "Jump", swfdec_action_print_jump, 0, 0, swfdec_action_jump, 4 },
+  [SWFDEC_AS_ACTION_GET_URL2] = { "GetURL2", swfdec_action_print_get_url2, 2, 0, swfdec_action_get_url2, 4 },
   /* version 5 */
-  [SWFDEC_AS_ACTION_DEFINE_FUNCTION] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, { NULL, NULL, swfdec_action_define_function, swfdec_action_define_function, swfdec_action_define_function } },
+  [SWFDEC_AS_ACTION_DEFINE_FUNCTION] = { "DefineFunction", swfdec_action_print_define_function, 0, -1, swfdec_action_define_function, 5 },
   /* version 4 */
-  [SWFDEC_AS_ACTION_IF] = { "If", swfdec_action_print_if, 1, 0, { NULL, swfdec_action_if, swfdec_action_if, swfdec_action_if, swfdec_action_if } },
-  [SWFDEC_AS_ACTION_CALL] = { "Call", NULL },
-  [SWFDEC_AS_ACTION_GOTO_FRAME2] = { "GotoFrame2", swfdec_action_print_goto_frame2, 1, 0, { NULL, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2, swfdec_action_goto_frame2 } }
+  [SWFDEC_AS_ACTION_IF] = { "If", swfdec_action_print_if, 1, 0, swfdec_action_if, 4 },
+  [SWFDEC_AS_ACTION_CALL] = { "Call", NULL, -1, -1, NULL, 4 },
+  [SWFDEC_AS_ACTION_GOTO_FRAME2] = { "GotoFrame2", swfdec_action_print_goto_frame2, 1, 0, swfdec_action_goto_frame2, 4 }
 };
 

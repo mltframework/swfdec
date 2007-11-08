@@ -690,7 +690,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {
     args = swfdec_as_array_new (context);
     if (!args)
-      return;
+      goto out;
     for (cur = swfdec_as_stack_iterator_init_arguments (&iter, frame); cur != NULL;
 	cur = swfdec_as_stack_iterator_next (&iter)) {
       swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
@@ -786,6 +786,10 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   frame->block_end = frame->script->buffer->data + frame->script->buffer->length;
 
 out:
+  if (context->state == SWFDEC_AS_CONTEXT_ABORTED) {
+    swfdec_as_frame_return (frame, NULL);
+    return;
+  }
   if (context->debugger) {
     SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
 

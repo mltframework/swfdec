@@ -1,6 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
- *                    Pekka Lampila <pekka.lampila@iki.fi>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
-#include <time.h>
 #include <math.h>
 
 #include "swfdec_as_date.h"
@@ -484,12 +482,19 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object,
 	  set = FALSE;
 	}
 	break;
-      default:
+      case FIELD_MILLISECONDS:
+      case FIELD_SECONDS:
+      case FIELD_MINUTES:
+      case FIELD_HOURS:
+      case FIELD_WEEK_DAYS:
+      case FIELD_MONTH_DAYS:
 	if (!isfinite (d)) {
 	  swfdec_as_date_set_invalid (date);
 	  set = FALSE;
 	}
 	break;
+      default:
+	g_assert_not_reached ();
     }
 
     if (set) {
@@ -525,13 +530,8 @@ swfdec_as_date_get_field (SwfdecAsContext *cx, SwfdecAsObject *object,
   number = swfdec_as_date_get_brokentime_value (date, utc,
       field_offsets[field]);
 
-  switch (field) {
-    case FIELD_FULL_YEAR:
-      number += 1900;
-      break;
-    default:
-      break;
-  }
+  if (field == FIELD_FULL_YEAR)
+    number += 1900;
 
   SWFDEC_AS_VALUE_SET_INT (ret, number);
 }
@@ -1049,11 +1049,11 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc == 0) // current time, local
   {
-    struct timeval tp;
+    GTimeVal tv;
 
-    gettimeofday (&tp, NULL);
+    swfdec_as_context_get_time (cx, &tv);
     swfdec_as_date_set_milliseconds_local (date,
-	tp.tv_sec * 1000 + tp.tv_usec / 1000);
+	tv.tv_sec * 1000 + tv.tv_usec / 1000);
   }
   else if (argc == 1) // milliseconds from epoch, local
   {

@@ -42,36 +42,48 @@ swfdec_decoder_init (SwfdecDecoder *decoder)
 }
 
 SwfdecDecoder *
-swfdec_decoder_new (SwfdecPlayer *player, SwfdecBufferQueue *queue)
+swfdec_decoder_new (SwfdecPlayer *player, const SwfdecBuffer *buffer)
 {
   guchar *data;
-  SwfdecBuffer *buffer;
   SwfdecDecoder *retval;
   
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (queue != NULL, NULL);
+  g_return_val_if_fail (buffer != NULL, NULL);
 
-  if (!swfdec_decoder_can_detect (queue))
+  if (buffer->length < SWFDEC_DECODER_DETECT_LENGTH)
     return NULL;
 
-  buffer = swfdec_buffer_queue_peek (queue, 3);
   data = buffer->data;
   if ((data[0] == 'C' || data[0] == 'F') &&
       data[1] == 'W' &&
       data[2] == 'S') {
     retval = g_object_new (SWFDEC_TYPE_SWF_DECODER, NULL);
+#if 0
   } else if (data[0] == 'F' &&
       data[1] == 'L' &&
       data[2] == 'V') {
     retval = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
+#endif
   } else {
     retval = NULL;
   }
-  swfdec_buffer_unref (buffer);
   if (retval) {
     retval->player = player;
-    retval->queue = queue;
   }
   return retval;
 }
+
+SwfdecStatus
+swfdec_decoder_parse (SwfdecDecoder *decoder, SwfdecBuffer *buffer)
+{
+  SwfdecDecoderClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_DECODER (decoder), SWFDEC_STATUS_ERROR);
+  g_return_val_if_fail (buffer != NULL, SWFDEC_STATUS_ERROR);
+
+  klass = SWFDEC_DECODER_GET_CLASS (decoder);
+  g_return_val_if_fail (klass->parse, SWFDEC_STATUS_ERROR);
+  return klass->parse (decoder, buffer);
+}
+
 

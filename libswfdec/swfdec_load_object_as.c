@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,14 +30,14 @@
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
 
-SWFDEC_AS_NATIVE (301, 0, swfdec_load_object_load)
+SWFDEC_AS_NATIVE (301, 0, swfdec_load_object_as_load)
 void
-swfdec_load_object_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
+swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   const char *url;
 
-  if (argc < 1) {
+  if (argc < 1 || obj == NULL) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
     return;
   }

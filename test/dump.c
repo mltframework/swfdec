@@ -48,7 +48,7 @@
 static gboolean verbose = FALSE;
 
 static const char *
-get_audio_format_name (SwfdecAudioCodec codec)
+get_audio_format_name (guint codec)
 {
   switch (codec) {
     case SWFDEC_AUDIO_CODEC_ADPCM:
@@ -316,6 +316,7 @@ get_image_type_name (SwfdecImageType type)
       return "lossless";
     case SWFDEC_IMAGE_TYPE_LOSSLESS2:
       return "lossless with alpha";
+    case SWFDEC_IMAGE_TYPE_UNKNOWN:
     default:
       g_assert_not_reached ();
       return "Unknown";

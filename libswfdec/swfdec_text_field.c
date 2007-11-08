@@ -1,6 +1,6 @@
 /* Swfdec
  * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
- *                    Pekka Lampila <pekka.lampila@iki.fi>
+ *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -151,7 +151,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     SWFDEC_LOG ("  color = %u", text->color);
   } else {
     SWFDEC_WARNING ("FIXME: figure out default color");
-    text->color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
+    text->color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);
   }
 
   if (has_max_length) {

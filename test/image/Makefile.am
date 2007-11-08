@@ -112,5 +112,26 @@ EXTRA_DIST = \
 	replace-shape-shape-6.swf \
 	replace-shape-shape-6.swf.png \
 	replace-shape-shape-7.swf \
-	replace-shape-shape-7.swf.png
+	replace-shape-shape-7.swf.png \
+	text-field-autosize.as \
+	text-field-autosize-6.swf \
+	text-field-autosize-6.swf.png \
+	text-field-autosize-7.swf \
+	text-field-autosize-7.swf.png \
+	text-field-autosize-8.swf \
+	text-field-autosize-8.swf.png
+	text-field-color-transform.as \
+	text-field-color-transform-6.swf \
+	text-field-color-transform-6.swf.png \
+	text-field-color-transform-7.swf \
+	text-field-color-transform-7.swf.png \
+	text-field-color-transform-8.swf \
+	text-field-color-transform-8.swf.png
+	text-field-empty.as \
+	text-field-empty-6.swf \
+	text-field-empty-6.swf.png \
+	text-field-empty-7.swf \
+	text-field-empty-7.swf.png \
+	text-field-empty-8.swf \
+	text-field-empty-8.swf.png
 

@@ -39,14 +39,14 @@ typedef struct _SwfdecFlvDataTag SwfdecFlvDataTag;
 
 struct _SwfdecFlvVideoTag {
   guint			timestamp;		/* milliseconds */
-  SwfdecVideoCodec	format;			/* format in use */
+  guint			format;			/* format in use */
   int			frame_type;		/* 0: undefined, 1: keyframe, 2: iframe, 3: H263 disposable iframe */
   SwfdecBuffer *	buffer;			/* buffer for this data */
 };
 
 struct _SwfdecFlvAudioTag {
   guint			timestamp;		/* milliseconds */
-  SwfdecAudioCodec	format;			/* format in use */
+  guint			format;			/* format in use */
   SwfdecAudioFormat	original_format;      	/* channel/rate information */
   SwfdecBuffer *	buffer;			/* buffer for this data */
 };
@@ -88,7 +88,8 @@ swfdec_flv_decoder_dispose (GObject *object)
     g_array_free (flv->data, TRUE);
     flv->data = NULL;
   }
-
+  swfdec_buffer_queue_unref (flv->queue);
+  flv->queue = NULL;
 
   G_OBJECT_CLASS (swfdec_flv_decoder_parent_class)->dispose (object);
 }
@@ -96,14 +97,12 @@ swfdec_flv_decoder_dispose (GObject *object)
 static SwfdecStatus
 swfdec_flv_decoder_parse_header (SwfdecFlvDecoder *flv)
 {
-  SwfdecDecoder *dec = SWFDEC_DECODER (flv);
   SwfdecBuffer *buffer;
   SwfdecBits bits;
   guint version, header_length;
   gboolean has_audio, has_video;
 
-  /* NB: we're still reading from the original queue, since deflating is not initialized yet */
-  buffer = swfdec_buffer_queue_peek (dec->queue, 9);
+  buffer = swfdec_buffer_queue_peek (flv->queue, 9);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
 
@@ -128,7 +127,7 @@ swfdec_flv_decoder_parse_header (SwfdecFlvDecoder *flv)
     /* FIXME: treat as error or ignore? */
     return SWFDEC_STATUS_ERROR;
   }
-  buffer = swfdec_buffer_queue_pull (dec->queue, header_length);
+  buffer = swfdec_buffer_queue_pull (flv->queue, header_length);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
   swfdec_buffer_unref (buffer);
@@ -151,12 +150,11 @@ swfdec_flv_decoder_parse_header (SwfdecFlvDecoder *flv)
 static SwfdecStatus
 swfdec_flv_decoder_parse_last_tag (SwfdecFlvDecoder *flv)
 {
-  SwfdecDecoder *dec = SWFDEC_DECODER (flv);
   SwfdecBuffer *buffer;
   SwfdecBits bits;
   guint last_tag;
 
-  buffer = swfdec_buffer_queue_pull (dec->queue, 4);
+  buffer = swfdec_buffer_queue_pull (flv->queue, 4);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
 
@@ -357,20 +355,19 @@ swfdec_flv_decoder_parse_data_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, guin
 static SwfdecStatus
 swfdec_flv_decoder_parse_tag (SwfdecFlvDecoder *flv)
 {
-  SwfdecDecoder *dec = SWFDEC_DECODER (flv);
   SwfdecBuffer *buffer;
   SwfdecBits bits;
   guint size, type, timestamp;
   SwfdecStatus ret = SWFDEC_STATUS_OK;
 
-  buffer = swfdec_buffer_queue_peek (dec->queue, 4);
+  buffer = swfdec_buffer_queue_peek (flv->queue, 4);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
   swfdec_bits_init (&bits, buffer);
   swfdec_bits_get_u8 (&bits);
   size = swfdec_bits_get_bu24 (&bits);
   swfdec_buffer_unref (buffer);
-  buffer = swfdec_buffer_queue_pull (dec->queue, 11 + size);
+  buffer = swfdec_buffer_queue_pull (flv->queue, 11 + size);
   if (buffer == NULL)
     return SWFDEC_STATUS_NEEDBITS;
   swfdec_bits_init (&bits, buffer);
@@ -405,31 +402,35 @@ swfdec_flv_decoder_parse_tag (SwfdecFlvDecoder *flv)
 }
 
 static SwfdecStatus
-swfdec_flv_decoder_parse (SwfdecDecoder *dec)
+swfdec_flv_decoder_parse (SwfdecDecoder *dec, SwfdecBuffer *buffer)
 {
   SwfdecFlvDecoder *flv = SWFDEC_FLV_DECODER (dec);
-  SwfdecStatus ret;
+  SwfdecStatus status = 0;
 
-  switch (flv->state) {
-    case SWFDEC_STATE_HEADER:
-      ret = swfdec_flv_decoder_parse_header (flv);
-      break;
-    case SWFDEC_STATE_LAST_TAG:
-      ret = swfdec_flv_decoder_parse_last_tag (flv);
-      break;
-    case SWFDEC_STATE_TAG:
-      ret = swfdec_flv_decoder_parse_tag (flv);
-      break;
-    case SWFDEC_STATE_EOF:
-      ret = SWFDEC_STATUS_EOF;
-      break;
-    default:
-      g_assert_not_reached ();
-      ret = SWFDEC_STATUS_ERROR;
-      break;
-  }
+  swfdec_buffer_queue_push (flv->queue, buffer);
 
-  return ret;
+  do {
+    switch (flv->state) {
+      case SWFDEC_STATE_HEADER:
+	status |= swfdec_flv_decoder_parse_header (flv);
+	break;
+      case SWFDEC_STATE_LAST_TAG:
+	status |= swfdec_flv_decoder_parse_last_tag (flv);
+	break;
+      case SWFDEC_STATE_TAG:
+	status |= swfdec_flv_decoder_parse_tag (flv);
+	break;
+      case SWFDEC_STATE_EOF:
+	status |= SWFDEC_STATUS_EOF;
+	break;
+      default:
+	g_assert_not_reached ();
+	status |= SWFDEC_STATUS_ERROR;
+	break;
+    }
+  } while ((status & (SWFDEC_STATUS_EOF | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_ERROR)) == 0);
+
+  return status;
 }
 
 static void
@@ -447,11 +448,12 @@ static void
 swfdec_flv_decoder_init (SwfdecFlvDecoder *flv)
 {
   flv->state = SWFDEC_STATE_HEADER;
+  flv->queue = swfdec_buffer_queue_new ();
 }
 
 SwfdecBuffer *
 swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
-    gboolean keyframe, SwfdecVideoCodec *format, guint *real_timestamp, guint *next_timestamp)
+    gboolean keyframe, guint *format, guint *real_timestamp, guint *next_timestamp)
 {
   guint id, offset;
   SwfdecFlvVideoTag *tag;
@@ -516,7 +518,7 @@ swfdec_flv_decoder_get_video_info (SwfdecFlvDecoder *flv,
 
 SwfdecBuffer *
 swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
-    SwfdecAudioCodec *codec, SwfdecAudioFormat *format,
+    guint *codec, SwfdecAudioFormat *format,
     guint *real_timestamp, guint *next_timestamp)
 {
   guint id, offset;
@@ -592,27 +594,6 @@ swfdec_flv_decoder_get_data (SwfdecFlvDecoder *flv, guint timestamp, guint *real
   return tag->buffer;
 }
 
-/*** HACK ***/
-
-/* This is a hack to allow native FLV playback IN SwfdecPlayer */
-
-#include "swfdec_loadertarget.h"
-#include "swfdec_net_stream.h"
-#include "swfdec_sprite.h"
-#include "swfdec_video_movie.h"
-
-#if 0
-static void
-notify_initialized (SwfdecPlayer *player, GParamSpec *pspec, SwfdecVideoMovie *movie)
-{
-  movie->video->width = player->width;
-  movie->video->height = player->height;
-
-  swfdec_movie_queue_update (SWFDEC_MOVIE (movie), SWFDEC_MOVIE_INVALID_MATRIX);
-  swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
-}
-#endif
-
 gboolean
 swfdec_flv_decoder_is_eof (SwfdecFlvDecoder *flv)
 {
@@ -627,41 +608,5 @@ swfdec_flv_decoder_eof (SwfdecFlvDecoder *flv)
   g_return_if_fail (SWFDEC_IS_FLV_DECODER (flv));
 
   flv->state = SWFDEC_STATE_EOF;
-}
-
-SwfdecMovie *
-swfdec_flv_decoder_add_movie (SwfdecFlvDecoder *flv, SwfdecMovie *parent)
-{
-  //g_assert_not_reached ();
-  return NULL;
-#if 0
-  SwfdecContent *content = swfdec_content_new (0);
-  SwfdecMovie *movie;
-  SwfdecVideo *video;
-  SwfdecConnection *conn;
-  SwfdecNetStream *stream;
-
-  /* set up the video movie */
-  video = g_object_new (SWFDEC_TYPE_VIDEO, NULL);
-  video->width = G_MAXUINT;
-  video->height = G_MAXUINT;
-  content->graphic = SWFDEC_GRAPHIC (video);
-  content->free = TRUE;
-  movie = swfdec_movie_new (parent, content);
-  g_object_weak_ref (G_OBJECT (movie), (GWeakNotify) g_object_unref, video);
-  g_signal_connect (SWFDEC_ROOT_MOVIE (parent)->player, "notify::initialized",
-      G_CALLBACK (notify_initialized), movie);
-  /* set up the playback stream */
-  conn = swfdec_connection_new (SWFDEC_ROOT_MOVIE (parent)->player->jscx);
-  stream = swfdec_net_stream_new (SWFDEC_ROOT_MOVIE (parent)->player, conn);
-  swfdec_net_stream_set_loader (stream, SWFDEC_ROOT_MOVIE (parent)->loader);
-  stream->flvdecoder = flv;
-  swfdec_video_movie_set_input (SWFDEC_VIDEO_MOVIE (movie), &stream->input);
-  swfdec_net_stream_set_playing (stream, TRUE);
-  g_object_unref (conn);
-  g_object_unref (stream);
-
-  return movie;
-#endif
 }
 

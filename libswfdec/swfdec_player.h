@@ -79,9 +79,9 @@ void		swfdec_player_set_loader_with_variables
 gboolean	swfdec_player_is_initialized	(SwfdecPlayer *	player);
 glong		swfdec_player_get_next_event  	(SwfdecPlayer *	player);
 double		swfdec_player_get_rate		(SwfdecPlayer *	player);
-void		swfdec_player_get_image_size	(SwfdecPlayer *	player,
-						 int *		width,
-						 int *		height);
+void		swfdec_player_get_default_size	(SwfdecPlayer *	player,
+						 guint *	width,
+						 guint *	height);
 void		swfdec_player_get_size		(SwfdecPlayer *	player,
 						 int *		width,
 						 int *		height);

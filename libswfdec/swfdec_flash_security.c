@@ -70,9 +70,9 @@ swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url)
       return !swfdec_url_is_local (url);
     case SWFDEC_SANDBOX_LOCAL_TRUSTED:
       return TRUE;
+    default:
+      g_return_val_if_reached (FALSE);
   }
-  g_assert_not_reached ();
-  return FALSE;
 }
 
 static void

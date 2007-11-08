@@ -193,14 +193,11 @@ swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
 static cairo_surface_t *
 swfdec_gtk_widget_create_renderer (cairo_surface_type_t type, int width, int height)
 {
-  switch (type) {
-    case CAIRO_SURFACE_TYPE_IMAGE:
-      return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-    default:
-      break;
+  if (type == CAIRO_SURFACE_TYPE_IMAGE) {
+    return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+  } else {
+    return NULL;
   }
-
-  return NULL;
 }
 
 static gboolean
@@ -330,8 +327,11 @@ swfdec_gtk_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
   if (priv->player == NULL) {
     req->width = req->height = 0;
   } else {
-    swfdec_player_get_image_size (priv->player, 
-	  &req->width, &req->height);
+    guint w, h;
+    swfdec_player_get_default_size (priv->player, &w, &h);
+    /* FIXME: set some sane upper limit here? */
+    req->width = MIN (w, G_MAXINT);
+    req->height = MIN (h, G_MAXINT);
   } 
 }
 

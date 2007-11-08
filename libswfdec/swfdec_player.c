@@ -43,9 +43,10 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
+#include "swfdec_resource.h"
+#include "swfdec_resource_request.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
-#include "swfdec_resource.h"
 #include "swfdec_utils.h"
 
 /*** gtk-doc ***/
@@ -354,32 +355,16 @@ swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
   }
   SWFDEC_INFO ("compresed action queue to %u elements", 
       swfdec_ring_buffer_get_n_elements (buffer));
+  for (i = 0; i < swfdec_ring_buffer_get_n_elements (buffer); i++) {
+    action = swfdec_ring_buffer_peek_nth (buffer, i);
+    g_assert (action->movie != NULL);
+  }
 }
 
-/**
- * swfdec_player_add_event:
- * @player: a #SwfdecPlayer
- * @movie: the movie on which to trigger the event
- * @type: type of the event
- * @importance: importance of the event
- *
- * Adds an action to the @player. Actions are used by Flash player to solve
- * reentrancy issues. Instead of calling back into the Actionscript engine,
- * an action is queued for later execution. So if you're writing code that
- * is calling Actionscript code, you want to do this by using actions.
- **/
-void
-swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecEventType type,
-    guint importance)
+static void
+swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlayerAction *act)
 {
-  SwfdecPlayerAction *action;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
-
-  SWFDEC_LOG ("adding action %s %u", movie->name, type);
-  action = swfdec_ring_buffer_push (player->actions[importance]);
+  SwfdecPlayerAction *action = swfdec_ring_buffer_push (player->actions[importance]);
   if (action == NULL) {
     /* try to get rid of freed actions */
     if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
@@ -398,16 +383,40 @@ swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecEventT
       g_assert (action);
     }
   }
-  action->movie = movie;
-  action->script = NULL;
-  action->event = type;
+  *action = *act;
+}
+
+/**
+ * swfdec_player_add_event:
+ * @player: a #SwfdecPlayer
+ * @movie: the movie on which to trigger the event
+ * @type: type of the event
+ * @importance: importance of the event
+ *
+ * Adds an action to the @player. Actions are used by Flash player to solve
+ * reentrancy issues. Instead of calling back into the Actionscript engine,
+ * an action is queued for later execution. So if you're writing code that
+ * is calling Actionscript code, you want to do this by using actions.
+ **/
+void
+swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecEventType type,
+    guint importance)
+{
+  SwfdecPlayerAction action = { movie, NULL, type };
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
+
+  SWFDEC_LOG ("adding action %s %u", movie->name, type);
+  swfdec_player_do_add_action (player, importance, &action);
 }
 
 void
 swfdec_player_add_action_script	(SwfdecPlayer *player, SwfdecMovie *movie,
     SwfdecScript *script, guint importance)
 {
-  SwfdecPlayerAction *action;
+  SwfdecPlayerAction action = { movie, script, 0 };
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
@@ -415,22 +424,7 @@ swfdec_player_add_action_script	(SwfdecPlayer *player, SwfdecMovie *movie,
   g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
 
   SWFDEC_LOG ("adding action script %s %s", movie->name, script->name);
-  action = swfdec_ring_buffer_push (player->actions[importance]);
-  if (action == NULL) {
-    /* FIXME: limit number of actions to not get inf loops due to scripts? */
-    if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
-      /* FIXME: try to remove empty entries first? */
-      swfdec_as_context_abort (SWFDEC_AS_CONTEXT (player), 
-	  "256 levels of recursion were exceeded in one action list.");
-      return;
-    }
-    swfdec_ring_buffer_set_size (player->actions[importance],
-	swfdec_ring_buffer_get_size (player->actions[importance]) + 16);
-    action = swfdec_ring_buffer_push (player->actions[importance]);
-    g_assert (action);
-  }
-  action->movie = movie;
-  action->script = script;
+  swfdec_player_do_add_action (player, importance, &action);
 }
 
 /**
@@ -522,6 +516,8 @@ swfdec_player_trigger_external_actions (SwfdecTimeout *advance)
 
   player->external_timeout.callback = NULL;
   swfdec_player_perform_external_actions (player);
+  swfdec_player_resource_request_perform (player);
+  swfdec_player_perform_actions (player);
 }
 
 void
@@ -604,6 +600,9 @@ enum {
   PROP_0,
   PROP_CACHE_SIZE,
   PROP_INITIALIZED,
+  PROP_DEFAULT_WIDTH,
+  PROP_DEFAULT_HEIGHT,
+  PROP_RATE,
   PROP_MOUSE_CURSOR,
   PROP_NEXT_EVENT,
   PROP_BACKGROUND_COLOR,
@@ -686,6 +685,15 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_INITIALIZED:
       g_value_set_boolean (value, swfdec_player_is_initialized (player));
+      break;
+    case PROP_DEFAULT_WIDTH:
+      g_value_set_uint (value, player->width);
+      break;
+    case PROP_DEFAULT_HEIGHT:
+      g_value_set_uint (value, player->height);
+      break;
+    case PROP_RATE:
+      g_value_set_double (value, player->rate / 256.0);
       break;
     case PROP_MOUSE_CURSOR:
       g_value_set_enum (value, player->mouse_cursor);
@@ -836,6 +844,7 @@ swfdec_player_dispose (GObject *object)
   guint i;
 
   swfdec_player_stop_all_sounds (player);
+  swfdec_player_resource_request_finish (player);
   g_hash_table_destroy (player->registered_classes);
 
   while (player->roots)
@@ -878,7 +887,8 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (player->timeouts == NULL);
   g_list_free (player->intervals);
-  g_list_free (player->load_objects);
+  while (player->rooted_objects)
+    swfdec_player_unroot_object (player, player->rooted_objects->data);
   player->intervals = NULL;
   swfdec_cache_unref (player->cache);
   if (player->system) {
@@ -1198,6 +1208,8 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
     if (!klass->iterate_end (cur))
       swfdec_movie_destroy (cur);
   }
+  swfdec_player_resource_request_perform (player);
+  swfdec_player_perform_actions (player);
   /* add timeout again */
   /* FIXME: rounding issues? */
   player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
@@ -1363,6 +1375,16 @@ swfdec_player_mark_string_object (gpointer key, gpointer value, gpointer data)
 }
 
 static void
+swfdec_player_mark_rooted_object (gpointer object, gpointer unused)
+{
+  if (SWFDEC_IS_RESOURCE (object)) {
+    swfdec_resource_mark (object);
+  } else if (SWFDEC_IS_AS_OBJECT (object)) {
+    swfdec_as_object_mark (object);
+  }
+}
+
+static void
 swfdec_player_mark (SwfdecAsContext *context)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
@@ -1372,7 +1394,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   swfdec_as_object_mark (player->Video);
   g_list_foreach (player->roots, (GFunc) swfdec_as_object_mark, NULL);
   g_list_foreach (player->intervals, (GFunc) swfdec_as_object_mark, NULL);
-  g_list_foreach (player->load_objects, (GFunc) swfdec_as_object_mark, NULL);
+  g_list_foreach (player->rooted_objects, swfdec_player_mark_rooted_object, NULL);
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }
@@ -1409,6 +1431,15 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_INITIALIZED,
       g_param_spec_boolean ("initialized", "initialized", "TRUE when the player has initialized its basic values",
 	  FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_DEFAULT_WIDTH,
+      g_param_spec_uint ("default-width", "default width", "default width of the movie",
+	  0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_DEFAULT_HEIGHT,
+      g_param_spec_uint ("default-height", "default height", "default height of the movie",
+	  0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_RATE,
+      g_param_spec_double ("rate", "rate", "rate in frames per second",
+	  0.0, 256.0, 0.0, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_MOUSE_CURSOR,
       g_param_spec_enum ("mouse-cursor", "mouse cursor", "how the mouse pointer should be presented",
 	  SWFDEC_TYPE_MOUSE_CURSOR, SWFDEC_MOUSE_CURSOR_NONE, G_PARAM_READABLE));
@@ -1611,6 +1642,8 @@ swfdec_player_init (SwfdecPlayer *player)
   player->iterate_timeout.callback = swfdec_player_iterate;
   player->stage_width = -1;
   player->stage_height = -1;
+
+  swfdec_player_resource_request_init (player);
 }
 
 void
@@ -1690,42 +1723,75 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 /**
  * swfdec_player_get_level:
  * @player: a #SwfdecPlayer
- * @name: name of the level to request
- * @create: resource to create the movie with if it doesn't exist
+ * @name: a name that is supposed to refer to a level
  *
- * This function is used to look up root movies in the given @player. The 
- * algorithm used is like this: First, check that @name actually references a
- * root level movie. If it does not, return %NULL. If the movie for the given 
- * level already exists, return it. If it does not, create it when @create was 
- * set to %TRUE and return the newly created movie. Otherwise return %NULL.
+ * Checks if the given @name refers to a level, and if so, returns the level.
+ * An example for such a name is "_level5". These strings are used to refer to
+ * root movies inside the Flash player.
  *
- * Returns: the #SwfdecMovie referenced by the given @name or %NULL if no such
- *          movie exists. Note that if a new movie is created, it will not be
- *          fully initialized (yes, this function sucks).
+ * Returns: the level referred to by @name or -1 if none
  **/
-SwfdecSpriteMovie *
-swfdec_player_get_level (SwfdecPlayer *player, const char *name, SwfdecResource *create)
+int
+swfdec_player_get_level (SwfdecPlayer *player, const char *name)
 {
-  SwfdecSpriteMovie *movie;
-  GList *walk;
-  const char *s;
   char *end;
-  int depth;
   gulong l;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), -1);
+  g_return_val_if_fail (name != NULL, -1);
 
   /* check name starts with "_level" */
   if (swfdec_strncmp (SWFDEC_AS_CONTEXT (player)->version, name, "_level", 6) != 0)
-    return NULL;
+    return -1;
   name += 6;
   /* extract depth from rest string (or fail if it's not a depth) */
   errno = 0;
   l = strtoul (name, &end, 10);
   if (errno != 0 || *end != 0 || l > G_MAXINT)
+    return -1;
+  return l;
+}
+
+SwfdecSpriteMovie *
+swfdec_player_create_movie_at_level (SwfdecPlayer *player, SwfdecResource *resource,
+    int level)
+{
+  SwfdecMovie *movie;
+  const char *s;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (level >= 0, NULL);
+  g_return_val_if_fail (swfdec_player_get_movie_at_level (player, level) == NULL, NULL);
+
+  /* create new root movie */
+  s = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%d", level));
+  movie = swfdec_movie_new (player, level - 16384, NULL, resource, NULL, s);
+  if (movie == NULL)
     return NULL;
-  depth = l - 16384;
+  movie->name = SWFDEC_AS_STR_EMPTY;
+  return SWFDEC_SPRITE_MOVIE (movie);
+}
+
+/**
+ * swfdec_player_get_movie_at_level:
+ * @player: a #SwfdecPlayer
+ * @level: number of the level
+ *
+ * This function is used to look up root movies in the given @player. 
+ *
+ * Returns: the #SwfdecMovie located at the given level or %NULL if there is no
+ *          movie at that level.
+ **/
+SwfdecSpriteMovie *
+swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
+{
+  GList *walk;
+  int depth;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (level >= 0, NULL);
+
+  depth = level - 16384;
   /* find movie */
   for (walk = player->roots; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
@@ -1735,73 +1801,7 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name, SwfdecResource 
       return SWFDEC_SPRITE_MOVIE (cur);
     break;
   }
-  /* bail if create isn't set*/
-  if (create == NULL)
-    return NULL;
-  /* create new root movie */
-  s = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%lu", l));
-  movie = SWFDEC_SPRITE_MOVIE (swfdec_movie_new (player, depth, NULL, create, NULL, s));
-  SWFDEC_MOVIE (movie)->name = SWFDEC_AS_STR_EMPTY;
-  return movie;
-}
-
-void
-swfdec_player_remove_level (SwfdecPlayer *player, guint depth)
-{
-  GList *walk;
-  int real_depth;
-
-  real_depth = (int) depth - 16384;
-
-  for (walk = player->roots; walk; walk = walk->next) {
-    SwfdecMovie *movie = walk->data;
-
-    if (movie->depth < real_depth)
-      continue;
-
-    if (movie->depth == real_depth) {
-      SWFDEC_DEBUG ("remove existing movie _level%u", depth);
-      swfdec_movie_remove (movie);
-      return;
-    }
-    break;
-  }
-  SWFDEC_LOG ("no movie to remove at level %u", depth);
-}
-
-SwfdecLoader *
-swfdec_player_load (SwfdecPlayer *player, const char *url, 
-    SwfdecLoaderRequest request, SwfdecBuffer *buffer)
-{
-  SwfdecAsContext *cx;
-  SwfdecSecurity *sec;
-  SwfdecURL *full;
-
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
-
-  g_assert (player->resource);
-  /* create absolute url first */
-  full = swfdec_url_new_relative (swfdec_loader_get_url (player->resource->loader), url);
-  /* figure out the right security object (FIXME: let the person loading it provide it?) */
-  cx = SWFDEC_AS_CONTEXT (player);
-  if (cx->frame) {
-    sec = cx->frame->security;
-  } else {
-    g_warning ("swfdec_player_load() should only be called from scripts");
-    sec = SWFDEC_SECURITY (player->resource);
-  }
-  if (!swfdec_security_allow_url (sec, full)) {
-    SWFDEC_ERROR ("not allowing access to %s", url);
-    return NULL;
-  }
-
-  if (buffer) {
-    return swfdec_loader_load (player->resource->loader, url, request, 
-	(const char *) buffer->data, buffer->length);
-  } else {
-    return swfdec_loader_load (player->resource->loader, url, request, NULL, 0);
-  }
+  return NULL;
 }
 
 static gboolean
@@ -1881,47 +1881,56 @@ void
 swfdec_player_initialize (SwfdecPlayer *player, guint version, 
     guint rate, guint width, guint height)
 {
-  SwfdecAsContext *context;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (rate > 0);
 
-  if (swfdec_player_is_initialized (player))
-    return;
-  
-  context = SWFDEC_AS_CONTEXT (player);
-  swfdec_as_context_startup (context, version);
-  /* reset state for initialization */
-  /* FIXME: have a better way to do this */
-  if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
-    context->state = SWFDEC_AS_CONTEXT_NEW;
-    swfdec_sprite_movie_init_context (player, version);
-    swfdec_video_movie_init_context (player, version);
-    swfdec_net_connection_init_context (player, version);
-    swfdec_net_stream_init_context (player, version);
+  if (!player->initialized) {
+    SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
+    swfdec_as_context_startup (context, version);
+    /* reset state for initialization */
+    /* FIXME: have a better way to do this */
+    if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
+      context->state = SWFDEC_AS_CONTEXT_NEW;
+      swfdec_sprite_movie_init_context (player, version);
+      swfdec_video_movie_init_context (player, version);
+      swfdec_net_connection_init_context (player, version);
+      swfdec_net_stream_init_context (player, version);
 
-    swfdec_as_context_run_init_script (context, swfdec_initialize, 
-	sizeof (swfdec_initialize), 8);
+      swfdec_as_context_run_init_script (context, swfdec_initialize, 
+	  sizeof (swfdec_initialize), 8);
 
-    if (context->state == SWFDEC_AS_CONTEXT_NEW) {
-      context->state = SWFDEC_AS_CONTEXT_RUNNING;
-      swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);
+      if (context->state == SWFDEC_AS_CONTEXT_NEW) {
+	context->state = SWFDEC_AS_CONTEXT_RUNNING;
+	swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);
+      }
     }
+    player->initialized = TRUE;
+    g_object_notify (G_OBJECT (player), "initialized");
+  } else {
+    swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
-  SWFDEC_INFO ("initializing player to size %ux%u", width, height);
-  player->rate = rate;
-  player->width = width;
-  player->height = height;
+
+  SWFDEC_INFO ("initializing player to size %ux%u and rate %u/256", width, height, rate);
+  if (rate != player->rate) {
+    player->rate = rate;
+    g_object_notify (G_OBJECT (player), "rate");
+  }
+  if (player->width != width) {
+    player->width = width;
+    g_object_notify (G_OBJECT (player), "default-width");
+  }
+  if (player->height != height) {
+    player->height = height;
+    g_object_notify (G_OBJECT (player), "default-height");
+  }
   player->internal_width = player->stage_width >= 0 ? (guint) player->stage_width : player->width;
   player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
-  player->initialized = TRUE;
-  if (rate) {
-    player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
-    swfdec_player_add_timeout (player, &player->iterate_timeout);
-    SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
-	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
-  }
-  g_object_notify (G_OBJECT (player), "initialized");
   swfdec_player_update_scale (player);
+
+  player->iterate_timeout.timestamp = player->time;
+  swfdec_player_add_timeout (player, &player->iterate_timeout);
+  SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
+      &player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
 }
 
 /**
@@ -1968,6 +1977,34 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
   } else {
     g_hash_table_remove (player->registered_classes, name);
   }
+}
+
+/* FIXME:
+ * I don't like the idea of rooting arbitrary objects very much. And so far, 
+ * this API is only necessary for the objects used for loading data. So it seems
+ * like a good idea to revisit the refcounting and GCing of resources.
+ */
+void
+swfdec_player_root_object (SwfdecPlayer *player, GObject *object)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (G_IS_OBJECT (object));
+
+  g_object_ref (object);
+  player->rooted_objects = g_list_prepend (player->rooted_objects, object);
+}
+
+void
+swfdec_player_unroot_object (SwfdecPlayer *player, GObject *object)
+{
+  GList *entry;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (G_IS_OBJECT (object));
+  entry = g_list_find (player->rooted_objects, object);
+  g_return_if_fail (entry != NULL);
+  g_object_unref (object);
+  player->rooted_objects = g_list_delete_link (player->rooted_objects, entry);
 }
 
 /** PUBLIC API ***/
@@ -2034,8 +2071,7 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_return_if_fail (player->resource == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  player->resource = swfdec_resource_new (loader, variables);
-  player->resource->initial = TRUE;
+  player->resource = swfdec_resource_new (player, loader, variables);
   movie = swfdec_movie_new (player, -16384, NULL, player->resource, NULL, SWFDEC_AS_STR__level0);
   movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);
@@ -2295,6 +2331,9 @@ swfdec_player_get_next_event (SwfdecPlayer *player)
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
+  if (swfdec_as_context_is_aborted (SWFDEC_AS_CONTEXT (player)))
+    return -1;
+
   tick = swfdec_player_get_next_event_time (player);
   if (tick == G_MAXUINT64)
     return -1;
@@ -2326,7 +2365,7 @@ swfdec_player_get_rate (SwfdecPlayer *player)
 }
 
 /**
- * swfdec_player_get_image_size:
+ * swfdec_player_get_default_size:
  * @player: a #SwfdecPlayer
  * @width: integer to store the width in or %NULL
  * @height: integer to store the height in or %NULL
@@ -2335,7 +2374,7 @@ swfdec_player_get_rate (SwfdecPlayer *player)
  * with the size. Otherwise @width and @height are set to 0.
  **/
 void
-swfdec_player_get_image_size (SwfdecPlayer *player, int *width, int *height)
+swfdec_player_get_default_size (SwfdecPlayer *player, guint *width, guint *height)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
@@ -2603,3 +2642,4 @@ swfdec_player_set_maximum_runtime (SwfdecPlayer *player, gulong msecs)
   player->max_runtime = msecs;
   g_object_notify (G_OBJECT (player), "max-runtime");
 }
+

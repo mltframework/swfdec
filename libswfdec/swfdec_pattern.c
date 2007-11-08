@@ -397,6 +397,8 @@ swfdec_pattern_do_parse (SwfdecBits *bits, SwfdecSwfDecoder *dec, gboolean rgba)
 	SWFDEC_ERROR ("spread mode 3 is undefined for gradients");
 	gradient->extend = CAIRO_EXTEND_PAD;
 	break;
+      default:
+	g_assert_not_reached ();
     }
     interpolation = swfdec_bits_getbits (bits, 2);
     if (interpolation) {
@@ -542,6 +544,8 @@ swfdec_pattern_parse_morph (SwfdecBits *bits, SwfdecSwfDecoder *dec)
 	SWFDEC_ERROR ("spread mode 3 is undefined for gradients");
 	gradient->extend = CAIRO_EXTEND_PAD;
 	break;
+      default:
+	g_assert_not_reached ();
     }
     interpolation = swfdec_bits_getbits (bits, 2);
     if (interpolation) {

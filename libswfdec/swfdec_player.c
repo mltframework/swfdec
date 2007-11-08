@@ -1178,6 +1178,24 @@ swfdec_player_stage_to_global (SwfdecPlayer *player, double *x, double *y)
 }
 
 static void
+swfdec_player_execute_on_load_init (SwfdecPlayer *player)
+{
+  GList *walk;
+
+  /* FIXME: This can be made a LOT faster with correct caching, but I'm lazy */
+  do {
+    for (walk = player->movies; walk; walk = walk->next) {
+      SwfdecMovie *movie = walk->data;
+      SwfdecResource *resource = swfdec_movie_get_own_resource (movie);
+      if (resource == NULL)
+	continue;
+      if (swfdec_resource_emit_on_load_init (resource))
+	break;
+    }
+  } while (walk != NULL);
+}
+
+static void
 swfdec_player_iterate (SwfdecTimeout *timeout)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
@@ -1209,6 +1227,7 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
     if (!klass->iterate_end (cur))
       swfdec_movie_destroy (cur);
   }
+  swfdec_player_execute_on_load_init (player);
   swfdec_player_resource_request_perform (player);
   swfdec_player_perform_actions (player);
 }

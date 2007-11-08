@@ -102,7 +102,7 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
 }
 
 /* NB: name must be GC'ed */
-static void
+static SwfdecSpriteMovie *
 swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolean progress, 
     SwfdecAsValue *args, guint n_args)
 {
@@ -112,14 +112,14 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
   SwfdecAsValue vals[n_args + skip];
 
   if (resource->clip_loader == NULL)
-    return;
+    return NULL;
   cx = SWFDEC_AS_OBJECT (resource->clip_loader)->context;
   g_assert (resource->target);
   movie = swfdec_action_lookup_object (cx, SWFDEC_PLAYER (cx)->roots->data, 
       resource->target, resource->target + strlen (resource->target));
   if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
     SWFDEC_FIXME ("figure out if we emit nonetheless");
-    return;
+    return NULL;
   }
 
   SWFDEC_AS_VALUE_SET_STRING (&vals[0], name);
@@ -144,6 +144,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
     memcpy (&vals[skip], args, sizeof (SwfdecAsValue) * n_args);
   swfdec_as_object_call (SWFDEC_AS_OBJECT (resource->clip_loader), SWFDEC_AS_STR_broadcastMessage, 
       n_args + skip, vals, NULL);
+  return SWFDEC_SPRITE_MOVIE (movie);
 }
 
 static void
@@ -297,13 +298,20 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 static void
 swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
-  SwfdecAsValue val;
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
+  SwfdecAsValue val;
+  SwfdecSpriteMovie *movie;
 
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
   SWFDEC_AS_VALUE_SET_INT (&val, 0); /* FIXME */
-  swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
-  resource->state = SWFDEC_RESOURCE_COMPLETE;
+  movie = swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
+  /* FIXME: I bet this is wrong for figuring out if movies should emit onLoadInit */
+  if (resource->clip_loader == NULL ||
+      movie != resource->movie) {
+    resource->state = SWFDEC_RESOURCE_DONE;
+  } else {
+    resource->state = SWFDEC_RESOURCE_COMPLETE;
+  }
 }
 
 static void
@@ -497,4 +505,22 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
   swfdec_player_root_object (player, G_OBJECT (resource));
   swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
       url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
+}
+
+gboolean
+swfdec_resource_emit_on_load_init (SwfdecResource *resource)
+{
+  g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), FALSE);
+
+  if (resource->state != SWFDEC_RESOURCE_COMPLETE)
+    return FALSE;
+
+  swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadInit, FALSE, NULL, 0);
+  resource->state = SWFDEC_RESOURCE_DONE;
+  /* free now unneeded resources */
+  if (resource->clip_loader) {
+    g_object_unref (resource->clip_loader);
+    resource->clip_loader = NULL;
+  }
+  return TRUE;
 }

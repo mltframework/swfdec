@@ -76,6 +76,7 @@ SwfdecResource *swfdec_resource_new			(SwfdecPlayer *		player,
 							 const char *		variables);
 void		swfdec_resource_mark			(SwfdecResource *	resource);
 
+gboolean	swfdec_resource_emit_on_load_init	(SwfdecResource *	resource);
 void		swfdec_resource_add_export		(SwfdecResource *	instance,
 							 SwfdecCharacter *	character,
 							 const char * 		name);

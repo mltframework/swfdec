@@ -1183,6 +1183,10 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
   SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
   GList *walk;
 
+  /* add timeout again - do this first because later code can change it */
+  /* FIXME: rounding issues? */
+  player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
+  swfdec_player_add_timeout (player, &player->iterate_timeout);
   swfdec_player_perform_external_actions (player);
   SWFDEC_INFO ("=== START ITERATION ===");
   /* start the iteration. This performs a goto next frame on all 
@@ -1207,10 +1211,6 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
   }
   swfdec_player_resource_request_perform (player);
   swfdec_player_perform_actions (player);
-  /* add timeout again */
-  /* FIXME: rounding issues? */
-  player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
-  swfdec_player_add_timeout (player, &player->iterate_timeout);
 }
 
 static void

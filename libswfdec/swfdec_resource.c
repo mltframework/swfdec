@@ -345,8 +345,8 @@ swfdec_resource_dispose (GObject *object)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (object);
 
-  swfdec_loader_set_target (resource->loader, NULL);
   if (resource->loader) {
+    swfdec_loader_set_target (resource->loader, NULL);
     g_object_unref (resource->loader);
     resource->loader = NULL;
   }

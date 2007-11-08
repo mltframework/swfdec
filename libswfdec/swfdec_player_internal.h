@@ -216,9 +216,6 @@ SwfdecSpriteMovie *
 						(SwfdecPlayer *		player,
 						 SwfdecResource *	resource,
 						 int			level);
-gboolean	swfdec_player_fscommand		(SwfdecPlayer *		player,
-						 const char *		command,
-						 const char *		value);
 void		swfdec_player_launch		(SwfdecPlayer *         player,
 						 SwfdecLoaderRequest	request,
 						 const char *		url,

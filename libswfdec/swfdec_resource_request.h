@@ -30,7 +30,7 @@ typedef void (* SwfdecResourceFunc) (SwfdecPlayer *player, SwfdecLoader *loader,
 
 struct _SwfdecResourceRequest
 {
-  SwfdecSecurity *	security;     	/* security context when loading */
+  SwfdecSecurity *	security;     	/* security context when loading or NULL for fscommand */
 
   char *		url;		/* URL we're gonna load */
   SwfdecLoaderRequest	request;	/* how are we goona load this URL? */
@@ -51,6 +51,9 @@ void		swfdec_player_request_resource		(SwfdecPlayer *		player,
 							 SwfdecResourceFunc	func,
 							 gpointer		data,
 							 GDestroyNotify		destroy);
+gboolean	swfdec_player_request_fscommand		(SwfdecPlayer *		player,
+							 const char *		command,
+							 const char *		value);
 SwfdecLoader *	swfdec_player_request_resource_now	(SwfdecPlayer *		player,
 							 SwfdecSecurity *	security,
 							 const char *		url,

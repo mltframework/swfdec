@@ -32,7 +32,8 @@ swfdec_resource_request_free (SwfdecResourceRequest *request)
 {
   g_return_if_fail (request != NULL);
 
-  g_object_unref (request->security);
+  if (request->security)
+    g_object_unref (request->security);
   if (request->destroy)
     request->destroy (request->data);
   g_free (request->url);
@@ -77,6 +78,11 @@ swfdec_request_resource_perform_one (gpointer requestp, gpointer playerp)
   SwfdecResourceRequest *request = requestp;
   SwfdecLoader *loader;
 
+  if (request->security == NULL) {
+    g_signal_emit_by_name (player, "fscommand", request->url, request->data);
+    swfdec_resource_request_free (request);
+    return;
+  }
   g_assert (player->resource);
   loader = swfdec_player_request_resource_now (player, request->security, 
       request->url, request->request, request->buffer);
@@ -120,6 +126,56 @@ swfdec_player_request_resource (SwfdecPlayer *player, SwfdecSecurity *security,
   request->data = data;
 
   player->resource_requests = g_slist_append (player->resource_requests, request);
+}
+
+static gboolean
+is_ascii (const char *s)
+{
+  while (*s) {
+    if (*s & 0x80)
+      return FALSE;
+    s++;
+  }
+  return TRUE;
+}
+
+/**
+ * swfdec_player_request_fscommand:
+ * @player: a #SwfdecPlayer
+ * @command: the command to parse
+ * @value: the value passed to the command
+ *
+ * Checks if @command is an FSCommand and if so, queues emission of the 
+ * SwfdecPlayer::fscommand signal. 
+ *
+ * Returns: %TRUE if an fscommand was found and the signal emitted, %FALSE 
+ *          otherwise.
+ **/
+gboolean
+swfdec_player_request_fscommand (SwfdecPlayer *player, const char *command,
+    const char *value)
+{
+  SwfdecResourceRequest *request;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (command != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if (g_ascii_strncasecmp (command, "FSCommand:", 10) != 0)
+    return FALSE;
+
+  command += 10;
+  if (!is_ascii (command)) {
+    SWFDEC_ERROR ("command \"%s\" are not ascii, skipping fscommand", command);
+    return TRUE;
+  }
+  request = g_slice_new0 (SwfdecResourceRequest);
+  request->url = g_ascii_strdown (command, -1);
+  request->destroy = g_free;
+  request->data = g_strdup (value);
+
+  player->resource_requests = g_slist_append (player->resource_requests, request);
+  return TRUE;
 }
 
 void

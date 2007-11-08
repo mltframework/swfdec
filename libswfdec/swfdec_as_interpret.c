@@ -43,6 +43,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_resource.h"
+#include "swfdec_resource_request.h"
 #include "swfdec_text_field_movie.h" // for typeof
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
@@ -1139,7 +1140,7 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   }
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_ERROR ("GetURL without a SwfdecPlayer");
-  } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
+  } else if (swfdec_player_request_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
@@ -1176,7 +1177,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
 
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_ERROR ("GetURL2 action requires a SwfdecPlayer");
-  } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
+  } else if (swfdec_player_request_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else if (variables) {
     SwfdecMovie *movie;

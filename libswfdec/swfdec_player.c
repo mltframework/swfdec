@@ -1801,52 +1801,6 @@ swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
   return NULL;
 }
 
-static gboolean
-is_ascii (const char *s)
-{
-  while (*s) {
-    if (*s & 0x80)
-      return FALSE;
-    s++;
-  }
-  return TRUE;
-}
-
-/**
- * swfdec_player_fscommand:
- * @player: a #SwfdecPlayer
- * @command: the command to parse
- * @value: the value passed to the command
- *
- * Checks if @command is an FSCommand and if so, emits the 
- * SwfdecPlayer::fscommand signal. 
- *
- * Returns: %TRUE if an fscommand was found and the signal emitted, %FALSE 
- *          otherwise.
- **/
-gboolean
-swfdec_player_fscommand (SwfdecPlayer *player, const char *command, const char *value)
-{
-  char *real_command;
-
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
-  g_return_val_if_fail (command != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
-  if (g_ascii_strncasecmp (command, "FSCommand:", 10) != 0)
-    return FALSE;
-
-  command += 10;
-  if (!is_ascii (command)) {
-    SWFDEC_ERROR ("command \"%s\" are not ascii, skipping fscommand", command);
-    return TRUE;
-  }
-  real_command = g_ascii_strdown (command, -1);
-  g_signal_emit (player, signals[FSCOMMAND], 0, real_command, value);
-  g_free (real_command);
-  return TRUE;
-}
-
 void
 swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const char *url, 
     const char *target, SwfdecBuffer *data)

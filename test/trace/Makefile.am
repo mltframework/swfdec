@@ -982,6 +982,20 @@ EXTRA_DIST = \
 	movieclip-target-6.swf.trace \
 	movieclip-target-7.swf \
 	movieclip-target-7.swf.trace \
+	moviecliploader-error-illegalrequest.as \
+	moviecliploader-error-illegalrequest-6.swf \
+	moviecliploader-error-illegalrequest-6.swf.trace \
+	moviecliploader-error-illegalrequest-7.swf \
+	moviecliploader-error-illegalrequest-7.swf.trace \
+	moviecliploader-error-illegalrequest-8.swf \
+	moviecliploader-error-illegalrequest-8.swf.trace \
+	moviecliploader-error-urlnotfound.as \
+	moviecliploader-error-urlnotfound-6.swf \
+	moviecliploader-error-urlnotfound-6.swf.trace \
+	moviecliploader-error-urlnotfound-7.swf \
+	moviecliploader-error-urlnotfound-7.swf.trace \
+	moviecliploader-error-urlnotfound-8.swf \
+	moviecliploader-error-urlnotfound-8.swf.trace \
 	moviecliploader-getprogress.as \
 	moviecliploader-getprogress-5.swf \
 	moviecliploader-getprogress-5.swf.trace \

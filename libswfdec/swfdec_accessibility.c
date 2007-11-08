@@ -29,7 +29,7 @@ void
 swfdec_accessibility_isActive (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ();
+  SWFDEC_STUB ("Accessibility.isActive (static)");
 }
 
 SWFDEC_AS_NATIVE (1999, 1, swfdec_accessibility_sendEvent)
@@ -37,7 +37,7 @@ void
 swfdec_accessibility_sendEvent (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ();
+  SWFDEC_STUB ("Accessibility.sendEvent (static)");
 }
 
 SWFDEC_AS_NATIVE (1999, 2, swfdec_accessibility_updateProperties)
@@ -46,5 +46,5 @@ swfdec_accessibility_updateProperties (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ();
+  SWFDEC_STUB ("Accessibility.updateProperties (static)");
 }

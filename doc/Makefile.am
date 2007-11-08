@@ -106,6 +106,7 @@ IGNORE_HFILES= \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
 	swfdec_movie.h \
+	swfdec_movie_clip_loader.h \
 	swfdec_net_connection.h \
 	swfdec_net_stream.h \
 	swfdec_path.h \
@@ -113,6 +114,7 @@ IGNORE_HFILES= \
 	swfdec_player_internal.h \
 	swfdec_rect.h \
 	swfdec_resource.h \
+	swfdec_resource_request.h \
 	swfdec_ringbuffer.h \
 	swfdec_root_movie.h \
 	swfdec_root_sprite.h \

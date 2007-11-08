@@ -244,6 +244,15 @@ EXTRA_DIST = \
 	callmethod-undefined-this-7.swf \
 	callmethod-undefined-this-7.swf.trace \
 	callmethod-undefined-this.as \
+	camera-properties.as \
+	camera-properties-5.swf \
+	camera-properties-5.swf.trace \
+	camera-properties-6.swf \
+	camera-properties-6.swf.trace \
+	camera-properties-7.swf \
+	camera-properties-7.swf.trace \
+	camera-properties-8.swf \
+	camera-properties-8.swf.trace \
 	case1-6.swf \
 	case1-6.swf.trace \
 	case1-7.swf \

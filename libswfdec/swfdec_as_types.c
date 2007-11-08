@@ -387,6 +387,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	    return SWFDEC_AS_STR__type_Object_;
 	}
       }
+    case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
       return SWFDEC_AS_STR_EMPTY;
@@ -420,6 +421,7 @@ swfdec_as_value_to_debug (const SwfdecAsValue *value)
       return g_strdup_printf ("%g", SWFDEC_AS_VALUE_GET_NUMBER (value));
     case SWFDEC_AS_TYPE_OBJECT:
       return swfdec_as_object_get_debug (SWFDEC_AS_VALUE_GET_OBJECT (value));
+    case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
       return NULL;
@@ -474,6 +476,7 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
       }
     case SWFDEC_AS_TYPE_OBJECT:
       return NAN;
+    case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
       return NAN;
@@ -545,6 +548,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
       break;
     case SWFDEC_AS_TYPE_OBJECT:
       return SWFDEC_AS_VALUE_GET_OBJECT (value);
+    case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
       return NULL;
@@ -601,6 +605,7 @@ swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value
       }
     case SWFDEC_AS_TYPE_OBJECT:
       return TRUE;
+    case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
       return FALSE;

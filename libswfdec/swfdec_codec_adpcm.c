@@ -167,7 +167,7 @@ swfdec_audio_decoder_adpcm_free (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_adpcm_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
+swfdec_audio_decoder_adpcm_new (guint type, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoderAdpcm *adpcm;
 

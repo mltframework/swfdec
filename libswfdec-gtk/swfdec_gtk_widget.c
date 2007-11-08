@@ -193,14 +193,11 @@ swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
 static cairo_surface_t *
 swfdec_gtk_widget_create_renderer (cairo_surface_type_t type, int width, int height)
 {
-  switch (type) {
-    case CAIRO_SURFACE_TYPE_IMAGE:
-      return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-    default:
-      break;
+  if (type == CAIRO_SURFACE_TYPE_IMAGE) {
+    return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+  } else {
+    return NULL;
   }
-
-  return NULL;
 }
 
 static gboolean

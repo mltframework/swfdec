@@ -364,6 +364,8 @@ swfdec_swf_decoder_parse_one (SwfdecSwfDecoder *s)
 	SWFDEC_WARNING ("%u bytes after EOF", SWFDEC_DECODER (s)->bytes_loaded - s->bytes_parsed);
       }
       return SWFDEC_STATUS_EOF;
+    default:
+      g_assert_not_reached ();
   }
 
   /* copy state */

@@ -265,23 +265,25 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
   s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head = sound;
 
   switch (sound->codec) {
-    case 0:
+    case SWFDEC_AUDIO_CODEC_UNDEFINED:
       if (swfdec_audio_format_is_16bit (sound->format)) {
 	SWFDEC_WARNING ("undefined endianness for s16 sound");
 	/* just assume LE and hope it works (FIXME: want a switch for this?) */
 	sound->codec = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
       }
       break;
-    case 2:
+    case SWFDEC_AUDIO_CODEC_MP3:
       /* latency seek */
       latency = swfdec_bits_get_s16 (b);
       break;
-    case 1:
-    case 3:
-    case 6:
+    case SWFDEC_AUDIO_CODEC_ADPCM:
+    case SWFDEC_AUDIO_CODEC_UNCOMPRESSED:
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ:
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER:
       break;
     default:
       SWFDEC_WARNING ("unknown codec %d", sound->codec);
+      sound->codec = SWFDEC_AUDIO_CODEC_UNDEFINED;
   }
 
   return SWFDEC_STATUS_OK;

@@ -170,7 +170,7 @@ swfdec_audio_decoder_ffmpeg_free (SwfdecAudioDecoder *dec)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_ffmpeg_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
+swfdec_audio_decoder_ffmpeg_new (guint type, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoderFFMpeg *ffmpeg;
   AVCodecContext *ctx;
@@ -212,16 +212,16 @@ typedef struct {
 } SwfdecVideoDecoderFFMpeg;
 
 static enum PixelFormat
-swfdec_video_decoder_ffmpeg_get_format (SwfdecVideoCodec codec)
+swfdec_video_decoder_ffmpeg_get_format (guint codec)
 {
   switch (swfdec_video_codec_get_format (codec)) {
     case SWFDEC_VIDEO_FORMAT_RGBA:
       return PIX_FMT_RGB32;
     case SWFDEC_VIDEO_FORMAT_I420:
       return PIX_FMT_YUV420P;
+    default:
+      g_return_val_if_reached (PIX_FMT_RGB32);
   }
-  g_assert_not_reached ();
-  return PIX_FMT_RGB32;
 }
 
 #define ALIGNMENT 31
@@ -282,7 +282,7 @@ swfdec_video_decoder_ffmpeg_free (SwfdecVideoDecoder *dec)
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_ffmpeg_new (SwfdecVideoCodec type)
+swfdec_video_decoder_ffmpeg_new (guint type)
 {
   SwfdecVideoDecoderFFMpeg *codec;
   AVCodecContext *ctx;

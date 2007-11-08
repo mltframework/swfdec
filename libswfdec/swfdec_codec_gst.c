@@ -406,7 +406,7 @@ swfdec_audio_decoder_set_caps (GstPad *pad, GstCaps *caps)
 }
 
 SwfdecAudioDecoder *
-swfdec_audio_decoder_gst_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
+swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
 {
   SwfdecGstAudio *player;
   GstCaps *srccaps, *sinkcaps;
@@ -549,12 +549,14 @@ swfdec_video_decoder_gst_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
       image->rowstride[2] = image->rowstride[1];
       g_assert (image->plane[2] + image->rowstride[2] * ALIGN (image->height, 2) / 2 == image->plane[0] + buf->size);
       break;
+    default:
+      g_return_val_if_reached (FALSE);
   }
   return TRUE;
 }
 
 static GstCaps *
-swfdec_video_decoder_get_sink_caps (SwfdecVideoCodec codec)
+swfdec_video_decoder_get_sink_caps (guint codec)
 {
   switch (swfdec_video_codec_get_format (codec)) {
     case SWFDEC_VIDEO_FORMAT_RGBA:
@@ -567,13 +569,13 @@ swfdec_video_decoder_get_sink_caps (SwfdecVideoCodec codec)
 #endif
     case SWFDEC_VIDEO_FORMAT_I420:
       return gst_caps_from_string ("video/x-raw-yuv, format=(fourcc)I420");
+    default:
+      g_return_val_if_reached (NULL);
   }
-  g_assert_not_reached ();
-  return NULL;
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_gst_new (SwfdecVideoCodec codec)
+swfdec_video_decoder_gst_new (guint codec)
 {
   SwfdecGstVideo *player;
   GstCaps *srccaps, *sinkcaps;

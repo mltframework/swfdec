@@ -89,7 +89,7 @@ static void
 swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 {
   SwfdecBuffer *buffer;
-  SwfdecVideoCodec format;
+  guint format;
   cairo_surface_t *old;
   gboolean process_events;
   guint process_events_from;

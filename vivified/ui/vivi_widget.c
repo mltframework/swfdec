@@ -96,7 +96,8 @@ vivi_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 
   if (event->button == 1 && swfdec_gtk_widget_get_interactive (widget)) {
     SwfdecPlayer *player = swfdec_gtk_widget_get_player (widget);
-    switch (event->type) {
+    // cast to int to get rid of unhandled enum warnings...
+    switch ((int)event->type) {
       case GDK_BUTTON_PRESS:
 	vivi_widget_invalidate_click_area (debug);
 	debug->x = event->x;

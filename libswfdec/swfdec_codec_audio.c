@@ -84,7 +84,7 @@ swfdec_audio_decoder_uncompressed_free (SwfdecAudioDecoder *decoder)
 }
 
 static SwfdecAudioDecoder *
-swfdec_audio_decoder_uncompressed_new (SwfdecAudioCodec type, SwfdecAudioFormat format)
+swfdec_audio_decoder_uncompressed_new (guint type, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoderUncompressed *dec;
 
@@ -110,7 +110,7 @@ swfdec_audio_decoder_uncompressed_new (SwfdecAudioCodec type, SwfdecAudioFormat 
 /*** PUBLIC API ***/
 
 static SwfdecAudioDecoder *
-swfdec_audio_decoder_builtin_new (SwfdecAudioCodec codec, SwfdecAudioFormat format)
+swfdec_audio_decoder_builtin_new (guint codec, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoder *ret;
 
@@ -123,7 +123,7 @@ swfdec_audio_decoder_builtin_new (SwfdecAudioCodec codec, SwfdecAudioFormat form
 
 struct {
   const char *		name;
-  SwfdecAudioDecoder *	(* func) (SwfdecAudioCodec, SwfdecAudioFormat);
+  SwfdecAudioDecoder *	(* func) (guint, SwfdecAudioFormat);
 } audio_codecs[] = {
   { "builtin",	swfdec_audio_decoder_builtin_new },
 #ifdef HAVE_GST
@@ -148,7 +148,7 @@ struct {
  * Returns: a new decoder or %NULL
  **/
 SwfdecAudioDecoder *
-swfdec_audio_decoder_new (SwfdecAudioCodec codec, SwfdecAudioFormat format)
+swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoder *ret;
   const char *list;

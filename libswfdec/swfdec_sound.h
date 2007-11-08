@@ -63,7 +63,7 @@ struct _SwfdecSound
 {
   SwfdecCached		cached;
 
-  SwfdecAudioCodec	codec;			/* codec in use */
+  guint			codec;			/* codec in use */
   SwfdecAudioFormat	format;	        	/* channel/rate/width information for codec */
   guint			n_samples;		/* total number of samples when decoded to 44100kHz */
   guint			skip;			/* samples to skip at start */

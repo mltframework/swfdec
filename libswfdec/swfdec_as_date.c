@@ -482,12 +482,19 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object,
 	  set = FALSE;
 	}
 	break;
-      default:
+      case FIELD_MILLISECONDS:
+      case FIELD_SECONDS:
+      case FIELD_MINUTES:
+      case FIELD_HOURS:
+      case FIELD_WEEK_DAYS:
+      case FIELD_MONTH_DAYS:
 	if (!isfinite (d)) {
 	  swfdec_as_date_set_invalid (date);
 	  set = FALSE;
 	}
 	break;
+      default:
+	g_assert_not_reached ();
     }
 
     if (set) {
@@ -523,13 +530,8 @@ swfdec_as_date_get_field (SwfdecAsContext *cx, SwfdecAsObject *object,
   number = swfdec_as_date_get_brokentime_value (date, utc,
       field_offsets[field]);
 
-  switch (field) {
-    case FIELD_FULL_YEAR:
-      number += 1900;
-      break;
-    default:
-      break;
-  }
+  if (field == FIELD_FULL_YEAR)
+    number += 1900;
 
   SWFDEC_AS_VALUE_SET_INT (ret, number);
 }

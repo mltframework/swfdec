@@ -1543,6 +1543,7 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
       case SWFDEC_AS_TYPE_OBJECT:
 	cond = SWFDEC_AS_VALUE_GET_OBJECT (rval) == SWFDEC_AS_VALUE_GET_OBJECT (lval);
 	break;
+      case SWFDEC_AS_TYPE_INT:
       default:
 	g_assert_not_reached ();
 	cond = FALSE;
@@ -2132,6 +2133,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 	}
       }
       break;
+    case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
       type = SWFDEC_AS_STR_EMPTY;

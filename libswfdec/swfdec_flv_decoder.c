@@ -39,14 +39,14 @@ typedef struct _SwfdecFlvDataTag SwfdecFlvDataTag;
 
 struct _SwfdecFlvVideoTag {
   guint			timestamp;		/* milliseconds */
-  SwfdecVideoCodec	format;			/* format in use */
+  guint			format;			/* format in use */
   int			frame_type;		/* 0: undefined, 1: keyframe, 2: iframe, 3: H263 disposable iframe */
   SwfdecBuffer *	buffer;			/* buffer for this data */
 };
 
 struct _SwfdecFlvAudioTag {
   guint			timestamp;		/* milliseconds */
-  SwfdecAudioCodec	format;			/* format in use */
+  guint			format;			/* format in use */
   SwfdecAudioFormat	original_format;      	/* channel/rate information */
   SwfdecBuffer *	buffer;			/* buffer for this data */
 };
@@ -453,7 +453,7 @@ swfdec_flv_decoder_init (SwfdecFlvDecoder *flv)
 
 SwfdecBuffer *
 swfdec_flv_decoder_get_video (SwfdecFlvDecoder *flv, guint timestamp,
-    gboolean keyframe, SwfdecVideoCodec *format, guint *real_timestamp, guint *next_timestamp)
+    gboolean keyframe, guint *format, guint *real_timestamp, guint *next_timestamp)
 {
   guint id, offset;
   SwfdecFlvVideoTag *tag;
@@ -518,7 +518,7 @@ swfdec_flv_decoder_get_video_info (SwfdecFlvDecoder *flv,
 
 SwfdecBuffer *
 swfdec_flv_decoder_get_audio (SwfdecFlvDecoder *flv, guint timestamp,
-    SwfdecAudioCodec *codec, SwfdecAudioFormat *format,
+    guint *codec, SwfdecAudioFormat *format,
     guint *real_timestamp, guint *next_timestamp)
 {
   guint id, offset;

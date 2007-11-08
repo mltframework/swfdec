@@ -31,30 +31,30 @@ G_BEGIN_DECLS
 
 /* audio codecs */
 
-SwfdecAudioDecoder *	swfdec_audio_decoder_adpcm_new		(SwfdecAudioCodec	type, 
+SwfdecAudioDecoder *	swfdec_audio_decoder_adpcm_new		(guint			type, 
 								 SwfdecAudioFormat	format);
 #ifdef HAVE_MAD
-SwfdecAudioDecoder *	swfdec_audio_decoder_mad_new		(SwfdecAudioCodec	type, 
+SwfdecAudioDecoder *	swfdec_audio_decoder_mad_new		(guint		type, 
 								 SwfdecAudioFormat	format);
 #endif
 #ifdef HAVE_FFMPEG
-SwfdecAudioDecoder *	swfdec_audio_decoder_ffmpeg_new		(SwfdecAudioCodec	type, 
+SwfdecAudioDecoder *	swfdec_audio_decoder_ffmpeg_new		(guint			type, 
 								 SwfdecAudioFormat	format);
 #endif
 #ifdef HAVE_GST
-SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(SwfdecAudioCodec	type, 
+SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(guint			type, 
 								 SwfdecAudioFormat	format);
 #endif
 
 /* video codecs */
 
-SwfdecVideoDecoder *	swfdec_video_decoder_screen_new		(SwfdecVideoCodec	format);
-SwfdecVideoDecoder *	swfdec_video_decoder_vp6_alpha_new    	(SwfdecVideoCodec	format);
+SwfdecVideoDecoder *	swfdec_video_decoder_screen_new		(guint			format);
+SwfdecVideoDecoder *	swfdec_video_decoder_vp6_alpha_new    	(guint			format);
 #ifdef HAVE_FFMPEG
-SwfdecVideoDecoder *	swfdec_video_decoder_ffmpeg_new		(SwfdecVideoCodec	format);
+SwfdecVideoDecoder *	swfdec_video_decoder_ffmpeg_new		(guint			format);
 #endif
 #ifdef HAVE_GST
-SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(SwfdecVideoCodec	format);
+SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(guint			format);
 #endif
 
 /* AS engine setup code */

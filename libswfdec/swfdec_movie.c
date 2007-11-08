@@ -418,9 +418,27 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
     case SWFDEC_EVENT_CONSTRUCT:
       importance = 1;
       break;
-    default:
+    case SWFDEC_EVENT_LOAD:
+    case SWFDEC_EVENT_ENTER:
+    case SWFDEC_EVENT_UNLOAD:
+    case SWFDEC_EVENT_MOUSE_MOVE:
+    case SWFDEC_EVENT_MOUSE_DOWN:
+    case SWFDEC_EVENT_MOUSE_UP:
+    case SWFDEC_EVENT_KEY_UP:
+    case SWFDEC_EVENT_KEY_DOWN:
+    case SWFDEC_EVENT_DATA:
+    case SWFDEC_EVENT_PRESS:
+    case SWFDEC_EVENT_RELEASE:
+    case SWFDEC_EVENT_RELEASE_OUTSIDE:
+    case SWFDEC_EVENT_ROLL_OVER:
+    case SWFDEC_EVENT_ROLL_OUT:
+    case SWFDEC_EVENT_DRAG_OVER:
+    case SWFDEC_EVENT_DRAG_OUT:
+    case SWFDEC_EVENT_KEY_PRESS:
       importance = 2;
       break;
+    default:
+      g_return_val_if_reached (FALSE);
   }
 
   if (movie->events &&

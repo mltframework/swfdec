@@ -89,7 +89,7 @@ swfdec_video_decoder_vp6_alpha_free (SwfdecVideoDecoder *dec)
 }
 
 SwfdecVideoDecoder *
-swfdec_video_decoder_vp6_alpha_new (SwfdecVideoCodec type)
+swfdec_video_decoder_vp6_alpha_new (guint type)
 {
   SwfdecCodecVp6Alpha *vp6;
   

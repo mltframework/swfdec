@@ -102,6 +102,8 @@ swfdec_text_paragraph_add_block (SwfdecParagraph *paragraph, int index_,
       block->align = PANGO_ALIGN_LEFT;
       block->justify = TRUE;
       break;
+    default:
+      g_assert_not_reached ();
   }
   block->leading = format->leading * 20 * PANGO_SCALE;
   block->block_indent = format->block_indent * 20;
@@ -1007,8 +1009,9 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 	graphic->extents.x0 += floor (diff / 2.0);
 	graphic->extents.x1 = graphic->extents.x0 + width;
 	break;
+      case SWFDEC_AUTO_SIZE_NONE:
       default:
-	g_assert_not_reached ();
+	g_return_val_if_reached (FALSE);
     }
   }
 

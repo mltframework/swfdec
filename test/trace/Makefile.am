@@ -982,6 +982,15 @@ EXTRA_DIST = \
 	movieclip-target-6.swf.trace \
 	movieclip-target-7.swf \
 	movieclip-target-7.swf.trace \
+	moviecliploader-constructor.as \
+	moviecliploader-constructor-5.swf \
+	moviecliploader-constructor-5.swf.trace \
+	moviecliploader-constructor-6.swf \
+	moviecliploader-constructor-6.swf.trace \
+	moviecliploader-constructor-7.swf \
+	moviecliploader-constructor-7.swf.trace \
+	moviecliploader-constructor-8.swf \
+	moviecliploader-constructor-8.swf.trace \
 	moviecliploader-error-illegalrequest.as \
 	moviecliploader-error-illegalrequest-6.swf \
 	moviecliploader-error-illegalrequest-6.swf.trace \

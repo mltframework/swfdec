@@ -469,22 +469,11 @@ swfdec_net_stream_new (SwfdecNetConnection *conn)
   return stream;
 }
 
-static void
-swfdec_net_stream_got_loader (SwfdecPlayer *player, SwfdecLoader *loader, gpointer streamp)
-{
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (streamp);
-
-  if (loader == NULL || SWFDEC_AS_OBJECT (stream)->context == NULL)
-    return;
-
-  swfdec_net_stream_set_loader (stream, loader);
-  g_object_unref (loader);
-}
-
 void
 swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
 {
   SwfdecAsContext *cx;
+  SwfdecLoader *loader;
 
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
   g_return_if_fail (url != NULL);
@@ -492,10 +481,12 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
   /* FIXME: use the connection once connections are implemented */
   cx = SWFDEC_AS_OBJECT (stream)->context;
   g_assert (cx->frame);
-  g_object_ref (stream);
-  swfdec_player_request_resource (SWFDEC_PLAYER (cx), cx->frame->security, url,
-      SWFDEC_LOADER_REQUEST_DEFAULT, NULL, swfdec_net_stream_got_loader, stream, 
-      g_object_unref);
+  loader = swfdec_player_request_resource_now (SWFDEC_PLAYER (cx), cx->frame->security, 
+      url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+  if (loader) {
+    swfdec_net_stream_set_loader (stream, loader);
+    g_object_unref (loader);
+  }
 }
 
 void

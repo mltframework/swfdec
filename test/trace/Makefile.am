@@ -14,6 +14,15 @@ trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
+	accessibility-properties.as \
+	accessibility-properties-5.swf \
+	accessibility-properties-5.swf.trace \
+	accessibility-properties-6.swf \
+	accessibility-properties-6.swf.trace \
+	accessibility-properties-7.swf \
+	accessibility-properties-7.swf.trace \
+	accessibility-properties-8.swf \
+	accessibility-properties-8.swf.trace \
 	abort-really-aborts.as \
 	abort-really-aborts-5.swf \
 	abort-really-aborts-5.swf.trace \

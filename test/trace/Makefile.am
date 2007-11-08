@@ -378,6 +378,15 @@ EXTRA_DIST = \
 	constructor-madness-8.swf.trace \
 	constructor-prototype.swf \
 	constructor-prototype.swf.trace \
+	context-menu-properties.as \
+	context-menu-properties-5.swf \
+	context-menu-properties-5.swf.trace \
+	context-menu-properties-6.swf \
+	context-menu-properties-6.swf.trace \
+	context-menu-properties-7.swf \
+	context-menu-properties-7.swf.trace \
+	context-menu-properties-8.swf \
+	context-menu-properties-8.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
 	crash-0.5.2-cvs-return-from-block.as \

@@ -545,6 +545,43 @@ ContextMenu.prototype.hideBuiltInItems = function () {
 
 ASSetPropFlags (ContextMenu.prototype, null, 1027);
 
+/* ContextMenuItem */
+
+function ContextMenuItem (caption, callback, separatorBefore, enabled, visible)
+{
+  this.caption = caption;
+  this.onSelect = callback;
+  if (separatorBefore == undefined) {
+    this.separatorBefore = false;
+  } else {
+    this.separatorBefore = separatorBefore;
+  }
+  if (enabled == undefined) {
+    this.enabled = true;
+  } else {
+    this.enabled = enabled;
+  }
+  if (visible == undefined) {
+    this.visible = true;
+  } else {
+    this.visible = visible;
+  }
+}
+
+ContextMenuItem.prototype.copy = function () {
+  var o = new ContextMenuItem ();
+
+  o.caption = this.caption;
+  o.onSelect = this.onSelect;
+  o.separatorBefore = this.separatorBefore;
+  o.enabled = this.enabled;
+  o.visible = this.visible;
+
+  return o;
+};
+
+ASSetPropFlags (ContextMenuItem.prototype, null, 1027);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

@@ -47,6 +47,7 @@ struct _SwfdecResource
 {
   SwfdecFlashSecurity	flash_security;
 
+  SwfdecPlayer *	player;		/* player we belong to */
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
   guint			parse_frame;	/* next frame to parse */
 
@@ -70,10 +71,9 @@ struct _SwfdecResourceClass
 
 GType		swfdec_resource_get_type	  	(void);
 
-SwfdecResource *swfdec_resource_new			(SwfdecLoader *		loader,
+SwfdecResource *swfdec_resource_new			(SwfdecPlayer *		player,
+							 SwfdecLoader *		loader,
 							 const char *		variables);
-void		swfdec_resource_set_movie		(SwfdecResource *	resource,
-							 SwfdecSpriteMovie *	movie);
 void		swfdec_resource_mark			(SwfdecResource *	resource);
 
 void		swfdec_resource_add_export		(SwfdecResource *	instance,

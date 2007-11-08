@@ -74,6 +74,8 @@ swfdec_load_object_ondata (SwfdecLoadObject *load_object)
   }
   swfdec_as_object_call (load_object->target, SWFDEC_AS_STR_onData, 1, &val,
       NULL);
+  swfdec_player_unroot_object (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (load_object)->context), 
+      G_OBJECT (load_object));
 }
 
 static void
@@ -256,8 +258,7 @@ swfdec_load_object_new (SwfdecAsObject *target, const char *url,
   if (!swfdec_load_object_load (SWFDEC_LOAD_OBJECT (load_object), url, request, data))
     return NULL;
 
-  SWFDEC_PLAYER (target->context)->load_objects =
-    g_list_append (SWFDEC_PLAYER (target->context)->load_objects, load_object);
+  swfdec_player_root_object (SWFDEC_PLAYER (target->context), G_OBJECT (load_object));
 
   return load_object;
 }

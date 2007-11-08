@@ -53,18 +53,15 @@ G_DEFINE_TYPE_WITH_CODE (SwfdecResource, swfdec_resource, SWFDEC_TYPE_FLASH_SECU
 static gboolean 
 swfdec_resource_is_root (SwfdecResource *resource)
 {
-  SwfdecPlayer *player;
-
   g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), FALSE);
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource->movie)->context);
-  return resource->movie == player->roots->data;
+  return resource->movie == resource->player->roots->data;
 }
 
 static SwfdecPlayer *
 swfdec_resource_loader_target_get_player (SwfdecLoaderTarget *target)
 {
-  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (SWFDEC_RESOURCE (target)->movie)->context);
+  return SWFDEC_RESOURCE (target)->player;
 }
 
 static void
@@ -158,12 +155,60 @@ swfdec_resource_emit_error (SwfdecResource *resource, const char *message)
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadError, FALSE, vals, 2);
 }
 
+static gboolean
+swfdec_resource_create_movie (SwfdecResource *resource)
+{
+  SwfdecPlayer *player;
+  SwfdecSpriteMovie *movie;
+  int level = -1;
+
+  if (resource->movie)
+    return TRUE;
+  player = resource->player;
+  movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (SWFDEC_AS_CONTEXT (player),
+      player->roots->data, resource->target, resource->target + strlen (resource->target));
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    level = swfdec_player_get_level (player, resource->target);
+    if (level < 0) {
+      SWFDEC_WARNING ("%s does not reference a movie, not loading %s", resource->target,
+	  swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
+      swfdec_loader_close (resource->loader);
+      swfdec_player_unroot_object (player, G_OBJECT (resource));
+      return FALSE;
+    }
+    movie = swfdec_player_get_movie_at_level (player, level);
+  }
+  if (movie == NULL) {
+    movie = swfdec_player_create_movie_at_level (player, resource, level);
+  } else {
+    /* can't use swfdec_movie_duplicate() here, we copy to same depth */
+    SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+    SwfdecMovie *copy;
+    
+    copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), 
+	mov->depth, mov->parent, resource, NULL, mov->name);
+    if (copy == NULL)
+      return FALSE;
+    copy->original_name = mov->original_name;
+    /* FIXME: are events copied? If so, wouldn't that be a security issue? */
+    swfdec_movie_set_static_properties (copy, &mov->original_transform,
+	&mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
+	mov->blend_mode, NULL);
+    swfdec_movie_remove (mov);
+    movie = SWFDEC_SPRITE_MOVIE (copy);
+  }
+  swfdec_player_unroot_object (player, G_OBJECT (resource));
+  return TRUE;
+}
+
 static void
 swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
   const char *query;
 
+  if (!swfdec_resource_create_movie (instance))
+    return;
   query = swfdec_url_get_query (swfdec_loader_get_url (loader));
   if (query) {
     SWFDEC_INFO ("set url query movie variables: %s", query);
@@ -181,7 +226,6 @@ static void
 swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance->movie)->context);
   SwfdecBuffer *buffer;
   SwfdecDecoder *dec = instance->decoder;
   SwfdecDecoderClass *klass;
@@ -192,7 +236,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
     if (swfdec_buffer_queue_get_depth (loader->queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return;
     buffer = swfdec_buffer_queue_peek (loader->queue, 4);
-    dec = swfdec_decoder_new (player, buffer);
+    dec = swfdec_decoder_new (instance->player, buffer);
     swfdec_buffer_unref (buffer);
     if (dec == NULL) {
       SWFDEC_ERROR ("no decoder found");
@@ -234,8 +278,9 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
       swfdec_loader_set_target (loader, NULL);
       return;
     }
-    if (status & SWFDEC_STATUS_INIT) {
-      swfdec_player_initialize (player, 
+    if ((status & SWFDEC_STATUS_INIT) &&
+	swfdec_resource_is_root (instance)) {
+      swfdec_player_initialize (instance->player, 
 	  SWFDEC_IS_SWF_DECODER (dec) ? SWFDEC_SWF_DECODER (dec)->version : 7, /* <-- HACK */
 	  dec->rate, dec->width, dec->height);
     }
@@ -344,36 +389,26 @@ swfdec_resource_set_loader (SwfdecResource *resource, SwfdecLoader *loader)
   g_return_if_fail (resource->loader == NULL);
 
   resource->loader = g_object_ref (loader);
+  swfdec_loader_set_target (resource->loader, SWFDEC_LOADER_TARGET (resource));
   swfdec_flash_security_set_url (SWFDEC_FLASH_SECURITY (resource),
       swfdec_loader_get_url (loader));
   resource->state = SWFDEC_RESOURCE_REQUESTED;
 }
 
 SwfdecResource *
-swfdec_resource_new (SwfdecLoader *loader, const char *variables)
+swfdec_resource_new (SwfdecPlayer *player, SwfdecLoader *loader, const char *variables)
 {
   SwfdecResource *resource;
 
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
-  /* set important variables */
+  resource->player = player;
   resource->variables = g_strdup (variables);
-  /* set loader (that depends on those vars) */
   swfdec_resource_set_loader (resource, loader);
 
   return resource;
-}
-
-void
-swfdec_resource_set_movie (SwfdecResource *resource, SwfdecSpriteMovie *movie)
-{
-  g_return_if_fail (SWFDEC_IS_RESOURCE (resource));
-  g_return_if_fail (resource->movie == NULL);
-  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
-
-  resource->movie = movie;
-  swfdec_loader_set_target (resource->loader, SWFDEC_LOADER_TARGET (resource));
 }
 
 void
@@ -418,48 +453,14 @@ static void
 swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer resourcep)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (resourcep);
-  SwfdecSpriteMovie *movie;
-  int level = -1;
 
   if (loader == NULL) {
     /* *** Security Sandbox Violation *** */
     swfdec_resource_emit_error (resource, SWFDEC_AS_STR_IllegalRequest);
     return;
   }
-
-  movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (SWFDEC_AS_CONTEXT (player),
-      player->roots->data, resource->target, resource->target + strlen (resource->target));
   swfdec_resource_set_loader (resource, loader);
-  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    level = swfdec_player_get_level (player, resource->target);
-    if (level < 0) {
-      SWFDEC_WARNING ("%s does not reference a movie, not loading %s", resource->target,
-	  swfdec_url_get_url (swfdec_loader_get_url (loader)));
-      swfdec_loader_close (loader);
-    }
-    movie = swfdec_player_get_movie_at_level (player, level);
-  }
-  if (movie == NULL) {
-    movie = swfdec_player_create_movie_at_level (player, resource, level);
-  } else {
-    /* can't use swfdec_movie_duplicate() here, we copy to same depth */
-    SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-    SwfdecMovie *copy;
-    
-    copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), 
-	mov->depth, mov->parent, resource, NULL, mov->name);
-    if (copy == NULL)
-      return;
-    copy->original_name = mov->original_name;
-    /* FIXME: are events copied? If so, wouldn't that be a security issue? */
-    swfdec_movie_set_static_properties (copy, &mov->original_transform,
-	&mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
-	mov->blend_mode, NULL);
-    swfdec_movie_remove (mov);
-    movie = SWFDEC_SPRITE_MOVIE (copy);
-  }
   g_object_unref (loader);
-  return;
 }
 
 /* NB: must be called from a script */
@@ -487,9 +488,11 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     return;
   }
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+  resource->player = player;
   resource->target = path;
   if (loader)
     resource->clip_loader = g_object_ref (loader);
+  swfdec_player_root_object (player, G_OBJECT (resource));
   swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
       url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
 }

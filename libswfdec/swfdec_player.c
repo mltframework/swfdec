@@ -887,7 +887,8 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (player->timeouts == NULL);
   g_list_free (player->intervals);
-  g_list_free (player->load_objects);
+  while (player->rooted_objects)
+    swfdec_player_unroot_object (player, player->rooted_objects->data);
   player->intervals = NULL;
   swfdec_cache_unref (player->cache);
   if (player->system) {
@@ -1374,6 +1375,16 @@ swfdec_player_mark_string_object (gpointer key, gpointer value, gpointer data)
 }
 
 static void
+swfdec_player_mark_rooted_object (gpointer object, gpointer unused)
+{
+  if (SWFDEC_IS_RESOURCE (object)) {
+    swfdec_resource_mark (object);
+  } else if (SWFDEC_IS_AS_OBJECT (object)) {
+    swfdec_as_object_mark (object);
+  }
+}
+
+static void
 swfdec_player_mark (SwfdecAsContext *context)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
@@ -1383,7 +1394,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   swfdec_as_object_mark (player->Video);
   g_list_foreach (player->roots, (GFunc) swfdec_as_object_mark, NULL);
   g_list_foreach (player->intervals, (GFunc) swfdec_as_object_mark, NULL);
-  g_list_foreach (player->load_objects, (GFunc) swfdec_as_object_mark, NULL);
+  g_list_foreach (player->rooted_objects, swfdec_player_mark_rooted_object, NULL);
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }
@@ -1870,50 +1881,56 @@ void
 swfdec_player_initialize (SwfdecPlayer *player, guint version, 
     guint rate, guint width, guint height)
 {
-  SwfdecAsContext *context;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (rate > 0);
 
-  if (swfdec_player_is_initialized (player))
-    return;
-  
-  context = SWFDEC_AS_CONTEXT (player);
-  swfdec_as_context_startup (context, version);
-  /* reset state for initialization */
-  /* FIXME: have a better way to do this */
-  if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
-    context->state = SWFDEC_AS_CONTEXT_NEW;
-    swfdec_sprite_movie_init_context (player, version);
-    swfdec_video_movie_init_context (player, version);
-    swfdec_net_connection_init_context (player, version);
-    swfdec_net_stream_init_context (player, version);
+  if (!player->initialized) {
+    SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
+    swfdec_as_context_startup (context, version);
+    /* reset state for initialization */
+    /* FIXME: have a better way to do this */
+    if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
+      context->state = SWFDEC_AS_CONTEXT_NEW;
+      swfdec_sprite_movie_init_context (player, version);
+      swfdec_video_movie_init_context (player, version);
+      swfdec_net_connection_init_context (player, version);
+      swfdec_net_stream_init_context (player, version);
 
-    swfdec_as_context_run_init_script (context, swfdec_initialize, 
-	sizeof (swfdec_initialize), 8);
+      swfdec_as_context_run_init_script (context, swfdec_initialize, 
+	  sizeof (swfdec_initialize), 8);
 
-    if (context->state == SWFDEC_AS_CONTEXT_NEW) {
-      context->state = SWFDEC_AS_CONTEXT_RUNNING;
-      swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);
+      if (context->state == SWFDEC_AS_CONTEXT_NEW) {
+	context->state = SWFDEC_AS_CONTEXT_RUNNING;
+	swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);
+      }
     }
+    player->initialized = TRUE;
+    g_object_notify (G_OBJECT (player), "initialized");
+  } else {
+    swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
+
   SWFDEC_INFO ("initializing player to size %ux%u and rate %u/256", width, height, rate);
-  player->rate = rate;
-  player->width = width;
-  player->height = height;
+  if (rate != player->rate) {
+    player->rate = rate;
+    g_object_notify (G_OBJECT (player), "rate");
+  }
+  if (player->width != width) {
+    player->width = width;
+    g_object_notify (G_OBJECT (player), "default-width");
+  }
+  if (player->height != height) {
+    player->height = height;
+    g_object_notify (G_OBJECT (player), "default-height");
+  }
   player->internal_width = player->stage_width >= 0 ? (guint) player->stage_width : player->width;
   player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
-  player->initialized = TRUE;
-  if (rate) {
-    player->iterate_timeout.timestamp = player->time;
-    swfdec_player_add_timeout (player, &player->iterate_timeout);
-    SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
-	&player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
-  }
-  g_object_notify (G_OBJECT (player), "initialized");
-  g_object_notify (G_OBJECT (player), "default-width");
-  g_object_notify (G_OBJECT (player), "default-height");
-  g_object_notify (G_OBJECT (player), "rate");
   swfdec_player_update_scale (player);
+
+  player->iterate_timeout.timestamp = player->time;
+  swfdec_player_add_timeout (player, &player->iterate_timeout);
+  SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
+      &player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
 }
 
 /**
@@ -1960,6 +1977,34 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
   } else {
     g_hash_table_remove (player->registered_classes, name);
   }
+}
+
+/* FIXME:
+ * I don't like the idea of rooting arbitrary objects very much. And so far, 
+ * this API is only necessary for the objects used for loading data. So it seems
+ * like a good idea to revisit the refcounting and GCing of resources.
+ */
+void
+swfdec_player_root_object (SwfdecPlayer *player, GObject *object)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (G_IS_OBJECT (object));
+
+  g_object_ref (object);
+  player->rooted_objects = g_list_prepend (player->rooted_objects, object);
+}
+
+void
+swfdec_player_unroot_object (SwfdecPlayer *player, GObject *object)
+{
+  GList *entry;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (G_IS_OBJECT (object));
+  entry = g_list_find (player->rooted_objects, object);
+  g_return_if_fail (entry != NULL);
+  g_object_unref (object);
+  player->rooted_objects = g_list_delete_link (player->rooted_objects, entry);
 }
 
 /** PUBLIC API ***/
@@ -2026,7 +2071,7 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_return_if_fail (player->resource == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  player->resource = swfdec_resource_new (loader, variables);
+  player->resource = swfdec_resource_new (player, loader, variables);
   movie = swfdec_movie_new (player, -16384, NULL, player->resource, NULL, SWFDEC_AS_STR__level0);
   movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);
@@ -2597,3 +2642,4 @@ swfdec_player_set_maximum_runtime (SwfdecPlayer *player, gulong msecs)
   player->max_runtime = msecs;
   g_object_notify (G_OBJECT (player), "max-runtime");
 }
+

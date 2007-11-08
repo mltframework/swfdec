@@ -1303,7 +1303,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
   /* only setup here, the resource assumes it can access the player via the movie */
   if (resource->movie == NULL) {
     g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
-    swfdec_resource_set_movie (resource, SWFDEC_SPRITE_MOVIE (movie));
+    resource->movie = SWFDEC_SPRITE_MOVIE (movie);
   }
   return movie;
 }

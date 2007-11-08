@@ -1906,6 +1906,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     player->initialized = TRUE;
     g_object_notify (G_OBJECT (player), "initialized");
   } else {
+    /* FIXME: need to kick all other movies out here */
     swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
 
@@ -1926,7 +1927,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
   swfdec_player_update_scale (player);
 
-  player->iterate_timeout.timestamp = player->time;
+  player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / player->rate / 10;
   swfdec_player_add_timeout (player, &player->iterate_timeout);
   SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
       &player->iterate_timeout, player->iterate_timeout.timestamp, player->time);

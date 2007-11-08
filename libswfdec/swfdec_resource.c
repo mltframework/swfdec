@@ -94,6 +94,8 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     movie->n_frames = movie->sprite->n_frames;
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
     swfdec_resource_check_rights (instance);
+    if (swfdec_resource_is_root (instance))
+      swfdec_movie_initialize (SWFDEC_MOVIE (movie));
   } else {
     g_assert_not_reached ();
   }

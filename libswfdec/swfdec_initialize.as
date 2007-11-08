@@ -498,6 +498,53 @@ Camera.addProperty ("names", ASnative (2102, 201), null);
 ASSetNative (Camera.prototype, 2102, "6setMode,6setQuality,6setKeyFrameInterval,6setMotionLevel,6setLoopback,6setCursor");
 ASSetPropFlags (Camera.prototype, null, 3);
 
+/* ContextMenu */
+
+function ContextMenu (callback) {
+  this.onSelect = callback;
+  this.customItems = new Array ();
+  this.builtInItems = {
+    forward_back: true,
+    loop: true,
+    play: true,
+    print: true,
+    quality: true,
+    rewind: true,
+    save: true,
+    zoom: true
+  };
+}
+
+ContextMenu.prototype.copy = function () {
+  var o = new ContextMenu ();
+
+  o.onSelect = this.onSelect;
+
+  o.customItems = new Array ();
+  for (var i = 0; i < this.customItems.length; i++) {
+    o.customItems.push (this.customItems[i].copy ());
+  }
+
+  o.builtInItems = this.builtInItems;
+
+  return o;
+};
+
+ContextMenu.prototype.hideBuiltInItems = function () {
+  this.builtInItems = {
+    forward_back: false,
+    loop: false,
+    play: false,
+    print: false,
+    quality: false,
+    rewind: false,
+    save: false,
+    zoom: false
+  };
+};
+
+ASSetPropFlags (ContextMenu.prototype, null, 1027);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

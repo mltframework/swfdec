@@ -515,8 +515,6 @@ swfdec_player_trigger_external_actions (SwfdecTimeout *advance)
 
   player->external_timeout.callback = NULL;
   swfdec_player_perform_external_actions (player);
-  swfdec_player_resource_request_perform (player);
-  swfdec_player_perform_actions (player);
 }
 
 void

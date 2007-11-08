@@ -120,7 +120,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
   movie = swfdec_action_lookup_object (cx, SWFDEC_PLAYER (cx)->roots->data, 
       resource->target, resource->target + strlen (resource->target));
   if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    SWFDEC_FIXME ("figure out if we emit nonetheless");
+    SWFDEC_DEBUG ("no movie, not emitting signal");
     return NULL;
   }
 

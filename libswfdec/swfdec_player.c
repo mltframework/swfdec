@@ -1984,8 +1984,10 @@ swfdec_player_unroot_object (SwfdecPlayer *player, GObject *object)
  * swfdec_player_new:
  * @debugger: %NULL or a #SwfdecAsDebugger to use for debugging this player.
  *
- * Creates a new player.
- * This function calls swfdec_init () for you if it wasn't called before.
+ * Creates a new player. This function is supposed to be used for testing.
+ * Because of this, the created player will behave as predictable as possible.
+ * For example, it will generate the same random number sequence every time.
+ * The function calls swfdec_init () for you if it wasn't called before.
  *
  * Returns: The new player
  **/

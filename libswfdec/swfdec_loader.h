@@ -57,6 +57,8 @@ struct _SwfdecLoader
 
   /*< private >*/
   guint			state;		/* SwfdecLoaderState the loader is currently in */
+  guint			processed_state;/* SwfdecLoaderState the target knows about */
+  gboolean		queued;		/* TRUE if we have queued an action already */
   SwfdecURL *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
   glong			size;		/* number of bytes in stream or -1 if unknown */
   char *		error;		/* error message if in error state or NULL */

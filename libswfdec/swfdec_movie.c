@@ -360,6 +360,12 @@ swfdec_movie_set_constructor (SwfdecSpriteMovie *movie)
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
 }
 
+guint
+swfdec_movie_get_version (SwfdecMovie *movie)
+{
+  return SWFDEC_SWF_DECODER (movie->resource->decoder)->version;
+}
+
 void
 swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
 {
@@ -369,7 +375,7 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
 
   /* special cases */
   if (condition == SWFDEC_EVENT_CONSTRUCT) {
-    if (SWFDEC_AS_OBJECT (movie)->context->version <= 5)
+    if (swfdec_movie_get_version (movie) <= 5)
       return;
     swfdec_movie_set_constructor (SWFDEC_SPRITE_MOVIE (movie));
   } else if (condition == SWFDEC_EVENT_ENTER) {
@@ -381,6 +387,9 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
     swfdec_event_list_execute (movie->events, SWFDEC_AS_OBJECT (movie), 
 	SWFDEC_SECURITY (movie->resource), condition, 0);
   }
+  /* FIXME: how do we compute the version correctly here? */
+  if (swfdec_movie_get_version (movie) <= 5)
+    return;
   name = swfdec_event_type_get_name (condition);
   if (name != NULL) {
     swfdec_as_object_call_with_security (SWFDEC_AS_OBJECT (movie), 

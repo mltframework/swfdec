@@ -210,8 +210,9 @@ swfdec_loader_init (SwfdecLoader *loader)
 static void
 swfdec_loader_process (gpointer loaderp, gpointer unused)
 {
-  SwfdecLoaderTarget *target;
   SwfdecLoader *loader = loaderp;
+
+  g_assert (loader->target != NULL);
 
   loader->queued = FALSE;
   if (loader->state == loader->processed_state)
@@ -221,22 +222,23 @@ swfdec_loader_process (gpointer loaderp, gpointer unused)
     swfdec_loader_target_error (loader->target, loader);
     return;
   }
-  target = loader->target;
+  g_object_ref (loader);
   while (loader->state != loader->processed_state) {
-    /* stupid reentrancy */
-    if (loader->target != target)
-      break;
     if (loader->processed_state == SWFDEC_LOADER_STATE_NEW) {
-      swfdec_loader_target_open (target, loader);
       loader->processed_state = SWFDEC_LOADER_STATE_OPEN;
+      swfdec_loader_target_open (loader->target, loader);
     } else if (loader->processed_state == SWFDEC_LOADER_STATE_OPEN) {
-      swfdec_loader_target_parse (target, loader);
       loader->processed_state = SWFDEC_LOADER_STATE_READING;
+      swfdec_loader_target_parse (loader->target, loader);
     } else if (loader->processed_state == SWFDEC_LOADER_STATE_READING) {
-      swfdec_loader_target_eof (target, loader);
       loader->processed_state = SWFDEC_LOADER_STATE_EOF;
+      swfdec_loader_target_eof (loader->target, loader);
     }
+    /* stupid reentrancy */
+    if (loader->processed_state == SWFDEC_LOADER_STATE_NEW)
+      break;
   }
+  g_object_unref (loader);
 }
 
 static void

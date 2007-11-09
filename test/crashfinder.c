@@ -124,6 +124,8 @@ main (int argc, char **argv)
 	  MIN (max_per_advance, max_per_file - elapsed));
 
       advance = swfdec_player_get_next_event (player);
+      if (advance == -1)
+	break;
       swfdec_player_advance (player, advance);
 
       swfdec_player_render (player, cr, 0, 0, 0, 0);

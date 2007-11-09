@@ -268,6 +268,12 @@ MovieClip.prototype["loadMovie"] = function (url, method) {
   setTarget ("");
 };
 
+MovieClip.prototype.unloadMovie = function () {
+  setTarget (this);
+  loadMovie ("", this._target);
+  setTarget ("");
+};
+
 MovieClip.prototype.attachMovie = ASnative (900, 0);
 MovieClip.prototype.swapDepths = ASnative (900, 1);
 MovieClip.prototype.hitTest = ASnative (900, 4);

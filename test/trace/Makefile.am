@@ -2187,6 +2187,15 @@ EXTRA_DIST = \
 	unescape2-6.swf.trace \
 	unescape2-7.swf \
 	unescape2-7.swf.trace \
+	unloadmovie-simple.as \
+	unloadmovie-simple-5.swf \
+	unloadmovie-simple-5.swf.trace \
+	unloadmovie-simple-6.swf \
+	unloadmovie-simple-6.swf.trace \
+	unloadmovie-simple-7.swf \
+	unloadmovie-simple-7.swf.trace \
+	unloadmovie-simple-8.swf \
+	unloadmovie-simple-8.swf.trace \
 	unreproducable-random.as \
 	unreproducable-random-5.swf \
 	unreproducable-random-5.swf.trace \

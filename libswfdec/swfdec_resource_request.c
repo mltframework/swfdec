@@ -222,13 +222,17 @@ void
 swfdec_player_request_unload (SwfdecPlayer *player, const char *target)
 {
   SwfdecResourceRequest *request;
+  SwfdecMovie *movie;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (target != NULL);
 
+  movie = swfdec_player_get_movie_from_string (player, target);
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie))
+    return;
   request = g_slice_new0 (SwfdecResourceRequest);
   request->type = SWFDEC_RESOURCE_REQUEST_UNLOAD;
-  request->target = g_strdup (target);
+  request->target = swfdec_movie_get_path (movie, TRUE);
 
   player->resource_requests = g_slist_append (player->resource_requests, request);
 }

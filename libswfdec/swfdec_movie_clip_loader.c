@@ -29,6 +29,7 @@
 #include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
+#include "swfdec_resource_request.h"
 
 
 G_DEFINE_TYPE (SwfdecMovieClipLoader, swfdec_movie_clip_loader, SWFDEC_TYPE_AS_OBJECT)
@@ -82,7 +83,11 @@ void
 swfdec_movie_clip_loader_unloadClip (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_FIXME ("implement");
+  SwfdecMovieClipLoader *loader;
+  const char *target;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "s", &target);
+  swfdec_player_request_unload (SWFDEC_PLAYER (cx), target);
 }
 
 SWFDEC_AS_NATIVE (112, 101, swfdec_movie_clip_loader_getProgress)

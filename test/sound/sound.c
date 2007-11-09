@@ -90,8 +90,9 @@ dump:
     char *dump = g_strdup_printf ("%s.dump", filename);
     /* convert to LE */
     comp_data = (gint16 *) compare->data;
-    for (i = 0; i < compare->length / 2; i++) {
-      comp_data[i] = GINT16_TO_LE (comp_data[i]);
+    for (i = 0; i < compare->length / 64; i++) {
+      comp_data[2 * i] = GINT16_TO_LE (comp_data[i * 16 + 14]);
+      comp_data[2 * i + 1] = GINT16_TO_LE (comp_data[i * 16 + 15]);
     }
     if (!g_file_set_contents (dump, (char *) compare->data, compare->length, &error)) {
       g_print ("  ERROR: failed to dump contents: %s\n", error->message);

@@ -1143,8 +1143,17 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   } else if (swfdec_player_request_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
-	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL);
+    if (url[0] == '\0') {
+      SwfdecMovie *movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
+      if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+	char *path = swfdec_movie_get_path (movie, TRUE);
+	swfdec_player_request_unload (SWFDEC_PLAYER (cx), path);
+	g_free (path);
+      }
+    } else {
+      swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
+	  SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL);
+    }
   }
   g_free (url);
   g_free (target);
@@ -1187,7 +1196,16 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
       swfdec_movie_load_variables (movie, url, method, NULL);
     }
   } else if (internal) {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL);
+    if (url[0] == '\0') {
+      SwfdecMovie *movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
+      if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+	char *path = swfdec_movie_get_path (movie, TRUE);
+	swfdec_player_request_unload (SWFDEC_PLAYER (cx), path);
+	g_free (path);
+      }
+    } else {
+      swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL);
+    }
   } else {
     /* load an external file */
     swfdec_player_launch (SWFDEC_PLAYER (cx), method, url, target, NULL);

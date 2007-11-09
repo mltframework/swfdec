@@ -21,11 +21,14 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include "swfdec_resource_request.h"
+#include "swfdec_as_interpret.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
+#include "swfdec_sprite_movie.h"
 
 static void
 swfdec_resource_request_free (SwfdecResourceRequest *request)
@@ -41,6 +44,7 @@ swfdec_resource_request_free (SwfdecResourceRequest *request)
     swfdec_buffer_unref (request->buffer);
   g_free (request->command);
   g_free (request->value);
+  g_free (request->target);
   g_slice_free (SwfdecResourceRequest, request);
 }
 
@@ -80,19 +84,27 @@ swfdec_request_resource_perform_fscommand (SwfdecPlayer *player, SwfdecResourceR
 }
 
 static void
-swfdec_request_resource_perform_load(SwfdecPlayer *player, SwfdecResourceRequest *request)
+swfdec_request_resource_perform_load (SwfdecPlayer *player, SwfdecResourceRequest *request)
 {
   SwfdecLoader *loader;
 
   g_assert (player->resource);
-  if (request->url[0] == '\0') {
-    /* special case for unloadMovie */
-    loader = NULL;
-  } else {
-    loader = swfdec_player_request_resource_now (player, request->security, 
-	request->url, request->request, request->buffer);
-  }
+  loader = swfdec_player_request_resource_now (player, request->security, 
+      request->url, request->request, request->buffer);
   request->func (player, loader, request->data);
+}
+
+static void
+swfdec_request_resource_perform_unload (SwfdecPlayer *player, SwfdecResourceRequest *request)
+{
+  SwfdecSpriteMovie *movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (
+      SWFDEC_AS_CONTEXT (player), player->roots->data, 
+      request->target, request->target + strlen (request->target));
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    SWFDEC_DEBUG ("no movie, not emitting signal");
+    return;
+  }
+  swfdec_sprite_movie_unload (movie);
 }
 
 static void
@@ -108,6 +120,8 @@ swfdec_request_resource_perform_one (gpointer requestp, gpointer player)
       swfdec_request_resource_perform_fscommand (player, request);
       break;
     case SWFDEC_RESOURCE_REQUEST_UNLOAD:
+      swfdec_request_resource_perform_unload (player, request);
+      break;
     default:
       g_assert_not_reached ();
       break;
@@ -202,6 +216,21 @@ swfdec_player_request_fscommand (SwfdecPlayer *player, const char *command,
 
   player->resource_requests = g_slist_append (player->resource_requests, request);
   return TRUE;
+}
+
+void
+swfdec_player_request_unload (SwfdecPlayer *player, const char *target)
+{
+  SwfdecResourceRequest *request;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (target != NULL);
+
+  request = g_slice_new0 (SwfdecResourceRequest);
+  request->type = SWFDEC_RESOURCE_REQUEST_UNLOAD;
+  request->target = g_strdup (target);
+
+  player->resource_requests = g_slist_append (player->resource_requests, request);
 }
 
 void

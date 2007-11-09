@@ -51,6 +51,9 @@ struct _SwfdecResourceRequest
   /* FSCOMMAND */
   char *		command;	/* fscommand to execute */
   char *		value;		/* value to pass to fscommand */
+
+  /* UNLOAD */
+  char *	      	target;		/* the target to unload */
 };
 
 /* public api for swfdec */
@@ -63,14 +66,16 @@ void		swfdec_player_request_resource		(SwfdecPlayer *		player,
 							 SwfdecResourceFunc	func,
 							 gpointer		data,
 							 GDestroyNotify		destroy);
-gboolean	swfdec_player_request_fscommand		(SwfdecPlayer *		player,
-							 const char *		command,
-							 const char *		value);
 SwfdecLoader *	swfdec_player_request_resource_now	(SwfdecPlayer *		player,
 							 SwfdecSecurity *	security,
 							 const char *		url,
 							 SwfdecLoaderRequest	req,
 							 SwfdecBuffer *		buffer);
+void		swfdec_player_request_unload		(SwfdecPlayer *		player,
+							 const char *		target);
+gboolean	swfdec_player_request_fscommand		(SwfdecPlayer *		player,
+							 const char *		command,
+							 const char *		value);
 
 /* private api for swfdec_player.c */
 void		swfdec_player_resource_request_init	(SwfdecPlayer *		player);

@@ -28,17 +28,29 @@ G_BEGIN_DECLS
 typedef struct _SwfdecResourceRequest SwfdecResourceRequest;
 typedef void (* SwfdecResourceFunc) (SwfdecPlayer *player, SwfdecLoader *loader, gpointer data);
 
+typedef enum {
+  SWFDEC_RESOURCE_REQUEST_LOAD,
+  SWFDEC_RESOURCE_REQUEST_FSCOMMAND,
+  SWFDEC_RESOURCE_REQUEST_UNLOAD
+} SwfdecResourceRequestType;
+
+/* FIXME: make this a union? */
 struct _SwfdecResourceRequest
 {
-  SwfdecSecurity *	security;     	/* security context when loading or NULL for fscommand */
+  SwfdecResourceRequestType	type;	/* type of request */
 
+  /* LOAD */
+  SwfdecSecurity *	security;     	/* security context when loading or NULL for fscommand */
   char *		url;		/* URL we're gonna load */
   SwfdecLoaderRequest	request;	/* how are we goona load this URL? */
   SwfdecBuffer *	buffer;		/* data to pass to load request or NULL */
-
   SwfdecResourceFunc	func;		/* function to call when we got a loader (or an error) */
   GDestroyNotify	destroy;	/* function to call on player dispose */
   gpointer		data;		/* function to pass to the above functions */
+
+  /* FSCOMMAND */
+  char *		command;	/* fscommand to execute */
+  char *		value;		/* value to pass to fscommand */
 };
 
 /* public api for swfdec */

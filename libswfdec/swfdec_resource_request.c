@@ -39,6 +39,8 @@ swfdec_resource_request_free (SwfdecResourceRequest *request)
   g_free (request->url);
   if (request->buffer)
     swfdec_buffer_unref (request->buffer);
+  g_free (request->command);
+  g_free (request->value);
   g_slice_free (SwfdecResourceRequest, request);
 }
 
@@ -72,21 +74,44 @@ swfdec_player_request_resource_now (SwfdecPlayer *player, SwfdecSecurity *securi
 }
 
 static void
-swfdec_request_resource_perform_one (gpointer requestp, gpointer playerp)
+swfdec_request_resource_perform_fscommand (SwfdecPlayer *player, SwfdecResourceRequest *request)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (playerp);
-  SwfdecResourceRequest *request = requestp;
+  g_signal_emit_by_name (player, "fscommand", request->command, request->value);
+}
+
+static void
+swfdec_request_resource_perform_load(SwfdecPlayer *player, SwfdecResourceRequest *request)
+{
   SwfdecLoader *loader;
 
-  if (request->security == NULL) {
-    g_signal_emit_by_name (player, "fscommand", request->url, request->data);
-    swfdec_resource_request_free (request);
-    return;
-  }
   g_assert (player->resource);
-  loader = swfdec_player_request_resource_now (player, request->security, 
-      request->url, request->request, request->buffer);
+  if (request->url[0] == '\0') {
+    /* special case for unloadMovie */
+    loader = NULL;
+  } else {
+    loader = swfdec_player_request_resource_now (player, request->security, 
+	request->url, request->request, request->buffer);
+  }
   request->func (player, loader, request->data);
+}
+
+static void
+swfdec_request_resource_perform_one (gpointer requestp, gpointer player)
+{
+  SwfdecResourceRequest *request = requestp;
+
+  switch (request->type) {
+    case SWFDEC_RESOURCE_REQUEST_LOAD:
+      swfdec_request_resource_perform_load (player, request);
+      break;
+    case SWFDEC_RESOURCE_REQUEST_FSCOMMAND:
+      swfdec_request_resource_perform_fscommand (player, request);
+      break;
+    case SWFDEC_RESOURCE_REQUEST_UNLOAD:
+    default:
+      g_assert_not_reached ();
+      break;
+  }
   swfdec_resource_request_free (request);
 }
 
@@ -116,6 +141,7 @@ swfdec_player_request_resource (SwfdecPlayer *player, SwfdecSecurity *security,
   g_return_if_fail (func != NULL);
 
   request = g_slice_new0 (SwfdecResourceRequest);
+  request->type = SWFDEC_RESOURCE_REQUEST_LOAD;
   request->security = g_object_ref (security);
   request->url = g_strdup (url);
   request->request = req;
@@ -170,9 +196,9 @@ swfdec_player_request_fscommand (SwfdecPlayer *player, const char *command,
     return TRUE;
   }
   request = g_slice_new0 (SwfdecResourceRequest);
-  request->url = g_ascii_strdown (command, -1);
-  request->destroy = g_free;
-  request->data = g_strdup (value);
+  request->type = SWFDEC_RESOURCE_REQUEST_FSCOMMAND;
+  request->command = g_ascii_strdown (command, -1);
+  request->value = g_strdup (value);
 
   player->resource_requests = g_slist_append (player->resource_requests, request);
   return TRUE;

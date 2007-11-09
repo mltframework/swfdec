@@ -816,7 +816,7 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
   /* FIXME: destroy or unload? */
   while (mov->list)
     swfdec_movie_remove (mov->list->data);
-  swfdec_as_object_clear_variables (SWFDEC_AS_OBJECT (movie));
+  swfdec_as_object_delete_all_variables (SWFDEC_AS_OBJECT (movie));
   movie->frame = (guint) -1;
   movie->n_frames = 0;
   movie->next_action = 0;

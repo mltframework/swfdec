@@ -48,10 +48,11 @@ struct _SwfdecResource
   SwfdecFlashSecurity	flash_security;
 
   SwfdecPlayer *	player;		/* player we belong to */
+  guint			version;	/* version of this resource */
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
-  SwfdecDecoder *	decoder;	/* decoder in use or NULL if not yet created (only happens after loadMovie()) */
+  SwfdecDecoder *	decoder;	/* decoder in use or NULL if broken file */
   char *		variables;	/* extra variables to be set */
 
   GHashTable *		exports;	/* string->SwfdecCharacter mapping of exported characters */

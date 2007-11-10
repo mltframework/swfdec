@@ -236,9 +236,9 @@ swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *lo
 static void
 swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
-  SwfdecResource *instance = SWFDEC_RESOURCE (target);
+  SwfdecResource *resource = SWFDEC_RESOURCE (target);
   SwfdecBuffer *buffer;
-  SwfdecDecoder *dec = instance->decoder;
+  SwfdecDecoder *dec = resource->decoder;
   SwfdecDecoderClass *klass;
   SwfdecStatus status;
   guint parsed;
@@ -247,7 +247,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
     if (swfdec_buffer_queue_get_depth (loader->queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return;
     buffer = swfdec_buffer_queue_peek (loader->queue, 4);
-    dec = swfdec_decoder_new (instance->player, buffer);
+    dec = swfdec_decoder_new (resource->player, buffer);
     swfdec_buffer_unref (buffer);
     if (dec == NULL) {
       SWFDEC_ERROR ("no decoder found");
@@ -257,7 +257,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 
     if (SWFDEC_IS_SWF_DECODER (dec)) {
       swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_SWF);
-      instance->decoder = dec;
+      resource->decoder = dec;
     } else {
       SWFDEC_FIXME ("implement handling of %s", G_OBJECT_TYPE_NAME (dec));
       g_object_unref (dec);
@@ -289,15 +289,17 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
       swfdec_loader_set_target (loader, NULL);
       return;
     }
-    if ((status & SWFDEC_STATUS_INIT) &&
-	swfdec_resource_is_root (instance)) {
-      swfdec_player_initialize (instance->player, 
-	  SWFDEC_IS_SWF_DECODER (dec) ? SWFDEC_SWF_DECODER (dec)->version : 7, /* <-- HACK */
-	  dec->rate, dec->width, dec->height);
+    if ((status & SWFDEC_STATUS_INIT)) {
+      if (SWFDEC_IS_SWF_DECODER (dec))
+	resource->version = SWFDEC_SWF_DECODER (dec)->version;
+      if (swfdec_resource_is_root (resource)) {
+	swfdec_player_initialize (resource->player, resource->version,
+	    dec->rate, dec->width, dec->height);
+      }
     }
     if (status & SWFDEC_STATUS_IMAGE)
-      swfdec_resource_loader_target_image (instance);
-    swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
+      swfdec_resource_loader_target_image (resource);
+    swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
     if (status & SWFDEC_STATUS_EOF)
       return;
   }
@@ -422,6 +424,7 @@ swfdec_resource_new (SwfdecPlayer *player, SwfdecLoader *loader, const char *var
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+  resource->version = 7;
   resource->player = player;
   resource->variables = g_strdup (variables);
   swfdec_resource_set_loader (resource, loader);
@@ -527,6 +530,7 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     g_free (path);
   } else {
     resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+    resource->version = SWFDEC_AS_CONTEXT (player)->version;
     resource->player = player;
     resource->target = path;
     if (loader)

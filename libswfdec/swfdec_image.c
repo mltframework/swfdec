@@ -558,10 +558,28 @@ swfdec_image_colormap_decode (SwfdecImage * image,
   }
 }
 
+static cairo_status_t
+swfdec_image_png_read (void *bitsp, unsigned char *data, unsigned int length)
+{
+  SwfdecBits *bits = bitsp;
+  const guint8 *ptr;
+
+  ptr = bits->ptr;
+  if (swfdec_bits_skip_bytes (bits, length) != length)
+    return CAIRO_STATUS_READ_ERROR;
+
+  memcpy (data, ptr, length);
+  return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 swfdec_image_png_load (SwfdecImage *image)
 {
-  SWFDEC_ERROR ("implement loading PNG images");
+  SwfdecBits bits;
+
+  swfdec_bits_init (&bits, image->raw_data);
+  image->surface = cairo_image_surface_create_from_png_stream (
+      swfdec_image_png_read, &bits);
 }
 
 cairo_surface_t *

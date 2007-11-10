@@ -160,6 +160,26 @@ swfdec_resource_emit_error (SwfdecResource *resource, const char *message)
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadError, FALSE, vals, 2);
 }
 
+static SwfdecSpriteMovie *
+swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resource)
+{
+  /* can't use swfdec_movie_duplicate() here, we copy to same depth */
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  SwfdecMovie *copy;
+  
+  copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), 
+      mov->depth, mov->parent, resource, NULL, mov->name);
+  if (copy == NULL)
+    return FALSE;
+  copy->original_name = mov->original_name;
+  /* FIXME: are events copied? If so, wouldn't that be a security issue? */
+  swfdec_movie_set_static_properties (copy, &mov->original_transform,
+      &mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
+      mov->blend_mode, NULL);
+  swfdec_movie_remove (mov);
+  return SWFDEC_SPRITE_MOVIE (copy);
+}
+
 static gboolean
 swfdec_resource_create_movie (SwfdecResource *resource)
 {
@@ -186,21 +206,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
   if (movie == NULL) {
     movie = swfdec_player_create_movie_at_level (player, resource, level);
   } else {
-    /* can't use swfdec_movie_duplicate() here, we copy to same depth */
-    SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-    SwfdecMovie *copy;
-    
-    copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), 
-	mov->depth, mov->parent, resource, NULL, mov->name);
-    if (copy == NULL)
-      return FALSE;
-    copy->original_name = mov->original_name;
-    /* FIXME: are events copied? If so, wouldn't that be a security issue? */
-    swfdec_movie_set_static_properties (copy, &mov->original_transform,
-	&mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
-	mov->blend_mode, NULL);
-    swfdec_movie_remove (mov);
-    movie = SWFDEC_SPRITE_MOVIE (copy);
+    movie = swfdec_resource_replace_movie (movie, resource);
   }
   swfdec_player_unroot_object (player, G_OBJECT (resource));
   return TRUE;
@@ -478,7 +484,7 @@ swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer re
 static void
 swfdec_resource_do_unload (SwfdecPlayer *player, const char *target, gpointer resourcep)
 {
-  //SwfdecResource *resource = SWFDEC_RESOURCE (resourcep);
+  SwfdecResource *resource = SWFDEC_RESOURCE (resourcep);
   SwfdecSpriteMovie *movie;
   
   movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (
@@ -488,7 +494,7 @@ swfdec_resource_do_unload (SwfdecPlayer *player, const char *target, gpointer re
     SWFDEC_DEBUG ("no movie, not unloading");
     return;
   }
-  swfdec_sprite_movie_unload (movie);
+  swfdec_resource_replace_movie (movie, resource);
 }
 
 /* NB: must be called from a script */

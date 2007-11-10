@@ -475,6 +475,22 @@ swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer re
   g_object_unref (loader);
 }
 
+static void
+swfdec_resource_do_unload (SwfdecPlayer *player, const char *target, gpointer resourcep)
+{
+  //SwfdecResource *resource = SWFDEC_RESOURCE (resourcep);
+  SwfdecSpriteMovie *movie;
+  
+  movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (
+      SWFDEC_AS_CONTEXT (player), player->roots->data, 
+      target, target + strlen (target));
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    SWFDEC_DEBUG ("no movie, not unloading");
+    return;
+  }
+  swfdec_sprite_movie_unload (movie);
+}
+
 /* NB: must be called from a script */
 void
 swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url, 
@@ -499,14 +515,20 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     SWFDEC_WARNING ("%s does not reference a movie, not loading %s", target, url);
     return;
   }
-  resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
-  resource->player = player;
-  resource->target = path;
-  if (loader)
-    resource->clip_loader = g_object_ref (loader);
-  swfdec_player_root_object (player, G_OBJECT (resource));
-  swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
-      url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
+  if (url[0] == '\0') {
+    resource = g_object_ref (SWFDEC_MOVIE (movie)->resource);
+    swfdec_player_request_unload (player, path, swfdec_resource_do_unload, resource, g_object_unref);
+    g_free (path);
+  } else {
+    resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+    resource->player = player;
+    resource->target = path;
+    if (loader)
+      resource->clip_loader = g_object_ref (loader);
+    swfdec_player_root_object (player, G_OBJECT (resource));
+    swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
+	url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
+  }
 }
 
 gboolean

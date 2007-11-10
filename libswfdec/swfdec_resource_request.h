@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef struct _SwfdecResourceRequest SwfdecResourceRequest;
 typedef void (* SwfdecResourceFunc) (SwfdecPlayer *player, SwfdecLoader *loader, gpointer data);
+typedef void (* SwfdecResourceUnloadFunc) (SwfdecPlayer *player, const char *target, gpointer data);
 
 typedef enum {
   SWFDEC_RESOURCE_REQUEST_LOAD,
@@ -39,14 +40,15 @@ struct _SwfdecResourceRequest
 {
   SwfdecResourceRequestType	type;	/* type of request */
 
+  GDestroyNotify	destroy;	/* function to call on player dispose */
+  gpointer		data;		/* function to pass to the above functions */
+
   /* LOAD */
   SwfdecSecurity *	security;     	/* security context when loading or NULL for fscommand */
   char *		url;		/* URL we're gonna load */
   SwfdecLoaderRequest	request;	/* how are we goona load this URL? */
   SwfdecBuffer *	buffer;		/* data to pass to load request or NULL */
   SwfdecResourceFunc	func;		/* function to call when we got a loader (or an error) */
-  GDestroyNotify	destroy;	/* function to call on player dispose */
-  gpointer		data;		/* function to pass to the above functions */
 
   /* FSCOMMAND */
   char *		command;	/* fscommand to execute */
@@ -54,6 +56,7 @@ struct _SwfdecResourceRequest
 
   /* UNLOAD */
   char *	      	target;		/* the target to unload */
+  SwfdecResourceUnloadFunc	unload;	/* function to call when we got a loader (or an error) */
 };
 
 /* public api for swfdec */
@@ -72,7 +75,10 @@ SwfdecLoader *	swfdec_player_request_resource_now	(SwfdecPlayer *		player,
 							 SwfdecLoaderRequest	req,
 							 SwfdecBuffer *		buffer);
 void		swfdec_player_request_unload		(SwfdecPlayer *		player,
-							 const char *		target);
+							 const char *		target,
+							 SwfdecResourceUnloadFunc func,
+							 gpointer		data,
+							 GDestroyNotify		destroy);
 gboolean	swfdec_player_request_fscommand		(SwfdecPlayer *		player,
 							 const char *		command,
 							 const char *		value);

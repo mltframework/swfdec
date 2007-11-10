@@ -87,7 +87,8 @@ swfdec_movie_clip_loader_unloadClip (SwfdecAsContext *cx, SwfdecAsObject *object
   const char *target;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "s", &target);
-  swfdec_player_request_unload (SWFDEC_PLAYER (cx), target);
+
+  swfdec_resource_load (SWFDEC_PLAYER (cx), target, "", SWFDEC_LOADER_REQUEST_DEFAULT, NULL, loader);
 }
 
 SWFDEC_AS_NATIVE (112, 101, swfdec_movie_clip_loader_getProgress)

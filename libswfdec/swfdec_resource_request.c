@@ -97,14 +97,7 @@ swfdec_request_resource_perform_load (SwfdecPlayer *player, SwfdecResourceReques
 static void
 swfdec_request_resource_perform_unload (SwfdecPlayer *player, SwfdecResourceRequest *request)
 {
-  SwfdecSpriteMovie *movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (
-      SWFDEC_AS_CONTEXT (player), player->roots->data, 
-      request->target, request->target + strlen (request->target));
-  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    SWFDEC_DEBUG ("no movie, not emitting signal");
-    return;
-  }
-  swfdec_sprite_movie_unload (movie);
+  request->unload (player, request->target, request->data);
 }
 
 static void
@@ -219,20 +212,20 @@ swfdec_player_request_fscommand (SwfdecPlayer *player, const char *command,
 }
 
 void
-swfdec_player_request_unload (SwfdecPlayer *player, const char *target)
+swfdec_player_request_unload (SwfdecPlayer *player, const char *target,
+    SwfdecResourceUnloadFunc func, gpointer data, GDestroyNotify destroy)
 {
   SwfdecResourceRequest *request;
-  SwfdecMovie *movie;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (target != NULL);
 
-  movie = swfdec_player_get_movie_from_string (player, target);
-  if (!SWFDEC_IS_SPRITE_MOVIE (movie))
-    return;
   request = g_slice_new0 (SwfdecResourceRequest);
   request->type = SWFDEC_RESOURCE_REQUEST_UNLOAD;
-  request->target = swfdec_movie_get_path (movie, TRUE);
+  request->target = g_strdup (target);
+  request->unload = func;
+  request->data = data;
+  request->destroy = destroy;
 
   player->resource_requests = g_slist_append (player->resource_requests, request);
 }

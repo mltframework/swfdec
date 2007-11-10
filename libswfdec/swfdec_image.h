@@ -43,6 +43,8 @@ typedef enum {
   SWFDEC_IMAGE_TYPE_JPEG3,
   SWFDEC_IMAGE_TYPE_LOSSLESS,
   SWFDEC_IMAGE_TYPE_LOSSLESS2,
+  /* those can only be created by loading from files */
+  SWFDEC_IMAGE_TYPE_PNG
 } SwfdecImageType;
 
 struct _SwfdecImage {
@@ -66,6 +68,7 @@ struct _SwfdecImageClass {
 
 GType			swfdec_image_get_type		(void);
 
+SwfdecImage *		swfdec_image_new		(SwfdecBuffer *		buffer);
 cairo_surface_t *	swfdec_image_create_surface	(SwfdecImage *		image);
 cairo_surface_t *	swfdec_image_create_surface_transformed 
 							(SwfdecImage *		image,

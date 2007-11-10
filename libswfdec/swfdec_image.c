@@ -545,6 +545,12 @@ swfdec_image_colormap_decode (SwfdecImage * image,
   }
 }
 
+static void
+swfdec_image_png_load (SwfdecImage *image)
+{
+  SWFDEC_ERROR ("implement loading PNG images");
+}
+
 static gboolean
 swfdec_image_ensure_loaded (SwfdecImage *image)
 {
@@ -567,6 +573,9 @@ swfdec_image_ensure_loaded (SwfdecImage *image)
 	break;
       case SWFDEC_IMAGE_TYPE_LOSSLESS2:
 	swfdec_image_lossless_load (image);
+	break;
+      case SWFDEC_IMAGE_TYPE_PNG:
+	swfdec_image_png_load (image);
 	break;
       case SWFDEC_IMAGE_TYPE_UNKNOWN:
       default:
@@ -659,4 +668,34 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTr
       image->width, image->height, image->width * 4);
   cairo_surface_set_user_data (surface, &key, tdata, g_free);
   return surface;
+}
+
+SwfdecImage *
+swfdec_image_new (SwfdecBuffer *buffer)
+{
+  SwfdecImage *image;
+  SwfdecImageType type;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+
+  /* check type of the image */
+  if (buffer->length < 4)
+    goto fail;
+  if (buffer->data[0] == 0xFF && buffer->data[1] == 0xD8)
+    type = SWFDEC_IMAGE_TYPE_JPEG2;
+  else if (buffer->data[0] == 0xFF && buffer->data[1] == 0xD8 &&
+      buffer->data[0] == 0xFF && buffer->data[1] == 0xD8)
+    type = SWFDEC_IMAGE_TYPE_PNG;
+  else
+    goto fail;
+
+  image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);
+  image->type = type;
+  image->raw_data = buffer;
+
+  return image;
+
+fail:
+  swfdec_buffer_unref (buffer);
+  return NULL;
 }

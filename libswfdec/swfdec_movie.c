@@ -360,6 +360,33 @@ swfdec_movie_set_constructor (SwfdecSpriteMovie *movie)
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
 }
 
+/**
+ * swfdec_movie_resolve:
+ * @movie: movie to resolve
+ *
+ * Resolves a movie clip to its real version. Since movie clips can be 
+ * explicitly destroyed, they have problems with references to them. In the
+ * case of destruction, these references will remain as "dangling pointers".
+ * However, if a movie with the same name is later created again, the reference
+ * will point to that movie. This function does this resolving.
+ *
+ * Returns: The movie clip @movie resolves to or %NULL if none.
+ **/
+SwfdecMovie *
+swfdec_movie_resolve (SwfdecMovie *movie)
+{
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
+
+  if (movie->state != SWFDEC_MOVIE_STATE_DESTROYED)
+    return movie;
+  if (movie->parent == NULL) {
+    SWFDEC_FIXME ("figure out how to resolve root movies");
+    return NULL;
+  }
+  /* FIXME: include unnamed ones? */
+  return swfdec_movie_get_by_name (movie->parent, movie->original_name, FALSE);
+}
+
 guint
 swfdec_movie_get_version (SwfdecMovie *movie)
 {
@@ -1061,7 +1088,8 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
-  if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
+  movie = swfdec_movie_resolve (movie);
+  if (movie == NULL)
     return FALSE;
 
   if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, orig, variable, val, flags))
@@ -1166,7 +1194,8 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
-  if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
+  movie = swfdec_movie_resolve (movie);
+  if (movie == NULL)
     return;
 
   if (swfdec_movie_set_asprop (movie, variable, val))

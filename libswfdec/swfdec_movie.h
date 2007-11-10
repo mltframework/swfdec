@@ -241,6 +241,7 @@ void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans,
 						 const SwfdecRect *	inval);
+SwfdecMovie *	swfdec_movie_resolve		(SwfdecMovie *		movie);
 guint		swfdec_movie_get_version	(SwfdecMovie *		movie);
 void		swfdec_movie_execute		(SwfdecMovie *		movie,
 						 SwfdecEventType	condition);

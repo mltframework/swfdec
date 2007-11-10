@@ -50,11 +50,9 @@ typedef enum {
 struct _SwfdecImage {
   SwfdecCached		cached;
 
-  guint8 *		data;		/* image data in CAIRO_FORMAT_ARGB32 but NOT premultiplied */	
-  int			width;
-  int			height;
-  int			rowstride;
-  cairo_surface_t *	surface;	/* surface that owns the data pointer or NULL (doesn't always work) */
+  int			width;		/* width of image or 0 if not known yet */
+  int			height;		/* height of image or 0 if not known yet */
+  cairo_surface_t *	surface;	/* surface when cache loaded or NULL */
 
   SwfdecImageType	type;
   SwfdecBuffer *	jpegtables;

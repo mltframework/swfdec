@@ -1041,6 +1041,15 @@ EXTRA_DIST = \
 	moviecliploader-properties-7.swf.trace \
 	moviecliploader-properties-8.swf \
 	moviecliploader-properties-8.swf.trace \
+	moviecliploader-unknown-format.as \
+	moviecliploader-unknown-format-5.swf \
+	moviecliploader-unknown-format-5.swf.trace \
+	moviecliploader-unknown-format-6.swf \
+	moviecliploader-unknown-format-6.swf.trace \
+	moviecliploader-unknown-format-7.swf \
+	moviecliploader-unknown-format-7.swf.trace \
+	moviecliploader-unknown-format-8.swf \
+	moviecliploader-unknown-format-8.swf.trace \
 	name.swf \
 	name.swf.trace \
 	name2.swf \

@@ -390,7 +390,7 @@ swfdec_movie_resolve (SwfdecMovie *movie)
 guint
 swfdec_movie_get_version (SwfdecMovie *movie)
 {
-  return SWFDEC_SWF_DECODER (movie->resource->decoder)->version;
+  return movie->resource->version;
 }
 
 void

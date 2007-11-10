@@ -394,6 +394,24 @@ EXTRA_DIST = \
 	crash-0.5.3-text-field-root-variable-8.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	dangling-compare.as \
+	dangling-compare-5.swf \
+	dangling-compare-5.swf.trace \
+	dangling-compare-6.swf \
+	dangling-compare-6.swf.trace \
+	dangling-compare-7.swf \
+	dangling-compare-7.swf.trace \
+	dangling-compare-8.swf \
+	dangling-compare-8.swf.trace \
+	dangling-print.as \
+	dangling-print-5.swf \
+	dangling-print-5.swf.trace \
+	dangling-print-6.swf \
+	dangling-print-6.swf.trace \
+	dangling-print-7.swf \
+	dangling-print-7.swf.trace \
+	dangling-print-8.swf \
+	dangling-print-8.swf.trace \
 	date.as \
 	date-5.swf \
 	date-5.swf.trace \

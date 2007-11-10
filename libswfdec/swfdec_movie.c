@@ -1018,6 +1018,8 @@ swfdec_movie_mark (SwfdecAsObject *object)
   GList *walk;
   GSList *iter;
 
+  if (movie->parent)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (movie->parent));
   swfdec_as_string_mark (movie->original_name);
   swfdec_as_string_mark (movie->name);
   for (walk = movie->list; walk; walk = walk->next) {

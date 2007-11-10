@@ -239,34 +239,24 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
   SwfdecBuffer *buffer;
   SwfdecDecoder *dec = resource->decoder;
-  SwfdecDecoderClass *klass;
   SwfdecStatus status;
   guint parsed;
 
-  if (dec == NULL) {
+  if (dec == NULL && swfdec_buffer_queue_get_offset (loader->queue == 0)) {
     if (swfdec_buffer_queue_get_depth (loader->queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return;
     buffer = swfdec_buffer_queue_peek (loader->queue, 4);
     dec = swfdec_decoder_new (resource->player, buffer);
     swfdec_buffer_unref (buffer);
     if (dec == NULL) {
-      SWFDEC_ERROR ("no decoder found");
-      swfdec_loader_set_target (loader, NULL);
-      return;
-    }
-
-    if (SWFDEC_IS_SWF_DECODER (dec)) {
+      SWFDEC_ERROR ("no decoder found for format");
+    } else if (SWFDEC_IS_SWF_DECODER (dec)) {
       swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_SWF);
       resource->decoder = dec;
     } else {
       SWFDEC_FIXME ("implement handling of %s", G_OBJECT_TYPE_NAME (dec));
-      g_object_unref (dec);
-      swfdec_loader_set_target (loader, NULL);
-      return;
     }
   }
-  klass = SWFDEC_DECODER_GET_CLASS (dec);
-  g_return_if_fail (klass->parse);
   while (swfdec_buffer_queue_get_depth (loader->queue)) {
     parsed = 0;
     status = 0;
@@ -282,7 +272,11 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 	buffer = swfdec_buffer_queue_pull (loader->queue, 65536 - parsed);
       }
       parsed += buffer->length;
-      status = klass->parse (dec, buffer);
+      if (dec) {
+	status = swfdec_decoder_parse (dec, buffer);
+      } else {
+	swfdec_buffer_unref (buffer);
+      }
     } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_EOF)) == 0);
     if (status & SWFDEC_STATUS_ERROR) {
       SWFDEC_ERROR ("parsing error");

@@ -242,7 +242,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
   SwfdecStatus status;
   guint parsed;
 
-  if (dec == NULL && swfdec_buffer_queue_get_offset (loader->queue == 0)) {
+  if (dec == NULL && swfdec_buffer_queue_get_offset (loader->queue) == 0) {
     if (swfdec_buffer_queue_get_depth (loader->queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return;
     buffer = swfdec_buffer_queue_peek (loader->queue, 4);

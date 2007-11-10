@@ -49,7 +49,6 @@ struct _SwfdecResource
 
   SwfdecPlayer *	player;		/* player we belong to */
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
-  guint			parse_frame;	/* next frame to parse */
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder in use or NULL if not yet created (only happens after loadMovie()) */

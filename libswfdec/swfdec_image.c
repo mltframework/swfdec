@@ -448,8 +448,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
 	ptr += 2;
     }
     swfdec_buffer_unref (buffer);
-  }
-  if (format == 5) {
+  } else if (format == 5) {
     SwfdecBuffer *buffer;
     int i, j;
     buffer = swfdec_bits_decompress (&bits, -1, 4 * image->width * image->height);
@@ -471,6 +470,8 @@ swfdec_image_lossless_load (SwfdecImage *image)
     buffer->data = NULL;
     buffer->length = 0;
     swfdec_buffer_unref (buffer);
+  } else {
+    data = g_malloc0 (4 * image->width * image->height);
   }
 
 out:

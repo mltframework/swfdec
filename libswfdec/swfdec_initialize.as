@@ -649,6 +649,17 @@ ASSetNative (Selection, 600, "getBeginIndex,getEndIndex,getCaretIndex,getFocus,s
 AsBroadcaster.initialize (Selection);
 ASSetPropFlags (Selection, null, 7);
 
+/* TextRenderer */
+
+flash.text = {};
+flash.text.TextRenderer = ASconstructor (2150, 0);
+
+ASSetNative (flash.text.TextRenderer, 2150, "8setAdvancedAntialiasingTable", 1);
+ASSetNativeAccessor (flash.text.TextRenderer, 2150, "8maxLevel", 4);
+ASSetNativeAccessor (flash.text.TextRenderer, 2150, "8displayMode", 10);
+
+textRenderer = flash.text.TextRenderer; // awesome
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

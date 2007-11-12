@@ -448,8 +448,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
 	ptr += 2;
     }
     swfdec_buffer_unref (buffer);
-  }
-  if (format == 5) {
+  } else if (format == 5) {
     SwfdecBuffer *buffer;
     int i, j;
     buffer = swfdec_bits_decompress (&bits, -1, 4 * image->width * image->height);
@@ -471,6 +470,9 @@ swfdec_image_lossless_load (SwfdecImage *image)
     buffer->data = NULL;
     buffer->length = 0;
     swfdec_buffer_unref (buffer);
+  } else {
+    SWFDEC_ERROR ("unknwon lossless image format %u", format);
+    return;
   }
 
 out:
@@ -674,8 +676,8 @@ swfdec_image_new (SwfdecBuffer *buffer)
     goto fail;
   if (buffer->data[0] == 0xFF && buffer->data[1] == 0xD8)
     type = SWFDEC_IMAGE_TYPE_JPEG2;
-  else if (buffer->data[0] == 0xFF && buffer->data[1] == 0xD8 &&
-      buffer->data[0] == 0xFF && buffer->data[1] == 0xD8)
+  else if (buffer->data[0] == 89 && buffer->data[1] == 'P' &&
+      buffer->data[2] == 'N' && buffer->data[3] == 'G')
     type = SWFDEC_IMAGE_TYPE_PNG;
   else
     goto fail;

@@ -1477,6 +1477,15 @@ EXTRA_DIST = \
 	place-object-remove-name-7.swf.trace \
 	preload.swf \
 	preload.swf.trace \
+	print-job-properties.as \
+	print-job-properties-5.swf \
+	print-job-properties-5.swf.trace \
+	print-job-properties-6.swf \
+	print-job-properties-6.swf.trace \
+	print-job-properties-7.swf \
+	print-job-properties-7.swf.trace \
+	print-job-properties-8.swf \
+	print-job-properties-8.swf.trace \
 	property-native.as \
 	property-native-5.swf \
 	property-native-5.swf.trace \

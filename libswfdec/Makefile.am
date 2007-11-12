@@ -134,7 +134,8 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_video_movie.c \
 	swfdec_video_movie_as.c \
 	swfdec_xml_node.c \
-	swfdec_xml.c
+	swfdec_xml.c \
+	swfdec_xml_socket.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \

@@ -670,6 +670,18 @@ ASSetNativeAccessor (flash.text.TextRenderer, 2150, "8displayMode", 10);
 
 textRenderer = flash.text.TextRenderer; // awesome
 
+/* XMLSocket */
+
+function XMLSocket () {
+}
+
+XMLSocket.prototype.onData = function (src) {
+    this.onXML (new XML (src));
+};
+
+ASSetNative (XMLSocket.prototype, 400, "connect,send,close");
+ASSetPropFlags (XMLSocket.prototype, null, 3);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

@@ -367,16 +367,12 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
   SwfdecPlayerAction *action = swfdec_ring_buffer_push (player->actions[importance]);
   if (action == NULL) {
     /* try to get rid of freed actions */
-    if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
-      swfdec_player_compress_actions (player->actions[importance]);
-      action = swfdec_ring_buffer_push (player->actions[importance]);
-      /* if it doesn't get smaller, bail */
-      if (action == NULL) {
-	swfdec_as_context_abort (SWFDEC_AS_CONTEXT (player), 
-	    "256 levels of recursion were exceeded in one action list.");
-	return;
+    swfdec_player_compress_actions (player->actions[importance]);
+    action = swfdec_ring_buffer_push (player->actions[importance]);
+    if (action == NULL) {
+      if (swfdec_ring_buffer_get_size (player->actions[importance]) == 256) {
+	SWFDEC_WARNING ("256 levels of recursion were exceeded in one action list.");
       }
-    } else {
       swfdec_ring_buffer_set_size (player->actions[importance],
 	  swfdec_ring_buffer_get_size (player->actions[importance]) + 16);
       action = swfdec_ring_buffer_push (player->actions[importance]);
@@ -850,6 +846,8 @@ swfdec_player_dispose (GObject *object)
     g_object_unref (player->resource);
     player->resource = NULL;
   }
+  while (player->rooted_objects)
+    swfdec_player_unroot_object (player, player->rooted_objects->data);
 
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
@@ -884,8 +882,6 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (player->timeouts == NULL);
   g_list_free (player->intervals);
-  while (player->rooted_objects)
-    swfdec_player_unroot_object (player, player->rooted_objects->data);
   player->intervals = NULL;
   swfdec_cache_unref (player->cache);
   if (player->system) {

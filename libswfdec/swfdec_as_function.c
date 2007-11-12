@@ -150,25 +150,21 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
 
 SWFDEC_AS_NATIVE (101, 10, swfdec_as_function_do_call)
 void
-swfdec_as_function_do_call (SwfdecAsContext *context, SwfdecAsObject *fun,
+swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
-  if (argc > 0) {
-    thisp = swfdec_as_value_to_object (context, &argv[0]);
-    argc -= 1;
-    argv++;
-  } else {
-    thisp = NULL;
-  }
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "O", &thisp);
+
   if (thisp == NULL) {
-    thisp = swfdec_as_object_new_empty (context);
+    thisp = swfdec_as_object_new_empty (cx);
     if (thisp == NULL)
       return;
   }
-  swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, argc, argv, ret);
-  swfdec_as_context_run (context);
+  swfdec_as_function_call (fun, thisp, argc, argv, ret);
+  swfdec_as_context_run (cx);
 }
 
 SWFDEC_AS_NATIVE (101, 11, swfdec_as_function_apply)

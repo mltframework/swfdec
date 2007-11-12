@@ -850,6 +850,8 @@ swfdec_player_dispose (GObject *object)
     g_object_unref (player->resource);
     player->resource = NULL;
   }
+  while (player->rooted_objects)
+    swfdec_player_unroot_object (player, player->rooted_objects->data);
 
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
@@ -884,8 +886,6 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (player->timeouts == NULL);
   g_list_free (player->intervals);
-  while (player->rooted_objects)
-    swfdec_player_unroot_object (player, player->rooted_objects->data);
   player->intervals = NULL;
   swfdec_cache_unref (player->cache);
   if (player->system) {

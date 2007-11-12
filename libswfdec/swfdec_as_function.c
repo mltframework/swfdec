@@ -162,8 +162,11 @@ swfdec_as_function_do_call (SwfdecAsContext *context, SwfdecAsObject *fun,
   } else {
     thisp = NULL;
   }
-  if (thisp == NULL)
+  if (thisp == NULL) {
     thisp = swfdec_as_object_new_empty (context);
+    if (thisp == NULL)
+      return;
+  }
   swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, argc, argv, ret);
   swfdec_as_context_run (context);
 }

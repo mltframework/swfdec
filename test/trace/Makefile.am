@@ -1484,6 +1484,15 @@ EXTRA_DIST = \
 	point-7.swf.trace \
 	point-8.swf \
 	point-8.swf.trace \
+	point-construct.as \
+	point-construct-5.swf \
+	point-construct-5.swf.trace \
+	point-construct-6.swf \
+	point-construct-6.swf.trace \
+	point-construct-7.swf \
+	point-construct-7.swf.trace \
+	point-construct-8.swf \
+	point-construct-8.swf.trace \
 	point-properties.as \
 	point-properties-5.swf \
 	point-properties-5.swf.trace \

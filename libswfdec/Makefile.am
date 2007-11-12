@@ -100,6 +100,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_pattern.c \
 	swfdec_player.c \
 	swfdec_player_as.c \
+	swfdec_print_job.c \
 	swfdec_rect.c \
 	swfdec_rectangle.c \
 	swfdec_resource.c \

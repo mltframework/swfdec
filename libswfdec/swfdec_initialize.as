@@ -636,6 +636,12 @@ Microphone.addProperty ("names", ASnative (2104, 201), null);
 ASSetNative (Microphone.prototype, 2104, "6setSilenceLevel,6setRate,6setGain,6setUseEchoSuppression");
 ASSetPropFlags (Microphone.prototype, null, 3);
 
+/* PrintJob */
+
+PrintJob = ASconstructor(111, 0);
+ASSetNative (PrintJob.prototype, 111, "7start,7addPage,7send", 100);
+ASSetPropFlags (PrintJob.prototype, null, 1027);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

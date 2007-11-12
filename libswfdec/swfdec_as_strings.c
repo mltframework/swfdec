@@ -437,5 +437,11 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("modificationDate")
   SWFDEC_AS_CONSTANT_STRING ("name")
   SWFDEC_AS_CONSTANT_STRING ("postData")
+  SWFDEC_AS_CONSTANT_STRING ("PrintJob")
+  SWFDEC_AS_CONSTANT_STRING ("orientation")
+  SWFDEC_AS_CONSTANT_STRING ("pageHeight")
+  SWFDEC_AS_CONSTANT_STRING ("pageWidth")
+  SWFDEC_AS_CONSTANT_STRING ("paperHeight")
+  SWFDEC_AS_CONSTANT_STRING ("paperWidth")
   /* add more here */
 ;

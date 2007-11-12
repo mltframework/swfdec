@@ -66,6 +66,7 @@ struct _SwfdecImageClass {
 
 GType			swfdec_image_get_type		(void);
 
+SwfdecImageType		swfdec_image_detect		(const guint8 *		data);
 SwfdecImage *		swfdec_image_new		(SwfdecBuffer *		buffer);
 cairo_surface_t *	swfdec_image_create_surface	(SwfdecImage *		image);
 cairo_surface_t *	swfdec_image_create_surface_transformed 

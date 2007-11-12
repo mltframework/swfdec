@@ -663,6 +663,21 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTr
   return surface;
 }
 
+/* NB: must be at least SWFDEC_DECODER_DETECT_LENGTH bytes */
+SwfdecImageType
+swfdec_image_detect (const guint8 *data)
+{
+  g_return_val_if_fail (data != NULL, SWFDEC_IMAGE_TYPE_UNKNOWN);
+
+  if (data[0] == 0xFF && data[1] == 0xD8)
+    return SWFDEC_IMAGE_TYPE_JPEG2;
+  else if (data[0] == 89 && data[1] == 'P' &&
+      data[2] == 'N' && data[3] == 'G')
+    return SWFDEC_IMAGE_TYPE_PNG;
+  else
+    return SWFDEC_IMAGE_TYPE_UNKNOWN;
+}
+
 SwfdecImage *
 swfdec_image_new (SwfdecBuffer *buffer)
 {
@@ -674,12 +689,8 @@ swfdec_image_new (SwfdecBuffer *buffer)
   /* check type of the image */
   if (buffer->length < 4)
     goto fail;
-  if (buffer->data[0] == 0xFF && buffer->data[1] == 0xD8)
-    type = SWFDEC_IMAGE_TYPE_JPEG2;
-  else if (buffer->data[0] == 89 && buffer->data[1] == 'P' &&
-      buffer->data[2] == 'N' && buffer->data[3] == 'G')
-    type = SWFDEC_IMAGE_TYPE_PNG;
-  else
+  type = swfdec_image_detect (buffer->data);
+  if (type == SWFDEC_IMAGE_TYPE_UNKNOWN)
     goto fail;
 
   image = g_object_new (SWFDEC_TYPE_IMAGE, NULL);

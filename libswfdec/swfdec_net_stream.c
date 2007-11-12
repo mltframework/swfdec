@@ -260,7 +260,6 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     SwfdecLoader *loader)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
-  SwfdecDecoderClass *klass;
   SwfdecStatus status;
   
   if (loader->state != SWFDEC_LOADER_STATE_EOF && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
@@ -275,8 +274,6 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
 	SWFDEC_AS_STR_status);
     swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_FLV);
   }
-  klass = SWFDEC_DECODER_GET_CLASS (stream->flvdecoder);
-  g_return_if_fail (klass->parse);
 
   status = SWFDEC_STATUS_OK;
   do {
@@ -284,7 +281,7 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     if (buffer == NULL)
       break;
     status &= ~SWFDEC_STATUS_NEEDBITS;
-    status |= klass->parse (SWFDEC_DECODER (stream->flvdecoder), buffer);
+    status |= swfdec_decoder_parse (SWFDEC_DECODER (stream->flvdecoder), buffer);
   } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_EOF)) == 0);
 
   if (status & SWFDEC_STATUS_IMAGE)

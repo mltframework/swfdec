@@ -151,10 +151,11 @@ swfdec_sprite_movie_gotoAndPlay (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecSpriteMovie *movie;
+  SwfdecAsValue val;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_SPRITE_MOVIE, (gpointer)&movie, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SPRITE_MOVIE, (gpointer)&movie, "v", &val);
   
-  swfdec_sprite_movie_do_goto (movie, &argv[0]);
+  swfdec_sprite_movie_do_goto (movie, &val);
   movie->playing = TRUE;
 }
 
@@ -164,10 +165,11 @@ swfdec_sprite_movie_gotoAndStop (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecSpriteMovie *movie;
+  SwfdecAsValue val;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_SPRITE_MOVIE, (gpointer)&movie, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SPRITE_MOVIE, (gpointer)&movie, "v", &val);
   
-  swfdec_sprite_movie_do_goto (movie, &argv[0]);
+  swfdec_sprite_movie_do_goto (movie, &val);
   movie->playing = FALSE;
 }
 

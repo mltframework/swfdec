@@ -471,7 +471,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
     buffer->length = 0;
     swfdec_buffer_unref (buffer);
   } else {
-    SWFDEC_ERROR ("unknwon lossless image format %u", format);
+    SWFDEC_ERROR ("unknown lossless image format %u", format);
     return;
   }
 

@@ -1773,6 +1773,15 @@ EXTRA_DIST = \
 	scope-chain-with-and-scope-chain-7.swf.trace \
 	scope-chain-with-and-scope-chain-8.swf \
 	scope-chain-with-and-scope-chain-8.swf.trace \
+	selection-properties.as \
+	selection-properties-5.swf \
+	selection-properties-5.swf.trace \
+	selection-properties-6.swf \
+	selection-properties-6.swf.trace \
+	selection-properties-7.swf \
+	selection-properties-7.swf.trace \
+	selection-properties-8.swf \
+	selection-properties-8.swf.trace \
 	set-overwrite-global-5.swf \
 	set-overwrite-global-6.swf \
 	set-overwrite-global-7.swf \

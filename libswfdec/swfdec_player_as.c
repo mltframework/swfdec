@@ -48,6 +48,11 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
   guint id, msecs;
 #define MIN_INTERVAL_TIME 10
 
+  if (argc < 2) {
+    SWFDEC_WARNING ("setInterval needs at least 2 arguments");
+    return;
+  }
+
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
     SWFDEC_WARNING ("first argument to setInterval is not an object");
     return;

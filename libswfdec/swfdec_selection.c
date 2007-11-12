@@ -31,7 +31,7 @@ void
 swfdec_selection_getBeginIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.getBeginIndex");
+  SWFDEC_STUB ("Selection.getBeginIndex (static)");
 }
 
 SWFDEC_AS_NATIVE (600, 1, swfdec_selection_getEndIndex)
@@ -39,7 +39,7 @@ void
 swfdec_selection_getEndIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.getEndIndex");
+  SWFDEC_STUB ("Selection.getEndIndex (static)");
 }
 
 SWFDEC_AS_NATIVE (600, 2, swfdec_selection_getCaretIndex)
@@ -47,7 +47,7 @@ void
 swfdec_selection_getCaretIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.getCaretIndex");
+  SWFDEC_STUB ("Selection.getCaretIndex (static)");
 }
 
 SWFDEC_AS_NATIVE (600, 3, swfdec_selection_getFocus)
@@ -55,7 +55,7 @@ void
 swfdec_selection_getFocus (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.getFocus");
+  SWFDEC_STUB ("Selection.getFocus (static)");
 }
 
 SWFDEC_AS_NATIVE (600, 4, swfdec_selection_setFocus)
@@ -63,7 +63,7 @@ void
 swfdec_selection_setFocus (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.setFocus");
+  SWFDEC_STUB ("Selection.setFocus (static)");
 }
 
 SWFDEC_AS_NATIVE (600, 5, swfdec_selection_setSelection)
@@ -71,5 +71,5 @@ void
 swfdec_selection_setSelection (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.setSelection");
+  SWFDEC_STUB ("Selection.setSelection (static)");
 }

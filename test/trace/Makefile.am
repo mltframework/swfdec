@@ -1475,6 +1475,15 @@ EXTRA_DIST = \
 	place-object-remove-name-6.swf.trace \
 	place-object-remove-name-7.swf \
 	place-object-remove-name-7.swf.trace \
+	point.as \
+	point-5.swf \
+	point-5.swf.trace \
+	point-6.swf \
+	point-6.swf.trace \
+	point-7.swf \
+	point-7.swf.trace \
+	point-8.swf \
+	point-8.swf.trace \
 	point-properties.as \
 	point-properties-5.swf \
 	point-properties-5.swf.trace \

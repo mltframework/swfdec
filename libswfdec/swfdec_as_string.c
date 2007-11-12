@@ -735,10 +735,12 @@ void
 swfdec_as_string_escape_internal (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  const char *s;
   char *result;
 
-  result =
-    swfdec_as_string_escape (cx, swfdec_as_value_to_string (cx, &argv[0]));
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+
+  result = swfdec_as_string_escape (cx, s);
   if (result != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, result));
     g_free (result);
@@ -854,10 +856,12 @@ void
 swfdec_as_string_unescape_internal (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  const char *s;
   char *result;
 
-  result =
-    swfdec_as_string_unescape (cx, swfdec_as_value_to_string (cx, &argv[0]));
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+
+  result = swfdec_as_string_unescape (cx, s);
   if (result != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, result));
     g_free (result);

@@ -216,6 +216,11 @@ Color = function (target) {
 ASSetNative (Color.prototype, 700, "setRGB,setTransform,getRGB,getTransform");
 ASSetPropFlags (Color.prototype, null, 7);
 
+/* TextSnapshot */
+
+TextSnapshot = ASconstructor (1067, 0);
+ASSetNative (TextSnapshot.prototype, 1067, "6getCount,6setSelected,6getSelected,6getText,6getSelectedText,6hitTestTextNearPos,6findText,6setSelectColor,6getTextRunInfo", 1);
+
 /* MovieClip */
 
 MovieClip.prototype.meth = function (method) {
@@ -276,6 +281,11 @@ MovieClip.prototype.unloadMovie = function () {
   loadMovie ("", this._target);
   setTarget ("");
 };
+
+MovieClip.prototype.getTextSnapshot = function () {
+    return new TextSnapshot(this);
+};
+ASSetPropFlags (MovieClip.prototype, "getTextSnapshot", 128);
 
 MovieClip.prototype.attachMovie = ASnative (900, 0);
 MovieClip.prototype.swapDepths = ASnative (900, 1);

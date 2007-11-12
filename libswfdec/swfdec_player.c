@@ -367,16 +367,12 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
   SwfdecPlayerAction *action = swfdec_ring_buffer_push (player->actions[importance]);
   if (action == NULL) {
     /* try to get rid of freed actions */
-    if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
-      swfdec_player_compress_actions (player->actions[importance]);
-      action = swfdec_ring_buffer_push (player->actions[importance]);
-      /* if it doesn't get smaller, bail */
-      if (action == NULL) {
-	swfdec_as_context_abort (SWFDEC_AS_CONTEXT (player), 
-	    "256 levels of recursion were exceeded in one action list.");
-	return;
+    swfdec_player_compress_actions (player->actions[importance]);
+    action = swfdec_ring_buffer_push (player->actions[importance]);
+    if (action == NULL) {
+      if (swfdec_ring_buffer_get_size (player->actions[importance]) == 256) {
+	SWFDEC_WARNING ("256 levels of recursion were exceeded in one action list.");
       }
-    } else {
       swfdec_ring_buffer_set_size (player->actions[importance],
 	  swfdec_ring_buffer_get_size (player->actions[importance]) + 16);
       action = swfdec_ring_buffer_push (player->actions[importance]);

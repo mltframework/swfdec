@@ -623,6 +623,19 @@ function LocalConnection () {
 ASSetNative (LocalConnection.prototype, 2200, "6connect,6send,6close,6domain");
 ASSetPropFlags (LocalConnection.prototype, null, 3);
 
+/* Microphone */
+
+function Microphone () {
+}
+
+Microphone.get = function (index) {
+  var get_func = ASnative (2104, 200);
+  return get_func (index);
+};
+Microphone.addProperty ("names", ASnative (2104, 201), null);
+ASSetNative (Microphone.prototype, 2104, "6setSilenceLevel,6setRate,6setGain,6setUseEchoSuppression");
+ASSetPropFlags (Microphone.prototype, null, 3);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

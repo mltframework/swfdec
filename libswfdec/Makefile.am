@@ -85,6 +85,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_loadvars_as.c \
 	swfdec_local_connection.c \
 	swfdec_marshal.c \
+	swfdec_microphone.c \
 	swfdec_morph_movie.c \
 	swfdec_morphshape.c \
 	swfdec_mouse_as.c \

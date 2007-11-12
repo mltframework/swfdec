@@ -276,9 +276,10 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   const char *name;
-  
-  name = swfdec_as_value_to_string (cx, &argv[0]);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
+
+  SWFDEC_AS_CHECK (0, NULL, "s", &name);
+
+  if (argc < 2 || !SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
     return;
   }

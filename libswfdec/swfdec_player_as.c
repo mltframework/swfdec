@@ -101,13 +101,14 @@ swfdec_player_setTimeout (SwfdecAsContext *cx, SwfdecAsObject *obj,
 
 SWFDEC_AS_NATIVE (250, 1, swfdec_player_clearInterval)
 void
-swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *obj,
+swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
   guint id;
+
+  SWFDEC_AS_CHECK (0, NULL, "i", &id);
   
-  id = swfdec_as_value_to_integer (cx, &argv[0]);
   swfdec_interval_remove (player, id);
 }
 

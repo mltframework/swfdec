@@ -304,7 +304,12 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
     depth = other->depth;
   } else {
     depth = swfdec_as_value_to_integer (cx, &argv[0]);
-    other = swfdec_movie_find (movie->parent, depth);
+    if (movie->parent) {
+      other = swfdec_movie_find (movie->parent, depth);
+    } else {
+      // special case: if root movie: we won't swap just, but just set depth
+      other = NULL;
+    }
   }
   if (other)
     swfdec_movie_set_depth (other, movie->depth);

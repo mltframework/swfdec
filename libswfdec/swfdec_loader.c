@@ -62,6 +62,8 @@
  * @SWFDEC_LOADER_DATA_FLV: Data describing a Flash video stream.
  * @SWFDEC_LOADER_DATA_XML: Data in XML format.
  * @SWFDEC_LOADER_DATA_TEXT: Textual data.
+ * @SWFDEC_LOADER_DATA_JPEG: a JPEG image
+ * @SWFDEC_LOADER_DATA_PNG: a PNG image
  *
  * This type describes the different types of data that can be loaded inside 
  * Swfdec. Swfdec identifies its data streams and you can use the 
@@ -577,6 +579,10 @@ swfdec_loader_data_type_get_extension (SwfdecLoaderDataType type)
       return "xml";
     case SWFDEC_LOADER_DATA_TEXT:
       return "txt";
+    case SWFDEC_LOADER_DATA_JPEG:
+      return "jpg";
+    case SWFDEC_LOADER_DATA_PNG:
+      return "png";
     default:
       g_warning ("unknown data type %u", type);
       return "";
@@ -602,54 +608,6 @@ swfdec_urlencode_append_string (GString *str, const char *s)
   }
 }
 
-static char *
-swfdec_urldecode_one_string (const char *s, const char **out)
-{
-  GString *ret = g_string_new ("");
-
-  while (*s) {
-    if (strchr (urlencode_unescaped, *s)) {
-      g_string_append_c (ret, *s);
-    } else if (*s == '+') {
-      g_string_append_c (ret, ' ');
-    } else if (*s == '%') {
-      guint byte;
-      s++;
-      if (*s >= '0' && *s <= '9') {
-	byte = *s - '0';
-      } else if (*s >= 'A' && *s <= 'F') {
-	byte = *s - 'A' + 10;
-      } else if (*s >= 'a' && *s <= 'f') {
-	byte = *s - 'a' + 10;
-      } else {
-	g_string_free (ret, TRUE);
-	*out = s;
-	return NULL;
-      }
-      byte *= 16;
-      s++;
-      if (*s >= '0' && *s <= '9') {
-	byte += *s - '0';
-      } else if (*s >= 'A' && *s <= 'F') {
-	byte += *s - 'A' + 10;
-      } else if (*s >= 'a' && *s <= 'f') {
-	byte += *s - 'a' + 10;
-      } else {
-	g_string_free (ret, TRUE);
-	*out = s;
-	return NULL;
-      }
-      g_assert (byte < 256);
-      g_string_append_c (ret, byte);
-    } else {
-      break;
-    }
-    s++;
-  }
-  *out = s;
-  return g_string_free (ret, FALSE);
-}
-
 /**
  * swfdec_string_append_urlencoded:
  * @str: a #GString
@@ -673,61 +631,3 @@ swfdec_string_append_urlencoded (GString *str, const char *name, const char *val
     swfdec_urlencode_append_string (str, value);
 }
 
-/**
- * swfdec_urldecode_one:
- * @string: string in 'application/x-www-form-urlencoded' form
- * @name: pointer that will hold a newly allocated string for the name of the 
- *        parsed property or NULL
- * @value: pointer that will hold a newly allocated string containing the 
- *         value of the parsed property or NULL
- * @end: If not %NULL, on success, pointer to the first byte in @s that was 
- *       not parsed. On failure it will point to the byte causing the problem
- *
- * Tries to parse the given @string into a name/value pair, assuming the string 
- * is in the application/x-www-form-urlencoded format. If the parsing succeeds,
- * @name and @value will contain the parsed values and %TRUE will be returned.
- *
- * Returns: %TRUE if parsing the property succeeded, %FALSE otherwise
- */
-gboolean
-swfdec_urldecode_one (const char *string, char **name, char **value, const char **end)
-{
-  char *name_str, *value_str;
-
-  g_return_val_if_fail (string != NULL, FALSE);
-
-  name_str = swfdec_urldecode_one_string (string, &string);
-  if (name_str == NULL)
-    goto fail;
-  if (*string != '=') {
-    g_free (name_str);
-    goto fail;
-  }
-  string++;
-  value_str = swfdec_urldecode_one_string (string, &string);
-  if (value_str == NULL) {
-    g_free (name_str);
-    goto fail;
-  }
-
-  if (name)
-    *name = name_str;
-  else
-    g_free (name_str);
-  if (value)
-    *value = value_str;
-  else
-    g_free (value_str);
-  if (end)
-    *end = string;
-  return TRUE;
-
-fail:
-  if (name)
-    *name = NULL;
-  if (value)
-    *value = NULL;
-  if (end)
-    *end = string;
-  return FALSE;
-}

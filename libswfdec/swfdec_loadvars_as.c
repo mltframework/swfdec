@@ -39,7 +39,7 @@ void
 swfdec_loadvars_decode (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  if (argc < 1)
+  if (argc < 1 || obj == NULL)
     return;
 
   swfdec_as_object_decode (obj, swfdec_as_value_to_string (cx, &argv[0]));

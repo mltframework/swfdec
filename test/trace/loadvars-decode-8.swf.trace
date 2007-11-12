@@ -1,0 +1,23 @@
+>>> a=b&c=d
+a = b
+c = d
+decode = [type Function]
+>>> %26=%3d&%3D=%26
+& = =
+= = &
+decode = [type Function]
+>>> 
+decode = [type Function]
+>>> ???=???
+??? = ???
+decode = [type Function]
+>>> a=
+a = 
+decode = [type Function]
+>>> =b
+decode = [type Function]
+>>> a=&=b&c&d=e
+a = 
+c = 
+d = e
+decode = [type Function]

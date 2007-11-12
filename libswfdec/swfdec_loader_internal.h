@@ -45,10 +45,6 @@ void			swfdec_loader_set_target	(SwfdecLoader *		loader,
 void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,
 							 SwfdecLoaderDataType	type);
 
-gboolean		swfdec_urldecode_one		(const char *		string,
-							 char **		name,
-							 char **		value,
-							 const char **		end);
 void			swfdec_string_append_urlencoded	(GString *		str,
 							 const char *		name,
 							 const char *		value);

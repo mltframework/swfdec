@@ -176,6 +176,7 @@ swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resourc
       mov->depth, mov->parent, resource, NULL, mov->name);
   if (copy == NULL)
     return FALSE;
+  copy->matrix = mov->matrix;
   copy->original_name = mov->original_name;
   copy->modified = mov->modified;
   copy->xscale = mov->xscale;

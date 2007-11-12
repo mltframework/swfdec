@@ -682,6 +682,76 @@ XMLSocket.prototype.onData = function (src) {
 ASSetNative (XMLSocket.prototype, 400, "connect,send,close");
 ASSetPropFlags (XMLSocket.prototype, null, 3);
 
+/* Point */
+
+flash.geom = {};
+
+flash.geom.Point = function () {
+  if (arguments.length == 0) {
+    this.x = 0;
+    this.y = 0;
+  } else {
+    // Note: we don't check for length == 1
+    this.x = arguments[0];
+    this.y = arguments[1];
+  }
+};
+
+flash.geom.Point.distance = function (a, b) {
+  return a.subtract (b).length;
+};
+
+flash.geom.Point.interpolate = function (a, b, value) {
+  return new flash.geom.Point (b.x + value * (a.x - b.x),
+      b.y + value * (a.y - b.y));
+};
+
+flash.geom.Point.polar = function (length, angle) {
+  return new flash.geom.Point (length * Math.cos (angle),
+      length * Math.sin (angle));
+};
+
+flash.geom.Point.prototype.addProperty ("length",
+    function () { return Math.sqrt (this.x * this.x + this.y * this.y); },
+    null);
+
+flash.geom.Point.prototype.add = function (other) {
+    return new flash.geom.Point (this.x + other.x, this.y + other.y);
+};
+
+flash.geom.Point.prototype.clone = function () {
+  return new flash.geom.Point (this.x, this.y);
+};
+
+flash.geom.Point.prototype.equals = function (other) {
+  if (!other instanceOf flash.geom.Point)
+    return false;
+
+  return (other.x == this.x && other.y == this.y);
+};
+
+flash.geom.Point.prototype.normalize = function (length) {
+  if (this.length <= 0)
+    return undefined;
+
+  var factor = length / this.length;
+  this.x = this.x * factor;
+  this.y = this.y * factor;
+};
+
+flash.geom.Point.prototype.subtract = function (other) {
+    return new flash.geom.Point (this.x - other.x, this.y - other.y);
+};
+
+flash.geom.Point.prototype.offset = function (x, y) {
+  this.x += x;
+  this.y += y;
+};
+
+flash.geom.Point.prototype.toString = function () {
+  return "(x=" + this.x + ", y=" + this.y + ")";
+};
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

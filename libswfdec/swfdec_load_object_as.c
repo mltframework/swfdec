@@ -70,6 +70,8 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (target == NULL)
     return;
 
+  // FIXME: support for contentType is missing
+
   swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &ret);
   data = swfdec_as_value_to_string (cx, &ret);
   if (strlen (data) > 0) {

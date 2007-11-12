@@ -344,7 +344,7 @@ swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
   SwfdecPlayerAction *action, tmp;
   guint i = 0;
 
-  for (i = swfdec_ring_buffer_get_n_elements (buffer) + 1; i > 0; i--) {
+  for (i = swfdec_ring_buffer_get_n_elements (buffer); i > 0; i--) {
     action = swfdec_ring_buffer_pop (buffer);
     g_assert (action);
     if (action->movie == NULL)

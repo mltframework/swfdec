@@ -134,6 +134,7 @@ struct _SwfdecMovie {
 
   /* drawing state */
   /* FIXME: could it be that shape drawing (SwfdecGraphicMovie etc) uses these same objects? */
+  SwfdecImage *		image;			/* image loaded via loadMovie */
   SwfdecRect		draw_extents;		/* extents of the items in the following list */
   GSList *		draws;			/* all the items to draw */
   SwfdecDraw *		draw_fill;	      	/* current fill style or NULL */

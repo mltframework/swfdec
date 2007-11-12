@@ -35,6 +35,7 @@
 #include "swfdec_draw.h"
 #include "swfdec_event.h"
 #include "swfdec_graphic.h"
+#include "swfdec_image.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
@@ -128,6 +129,12 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
   SwfdecRect *extents = &movie->extents;
 
   *rect = movie->draw_extents;
+  if (movie->image) {
+    SwfdecRect image_extents = { 0, 0, 
+      movie->image->width * SWFDEC_TWIPS_SCALE_FACTOR,
+      movie->image->height * SWFDEC_TWIPS_SCALE_FACTOR };
+    swfdec_rect_union (rect, rect, &image_extents);
+  }
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_rect_union (rect, rect, &SWFDEC_MOVIE (walk->data)->extents);
   }
@@ -880,6 +887,20 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     swfdec_draw_paint (draw, cr, &trans);
   }
 
+  /* if the movie loaded an image, draw it here now */
+  if (movie->image) {
+    cairo_surface_t *surface = swfdec_image_create_surface_transformed (movie->image,
+	&trans);
+    if (surface) {
+      static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
+      cairo_pattern_t *pattern = cairo_pattern_create_for_surface (surface);
+      SWFDEC_LOG ("rendering loaded image");
+      cairo_pattern_set_matrix (pattern, &matrix);
+      cairo_set_source (cr, pattern);
+      cairo_paint (cr);
+    }
+  }
+
   /* draw the children movies */
   for (g = movie->list; g; g = g_list_next (g)) {
     SwfdecMovie *child = g->data;
@@ -1004,6 +1025,10 @@ swfdec_movie_dispose (GObject *object)
   g_slist_free (movie->variable_listeners);
   movie->variable_listeners = NULL;
 
+  if (movie->image) {
+    g_object_unref (movie->image);
+    movie->image = NULL;
+  }
   g_slist_foreach (movie->draws, (GFunc) g_object_unref, NULL);
   g_slist_free (movie->draws);
   movie->draws = NULL;

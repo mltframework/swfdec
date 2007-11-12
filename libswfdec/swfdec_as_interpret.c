@@ -1346,13 +1346,9 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_OBJECT (&ltmp);
     SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (&rtmp);
 
-    if (!SWFDEC_IS_MOVIE (lo))
-      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
-    if (!SWFDEC_IS_MOVIE (ro))
-      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
-
     if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
-      /* do nothing */
+      lo = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (lo)));
+      ro = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (ro)));
     } else if (SWFDEC_IS_MOVIE (lo)) {
       swfdec_as_value_to_primitive (rval);
       rtype = rval->type;
@@ -1369,6 +1365,9 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 	goto out;
       }
       lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+    } else {
+      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
     }
     cond = lo == ro;
     goto out;
@@ -1432,7 +1431,8 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
 
     if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
-      /* do nothing */
+      lo = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (lo)));
+      ro = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (ro)));
     } else if (SWFDEC_IS_MOVIE (lo)) {
       swfdec_as_value_to_primitive (rval);
       rtype = rval->type;
@@ -1542,7 +1542,17 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
 	cond = SWFDEC_AS_VALUE_GET_STRING (rval) == SWFDEC_AS_VALUE_GET_STRING (lval);
 	break;
       case SWFDEC_AS_TYPE_OBJECT:
-	cond = SWFDEC_AS_VALUE_GET_OBJECT (rval) == SWFDEC_AS_VALUE_GET_OBJECT (lval);
+	{
+	  SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+	  SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
+	  if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
+	    cond = swfdec_movie_resolve (SWFDEC_MOVIE (lo)) == swfdec_movie_resolve (SWFDEC_MOVIE (ro));
+	  } else if (!SWFDEC_IS_MOVIE (lo) && !SWFDEC_IS_MOVIE (ro)) {
+	    cond = lo == ro;
+	  } else {
+	    cond = FALSE;
+	  }
+	}
 	break;
       case SWFDEC_AS_TYPE_INT:
       default:

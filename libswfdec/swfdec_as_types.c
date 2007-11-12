@@ -370,10 +370,13 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
       {
 	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (value);
 	if (SWFDEC_IS_MOVIE (object)) {
-	  char *str = swfdec_movie_get_path (SWFDEC_MOVIE (object), TRUE);
-	  const char *ret = swfdec_as_context_get_string (context, str);
-	  g_free (str);
-	  return ret;
+	  SwfdecMovie *movie = swfdec_movie_resolve (SWFDEC_MOVIE (object));
+	  if (movie == NULL) {
+	    return SWFDEC_AS_STR_EMPTY;
+	  } else {
+	    char *str = swfdec_movie_get_path (SWFDEC_MOVIE (object), TRUE);
+	    return swfdec_as_context_give_string (context, str);
+	  }
 	} else {
 	  SwfdecAsValue ret;
 	  swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &ret);

@@ -921,13 +921,13 @@ swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
 }
 
 /**
- * swfdec_as_object_clear_variables:
+ * swfdec_as_object_delete_all_variables:
  * @object: a #SwfdecAsObject
  *
- * Clears all user-set variables from the given object.
+ * Deletes all user-set variables from the given object.
  **/
 void
-swfdec_as_object_clear_variables (SwfdecAsObject *object)
+swfdec_as_object_delete_all_variables (SwfdecAsObject *object)
 {
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
 

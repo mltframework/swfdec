@@ -281,8 +281,11 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
   status = SWFDEC_STATUS_OK;
   do {
     SwfdecBuffer *buffer = swfdec_buffer_queue_pull_buffer (loader->queue);
+    if (buffer == NULL)
+      break;
+    status &= ~SWFDEC_STATUS_NEEDBITS;
     status |= klass->parse (SWFDEC_DECODER (stream->flvdecoder), buffer);
-  } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_EOF)) == 0);
+  } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_EOF)) == 0);
 
   if (status & SWFDEC_STATUS_IMAGE)
     swfdec_net_stream_loader_target_recheck (stream);

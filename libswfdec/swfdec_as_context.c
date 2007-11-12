@@ -435,6 +435,7 @@ enum {
 enum {
   PROP_0,
   PROP_DEBUGGER,
+  PROP_RANDOM_SEED,
   PROP_ABORTED,
   PROP_UNTIL_GC
 };
@@ -448,7 +449,6 @@ swfdec_as_context_get_property (GObject *object, guint param_id, GValue *value,
 {
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
 
-  
   switch (param_id) {
     case PROP_DEBUGGER:
       g_value_set_object (value, context->debugger);
@@ -471,10 +471,12 @@ swfdec_as_context_set_property (GObject *object, guint param_id, const GValue *v
 {
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (object);
 
-  
   switch (param_id) {
     case PROP_DEBUGGER:
       context->debugger = SWFDEC_AS_DEBUGGER (g_value_dup_object (value));
+      break;
+    case PROP_RANDOM_SEED:
+      g_rand_set_seed (context->rand, g_value_get_uint (value));
       break;
     case PROP_UNTIL_GC:
       context->memory_until_gc = g_value_get_ulong (value);
@@ -520,6 +522,10 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
   g_object_class_install_property (object_class, PROP_DEBUGGER,
       g_param_spec_object ("debugger", "debugger", "debugger used in this player",
 	  SWFDEC_TYPE_AS_DEBUGGER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_RANDOM_SEED,
+      g_param_spec_uint ("random-seed", "random seed", 
+	  "seed used for calculating random numbers",
+	  0, G_MAXUINT32, 0, G_PARAM_WRITABLE)); /* FIXME: make this readwrite for replaying? */
   g_object_class_install_property (object_class, PROP_ABORTED,
       g_param_spec_boolean ("aborted", "aborted", "set when the script engine aborts due to an error",
 	FALSE, G_PARAM_READABLE));

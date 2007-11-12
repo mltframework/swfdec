@@ -448,6 +448,24 @@ EXTRA_DIST = \
 	crash-0.5.3-text-field-root-variable-8.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
+	dangling-compare.as \
+	dangling-compare-5.swf \
+	dangling-compare-5.swf.trace \
+	dangling-compare-6.swf \
+	dangling-compare-6.swf.trace \
+	dangling-compare-7.swf \
+	dangling-compare-7.swf.trace \
+	dangling-compare-8.swf \
+	dangling-compare-8.swf.trace \
+	dangling-print.as \
+	dangling-print-5.swf \
+	dangling-print-5.swf.trace \
+	dangling-print-6.swf \
+	dangling-print-6.swf.trace \
+	dangling-print-7.swf \
+	dangling-print-7.swf.trace \
+	dangling-print-8.swf \
+	dangling-print-8.swf.trace \
 	date.as \
 	date-5.swf \
 	date-5.swf.trace \
@@ -1036,6 +1054,15 @@ EXTRA_DIST = \
 	movieclip-target-6.swf.trace \
 	movieclip-target-7.swf \
 	movieclip-target-7.swf.trace \
+	moviecliploader-constructor.as \
+	moviecliploader-constructor-5.swf \
+	moviecliploader-constructor-5.swf.trace \
+	moviecliploader-constructor-6.swf \
+	moviecliploader-constructor-6.swf.trace \
+	moviecliploader-constructor-7.swf \
+	moviecliploader-constructor-7.swf.trace \
+	moviecliploader-constructor-8.swf \
+	moviecliploader-constructor-8.swf.trace \
 	moviecliploader-error-illegalrequest.as \
 	moviecliploader-error-illegalrequest-6.swf \
 	moviecliploader-error-illegalrequest-6.swf.trace \
@@ -1068,6 +1095,15 @@ EXTRA_DIST = \
 	moviecliploader-properties-7.swf.trace \
 	moviecliploader-properties-8.swf \
 	moviecliploader-properties-8.swf.trace \
+	moviecliploader-unknown-format.as \
+	moviecliploader-unknown-format-5.swf \
+	moviecliploader-unknown-format-5.swf.trace \
+	moviecliploader-unknown-format-6.swf \
+	moviecliploader-unknown-format-6.swf.trace \
+	moviecliploader-unknown-format-7.swf \
+	moviecliploader-unknown-format-7.swf.trace \
+	moviecliploader-unknown-format-8.swf \
+	moviecliploader-unknown-format-8.swf.trace \
 	name.swf \
 	name.swf.trace \
 	name2.swf \
@@ -1076,6 +1112,13 @@ EXTRA_DIST = \
 	names.swf.trace \
 	netconnection.swf \
 	netconnection.swf.trace \
+	netstream-fscommand.as \
+	netstream-fscommand-6.swf \
+	netstream-fscommand-6.swf.trace \
+	netstream-fscommand-7.swf \
+	netstream-fscommand-7.swf.trace \
+	netstream-fscommand-8.swf \
+	netstream-fscommand-8.swf.trace \
 	netstream-load-loop.as \
 	netstream-load-loop-6.swf \
 	netstream-load-loop-6.swf.trace \
@@ -2225,6 +2268,31 @@ EXTRA_DIST = \
 	unescape2-6.swf.trace \
 	unescape2-7.swf \
 	unescape2-7.swf.trace \
+	unloadmovie-recreate.as \
+	unloadmovie-recreate-6.swf \
+	unloadmovie-recreate-6.swf.trace \
+	unloadmovie-recreate-7.swf \
+	unloadmovie-recreate-7.swf.trace \
+	unloadmovie-recreate-8.swf \
+	unloadmovie-recreate-8.swf.trace \
+	unloadmovie-simple.as \
+	unloadmovie-simple-5.swf \
+	unloadmovie-simple-5.swf.trace \
+	unloadmovie-simple-6.swf \
+	unloadmovie-simple-6.swf.trace \
+	unloadmovie-simple-7.swf \
+	unloadmovie-simple-7.swf.trace \
+	unloadmovie-simple-8.swf \
+	unloadmovie-simple-8.swf.trace \
+	unreproducable-random.as \
+	unreproducable-random-5.swf \
+	unreproducable-random-5.swf.trace \
+	unreproducable-random-6.swf \
+	unreproducable-random-6.swf.trace \
+	unreproducable-random-7.swf \
+	unreproducable-random-7.swf.trace \
+	unreproducable-random-8.swf \
+	unreproducable-random-8.swf.trace \
 	values.as \
 	video.flv \
 	video-properties.as \

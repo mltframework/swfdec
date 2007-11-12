@@ -43,16 +43,16 @@ typedef enum {
   SWFDEC_IMAGE_TYPE_JPEG3,
   SWFDEC_IMAGE_TYPE_LOSSLESS,
   SWFDEC_IMAGE_TYPE_LOSSLESS2,
+  /* those can only be created by loading from files */
+  SWFDEC_IMAGE_TYPE_PNG
 } SwfdecImageType;
 
 struct _SwfdecImage {
   SwfdecCached		cached;
 
-  guint8 *		data;		/* image data in CAIRO_FORMAT_ARGB32 but NOT premultiplied */	
-  int			width;
-  int			height;
-  int			rowstride;
-  cairo_surface_t *	surface;	/* surface that owns the data pointer or NULL (doesn't always work) */
+  int			width;		/* width of image or 0 if not known yet */
+  int			height;		/* height of image or 0 if not known yet */
+  cairo_surface_t *	surface;	/* surface when cache loaded or NULL */
 
   SwfdecImageType	type;
   SwfdecBuffer *	jpegtables;
@@ -66,6 +66,7 @@ struct _SwfdecImageClass {
 
 GType			swfdec_image_get_type		(void);
 
+SwfdecImage *		swfdec_image_new		(SwfdecBuffer *		buffer);
 cairo_surface_t *	swfdec_image_create_surface	(SwfdecImage *		image);
 cairo_surface_t *	swfdec_image_create_surface_transformed 
 							(SwfdecImage *		image,

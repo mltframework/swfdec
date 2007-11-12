@@ -1178,11 +1178,33 @@ swfdec_player_stage_to_global (SwfdecPlayer *player, double *x, double *y)
 }
 
 static void
+swfdec_player_execute_on_load_init (SwfdecPlayer *player)
+{
+  GList *walk;
+
+  /* FIXME: This can be made a LOT faster with correct caching, but I'm lazy */
+  do {
+    for (walk = player->movies; walk; walk = walk->next) {
+      SwfdecMovie *movie = walk->data;
+      SwfdecResource *resource = swfdec_movie_get_own_resource (movie);
+      if (resource == NULL)
+	continue;
+      if (swfdec_resource_emit_on_load_init (resource))
+	break;
+    }
+  } while (walk != NULL);
+}
+
+static void
 swfdec_player_iterate (SwfdecTimeout *timeout)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
   GList *walk;
 
+  /* add timeout again - do this first because later code can change it */
+  /* FIXME: rounding issues? */
+  player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
+  swfdec_player_add_timeout (player, &player->iterate_timeout);
   swfdec_player_perform_external_actions (player);
   SWFDEC_INFO ("=== START ITERATION ===");
   /* start the iteration. This performs a goto next frame on all 
@@ -1205,12 +1227,9 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
     if (!klass->iterate_end (cur))
       swfdec_movie_destroy (cur);
   }
+  swfdec_player_execute_on_load_init (player);
   swfdec_player_resource_request_perform (player);
   swfdec_player_perform_actions (player);
-  /* add timeout again */
-  /* FIXME: rounding issues? */
-  player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
-  swfdec_player_add_timeout (player, &player->iterate_timeout);
 }
 
 static void
@@ -1466,7 +1485,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 	  SWFDEC_TYPE_SYSTEM, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_MAX_RUNTIME,
       g_param_spec_ulong ("max-runtime", "maximum runtime", "maximum time in msecs scripts may run in the player before aborting",
-	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
+	  0, G_MAXULONG, 10 * 1000, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1633,6 +1652,7 @@ swfdec_player_init (SwfdecPlayer *player)
 
   player->runtime = g_timer_new ();
   g_timer_stop (player->runtime);
+  player->max_runtime = 10 * 1000;
   player->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -1965,18 +1985,27 @@ swfdec_player_unroot_object (SwfdecPlayer *player, GObject *object)
  * swfdec_player_new:
  * @debugger: %NULL or a #SwfdecAsDebugger to use for debugging this player.
  *
- * Creates a new player.
- * This function calls swfdec_init () for you if it wasn't called before.
+ * Creates a new player. This function is supposed to be used for testing.
+ * Because of this, the created player will behave as predictable as possible.
+ * For example, it will generate the same random number sequence every time.
+ * The function calls swfdec_init () for you if it wasn't called before.
  *
  * Returns: The new player
  **/
 SwfdecPlayer *
 swfdec_player_new (SwfdecAsDebugger *debugger)
 {
+  static const GTimeVal the_beginning = { 1035840244, 0 };
   SwfdecPlayer *player;
 
+  g_return_val_if_fail (debugger == NULL || SWFDEC_IS_AS_DEBUGGER (debugger), NULL);
+
   swfdec_init ();
-  player = g_object_new (SWFDEC_TYPE_PLAYER, "debugger", debugger, NULL);
+  player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
+      "max-runtime", 0, 
+      "debugger", debugger, NULL);
+  /* FIXME: make this a property or something and don't set it here */
+  SWFDEC_AS_CONTEXT (player)->start_time = the_beginning;
 
   return player;
 }

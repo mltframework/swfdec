@@ -316,6 +316,7 @@ get_image_type_name (SwfdecImageType type)
       return "lossless";
     case SWFDEC_IMAGE_TYPE_LOSSLESS2:
       return "lossless with alpha";
+    case SWFDEC_IMAGE_TYPE_PNG:
     case SWFDEC_IMAGE_TYPE_UNKNOWN:
     default:
       g_assert_not_reached ();

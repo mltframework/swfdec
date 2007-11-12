@@ -811,18 +811,18 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
   g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
 
   mov = SWFDEC_MOVIE (movie);
-  /* This function does enough invalidating */
   swfdec_sprite_movie_clear (SWFDEC_AS_OBJECT (movie)->context, 
       SWFDEC_AS_OBJECT (movie), 0, NULL, &hack);
   /* FIXME: destroy or unload? */
   while (mov->list)
-    swfdec_movie_destroy (mov->list->data);
-  swfdec_as_object_clear_variables (SWFDEC_AS_OBJECT (movie));
+    swfdec_movie_remove (mov->list->data);
+  swfdec_as_object_delete_all_variables (SWFDEC_AS_OBJECT (movie));
   movie->frame = (guint) -1;
   movie->n_frames = 0;
   movie->next_action = 0;
   movie->max_action = 0;
   movie->sprite = NULL;
+  swfdec_movie_queue_update (SWFDEC_MOVIE (movie), SWFDEC_MOVIE_INVALID_EXTENTS);
 }
 
 /**

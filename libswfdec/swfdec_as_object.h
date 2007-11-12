@@ -146,7 +146,8 @@ gboolean	swfdec_as_object_get_variable_and_flags
 SwfdecAsDeleteReturn
 		swfdec_as_object_delete_variable(SwfdecAsObject *	object,
 						 const char *		variable);
-void		swfdec_as_object_clear_variables(SwfdecAsObject *	object);
+void		swfdec_as_object_delete_all_variables
+						(SwfdecAsObject *	object);
 void		swfdec_as_object_set_variable_flags
 						(SwfdecAsObject *       object,
 						 const char *		variable,

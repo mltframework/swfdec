@@ -94,15 +94,17 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     movie->n_frames = movie->sprite->n_frames;
     swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
     swfdec_resource_check_rights (instance);
-    if (swfdec_resource_is_root (instance))
+    if (swfdec_resource_is_root (instance)) {
       swfdec_movie_initialize (SWFDEC_MOVIE (movie));
+      swfdec_player_perform_actions (instance->player);
+    }
   } else {
     g_assert_not_reached ();
   }
 }
 
 /* NB: name must be GC'ed */
-static void
+static SwfdecSpriteMovie *
 swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolean progress, 
     SwfdecAsValue *args, guint n_args)
 {
@@ -112,14 +114,14 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
   SwfdecAsValue vals[n_args + skip];
 
   if (resource->clip_loader == NULL)
-    return;
+    return NULL;
   cx = SWFDEC_AS_OBJECT (resource->clip_loader)->context;
   g_assert (resource->target);
   movie = swfdec_action_lookup_object (cx, SWFDEC_PLAYER (cx)->roots->data, 
       resource->target, resource->target + strlen (resource->target));
   if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    SWFDEC_FIXME ("figure out if we emit nonetheless");
-    return;
+    SWFDEC_DEBUG ("no movie, not emitting signal");
+    return NULL;
   }
 
   SWFDEC_AS_VALUE_SET_STRING (&vals[0], name);
@@ -144,6 +146,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
     memcpy (&vals[skip], args, sizeof (SwfdecAsValue) * n_args);
   swfdec_as_object_call (SWFDEC_AS_OBJECT (resource->clip_loader), SWFDEC_AS_STR_broadcastMessage, 
       n_args + skip, vals, NULL);
+  return SWFDEC_SPRITE_MOVIE (movie);
 }
 
 static void
@@ -155,6 +158,26 @@ swfdec_resource_emit_error (SwfdecResource *resource, const char *message)
   SWFDEC_AS_VALUE_SET_INT (&vals[1], 0);
 
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadError, FALSE, vals, 2);
+}
+
+static SwfdecSpriteMovie *
+swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resource)
+{
+  /* can't use swfdec_movie_duplicate() here, we copy to same depth */
+  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  SwfdecMovie *copy;
+  
+  copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), 
+      mov->depth, mov->parent, resource, NULL, mov->name);
+  if (copy == NULL)
+    return FALSE;
+  copy->original_name = mov->original_name;
+  /* FIXME: are events copied? If so, wouldn't that be a security issue? */
+  swfdec_movie_set_static_properties (copy, &mov->original_transform,
+      &mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
+      mov->blend_mode, NULL);
+  swfdec_movie_remove (mov);
+  return SWFDEC_SPRITE_MOVIE (copy);
 }
 
 static gboolean
@@ -183,21 +206,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
   if (movie == NULL) {
     movie = swfdec_player_create_movie_at_level (player, resource, level);
   } else {
-    /* can't use swfdec_movie_duplicate() here, we copy to same depth */
-    SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-    SwfdecMovie *copy;
-    
-    copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), 
-	mov->depth, mov->parent, resource, NULL, mov->name);
-    if (copy == NULL)
-      return FALSE;
-    copy->original_name = mov->original_name;
-    /* FIXME: are events copied? If so, wouldn't that be a security issue? */
-    swfdec_movie_set_static_properties (copy, &mov->original_transform,
-	&mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
-	mov->blend_mode, NULL);
-    swfdec_movie_remove (mov);
-    movie = SWFDEC_SPRITE_MOVIE (copy);
+    movie = swfdec_resource_replace_movie (movie, resource);
   }
   swfdec_player_unroot_object (player, G_OBJECT (resource));
   return TRUE;
@@ -227,37 +236,27 @@ swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *lo
 static void
 swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
-  SwfdecResource *instance = SWFDEC_RESOURCE (target);
+  SwfdecResource *resource = SWFDEC_RESOURCE (target);
   SwfdecBuffer *buffer;
-  SwfdecDecoder *dec = instance->decoder;
-  SwfdecDecoderClass *klass;
+  SwfdecDecoder *dec = resource->decoder;
   SwfdecStatus status;
   guint parsed;
 
-  if (dec == NULL) {
+  if (dec == NULL && swfdec_buffer_queue_get_offset (loader->queue) == 0) {
     if (swfdec_buffer_queue_get_depth (loader->queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return;
     buffer = swfdec_buffer_queue_peek (loader->queue, 4);
-    dec = swfdec_decoder_new (instance->player, buffer);
+    dec = swfdec_decoder_new (resource->player, buffer);
     swfdec_buffer_unref (buffer);
     if (dec == NULL) {
-      SWFDEC_ERROR ("no decoder found");
-      swfdec_loader_set_target (loader, NULL);
-      return;
-    }
-
-    if (SWFDEC_IS_SWF_DECODER (dec)) {
+      SWFDEC_ERROR ("no decoder found for format");
+    } else if (SWFDEC_IS_SWF_DECODER (dec)) {
       swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_SWF);
-      instance->decoder = dec;
+      resource->decoder = dec;
     } else {
       SWFDEC_FIXME ("implement handling of %s", G_OBJECT_TYPE_NAME (dec));
-      g_object_unref (dec);
-      swfdec_loader_set_target (loader, NULL);
-      return;
     }
   }
-  klass = SWFDEC_DECODER_GET_CLASS (dec);
-  g_return_if_fail (klass->parse);
   while (swfdec_buffer_queue_get_depth (loader->queue)) {
     parsed = 0;
     status = 0;
@@ -273,22 +272,28 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 	buffer = swfdec_buffer_queue_pull (loader->queue, 65536 - parsed);
       }
       parsed += buffer->length;
-      status = klass->parse (dec, buffer);
+      if (dec) {
+	status = swfdec_decoder_parse (dec, buffer);
+      } else {
+	swfdec_buffer_unref (buffer);
+      }
     } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_EOF)) == 0);
     if (status & SWFDEC_STATUS_ERROR) {
       SWFDEC_ERROR ("parsing error");
       swfdec_loader_set_target (loader, NULL);
       return;
     }
-    if ((status & SWFDEC_STATUS_INIT) &&
-	swfdec_resource_is_root (instance)) {
-      swfdec_player_initialize (instance->player, 
-	  SWFDEC_IS_SWF_DECODER (dec) ? SWFDEC_SWF_DECODER (dec)->version : 7, /* <-- HACK */
-	  dec->rate, dec->width, dec->height);
+    if ((status & SWFDEC_STATUS_INIT)) {
+      if (SWFDEC_IS_SWF_DECODER (dec))
+	resource->version = SWFDEC_SWF_DECODER (dec)->version;
+      if (swfdec_resource_is_root (resource)) {
+	swfdec_player_initialize (resource->player, resource->version,
+	    dec->rate, dec->width, dec->height);
+      }
     }
     if (status & SWFDEC_STATUS_IMAGE)
-      swfdec_resource_loader_target_image (instance);
-    swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
+      swfdec_resource_loader_target_image (resource);
+    swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
     if (status & SWFDEC_STATUS_EOF)
       return;
   }
@@ -297,13 +302,20 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 static void
 swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
 {
-  SwfdecAsValue val;
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
+  SwfdecAsValue val;
+  SwfdecSpriteMovie *movie;
 
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
   SWFDEC_AS_VALUE_SET_INT (&val, 0); /* FIXME */
-  swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
-  resource->state = SWFDEC_RESOURCE_COMPLETE;
+  movie = swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
+  /* FIXME: I bet this is wrong for figuring out if movies should emit onLoadInit */
+  if (resource->clip_loader == NULL ||
+      movie != resource->movie) {
+    resource->state = SWFDEC_RESOURCE_DONE;
+  } else {
+    resource->state = SWFDEC_RESOURCE_COMPLETE;
+  }
 }
 
 static void
@@ -406,6 +418,7 @@ swfdec_resource_new (SwfdecPlayer *player, SwfdecLoader *loader, const char *var
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+  resource->version = 7;
   resource->player = player;
   resource->variables = g_strdup (variables);
   swfdec_resource_set_loader (resource, loader);
@@ -465,6 +478,22 @@ swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer re
   g_object_unref (loader);
 }
 
+static void
+swfdec_resource_do_unload (SwfdecPlayer *player, const char *target, gpointer resourcep)
+{
+  SwfdecResource *resource = SWFDEC_RESOURCE (resourcep);
+  SwfdecSpriteMovie *movie;
+  
+  movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (
+      SWFDEC_AS_CONTEXT (player), player->roots->data, 
+      target, target + strlen (target));
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    SWFDEC_DEBUG ("no movie, not unloading");
+    return;
+  }
+  swfdec_resource_replace_movie (movie, resource);
+}
+
 /* NB: must be called from a script */
 void
 swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url, 
@@ -489,12 +518,37 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     SWFDEC_WARNING ("%s does not reference a movie, not loading %s", target, url);
     return;
   }
-  resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
-  resource->player = player;
-  resource->target = path;
-  if (loader)
-    resource->clip_loader = g_object_ref (loader);
-  swfdec_player_root_object (player, G_OBJECT (resource));
-  swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
-      url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
+  if (url[0] == '\0') {
+    resource = g_object_ref (SWFDEC_MOVIE (movie)->resource);
+    swfdec_player_request_unload (player, path, swfdec_resource_do_unload, resource, g_object_unref);
+    g_free (path);
+  } else {
+    resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+    resource->version = SWFDEC_AS_CONTEXT (player)->version;
+    resource->player = player;
+    resource->target = path;
+    if (loader)
+      resource->clip_loader = g_object_ref (loader);
+    swfdec_player_root_object (player, G_OBJECT (resource));
+    swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
+	url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
+  }
+}
+
+gboolean
+swfdec_resource_emit_on_load_init (SwfdecResource *resource)
+{
+  g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), FALSE);
+
+  if (resource->state != SWFDEC_RESOURCE_COMPLETE)
+    return FALSE;
+
+  swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadInit, FALSE, NULL, 0);
+  resource->state = SWFDEC_RESOURCE_DONE;
+  /* free now unneeded resources */
+  if (resource->clip_loader) {
+    g_object_unref (resource->clip_loader);
+    resource->clip_loader = NULL;
+  }
+  return TRUE;
 }

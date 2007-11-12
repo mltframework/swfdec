@@ -2477,6 +2477,15 @@ EXTRA_DIST = \
 	xml-properties2-6.swf.trace \
 	xml-properties2-7.swf \
 	xml-properties2-7.swf.trace \
+	xml-socket-properties.as \
+	xml-socket-properties-5.swf \
+	xml-socket-properties-5.swf.trace \
+	xml-socket-properties-6.swf \
+	xml-socket-properties-6.swf.trace \
+	xml-socket-properties-7.swf \
+	xml-socket-properties-7.swf.trace \
+	xml-socket-properties-8.swf \
+	xml-socket-properties-8.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
 

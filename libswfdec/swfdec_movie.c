@@ -500,52 +500,6 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
   return ret;
 }
 
-/**
- * swfdec_movie_set_variables:
- * @script: a #SwfdecMovie
- * @variables: variables to set on @movie in application-x-www-form-urlencoded 
- *             format
- * 
- * Verifies @variables to be encoded correctly and sets them as string 
- * properties on the given @movie.
- **/
-void
-swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
-{
-  SwfdecAsObject *as;
-
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (variables != NULL);
-
-  as = SWFDEC_AS_OBJECT (movie);
-  SWFDEC_DEBUG ("setting variables on %p: %s", movie, variables);
-  while (TRUE) {
-    char *name, *value;
-    const char *asname;
-    SwfdecAsValue val;
-
-    while (*variables == '&')
-      variables++;
-    if (*variables == '\0')
-      break;
-    if (!swfdec_urldecode_one (variables, &name, &value, &variables)) {
-      SWFDEC_WARNING ("variables invalid at \"%s\"", variables);
-      break;
-    }
-    if (*variables != '\0' && *variables != '&') {
-      SWFDEC_WARNING ("variables not delimited with & at \"%s\"", variables);
-      g_free (name);
-      g_free (value);
-      break;
-    }
-    SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
-    asname = swfdec_as_context_give_string (as->context, name);
-    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (as->context, value));
-    g_free (value);
-    swfdec_as_object_set_variable (as, asname, &val);
-  }
-}
-
 /* NB: coordinates are in movie's coordiante system. Use swfdec_movie_get_mouse
  * if you have global coordinates */
 gboolean

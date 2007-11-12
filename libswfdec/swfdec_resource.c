@@ -234,11 +234,11 @@ swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *lo
   query = swfdec_url_get_query (swfdec_loader_get_url (loader));
   if (query) {
     SWFDEC_INFO ("set url query movie variables: %s", query);
-    swfdec_movie_set_variables (SWFDEC_MOVIE (instance->movie), query);
+    swfdec_as_object_decode (SWFDEC_AS_OBJECT (instance->movie), query);
   }
   if (instance->variables) {
     SWFDEC_INFO ("set manual movie variables: %s", instance->variables);
-    swfdec_movie_set_variables (SWFDEC_MOVIE (instance->movie), instance->variables);
+    swfdec_as_object_decode (SWFDEC_AS_OBJECT (instance->movie), instance->variables);
   }
   swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadStart, FALSE, NULL, 0);
   instance->state = SWFDEC_RESOURCE_OPENED;

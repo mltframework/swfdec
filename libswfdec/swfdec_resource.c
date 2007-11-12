@@ -252,7 +252,11 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
     if (dec == NULL) {
       SWFDEC_ERROR ("no decoder found for format");
     } else {
+      glong total;
       resource->decoder = dec;
+      total = swfdec_loader_get_size (loader);
+      if (total >= 0)
+	dec->bytes_total = total;
     }
   }
   while (swfdec_buffer_queue_get_depth (loader->queue)) {

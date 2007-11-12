@@ -169,20 +169,21 @@ swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 SWFDEC_AS_NATIVE (101, 11, swfdec_as_function_apply)
 void
-swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
+swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsValue *argv_pass = NULL;
   int length = 0;
+  SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
-  if (argc > 0) {
-    thisp = swfdec_as_value_to_object (cx, &argv[0]);
-  } else {
-    thisp = NULL;
-  }
-  if (thisp == NULL)
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "O", &thisp);
+
+  if (thisp == NULL) {
     thisp = swfdec_as_object_new_empty (cx);
+    if (thisp == NULL)
+      return;
+  }
 
   if (argc > 1 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
     int i;
@@ -209,8 +210,7 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
     }
   }
 
-  swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, length,
-      argv_pass, ret);
+  swfdec_as_function_call (fun, thisp, length, argv_pass, ret);
   swfdec_as_context_run (cx);
 
   if (argv_pass) {

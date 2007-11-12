@@ -62,6 +62,8 @@
  * @SWFDEC_LOADER_DATA_FLV: Data describing a Flash video stream.
  * @SWFDEC_LOADER_DATA_XML: Data in XML format.
  * @SWFDEC_LOADER_DATA_TEXT: Textual data.
+ * @SWFDEC_LOADER_DATA_JPEG: a JPEG image
+ * @SWFDEC_LOADER_DATA_PNG: a PNG image
  *
  * This type describes the different types of data that can be loaded inside 
  * Swfdec. Swfdec identifies its data streams and you can use the 
@@ -577,6 +579,10 @@ swfdec_loader_data_type_get_extension (SwfdecLoaderDataType type)
       return "xml";
     case SWFDEC_LOADER_DATA_TEXT:
       return "txt";
+    case SWFDEC_LOADER_DATA_JPEG:
+      return "jpg";
+    case SWFDEC_LOADER_DATA_PNG:
+      return "png";
     default:
       g_warning ("unknown data type %u", type);
       return "";

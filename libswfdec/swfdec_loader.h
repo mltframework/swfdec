@@ -31,7 +31,9 @@ typedef enum {
   SWFDEC_LOADER_DATA_SWF,
   SWFDEC_LOADER_DATA_FLV,
   SWFDEC_LOADER_DATA_XML,
-  SWFDEC_LOADER_DATA_TEXT
+  SWFDEC_LOADER_DATA_TEXT,
+  SWFDEC_LOADER_DATA_JPEG,
+  SWFDEC_LOADER_DATA_PNG
 } SwfdecLoaderDataType;
 
 /* NB: actal numbers in SwfdecLoaderRequest are important for GetURL2 action */

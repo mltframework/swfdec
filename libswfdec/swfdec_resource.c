@@ -250,11 +250,8 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
     swfdec_buffer_unref (buffer);
     if (dec == NULL) {
       SWFDEC_ERROR ("no decoder found for format");
-    } else if (SWFDEC_IS_SWF_DECODER (dec)) {
-      swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_SWF);
-      resource->decoder = dec;
     } else {
-      SWFDEC_FIXME ("implement handling of %s", G_OBJECT_TYPE_NAME (dec));
+      resource->decoder = dec;
     }
   }
   while (swfdec_buffer_queue_get_depth (loader->queue)) {
@@ -308,7 +305,10 @@ swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loa
 
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
   if (resource->decoder) {
-    swfdec_decoder_eof (resource->decoder);
+    SwfdecDecoder *dec = resource->decoder;
+    swfdec_decoder_eof (dec);
+    if (dec->data_type != SWFDEC_LOADER_DATA_UNKNOWN)
+      swfdec_loader_set_data_type (loader, dec->data_type);
   }
   SWFDEC_AS_VALUE_SET_INT (&val, 0); /* FIXME */
   movie = swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);

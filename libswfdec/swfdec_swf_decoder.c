@@ -234,6 +234,7 @@ swf_parse_header1 (SwfdecSwfDecoder * s)
   s->bytes_parsed = 8;
   s->state = SWFDEC_STATE_INIT2;
   swfdec_swf_decoder_deflate (s, rest);
+  dec->data_type = SWFDEC_LOADER_DATA_SWF;
 
   return SWFDEC_STATUS_OK;
 }

@@ -1,0 +1,23 @@
+>>> a=b&c=d
+a = b
+c = d
+decode = 
+>>> %26=%3d&%3D=%26
+& = =
+= = &
+decode = 
+>>> 
+decode = 
+>>> ???=???
+??? = ???
+decode = 
+>>> a=
+a = 
+decode = 
+>>> =b
+decode = 
+>>> a=&=b&c&d=e
+a = 
+c = 
+d = e
+decode = 

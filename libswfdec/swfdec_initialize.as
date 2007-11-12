@@ -604,6 +604,17 @@ AsBroadcaster.initialize(flash.net.FileReference.prototype);
 ASSetNative(flash.net.FileReference.prototype, 2204, "8browse,8upload,8download,8cancel");
 ASSetPropFlags(flash.net.FileReference.prototype, null, 3);
 
+/* FileReferenceList */
+
+flash.net.FileReferenceList = function () {
+  this.fileList = new Array();
+  this._listeners = [];
+};
+
+AsBroadcaster.initialize (flash.net.FileReferenceList.prototype);
+ASSetNative (flash.net.FileReferenceList.prototype, 2205, "8browse");
+ASSetPropFlags (flash.net.FileReferenceList.prototype, null, 3);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

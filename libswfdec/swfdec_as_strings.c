@@ -432,5 +432,10 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("URLNotFound")
   SWFDEC_AS_CONSTANT_STRING ("IllegalRequest")
   SWFDEC_AS_CONSTANT_STRING ("LoadNeverCompleted")
+  SWFDEC_AS_CONSTANT_STRING ("creationDate")
+  SWFDEC_AS_CONSTANT_STRING ("creator")
+  SWFDEC_AS_CONSTANT_STRING ("modificationDate")
+  SWFDEC_AS_CONSTANT_STRING ("name")
+  SWFDEC_AS_CONSTANT_STRING ("postData")
   /* add more here */
 ;

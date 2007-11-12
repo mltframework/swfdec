@@ -23,6 +23,9 @@
 ASSetNative = ASnative (4, 0);
 ASSetNativeAccessor = ASnative (4, 1);
 
+flash = {};
+ASSetPropFlags (this, "flash", 4096);
+
 /*** Object ***/
 /* Only Flash extensions here, rest to swfdec_as_initialize.as */
 
@@ -587,6 +590,19 @@ ContextMenuItem.prototype.copy = function () {
 };
 
 ASSetPropFlags (ContextMenuItem.prototype, null, 1027);
+
+/* FileReference */
+
+flash.net = {};
+flash.net.FileReference = function () {
+  var c = ASnative (2204, 200);
+  c (this);
+  this._listeners = [];
+};
+
+AsBroadcaster.initialize(flash.net.FileReference.prototype);
+ASSetNative(flash.net.FileReference.prototype, 2204, "8browse,8upload,8download,8cancel");
+ASSetPropFlags(flash.net.FileReference.prototype, null, 3);
 
 /* Global Functions */
 

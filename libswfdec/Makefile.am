@@ -66,6 +66,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_enums.c \
 	swfdec_event.c \
 	swfdec_file_loader.c \
+	swfdec_file_reference.c \
 	swfdec_filter.c \
 	swfdec_filter_as.c \
 	swfdec_flash_security.c \

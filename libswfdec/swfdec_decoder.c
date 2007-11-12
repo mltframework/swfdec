@@ -86,4 +86,15 @@ swfdec_decoder_parse (SwfdecDecoder *decoder, SwfdecBuffer *buffer)
   return klass->parse (decoder, buffer);
 }
 
+SwfdecStatus
+swfdec_decoder_eof (SwfdecDecoder *decoder)
+{
+  SwfdecDecoderClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_DECODER (decoder), SWFDEC_STATUS_ERROR);
+
+  klass = SWFDEC_DECODER_GET_CLASS (decoder);
+  g_return_val_if_fail (klass->eof, SWFDEC_STATUS_ERROR);
+  return klass->eof (decoder);
+}
 

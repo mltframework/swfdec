@@ -307,6 +307,9 @@ swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loa
   SwfdecSpriteMovie *movie;
 
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
+  if (resource->decoder) {
+    swfdec_decoder_eof (resource->decoder);
+  }
   SWFDEC_AS_VALUE_SET_INT (&val, 0); /* FIXME */
   movie = swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
   /* FIXME: I bet this is wrong for figuring out if movies should emit onLoadInit */

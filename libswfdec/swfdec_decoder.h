@@ -73,6 +73,7 @@ struct _SwfdecDecoderClass
 
   SwfdecStatus		(* parse)		(SwfdecDecoder *	decoder,
 						 SwfdecBuffer *		buffer);
+  SwfdecStatus		(* eof)			(SwfdecDecoder *	decoder);
 };
 
 GType		swfdec_decoder_get_type		(void);
@@ -83,6 +84,7 @@ SwfdecDecoder *	swfdec_decoder_new		(SwfdecPlayer *		player,
 
 SwfdecStatus	swfdec_decoder_parse		(SwfdecDecoder *	decoder,
 						 SwfdecBuffer * 	buffer);
+SwfdecStatus	swfdec_decoder_eof		(SwfdecDecoder *	decoder);
 
 
 G_END_DECLS

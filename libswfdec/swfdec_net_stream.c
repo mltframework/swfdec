@@ -298,7 +298,7 @@ swfdec_net_stream_loader_target_eof (SwfdecLoaderTarget *target,
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
   guint first, last;
 
-  swfdec_flv_decoder_eof (stream->flvdecoder);
+  swfdec_decoder_eof (SWFDEC_DECODER (stream->flvdecoder));
   swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Flush,
       SWFDEC_AS_STR_status);
   swfdec_net_stream_video_goto (stream, stream->current_time);

@@ -387,6 +387,17 @@ swfdec_swf_decoder_parse (SwfdecDecoder *dec, SwfdecBuffer *buffer)
   return status;
 }
 
+static SwfdecStatus
+swfdec_swf_decoder_eof (SwfdecDecoder *dec)
+{
+  if (dec->bytes_loaded < dec->bytes_total) {
+    SWFDEC_ERROR ("only %u of %u bytes provided, broken transmission?",
+	dec->bytes_loaded, dec->bytes_total);
+  }
+
+  return 0;
+}
+
 static void
 swfdec_swf_decoder_class_init (SwfdecSwfDecoderClass *class)
 {
@@ -396,6 +407,7 @@ swfdec_swf_decoder_class_init (SwfdecSwfDecoderClass *class)
   object_class->dispose = swfdec_swf_decoder_dispose;
 
   decoder_class->parse = swfdec_swf_decoder_parse;
+  decoder_class->eof = swfdec_swf_decoder_eof;
 }
 
 static void

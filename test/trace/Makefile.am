@@ -654,6 +654,15 @@ EXTRA_DIST = \
 	file-reference-constructor-7.swf.trace \
 	file-reference-constructor-8.swf \
 	file-reference-constructor-8.swf.trace \
+	file-reference-properties.as \
+	file-reference-properties-5.swf \
+	file-reference-properties-5.swf.trace \
+	file-reference-properties-6.swf \
+	file-reference-properties-6.swf.trace \
+	file-reference-properties-7.swf \
+	file-reference-properties-7.swf.trace \
+	file-reference-properties-8.swf \
+	file-reference-properties-8.swf.trace \
 	foreach-proto-simple.as \
 	foreach-proto-simple-5.swf \
 	foreach-proto-simple-5.swf.trace \

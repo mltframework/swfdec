@@ -291,6 +291,9 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
 
+  if (argc < 1)
+    return;
+
   if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
     other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
     if (!SWFDEC_IS_MOVIE (other) ||

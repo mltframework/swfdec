@@ -1002,6 +1002,15 @@ EXTRA_DIST = \
 	loadvars.txt \
 	local.swf \
 	local.swf.trace \
+	local-connection-properties.as \
+	local-connection-properties-5.swf \
+	local-connection-properties-5.swf.trace \
+	local-connection-properties-6.swf \
+	local-connection-properties-6.swf.trace \
+	local-connection-properties-7.swf \
+	local-connection-properties-7.swf.trace \
+	local-connection-properties-8.swf \
+	local-connection-properties-8.swf.trace \
 	lots-of-arguments.as \
 	lots-of-arguments-5.swf \
 	lots-of-arguments-5.swf.trace \

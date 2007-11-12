@@ -103,7 +103,7 @@ LoadVars.prototype.contentType = "application/x-www-form-urlencoded";
 
 LoadVars.prototype.load = ASnative (301, 0);
 //LoadVars.prototype.send = ASnative (301, 1);
-//LoadVars.prototype.sendAndLoad = ASnative (301, 2);
+LoadVars.prototype.sendAndLoad = ASnative (301, 2);
 LoadVars.prototype.decode = ASnative (301, 3);
 
 LoadVars.prototype.onLoad = function () {
@@ -168,7 +168,7 @@ ASSetPropFlags (XML, "prototype", 3);
 
 XML.prototype.load = ASnative (301, 0);
 //XML.prototype.send = ASnative (301, 1);
-//XML.prototype.sendAndLoad = ASnative (301, 2);
+XML.prototype.sendAndLoad = ASnative (301, 2);
 XML.prototype.createElement = ASnative (253, 10);
 XML.prototype.createTextNode = ASnative (253, 11);
 XML.prototype.parseXML = ASnative (253, 12);

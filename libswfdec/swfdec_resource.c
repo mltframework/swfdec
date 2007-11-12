@@ -33,6 +33,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_flash_security.h"
+#include "swfdec_image_decoder.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
 #include "swfdec_movie_clip_loader.h"
@@ -541,13 +542,22 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
 gboolean
 swfdec_resource_emit_on_load_init (SwfdecResource *resource)
 {
+  SwfdecMovie *movie;
+
   g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), FALSE);
 
   if (resource->state != SWFDEC_RESOURCE_COMPLETE)
     return FALSE;
 
-  swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadInit, FALSE, NULL, 0);
+  movie = SWFDEC_MOVIE (swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadInit, FALSE, NULL, 0));
   resource->state = SWFDEC_RESOURCE_DONE;
+  if (movie && SWFDEC_IS_IMAGE_DECODER (resource->decoder)) {
+    SwfdecImage *image = SWFDEC_IMAGE_DECODER (resource->decoder)->image;
+    if (image) {
+      movie->image = g_object_ref (image);
+      swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
+    }
+  }
   /* free now unneeded resources */
   if (resource->clip_loader) {
     g_object_unref (resource->clip_loader);

@@ -83,6 +83,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
 	swfdec_loadvars_as.c \
+	swfdec_local_connection.c \
 	swfdec_marshal.c \
 	swfdec_morph_movie.c \
 	swfdec_morphshape.c \

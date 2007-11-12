@@ -615,6 +615,14 @@ AsBroadcaster.initialize (flash.net.FileReferenceList.prototype);
 ASSetNative (flash.net.FileReferenceList.prototype, 2205, "8browse");
 ASSetPropFlags (flash.net.FileReferenceList.prototype, null, 3);
 
+/* LocalConnection */
+
+function LocalConnection () {
+}
+
+ASSetNative (LocalConnection.prototype, 2200, "6connect,6send,6close,6domain");
+ASSetPropFlags (LocalConnection.prototype, null, 3);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

@@ -173,11 +173,16 @@ swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resourc
   if (copy == NULL)
     return FALSE;
   copy->original_name = mov->original_name;
+  copy->modified = mov->modified;
+  copy->xscale = mov->xscale;
+  copy->yscale = mov->yscale;
+  copy->rotation = mov->rotation;
   /* FIXME: are events copied? If so, wouldn't that be a security issue? */
   swfdec_movie_set_static_properties (copy, &mov->original_transform,
       &mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
       mov->blend_mode, NULL);
   swfdec_movie_remove (mov);
+  swfdec_movie_queue_update (copy, SWFDEC_MOVIE_INVALID_MATRIX);
   return SWFDEC_SPRITE_MOVIE (copy);
 }
 

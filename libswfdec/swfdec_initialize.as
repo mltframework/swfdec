@@ -642,6 +642,13 @@ PrintJob = ASconstructor(111, 0);
 ASSetNative (PrintJob.prototype, 111, "7start,7addPage,7send", 100);
 ASSetPropFlags (PrintJob.prototype, null, 1027);
 
+/* Selection */
+
+Selection = {};
+ASSetNative (Selection, 600, "getBeginIndex,getEndIndex,getCaretIndex,getFocus,setFocus,setSelection");
+AsBroadcaster.initialize (Selection);
+ASSetPropFlags (Selection, null, 7);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

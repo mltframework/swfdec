@@ -109,6 +109,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_script.c \
 	swfdec_security.c \
 	swfdec_security_allow.c \
+	swfdec_selection.c \
 	swfdec_shape.c \
 	swfdec_shape_parser.c \
 	swfdec_sound.c \

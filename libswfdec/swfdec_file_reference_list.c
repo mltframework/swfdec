@@ -29,5 +29,5 @@ void
 swfdec_file_reference_list_browse (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("FileReference.browse");
+  SWFDEC_STUB ("FileReferenceList.browse");
 }

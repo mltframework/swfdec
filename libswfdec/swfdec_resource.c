@@ -530,8 +530,10 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     return;
   }
   if (url[0] == '\0') {
-    resource = g_object_ref (SWFDEC_MOVIE (movie)->resource);
-    swfdec_player_request_unload (player, path, swfdec_resource_do_unload, resource, g_object_unref);
+    if (movie) {
+      resource = g_object_ref (SWFDEC_MOVIE (movie)->resource);
+      swfdec_player_request_unload (player, path, swfdec_resource_do_unload, resource, g_object_unref);
+    }
     g_free (path);
   } else {
     resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);

@@ -1044,6 +1044,15 @@ EXTRA_DIST = \
 	math-properties-6.swf.trace \
 	math-properties-7.swf \
 	math-properties-7.swf.trace \
+	microphone-properties.as \
+	microphone-properties-5.swf \
+	microphone-properties-5.swf.trace \
+	microphone-properties-6.swf \
+	microphone-properties-6.swf.trace \
+	microphone-properties-7.swf \
+	microphone-properties-7.swf.trace \
+	microphone-properties-8.swf \
+	microphone-properties-8.swf.trace \
 	mouse-properties.as \
 	mouse-properties-5.swf \
 	mouse-properties-5.swf.trace \

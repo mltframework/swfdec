@@ -649,6 +649,11 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	file-reference-constructor.as \
+	file-reference-constructor-7.swf \
+	file-reference-constructor-7.swf.trace \
+	file-reference-constructor-8.swf \
+	file-reference-constructor-8.swf.trace \
 	foreach-proto-simple.as \
 	foreach-proto-simple-5.swf \
 	foreach-proto-simple-5.swf.trace \

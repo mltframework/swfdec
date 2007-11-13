@@ -522,6 +522,7 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
   guint rate = swfdec_audio_format_get_granularity (format);
   guint width = swfdec_audio_format_is_16bit (format) ? 2 : 1;
   guint total_samples;
+  gint16 *fixme = NULL;
 
   g_return_if_fail (dest != NULL);
   g_return_if_fail (source != NULL);
@@ -533,12 +534,21 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
   /* FIXME: warn about this? */
   n_samples = MIN (n_samples, total_samples - offset);
   
-  /* FIXME! */
-  g_return_if_fail (width == 2);
+  if (width == 1) {
+    guint i;
+    /* FIXME: make this faster */
+    fixme = g_try_malloc (source->length * 2);
+    if (fixme == NULL)
+      return;
+    for (i = 0; i < source->length; i++) {
+      fixme[i] = (((gint16) source->data[i]) << 8) - 32768;
+    }
+  }
   if (channels == 2) {
     swfdec_sound_buffer_render_stereo (dest, (const gint16 *) source->data, offset, n_samples, rate);
   } else {
     swfdec_sound_buffer_render_mono (dest, (const gint16 *) source->data, offset, n_samples, rate);
   }
+  g_free (fixme);
 }
 

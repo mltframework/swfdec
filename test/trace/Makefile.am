@@ -492,6 +492,10 @@ EXTRA_DIST = \
 	doaction-before-placeobject.c \
 	doaction-before-placeobject.swf \
 	doaction-before-placeobject.swf.trace \
+	DoInitAction-once.swf \
+	DoInitAction-once.swf.trace \
+	DoInitAction-this.swf \
+	DoInitAction-this.swf.trace \
 	double.swf \
 	double.swf.trace \
 	double.swf.trace.org \
@@ -584,6 +588,8 @@ EXTRA_DIST = \
 	export-case-6.swf.trace \
 	export-case-7.swf \
 	export-case-7.swf.trace \
+	ExportAssets.swf \
+	ExportAssets.swf.trace \
 	extends-constructors.as \
 	extends-constructors-6.swf \
 	extends-constructors-6.swf.trace \
@@ -638,6 +644,13 @@ EXTRA_DIST = \
 	function-apply-crash-7.swf.trace \
 	function-apply-crash-8.swf \
 	function-apply-crash-8.swf.trace \
+	function-properties.as \
+	function-properties-5.swf \
+	function-properties-5.swf.trace \
+	function-properties-6.swf \
+	function-properties-6.swf.trace \
+	function-properties-7.swf \
+	function-properties-7.swf.trace \
 	function-prototype-chain.swf \
 	function-prototype-chain.swf.trace \
 	function-scope.as \
@@ -1933,6 +1946,7 @@ EXTRA_DIST = \
 	stylesheet-load-6.swf.trace \
 	stylesheet-load-7.swf \
 	stylesheet-load-7.swf.trace \
+	stylesheet-load.css \
 	stylesheet-parse.as \
 	stylesheet-parse-5.swf \
 	stylesheet-parse-5.swf.trace \
@@ -2068,7 +2082,7 @@ EXTRA_DIST = \
 	text-field-init-7.swf.trace \
 	text-field-init-8.swf \
 	text-field-init-8.swf.trace \
-	text-field-init-native.as \
+	text-field-init-native.c \
 	text-field-init-native-5.swf \
 	text-field-init-native-5.swf.trace \
 	text-field-init-native-6.swf \
@@ -2181,6 +2195,7 @@ EXTRA_DIST = \
 	tointeger-various-6.swf.trace \
 	tointeger-various-7.swf \
 	tointeger-various-7.swf.trace \
+	trace_properties.as \
 	transform.swf \
 	transform.swf.trace \
 	transform2.swf \

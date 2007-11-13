@@ -202,15 +202,14 @@ swfdec_sprite_set_n_frames (SwfdecSprite *sprite, guint n_frames,
   guint i;
 
   g_return_if_fail (SWFDEC_IS_SPRITE (sprite));
-  if (n_frames == 0)
-    n_frames = 1;
+  if (n_frames > 0) {
+    sprite->frames = g_new0 (SwfdecSpriteFrame, n_frames);
+    sprite->n_frames = n_frames;
 
-  sprite->frames = g_new0 (SwfdecSpriteFrame, n_frames);
-  sprite->n_frames = n_frames;
-
-  if (rate > 0) {
-    for (i = 0; i < n_frames; i++) {
-      sprite->frames[i].sound_samples = 44100 * 256 / rate;
+    if (rate > 0) {
+      for (i = 0; i < n_frames; i++) {
+	sprite->frames[i].sound_samples = 44100 * 256 / rate;
+      }
     }
   }
 

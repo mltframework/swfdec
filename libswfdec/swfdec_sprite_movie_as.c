@@ -368,6 +368,11 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
 	swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
   }
 
+  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_INITIALIZE);
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
+    swfdec_movie_execute (movie, SWFDEC_EVENT_CONSTRUCT);
+  }
   swfdec_movie_initialize (movie);
 }
 
@@ -383,7 +388,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
   int depth;
   SwfdecGraphic *sprite;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "ss", &export, &name);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "ssi", &export, &name, &depth);
 
   if (argc > 3 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[3])) {
     initObject = SWFDEC_AS_VALUE_GET_OBJECT ((&argv[3]));
@@ -399,7 +404,6 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
     return;
   }
-  depth = swfdec_as_value_to_integer (cx, &argv[2]);
   if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY)
     return;
   ret = swfdec_movie_find (movie, depth);

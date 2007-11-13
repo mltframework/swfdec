@@ -530,7 +530,7 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
   g_return_if_fail (previous == NULL || swfdec_sound_buffer_get_n_samples (previous, format) > 0);
 
   total_samples = (source->length / channels / width) * rate;
-  g_print ("total: %u - rendering @ %u %u\n", total_samples, offset, n_samples);
+  SWFDEC_LOG ("rendering [%u %u) - total: %u samples", offset, n_samples, total_samples);
   /* FIXME: warn about this? */
   n_samples = MIN (n_samples, total_samples - offset);
   

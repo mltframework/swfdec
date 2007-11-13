@@ -452,7 +452,7 @@ swfdec_sound_buffer_render_stereo (gint16 *dest, const gint16 *source, guint off
     source += 2;
     n_samples -= offset;
   }
-  for (i = rate; i < n_samples; i += rate) {
+  for (i = rate; i <= n_samples; i += rate) {
     for (j = 0; j < rate; j++) {
       *dest++ = source[0];
       *dest++ = source[1];

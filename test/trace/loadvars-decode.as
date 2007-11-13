@@ -71,6 +71,8 @@ tests = [
   "txt=ÂMOBILÂGODIS&textcolor=%23ffffff&emcolor=%23fed63b&w=265&h=19",
   "txt=ÂPRESENT-Â OCH RABATTKORT&textcolor=%23ffffff&emcolor=%23fed63b&w=265&h=19",
   "pHost=www.sf.se&pContextPath=/bio&pServer=www.sf.se&pPort=4001&pNumSeats=2&pSeats=&pSplitSeats=false&pAuditorium=2008_53&pVip=false&pListen=2008%2353%23200711131830&pNextUrl=/bio/Booking?cmd=showPaymentTypePage&pAbortUrl=/bio/Booking?cmd=listFilms",
+  // www.aftonbladet.se
+  "&dynimg=http://img.aftonbladet.se/special/webbtv/bilder2/Noje/0711/p1101779.jpg&dynurl=http://www.aftonbladet.se/atv2/init.html?id=categories/Noje/0711/8220&category=noje&commercial=yes",
 
   // add more here.
 

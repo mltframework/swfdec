@@ -200,6 +200,12 @@ pSeats =
 pServer = www.sf.se
 pSplitSeats = false
 pVip = false
+>>> &dynimg=http://img.aftonbladet.se/special/webbtv/bilder2/Noje/0711/p1101779.jpg&dynurl=http://www.aftonbladet.se/atv2/init.html?id=categories/Noje/0711/8220&category=noje&commercial=yes
+category = noje
+commercial = yes
+decode = 
+dynimg = http://img.aftonbladet.se/special/webbtv/bilder2/Noje/0711/p1101779.jpg
+dynurl = http://www.aftonbladet.se/atv2/init.html?id=categories/Noje/0711/8220
 >>> foo=bar
 decode = 
 foo = bar

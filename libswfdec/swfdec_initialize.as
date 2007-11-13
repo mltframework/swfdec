@@ -28,6 +28,7 @@ ASSetNativeAccessor = ASnative (4, 1);
 
 Object.registerClass = ASnative(101, 8);
 ASSetPropFlags (Object, null, 7);
+lal
 
 /*** Error ***/
 

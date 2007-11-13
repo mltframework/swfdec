@@ -495,7 +495,7 @@ EXTRA_DIST = \
 	double.swf \
 	double.swf.trace \
 	double.swf.trace.org \
-	double-to-string.as
+	double-to-string.as \
 	double-to-string-5.swf \
 	double-to-string-5.swf.trace \
 	double-to-string-5.swf.trace.org \
@@ -1717,15 +1717,15 @@ EXTRA_DIST = \
 	settarget-6.swf.trace \
 	settarget-7.swf \
 	settarget-7.swf.trace \
-	settarget-tostring-5.swf
-	settarget-tostring-5.swf.trace
-	settarget-tostring-6.swf
-	settarget-tostring-6.swf.trace
-	settarget-tostring-7.swf
-	settarget-tostring-7.swf.trace
-	settarget-tostring-8.swf
-	settarget-tostring-8.swf.trace
-	settarget-tostring.as
+	settarget-tostring-5.swf \
+	settarget-tostring-5.swf.trace \
+	settarget-tostring-6.swf \
+	settarget-tostring-6.swf.trace \
+	settarget-tostring-7.swf \
+	settarget-tostring-7.swf.trace \
+	settarget-tostring-8.swf \
+	settarget-tostring-8.swf.trace \
+	settarget-tostring.as \
 	settarget-delimiters.as \
 	settarget-delimiters-5.swf \
 	settarget-delimiters-5.swf.trace \

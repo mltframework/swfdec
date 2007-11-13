@@ -156,12 +156,16 @@ swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "O", &thisp);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "|O", &thisp);
 
   if (thisp == NULL) {
     thisp = swfdec_as_object_new_empty (cx);
     if (thisp == NULL)
       return;
+  }
+  if (argc > 0) {
+    argc--;
+    argv++;
   }
   swfdec_as_function_call (fun, thisp, argc, argv, ret);
   swfdec_as_context_run (cx);
@@ -177,7 +181,7 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "O", &thisp);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "|O", &thisp);
 
   if (thisp == NULL) {
     thisp = swfdec_as_object_new_empty (cx);

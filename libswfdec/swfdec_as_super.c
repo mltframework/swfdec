@@ -146,9 +146,6 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
     SWFDEC_FIXME ("found a case where this was NULL, test how super behaves here!");
     return NULL;
   }
-  /* functions called on native objects don't get a super object?! */
-  if (SWFDEC_IS_MOVIE (frame->thisp))
-    return NULL;
 
   context = SWFDEC_AS_OBJECT (frame)->context;
   if (context->version <= 5 && !frame->construct)

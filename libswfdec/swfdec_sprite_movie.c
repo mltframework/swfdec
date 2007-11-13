@@ -691,10 +691,8 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   if (movie->sprite == NULL)
     return TRUE;
   g_assert (movie->frame <= movie->n_frames);
-  if (movie->frame == 0) {
-    SWFDEC_WARNING ("not at first frame yet");
+  if (movie->frame == 0)
     return TRUE;
-  }
   current = &movie->sprite->frames[movie->frame - 1];
 
   /* then do the streaming thing */

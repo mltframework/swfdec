@@ -699,9 +699,6 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     /* silence gcc */
     args = NULL;
   }
-  if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_SUPER | SWFDEC_SCRIPT_SUPPRESS_SUPER)) != SWFDEC_SCRIPT_SUPPRESS_SUPER) {
-    frame->super = swfdec_as_super_new (frame);
-  }
 
   /* set the default variables (unless suppressed */
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {

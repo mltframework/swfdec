@@ -34,11 +34,16 @@ G_BEGIN_DECLS
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);
 
 
-void		swfdec_as_function_set_constructor (SwfdecAsFunction *	fun);
-void		swfdec_as_function_set_security	(SwfdecAsFunction *	fun,
-						 SwfdecSecurity *	sec);
-void		swfdec_as_function_init_context (SwfdecAsContext *	context,
-						 guint			version);
+void		swfdec_as_function_set_constructor	(SwfdecAsFunction *	fun);
+void		swfdec_as_function_set_security	  	(SwfdecAsFunction *	fun,
+							 SwfdecSecurity *	sec);
+void		swfdec_as_function_init_context		(SwfdecAsContext *	context,
+							 guint			version);
+SwfdecAsFrame *	swfdec_as_function_call_no_preload	(SwfdecAsFunction *	function, 
+							 SwfdecAsObject *	thisp,
+							 guint			n_args,
+							 const SwfdecAsValue *	args, 
+							 SwfdecAsValue *	return_value);
 
 /* swfdec_as_context.c */
 gboolean	swfdec_as_context_check_continue (SwfdecAsContext *	context);

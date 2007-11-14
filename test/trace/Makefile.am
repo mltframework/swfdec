@@ -2045,6 +2045,15 @@ EXTRA_DIST = \
 	super-equals-this-7.swf.trace \
 	super-equals-this-8.swf \
 	super-equals-this-8.swf.trace \
+	super-existance.as \
+	super-existance-5.swf \
+	super-existance-5.swf.trace \
+	super-existance-6.swf \
+	super-existance-6.swf.trace \
+	super-existance-7.swf \
+	super-existance-7.swf.trace \
+	super-existance-8.swf \
+	super-existance-8.swf.trace \
 	super-missing.as \
 	super-missing-5.swf \
 	super-missing-5.swf.trace \

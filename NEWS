@@ -16,7 +16,7 @@ was necessary. In particular this release contains:
 - add an initial and incomplete implementation of the Flash security framework
 - Swfdec has a logo now
 - make the player automatically abort when scripts get stuck
-- add PulseAudio sound output back end, it can be disable via configure switch
+- add PulseAudio sound output back end, it can be disabled via configure switch
 
  0.5.3 ("Tennis")
 

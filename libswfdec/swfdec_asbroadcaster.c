@@ -39,6 +39,9 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *name;
   GSList *list = NULL, *walk;
 
+  if (object == NULL)
+    return;
+
   if (argc < 1)
     return;
   name = swfdec_as_value_to_string (cx, &argv[0]);

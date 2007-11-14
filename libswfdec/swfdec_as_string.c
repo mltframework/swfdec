@@ -75,7 +75,13 @@ swfdec_as_string_object_to_string (SwfdecAsContext *context,
 {
   SwfdecAsValue val;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (object == NULL || SWFDEC_IS_AS_OBJECT (object),
+      SWFDEC_AS_STR_EMPTY);
+
+  if (object == NULL) {
+    SWFDEC_FIXME ("What to do when this is null in string functions");
+    return SWFDEC_AS_STR_EMPTY;
+  }
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
 

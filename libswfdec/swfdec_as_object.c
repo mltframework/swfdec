@@ -1422,6 +1422,9 @@ swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
 
+  if (object == NULL)
+    return;
+
   // return false even if no params
   if (argc < 1)
     return;
@@ -1448,6 +1451,9 @@ swfdec_as_object_isPropertyEnumerable (SwfdecAsContext *cx,
   const char *name;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+
+  if (object == NULL)
+    return;
 
   // return false even if no params
   if (argc < 1)
@@ -1546,6 +1552,9 @@ swfdec_as_object_unwatch (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsVariable *var;
   const char *name;
 
+  if (object == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
 
   if (argc < 1)
@@ -1574,7 +1583,8 @@ void
 swfdec_as_object_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
+  if (object != NULL)
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
 }
 
 SWFDEC_AS_NATIVE (101, 4, swfdec_as_object_toString)

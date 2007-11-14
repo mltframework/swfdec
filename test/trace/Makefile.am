@@ -228,6 +228,15 @@ EXTRA_DIST = \
 	callfunction-stack.as \
 	callfunction-stack.swf \
 	callfunction-stack.swf.trace \
+	callmethod-this.as \
+	callmethod-this-5.swf \
+	callmethod-this-5.swf.trace \
+	callmethod-this-6.swf \
+	callmethod-this-6.swf.trace \
+	callmethod-this-7.swf \
+	callmethod-this-7.swf.trace \
+	callmethod-this-8.swf \
+	callmethod-this-8.swf.trace \
 	callmethod-undefined-this-5.swf \
 	callmethod-undefined-this-5.swf.trace \
 	callmethod-undefined-this-6.swf \

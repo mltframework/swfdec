@@ -877,7 +877,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   SwfdecAsValue *val;
   SwfdecAsObject *obj;
   guint n_args;
-  const char *name = NULL;
+  const char *name;
   
   swfdec_as_stack_ensure_size (cx, 3);
   obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 2));
@@ -906,7 +906,11 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   frame = swfdec_action_call (cx, n_args);
   if (frame) {
     /* setup super to point to the right prototype */
-    swfdec_as_super_new (frame, obj, FALSE);
+    if (SWFDEC_IS_AS_SUPER (obj)) {
+      swfdec_as_super_new_chain (frame, SWFDEC_AS_SUPER (obj), name);
+    } else {
+      swfdec_as_super_new (frame, obj, FALSE);
+    }
     swfdec_as_frame_preload (frame);
   } else {
     SWFDEC_WARNING ("no function named \"%s\" on object %s", name, obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");

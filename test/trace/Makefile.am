@@ -1096,6 +1096,15 @@ EXTRA_DIST = \
 	name2.swf.trace \
 	names.swf \
 	names.swf.trace \
+	native-run.as \
+	native-run-5.swf \
+	native-run-5.swf.trace \
+	native-run-6.swf \
+	native-run-6.swf.trace \
+	native-run-7.swf \
+	native-run-7.swf.trace \
+	native-run-8.swf \
+	native-run-8.swf.trace \
 	netconnection.swf \
 	netconnection.swf.trace \
 	netstream-fscommand.as \

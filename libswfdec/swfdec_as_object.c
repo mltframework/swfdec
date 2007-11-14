@@ -1422,10 +1422,10 @@ swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsVariable *var;
   const char *name;
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
-
   if (object == NULL)
     return;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
 
   // return false even if no params
   if (argc < 1)
@@ -1452,10 +1452,10 @@ swfdec_as_object_isPropertyEnumerable (SwfdecAsContext *cx,
   SwfdecAsVariable *var;
   const char *name;
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
-
   if (object == NULL)
     return;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
 
   // return false even if no params
   if (argc < 1)

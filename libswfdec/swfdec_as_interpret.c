@@ -1147,6 +1147,8 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
 	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL);
+  } else {
+    swfdec_player_launch (SWFDEC_PLAYER (cx), SWFDEC_LOADER_REQUEST_DEFAULT, url, target, NULL);
   }
   g_free (url);
   g_free (target);

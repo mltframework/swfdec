@@ -617,6 +617,15 @@ EXTRA_DIST = \
 	fromcharcode-6.swf.trace \
 	fromcharcode-7.swf \
 	fromcharcode-7.swf.trace \
+	fromcharcode-other.as \
+	fromcharcode-other-5.swf \
+	fromcharcode-other-5.swf.trace \
+	fromcharcode-other-6.swf \
+	fromcharcode-other-6.swf.trace \
+	fromcharcode-other-7.swf \
+	fromcharcode-other-7.swf.trace \
+	fromcharcode-other-8.swf \
+	fromcharcode-other-8.swf.trace \
 	fscommand.as \
 	fscommand-5.swf \
 	fscommand-5.swf.trace \

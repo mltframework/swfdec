@@ -1773,6 +1773,15 @@ EXTRA_DIST = \
 	settimeout-6.swf.trace \
 	settimeout-7.swf \
 	settimeout-7.swf.trace \
+	settimeout-clear-self.as \
+	settimeout-clear-self-5.swf \
+	settimeout-clear-self-5.swf.trace \
+	settimeout-clear-self-6.swf \
+	settimeout-clear-self-6.swf.trace \
+	settimeout-clear-self-7.swf \
+	settimeout-clear-self-7.swf.trace \
+	settimeout-clear-self-8.swf \
+	settimeout-clear-self-8.swf.trace \
 	setvariable.swf \
 	setvariable.swf.trace \
 	setvariable-callback.as \

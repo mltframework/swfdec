@@ -122,7 +122,7 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
       dest[i] *= (swfdec_audio_event_get_envelop_volume (event, pos,
 	  global_offset + i, 0) * 0.5 +
 	  swfdec_audio_event_get_envelop_volume (event, pos, global_offset + i,
-	    0) * 0.5) / 32768.0;
+	    1) * 0.5) / 32768.0;
     } else {
       dest[i] *= swfdec_audio_event_get_envelop_volume (event, pos,
 	  global_offset + i, i % 2) / 32768.0;

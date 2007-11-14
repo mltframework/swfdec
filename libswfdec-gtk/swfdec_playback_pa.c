@@ -136,6 +136,7 @@ stream_state_callback (pa_stream *pa, void *data)
   case PA_STREAM_CREATING:
   case PA_STREAM_TERMINATED:
   case PA_STREAM_READY:
+  case PA_STREAM_UNCONNECTED:
     break;
 
   case PA_STREAM_FAILED:
@@ -238,6 +239,12 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
 static void
 context_state_callback (pa_context *pa, void *data) {
   switch (pa_context_get_state(pa)) {
+  case PA_CONTEXT_FAILED:
+    g_printerr("PA context failed");
+    break;
+
+  default:
+  case PA_CONTEXT_TERMINATED:
   case PA_CONTEXT_UNCONNECTED:
   case PA_CONTEXT_CONNECTING:
   case PA_CONTEXT_AUTHORIZING:
@@ -245,13 +252,6 @@ context_state_callback (pa_context *pa, void *data) {
   case PA_CONTEXT_READY:
     break;
 
-  case PA_CONTEXT_FAILED:
-    g_printerr("PA context failed");
-    break;
-
-  case PA_CONTEXT_TERMINATED:
-    g_printerr("PA context lost\n");
-    break;
   }
 }
 
@@ -304,6 +304,8 @@ context_drain_complete (pa_context *pa, void *data)
 void
 swfdec_playback_close (SwfdecPlayback *sound)
 {
+  pa_operation *op;
+
 #define REMOVE_HANDLER_FULL(obj,func,data,count) G_STMT_START {\
   if (g_signal_handlers_disconnect_by_func ((obj), \
 	G_CALLBACK (func), (data)) != (count)) { \
@@ -318,10 +320,13 @@ swfdec_playback_close (SwfdecPlayback *sound)
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);
 
-  pa_operation_unref (pa_context_drain (sound->pa,
-					context_drain_complete,
-					NULL));
-  pa_context_unref (sound->pa);
+  op = pa_context_drain (sound->pa, context_drain_complete, NULL);
+  if (op == NULL) {
+    pa_context_disconnect (sound->pa);
+    pa_context_unref (sound->pa);
+  } else {
+    pa_operation_unref (op);
+  }
   pa_glib_mainloop_free (sound->pa_mainloop);
 
   g_main_context_unref (sound->context);

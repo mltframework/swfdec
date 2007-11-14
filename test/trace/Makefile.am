@@ -497,6 +497,8 @@ EXTRA_DIST = \
 	definelocal-function-target-6.swf.trace \
 	definelocal-function-target-7.swf \
 	definelocal-function-target-7.swf.trace \
+	definelocal-function-target-8.swf \
+	definelocal-function-target-8.swf.trace \
 	definelocal-target.as \
 	definelocal-target-5.swf \
 	definelocal-target-5.swf.trace \
@@ -504,6 +506,8 @@ EXTRA_DIST = \
 	definelocal-target-6.swf.trace \
 	definelocal-target-7.swf \
 	definelocal-target-7.swf.trace \
+	definelocal-target-8.swf \
+	definelocal-target-8.swf.trace \
 	delete-object.as \
 	delete-object-5.swf \
 	delete-object-5.swf.trace \
@@ -511,6 +515,8 @@ EXTRA_DIST = \
 	delete-object-6.swf.trace \
 	delete-object-7.swf \
 	delete-object-7.swf.trace \
+	delete-object-8.swf \
+	delete-object-8.swf.trace \
 	delete-prototypes.as \
 	delete-prototypes-5.swf \
 	delete-prototypes-5.swf.trace \
@@ -518,6 +524,8 @@ EXTRA_DIST = \
 	delete-prototypes-6.swf.trace \
 	delete-prototypes-7.swf \
 	delete-prototypes-7.swf.trace \
+	delete-prototypes-8.swf \
+	delete-prototypes-8.swf.trace \
 	divide.as \
 	divide-7.swf \
 	divide-7.swf.trace \
@@ -559,6 +567,8 @@ EXTRA_DIST = \
 	duplicate-names-6.swf.trace \
 	duplicate-names-7.swf \
 	duplicate-names-7.swf.trace \
+	duplicate-names-8.swf \
+	duplicate-names-8.swf.trace \
 	error-properties.as \
 	error-properties-5.swf \
 	error-properties-5.swf.trace \
@@ -606,6 +616,8 @@ EXTRA_DIST = \
 	equality-6.swf.trace \
 	equality-7.swf \
 	equality-7.swf.trace \
+	equality-8.swf \
+	equality-8.swf.trace \
 	escape.as \
 	escape-5.swf \
 	escape-5.swf.trace \
@@ -613,6 +625,8 @@ EXTRA_DIST = \
 	escape-6.swf.trace \
 	escape-7.swf \
 	escape-7.swf.trace \
+	escape-8.swf \
+	escape-8.swf.trace \
 	event-order.swf \
 	event-order.swf.trace \
 	export-case.c \
@@ -651,6 +665,8 @@ EXTRA_DIST = \
 	fromcharcode-6.swf.trace \
 	fromcharcode-7.swf \
 	fromcharcode-7.swf.trace \
+	fromcharcode-8.swf \
+	fromcharcode-8.swf.trace \
 	fromcharcode-other.as \
 	fromcharcode-other-5.swf \
 	fromcharcode-other-5.swf.trace \
@@ -667,6 +683,8 @@ EXTRA_DIST = \
 	fscommand-6.swf.trace \
 	fscommand-7.swf \
 	fscommand-7.swf.trace \
+	fscommand-8.swf \
+	fscommand-8.swf.trace \
 	function1.swf \
 	function1.swf.trace \
 	function2.swf \
@@ -678,6 +696,8 @@ EXTRA_DIST = \
 	function-apply-6.swf.trace \
 	function-apply-7.swf \
 	function-apply-7.swf.trace \
+	function-apply-8.swf \
+	function-apply-8.swf.trace \
 	function-apply-crash.as \
 	function-apply-crash-5.swf \
 	function-apply-crash-5.swf.trace \
@@ -694,6 +714,8 @@ EXTRA_DIST = \
 	function-properties-6.swf.trace \
 	function-properties-7.swf \
 	function-properties-7.swf.trace \
+	function-properties-8.swf \
+	function-properties-8.swf.trace \
 	function-prototype-chain.swf \
 	function-prototype-chain.swf.trace \
 	function-scope.as \
@@ -703,6 +725,8 @@ EXTRA_DIST = \
 	function-scope-6.swf.trace \
 	function-scope-7.swf \
 	function-scope-7.swf.trace \
+	function-scope-8.swf \
+	function-scope-8.swf.trace \
 	function-tostring.as \
 	function-tostring-5.swf \
 	function-tostring-5.swf.trace \
@@ -710,6 +734,8 @@ EXTRA_DIST = \
 	function-tostring-6.swf.trace \
 	function-tostring-7.swf \
 	function-tostring-7.swf.trace \
+	function-tostring-8.swf \
+	function-tostring-8.swf.trace \
 	function-undefined.swf \
 	function-undefined.swf.trace \
 	forin-delete.as \

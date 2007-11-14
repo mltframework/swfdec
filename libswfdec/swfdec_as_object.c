@@ -31,6 +31,7 @@
 #include "swfdec_as_stack.h"
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 #include "swfdec_security_allow.h"
@@ -1230,6 +1231,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   SwfdecAsObject *new;
   SwfdecAsContext *context;
   SwfdecAsFunction *cur;
+  SwfdecAsFrame *frame;
   guint size;
   GType type = 0;
 
@@ -1281,8 +1283,10 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
-  swfdec_as_function_call (fun, new, n_args, args, return_value);
-  context->frame->construct = TRUE;
+  frame = swfdec_as_function_call_no_preload (fun, new, n_args, args, return_value);
+  frame->construct = TRUE;
+  swfdec_as_super_new (frame, new, TRUE);
+  swfdec_as_frame_preload (frame);
 }
 
 /**

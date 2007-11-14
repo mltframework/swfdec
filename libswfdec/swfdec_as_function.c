@@ -118,14 +118,17 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
   g_assert (klass->call);
   frame = klass->call (function);
-  /* FIXME: figure out what to do in these situations */
+  /* FIXME: figure out what to do in these situations?
+   * It's a problem when called inside swfdec_as_function_call () as the
+   * user of that function expects success, but super may fail here */
   if (frame == NULL)
     return NULL;
   if (function->priv)
     swfdec_as_frame_set_security (frame, function->priv);
   /* second check especially for super object */
-  if (thisp != NULL && frame->thisp == NULL)
+  if (thisp != NULL && frame->thisp == NULL) {
     swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
+  }
   frame->is_local = TRUE;
   frame->argc = n_args;
   frame->argv = args;
@@ -160,7 +163,12 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   frame = swfdec_as_function_call_no_preload (function, thisp, n_args, args, return_value);
   if (frame == NULL)
     return;
-  frame->super = swfdec_as_super_new (frame);
+  if (thisp != NULL) {
+    swfdec_as_super_new (frame, thisp, FALSE);
+  } else {
+    SWFDEC_FIXME ("does the super object really reference the function when thisp is NULL?");
+    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), FALSE);
+  }
   swfdec_as_frame_preload (frame);
 }
 

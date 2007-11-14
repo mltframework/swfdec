@@ -26,6 +26,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_script_function.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_string.h"
@@ -801,9 +802,10 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 
 /* stack looks like this: [ function, this, arg1, arg2, ... ] */
 /* stack must be at least 2 elements big */
-static gboolean
+static SwfdecAsFrame *
 swfdec_action_call (SwfdecAsContext *cx, guint n_args)
 {
+  SwfdecAsFrame *frame;
   SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
@@ -821,12 +823,14 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
   /* sanitize argument count */
   if (n_args >= swfdec_as_stack_get_size (cx))
     n_args = swfdec_as_stack_get_size (cx);
-  swfdec_as_function_call (fun, thisp, n_args, NULL, NULL);
+  frame = swfdec_as_function_call_no_preload (fun, thisp, n_args, NULL, NULL);
+  if (frame == NULL)
+    return NULL;
   if (SWFDEC_IS_AS_SUPER (fun)) {
     SWFDEC_LOG ("replacing super object on frame");
-    swfdec_as_super_replace (SWFDEC_AS_SUPER (fun), NULL);
+    swfdec_as_super_new_chain (frame, SWFDEC_AS_SUPER (fun), NULL);
   }
-  return TRUE;
+  return frame;
 
 error:
   n_args += 2;
@@ -834,7 +838,7 @@ error:
     n_args = swfdec_as_stack_get_size (cx);
   swfdec_as_stack_pop_n (cx, n_args);
   SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (cx));
-  return FALSE;
+  return NULL;
 }
 
 static void
@@ -858,7 +862,10 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
     SWFDEC_AS_VALUE_SET_NULL (thisp);
     SWFDEC_AS_VALUE_SET_UNDEFINED (fun);
   }
-  if (!swfdec_action_call (cx, n_args)) {
+  frame = swfdec_action_call (cx, n_args);
+  if (frame) {
+    swfdec_as_frame_preload (frame);
+  } else {
     SWFDEC_WARNING ("no function named %s", name);
   }
 }
@@ -876,45 +883,33 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 2));
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 3));
   val = swfdec_as_stack_peek (cx, 1);
-  /* FIXME: this is a hack for constructors calling super - is this correct? */
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
-    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
-  }
   if (obj) {
-    if (SWFDEC_AS_VALUE_IS_STRING (val) && 
-	SWFDEC_AS_VALUE_GET_STRING (val) == SWFDEC_AS_STR_EMPTY) {
+    name = swfdec_as_value_to_string (cx, val);
+    if (SWFDEC_AS_VALUE_IS_UNDEFINED (val) ||
+	name == SWFDEC_AS_STR_EMPTY) {
       SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 3));
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 2), obj);
+      name = "";
     } else {
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 3), obj);
-      name = swfdec_as_value_to_string (cx, val);
       swfdec_as_object_get_variable (obj, name, swfdec_as_stack_peek (cx, 2));
     }
   } else {
     if (SWFDEC_AS_VALUE_IS_STRING (val))
       name = SWFDEC_AS_VALUE_GET_STRING (val);
+    else
+      name = "???";
     SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (cx, 3));
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 2));
   }
   swfdec_as_stack_pop (cx);
-  if (swfdec_action_call (cx, n_args)) {
+  frame = swfdec_action_call (cx, n_args);
+  if (frame) {
     /* setup super to point to the right prototype */
-    frame = cx->frame;
-    if (SWFDEC_IS_AS_SUPER (obj)) {
-      swfdec_as_super_replace (SWFDEC_AS_SUPER (obj), name);
-    } else if (frame->super) {
-      SwfdecAsSuper *super = SWFDEC_AS_SUPER (frame->super);
-      if (name && 
-	  cx->version > 6 && 
-	  swfdec_as_object_get_variable_and_flags (frame->thisp, 
-	    name, NULL, NULL, &super->object) && 
-	  super->object == frame->thisp) {
-	// FIXME: Do we need to check prototype_flags here?
-	super->object = super->object->prototype;
-      }
-    }
+    swfdec_as_super_new (frame, obj, FALSE);
+    swfdec_as_frame_preload (frame);
   } else {
-    SWFDEC_WARNING ("no function named %s on object %s", name ? name : "unknown", obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
+    SWFDEC_WARNING ("no function named \"%s\" on object %s", name, obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
   }
 }
 

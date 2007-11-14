@@ -133,41 +133,39 @@ swfdec_as_super_init (SwfdecAsSuper *super)
 {
 }
 
-SwfdecAsObject *
-swfdec_as_super_new (SwfdecAsFrame *frame)
+void
+swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *ref, gboolean callable)
 {
   SwfdecAsContext *context;
   SwfdecAsSuper *super;
-  SwfdecAsObject *ret;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (ref));
   
-  if (frame->thisp == NULL) {
-    SWFDEC_FIXME ("found a case where this was NULL, test how super behaves here!");
-    return NULL;
-  }
-
+  if (frame->super != NULL)
+    return;
   context = SWFDEC_AS_OBJECT (frame)->context;
-  if (context->version <= 5 && !frame->construct)
-    return NULL;
+  if (context->version <= 5)
+    return;
 
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
-    return NULL;
-  ret = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
-  swfdec_as_object_add (ret, context, sizeof (SwfdecAsSuper));
-  super = SWFDEC_AS_SUPER (ret);
-  super->thisp = frame->thisp;
+    return;
+  super = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
+  frame->super = SWFDEC_AS_OBJECT (super);
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (super), context, sizeof (SwfdecAsSuper));
+  super->thisp = ref;
+  super->callable = callable;
   if (context->version <= 5) {
     super->object = NULL;
   } else {
-    super->object = frame->thisp->prototype;
+    super->object = ref->prototype;
   }
-  return ret;
 }
 
 /**
- * swfdec_as_super_replace:
- * @super: the super object to replace from
+ * swfdec_as_super_new_chain:
+ * @frame: the frame that is called
+ * @super: the super object to chain from
  * @function_name: garbage-collected name of the function that was called on 
  *                 @super or %NULL
  *
@@ -177,23 +175,31 @@ swfdec_as_super_new (SwfdecAsFrame *frame)
  * function is called with @super and "foo" as @function_name.
  **/
 void
-swfdec_as_super_replace (SwfdecAsSuper *super, const char *function_name)
+swfdec_as_super_new_chain (SwfdecAsFrame *frame, SwfdecAsSuper *super,
+    const char *function_name)
 {
   SwfdecAsSuper *replace;
   SwfdecAsContext *context;
 
   g_return_if_fail (SWFDEC_IS_AS_SUPER (super));
+  /* should be the first call trying to set super */
+  g_return_if_fail (frame->super == NULL);
 
-  context = SWFDEC_AS_OBJECT (super)->context;
-  replace = SWFDEC_AS_SUPER (context->frame->super);
-  if (replace == NULL)
+  context = SWFDEC_AS_OBJECT (frame)->context;
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
     return;
+  replace = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
+  frame->super = SWFDEC_AS_OBJECT (replace);
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (replace), context, sizeof (SwfdecAsSuper));
   if (super->object == NULL || super->object->prototype == NULL) {
     replace->object = NULL;
     return;
   }
+  replace->thisp = super->thisp;
   replace->object = super->object->prototype;
+  replace->callable = super->callable;
   if (function_name && context->version > 6) {
+    /* skip prototypes to find the next one that has this function defined */
     SwfdecAsObject *res;
     if (swfdec_as_object_get_variable_and_flags (replace->object, 
 	  function_name, NULL, NULL, &res) &&

@@ -217,8 +217,8 @@ typedef struct {
  *
  * Registers a function that guards a block of memory. When the function 
  * exits this block of memory, it will call this function. This can happen
- * either when the program counter leaves the guarded region, when the function
- * returns or when the context aborted due to an unrecoverable error.
+ * either when the program counter leaves the guarded region, when the 
+ * function returns or when the context aborted due to an unrecoverable error.
  **/
 void
 swfdec_as_frame_push_block (SwfdecAsFrame *frame, const guint8 *start, 
@@ -698,9 +698,6 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   } else {
     /* silence gcc */
     args = NULL;
-  }
-  if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_SUPER | SWFDEC_SCRIPT_SUPPRESS_SUPER)) != SWFDEC_SCRIPT_SUPPRESS_SUPER) {
-    frame->super = swfdec_as_super_new (frame);
   }
 
   /* set the default variables (unless suppressed */

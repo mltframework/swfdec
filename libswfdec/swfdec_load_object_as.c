@@ -25,6 +25,7 @@
 #include <string.h>
 #include "swfdec_load_object.h"
 #include "swfdec_as_internal.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_loadertarget.h"
@@ -44,6 +45,43 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc
 
   url = swfdec_as_value_to_string (cx, &argv[0]);
   swfdec_load_object_new (obj, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
+}
+
+SWFDEC_AS_NATIVE (301, 2, swfdec_load_object_as_sendAndLoad)
+void
+swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  const char *url, *data;
+  SwfdecAsObject *target;
+  SwfdecAsValue ret;
+  SwfdecBuffer *buffer;
+
+  if (object == NULL)
+    return;
+
+  if (argc < 2)
+    return;
+
+  url = swfdec_as_value_to_string (cx, &argv[0]);
+  target = swfdec_as_value_to_object (cx, &argv[0]);
+  if (target == NULL)
+    return;
+
+  // FIXME: support for contentType is missing
+
+  swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &ret);
+  data = swfdec_as_value_to_string (cx, &ret);
+  if (strlen (data) > 0) {
+    buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data)),
+	strlen (data));
+    swfdec_load_object_new (target, url, SWFDEC_LOADER_REQUEST_POST, buffer);
+    swfdec_buffer_unref (buffer);
+  } else {
+    swfdec_load_object_new (target, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+  }
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }

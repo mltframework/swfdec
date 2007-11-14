@@ -344,7 +344,7 @@ swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
   SwfdecPlayerAction *action, tmp;
   guint i = 0;
 
-  for (i = swfdec_ring_buffer_get_n_elements (buffer) + 1; i > 0; i--) {
+  for (i = swfdec_ring_buffer_get_n_elements (buffer); i > 0; i--) {
     action = swfdec_ring_buffer_pop (buffer);
     g_assert (action);
     if (action->movie == NULL)
@@ -367,16 +367,12 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
   SwfdecPlayerAction *action = swfdec_ring_buffer_push (player->actions[importance]);
   if (action == NULL) {
     /* try to get rid of freed actions */
-    if (swfdec_ring_buffer_get_size (player->actions[importance]) >= 256) {
-      swfdec_player_compress_actions (player->actions[importance]);
-      action = swfdec_ring_buffer_push (player->actions[importance]);
-      /* if it doesn't get smaller, bail */
-      if (action == NULL) {
-	swfdec_as_context_abort (SWFDEC_AS_CONTEXT (player), 
-	    "256 levels of recursion were exceeded in one action list.");
-	return;
+    swfdec_player_compress_actions (player->actions[importance]);
+    action = swfdec_ring_buffer_push (player->actions[importance]);
+    if (action == NULL) {
+      if (swfdec_ring_buffer_get_size (player->actions[importance]) == 256) {
+	SWFDEC_WARNING ("256 levels of recursion were exceeded in one action list.");
       }
-    } else {
       swfdec_ring_buffer_set_size (player->actions[importance],
 	  swfdec_ring_buffer_get_size (player->actions[importance]) + 16);
       action = swfdec_ring_buffer_push (player->actions[importance]);
@@ -504,9 +500,8 @@ swfdec_player_perform_external_actions (SwfdecPlayer *player)
     if (action->object == NULL) 
       continue;
     action->func (action->object, action->data);
+    swfdec_player_perform_actions (player);
   }
-
-  swfdec_player_perform_actions (player);
 }
 
 static void
@@ -516,8 +511,6 @@ swfdec_player_trigger_external_actions (SwfdecTimeout *advance)
 
   player->external_timeout.callback = NULL;
   swfdec_player_perform_external_actions (player);
-  swfdec_player_resource_request_perform (player);
-  swfdec_player_perform_actions (player);
 }
 
 void
@@ -853,6 +846,8 @@ swfdec_player_dispose (GObject *object)
     g_object_unref (player->resource);
     player->resource = NULL;
   }
+  while (player->rooted_objects)
+    swfdec_player_unroot_object (player, player->rooted_objects->data);
 
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
@@ -887,8 +882,6 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (player->timeouts == NULL);
   g_list_free (player->intervals);
-  while (player->rooted_objects)
-    swfdec_player_unroot_object (player, player->rooted_objects->data);
   player->intervals = NULL;
   swfdec_cache_unref (player->cache);
   if (player->system) {
@@ -1181,11 +1174,33 @@ swfdec_player_stage_to_global (SwfdecPlayer *player, double *x, double *y)
 }
 
 static void
+swfdec_player_execute_on_load_init (SwfdecPlayer *player)
+{
+  GList *walk;
+
+  /* FIXME: This can be made a LOT faster with correct caching, but I'm lazy */
+  do {
+    for (walk = player->movies; walk; walk = walk->next) {
+      SwfdecMovie *movie = walk->data;
+      SwfdecResource *resource = swfdec_movie_get_own_resource (movie);
+      if (resource == NULL)
+	continue;
+      if (swfdec_resource_emit_on_load_init (resource))
+	break;
+    }
+  } while (walk != NULL);
+}
+
+static void
 swfdec_player_iterate (SwfdecTimeout *timeout)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
   GList *walk;
 
+  /* add timeout again - do this first because later code can change it */
+  /* FIXME: rounding issues? */
+  player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
+  swfdec_player_add_timeout (player, &player->iterate_timeout);
   swfdec_player_perform_external_actions (player);
   SWFDEC_INFO ("=== START ITERATION ===");
   /* start the iteration. This performs a goto next frame on all 
@@ -1208,12 +1223,9 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
     if (!klass->iterate_end (cur))
       swfdec_movie_destroy (cur);
   }
+  swfdec_player_execute_on_load_init (player);
   swfdec_player_resource_request_perform (player);
   swfdec_player_perform_actions (player);
-  /* add timeout again */
-  /* FIXME: rounding issues? */
-  player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
-  swfdec_player_add_timeout (player, &player->iterate_timeout);
 }
 
 static void
@@ -1469,7 +1481,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 	  SWFDEC_TYPE_SYSTEM, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_MAX_RUNTIME,
       g_param_spec_ulong ("max-runtime", "maximum runtime", "maximum time in msecs scripts may run in the player before aborting",
-	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
+	  0, G_MAXULONG, 10 * 1000, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1636,6 +1648,7 @@ swfdec_player_init (SwfdecPlayer *player)
 
   player->runtime = g_timer_new ();
   g_timer_stop (player->runtime);
+  player->max_runtime = 10 * 1000;
   player->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
   player->mouse_visible = TRUE;
   player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -1804,52 +1817,6 @@ swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
   return NULL;
 }
 
-static gboolean
-is_ascii (const char *s)
-{
-  while (*s) {
-    if (*s & 0x80)
-      return FALSE;
-    s++;
-  }
-  return TRUE;
-}
-
-/**
- * swfdec_player_fscommand:
- * @player: a #SwfdecPlayer
- * @command: the command to parse
- * @value: the value passed to the command
- *
- * Checks if @command is an FSCommand and if so, emits the 
- * SwfdecPlayer::fscommand signal. 
- *
- * Returns: %TRUE if an fscommand was found and the signal emitted, %FALSE 
- *          otherwise.
- **/
-gboolean
-swfdec_player_fscommand (SwfdecPlayer *player, const char *command, const char *value)
-{
-  char *real_command;
-
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
-  g_return_val_if_fail (command != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
-  if (g_ascii_strncasecmp (command, "FSCommand:", 10) != 0)
-    return FALSE;
-
-  command += 10;
-  if (!is_ascii (command)) {
-    SWFDEC_ERROR ("command \"%s\" are not ascii, skipping fscommand", command);
-    return TRUE;
-  }
-  real_command = g_ascii_strdown (command, -1);
-  g_signal_emit (player, signals[FSCOMMAND], 0, real_command, value);
-  g_free (real_command);
-  return TRUE;
-}
-
 void
 swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const char *url, 
     const char *target, SwfdecBuffer *data)
@@ -1907,6 +1874,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     player->initialized = TRUE;
     g_object_notify (G_OBJECT (player), "initialized");
   } else {
+    /* FIXME: need to kick all other movies out here */
     swfdec_player_remove_timeout (player, &player->iterate_timeout);
   }
 
@@ -1927,7 +1895,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
   player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
   swfdec_player_update_scale (player);
 
-  player->iterate_timeout.timestamp = player->time;
+  player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / player->rate / 10;
   swfdec_player_add_timeout (player, &player->iterate_timeout);
   SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
       &player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
@@ -2013,18 +1981,27 @@ swfdec_player_unroot_object (SwfdecPlayer *player, GObject *object)
  * swfdec_player_new:
  * @debugger: %NULL or a #SwfdecAsDebugger to use for debugging this player.
  *
- * Creates a new player.
- * This function calls swfdec_init () for you if it wasn't called before.
+ * Creates a new player. This function is supposed to be used for testing.
+ * Because of this, the created player will behave as predictable as possible.
+ * For example, it will generate the same random number sequence every time.
+ * The function calls swfdec_init () for you if it wasn't called before.
  *
  * Returns: The new player
  **/
 SwfdecPlayer *
 swfdec_player_new (SwfdecAsDebugger *debugger)
 {
+  static const GTimeVal the_beginning = { 1035840244, 0 };
   SwfdecPlayer *player;
 
+  g_return_val_if_fail (debugger == NULL || SWFDEC_IS_AS_DEBUGGER (debugger), NULL);
+
   swfdec_init ();
-  player = g_object_new (SWFDEC_TYPE_PLAYER, "debugger", debugger, NULL);
+  player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
+      "max-runtime", 0, 
+      "debugger", debugger, NULL);
+  /* FIXME: make this a property or something and don't set it here */
+  SWFDEC_AS_CONTEXT (player)->start_time = the_beginning;
 
   return player;
 }

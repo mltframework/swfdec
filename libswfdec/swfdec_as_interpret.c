@@ -26,6 +26,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_script_function.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_string.h"
@@ -43,6 +44,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_resource.h"
+#include "swfdec_resource_request.h"
 #include "swfdec_text_field_movie.h" // for typeof
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
@@ -800,9 +802,10 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 
 /* stack looks like this: [ function, this, arg1, arg2, ... ] */
 /* stack must be at least 2 elements big */
-static gboolean
+static SwfdecAsFrame *
 swfdec_action_call (SwfdecAsContext *cx, guint n_args)
 {
+  SwfdecAsFrame *frame;
   SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
@@ -820,12 +823,14 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
   /* sanitize argument count */
   if (n_args >= swfdec_as_stack_get_size (cx))
     n_args = swfdec_as_stack_get_size (cx);
-  swfdec_as_function_call (fun, thisp, n_args, NULL, NULL);
+  frame = swfdec_as_function_call_no_preload (fun, thisp, n_args, NULL, NULL);
+  if (frame == NULL)
+    return NULL;
   if (SWFDEC_IS_AS_SUPER (fun)) {
     SWFDEC_LOG ("replacing super object on frame");
-    swfdec_as_super_replace (SWFDEC_AS_SUPER (fun), NULL);
+    swfdec_as_super_new_chain (frame, SWFDEC_AS_SUPER (fun), NULL);
   }
-  return TRUE;
+  return frame;
 
 error:
   n_args += 2;
@@ -833,7 +838,7 @@ error:
     n_args = swfdec_as_stack_get_size (cx);
   swfdec_as_stack_pop_n (cx, n_args);
   SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (cx));
-  return FALSE;
+  return NULL;
 }
 
 static void
@@ -857,7 +862,10 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
     SWFDEC_AS_VALUE_SET_NULL (thisp);
     SWFDEC_AS_VALUE_SET_UNDEFINED (fun);
   }
-  if (!swfdec_action_call (cx, n_args)) {
+  frame = swfdec_action_call (cx, n_args);
+  if (frame) {
+    swfdec_as_frame_preload (frame);
+  } else {
     SWFDEC_WARNING ("no function named %s", name);
   }
 }
@@ -868,52 +876,47 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   SwfdecAsFrame *frame = cx->frame;
   SwfdecAsValue *val;
   SwfdecAsObject *obj;
+  SwfdecAsObject *pobj = NULL;
   guint n_args;
-  const char *name = NULL;
+  const char *name;
   
   swfdec_as_stack_ensure_size (cx, 3);
   obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 2));
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 3));
   val = swfdec_as_stack_peek (cx, 1);
-  /* FIXME: this is a hack for constructors calling super - is this correct? */
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
-    SWFDEC_AS_VALUE_SET_STRING (val, SWFDEC_AS_STR_EMPTY);
-  }
   if (obj) {
-    if (SWFDEC_AS_VALUE_IS_STRING (val) && 
-	SWFDEC_AS_VALUE_GET_STRING (val) == SWFDEC_AS_STR_EMPTY) {
+    name = swfdec_as_value_to_string (cx, val);
+    if (SWFDEC_AS_VALUE_IS_UNDEFINED (val) ||
+	name == SWFDEC_AS_STR_EMPTY) {
       SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 3));
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 2), obj);
+      name = "";
     } else {
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 3), obj);
-      name = swfdec_as_value_to_string (cx, val);
-      swfdec_as_object_get_variable (obj, name, swfdec_as_stack_peek (cx, 2));
+      swfdec_as_object_get_variable_and_flags (obj, name, swfdec_as_stack_peek (cx, 2), NULL, &pobj);
     }
   } else {
     if (SWFDEC_AS_VALUE_IS_STRING (val))
       name = SWFDEC_AS_VALUE_GET_STRING (val);
+    else
+      name = "???";
     SWFDEC_AS_VALUE_SET_NULL (swfdec_as_stack_peek (cx, 3));
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 2));
   }
   swfdec_as_stack_pop (cx);
-  if (swfdec_action_call (cx, n_args)) {
+  frame = swfdec_action_call (cx, n_args);
+  if (frame) {
     /* setup super to point to the right prototype */
-    frame = cx->frame;
     if (SWFDEC_IS_AS_SUPER (obj)) {
-      swfdec_as_super_replace (SWFDEC_AS_SUPER (obj), name);
-    } else if (frame->super) {
-      SwfdecAsSuper *super = SWFDEC_AS_SUPER (frame->super);
-      if (name && 
-	  cx->version > 6 && 
-	  swfdec_as_object_get_variable_and_flags (frame->thisp, 
-	    name, NULL, NULL, &super->object) && 
-	  super->object == frame->thisp) {
-	// FIXME: Do we need to check prototype_flags here?
-	super->object = super->object->prototype;
-      }
+      swfdec_as_super_new_chain (frame, SWFDEC_AS_SUPER (obj), name);
+    } else if (cx->version > 6) {
+      swfdec_as_super_new (frame, obj, pobj == obj ? obj->prototype : pobj);
+    } else {
+      swfdec_as_super_new (frame, obj, obj->prototype);
     }
+    swfdec_as_frame_preload (frame);
   } else {
-    SWFDEC_WARNING ("no function named %s on object %s", name ? name : "unknown", obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
+    SWFDEC_WARNING ("no function named \"%s\" on object %s", name, obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
   }
 }
 
@@ -1139,7 +1142,7 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   }
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_ERROR ("GetURL without a SwfdecPlayer");
-  } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
+  } else if (swfdec_player_request_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
@@ -1176,7 +1179,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
 
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_ERROR ("GetURL2 action requires a SwfdecPlayer");
-  } else if (swfdec_player_fscommand (SWFDEC_PLAYER (cx), url, target)) {
+  } else if (swfdec_player_request_fscommand (SWFDEC_PLAYER (cx), url, target)) {
     /* nothing to do here */
   } else if (variables) {
     SwfdecMovie *movie;
@@ -1345,13 +1348,9 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_OBJECT (&ltmp);
     SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (&rtmp);
 
-    if (!SWFDEC_IS_MOVIE (lo))
-      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
-    if (!SWFDEC_IS_MOVIE (ro))
-      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
-
     if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
-      /* do nothing */
+      lo = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (lo)));
+      ro = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (ro)));
     } else if (SWFDEC_IS_MOVIE (lo)) {
       swfdec_as_value_to_primitive (rval);
       rtype = rval->type;
@@ -1368,6 +1367,9 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 	goto out;
       }
       lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+    } else {
+      lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+      ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
     }
     cond = lo == ro;
     goto out;
@@ -1431,7 +1433,8 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
 
     if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
-      /* do nothing */
+      lo = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (lo)));
+      ro = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (ro)));
     } else if (SWFDEC_IS_MOVIE (lo)) {
       swfdec_as_value_to_primitive (rval);
       rtype = rval->type;
@@ -1541,7 +1544,17 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
 	cond = SWFDEC_AS_VALUE_GET_STRING (rval) == SWFDEC_AS_VALUE_GET_STRING (lval);
 	break;
       case SWFDEC_AS_TYPE_OBJECT:
-	cond = SWFDEC_AS_VALUE_GET_OBJECT (rval) == SWFDEC_AS_VALUE_GET_OBJECT (lval);
+	{
+	  SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_OBJECT (lval);
+	  SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
+	  if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
+	    cond = swfdec_movie_resolve (SWFDEC_MOVIE (lo)) == swfdec_movie_resolve (SWFDEC_MOVIE (ro));
+	  } else if (!SWFDEC_IS_MOVIE (lo) && !SWFDEC_IS_MOVIE (ro)) {
+	    cond = lo == ro;
+	  } else {
+	    cond = FALSE;
+	  }
+	}
 	break;
       case SWFDEC_AS_TYPE_INT:
       default:

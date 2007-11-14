@@ -75,9 +75,14 @@ swfdec_as_string_object_to_string (SwfdecAsContext *context,
 {
   SwfdecAsValue val;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (object == NULL || SWFDEC_IS_AS_OBJECT (object),
+      SWFDEC_AS_STR_EMPTY);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  if (object == NULL) {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+  } else {
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  }
 
   return swfdec_as_value_to_string (context, &val);
 }
@@ -102,9 +107,9 @@ swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  s = swfdec_as_value_to_string (object->context, &argv[0]);
+  s = swfdec_as_value_to_string (cx, &argv[0]);
   if (argc == 2) {
-    int offset = swfdec_as_value_to_integer (object->context, &argv[1]);
+    int offset = swfdec_as_value_to_integer (cx, &argv[1]);
     if (offset < 0) {
       SWFDEC_AS_VALUE_SET_INT (ret, -1);
       return;
@@ -133,9 +138,9 @@ swfdec_as_string_indexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  s = swfdec_as_value_to_string (object->context, &argv[0]);
+  s = swfdec_as_value_to_string (cx, &argv[0]);
   if (argc == 2)
-    offset = swfdec_as_value_to_integer (object->context, &argv[1]);
+    offset = swfdec_as_value_to_integer (cx, &argv[1]);
   if (offset < 0)
     offset = 0;
   len = g_utf8_strlen (string, -1);
@@ -161,7 +166,7 @@ swfdec_as_string_charAt (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  i = swfdec_as_value_to_integer (object->context, &argv[0]);
+  i = swfdec_as_value_to_integer (cx, &argv[0]);
   if (i < 0) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
     return;
@@ -217,18 +222,23 @@ swfdec_as_string_fromCharCode_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   char *s;
   GByteArray *array = g_byte_array_new ();
 
-  for (i = 0; i < argc; i++) {
-    c = ((guint) swfdec_as_value_to_integer (cx, &argv[i])) % 65536;
-    if (c > 255) {
-      append = c / 256;
+  if (argc > 0) {
+    for (i = 0; i < argc; i++) {
+      c = ((guint) swfdec_as_value_to_integer (cx, &argv[i])) % 65536;
+      if (c > 255) {
+	append = c / 256;
+	g_byte_array_append (array, &append, 1);
+      }
+      append = c;
       g_byte_array_append (array, &append, 1);
     }
-    append = c;
-    g_byte_array_append (array, &append, 1);
+
+    /* FIXME: are these the correct charset names? */
+    s = g_convert ((char *) array->data, array->len, "UTF-8", "LATIN1", NULL, NULL, &error);
+  } else{
+    s = g_strdup ("");
   }
 
-  /* FIXME: are these the correct charset names? */
-  s = g_convert ((char *) array->data, array->len, "UTF-8", "LATIN1", NULL, NULL, &error);
   if (s) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
     g_free (s);
@@ -735,10 +745,12 @@ void
 swfdec_as_string_escape_internal (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  const char *s;
   char *result;
 
-  result =
-    swfdec_as_string_escape (cx, swfdec_as_value_to_string (cx, &argv[0]));
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+
+  result = swfdec_as_string_escape (cx, s);
   if (result != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, result));
     g_free (result);
@@ -854,10 +866,12 @@ void
 swfdec_as_string_unescape_internal (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  const char *s;
   char *result;
 
-  result =
-    swfdec_as_string_unescape (cx, swfdec_as_value_to_string (cx, &argv[0]));
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+
+  result = swfdec_as_string_unescape (cx, s);
   if (result != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, result));
     g_free (result);

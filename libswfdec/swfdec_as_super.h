@@ -39,7 +39,7 @@ struct _SwfdecAsSuper {
   SwfdecAsFunction	function;
 
   SwfdecAsObject *	thisp;		/* object super was called on */
-  SwfdecAsObject *	object;		/* current prototype we reference */
+  SwfdecAsObject *	object;		/* current prototype we reference or NULL if none */
 };
 
 struct _SwfdecAsSuperClass {
@@ -48,9 +48,11 @@ struct _SwfdecAsSuperClass {
 
 GType		swfdec_as_super_get_type	(void);
 
-SwfdecAsObject *swfdec_as_super_new		(SwfdecAsFrame *	frame);
-
-void		swfdec_as_super_replace		(SwfdecAsSuper *	super,
+void		swfdec_as_super_new		(SwfdecAsFrame *	frame,
+						 SwfdecAsObject *	thisp,
+						 SwfdecAsObject *	ref);
+void		swfdec_as_super_new_chain	(SwfdecAsFrame *	frame,
+						 SwfdecAsSuper *	super,
 						 const char *		function_name);
 
 G_END_DECLS

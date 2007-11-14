@@ -433,6 +433,16 @@ swfdec_flv_decoder_parse (SwfdecDecoder *dec, SwfdecBuffer *buffer)
   return status;
 }
 
+static SwfdecStatus
+swfdec_flv_decoder_eof (SwfdecDecoder *dec)
+{
+  SwfdecFlvDecoder *flv = SWFDEC_FLV_DECODER (dec);
+
+  flv->state = SWFDEC_STATE_EOF;
+
+  return 0;
+}
+
 static void
 swfdec_flv_decoder_class_init (SwfdecFlvDecoderClass *class)
 {
@@ -442,6 +452,7 @@ swfdec_flv_decoder_class_init (SwfdecFlvDecoderClass *class)
   object_class->dispose = swfdec_flv_decoder_dispose;
 
   decoder_class->parse = swfdec_flv_decoder_parse;
+  decoder_class->eof = swfdec_flv_decoder_eof;
 }
 
 static void
@@ -600,13 +611,5 @@ swfdec_flv_decoder_is_eof (SwfdecFlvDecoder *flv)
   g_return_val_if_fail (SWFDEC_IS_FLV_DECODER (flv), TRUE);
 
   return flv->state == SWFDEC_STATE_EOF;
-}
-
-void
-swfdec_flv_decoder_eof (SwfdecFlvDecoder *flv)
-{
-  g_return_if_fail (SWFDEC_IS_FLV_DECODER (flv));
-
-  flv->state = SWFDEC_STATE_EOF;
 }
 

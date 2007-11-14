@@ -37,6 +37,9 @@ swfdec_movie_color_get_movie (SwfdecAsObject *object)
   SwfdecAsValue val;
   SwfdecAsObject *target;
 
+  if (object == NULL)
+    return NULL;
+
   swfdec_as_object_get_variable (object, SWFDEC_AS_STR_target, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return NULL;
@@ -54,7 +57,9 @@ swfdec_movie_color_getRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   int result;
-  SwfdecMovie *movie = swfdec_movie_color_get_movie (obj);
+  SwfdecMovie *movie;
+
+  movie = swfdec_movie_color_get_movie (obj);
   
   if (movie == NULL)
     return;
@@ -80,7 +85,9 @@ swfdec_movie_color_getTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsObject *ret;
-  SwfdecMovie *movie = swfdec_movie_color_get_movie (obj);
+  SwfdecMovie *movie;
+
+  movie = swfdec_movie_color_get_movie (obj);
   
   if (movie == NULL)
     return;

@@ -61,7 +61,7 @@ Limitations:
 
 Dependencies:
 
-  cairo (>= 1.2.0 - >= 1.4.0 recommended)
+  cairo (>= 1.2.0 - >= 1.4.0 recommended) with png support enabled
   glib (>= 2.10.0)
   liboil (>= 0.3.6)
   Pangocairo (aka Pango with cairo support)

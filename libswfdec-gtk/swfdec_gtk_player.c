@@ -173,8 +173,7 @@ swfdec_gtk_player_new (SwfdecAsDebugger *debugger)
   SwfdecPlayer *player;
 
   swfdec_init ();
-  player = g_object_new (SWFDEC_TYPE_GTK_PLAYER, "debugger", debugger, 
-      "max-runtime", (gulong) 10 * 1000, NULL);
+  player = g_object_new (SWFDEC_TYPE_GTK_PLAYER, "debugger", debugger, NULL);
 
   return player;
 }

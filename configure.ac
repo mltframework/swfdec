@@ -191,11 +191,11 @@ if test "$HAVE_LIBOIL" = "no"; then
 fi
 
 CAIRO_VER=1.2.0
-PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VER, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VER cairo-png >= $CAIRO_VER, HAVE_CAIRO=yes, HAVE_CAIRO=no)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 if test "$HAVE_CAIRO" = "no"; then
-  AC_MSG_ERROR([cairo >= $CAIRO_VER is required to build swfdec])
+  AC_MSG_ERROR([cairo and cairo-png = $CAIRO_VER is required to build swfdec])
 fi
 
 AC_ARG_ENABLE(mad,

@@ -35,6 +35,7 @@
 #include "swfdec_draw.h"
 #include "swfdec_event.h"
 #include "swfdec_graphic.h"
+#include "swfdec_image.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
@@ -128,6 +129,12 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
   SwfdecRect *extents = &movie->extents;
 
   *rect = movie->draw_extents;
+  if (movie->image) {
+    SwfdecRect image_extents = { 0, 0, 
+      movie->image->width * SWFDEC_TWIPS_SCALE_FACTOR,
+      movie->image->height * SWFDEC_TWIPS_SCALE_FACTOR };
+    swfdec_rect_union (rect, rect, &image_extents);
+  }
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_rect_union (rect, rect, &SWFDEC_MOVIE (walk->data)->extents);
   }
@@ -360,6 +367,39 @@ swfdec_movie_set_constructor (SwfdecSpriteMovie *movie)
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
 }
 
+/**
+ * swfdec_movie_resolve:
+ * @movie: movie to resolve
+ *
+ * Resolves a movie clip to its real version. Since movie clips can be 
+ * explicitly destroyed, they have problems with references to them. In the
+ * case of destruction, these references will remain as "dangling pointers".
+ * However, if a movie with the same name is later created again, the reference
+ * will point to that movie. This function does this resolving.
+ *
+ * Returns: The movie clip @movie resolves to or %NULL if none.
+ **/
+SwfdecMovie *
+swfdec_movie_resolve (SwfdecMovie *movie)
+{
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
+
+  if (movie->state != SWFDEC_MOVIE_STATE_DESTROYED)
+    return movie;
+  if (movie->parent == NULL) {
+    SWFDEC_FIXME ("figure out how to resolve root movies");
+    return NULL;
+  }
+  /* FIXME: include unnamed ones? */
+  return swfdec_movie_get_by_name (movie->parent, movie->original_name, FALSE);
+}
+
+guint
+swfdec_movie_get_version (SwfdecMovie *movie)
+{
+  return movie->resource->version;
+}
+
 void
 swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
 {
@@ -369,7 +409,7 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
 
   /* special cases */
   if (condition == SWFDEC_EVENT_CONSTRUCT) {
-    if (SWFDEC_AS_OBJECT (movie)->context->version <= 5)
+    if (swfdec_movie_get_version (movie) <= 5)
       return;
     swfdec_movie_set_constructor (SWFDEC_SPRITE_MOVIE (movie));
   } else if (condition == SWFDEC_EVENT_ENTER) {
@@ -381,6 +421,9 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
     swfdec_event_list_execute (movie->events, SWFDEC_AS_OBJECT (movie), 
 	SWFDEC_SECURITY (movie->resource), condition, 0);
   }
+  /* FIXME: how do we compute the version correctly here? */
+  if (swfdec_movie_get_version (movie) <= 5)
+    return;
   name = swfdec_event_type_get_name (condition);
   if (name != NULL) {
     swfdec_as_object_call_with_security (SWFDEC_AS_OBJECT (movie), 
@@ -455,52 +498,6 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   swfdec_player_add_action (player, movie, condition, importance);
   return ret;
-}
-
-/**
- * swfdec_movie_set_variables:
- * @script: a #SwfdecMovie
- * @variables: variables to set on @movie in application-x-www-form-urlencoded 
- *             format
- * 
- * Verifies @variables to be encoded correctly and sets them as string 
- * properties on the given @movie.
- **/
-void
-swfdec_movie_set_variables (SwfdecMovie *movie, const char *variables)
-{
-  SwfdecAsObject *as;
-
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (variables != NULL);
-
-  as = SWFDEC_AS_OBJECT (movie);
-  SWFDEC_DEBUG ("setting variables on %p: %s", movie, variables);
-  while (TRUE) {
-    char *name, *value;
-    const char *asname;
-    SwfdecAsValue val;
-
-    while (*variables == '&')
-      variables++;
-    if (*variables == '\0')
-      break;
-    if (!swfdec_urldecode_one (variables, &name, &value, &variables)) {
-      SWFDEC_WARNING ("variables invalid at \"%s\"", variables);
-      break;
-    }
-    if (*variables != '\0' && *variables != '&') {
-      SWFDEC_WARNING ("variables not delimited with & at \"%s\"", variables);
-      g_free (name);
-      g_free (value);
-      break;
-    }
-    SWFDEC_LOG ("Set variable \"%s\" to \"%s\"", name, value);
-    asname = swfdec_as_context_give_string (as->context, name);
-    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (as->context, value));
-    g_free (value);
-    swfdec_as_object_set_variable (as, asname, &val);
-  }
 }
 
 /* NB: coordinates are in movie's coordiante system. Use swfdec_movie_get_mouse
@@ -844,6 +841,20 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     swfdec_draw_paint (draw, cr, &trans);
   }
 
+  /* if the movie loaded an image, draw it here now */
+  if (movie->image) {
+    cairo_surface_t *surface = swfdec_image_create_surface_transformed (movie->image,
+	&trans);
+    if (surface) {
+      static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
+      cairo_pattern_t *pattern = cairo_pattern_create_for_surface (surface);
+      SWFDEC_LOG ("rendering loaded image");
+      cairo_pattern_set_matrix (pattern, &matrix);
+      cairo_set_source (cr, pattern);
+      cairo_paint (cr);
+    }
+  }
+
   /* draw the children movies */
   for (g = movie->list; g; g = g_list_next (g)) {
     SwfdecMovie *child = g->data;
@@ -968,6 +979,10 @@ swfdec_movie_dispose (GObject *object)
   g_slist_free (movie->variable_listeners);
   movie->variable_listeners = NULL;
 
+  if (movie->image) {
+    g_object_unref (movie->image);
+    movie->image = NULL;
+  }
   g_slist_foreach (movie->draws, (GFunc) g_object_unref, NULL);
   g_slist_free (movie->draws);
   movie->draws = NULL;
@@ -982,6 +997,8 @@ swfdec_movie_mark (SwfdecAsObject *object)
   GList *walk;
   GSList *iter;
 
+  if (movie->parent)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (movie->parent));
   swfdec_as_string_mark (movie->original_name);
   swfdec_as_string_mark (movie->name);
   for (walk = movie->list; walk; walk = walk->next) {
@@ -1052,7 +1069,8 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
-  if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
+  movie = swfdec_movie_resolve (movie);
+  if (movie == NULL)
     return FALSE;
 
   if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, orig, variable, val, flags))
@@ -1157,7 +1175,8 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
-  if (movie->state == SWFDEC_MOVIE_STATE_DESTROYED)
+  movie = swfdec_movie_resolve (movie);
+  if (movie == NULL)
     return;
 
   if (swfdec_movie_set_asprop (movie, variable, val))

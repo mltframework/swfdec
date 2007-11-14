@@ -56,7 +56,6 @@ struct _SwfdecFlvDecoderClass {
 GType		swfdec_flv_decoder_get_type		(void);
 
 gboolean	swfdec_flv_decoder_is_eof		(SwfdecFlvDecoder *	flv);
-void		swfdec_flv_decoder_eof			(SwfdecFlvDecoder *	flv);
 
 SwfdecBuffer *	swfdec_flv_decoder_get_video  		(SwfdecFlvDecoder *	flv,
 							 guint			timestamp,

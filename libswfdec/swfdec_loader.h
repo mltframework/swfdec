@@ -31,7 +31,9 @@ typedef enum {
   SWFDEC_LOADER_DATA_SWF,
   SWFDEC_LOADER_DATA_FLV,
   SWFDEC_LOADER_DATA_XML,
-  SWFDEC_LOADER_DATA_TEXT
+  SWFDEC_LOADER_DATA_TEXT,
+  SWFDEC_LOADER_DATA_JPEG,
+  SWFDEC_LOADER_DATA_PNG
 } SwfdecLoaderDataType;
 
 /* NB: actal numbers in SwfdecLoaderRequest are important for GetURL2 action */
@@ -57,6 +59,8 @@ struct _SwfdecLoader
 
   /*< private >*/
   guint			state;		/* SwfdecLoaderState the loader is currently in */
+  guint			processed_state;/* SwfdecLoaderState the target knows about */
+  gboolean		queued;		/* TRUE if we have queued an action already */
   SwfdecURL *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
   glong			size;		/* number of bytes in stream or -1 if unknown */
   char *		error;		/* error message if in error state or NULL */

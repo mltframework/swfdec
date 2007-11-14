@@ -589,6 +589,9 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   const char *var, *str, *sep;
   SwfdecAsValue val;
 
+  if (object == NULL)
+    return;
+
   if (argc > 0) {
     sep = swfdec_as_value_to_string (cx, &argv[0]);
   } else {
@@ -623,6 +626,9 @@ void
 swfdec_as_array_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  if (object == NULL)
+    return;
+
   swfdec_as_array_join (cx, object, 0, NULL, ret);
 }
 
@@ -631,6 +637,9 @@ void
 swfdec_as_array_do_push (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  if (object == NULL)
+    return;
+
   // if 0 args, just return the length
   // manually set the length here to make the function work on non-Arrays
   if (argc > 0) {
@@ -649,6 +658,9 @@ swfdec_as_array_do_pop (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 {
   gint32 length;
   const char *var;
+
+  if (object == NULL)
+    return;
 
   // we allow negative indexes here, but not 0
   length = swfdec_as_array_length_as_integer (object);
@@ -674,6 +686,9 @@ swfdec_as_array_do_unshift (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   gint32 length;
 
+  if (object == NULL)
+    return;
+
   if (argc) {
     // don't allow negative length
     length = swfdec_as_array_length (object);
@@ -694,6 +709,9 @@ swfdec_as_array_do_shift (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   gint32 length;
   const char *var;
+
+  if (object == NULL)
+    return;
 
   // don't allow negative length
   length = swfdec_as_array_length (object);
@@ -743,6 +761,9 @@ swfdec_as_array_reverse (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   gint32 length;
 
+  if (object == NULL)
+    return;
+
   length = swfdec_as_array_length (object);
   swfdec_as_object_foreach_rename (object, swfdec_as_array_foreach_reverse,
       &length);
@@ -759,6 +780,9 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SwfdecAsObject *object_new;
   SwfdecAsArray *array_new;
   const char *var;
+
+  if (object == NULL)
+    return;
 
   object_new = swfdec_as_array_new (cx);
   if (object_new == NULL)
@@ -793,6 +817,9 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   gint32 length, start_index, num;
   SwfdecAsObject *object_new;
   SwfdecAsArray *array_new;
+
+  if (object == NULL)
+    return;
 
   length = swfdec_as_array_length (object);
 
@@ -833,6 +860,9 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   gint32 length, start_index, num_remove, num_add;
   SwfdecAsObject *object_new;
   SwfdecAsArray *array_new;
+
+  if (object == NULL)
+    return;
 
   length = swfdec_as_array_length (object);
 
@@ -1260,6 +1290,9 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   gint32 options;
   SwfdecAsFunction *custom_compare_func;
 
+  if (object == NULL)
+    return;
+
   pos = 0;
   if (argc > 0 && !SWFDEC_AS_VALUE_IS_NUMBER (&argv[0])) {
     SwfdecAsFunction *fun;
@@ -1289,6 +1322,9 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 {
   const char **fields;
   gint32 options;
+
+  if (object == NULL)
+    return;
 
   if (argc < 1)
     return;

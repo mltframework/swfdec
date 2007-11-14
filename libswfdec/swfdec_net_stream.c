@@ -260,7 +260,6 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
     SwfdecLoader *loader)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
-  SwfdecDecoderClass *klass;
   SwfdecStatus status;
   
   if (loader->state != SWFDEC_LOADER_STATE_EOF && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
@@ -275,14 +274,15 @@ swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target,
 	SWFDEC_AS_STR_status);
     swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_FLV);
   }
-  klass = SWFDEC_DECODER_GET_CLASS (stream->flvdecoder);
-  g_return_if_fail (klass->parse);
 
   status = SWFDEC_STATUS_OK;
   do {
     SwfdecBuffer *buffer = swfdec_buffer_queue_pull_buffer (loader->queue);
-    status |= klass->parse (SWFDEC_DECODER (stream->flvdecoder), buffer);
-  } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_EOF)) == 0);
+    if (buffer == NULL)
+      break;
+    status &= ~SWFDEC_STATUS_NEEDBITS;
+    status |= swfdec_decoder_parse (SWFDEC_DECODER (stream->flvdecoder), buffer);
+  } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_EOF)) == 0);
 
   if (status & SWFDEC_STATUS_IMAGE)
     swfdec_net_stream_loader_target_recheck (stream);
@@ -295,7 +295,7 @@ swfdec_net_stream_loader_target_eof (SwfdecLoaderTarget *target,
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
   guint first, last;
 
-  swfdec_flv_decoder_eof (stream->flvdecoder);
+  swfdec_decoder_eof (SWFDEC_DECODER (stream->flvdecoder));
   swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Flush,
       SWFDEC_AS_STR_status);
   swfdec_net_stream_video_goto (stream, stream->current_time);
@@ -469,22 +469,11 @@ swfdec_net_stream_new (SwfdecNetConnection *conn)
   return stream;
 }
 
-static void
-swfdec_net_stream_got_loader (SwfdecPlayer *player, SwfdecLoader *loader, gpointer streamp)
-{
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (streamp);
-
-  if (loader == NULL || SWFDEC_AS_OBJECT (stream)->context == NULL)
-    return;
-
-  swfdec_net_stream_set_loader (stream, loader);
-  g_object_unref (loader);
-}
-
 void
 swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
 {
   SwfdecAsContext *cx;
+  SwfdecLoader *loader;
 
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
   g_return_if_fail (url != NULL);
@@ -492,10 +481,12 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
   /* FIXME: use the connection once connections are implemented */
   cx = SWFDEC_AS_OBJECT (stream)->context;
   g_assert (cx->frame);
-  g_object_ref (stream);
-  swfdec_player_request_resource (SWFDEC_PLAYER (cx), cx->frame->security, url,
-      SWFDEC_LOADER_REQUEST_DEFAULT, NULL, swfdec_net_stream_got_loader, stream, 
-      g_object_unref);
+  loader = swfdec_player_request_resource_now (SWFDEC_PLAYER (cx), cx->frame->security, 
+      url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+  if (loader) {
+    swfdec_net_stream_set_loader (stream, loader);
+    g_object_unref (loader);
+  }
 }
 
 void

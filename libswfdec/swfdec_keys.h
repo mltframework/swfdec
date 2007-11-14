@@ -20,6 +20,8 @@
 #ifndef _SWFDEC_KEYS_H_
 #define _SWFDEC_KEYS_H_
 
+G_BEGIN_DECLS
+
 typedef enum {
   SWFDEC_KEY_BACKSPACE = 8,
   SWFDEC_KEY_TAB = 9,

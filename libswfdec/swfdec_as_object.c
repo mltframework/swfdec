@@ -31,11 +31,10 @@
 #include "swfdec_as_stack.h"
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
 #include "swfdec_security_allow.h"
-
-#define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
 /**
  * SECTION:SwfdecAsObject
@@ -921,13 +920,13 @@ swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
 }
 
 /**
- * swfdec_as_object_clear_variables:
+ * swfdec_as_object_delete_all_variables:
  * @object: a #SwfdecAsObject
  *
- * Clears all user-set variables from the given object.
+ * Deletes all user-set variables from the given object.
  **/
 void
-swfdec_as_object_clear_variables (SwfdecAsObject *object)
+swfdec_as_object_delete_all_variables (SwfdecAsObject *object)
 {
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
 
@@ -1230,6 +1229,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   SwfdecAsObject *new;
   SwfdecAsContext *context;
   SwfdecAsFunction *cur;
+  SwfdecAsFrame *frame;
   guint size;
   GType type = 0;
 
@@ -1281,8 +1281,10 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
-  swfdec_as_function_call (fun, new, n_args, args, return_value);
-  context->frame->construct = TRUE;
+  frame = swfdec_as_function_call_no_preload (fun, new, n_args, args, return_value);
+  frame->construct = TRUE;
+  swfdec_as_super_new (frame, new, new->prototype);
+  swfdec_as_frame_preload (frame);
 }
 
 /**
@@ -1420,6 +1422,9 @@ swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsVariable *var;
   const char *name;
 
+  if (object == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
 
   // return false even if no params
@@ -1446,6 +1451,9 @@ swfdec_as_object_isPropertyEnumerable (SwfdecAsContext *cx,
 {
   SwfdecAsVariable *var;
   const char *name;
+
+  if (object == NULL)
+    return;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
 
@@ -1546,6 +1554,9 @@ swfdec_as_object_unwatch (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsVariable *var;
   const char *name;
 
+  if (object == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
 
   if (argc < 1)
@@ -1574,7 +1585,8 @@ void
 swfdec_as_object_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
+  if (object != NULL)
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
 }
 
 SWFDEC_AS_NATIVE (101, 4, swfdec_as_object_toString)

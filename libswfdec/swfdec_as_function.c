@@ -26,6 +26,7 @@
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_stack.h"
+#include "swfdec_as_super.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 
@@ -97,6 +98,44 @@ swfdec_as_function_set_constructor (SwfdecAsFunction *fun)
       SWFDEC_AS_VARIABLE_VERSION_6_UP);
 }
 
+SwfdecAsFrame *
+swfdec_as_function_call_no_preload (SwfdecAsFunction *function, 
+    SwfdecAsObject *thisp, guint n_args, const SwfdecAsValue *args, 
+    SwfdecAsValue *return_value)
+{
+  SwfdecAsContext *context;
+  SwfdecAsFrame *frame;
+  SwfdecAsFunctionClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (function), NULL);
+  g_return_val_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp), NULL);
+
+  context = SWFDEC_AS_OBJECT (function)->context;
+  /* just to be sure... */
+  if (return_value)
+    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+
+  klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
+  g_assert (klass->call);
+  frame = klass->call (function);
+  /* FIXME: figure out what to do in these situations?
+   * It's a problem when called inside swfdec_as_function_call () as the
+   * user of that function expects success, but super may fail here */
+  if (frame == NULL)
+    return NULL;
+  if (function->priv)
+    swfdec_as_frame_set_security (frame, function->priv);
+  /* second check especially for super object */
+  if (thisp != NULL && frame->thisp == NULL) {
+    swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
+  }
+  frame->is_local = TRUE;
+  frame->argc = n_args;
+  frame->argv = args;
+  frame->return_value = return_value;
+  return frame;
+}
+
 /**
  * swfdec_as_function_call:
  * @function: the #SwfdecAsFunction to call
@@ -116,33 +155,20 @@ void
 swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args,
     const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
-  SwfdecAsContext *context;
   SwfdecAsFrame *frame;
-  SwfdecAsFunctionClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
   g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
 
-  context = SWFDEC_AS_OBJECT (function)->context;
-  /* just to be sure... */
-  if (return_value)
-    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
-
-  klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
-  g_assert (klass->call);
-  frame = klass->call (function);
-  /* FIXME: figure out what to do in these situations */
+  frame = swfdec_as_function_call_no_preload (function, thisp, n_args, args, return_value);
   if (frame == NULL)
     return;
-  if (function->priv)
-    swfdec_as_frame_set_security (frame, function->priv);
-  /* second check especially for super object */
-  if (thisp != NULL && frame->thisp == NULL)
-    swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
-  frame->is_local = TRUE;
-  frame->argc = n_args;
-  frame->argv = args;
-  frame->return_value = return_value;
+  if (thisp != NULL) {
+    swfdec_as_super_new (frame, thisp, thisp->prototype);
+  } else {
+    SWFDEC_FIXME ("does the super object really reference the function when thisp is NULL?");
+    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), SWFDEC_AS_OBJECT (function)->prototype);
+  }
   swfdec_as_frame_preload (frame);
 }
 
@@ -150,40 +176,44 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
 
 SWFDEC_AS_NATIVE (101, 10, swfdec_as_function_do_call)
 void
-swfdec_as_function_do_call (SwfdecAsContext *context, SwfdecAsObject *fun,
+swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
-  if (argc > 0) {
-    thisp = swfdec_as_value_to_object (context, &argv[0]);
-    argc -= 1;
-    argv++;
-  } else {
-    thisp = NULL;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "|O", &thisp);
+
+  if (thisp == NULL) {
+    thisp = swfdec_as_object_new_empty (cx);
+    if (thisp == NULL)
+      return;
   }
-  if (thisp == NULL)
-    thisp = swfdec_as_object_new_empty (context);
-  swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, argc, argv, ret);
-  swfdec_as_context_run (context);
+  if (argc > 0) {
+    argc--;
+    argv++;
+  }
+  swfdec_as_function_call (fun, thisp, argc, argv, ret);
+  swfdec_as_context_run (cx);
 }
 
 SWFDEC_AS_NATIVE (101, 11, swfdec_as_function_apply)
 void
-swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
+swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsValue *argv_pass = NULL;
   int length = 0;
+  SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
-  if (argc > 0) {
-    thisp = swfdec_as_value_to_object (cx, &argv[0]);
-  } else {
-    thisp = NULL;
-  }
-  if (thisp == NULL)
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "|O", &thisp);
+
+  if (thisp == NULL) {
     thisp = swfdec_as_object_new_empty (cx);
+    if (thisp == NULL)
+      return;
+  }
 
   if (argc > 1 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
     int i;
@@ -210,8 +240,7 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *fun,
     }
   }
 
-  swfdec_as_function_call (SWFDEC_AS_FUNCTION (fun), thisp, length,
-      argv_pass, ret);
+  swfdec_as_function_call (fun, thisp, length, argv_pass, ret);
   swfdec_as_context_run (cx);
 
   if (argv_pass) {

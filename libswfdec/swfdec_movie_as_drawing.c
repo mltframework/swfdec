@@ -203,7 +203,7 @@ swfdec_sprite_movie_lineStyle (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|iii", &width, &color, &alpha);
 
   movie->draw_line = NULL;
-  if (argc < 1 && SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+  if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
   if (argc < 3)
     alpha = 100;

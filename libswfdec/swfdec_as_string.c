@@ -223,18 +223,23 @@ swfdec_as_string_fromCharCode_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   char *s;
   GByteArray *array = g_byte_array_new ();
 
-  for (i = 0; i < argc; i++) {
-    c = ((guint) swfdec_as_value_to_integer (cx, &argv[i])) % 65536;
-    if (c > 255) {
-      append = c / 256;
+  if (argc > 0) {
+    for (i = 0; i < argc; i++) {
+      c = ((guint) swfdec_as_value_to_integer (cx, &argv[i])) % 65536;
+      if (c > 255) {
+	append = c / 256;
+	g_byte_array_append (array, &append, 1);
+      }
+      append = c;
       g_byte_array_append (array, &append, 1);
     }
-    append = c;
-    g_byte_array_append (array, &append, 1);
+
+    /* FIXME: are these the correct charset names? */
+    s = g_convert ((char *) array->data, array->len, "UTF-8", "LATIN1", NULL, NULL, &error);
+  } else{
+    s = g_strdup ("");
   }
 
-  /* FIXME: are these the correct charset names? */
-  s = g_convert ((char *) array->data, array->len, "UTF-8", "LATIN1", NULL, NULL, &error);
   if (s) {
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
     g_free (s);

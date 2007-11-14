@@ -108,9 +108,9 @@ swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  s = swfdec_as_value_to_string (object->context, &argv[0]);
+  s = swfdec_as_value_to_string (cx, &argv[0]);
   if (argc == 2) {
-    int offset = swfdec_as_value_to_integer (object->context, &argv[1]);
+    int offset = swfdec_as_value_to_integer (cx, &argv[1]);
     if (offset < 0) {
       SWFDEC_AS_VALUE_SET_INT (ret, -1);
       return;
@@ -139,9 +139,9 @@ swfdec_as_string_indexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  s = swfdec_as_value_to_string (object->context, &argv[0]);
+  s = swfdec_as_value_to_string (cx, &argv[0]);
   if (argc == 2)
-    offset = swfdec_as_value_to_integer (object->context, &argv[1]);
+    offset = swfdec_as_value_to_integer (cx, &argv[1]);
   if (offset < 0)
     offset = 0;
   len = g_utf8_strlen (string, -1);
@@ -167,7 +167,7 @@ swfdec_as_string_charAt (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  i = swfdec_as_value_to_integer (object->context, &argv[0]);
+  i = swfdec_as_value_to_integer (cx, &argv[0]);
   if (i < 0) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
     return;

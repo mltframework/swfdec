@@ -21,6 +21,8 @@ EXTRA_DIST = \
 	abort-really-aborts-6.swf.trace \
 	abort-really-aborts-7.swf \
 	abort-really-aborts-7.swf.trace \
+	abort-really-aborts-8.swf \
+	abort-really-aborts-8.swf.trace \
 	add2.as \
 	add2-5.swf \
 	add2-5.swf.trace \
@@ -28,6 +30,8 @@ EXTRA_DIST = \
 	add2-6.swf.trace \
 	add2-7.swf \
 	add2-7.swf.trace \
+	add2-8.swf \
+	add2-8.swf.trace \
 	addProperty.as \
 	addProperty-5.swf \
 	addProperty-5.swf.trace \
@@ -88,6 +92,8 @@ EXTRA_DIST = \
 	array-new-6.swf.trace \
 	array-new-7.swf \
 	array-new-7.swf.trace \
+	array-new-8.swf \
+	array-new-8.swf.trace \
 	array-new-override.as \
 	array-new-override-5.swf \
 	array-new-override-5.swf.trace \
@@ -95,6 +101,8 @@ EXTRA_DIST = \
 	array-new-override-6.swf.trace \
 	array-new-override-7.swf \
 	array-new-override-7.swf.trace \
+	array-new-override-8.swf \
+	array-new-override-8.swf.trace \
 	array-properties.as \
 	array-properties-5.swf \
 	array-properties-5.swf.trace \
@@ -102,6 +110,8 @@ EXTRA_DIST = \
 	array-properties-6.swf.trace \
 	array-properties-7.swf \
 	array-properties-7.swf.trace \
+	array-properties-8.swf \
+	array-properties-8.swf.trace \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \
@@ -145,6 +155,8 @@ EXTRA_DIST = \
 	asbroadcaster-properties-6.swf.trace \
 	asbroadcaster-properties-7.swf \
 	asbroadcaster-properties-7.swf.trace \
+	asbroadcaster-properties-8.swf \
+	asbroadcaster-properties-8.swf.trace \
 	asfunction-properties.as \
 	asfunction-properties-5.swf \
 	asfunction-properties-5.swf.trace \
@@ -152,6 +164,8 @@ EXTRA_DIST = \
 	asfunction-properties-6.swf.trace \
 	asfunction-properties-7.swf \
 	asfunction-properties-7.swf.trace \
+	asfunction-properties-8.swf \
+	asfunction-properties-8.swf.trace \
 	asnative-create.as \
 	asnative-create-5.swf \
 	asnative-create-5.swf.trace \
@@ -168,6 +182,8 @@ EXTRA_DIST = \
 	assetnative-6.swf.trace \
 	assetnative-7.swf \
 	assetnative-7.swf.trace \
+	assetnative-8.swf \
+	assetnative-8.swf.trace \
 	ASSetPropFlags-extended.as \
 	ASSetPropFlags-extended-5.swf \
 	ASSetPropFlags-extended-5.swf.trace \
@@ -209,6 +225,8 @@ EXTRA_DIST = \
 	bitwise-6.swf.trace \
 	bitwise-7.swf \
 	bitwise-7.swf.trace \
+	bitwise-8.swf \
+	bitwise-8.swf.trace \
 	boolean-properties.as \
 	boolean-properties-5.swf \
 	boolean-properties-5.swf.trace \
@@ -216,6 +234,8 @@ EXTRA_DIST = \
 	boolean-properties-6.swf.trace \
 	boolean-properties-7.swf \
 	boolean-properties-7.swf.trace \
+	boolean-properties-8.swf \
+	boolean-properties-8.swf.trace \
 	call-arguments.as \
 	call-arguments-5.swf \
 	call-arguments-5.swf.trace \
@@ -234,6 +254,8 @@ EXTRA_DIST = \
 	callmethod-undefined-this-6.swf.trace \
 	callmethod-undefined-this-7.swf \
 	callmethod-undefined-this-7.swf.trace \
+	callmethod-undefined-this-8.swf \
+	callmethod-undefined-this-8.swf.trace \
 	callmethod-undefined-this.as \
 	case1-6.swf \
 	case1-6.swf.trace \
@@ -262,6 +284,8 @@ EXTRA_DIST = \
 	charat-6.swf.trace \
 	charat-7.swf \
 	charat-7.swf.trace \
+	charat-8.swf \
+	charat-8.swf.trace \
 	chartoascii.as \
 	chartoascii-4.swf \
 	chartoascii-4.swf.trace \
@@ -271,6 +295,8 @@ EXTRA_DIST = \
 	chartoascii-6.swf.trace \
 	chartoascii-7.swf \
 	chartoascii-7.swf.trace \
+	chartoascii-8.swf \
+	chartoascii-8.swf.trace \
 	children.swf \
 	children.swf.trace \
 	chr.as \
@@ -280,6 +306,8 @@ EXTRA_DIST = \
 	chr-6.swf.trace \
 	chr-7.swf \
 	chr-7.swf.trace \
+	chr-8.swf \
+	chr-8.swf.trace \
 	classes.swf \
 	classes.swf.trace \
 	clonesprite-depths.as \
@@ -311,6 +339,8 @@ EXTRA_DIST = \
 	color-properties-6.swf.trace\
 	color-properties-7.swf\
 	color-properties-7.swf.trace\
+	color-properties-8.swf\
+	color-properties-8.swf.trace\
 	color-setRGB.swf \
 	color-setRGB.swf.trace \
 	color-setTransform-alpha.swf \
@@ -419,6 +449,8 @@ EXTRA_DIST = \
 	date-6.swf.trace \
 	date-7.swf \
 	date-7.swf.trace \
+	date-8.swf \
+	date-8.swf.trace \
 	date-properties.as \
 	date-properties-5.swf \
 	date-properties-5.swf.trace \
@@ -426,6 +458,8 @@ EXTRA_DIST = \
 	date-properties-6.swf.trace \
 	date-properties-7.swf \
 	date-properties-7.swf.trace \
+	date-properties-8.swf \
+	date-properties-8.swf.trace \
 	definefunction2-arguments.swf \
 	definefunction2-arguments.swf.trace \
 	definefunction2-arguments.xml \

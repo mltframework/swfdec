@@ -4,19 +4,19 @@
 Features left and right make this release. Unfortunately a lot of reorganization
 was necessary. In particular this release contains:
 - Swfdec supports FutureSplash movies now
-- rewrite GStreamer audio and video backends. They work perfectly now and are
-  the default and only enabled backends. Other backends are still available via
-  configure switches.
-- support for the TextField object. This makes Youtube show the time correctly.
-- support for ActionScript exception handling and inheritance actions Cast, 
+- rewrite GStreamer audio and video back ends. They work perfectly now and are
+  the default and only enabled back ends. Other back ends are still available
+  via configure switches.
+- support for the TextField object. This makes YouTube show the time correctly.
+- support for ActionScript exception handling and inheritance actions Cast,
   Implements, InstanceOf, Try and Throw.
 - support for the MovieClipLoader object and loadMovie functions. This allows
   Flash movies to load other Flash movies.
 - support for loading JPEG and PNG images.
 - add an initial and incomplete implementation of the Flash security framework
-- swfdec has a logo now
+- Swfdec has a logo now
 - make the player automatically abort when scripts get stuck
-- add PulseAudio sound output backend, it can be disable via configure switch
+- add PulseAudio sound output back end, it can be disable via configure switch
 
  0.5.3 ("Tennis")
 

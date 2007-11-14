@@ -876,6 +876,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   SwfdecAsFrame *frame = cx->frame;
   SwfdecAsValue *val;
   SwfdecAsObject *obj;
+  SwfdecAsObject *pobj = NULL;
   guint n_args;
   const char *name;
   
@@ -892,7 +893,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
       name = "";
     } else {
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 3), obj);
-      swfdec_as_object_get_variable (obj, name, swfdec_as_stack_peek (cx, 2));
+      swfdec_as_object_get_variable_and_flags (obj, name, swfdec_as_stack_peek (cx, 2), NULL, &pobj);
     }
   } else {
     if (SWFDEC_AS_VALUE_IS_STRING (val))
@@ -908,8 +909,10 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
     /* setup super to point to the right prototype */
     if (SWFDEC_IS_AS_SUPER (obj)) {
       swfdec_as_super_new_chain (frame, SWFDEC_AS_SUPER (obj), name);
+    } else if (cx->version > 6) {
+      swfdec_as_super_new (frame, obj, pobj == obj ? obj->prototype : pobj);
     } else {
-      swfdec_as_super_new (frame, obj, FALSE);
+      swfdec_as_super_new (frame, obj, obj->prototype);
     }
     swfdec_as_frame_preload (frame);
   } else {

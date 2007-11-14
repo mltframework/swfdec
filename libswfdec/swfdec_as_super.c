@@ -43,8 +43,6 @@ swfdec_as_super_call (SwfdecAsFunction *function)
   SwfdecAsFunctionClass *klass;
   SwfdecAsFrame *frame;
 
-  //if (!super->callable)
-  //  return NULL;
   if (super->object == NULL) {
     SWFDEC_WARNING ("super () called without an object.");
     return NULL;
@@ -146,13 +144,14 @@ swfdec_as_super_init (SwfdecAsSuper *super)
 }
 
 void
-swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *ref, gboolean callable)
+swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject *ref)
 {
   SwfdecAsContext *context;
   SwfdecAsSuper *super;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (ref));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
+  g_return_if_fail (ref == NULL || SWFDEC_IS_AS_OBJECT (ref));
   
   if (frame->super != NULL)
     return;
@@ -165,12 +164,11 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *ref, gboolean callabl
   super = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
   frame->super = SWFDEC_AS_OBJECT (super);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (super), context, sizeof (SwfdecAsSuper));
-  super->thisp = ref;
-  super->callable = callable;
+  super->thisp = thisp;
   if (context->version <= 5) {
     super->object = NULL;
   } else {
-    super->object = ref->prototype;
+    super->object = ref;
   }
 }
 
@@ -188,38 +186,32 @@ void
 swfdec_as_super_new_chain (SwfdecAsFrame *frame, SwfdecAsSuper *super,
     const char *function_name)
 {
-  SwfdecAsSuper *replace;
+  SwfdecAsObject *ref;
   SwfdecAsContext *context;
 	  
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (SWFDEC_IS_AS_SUPER (super));
 
   if (frame->super != NULL)
     return;
-	     
+  
+  if (super->object == NULL)
+    return;
+  ref = super->object->prototype;
+  if (ref == NULL)
+    return;
   context = SWFDEC_AS_OBJECT (frame)->context;
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
-    return;
-  replace = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
-  frame->super = SWFDEC_AS_OBJECT (replace);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (replace), context, sizeof (SwfdecAsSuper));
-  if (super->object == NULL || super->object->prototype == NULL) {
-    replace->object = NULL;
-    return;
-  }
-  replace->thisp = super->thisp;
-  replace->object = super->object->prototype;
-  replace->callable = super->callable;
   if (function_name && context->version > 6) {
     /* skip prototypes to find the next one that has this function defined */
     SwfdecAsObject *res;
-    if (swfdec_as_object_get_variable_and_flags (replace->object, 
-         function_name, NULL, NULL, &res) &&
-       replace->object != res) {
-      while (replace->object->prototype != res) {
-        replace->object = replace->object->prototype;
-        g_return_if_fail (replace->object);
+    if (swfdec_as_object_get_variable_and_flags (ref, 
+         function_name, NULL, NULL, &res) && ref != res) {
+      while (ref->prototype != res) {
+        ref = ref->prototype;
+        g_return_if_fail (ref);
       }
     }
   }
+  swfdec_as_super_new (frame, super->thisp, ref);
 }
 

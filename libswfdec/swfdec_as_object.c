@@ -1283,7 +1283,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
 
   frame = swfdec_as_function_call_no_preload (fun, new, n_args, args, return_value);
   frame->construct = TRUE;
-  swfdec_as_super_new (frame, new, TRUE);
+  swfdec_as_super_new (frame, new, new->prototype);
   swfdec_as_frame_preload (frame);
 }
 

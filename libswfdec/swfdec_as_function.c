@@ -164,10 +164,10 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
   if (frame == NULL)
     return;
   if (thisp != NULL) {
-    swfdec_as_super_new (frame, thisp, FALSE);
+    swfdec_as_super_new (frame, thisp, thisp->prototype);
   } else {
     SWFDEC_FIXME ("does the super object really reference the function when thisp is NULL?");
-    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), FALSE);
+    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), SWFDEC_AS_OBJECT (function)->prototype);
   }
   swfdec_as_frame_preload (frame);
 }

@@ -87,11 +87,13 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
   SwfdecInterval *interval = SWFDEC_INTERVAL (((guchar *) timeout) 
       - G_STRUCT_OFFSET (SwfdecInterval, timeout));
   SwfdecAsContext *context = SWFDEC_AS_OBJECT (interval)->context;
+  SwfdecPlayer *player = SWFDEC_PLAYER (context);
 
   if (interval->repeat) {
     timeout->timestamp += SWFDEC_MSECS_TO_TICKS (interval->msecs);
     swfdec_player_add_timeout (SWFDEC_PLAYER (context), timeout);
   } else {
+    player->intervals = g_list_remove (player->intervals, interval);
     interval->timeout.callback = NULL;
   }
   if (interval->fun_name) {

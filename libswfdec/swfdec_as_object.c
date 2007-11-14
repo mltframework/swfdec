@@ -36,8 +36,6 @@
 #include "swfdec_movie.h"
 #include "swfdec_security_allow.h"
 
-#define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
-
 /**
  * SECTION:SwfdecAsObject
  * @title: SwfdecAsObject

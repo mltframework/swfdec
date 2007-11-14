@@ -33,6 +33,7 @@ G_BEGIN_DECLS
 #define SWFDEC_AS_CONSTRUCTOR(x, y, func, type) void func (SwfdecAsContext *cx, \
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);
 
+#define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
 void		swfdec_as_function_set_constructor	(SwfdecAsFunction *	fun);
 void		swfdec_as_function_set_security	  	(SwfdecAsFunction *	fun,

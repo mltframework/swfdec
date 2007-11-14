@@ -82,10 +82,10 @@ swfdec_video_movie_unset_input (SwfdecVideoMovie *movie)
   if (movie->input == NULL)
     return;
 
-  swfdec_video_movie_update_image (movie);
   if (movie->input->disconnect)
     movie->input->disconnect (movie->input, movie);
   movie->input = NULL;
+  swfdec_video_movie_update_image (movie);
 }
 
 static void

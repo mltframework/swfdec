@@ -87,9 +87,10 @@ AC_SUBST(GLIB_GENMARSHAL)
 GLIB_MKENUMS=glib-mkenums
 AC_SUBST(GLIB_MKENUMS)
 
-PKG_CHECK_MODULES(PANGO, pangocairo, HAVE_PANGO=yes, HAVE_PANGO=no)
+PANGO_VER=1.16
+PKG_CHECK_MODULES(PANGO, pangocairo >= $PANGO_VER, HAVE_PANGO=yes, HAVE_PANGO=no)
 if test "$HAVE_PANGO" = "no"; then
-  AC_MSG_ERROR([pangocairo is required to build swfdec])
+  AC_MSG_ERROR([pangocairo >= $PANGO_VER is required to build swfdec])
 fi
 AC_SUBST(PANGO_LIBS)
 AC_SUBST(PANGO_CFLAGS)

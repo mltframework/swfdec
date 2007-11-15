@@ -2,23 +2,49 @@ Global:
 arguments: 
 caller: 
 callee: 
+Child:
+arguments: 
+caller: null
+callee: child
+Run:
+arguments: 
+caller: null
+callee: run
 Child CallFunction:
 arguments: 
-caller: null
-callee: func
+caller: run
+callee: child
 Child CallMethod:
 arguments: 
-caller: null
-callee: func
+caller: run
+callee: child
 
-Method:
+toString:
 arguments: 
-caller: null
+caller: run
 callee: func_and_child
 Child:
 arguments: 
 caller: func_and_child
-callee: func
+callee: child
+
+valueOf:
+arguments: 
+caller: run
+callee: func_and_child
+Child:
+arguments: 
+caller: func_and_child
+callee: child
+
+Method:
+arguments: 
+caller: run
+callee: func_and_child
+Child:
+arguments: 
+caller: func_and_child
+callee: child
 
 Call:
 
@@ -26,12 +52,12 @@ Apply:
 
 Sort:
 arguments: a,
-caller: null
+caller: run
 callee: func_and_child
 Child:
 arguments: 
 caller: func_and_child
-callee: func
+callee: child
 
 Timeout:
 arguments: 
@@ -40,4 +66,4 @@ callee: timeout
 Child:
 arguments: 
 caller: timeout
-callee: func
+callee: child

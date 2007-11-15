@@ -2,86 +2,109 @@ Global:
 arguments: undefined
 caller: undefined
 callee: undefined
+Child:
+arguments: 
+caller: null
+callee: child
+Run:
+arguments: 
+caller: null
+callee: run
 Child CallFunction:
 arguments: 
-caller: null
-callee: func
+caller: run
+callee: child
 Child CallMethod:
 arguments: 
-caller: null
-callee: func
+caller: run
+callee: child
+
+toString:
+arguments: 
+caller: run
+callee: func_and_child
+Child:
+arguments: 
+caller: func_and_child
+callee: child
+
+valueOf:
+arguments: 
+caller: run
+callee: func_and_child
+Child:
+arguments: 
+caller: func_and_child
+callee: child
 
 Method:
 arguments: 
-caller: null
+caller: run
 callee: func_and_child
 Child:
 arguments: 
 caller: func_and_child
-callee: func
+callee: child
 
 Call:
 arguments: 
-caller: null
+caller: run
 callee: func_and_child
 Child:
 arguments: 
 caller: func_and_child
-callee: func
+callee: child
 
 Apply:
 arguments: 
-caller: null
+caller: run
 callee: func_and_child
 Child:
 arguments: 
 caller: func_and_child
-callee: func
+callee: child
 
 Sort:
 arguments: a,undefined
-caller: null
+caller: run
 callee: func_and_child
 Child:
 arguments: 
 caller: func_and_child
-callee: func
+callee: child
 
 Prop set:
 arguments: a,undefined
-caller: null
+caller: run
 callee: prop_set
 Child:
 arguments: 
 caller: prop_set
-callee: func
+callee: child
 
 Prop get:
 arguments: 
-caller: null
+caller: run
 callee: prop_get
 Child:
 arguments: 
 caller: prop_get
-callee: func
+callee: child
 
 Watcher:
 arguments: watched,true,false,undefined
-caller: null
+caller: run
 callee: watcher
 Child:
 arguments: 
 caller: watcher
-callee: func
+callee: child
 
 Broadcast:
 arguments: 
-caller: null
+caller: run
 callee: broadcast
 Child:
-arguments: 
-caller: broadcast
-callee: func
 
 Timeout:
 arguments: 
@@ -90,4 +113,4 @@ callee: timeout
 Child:
 arguments: 
 caller: timeout
-callee: func
+callee: child

@@ -865,7 +865,6 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   frame = swfdec_action_call (cx, n_args);
   if (frame) {
     swfdec_as_frame_preload (frame);
-    frame->update_caller = TRUE;
   } else {
     SWFDEC_WARNING ("no function named %s", name);
   }

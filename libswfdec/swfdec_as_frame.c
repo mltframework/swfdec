@@ -378,6 +378,7 @@ swfdec_as_frame_init (SwfdecAsFrame *frame)
   frame->function_name = "unnamed";
   frame->blocks = g_array_new (FALSE, FALSE, sizeof (SwfdecAsFrameBlock));
   frame->block_end = (gpointer) -1;
+  frame->caller = TRUE;
 }
 
 static void
@@ -688,6 +689,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   /* create arguments and super object if necessary */
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {
+    SwfdecAsFrame *next;
     args = swfdec_as_array_new (context);
     if (!args)
       goto out;
@@ -696,15 +698,19 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
     }
 
-    if (frame->caller != NULL) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->caller));
+    next = frame->next;
+    while (next && next->caller == FALSE) {
+      next = next->next;
+    }
+    if (next != NULL && next->function != NULL) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (next->function));
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);
     }
     swfdec_as_object_set_variable (args, SWFDEC_AS_STR_caller, &val);
 
-    if (frame->callee != NULL) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->callee));
+    if (frame->function != NULL) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->function));
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);
     }

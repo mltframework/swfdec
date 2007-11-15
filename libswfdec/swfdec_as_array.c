@@ -1228,6 +1228,9 @@ swfdec_as_array_do_sort (SwfdecAsObject *object, gint32 options,
   fdata.compare_custom_func = custom_compare_func;
   fdata.fields = fields;
 
+  // don't mark this function as the caller of custom sort function
+  object->context->frame->caller = FALSE;
+
   // generate fdata.order which points to the values
   if (!swfdec_as_object_foreach (object, swfdec_as_array_foreach_sort_populate,
 	&fdata))

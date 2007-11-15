@@ -103,9 +103,7 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
     SwfdecAsObject *thisp, guint n_args, const SwfdecAsValue *args, 
     SwfdecAsValue *return_value)
 {
-  SwfdecAsContext *context;
   SwfdecAsFrame *frame;
-  SwfdecAsFunction *caller;
   SwfdecAsFunctionClass *klass;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (function), NULL);
@@ -114,14 +112,6 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
   /* just to be sure... */
   if (return_value)
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
-
-  context = SWFDEC_AS_OBJECT (function)->context;
-  if (context->frame != NULL) {
-    caller = (context->frame->update_caller ? context->frame->callee :
-	context->frame->caller);
-  } else {
-    caller = NULL;
-  }
 
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
   g_assert (klass->call);
@@ -138,8 +128,6 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
     swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
   }
   frame->is_local = TRUE;
-  frame->caller = caller;
-  frame->callee = function;
   frame->argc = n_args;
   frame->argv = args;
   frame->return_value = return_value;
@@ -203,6 +191,7 @@ swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
     argc--;
     argv++;
   }
+  cx->frame->caller = FALSE; // don't mark this function as the caller
   swfdec_as_function_call (fun, thisp, argc, argv, ret);
   swfdec_as_context_run (cx);
 }
@@ -250,6 +239,7 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
+  cx->frame->caller = FALSE; // don't mark this function as the caller
   swfdec_as_function_call (fun, thisp, length, argv_pass, ret);
   swfdec_as_context_run (cx);
 

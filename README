@@ -64,7 +64,7 @@ Dependencies:
   cairo (>= 1.2.0 - >= 1.4.0 recommended) with png support enabled
   glib (>= 2.10.0)
   liboil (>= 0.3.6)
-  Pangocairo (aka Pango with cairo support)
+  Pangocairo (>= 1.16.0) - this is provided by Pango
   zlib (>= 1.1.4)
 
   FFMpeg (current SVN - optional, required for various audio and video formats)

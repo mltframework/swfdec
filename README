@@ -14,10 +14,8 @@ it crashes. If you encounter such a crash however, make sure to file a bug
 immediately.
 
 Swfdec contains some applications for testing and debugging the library. These 
-are available in the player/ and test/ directory. They are not installed. The
-applications in the player/ directory require GTK and ALSO to build, while the
-library does not. So if you are packaging Swfdec, you probably do not want to 
-make it depend on GTK or ALSA.
+are available in the player/ and test/ directory. They are not installed. Most 
+of them require the libswfdec-gtk library.
 
 The test/ directory contains subdirectories that run automated tests with the 
 provided SWF files in the directory. See the README files in those directories

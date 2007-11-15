@@ -2309,6 +2309,9 @@ EXTRA_DIST = \
 	tointeger-various-6.swf.trace \
 	tointeger-various-7.swf \
 	tointeger-various-7.swf.trace \
+	totalframes.xml \
+	totalframes.swf \
+	totalframes.swf.trace \
 	trace_properties.as \
 	transform.swf \
 	transform.swf.trace \

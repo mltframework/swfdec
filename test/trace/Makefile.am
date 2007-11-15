@@ -83,6 +83,15 @@ EXTRA_DIST = \
 	and-or-6.swf.trace \
 	and-or-7.swf \
 	and-or-7.swf.trace \
+	arguments.as \
+	arguments-5.swf \
+	arguments-5.swf.trace \
+	arguments-6.swf \
+	arguments-6.swf.trace \
+	arguments-7.swf \
+	arguments-7.swf.trace \
+	arguments-8.swf \
+	arguments-8.swf.trace \
 	array.swf \
 	array.swf.trace \
 	array-new.as \

@@ -1,0 +1,63 @@
+Global:
+arguments: 
+caller: 
+callee: 
+
+Calling from outside of function
+
+CallFunction
+arguments: 
+caller: null
+callee: 
+
+CallMethod
+arguments: 
+caller: null
+callee: 
+
+Call:
+
+Apply:
+
+New:
+arguments: 
+caller: null
+callee: 
+
+Sort:
+arguments: a,
+caller: null
+callee: 
+
+Calling from inside a function
+
+Check
+
+CallFunction
+arguments: 
+caller: 
+callee: 
+
+CallMethod
+arguments: 
+caller: 
+callee: 
+
+Call:
+
+Apply:
+
+New:
+arguments: 
+caller: 
+callee: 
+
+Sort:
+arguments: a,
+caller: 
+callee: 
+
+Timeout:
+arguments: 
+caller: null
+callee: 

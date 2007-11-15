@@ -17,6 +17,8 @@ was necessary. In particular this release contains:
 - Swfdec has a logo now
 - make the player automatically abort when scripts get stuck
 - add PulseAudio sound output back end, it can be disabled via configure switch
+- cross-compilation should now work without issues.
+- lots of small improvements
 
  0.5.3 ("Tennis")
 

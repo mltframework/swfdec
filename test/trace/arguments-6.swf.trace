@@ -2,114 +2,92 @@ Global:
 arguments: 
 caller: 
 callee: 
-
-Calling from outside of function
-
-CallFunction
+Child CallFunction:
+arguments: 
+caller: null
+callee: func
+Child CallMethod:
 arguments: 
 caller: null
 callee: func
 
-CallMethod
+Method:
 arguments: 
 caller: null
+callee: func_and_child
+Child:
+arguments: 
+caller: func_and_child
 callee: func
 
 Call:
 arguments: 
 caller: null
+callee: func_and_child
+Child:
+arguments: 
+caller: func_and_child
 callee: func
 
 Apply:
 arguments: 
 caller: null
-callee: func
-
-New:
+callee: func_and_child
+Child:
 arguments: 
-caller: null
+caller: func_and_child
 callee: func
 
 Sort:
 arguments: a,
 caller: null
+callee: func_and_child
+Child:
+arguments: 
+caller: func_and_child
 callee: func
 
 Prop set:
-arguments: 2
+arguments: a,
 caller: null
 callee: prop_set
+Child:
+arguments: 
+caller: prop_set
+callee: func
 
 Prop get:
 arguments: 
 caller: null
 callee: prop_get
+Child:
+arguments: 
+caller: prop_get
+callee: func
 
 Watcher:
 arguments: watched,true,false,
 caller: null
 callee: watcher
+Child:
+arguments: 
+caller: watcher
+callee: func
 
 Broadcast:
 arguments: 
 caller: null
 callee: broadcast
-
-Calling from inside a function
-
-Check
-
-CallFunction
+Child:
 arguments: 
-caller: check
+caller: broadcast
 callee: func
-
-CallMethod
-arguments: 
-caller: check
-callee: func
-
-Call:
-arguments: 
-caller: check
-callee: func
-
-Apply:
-arguments: 
-caller: check
-callee: func
-
-New:
-arguments: 
-caller: check
-callee: func
-
-Sort:
-arguments: a,
-caller: check
-callee: func
-
-Prop set:
-arguments: 2
-caller: check
-callee: prop_set
-
-Prop get:
-arguments: 
-caller: check
-callee: prop_get
-
-Watcher:
-arguments: watched,,false,
-caller: check
-callee: watcher
-
-Broadcast:
-arguments: 
-caller: check
-callee: broadcast
 
 Timeout:
 arguments: 
 caller: null
 callee: timeout
+Child:
+arguments: 
+caller: timeout
+callee: func

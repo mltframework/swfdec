@@ -2,62 +2,42 @@ Global:
 arguments: 
 caller: 
 callee: 
-
-Calling from outside of function
-
-CallFunction
+Child CallFunction:
 arguments: 
 caller: null
-callee: 
-
-CallMethod
+callee: func
+Child CallMethod:
 arguments: 
 caller: null
-callee: 
+callee: func
+
+Method:
+arguments: 
+caller: null
+callee: func_and_child
+Child:
+arguments: 
+caller: func_and_child
+callee: func
 
 Call:
 
 Apply:
 
-New:
-arguments: 
-caller: null
-callee: 
-
 Sort:
 arguments: a,
 caller: null
-callee: 
-
-Calling from inside a function
-
-Check
-
-CallFunction
+callee: func_and_child
+Child:
 arguments: 
-caller: 
-callee: 
-
-CallMethod
-arguments: 
-caller: 
-callee: 
-
-Call:
-
-Apply:
-
-New:
-arguments: 
-caller: 
-callee: 
-
-Sort:
-arguments: a,
-caller: 
-callee: 
+caller: func_and_child
+callee: func
 
 Timeout:
 arguments: 
 caller: null
-callee: 
+callee: timeout
+Child:
+arguments: 
+caller: timeout
+callee: func

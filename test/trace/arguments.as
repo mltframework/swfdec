@@ -1,16 +1,59 @@
 // makeswf -v 7 -r 1 -o test-7.swf test.as
 
-trace ("Global:");
-trace ("arguments: " + arguments);
-trace ("caller: " + arguments.caller);
-trace ("callee: " + arguments.callee);
+var o = {};
+var tmp = {};
 
 function func () {
   trace ("arguments: " + arguments);
   trace ("caller: " + arguments.caller);
   trace ("callee: " + arguments.callee);
 }
-func.toString = function () { return "func"; };
+func.valueOf = func.toString = function () { return "func"; };
+
+function func_and_child () {
+  trace ("arguments: " + arguments);
+  trace ("caller: " + arguments.caller);
+  trace ("callee: " + arguments.callee);
+  trace ("Child:");
+  func ();
+}
+func_and_child.valueOf = func_and_child.toString =
+  function () { return "func_and_child"; };
+
+
+trace ("Global:");
+trace ("arguments: " + arguments);
+trace ("caller: " + arguments.caller);
+trace ("callee: " + arguments.callee);
+trace ("Child CallFunction:");
+func ();
+trace ("Child CallMethod:");
+o.func = func;
+o.func ();
+
+
+trace ("");
+trace ("Method:");
+o.func_and_child = func_and_child;
+o.func_and_child ();
+
+
+trace ("");
+trace ("Call:");
+func_and_child.call ();
+
+
+trace ("");
+trace ("Apply:");
+func_and_child.apply ();
+
+
+trace ("");
+trace ("Sort:");
+tmp = new Array (2);
+tmp[0] = "a";
+tmp.sort (func_and_child);
+
 
 function prop_get () {
   trace ("");
@@ -18,8 +61,10 @@ function prop_get () {
   trace ("arguments: " + arguments);
   trace ("caller: " + arguments.caller);
   trace ("callee: " + arguments.callee);
+  trace ("Child:");
+  func ();
 }
-prop_get.toString = function () { return "prop_get"; };
+prop_get.valueOf = prop_get.toString = function () { return "prop_get"; };
 
 function prop_set () {
   trace ("");
@@ -27,8 +72,16 @@ function prop_set () {
   trace ("arguments: " + arguments);
   trace ("caller: " + arguments.caller);
   trace ("callee: " + arguments.callee);
+  trace ("Child:");
+  func ();
 }
-prop_set.toString = function () { return "prop_set"; };
+prop_set.valueOf = prop_set.toString = function () { return "prop_set"; };
+
+o.addProperty ("prop", prop_get, prop_set);
+
+o.prop = tmp;
+tmp = o.prop;
+
 
 function watcher () {
   trace ("");
@@ -36,14 +89,15 @@ function watcher () {
   trace ("arguments: " + arguments);
   trace ("caller: " + arguments.caller);
   trace ("callee: " + arguments.callee);
+  trace ("Child:");
+  func ();
 }
-watcher.toString = function () { return "watcher"; };
+watcher.valueOf = watcher.toString = function () { return "watcher"; };
 
-var o = {};
-o.func = func;
-o.addProperty ("prop", prop_get, prop_set);
 o.watched = true;
 o.watch ("watched", watcher);
+o.watched = false;
+
 
 var emitter = new Object ();
 AsBroadcaster.initialize (emitter);
@@ -54,8 +108,14 @@ emitter._listeners[0].broadcast = function () {
   trace ("arguments: " + arguments);
   trace ("caller: " + arguments.caller);
   trace ("callee: " + arguments.callee);
+  trace ("Child:");
+  func ();
 };
+emitter._listeners[0].broadcast.valueOf = function () { return "broadcast"; };
 emitter._listeners[0].broadcast.toString = function () { return "broadcast"; };
+
+emitter.broadcastMessage ("broadcast");
+
 
 function timeout () {
   trace ("");
@@ -63,88 +123,11 @@ function timeout () {
   trace ("arguments: " + arguments);
   trace ("caller: " + arguments.caller);
   trace ("callee: " + arguments.callee);
+  trace ("Child:");
+  func ();
 
   loadMovie ("FSCommand:quit", "");
 }
-timeout.toString = function () { return "timeout"; };
+timeout.valueOf = timeout.toString = function () { return "timeout"; };
 
-trace ("");
-trace ("Calling from outside of function");
-
-trace ("");
-trace ("CallFunction");
-func ();
-
-trace ("");
-trace ("CallMethod");
-o.func ();
-
-trace ("");
-trace ("Call:");
-func.call ();
-
-trace ("");
-trace ("Apply:");
-func.apply ();
-
-trace ("");
-trace ("New:");
-var a = new func ();
-
-trace ("");
-trace ("Sort:");
-a = new Array (2);
-a[0] = "a";
-a.sort (func);
-
-o.prop = 2;
-a = o.prop;
-
-o.watched = false;
-
-emitter.broadcastMessage ("broadcast");
-
-function check () {
-  trace ("");
-  trace ("CallFunction");
-  func ();
-
-  trace ("");
-  trace ("CallMethod");
-  o.func ();
-
-  trace ("");
-  trace ("Call:");
-  func.call ();
-
-  trace ("");
-  trace ("Apply:");
-  func.apply ();
-
-  trace ("");
-  trace ("New:");
-  var a = new func ();
-
-  trace ("");
-  trace ("Sort:");
-  a = new Array (2);
-  a[0] = "a";
-  a.sort (func);
-
-  o.prop = 2;
-  a = o.prop;
-
-  o.watched = false;
-
-  emitter.broadcastMessage ("broadcast");
-
-  setTimeout (timeout, 0);
-}
-check.toString = function () { return "check"; };
-
-trace ("");
-trace ("Calling from inside a function");
-
-trace ("");
-trace ("Check");
-check ();
+setTimeout (timeout, 0);

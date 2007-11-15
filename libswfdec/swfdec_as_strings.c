@@ -432,5 +432,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("URLNotFound")
   SWFDEC_AS_CONSTANT_STRING ("IllegalRequest")
   SWFDEC_AS_CONSTANT_STRING ("LoadNeverCompleted")
+  SWFDEC_AS_CONSTANT_STRING ("callee")
   /* add more here */
 ;

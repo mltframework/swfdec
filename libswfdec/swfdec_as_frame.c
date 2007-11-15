@@ -695,6 +695,13 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 	cur = swfdec_as_stack_iterator_next (&iter)) {
       swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
     }
+
+    if (frame->callee != NULL) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->callee));
+    } else {
+      SWFDEC_AS_VALUE_SET_NULL (&val);
+    }
+    swfdec_as_object_set_variable (args, SWFDEC_AS_STR_callee, &val);
   } else {
     /* silence gcc */
     args = NULL;

@@ -40,6 +40,7 @@ struct _SwfdecAsFrame {
   guint			argc;		/* number of arguments */
   const SwfdecAsValue *	argv;		/* arguments or %NULL if taken from stack */
   SwfdecSecurity *	security;	/* security for this frame or %NULL if not allowed to call */
+  SwfdecAsFunction *	callee;		/* the function being called or %NULL */
   /* debugging */
   const char *		function_name;	/* name of function */
   /* script execution */

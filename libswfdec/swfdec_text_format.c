@@ -770,7 +770,7 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
   }
   else if (SWFDEC_AS_VALUE_IS_STRING (&argv[0]))
   {
-    size_t i, len;
+    gsize i, len;
     SwfdecAsValue val;
 
     len = strlen (SWFDEC_AS_VALUE_GET_STRING (&argv[0]));

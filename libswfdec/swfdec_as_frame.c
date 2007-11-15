@@ -378,7 +378,6 @@ swfdec_as_frame_init (SwfdecAsFrame *frame)
   frame->function_name = "unnamed";
   frame->blocks = g_array_new (FALSE, FALSE, sizeof (SwfdecAsFrameBlock));
   frame->block_end = (gpointer) -1;
-  frame->caller = TRUE;
 }
 
 static void
@@ -699,10 +698,11 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     }
 
     next = frame->next;
-    while (next && next->caller == FALSE) {
+    while (next != NULL && (next->function == NULL ||
+	SWFDEC_IS_AS_NATIVE_FUNCTION (next->function))) {
       next = next->next;
     }
-    if (next != NULL && next->function != NULL) {
+    if (next != NULL) {
       SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (next->function));
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);

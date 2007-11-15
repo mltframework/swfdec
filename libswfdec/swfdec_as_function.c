@@ -191,7 +191,6 @@ swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
     argc--;
     argv++;
   }
-  cx->frame->caller = FALSE; // don't mark this function as the caller
   swfdec_as_function_call (fun, thisp, argc, argv, ret);
   swfdec_as_context_run (cx);
 }
@@ -239,7 +238,6 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  cx->frame->caller = FALSE; // don't mark this function as the caller
   swfdec_as_function_call (fun, thisp, length, argv_pass, ret);
   swfdec_as_context_run (cx);
 

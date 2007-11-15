@@ -73,7 +73,6 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (list == NULL)
     return;
 
-  cx->frame->caller = FALSE; // don't mark this function as the caller
   list = g_slist_reverse (list);
   for (walk = list; walk; walk = walk->next) {
     swfdec_as_object_call (walk->data, name, argc, argv, &val);

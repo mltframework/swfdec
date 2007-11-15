@@ -33,7 +33,6 @@ struct _SwfdecAsFrame {
 
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
-  gboolean		caller;		/* this function can be used as arguments.caller */
   SwfdecAsObject *	thisp;		/* this object in current frame or NULL if none */
   SwfdecAsObject *	super;		/* super object in current frame or NULL if none */
   gboolean		construct;	/* TRUE if this is the constructor for thisp */

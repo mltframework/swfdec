@@ -696,6 +696,13 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
     }
 
+    if (frame->caller != NULL) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->caller));
+    } else {
+      SWFDEC_AS_VALUE_SET_NULL (&val);
+    }
+    swfdec_as_object_set_variable (args, SWFDEC_AS_STR_caller, &val);
+
     if (frame->callee != NULL) {
       SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->callee));
     } else {

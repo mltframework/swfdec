@@ -433,5 +433,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("IllegalRequest")
   SWFDEC_AS_CONSTANT_STRING ("LoadNeverCompleted")
   SWFDEC_AS_CONSTANT_STRING ("callee")
+  SWFDEC_AS_CONSTANT_STRING ("caller")
   /* add more here */
 ;

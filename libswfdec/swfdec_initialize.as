@@ -1049,6 +1049,8 @@ clearInterval = ASnative (250, 1);
 setTimeout = ASnative(250, 2);
 clearTimeout = clearInterval;
 showRedrawRegions = ASnative (1021, 1);
+trace = ASnative (100, 4);
+updateAfterEvent = ASnative (9, 0);
 
 /*** OH THE HUMANITY ***/
 

@@ -114,6 +114,22 @@ swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 /*** VARIOUS ***/
 
+SWFDEC_AS_NATIVE (100, 4, swfdec_player_trace)
+void
+swfdec_player_trace (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_FIXME ("Is _global.trace supposed to do something?");
+}
+
+SWFDEC_AS_NATIVE (9, 0, swfdec_player_updateAfterEvent)
+void
+swfdec_player_updateAfterEvent (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("updateAfterEvent");
+}
+
 SWFDEC_AS_NATIVE (1021, 1, swfdec_player_showRedrawRegions)
 void
 swfdec_player_showRedrawRegions (SwfdecAsContext *cx, SwfdecAsObject *obj,

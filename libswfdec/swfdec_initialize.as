@@ -911,6 +911,12 @@ flash.geom.ColorTransform.prototype.toString = function () {
 ASSetNative (flash.geom.ColorTransform.prototype, 1105, "8concat", 1);
 ASSetNativeAccessor (flash.geom.ColorTransform.prototype, 1105, "8alphaMultiplier,8redMultiplier,8greenMultiplier,8blueMultiplier,8alphaOffset,8redOffset,8greenOffset,8blueOffset,8rgb", 101);
 
+/* Transform */
+
+flash.geom.Transform = ASconstructor (1106, 0);
+
+ASSetNativeAccessor (flash.geom.Transform.prototype, 1106, "8matrix,8concatenatedMatrix,8colorTransform,8concatenatedColorTransform,8pixelBounds", 101);
+
 /* BitmapData */
 
 flash.display = {};

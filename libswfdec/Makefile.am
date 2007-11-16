@@ -67,6 +67,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_text_field_movie_html.c \
 	swfdec_text_renderer.c \
 	swfdec_text_snapshot.c \
+	swfdec_transform.c \
 	swfdec_enums.c \
 	swfdec_event.c \
 	swfdec_external_interface.c \

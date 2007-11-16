@@ -1753,6 +1753,15 @@ EXTRA_DIST = \
 	relational-6.swf.trace \
 	relational-7.swf \
 	relational-7.swf.trace \
+	remote-lso-usage-properties.as \
+	remote-lso-usage-properties-5.swf \
+	remote-lso-usage-properties-5.swf.trace \
+	remote-lso-usage-properties-6.swf \
+	remote-lso-usage-properties-6.swf.trace \
+	remote-lso-usage-properties-7.swf \
+	remote-lso-usage-properties-7.swf.trace \
+	remote-lso-usage-properties-8.swf \
+	remote-lso-usage-properties-8.swf.trace \
 	remove-depths.as \
 	remove-depths-5.swf \
 	remove-depths-5.swf.trace \

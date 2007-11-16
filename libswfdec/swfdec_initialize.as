@@ -1020,6 +1020,18 @@ ASSetPropFlags (SharedObject, "deleteAll,getDiskUsage", 1);
 ASSetNative (SharedObject.prototype, 2106, "6connect,6send,6flush,6close,6getSize,6setFps,6clear");
 ASSetPropFlags (SharedObject.prototype, null, 3);
 
+/* AsSetupError */
+
+/* This function added new Error classes in Flash player 7, in Flash player 9
+ * it seems to be just broken, we just call new Error based on the number of
+ * ,-characters in the given string */
+function AsSetupError (names) {
+  var count = names.split (",").length;
+  for (var i = 0; i < count; i++) {
+    var tmp = new Error ();
+  }
+}
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

@@ -118,6 +118,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_selection.c \
 	swfdec_shape.c \
 	swfdec_shape_parser.c \
+	swfdec_shared_object.c \
 	swfdec_sound.c \
 	swfdec_sound_object.c \
 	swfdec_stroke.c \

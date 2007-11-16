@@ -994,6 +994,32 @@ ASSetNativeAccessor (flash.external.ExternalInterface, 14, "8available", 100);
 
 ASSetPropFlags (flash.external.ExternalInterface, null, 4103);
 
+/* SharedObject */
+
+function SharedObject () {
+};
+
+SharedObject.deleteAll = function () {
+  SWFDEC_STUB ("SharedObject.deleteAll (static)");
+};
+
+SharedObject.getDiskUsage = function () {
+  SWFDEC_STUB ("SharedObject.getDiskUsage (static)");
+};
+
+SharedObject.getLocal = function () {
+  SWFDEC_STUB ("SharedObject.getLocal (static)");
+};
+
+SharedObject.getRemote = function () {
+  SWFDEC_STUB ("SharedObject.getRemote (static)");
+};
+
+ASSetPropFlags (SharedObject, "deleteAll,getDiskUsage", 1);
+
+ASSetNative (SharedObject.prototype, 2106, "6connect,6send,6flush,6close,6getSize,6setFps,6clear");
+ASSetPropFlags (SharedObject.prototype, null, 3);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

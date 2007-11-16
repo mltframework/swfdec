@@ -446,5 +446,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("callee")
   SWFDEC_AS_CONSTANT_STRING ("caller")
   SWFDEC_AS_CONSTANT_STRING ("SWFDEC_STUB")
+  SWFDEC_AS_CONSTANT_STRING ("enableDebugConsole")
   /* add more here */
 ;

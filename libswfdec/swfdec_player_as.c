@@ -138,6 +138,13 @@ swfdec_player_showRedrawRegions (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SWFDEC_STUB ("showRedrawRegions");
 }
 
+static void
+swfdec_player_enableDebugConsole (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("enableDebugConsole");
+}
+
 static SwfdecAsFunction *
 swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
 {
@@ -330,4 +337,8 @@ swfdec_player_preinit_global (SwfdecAsContext *context, guint version)
       0, swfdec_player_ASnative, 2);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASconstructor,
       0, swfdec_player_ASconstructor, 2);
+  // FIXME: is this only the debug player?
+  swfdec_as_object_add_function (context->global,
+      SWFDEC_AS_STR_enableDebugConsole, 0, swfdec_player_enableDebugConsole,
+      2);
 }

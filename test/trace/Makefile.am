@@ -738,8 +738,6 @@ EXTRA_DIST = \
 	file-reference-properties.as \
 	file-reference-properties-5.swf \
 	file-reference-properties-5.swf.trace \
-	file-reference-properties-6.swf \
-	file-reference-properties-6.swf.trace \
 	file-reference-properties-7.swf \
 	file-reference-properties-7.swf.trace \
 	file-reference-properties-8.swf \
@@ -747,8 +745,6 @@ EXTRA_DIST = \
 	file-reference-list-properties.as \
 	file-reference-list-properties-5.swf \
 	file-reference-list-properties-5.swf.trace \
-	file-reference-list-properties-6.swf \
-	file-reference-list-properties-6.swf.trace \
 	file-reference-list-properties-7.swf \
 	file-reference-list-properties-7.swf.trace \
 	file-reference-list-properties-8.swf \
@@ -1623,8 +1619,6 @@ EXTRA_DIST = \
 	point-construct.as \
 	point-construct-5.swf \
 	point-construct-5.swf.trace \
-	point-construct-6.swf \
-	point-construct-6.swf.trace \
 	point-construct-7.swf \
 	point-construct-7.swf.trace \
 	point-construct-8.swf \
@@ -1632,8 +1626,6 @@ EXTRA_DIST = \
 	point-properties.as \
 	point-properties-5.swf \
 	point-properties-5.swf.trace \
-	point-properties-6.swf \
-	point-properties-6.swf.trace \
 	point-properties-7.swf \
 	point-properties-7.swf.trace \
 	point-properties-8.swf \

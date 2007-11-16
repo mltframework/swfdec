@@ -1,5 +1,8 @@
 // makeswf -v 7 -r 1 -o point-construct-7.swf point-construct.as
 
+// enable flash structure for version < 8 too for this test
+ASSetPropFlags (_global, "flash", 0, 4096);
+
 #include "values.as"
 
 trace ("Testing (no params):");

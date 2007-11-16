@@ -1,5 +1,8 @@
 // makeswf -v 7 -r 1 -o point-7.swf point.as
 
+// enable flash structure for version < 8 too for this test
+ASSetPropFlags (_global, "flash", 0, 4096);
+
 var points = [];
 points.push (new flash.geom.Point ());
 points.push (new flash.geom.Point (1, 2));

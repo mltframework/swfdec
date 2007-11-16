@@ -953,6 +953,14 @@ flash.external.ExternalInterface._objectToXML = function () {
   SWFDEC_STUB ("ExternalInterface._objectToXML (static)");
 };
 
+flash.external.ExternalInterface._arrayToXML = function () {
+  SWFDEC_STUB ("ExternalInterface._arrayToXML (static)");
+};
+
+flash.external.ExternalInterface._argumentsToXML = function () {
+  SWFDEC_STUB ("ExternalInterface._argumentsToXML (static)");
+};
+
 flash.external.ExternalInterface._toAS = function () {
   SWFDEC_STUB ("ExternalInterface._toAS (static)");
 };

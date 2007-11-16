@@ -2049,6 +2049,15 @@ EXTRA_DIST = \
 	setvariable-function-target-6.swf.trace \
 	setvariable-function-target-7.swf \
 	setvariable-function-target-7.swf.trace \
+	shared-object-properties.as \
+	shared-object-properties-5.swf \
+	shared-object-properties-5.swf.trace \
+	shared-object-properties-6.swf \
+	shared-object-properties-6.swf.trace \
+	shared-object-properties-7.swf \
+	shared-object-properties-7.swf.trace \
+	shared-object-properties-8.swf \
+	shared-object-properties-8.swf.trace \
 	shift.as \
 	shift-5.swf \
 	shift-5.swf.trace \

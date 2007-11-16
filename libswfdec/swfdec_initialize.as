@@ -846,6 +846,60 @@ flash.geom.Rectangle.prototype.toString = function () {
   SWFDEC_STUB ("Rectangle.toString");
 };
 
+/* Matrix */
+
+flash.geom.Matrix = function () {
+  SWFDEC_STUB ("Matrix");
+};
+
+flash.geom.Matrix.prototype.clone = function () {
+  SWFDEC_STUB ("Matrix.clone");
+};
+
+flash.geom.Matrix.prototype.concat = function () {
+  SWFDEC_STUB ("Matrix.concat");
+};
+
+flash.geom.Matrix.prototype.createBox = function () {
+  SWFDEC_STUB ("Matrix.createBox");
+};
+
+flash.geom.Matrix.prototype.createGradientBox = function () {
+  SWFDEC_STUB ("Matrix.createGradientBox");
+};
+
+flash.geom.Matrix.prototype.deltaTransformPoint = function () {
+  SWFDEC_STUB ("Matrix.deltaTransformPoint");
+};
+
+flash.geom.Matrix.prototype.identity = function () {
+  SWFDEC_STUB ("Matrix.identity");
+};
+
+flash.geom.Matrix.prototype.invert = function () {
+  SWFDEC_STUB ("Matrix.invert");
+};
+
+flash.geom.Matrix.prototype.rotate = function () {
+  SWFDEC_STUB ("Matrix.rotate");
+};
+
+flash.geom.Matrix.prototype.scale = function () {
+  SWFDEC_STUB ("Matrix.scale");
+};
+
+flash.geom.Matrix.prototype.transformPoint = function () {
+  SWFDEC_STUB ("Matrix.transformPoint");
+};
+
+flash.geom.Matrix.prototype.translate = function () {
+  SWFDEC_STUB ("Matrix.translate");
+};
+
+flash.geom.Matrix.prototype.toString = function () {
+  SWFDEC_STUB ("Matrix.toString");
+};
+
 /* ColorTransform */
 
 flash.geom.ColorTransform = ASconstructor (1105, 0);

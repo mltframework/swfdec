@@ -13,10 +13,10 @@ trace_properties (_global.parseInt, "_global", "parseInt");
 trace_properties (_global.setInterval, "_global", "setInterval");
 trace_properties (_global.setTimeout, "_global", "setTimeout");
 trace_properties (_global.showRedrawRegions, "_global", "showRedrawRegions");
+trace_properties (_global.trace, "_global", "trace");
 trace_properties (_global.unescape, "_global", "unescape");
+trace_properties (_global.updateAfterEvent, "_global", "updateAfterEvent");
 
 //trace_properties (_global.enableDebugConsole, "_global", "enableDebugConsole");
-//trace_properties (_global.trace, "_global", "trace");
-//trace_properties (_global.updateAfterEvent, "_global", "updateAfterEvent");
 
 loadMovie ("FSCommand:quit", "");

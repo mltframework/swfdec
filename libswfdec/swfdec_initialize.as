@@ -846,6 +846,17 @@ flash.geom.Rectangle.prototype.toString = function () {
   SWFDEC_STUB ("Rectangle.toString");
 };
 
+/* ColorTransform */
+
+flash.geom.ColorTransform = ASconstructor (1105, 0);
+
+flash.geom.ColorTransform.prototype.toString = function () {
+  SWFDEC_STUB ("ColorTransform.toString");
+};
+
+ASSetNative (flash.geom.ColorTransform.prototype, 1105, "8concat", 1);
+ASSetNativeAccessor (flash.geom.ColorTransform.prototype, 1105, "8alphaMultiplier,8redMultiplier,8greenMultiplier,8blueMultiplier,8alphaOffset,8redOffset,8greenOffset,8blueOffset,8rgb", 101);
+
 /* BitmapData */
 
 flash.display = {};

@@ -69,6 +69,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_text_snapshot.c \
 	swfdec_enums.c \
 	swfdec_event.c \
+	swfdec_external_interface.c \
 	swfdec_file_loader.c \
 	swfdec_file_reference.c \
 	swfdec_file_reference_list.c \

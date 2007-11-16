@@ -872,6 +872,66 @@ ASSetNative (flash.display.BitmapData, 1100, "8loadBitmap", 40);
 ASSetNative (flash.display.BitmapData.prototype, 1100, "8getPixel,8setPixel,8fillRect,8copyPixels,8applyFilter,8scroll,8threshold,8draw,8pixelDissolve,8getPixel32,8setPixel32,8floodFill,8getColorBoundsRect,8perlinNoise,8colorTransform,8hitTest,8paletteMap,8merge,8noise,8copyChannel,8clone,8dispose,8generateFilterRect,8compare", 1);
 ASSetNativeAccessor(flash.display.BitmapData.prototype, 1100, "8width,8height,8rectangle,8transparent", 100);
 
+/* ExternalInterface */
+
+flash.external = {};
+
+flash.external.ExternalInterface = function () {
+};
+
+flash.external.ExternalInterface.addCallback = function () {
+  SWFDEC_STUB ("ExternalInterface.addCallback (static)");
+};
+
+flash.external.ExternalInterface.call = function () {
+  SWFDEC_STUB ("ExternalInterface.call (static)");
+};
+
+flash.external.ExternalInterface._callIn = function () {
+  SWFDEC_STUB ("ExternalInterface._callIn (static)");
+};
+
+flash.external.ExternalInterface._toXML = function () {
+  SWFDEC_STUB ("ExternalInterface._toXML (static)");
+};
+
+flash.external.ExternalInterface._objectToXML = function () {
+  SWFDEC_STUB ("ExternalInterface._objectToXML (static)");
+};
+
+flash.external.ExternalInterface._toAS = function () {
+  SWFDEC_STUB ("ExternalInterface._toAS (static)");
+};
+
+flash.external.ExternalInterface._objectToAS = function () {
+  SWFDEC_STUB ("ExternalInterface._objectToAS (static)");
+};
+
+flash.external.ExternalInterface._arrayToAS = function () {
+  SWFDEC_STUB ("ExternalInterface._arrayToAS (static)");
+};
+
+flash.external.ExternalInterface._argumentsToAS = function () {
+  SWFDEC_STUB ("ExternalInterface._argumentsToAS (static)");
+};
+
+flash.external.ExternalInterface._toJS = function () {
+  SWFDEC_STUB ("ExternalInterface._toJS (static)");
+};
+
+flash.external.ExternalInterface._objectToJS = function () {
+  SWFDEC_STUB ("ExternalInterface._objectToJS (static)");
+};
+
+flash.external.ExternalInterface._arrayToJS = function () {
+  SWFDEC_STUB ("ExternalInterface._arrayToJS (static)");
+};
+
+ASSetNative (flash.external.ExternalInterface, 14, "8_initJS,8_objectID,8_addCallback,8_evalJS,8_callOut,8_escapeXML,8_unescapeXML,8_jsQuoteString");
+ASSetNativeAccessor (flash.external.ExternalInterface, 14, "8available", 100);
+
+ASSetPropFlags (flash.external.ExternalInterface, null, 4103);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

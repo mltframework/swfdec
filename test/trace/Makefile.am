@@ -2408,15 +2408,15 @@ EXTRA_DIST = \
 	text-field-variable-7.swf.trace \
 	text-field-variable-8.swf \
 	text-field-variable-8.swf.trace \
-	text-renderer-properties.as \
-	text-renderer-properties-5.swf \
-	text-renderer-properties-5.swf.trace \
-	text-renderer-properties-6.swf \
-	text-renderer-properties-6.swf.trace \
-	text-renderer-properties-7.swf \
-	text-renderer-properties-7.swf.trace \
-	text-renderer-properties-8.swf \
-	text-renderer-properties-8.swf.trace \
+	text-snapshot-properties.as \
+	text-snapshot-properties-5.swf \
+	text-snapshot-properties-5.swf.trace \
+	text-snapshot-properties-6.swf \
+	text-snapshot-properties-6.swf.trace \
+	text-snapshot-properties-7.swf \
+	text-snapshot-properties-7.swf.trace \
+	text-snapshot-properties-8.swf \
+	text-snapshot-properties-8.swf.trace \
 	textformat.as \
 	textformat-5.swf \
 	textformat-5.swf.trace \

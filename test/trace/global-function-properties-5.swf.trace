@@ -10,6 +10,8 @@ _global.clearInterval = function
 _global.clearTimeout = _global.clearInterval
   __proto__ (hp) = _global.Object.__proto__
   constructor (hp) = _global.Object.constructor
+_global.enableDebugConsole = function
+  no children
 _global.escape = function
   __proto__ (hpn) = _global.Object.__proto__
   constructor (hp) = _global.Object.constructor

@@ -846,6 +846,21 @@ flash.geom.Rectangle.prototype.toString = function () {
   SWFDEC_STUB ("Rectangle.toString");
 };
 
+/* BitmapData */
+
+flash.display = {};
+flash.display.BitmapData = ASconstructor (1100, 0);
+
+flash.display.BitmapData.RED_CHANNEL = 1;
+flash.display.BitmapData.GREEN_CHANNEL = 2;
+flash.display.BitmapData.BLUE_CHANNEL = 4;
+flash.display.BitmapData.ALPHA_CHANNEL = 8;
+
+ASSetNative (flash.display.BitmapData, 1100, "8loadBitmap", 40);
+
+ASSetNative (flash.display.BitmapData.prototype, 1100, "8getPixel,8setPixel,8fillRect,8copyPixels,8applyFilter,8scroll,8threshold,8draw,8pixelDissolve,8getPixel32,8setPixel32,8floodFill,8getColorBoundsRect,8perlinNoise,8colorTransform,8hitTest,8paletteMap,8merge,8noise,8copyChannel,8clone,8dispose,8generateFilterRect,8compare", 1);
+ASSetNativeAccessor(flash.display.BitmapData.prototype, 1100, "8width,8height,8rectangle,8transparent", 100);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

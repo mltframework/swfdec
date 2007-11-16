@@ -114,6 +114,14 @@ swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 /*** VARIOUS ***/
 
+SWFDEC_AS_NATIVE (1021, 1, swfdec_player_showRedrawRegions)
+void
+swfdec_player_showRedrawRegions (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("showRedrawRegions");
+}
+
 static SwfdecAsFunction *
 swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
 {

@@ -992,6 +992,7 @@ setInterval = ASnative (250, 0);
 clearInterval = ASnative (250, 1);
 setTimeout = ASnative(250, 2);
 clearTimeout = clearInterval;
+showRedrawRegions = ASnative (1021, 1);
 
 /*** OH THE HUMANITY ***/
 

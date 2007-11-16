@@ -1375,11 +1375,10 @@ swfdec_as_context_run_init_script (SwfdecAsContext *context, const guint8 *data,
       g_warning ("script passed to swfdec_as_context_run_init_script is invalid");
       return;
     }
+    // FIXME: Remove this when we no longer have stubs...
     swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_SWFDEC_STUB,
 	0, swfdec_as_context_stub, 0);
     swfdec_as_object_run (context->global, script);
-    swfdec_as_object_delete_variable (context->global,
-	SWFDEC_AS_STR_SWFDEC_STUB);
     swfdec_script_unref (script);
   } else {
     SWFDEC_LOG ("not running init script, since version is <= 4");

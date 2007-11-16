@@ -2501,6 +2501,15 @@ EXTRA_DIST = \
 	trace_properties.as \
 	transform.swf \
 	transform.swf.trace \
+	transform-properties.as \
+	transform-properties-5.swf \
+	transform-properties-5.swf.trace \
+	transform-properties-6.swf \
+	transform-properties-6.swf.trace \
+	transform-properties-7.swf \
+	transform-properties-7.swf.trace \
+	transform-properties-8.swf \
+	transform-properties-8.swf.trace \
 	transform2.swf \
 	transform2.swf.trace \
 	transform2.swf.trace.org \

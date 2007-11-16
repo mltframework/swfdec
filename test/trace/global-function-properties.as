@@ -2,6 +2,7 @@
 
 #include "trace_properties.as"
 
+trace_properties (_global.AsSetupError, "_global", "AsSetupError");
 trace_properties (_global.clearInterval, "_global", "clearInterval");
 trace_properties (_global.clearTimeout, "_global", "clearTimeout");
 trace_properties (_global.escape, "_global", "escape");

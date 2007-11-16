@@ -1,3 +1,9 @@
+_global.AsSetupError = function
+  __proto__ (hp) = _global.Function.prototype
+  constructor (hp) = _global.Function
+  prototype (hp) = object
+    __proto__ (hp) = _global.Object.prototype
+    constructor (hp) = _global.AsSetupError
 _global.clearInterval = function
   __proto__ (hp) = _global.Function.prototype
   constructor (hp) = _global.Function

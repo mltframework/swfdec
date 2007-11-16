@@ -1032,6 +1032,16 @@ function AsSetupError (names) {
   }
 }
 
+/* RemoteLSOUsage */
+
+function RemoteLSOUsage () {
+};
+
+RemoteLSOUsage.getURLPageSupport = function () {
+  SWFDEC_STUB ("RemoteLSOUsage.getURLPageSupport (static)");
+};
+ASSetPropFlags (RemoteLSOUsage, "getURLPageSupport", 1);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

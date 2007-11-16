@@ -202,10 +202,44 @@ XML.prototype.getBytesTotal = function () {
 /*** System ***/
 
 System = {};
+
 System.capabilities = {};
 System.capabilities.Query = ASnative (11, 0);
 System.capabilities.Query ();
 delete System.capabilities.Query;
+
+System.setClipboard = ASnative (1066, 0);
+System.showSettings = ASnative (2107, 0);
+ASSetNativeAccessor (System, 2107, "exactSettings,useCodePage", 1);
+ASSetPropFlags (System, "exactSettings,useCodePage", 128);
+
+/*** System.Product ***/
+
+System.Product = function () {
+  SWFDEC_STUB ("System.Product");
+};
+
+System.Product.prototype.isRunning = function () {
+  SWFDEC_STUB ("System.Product.isRunning");
+};
+
+System.Product.prototype.isInstalled = function () {
+  SWFDEC_STUB ("System.Product.isInstalled");
+};
+
+System.Product.prototype.launch = function () {
+  SWFDEC_STUB ("System.Product.launch");
+};
+
+System.Product.prototype.download = function () {
+  SWFDEC_STUB ("System.Product.download");
+};
+
+System.Product.prototype.installedVersion = function () {
+  SWFDEC_STUB ("System.Product.installedVersion");
+};
+
+ASSetPropFlags (System.Product.prototype, null, 3);
 
 /*** Color ***/
 

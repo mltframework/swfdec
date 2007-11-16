@@ -21,8 +21,6 @@
 #ifndef _SWFDEC_AS_DATE_H_
 #define _SWFDEC_AS_DATE_H_
 
-#include <sys/time.h>
-
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_script.h>

@@ -25,7 +25,8 @@
 #include "swfdec_decoder.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
-#include "swfdec_flv_decoder.h"
+#include "swfdec_image.h"
+#include "swfdec_image_decoder.h"
 #include "swfdec_swf_decoder.h"
 
 
@@ -64,6 +65,8 @@ swfdec_decoder_new (SwfdecPlayer *player, const SwfdecBuffer *buffer)
       data[2] == 'V') {
     retval = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
 #endif
+  } else if (swfdec_image_detect (data) != SWFDEC_IMAGE_TYPE_UNKNOWN) {
+    retval = g_object_new (SWFDEC_TYPE_IMAGE_DECODER, NULL);
   } else {
     retval = NULL;
   }
@@ -86,4 +89,15 @@ swfdec_decoder_parse (SwfdecDecoder *decoder, SwfdecBuffer *buffer)
   return klass->parse (decoder, buffer);
 }
 
+SwfdecStatus
+swfdec_decoder_eof (SwfdecDecoder *decoder)
+{
+  SwfdecDecoderClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_DECODER (decoder), SWFDEC_STATUS_ERROR);
+
+  klass = SWFDEC_DECODER_GET_CLASS (decoder);
+  g_return_val_if_fail (klass->eof, SWFDEC_STATUS_ERROR);
+  return klass->eof (decoder);
+}
 

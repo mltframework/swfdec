@@ -16,3 +16,5 @@ bla = "outermost scope";
 x = new Foo ();
 x.func ();
 x.func ();
+
+loadMovie ("FSCommand:quit", "");

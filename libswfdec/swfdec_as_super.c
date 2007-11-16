@@ -27,6 +27,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
@@ -71,19 +72,28 @@ swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
     const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
+  SwfdecAsObjectClass *klass;
+  SwfdecAsObject *cur;
+  guint i;
 
   if (super->object == NULL) {
     SWFDEC_WARNING ("super.%s () called without an object.", variable);
     return FALSE;
   }
-  if (super->object->prototype == NULL) {
-    SWFDEC_WARNING ("super.%s () called without a prototype.", variable);
-    return FALSE;
+  cur = super->object->prototype;
+  for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && cur != NULL; i++) {
+    klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
+    /* FIXME: is the orig pointer correct? */
+    if (klass->get (cur, super->object, variable, val, flags))
+      return TRUE;
+    /* FIXME: need get_prototype_internal here? */
+    cur = swfdec_as_object_get_prototype (cur);
   }
-  if (!swfdec_as_object_get_variable_and_flags (super->object->prototype, variable, val, NULL, NULL))
-    return FALSE;
+  if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT)
+    swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+  SWFDEC_AS_VALUE_SET_UNDEFINED (val);
   *flags = 0;
-  return TRUE;
+  return FALSE;
 }
 
 static void
@@ -133,76 +143,75 @@ swfdec_as_super_init (SwfdecAsSuper *super)
 {
 }
 
-SwfdecAsObject *
-swfdec_as_super_new (SwfdecAsFrame *frame)
+void
+swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject *ref)
 {
   SwfdecAsContext *context;
   SwfdecAsSuper *super;
-  SwfdecAsObject *ret;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
+  g_return_if_fail (ref == NULL || SWFDEC_IS_AS_OBJECT (ref));
   
-  if (frame->thisp == NULL) {
-    SWFDEC_FIXME ("found a case where this was NULL, test how super behaves here!");
-    return NULL;
-  }
-  /* functions called on native objects don't get a super object?! */
-  if (SWFDEC_IS_MOVIE (frame->thisp))
-    return NULL;
-
+  if (frame->super != NULL)
+    return;
   context = SWFDEC_AS_OBJECT (frame)->context;
-  if (context->version <= 5 && !frame->construct)
-    return NULL;
+  if (context->version <= 5)
+    return;
 
   if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
-    return NULL;
-  ret = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
-  swfdec_as_object_add (ret, context, sizeof (SwfdecAsSuper));
-  super = SWFDEC_AS_SUPER (ret);
-  super->thisp = frame->thisp;
+    return;
+  super = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
+  frame->super = SWFDEC_AS_OBJECT (super);
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (super), context, sizeof (SwfdecAsSuper));
+  super->thisp = thisp;
   if (context->version <= 5) {
     super->object = NULL;
   } else {
-    super->object = frame->thisp->prototype;
+    super->object = ref;
   }
-  return ret;
 }
 
 /**
- * swfdec_as_super_replace:
- * @super: the super object to replace from
- * @function_name: garbage-collected name of the function that was called on 
- *                 @super or %NULL
+ * swfdec_as_super_new_chain:
+ * @frame: the frame that is called
+ * @super: the super object to chain from
+ * @chain_to: object to chain to. Must be in the prototype chain of @super. Or
+ *            %NULL to just use the super object's prototype
  *
- * This is an internal function used to replace the current frame's super object
- * with the next one starting from @super. (FIXME: nice explanation!) So when 
- * super.foo () has been called, a new frame is constructed and after that this 
- * function is called with @super and "foo" as @function_name.
+ * This function creates a super object relative to the given @super object. It
+ * is only needed when calling functions on the @super object.
  **/
 void
-swfdec_as_super_replace (SwfdecAsSuper *super, const char *function_name)
+swfdec_as_super_new_chain (SwfdecAsFrame *frame, SwfdecAsSuper *super,
+    const char *function_name)
 {
-  SwfdecAsSuper *replace;
+  SwfdecAsObject *ref;
   SwfdecAsContext *context;
-
+	  
+  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (SWFDEC_IS_AS_SUPER (super));
 
-  context = SWFDEC_AS_OBJECT (super)->context;
-  replace = SWFDEC_AS_SUPER (context->frame->super);
-  if (replace == NULL)
+  if (frame->super != NULL)
     return;
-  if (super->object == NULL || super->object->prototype == NULL) {
-    replace->object = NULL;
+  
+  if (super->object == NULL)
     return;
-  }
-  replace->object = super->object->prototype;
+  ref = super->object->prototype;
+  if (ref == NULL)
+    return;
+  context = SWFDEC_AS_OBJECT (frame)->context;
   if (function_name && context->version > 6) {
+    /* skip prototypes to find the next one that has this function defined */
     SwfdecAsObject *res;
-    if (swfdec_as_object_get_variable_and_flags (replace->object, 
-	  function_name, NULL, NULL, &res) &&
-	replace->object != res) {
-      while (replace->object->prototype != res)
-	replace->object = replace->object->prototype;
+    if (swfdec_as_object_get_variable_and_flags (ref, 
+         function_name, NULL, NULL, &res) && ref != res) {
+      while (ref->prototype != res) {
+        ref = ref->prototype;
+        g_return_if_fail (ref);
+      }
     }
   }
+  swfdec_as_super_new (frame, super->thisp, ref);
 }
+

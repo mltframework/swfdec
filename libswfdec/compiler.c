@@ -60,7 +60,7 @@ main (int argc, char **argv)
   char *contents;
   GError *error = NULL;
   guint i;
-  size_t len;
+  gsize len;
   byte *data;
 
   if (argc < 2) {

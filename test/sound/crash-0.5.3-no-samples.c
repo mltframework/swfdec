@@ -28,15 +28,6 @@ do_movie ()
   SWFMovie_add (movie, (SWFBlock) movie_clip);
   SWFMovie_nextFrame (movie);
 
-  SWFMovie_add (movie, (SWFBlock) newSWFAction (""
-	"trace ('To crash or not to crash?');"
-	"function quit () {"
-	"  loadMovie ('FSCommand:quit', '');"
-	"}"
-	"setTimeout (quit, 200);"
-	""));
-  SWFMovie_nextFrame (movie);
-
   SWFMovie_save (movie, "crash-0.5.3-no-samples.swf");
 
   destroySWFSound (sound);

@@ -41,6 +41,16 @@ EXTRA_DIST = \
 	image-jpeg-alpha.swf.png \
 	image-lossless-alpha.swf \
 	image-lossless-alpha.swf.png \
+	load-jpeg.as \
+	load-jpeg-5.swf \
+	load-jpeg-5.swf.png \
+	load-jpeg-6.swf \
+	load-jpeg-6.swf.png \
+	load-jpeg-7.swf \
+	load-jpeg-7.swf.org.png \
+	load-jpeg-7.swf.png \
+	load-jpeg-8.swf \
+	load-jpeg-8.swf.png \
 	morph-gradient.c \
 	morph-gradient-4.swf \
 	morph-gradient-4.swf.png \
@@ -113,6 +123,7 @@ EXTRA_DIST = \
 	replace-shape-shape-6.swf.png \
 	replace-shape-shape-7.swf \
 	replace-shape-shape-7.swf.png \
+	swfdec.jpg \
 	text-field-autosize.as \
 	text-field-autosize-6.swf \
 	text-field-autosize-6.swf.png \

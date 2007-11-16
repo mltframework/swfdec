@@ -48,6 +48,11 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
   guint id, msecs;
 #define MIN_INTERVAL_TIME 10
 
+  if (argc < 2) {
+    SWFDEC_WARNING ("setInterval needs at least 2 arguments");
+    return;
+  }
+
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
     SWFDEC_WARNING ("first argument to setInterval is not an object");
     return;
@@ -96,13 +101,14 @@ swfdec_player_setTimeout (SwfdecAsContext *cx, SwfdecAsObject *obj,
 
 SWFDEC_AS_NATIVE (250, 1, swfdec_player_clearInterval)
 void
-swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *obj,
+swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
   guint id;
+
+  SWFDEC_AS_CHECK (0, NULL, "i", &id);
   
-  id = swfdec_as_value_to_integer (cx, &argv[0]);
   swfdec_interval_remove (player, id);
 }
 
@@ -276,9 +282,10 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   const char *name;
-  
-  name = swfdec_as_value_to_string (cx, &argv[0]);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
+
+  SWFDEC_AS_CHECK (0, NULL, "s", &name);
+
+  if (argc < 2 || !SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
     return;
   }

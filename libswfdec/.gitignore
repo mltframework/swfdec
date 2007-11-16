@@ -17,4 +17,3 @@ swfdec_enums.[ch]
 swfdec_marshal.[ch]
 
 compiler
-compute-strings

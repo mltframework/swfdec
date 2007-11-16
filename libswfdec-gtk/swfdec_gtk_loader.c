@@ -75,6 +75,22 @@ G_DEFINE_TYPE (SwfdecGtkLoader, swfdec_gtk_loader, SWFDEC_TYPE_FILE_LOADER)
 
 #ifdef HAVE_HTTP
 static void
+swfdec_gtk_loader_set_size (SwfdecGtkLoader *gtk)
+{
+  const char *s = soup_message_get_header (gtk->message->response_headers, "Content-Length");
+  unsigned long l;
+  char *end;
+
+  if (s == NULL)
+    return;
+
+  errno = 0;
+  l = strtoul (s, &end, 10);
+  if (errno == 0 && *end == 0 && l <= G_MAXLONG)
+    swfdec_loader_set_size (SWFDEC_LOADER (gtk), l);
+}
+
+static void
 swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
 {
   char *real_uri;
@@ -83,6 +99,7 @@ swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
     return;
 
   real_uri = soup_uri_to_string (soup_message_get_uri (gtk->message), FALSE);
+  swfdec_gtk_loader_set_size (gtk);
   swfdec_loader_open (SWFDEC_LOADER (gtk), real_uri);
   gtk->opened = TRUE;
   g_free (real_uri);
@@ -98,22 +115,6 @@ swfdec_gtk_loader_push (SoupMessage *msg, gpointer loader)
   buffer = swfdec_buffer_new_and_alloc (msg->response.length);
   memcpy (buffer->data, msg->response.body, msg->response.length);
   swfdec_loader_push (loader, buffer);
-}
-
-static void
-swfdec_gtk_loader_headers (SoupMessage *msg, gpointer loader)
-{
-  const char *s = soup_message_get_header (msg->response_headers, "Content-Length");
-  unsigned long l;
-  char *end;
-
-  if (s == NULL)
-    return;
-
-  errno = 0;
-  l = strtoul (s, &end, 10);
-  if (errno == 0 && *end == 0 && l <= G_MAXLONG)
-    swfdec_loader_set_size (loader, l);
 }
 
 static void
@@ -136,7 +137,6 @@ swfdec_gtk_loader_dispose (GObject *object)
 
   if (gtk->message) {
     g_signal_handlers_disconnect_by_func (gtk->message, swfdec_gtk_loader_push, gtk);
-    g_signal_handlers_disconnect_by_func (gtk->message, swfdec_gtk_loader_headers, gtk);
     g_signal_handlers_disconnect_by_func (gtk->message, swfdec_gtk_loader_finished, gtk);
     g_object_unref (gtk->message);
     gtk->message = NULL;
@@ -166,7 +166,6 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
 	swfdec_url_get_url (url));
     soup_message_set_flags (gtk->message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
     g_signal_connect (gtk->message, "got-chunk", G_CALLBACK (swfdec_gtk_loader_push), gtk);
-    g_signal_connect (gtk->message, "got-headers", G_CALLBACK (swfdec_gtk_loader_headers), gtk);
     g_signal_connect (gtk->message, "finished", G_CALLBACK (swfdec_gtk_loader_finished), gtk);
     if (data)
       soup_message_set_request (gtk->message, "appliation/x-www-urlencoded",

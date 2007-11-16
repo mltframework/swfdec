@@ -688,6 +688,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   /* create arguments and super object if necessary */
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {
+    SwfdecAsFrame *next;
     args = swfdec_as_array_new (context);
     if (!args)
       goto out;
@@ -695,12 +696,28 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 	cur = swfdec_as_stack_iterator_next (&iter)) {
       swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
     }
+
+    next = frame->next;
+    while (next != NULL && (next->function == NULL ||
+	SWFDEC_IS_AS_NATIVE_FUNCTION (next->function))) {
+      next = next->next;
+    }
+    if (next != NULL) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (next->function));
+    } else {
+      SWFDEC_AS_VALUE_SET_NULL (&val);
+    }
+    swfdec_as_object_set_variable (args, SWFDEC_AS_STR_caller, &val);
+
+    if (frame->function != NULL) {
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->function));
+    } else {
+      SWFDEC_AS_VALUE_SET_NULL (&val);
+    }
+    swfdec_as_object_set_variable (args, SWFDEC_AS_STR_callee, &val);
   } else {
     /* silence gcc */
     args = NULL;
-  }
-  if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_SUPER | SWFDEC_SCRIPT_SUPPRESS_SUPER)) != SWFDEC_SCRIPT_SUPPRESS_SUPER) {
-    frame->super = swfdec_as_super_new (frame);
   }
 
   /* set the default variables (unless suppressed */

@@ -78,6 +78,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_graphic.c \
 	swfdec_graphic_movie.c \
 	swfdec_image.c \
+	swfdec_image_decoder.c \
 	swfdec_interval.c \
 	swfdec_key_as.c \
 	swfdec_load_object.c \
@@ -215,6 +216,7 @@ noinst_HEADERS = \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
+	swfdec_image_decoder.h \
 	swfdec_initialize.h \
 	swfdec_internal.h \
 	swfdec_interval.h \

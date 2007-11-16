@@ -58,6 +58,7 @@ struct _SwfdecDecoder
   GObject		object;
 
   SwfdecPlayer *	player;		/* FIXME: only needed to get the JS Context, I want it gone */
+  SwfdecLoaderDataType	data_type;	/* type of the data we provide or UNKNOWN if not known yet */
   guint			rate;		/* rate per second in 256th */
   guint			width;		/* width of stream */
   guint			height;		/* guess */
@@ -73,6 +74,7 @@ struct _SwfdecDecoderClass
 
   SwfdecStatus		(* parse)		(SwfdecDecoder *	decoder,
 						 SwfdecBuffer *		buffer);
+  SwfdecStatus		(* eof)			(SwfdecDecoder *	decoder);
 };
 
 GType		swfdec_decoder_get_type		(void);
@@ -83,6 +85,7 @@ SwfdecDecoder *	swfdec_decoder_new		(SwfdecPlayer *		player,
 
 SwfdecStatus	swfdec_decoder_parse		(SwfdecDecoder *	decoder,
 						 SwfdecBuffer * 	buffer);
+SwfdecStatus	swfdec_decoder_eof		(SwfdecDecoder *	decoder);
 
 
 G_END_DECLS

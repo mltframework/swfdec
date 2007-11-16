@@ -9,3 +9,5 @@ Makefile.in
 *.o
 
 image
+*.dump.png
+*.diff.png

@@ -443,5 +443,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("pageWidth")
   SWFDEC_AS_CONSTANT_STRING ("paperHeight")
   SWFDEC_AS_CONSTANT_STRING ("paperWidth")
+  SWFDEC_AS_CONSTANT_STRING ("callee")
+  SWFDEC_AS_CONSTANT_STRING ("caller")
   /* add more here */
 ;

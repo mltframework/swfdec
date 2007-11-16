@@ -387,6 +387,15 @@ EXTRA_DIST = \
 	color-setTransform-negative.swf.trace \
 	color-setTransform-full.swf \
 	color-setTransform-full.swf.trace \
+	color-transform-properties.as \
+	color-transform-properties-5.swf\
+	color-transform-properties-5.swf.trace\
+	color-transform-properties-6.swf\
+	color-transform-properties-6.swf.trace\
+	color-transform-properties-7.swf\
+	color-transform-properties-7.swf.trace\
+	color-transform-properties-8.swf\
+	color-transform-properties-8.swf.trace\
 	color1.swf \
 	color1.swf.trace \
 	comparisons-4.swf \

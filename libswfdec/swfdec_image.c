@@ -582,6 +582,10 @@ swfdec_image_png_load (SwfdecImage *image)
   swfdec_bits_init (&bits, image->raw_data);
   image->surface = cairo_image_surface_create_from_png_stream (
       swfdec_image_png_read, &bits);
+  image->width = cairo_image_surface_get_width (image->surface);
+  image->height = cairo_image_surface_get_height (image->surface);
+  swfdec_cached_load (SWFDEC_CACHED (image), image->height *
+      cairo_image_surface_get_stride (image->surface));
 }
 
 cairo_surface_t *

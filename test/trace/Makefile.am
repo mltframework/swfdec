@@ -220,6 +220,15 @@ EXTRA_DIST = \
 	ASSetPropFlags-ignore-7.swf.trace \
 	ASSetPropFlags-ignore-8.swf \
 	ASSetPropFlags-ignore-8.swf.trace \
+	assetuperror.as \
+	assetuperror-5.swf \
+	assetuperror-5.swf.trace \
+	assetuperror-6.swf \
+	assetuperror-6.swf.trace \
+	assetuperror-7.swf \
+	assetuperror-7.swf.trace \
+	assetuperror-8.swf \
+	assetuperror-8.swf.trace \
 	atan2-5.swf \
 	atan2-5.swf.trace \
 	atan2-6.swf \

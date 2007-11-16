@@ -752,6 +752,100 @@ flash.geom.Point.prototype.toString = function () {
   return "(x=" + this.x + ", y=" + this.y + ")";
 };
 
+/* Rectangle */
+
+flash.geom.Rectangle = function () {
+  SWFDEC_STUB ("Rectangle");
+};
+
+flash.geom.Rectangle.prototype.clone = function () {
+  SWFDEC_STUB ("Rectangle.clone");
+};
+
+flash.geom.Rectangle.prototype.setEmpty = function () {
+  SWFDEC_STUB ("Rectangle.setEmpty");
+};
+
+flash.geom.Rectangle.prototype.isEmpty = function () {
+  SWFDEC_STUB ("Rectangle.isEmpty");
+};
+
+flash.geom.Rectangle.prototype.addProperty ("left",
+    function () { SWFDEC_STUB ("Rectangle.left (get)"); },
+    function () { SWFDEC_STUB ("Rectangle.left (set)"); });
+
+flash.geom.Rectangle.prototype.addProperty ("right",
+    function () { SWFDEC_STUB ("Rectangle.right (get)"); },
+    function () { SWFDEC_STUB ("Rectangle.right (set)"); });
+
+flash.geom.Rectangle.prototype.addProperty ("top",
+    function () { SWFDEC_STUB ("Rectangle.top (get)"); },
+    function () { SWFDEC_STUB ("Rectangle.top (set)"); });
+
+flash.geom.Rectangle.prototype.addProperty ("bottom",
+    function () { SWFDEC_STUB ("Rectangle.bottom (get)"); },
+    function () { SWFDEC_STUB ("Rectangle.bottom (set)"); });
+
+flash.geom.Rectangle.prototype.addProperty ("topLeft",
+    function () { SWFDEC_STUB ("Rectangle.topLeft (get)"); },
+    function () { SWFDEC_STUB ("Rectangle.topLeft (set)"); });
+
+flash.geom.Rectangle.prototype.addProperty ("bottomRight",
+    function () { SWFDEC_STUB ("Rectangle.bottomRight (get)"); },
+    function () { SWFDEC_STUB ("Rectangle.bottomRight (set)"); });
+
+flash.geom.Rectangle.prototype.addProperty ("size",
+    function () { SWFDEC_STUB ("Rectangle.size (get)"); },
+    function () { SWFDEC_STUB ("Rectangle.size (set)"); });
+
+flash.geom.Rectangle.prototype.inflate = function () {
+  SWFDEC_STUB ("Rectangle.inflate");
+};
+
+flash.geom.Rectangle.prototype.inflatePoint = function () {
+  SWFDEC_STUB ("Rectangle.inflatePoint");
+};
+
+flash.geom.Rectangle.prototype.offset = function () {
+  SWFDEC_STUB ("Rectangle.offset");
+};
+
+flash.geom.Rectangle.prototype.offsetPoint = function () {
+  SWFDEC_STUB ("Rectangle.offsetPoint");
+};
+
+flash.geom.Rectangle.prototype.contains = function () {
+  SWFDEC_STUB ("Rectangle.contains");
+};
+
+flash.geom.Rectangle.prototype.containsPoint = function () {
+  SWFDEC_STUB ("Rectangle.containsPoint");
+};
+
+flash.geom.Rectangle.prototype.containsRectangle = function () {
+  SWFDEC_STUB ("Rectangle.containsRectangle");
+};
+
+flash.geom.Rectangle.prototype.intersection = function () {
+  SWFDEC_STUB ("Rectangle.intersection");
+};
+
+flash.geom.Rectangle.prototype.intersects = function () {
+  SWFDEC_STUB ("Rectangle.intersects");
+};
+
+flash.geom.Rectangle.prototype.union = function () {
+  SWFDEC_STUB ("Rectangle.union");
+};
+
+flash.geom.Rectangle.prototype.equals = function () {
+  SWFDEC_STUB ("Rectangle.equals");
+};
+
+flash.geom.Rectangle.prototype.toString = function () {
+  SWFDEC_STUB ("Rectangle.toString");
+};
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

@@ -213,6 +213,12 @@ System.showSettings = ASnative (2107, 0);
 ASSetNativeAccessor (System, 2107, "exactSettings,useCodePage", 1);
 ASSetPropFlags (System, "exactSettings,useCodePage", 128);
 
+/*** System.security */
+
+System.security = new Object();
+ASSetNative (System.security, 12, "allowDomain,7allowInsecureDomain,loadPolicyFile,chooseLocalSwfPath,escapeDomain");
+ASSetNativeAccessor (System.security, 12, "sandboxType", 5);
+
 /*** System.Product ***/
 
 System.Product = function () {

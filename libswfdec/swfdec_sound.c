@@ -368,7 +368,7 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
     for (j = 0; j < 2; j++) {
       chunk->envelope[i].volume[j] = swfdec_bits_get_u16 (b);
       if (chunk->envelope[i].volume[j] > 32768) {
-	SWFDEC_ERROR ("envelope volume too big: %u > 32768",
+	SWFDEC_FIXME ("too big envelope volumes (%u > 32768) not handled correctly",
 	    chunk->envelope[i].volume[j]);
 	chunk->envelope[i].volume[j] = 32768;
       }

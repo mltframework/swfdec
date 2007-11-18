@@ -50,32 +50,32 @@ swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
     return 0;
 }
 
-static double
+static guint16
 swfdec_audio_event_get_envelop_volume (SwfdecAudioEvent *event, guint pos,
     guint offset, guint channel)
 {
   double distance;
 
-  g_return_val_if_fail (SWFDEC_IS_AUDIO_EVENT (event), 1);
-  g_return_val_if_fail (pos <= event->n_envelopes, 1);
-  g_return_val_if_fail (channel == 0 || channel == 1, 1);
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_EVENT (event), 32768);
+  g_return_val_if_fail (pos <= event->n_envelopes, 32768);
+  g_return_val_if_fail (channel == 0 || channel == 1, 32768);
 
   if (event->n_envelopes == 0)
-    return 1;
+    return 32768;
 
   if (pos == 0)
-    return event->envelope[pos].volume[channel] / 32768.0;
+    return event->envelope[pos].volume[channel];
 
   if (pos == event->n_envelopes)
-    return event->envelope[pos - 1].volume[channel] / 32768.0;
+    return event->envelope[pos - 1].volume[channel];
 
   distance = event->envelope[pos].offset - event->envelope[pos - 1].offset;
   g_return_val_if_fail (offset >= event->envelope[pos - 1].offset, 1);
   offset -= event->envelope[pos - 1].offset;
   g_return_val_if_fail (offset < distance, 1);
 
-  return (event->envelope[pos - 1].volume[channel] * (1 - offset / distance) +
-      event->envelope[pos].volume[channel] * (offset / distance)) / 32768.0;
+  return event->envelope[pos - 1].volume[channel] * (1 - offset / distance) +
+    event->envelope[pos].volume[channel] * (offset / distance);
 }
 
 static void
@@ -119,13 +119,13 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
 	event->envelope[pos].offset <= global_offset + (i / 2))
       pos++;
     if (channels == 1) {
-      dest[i] *= swfdec_audio_event_get_envelop_volume (event, pos,
+      dest[i] *= (swfdec_audio_event_get_envelop_volume (event, pos,
 	  global_offset + (i / 2), 0) * 0.5 +
 	  swfdec_audio_event_get_envelop_volume (event, pos,
-	    global_offset + (i / 2), 1) * 0.5;
+	    global_offset + (i / 2), 1) * 0.5) / 32768.0;
     } else {
       dest[i] *= swfdec_audio_event_get_envelop_volume (event, pos,
-	  global_offset + (i / 2), i % 2);
+	  global_offset + (i / 2), i % 2) / 32768.0;
     }
   }
 }

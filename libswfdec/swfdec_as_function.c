@@ -103,14 +103,12 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
     SwfdecAsObject *thisp, guint n_args, const SwfdecAsValue *args, 
     SwfdecAsValue *return_value)
 {
-  SwfdecAsContext *context;
   SwfdecAsFrame *frame;
   SwfdecAsFunctionClass *klass;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (function), NULL);
   g_return_val_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp), NULL);
 
-  context = SWFDEC_AS_OBJECT (function)->context;
   /* just to be sure... */
   if (return_value)
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);

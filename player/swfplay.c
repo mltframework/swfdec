@@ -103,6 +103,7 @@ main (int argc, char *argv[])
 {
   int delay = 0;
   int speed = 100;
+  int max_runtime = 0;
   SwfdecLoader *loader;
   SwfdecPlayer *player;
   GError *error = NULL;
@@ -117,6 +118,7 @@ main (int argc, char *argv[])
     { "always-gc", 'g', 0, G_OPTION_ARG_NONE, &gc, "run the garbage collector as often as possible", NULL },
     { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "make loading of resources take time", "SECS" },
     { "image", 'i', 0, G_OPTION_ARG_NONE, &use_image, "use an intermediate image surface for drawing", NULL },
+    { "max-runtime", 0, 0, G_OPTION_ARG_INT, &max_runtime, "maximum time scripts run before aborting the player", "SECS" },
     { "no-scripts", 0, 0, G_OPTION_ARG_NONE, &no_scripts, "don't execute scripts affecting the application", NULL },
     { "no-sound", 'n', 0, G_OPTION_ARG_NONE, &no_sound, "don't play sound", NULL },
     { "redraws", 'r', 0, G_OPTION_ARG_NONE, &redraws, "show redraw regions", NULL },
@@ -157,7 +159,8 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, TRUE);
   player = swfdec_gtk_player_new (NULL);
   /* this allows the player to continue fine when running in gdb */
-  swfdec_player_set_maximum_runtime (player, 0);
+  if (max_runtime >= 0)
+    swfdec_player_set_maximum_runtime (player, max_runtime * 1000);
   if (gc)
     g_object_set (player, "memory-until-gc", (gulong) 0, NULL);
   if (trace)

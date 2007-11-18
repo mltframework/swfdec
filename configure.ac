@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.5.3.1)
+AC_INIT(swfdec,0.5.4.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -33,7 +33,7 @@ else
 fi
 AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="3:0:0"
+SWFDEC_LIBVERSION="4:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
@@ -72,7 +72,7 @@ AC_ARG_WITH(pkg-config-path,
 dnl Check for essential libraries first:
 dnl ====================================
 
-GLIB_VER=2.10
+GLIB_VER=2.12
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_VER gobject-2.0 >= $GLIB_VER gthread-2.0 >= $GLIB_VER,
 		HAVE_GLIB=yes, HAVE_GLIB=no)
 if test "$HAVE_GLIB" = "no"; then
@@ -87,9 +87,10 @@ AC_SUBST(GLIB_GENMARSHAL)
 GLIB_MKENUMS=glib-mkenums
 AC_SUBST(GLIB_MKENUMS)
 
-PKG_CHECK_MODULES(PANGO, pangocairo, HAVE_PANGO=yes, HAVE_PANGO=no)
+PANGO_VER=1.16
+PKG_CHECK_MODULES(PANGO, pangocairo >= $PANGO_VER, HAVE_PANGO=yes, HAVE_PANGO=no)
 if test "$HAVE_PANGO" = "no"; then
-  AC_MSG_ERROR([pangocairo is required to build swfdec])
+  AC_MSG_ERROR([pangocairo >= $PANGO_VER is required to build swfdec])
 fi
 AC_SUBST(PANGO_LIBS)
 AC_SUBST(PANGO_CFLAGS)
@@ -286,11 +287,12 @@ AC_ARG_ENABLE(vivified,
 if test "$enable_vivi" = "yes"; then
 	MING_REQUIRED=0.4.0.beta5
 	VIVI_GTK_REQUIRED=2.11.6
-	PKG_CHECK_MODULES(VIVI, libming >= $MING_REQUIRED gmodule-export-2.0 gtk+-2.0 >= $VIVI_GTK_REQUIRED, HAVE_VIVI=yes, HAVE_VIVI=no)
+	VIVI_GLIB_REQUIRED=2.14
+	PKG_CHECK_MODULES(VIVI, libming >= $MING_REQUIRED gmodule-export-2.0 gtk+-2.0 >= $VIVI_GTK_REQUIRED glib-2.0 >= $VIVI_GLIB_REQUIRED, HAVE_VIVI=yes, HAVE_VIVI=no)
 	if test "x$HAVE_VIVI" = xyes; then
 	  AC_DEFINE(HAVE_VIVI, 1, [Define if Vivified is enabled])
 	else
-	  AC_MSG_ERROR([Vivified requirements not met. You need libming >= $MING_REQUIRED and Gtk+ >= $VIVI_GTK_REQUIRED.])
+	  AC_MSG_ERROR([Vivified requirements not met. You need libming >= $MING_REQUIRED, glib >= $VIVI_GLIB_REQUIRED and Gtk+ >= $VIVI_GTK_REQUIRED.])
 	fi
 else
 	AC_MSG_NOTICE([Vivified was not enabled.])

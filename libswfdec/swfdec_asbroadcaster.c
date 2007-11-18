@@ -24,6 +24,8 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_context.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
 
 /*** AS CODE ***/
@@ -70,6 +72,7 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   if (list == NULL)
     return;
+
   list = g_slist_reverse (list);
   for (walk = list; walk; walk = walk->next) {
     swfdec_as_object_call (walk->data, name, argc, argv, &val);

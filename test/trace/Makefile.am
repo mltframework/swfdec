@@ -83,6 +83,15 @@ EXTRA_DIST = \
 	and-or-6.swf.trace \
 	and-or-7.swf \
 	and-or-7.swf.trace \
+	arguments.as \
+	arguments-5.swf \
+	arguments-5.swf.trace \
+	arguments-6.swf \
+	arguments-6.swf.trace \
+	arguments-7.swf \
+	arguments-7.swf.trace \
+	arguments-8.swf \
+	arguments-8.swf.trace \
 	array.swf \
 	array.swf.trace \
 	array-new.as \
@@ -248,6 +257,15 @@ EXTRA_DIST = \
 	callfunction-stack.as \
 	callfunction-stack.swf \
 	callfunction-stack.swf.trace \
+	callmethod-this.as \
+	callmethod-this-5.swf \
+	callmethod-this-5.swf.trace \
+	callmethod-this-6.swf \
+	callmethod-this-6.swf.trace \
+	callmethod-this-7.swf \
+	callmethod-this-7.swf.trace \
+	callmethod-this-8.swf \
+	callmethod-this-8.swf.trace \
 	callmethod-undefined-this-5.swf \
 	callmethod-undefined-this-5.swf.trace \
 	callmethod-undefined-this-6.swf \
@@ -2096,6 +2114,15 @@ EXTRA_DIST = \
 	super-equals-this-7.swf.trace \
 	super-equals-this-8.swf \
 	super-equals-this-8.swf.trace \
+	super-existance.as \
+	super-existance-5.swf \
+	super-existance-5.swf.trace \
+	super-existance-6.swf \
+	super-existance-6.swf.trace \
+	super-existance-7.swf \
+	super-existance-7.swf.trace \
+	super-existance-8.swf \
+	super-existance-8.swf.trace \
 	super-missing.as \
 	super-missing-5.swf \
 	super-missing-5.swf.trace \
@@ -2282,6 +2309,9 @@ EXTRA_DIST = \
 	tointeger-various-6.swf.trace \
 	tointeger-various-7.swf \
 	tointeger-various-7.swf.trace \
+	totalframes.xml \
+	totalframes.swf \
+	totalframes.swf.trace \
 	trace_properties.as \
 	transform.swf \
 	transform.swf.trace \

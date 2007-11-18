@@ -138,6 +138,10 @@ swfdec_audio_event_dispose (GObject *object)
   g_free (audio->envelope);
   audio->envelope = NULL;
   audio->n_envelopes = 0;
+  if (audio->decoded) {
+    swfdec_buffer_unref (audio->decoded);
+    audio->decoded = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_audio_event_parent_class)->dispose (object);
 }

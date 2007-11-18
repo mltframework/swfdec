@@ -639,7 +639,7 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
   if (end == NULL)
     end = strchr (p, '\0');
 
-  if (!xml->ignoreWhite || strspn (p, " \t\r\n") < (size_t)(end - p))
+  if (!xml->ignoreWhite || strspn (p, " \t\r\n") < (gsize)(end - p))
   {
     text = g_strndup (p, end - p);
     unescaped = swfdec_xml_unescape (SWFDEC_AS_OBJECT (xml)->context, text);

@@ -645,6 +645,7 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTr
   tdata = g_try_malloc (image->width * image->height * 4);
   if (!tdata) {
     SWFDEC_ERROR ("failed to allocate memory for transformed image");
+    cairo_surface_destroy (source);
     return NULL;
   }
   /* FIXME: This code assumes a rowstride of 4 * width */

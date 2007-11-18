@@ -891,6 +891,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
       SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 3));
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 2), obj);
       name = "";
+      pobj = obj;
     } else {
       SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_peek (cx, 3), obj);
       swfdec_as_object_get_variable_and_flags (obj, name, swfdec_as_stack_peek (cx, 2), NULL, &pobj);
@@ -1147,6 +1148,8 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
 	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL);
+  } else {
+    swfdec_player_launch (SWFDEC_PLAYER (cx), SWFDEC_LOADER_REQUEST_DEFAULT, url, target, NULL);
   }
   g_free (url);
   g_free (target);

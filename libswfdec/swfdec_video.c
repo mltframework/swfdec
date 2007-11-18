@@ -128,6 +128,8 @@ swfdec_video_input_disconnect (SwfdecVideoMovieInput *input_, SwfdecVideoMovie *
   g_assert (input->movie == movie);
   if (input->decoder)
     swfdec_video_decoder_free (input->decoder);
+  if (input->surface)
+    cairo_surface_destroy (input->surface);
   g_object_unref (input->video);
   g_slice_free (SwfdecVideoInput, input);
 }

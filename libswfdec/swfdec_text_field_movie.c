@@ -724,11 +724,13 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   swfdec_rect_intersect (&limit, &movie->original_extents, inval);
 
-  cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0, limit.y1 - limit.y0);
+  cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0,
+      limit.y1 - limit.y0);
   cairo_clip (cr);
 
   if (text->background) {
-    cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0, limit.y1 - limit.y0);
+    cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0,
+	limit.y1 - limit.y0);
     color = swfdec_color_apply_transform (text_movie->background_color, trans);
     // always use full alpha
     swfdec_color_set_source (cr, color | SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
@@ -736,11 +738,13 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 
   if (text->border) {
-    cairo_rectangle (cr, movie->original_extents.x0 + SWFDEC_DOUBLE_TO_TWIPS (1),
-	movie->original_extents.y0, movie->original_extents.x1 -
-	movie->original_extents.x0 - SWFDEC_DOUBLE_TO_TWIPS (1),
-	movie->original_extents.y1 - movie->original_extents.y0 -
-	SWFDEC_DOUBLE_TO_TWIPS (1));
+    // FIXME: border should be partly outside the extents and should not be
+    // scaled, but always be 1 pixel width
+    cairo_rectangle (cr, movie->original_extents.x0 +
+	SWFDEC_DOUBLE_TO_TWIPS (1), movie->original_extents.y0,
+	movie->original_extents.x1 - movie->original_extents.x0 -
+	SWFDEC_DOUBLE_TO_TWIPS (1), movie->original_extents.y1 -
+	movie->original_extents.y0 - SWFDEC_DOUBLE_TO_TWIPS (1));
     color = swfdec_color_apply_transform (text_movie->border_color, trans);
     // always use full alpha
     swfdec_color_set_source (cr, color | SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
@@ -832,7 +836,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       line = pango_layout_iter_get_line_readonly (iter_line);
       pango_cairo_show_layout_line (cr, line);
       cairo_rel_move_to (cr, -(layout->offset_x + rect.x),
-	  -(pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped));
+	  -(pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE -
+	    skipped));
       if (pango_layout_iter_at_last_line (iter_line))
 	cairo_rel_move_to (cr, 0, -layout->last_line_offset_y);
     } while (pango_layout_iter_next_line (iter_line));

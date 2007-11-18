@@ -852,6 +852,8 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
       cairo_pattern_set_matrix (pattern, &matrix);
       cairo_set_source (cr, pattern);
       cairo_paint (cr);
+      cairo_pattern_destroy (pattern);
+      cairo_surface_destroy (surface);
     }
   }
 

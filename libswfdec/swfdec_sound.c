@@ -348,6 +348,10 @@ swfdec_sound_parse_chunk (SwfdecSwfDecoder *s, SwfdecBits *b, int id)
   }
   if (has_loops) {
     chunk->loop_count = swfdec_bits_get_u16 (b);
+    if (chunk->loop_count == 0) {
+      SWFDEC_ERROR ("loop_count 0 not allowed, setting to 1");
+      chunk->loop_count = 1;
+    }
     SWFDEC_LOG ("  loop_count = %u", chunk->loop_count);
   } else {
     chunk->loop_count = 1;

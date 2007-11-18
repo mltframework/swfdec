@@ -114,18 +114,18 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
     return;
 
   pos = 0;
-  for (i = 0; i < (dest_end - dest) / 2; i++) {
+  for (i = 0; i < dest_end - dest; i++) {
     while (pos < event->n_envelopes &&
-	event->envelope[pos].offset <= global_offset + i)
+	event->envelope[pos].offset <= global_offset + (i / 2))
       pos++;
     if (channels == 1) {
       dest[i] *= (swfdec_audio_event_get_envelop_volume (event, pos,
 	  global_offset + i, 0) * 0.5 +
-	  swfdec_audio_event_get_envelop_volume (event, pos, global_offset + i,
-	    1) * 0.5) / 32768.0;
+	  swfdec_audio_event_get_envelop_volume (event, pos,
+	    global_offset + (i / 2), 1) * 0.5) / 32768.0;
     } else {
       dest[i] *= swfdec_audio_event_get_envelop_volume (event, pos,
-	  global_offset + i, i % 2) / 32768.0;
+	  global_offset + (i / 2), i % 2) / 32768.0;
     }
   }
 }

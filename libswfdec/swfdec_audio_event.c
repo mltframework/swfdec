@@ -64,10 +64,10 @@ swfdec_audio_event_get_envelop_volume (SwfdecAudioEvent *event, guint pos,
     return 1;
 
   if (pos == 0)
-    return event->envelope[pos].volume[channel] / 32768;
+    return event->envelope[pos].volume[channel] / 32768.0;
 
   if (pos == event->n_envelopes)
-    return event->envelope[pos - 1].volume[channel] / 32768;
+    return event->envelope[pos - 1].volume[channel] / 32768.0;
 
   distance = event->envelope[pos].offset - event->envelope[pos - 1].offset;
   g_return_val_if_fail (offset >= event->envelope[pos - 1].offset, 1);
@@ -75,7 +75,7 @@ swfdec_audio_event_get_envelop_volume (SwfdecAudioEvent *event, guint pos,
   g_return_val_if_fail (offset < distance, 1);
 
   return (event->envelope[pos - 1].volume[channel] * (1 - offset / distance) +
-      event->envelope[pos].volume[channel] * (offset / distance)) / 32768;
+      event->envelope[pos].volume[channel] * (offset / distance)) / 32768.0;
 }
 
 static void
@@ -120,7 +120,7 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
       pos++;
     if (channels == 1) {
       dest[i] *= swfdec_audio_event_get_envelop_volume (event, pos,
-	  global_offset + i, 0) * 0.5 +
+	  global_offset + (i / 2), 0) * 0.5 +
 	  swfdec_audio_event_get_envelop_volume (event, pos,
 	    global_offset + (i / 2), 1);
     } else {

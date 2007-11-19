@@ -695,6 +695,15 @@ EXTRA_DIST = \
 	double-to-string-7.swf \
 	double-to-string-7.swf.trace \
 	double-to-string-7.swf.trace.org \
+	drop-shadow-filter-properties.as \
+	drop-shadow-filter-properties-5.swf \
+	drop-shadow-filter-properties-5.swf.trace \
+	drop-shadow-filter-properties-6.swf \
+	drop-shadow-filter-properties-6.swf.trace \
+	drop-shadow-filter-properties-7.swf \
+	drop-shadow-filter-properties-7.swf.trace \
+	drop-shadow-filter-properties-8.swf \
+	drop-shadow-filter-properties-8.swf.trace \
 	duplicateMovieClip-events.c \
 	duplicateMovieClip-events-5.swf \
 	duplicateMovieClip-events-5.swf.trace \

@@ -68,6 +68,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_decoder.c \
 	swfdec_displacement_map_filter.c \
 	swfdec_draw.c \
+	swfdec_drop_shadow_filter.c \
 	swfdec_text_field.c \
 	swfdec_text_field_movie.c \
 	swfdec_text_field_movie_as.c \

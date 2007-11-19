@@ -1143,6 +1143,13 @@ flash.filters.DisplacementMapFilter.prototype = new flash.filters.BitmapFilter (
 
 ASSetNativeAccessor (flash.filters.DisplacementMapFilter.prototype, 1111, "8mapBitmap,8mapPoint,8componentX,8componentY,8scaleX,8scaleY,8mode,8color,8alpha", 1);
 
+/* DropShadowFilter */
+
+flash.filters.DropShadowFilter = ASconstructor (1101, 0);
+flash.filters.DropShadowFilter.prototype = new flash.filters.BitmapFilter();
+
+ASSetNativeAccessor (flash.filters.DropShadowFilter.prototype, 1101, "8distance,8angle,8color,8alpha,8quality,8inner,8knockout,8blurX,8blurY,8strength,8hideObject", 1);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

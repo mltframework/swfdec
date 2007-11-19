@@ -1190,6 +1190,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
       cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
       cairo_pop_group_to_source (cr);
       cairo_mask (cr, clip->mask);
+      cairo_pattern_destroy (clip->mask);
       g_slice_free (ClipEntry, clip);
       clips = g_slist_delete_link (clips, clips);
       clip = clips ? clips->data : NULL;
@@ -1214,6 +1215,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_pop_group_to_source (cr);
     cairo_mask (cr, clip->mask);
+    cairo_pattern_destroy (clip->mask);
     g_slice_free (ClipEntry, clip);
     clips = g_slist_delete_link (clips, clips);
     clip = clips ? clips->data : NULL;

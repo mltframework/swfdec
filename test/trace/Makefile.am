@@ -272,6 +272,15 @@ EXTRA_DIST = \
 	bitwise-7.swf.trace \
 	bitwise-8.swf \
 	bitwise-8.swf.trace \
+	blur-filter-properties.as \
+	blur-filter-properties-5.swf \
+	blur-filter-properties-5.swf.trace \
+	blur-filter-properties-6.swf \
+	blur-filter-properties-6.swf.trace \
+	blur-filter-properties-7.swf \
+	blur-filter-properties-7.swf.trace \
+	blur-filter-properties-8.swf \
+	blur-filter-properties-8.swf.trace \
 	boolean-properties.as \
 	boolean-properties-5.swf \
 	boolean-properties-5.swf.trace \

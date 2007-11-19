@@ -37,5 +37,7 @@ void
 swfdec_bitmap_filter_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapFilter");
+  // FIXME: this is just commented out so that it won't always output warning
+  // when running initialization scripts
+  //SWFDEC_STUB ("BitmapFilter");
 }

@@ -222,27 +222,27 @@ ASSetNativeAccessor (System.security, 12, "sandboxType", 5);
 /*** System.Product ***/
 
 System.Product = function () {
-  SWFDEC_STUB ("System.Product");
+  var o = {}; o["Implement System.Product"] ();
 };
 
 System.Product.prototype.isRunning = function () {
-  SWFDEC_STUB ("System.Product.isRunning");
+  var o = {}; o["Implement System.Product.isRunning"] ();
 };
 
 System.Product.prototype.isInstalled = function () {
-  SWFDEC_STUB ("System.Product.isInstalled");
+  var o = {}; o["Implement System.Product.isInstalled"] ();
 };
 
 System.Product.prototype.launch = function () {
-  SWFDEC_STUB ("System.Product.launch");
+  var o = {}; o["Implement System.Product.launch"] ();
 };
 
 System.Product.prototype.download = function () {
-  SWFDEC_STUB ("System.Product.download");
+  var o = {}; o["Implement System.Product.download"] ();
 };
 
 System.Product.prototype.installedVersion = function () {
-  SWFDEC_STUB ("System.Product.installedVersion");
+  var o = {}; o["Implement System.Product.installedVersion"] ();
 };
 
 ASSetPropFlags (System.Product.prototype, null, 3);
@@ -795,149 +795,149 @@ flash.geom.Point.prototype.toString = function () {
 /* Rectangle */
 
 flash.geom.Rectangle = function () {
-  SWFDEC_STUB ("Rectangle");
+  var o = {}; o["Implement Rectangle"] ();
 };
 
 flash.geom.Rectangle.prototype.clone = function () {
-  SWFDEC_STUB ("Rectangle.clone");
+  var o = {}; o["Implement Rectangle.clone"] ();
 };
 
 flash.geom.Rectangle.prototype.setEmpty = function () {
-  SWFDEC_STUB ("Rectangle.setEmpty");
+  var o = {}; o["Implement Rectangle.setEmpty"] ();
 };
 
 flash.geom.Rectangle.prototype.isEmpty = function () {
-  SWFDEC_STUB ("Rectangle.isEmpty");
+  var o = {}; o["Implement Rectangle.isEmpty"] ();
 };
 
 flash.geom.Rectangle.prototype.addProperty ("left",
-    function () { SWFDEC_STUB ("Rectangle.left (get)"); },
-    function () { SWFDEC_STUB ("Rectangle.left (set)"); });
+    function () { var o = {}; o["Implement Rectangle.left (get)"] (); },
+    function () { var o = {}; o["Implement Rectangle.left (set)"] (); });
 
 flash.geom.Rectangle.prototype.addProperty ("right",
-    function () { SWFDEC_STUB ("Rectangle.right (get)"); },
-    function () { SWFDEC_STUB ("Rectangle.right (set)"); });
+    function () { var o = {}; o["Implement Rectangle.right (get)"] (); },
+    function () { var o = {}; o["Implement Rectangle.right (set)"] (); });
 
 flash.geom.Rectangle.prototype.addProperty ("top",
-    function () { SWFDEC_STUB ("Rectangle.top (get)"); },
-    function () { SWFDEC_STUB ("Rectangle.top (set)"); });
+    function () { var o = {}; o["Implement Rectangle.top (get)"] (); },
+    function () { var o = {}; o["Implement Rectangle.top (set)"] (); });
 
 flash.geom.Rectangle.prototype.addProperty ("bottom",
-    function () { SWFDEC_STUB ("Rectangle.bottom (get)"); },
-    function () { SWFDEC_STUB ("Rectangle.bottom (set)"); });
+    function () { var o = {}; o["Implement Rectangle.bottom (get)"] (); },
+    function () { var o = {}; o["Implement Rectangle.bottom (set)"] (); });
 
 flash.geom.Rectangle.prototype.addProperty ("topLeft",
-    function () { SWFDEC_STUB ("Rectangle.topLeft (get)"); },
-    function () { SWFDEC_STUB ("Rectangle.topLeft (set)"); });
+    function () { var o = {}; o["Implement Rectangle.topLeft (get)"] (); },
+    function () { var o = {}; o["Implement Rectangle.topLeft (set)"] (); });
 
 flash.geom.Rectangle.prototype.addProperty ("bottomRight",
-    function () { SWFDEC_STUB ("Rectangle.bottomRight (get)"); },
-    function () { SWFDEC_STUB ("Rectangle.bottomRight (set)"); });
+    function () { var o = {}; o["Implement Rectangle.bottomRight (get)"] (); },
+    function () { var o = {}; o["Implement Rectangle.bottomRight (set)"] (); });
 
 flash.geom.Rectangle.prototype.addProperty ("size",
-    function () { SWFDEC_STUB ("Rectangle.size (get)"); },
-    function () { SWFDEC_STUB ("Rectangle.size (set)"); });
+    function () { var o = {}; o["Implement Rectangle.size (get)"] (); },
+    function () { var o = {}; o["Implement Rectangle.size (set)"] (); });
 
 flash.geom.Rectangle.prototype.inflate = function () {
-  SWFDEC_STUB ("Rectangle.inflate");
+  var o = {}; o["Implement Rectangle.inflate"] ();
 };
 
 flash.geom.Rectangle.prototype.inflatePoint = function () {
-  SWFDEC_STUB ("Rectangle.inflatePoint");
+  var o = {}; o["Implement Rectangle.inflatePoint"] ();
 };
 
 flash.geom.Rectangle.prototype.offset = function () {
-  SWFDEC_STUB ("Rectangle.offset");
+  var o = {}; o["Implement Rectangle.offset"] ();
 };
 
 flash.geom.Rectangle.prototype.offsetPoint = function () {
-  SWFDEC_STUB ("Rectangle.offsetPoint");
+  var o = {}; o["Implement Rectangle.offsetPoint"] ();
 };
 
 flash.geom.Rectangle.prototype.contains = function () {
-  SWFDEC_STUB ("Rectangle.contains");
+  var o = {}; o["Implement Rectangle.contains"] ();
 };
 
 flash.geom.Rectangle.prototype.containsPoint = function () {
-  SWFDEC_STUB ("Rectangle.containsPoint");
+  var o = {}; o["Implement Rectangle.containsPoint"] ();
 };
 
 flash.geom.Rectangle.prototype.containsRectangle = function () {
-  SWFDEC_STUB ("Rectangle.containsRectangle");
+  var o = {}; o["Implement Rectangle.containsRectangle"] ();
 };
 
 flash.geom.Rectangle.prototype.intersection = function () {
-  SWFDEC_STUB ("Rectangle.intersection");
+  var o = {}; o["Implement Rectangle.intersection"] ();
 };
 
 flash.geom.Rectangle.prototype.intersects = function () {
-  SWFDEC_STUB ("Rectangle.intersects");
+  var o = {}; o["Implement Rectangle.intersects"] ();
 };
 
 flash.geom.Rectangle.prototype.union = function () {
-  SWFDEC_STUB ("Rectangle.union");
+  var o = {}; o["Implement Rectangle.union"] ();
 };
 
 flash.geom.Rectangle.prototype.equals = function () {
-  SWFDEC_STUB ("Rectangle.equals");
+  var o = {}; o["Implement Rectangle.equals"] ();
 };
 
 flash.geom.Rectangle.prototype.toString = function () {
-  SWFDEC_STUB ("Rectangle.toString");
+  var o = {}; o["Implement Rectangle.toString"] ();
 };
 
 /* Matrix */
 
 flash.geom.Matrix = function () {
-  SWFDEC_STUB ("Matrix");
+  var o = {}; o["Implement Matrix"] ();
 };
 
 flash.geom.Matrix.prototype.clone = function () {
-  SWFDEC_STUB ("Matrix.clone");
+  var o = {}; o["Implement Matrix.clone"] ();
 };
 
 flash.geom.Matrix.prototype.concat = function () {
-  SWFDEC_STUB ("Matrix.concat");
+  var o = {}; o["Implement Matrix.concat"] ();
 };
 
 flash.geom.Matrix.prototype.createBox = function () {
-  SWFDEC_STUB ("Matrix.createBox");
+  var o = {}; o["Implement Matrix.createBox"] ();
 };
 
 flash.geom.Matrix.prototype.createGradientBox = function () {
-  SWFDEC_STUB ("Matrix.createGradientBox");
+  var o = {}; o["Implement Matrix.createGradientBox"] ();
 };
 
 flash.geom.Matrix.prototype.deltaTransformPoint = function () {
-  SWFDEC_STUB ("Matrix.deltaTransformPoint");
+  var o = {}; o["Implement Matrix.deltaTransformPoint"] ();
 };
 
 flash.geom.Matrix.prototype.identity = function () {
-  SWFDEC_STUB ("Matrix.identity");
+  var o = {}; o["Implement Matrix.identity"] ();
 };
 
 flash.geom.Matrix.prototype.invert = function () {
-  SWFDEC_STUB ("Matrix.invert");
+  var o = {}; o["Implement Matrix.invert"] ();
 };
 
 flash.geom.Matrix.prototype.rotate = function () {
-  SWFDEC_STUB ("Matrix.rotate");
+  var o = {}; o["Implement Matrix.rotate"] ();
 };
 
 flash.geom.Matrix.prototype.scale = function () {
-  SWFDEC_STUB ("Matrix.scale");
+  var o = {}; o["Implement Matrix.scale"] ();
 };
 
 flash.geom.Matrix.prototype.transformPoint = function () {
-  SWFDEC_STUB ("Matrix.transformPoint");
+  var o = {}; o["Implement Matrix.transformPoint"] ();
 };
 
 flash.geom.Matrix.prototype.translate = function () {
-  SWFDEC_STUB ("Matrix.translate");
+  var o = {}; o["Implement Matrix.translate"] ();
 };
 
 flash.geom.Matrix.prototype.toString = function () {
-  SWFDEC_STUB ("Matrix.toString");
+  var o = {}; o["Implement Matrix.toString"] ();
 };
 
 /* ColorTransform */
@@ -945,7 +945,7 @@ flash.geom.Matrix.prototype.toString = function () {
 flash.geom.ColorTransform = ASconstructor (1105, 0);
 
 flash.geom.ColorTransform.prototype.toString = function () {
-  SWFDEC_STUB ("ColorTransform.toString");
+  var o = {}; o["Implement ColorTransform.toString"] ();
 };
 
 ASSetNative (flash.geom.ColorTransform.prototype, 1105, "8concat", 1);
@@ -980,59 +980,59 @@ flash.external.ExternalInterface = function () {
 };
 
 flash.external.ExternalInterface.addCallback = function () {
-  SWFDEC_STUB ("ExternalInterface.addCallback (static)");
+  var o = {}; o["Implement ExternalInterface.addCallback (static)"] ();
 };
 
 flash.external.ExternalInterface.call = function () {
-  SWFDEC_STUB ("ExternalInterface.call (static)");
+  var o = {}; o["Implement ExternalInterface.call (static)"] ();
 };
 
 flash.external.ExternalInterface._callIn = function () {
-  SWFDEC_STUB ("ExternalInterface._callIn (static)");
+  var o = {}; o["Implement ExternalInterface._callIn (static)"] ();
 };
 
 flash.external.ExternalInterface._toXML = function () {
-  SWFDEC_STUB ("ExternalInterface._toXML (static)");
+  var o = {}; o["Implement ExternalInterface._toXML (static)"] ();
 };
 
 flash.external.ExternalInterface._objectToXML = function () {
-  SWFDEC_STUB ("ExternalInterface._objectToXML (static)");
+  var o = {}; o["Implement ExternalInterface._objectToXML (static)"] ();
 };
 
 flash.external.ExternalInterface._arrayToXML = function () {
-  SWFDEC_STUB ("ExternalInterface._arrayToXML (static)");
+  var o = {}; o["Implement ExternalInterface._arrayToXML (static)"] ();
 };
 
 flash.external.ExternalInterface._argumentsToXML = function () {
-  SWFDEC_STUB ("ExternalInterface._argumentsToXML (static)");
+  var o = {}; o["Implement ExternalInterface._argumentsToXML (static)"] ();
 };
 
 flash.external.ExternalInterface._toAS = function () {
-  SWFDEC_STUB ("ExternalInterface._toAS (static)");
+  var o = {}; o["Implement ExternalInterface._toAS (static)"] ();
 };
 
 flash.external.ExternalInterface._objectToAS = function () {
-  SWFDEC_STUB ("ExternalInterface._objectToAS (static)");
+  var o = {}; o["Implement ExternalInterface._objectToAS (static)"] ();
 };
 
 flash.external.ExternalInterface._arrayToAS = function () {
-  SWFDEC_STUB ("ExternalInterface._arrayToAS (static)");
+  var o = {}; o["Implement ExternalInterface._arrayToAS (static)"] ();
 };
 
 flash.external.ExternalInterface._argumentsToAS = function () {
-  SWFDEC_STUB ("ExternalInterface._argumentsToAS (static)");
+  var o = {}; o["Implement ExternalInterface._argumentsToAS (static)"] ();
 };
 
 flash.external.ExternalInterface._toJS = function () {
-  SWFDEC_STUB ("ExternalInterface._toJS (static)");
+  var o = {}; o["Implement ExternalInterface._toJS (static)"] ();
 };
 
 flash.external.ExternalInterface._objectToJS = function () {
-  SWFDEC_STUB ("ExternalInterface._objectToJS (static)");
+  var o = {}; o["Implement ExternalInterface._objectToJS (static)"] ();
 };
 
 flash.external.ExternalInterface._arrayToJS = function () {
-  SWFDEC_STUB ("ExternalInterface._arrayToJS (static)");
+  var o = {}; o["Implement ExternalInterface._arrayToJS (static)"] ();
 };
 
 ASSetNative (flash.external.ExternalInterface, 14, "8_initJS,8_objectID,8_addCallback,8_evalJS,8_callOut,8_escapeXML,8_unescapeXML,8_jsQuoteString");
@@ -1046,19 +1046,19 @@ function SharedObject () {
 };
 
 SharedObject.deleteAll = function () {
-  SWFDEC_STUB ("SharedObject.deleteAll (static)");
+  var o = {}; o["Implement SharedObject.deleteAll (static)"] ();
 };
 
 SharedObject.getDiskUsage = function () {
-  SWFDEC_STUB ("SharedObject.getDiskUsage (static)");
+  var o = {}; o["Implement SharedObject.getDiskUsage (static)"] ();
 };
 
 SharedObject.getLocal = function () {
-  SWFDEC_STUB ("SharedObject.getLocal (static)");
+  var o = {}; o["Implement SharedObject.getLocal (static)"] ();
 };
 
 SharedObject.getRemote = function () {
-  SWFDEC_STUB ("SharedObject.getRemote (static)");
+  var o = {}; o["Implement SharedObject.getRemote (static)"] ();
 };
 
 ASSetPropFlags (SharedObject, "deleteAll,getDiskUsage", 1);
@@ -1084,7 +1084,7 @@ function RemoteLSOUsage () {
 };
 
 RemoteLSOUsage.getURLPageSupport = function () {
-  SWFDEC_STUB ("RemoteLSOUsage.getURLPageSupport (static)");
+  var o = {}; o["Implement RemoteLSOUsage.getURLPageSupport (static)"] ();
 };
 ASSetPropFlags (RemoteLSOUsage, "getURLPageSupport", 1);
 

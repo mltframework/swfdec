@@ -1122,6 +1122,13 @@ flash.filters.BlurFilter.prototype = new flash.filters.BitmapFilter ();
 
 ASSetNativeAccessor (flash.filters.BlurFilter.prototype, 1102, "8blurX,8blurY,8quality", 1);
 
+/* ColorMatrixFilter */
+
+flash.filters.ColorMatrixFilter = ASconstructor (1110, 0);
+flash.filters.ColorMatrixFilter.prototype = new flash.filters.BitmapFilter ();
+
+ASSetNativeAccessor (flash.filters.ColorMatrixFilter.prototype, 1110, "8matrix", 1);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

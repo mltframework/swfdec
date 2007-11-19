@@ -61,6 +61,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec_vp6_alpha.c \
 	swfdec_color.c \
 	swfdec_color_as.c \
+	swfdec_color_matrix_filter.c \
 	swfdec_color_transform.c \
 	swfdec_debug.c \
 	swfdec_decoder.c \

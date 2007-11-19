@@ -1153,7 +1153,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
   GList *g;
   GSList *walk;
   GSList *clips = NULL;
-  ClipEntry *clip;
+  ClipEntry *clip = NULL;
 
   /* exeute the movie's drawing commands */
   for (walk = movie->draws; walk; walk = walk->next) {
@@ -1199,7 +1199,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     if (child->clip_depth) {
       clip = g_slice_new (ClipEntry);
       clips = g_slist_prepend (clips, clip);
-      clip->mask = swfdec_movie_mask (cr, movie, inval);
+      clip->mask = swfdec_movie_mask (cr, child, inval);
       clip->depth = child->clip_depth;
       SWFDEC_INFO ("clipping up to depth %d by using %s with depth %d", child->clip_depth,
 	  child->name, child->depth);

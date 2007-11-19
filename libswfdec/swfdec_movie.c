@@ -784,13 +784,9 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *color_transform, const SwfdecRect *inval)
 {
   SwfdecMovieClass *klass;
-  GList *g;
-  GSList *walk;
-  int clip_depth = 0;
   SwfdecColorTransform trans;
   SwfdecRect rect;
   gboolean group;
-  cairo_pattern_t *mask = NULL;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (cr != NULL);
@@ -831,68 +827,9 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   swfdec_color_transform_chain (&trans, &movie->original_ctrans, color_transform);
   swfdec_color_transform_chain (&trans, &movie->color_transform, &trans);
 
-  /* exeute the movie's drawing commands */
-  for (walk = movie->draws; walk; walk = walk->next) {
-    SwfdecDraw *draw = walk->data;
-
-    if (!swfdec_rect_intersect (NULL, &draw->extents, &rect))
-      continue;
-    
-    swfdec_draw_paint (draw, cr, &trans);
-  }
-
-  /* if the movie loaded an image, draw it here now */
-  if (movie->image) {
-    cairo_surface_t *surface = swfdec_image_create_surface_transformed (movie->image,
-	&trans);
-    if (surface) {
-      static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
-      cairo_pattern_t *pattern = cairo_pattern_create_for_surface (surface);
-      SWFDEC_LOG ("rendering loaded image");
-      cairo_pattern_set_matrix (pattern, &matrix);
-      cairo_set_source (cr, pattern);
-      cairo_paint (cr);
-      cairo_pattern_destroy (pattern);
-      cairo_surface_destroy (surface);
-    }
-  }
-
-  /* draw the children movies */
-  for (g = movie->list; g; g = g_list_next (g)) {
-    SwfdecMovie *child = g->data;
-
-    if (clip_depth && child->depth > clip_depth) {
-      SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->depth);
-      clip_depth = 0;
-      mask = swfdec_movie_pop_clip (cr, mask);
-    }
-
-    if (child->clip_depth) {
-      if (clip_depth) {
-	/* FIXME: is clipping additive? */
-	SWFDEC_FIXME ("unsetting clip depth %d for new clip depth %d", clip_depth,
-	    child->clip_depth);
-	mask = swfdec_movie_pop_clip (cr, mask);
-      }
-      SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->clip_depth,
-	  child, child->depth);
-      clip_depth = child->clip_depth;
-      mask = swfdec_movie_push_clip (cr, child, &rect);
-      continue;
-    }
-
-    SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
-    swfdec_movie_render (child, cr, &trans, &rect);
-  }
-  if (clip_depth) {
-    SWFDEC_INFO ("unsetting clip depth %d after rendering", clip_depth);
-    clip_depth = 0;
-    mask = swfdec_movie_pop_clip (cr, mask);
-  }
-  g_assert (mask == NULL);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->render)
-    klass->render (movie, cr, &trans, &rect);
+  g_return_if_fail (klass->render);
+  klass->render (movie, cr, &trans, &rect);
 #if 0
   /* code to draw a red rectangle around the area occupied by this movie clip */
   {
@@ -1205,6 +1142,76 @@ swfdec_movie_iterate_end (SwfdecMovie *movie)
 }
 
 static void
+swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
+    const SwfdecColorTransform *ctrans, const SwfdecRect *inval)
+{
+  GList *g;
+  GSList *walk;
+  int clip_depth = 0;
+  cairo_pattern_t *mask = NULL;
+
+  /* exeute the movie's drawing commands */
+  for (walk = movie->draws; walk; walk = walk->next) {
+    SwfdecDraw *draw = walk->data;
+
+    if (!swfdec_rect_intersect (NULL, &draw->extents, inval))
+      continue;
+    
+    swfdec_draw_paint (draw, cr, ctrans);
+  }
+
+  /* if the movie loaded an image, draw it here now */
+  if (movie->image) {
+    cairo_surface_t *surface = swfdec_image_create_surface_transformed (movie->image,
+	ctrans);
+    if (surface) {
+      static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
+      cairo_pattern_t *pattern = cairo_pattern_create_for_surface (surface);
+      SWFDEC_LOG ("rendering loaded image");
+      cairo_pattern_set_matrix (pattern, &matrix);
+      cairo_set_source (cr, pattern);
+      cairo_paint (cr);
+      cairo_pattern_destroy (pattern);
+      cairo_surface_destroy (surface);
+    }
+  }
+
+  /* draw the children movies */
+  for (g = movie->list; g; g = g_list_next (g)) {
+    SwfdecMovie *child = g->data;
+
+    if (clip_depth && child->depth > clip_depth) {
+      SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip_depth, child->depth);
+      clip_depth = 0;
+      mask = swfdec_movie_pop_clip (cr, mask);
+    }
+
+    if (child->clip_depth) {
+      if (clip_depth) {
+	/* FIXME: is clipping additive? */
+	SWFDEC_FIXME ("unsetting clip depth %d for new clip depth %d", clip_depth,
+	    child->clip_depth);
+	mask = swfdec_movie_pop_clip (cr, mask);
+      }
+      SWFDEC_INFO ("clipping up to depth %d by using %p with depth %d", child->clip_depth,
+	  child, child->depth);
+      clip_depth = child->clip_depth;
+      mask = swfdec_movie_push_clip (cr, child, inval);
+      continue;
+    }
+
+    SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
+    swfdec_movie_render (child, cr, ctrans, inval);
+  }
+  if (clip_depth) {
+    SWFDEC_INFO ("unsetting clip depth %d after rendering", clip_depth);
+    clip_depth = 0;
+    mask = swfdec_movie_pop_clip (cr, mask);
+  }
+  g_assert (mask == NULL);
+}
+
+static void
 swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (movie_class);
@@ -1223,6 +1230,7 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
       g_param_spec_int ("depth", "depth", "z order inside the parent",
 	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
+  movie_class->render = swfdec_movie_do_render;
   movie_class->iterate_end = swfdec_movie_iterate_end;
 }
 

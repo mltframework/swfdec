@@ -1030,6 +1030,15 @@ EXTRA_DIST = \
 	global-variable-properties-6.swf.trace \
 	global-variable-properties-7.swf \
 	global-variable-properties-7.swf.trace \
+	glow-filter-properties.as \
+	glow-filter-properties-5.swf \
+	glow-filter-properties-5.swf.trace \
+	glow-filter-properties-6.swf \
+	glow-filter-properties-6.swf.trace \
+	glow-filter-properties-7.swf \
+	glow-filter-properties-7.swf.trace \
+	glow-filter-properties-8.swf \
+	glow-filter-properties-8.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \

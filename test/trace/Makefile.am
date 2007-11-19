@@ -422,6 +422,15 @@ EXTRA_DIST = \
 	color-properties-7.swf.trace\
 	color-properties-8.swf\
 	color-properties-8.swf.trace\
+	color-matrix-filter-properties.as \
+	color-matrix-filter-properties-5.swf \
+	color-matrix-filter-properties-5.swf.trace \
+	color-matrix-filter-properties-6.swf \
+	color-matrix-filter-properties-6.swf.trace \
+	color-matrix-filter-properties-7.swf \
+	color-matrix-filter-properties-7.swf.trace \
+	color-matrix-filter-properties-8.swf \
+	color-matrix-filter-properties-8.swf.trace \
 	color-setRGB.swf \
 	color-setRGB.swf.trace \
 	color-setTransform-alpha.swf \

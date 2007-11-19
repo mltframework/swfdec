@@ -525,6 +525,15 @@ EXTRA_DIST = \
 	context-menu-properties-7.swf.trace \
 	context-menu-properties-8.swf \
 	context-menu-properties-8.swf.trace \
+	convolution-filter-properties.as \
+	convolution-filter-properties-5.swf \
+	convolution-filter-properties-5.swf.trace \
+	convolution-filter-properties-6.swf \
+	convolution-filter-properties-6.swf.trace \
+	convolution-filter-properties-7.swf \
+	convolution-filter-properties-7.swf.trace \
+	convolution-filter-properties-8.swf \
+	convolution-filter-properties-8.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
 	crash-0.5.2-cvs-return-from-block.as \

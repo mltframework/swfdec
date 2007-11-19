@@ -263,6 +263,15 @@ EXTRA_DIST = \
 	boolean-properties-7.swf.trace \
 	boolean-properties-8.swf \
 	boolean-properties-8.swf.trace \
+	button-properties.as \
+	button-properties-5.swf \
+	button-properties-5.swf.trace \
+	button-properties-6.swf \
+	button-properties-6.swf.trace \
+	button-properties-7.swf \
+	button-properties-7.swf.trace \
+	button-properties-8.swf \
+	button-properties-8.swf.trace \
 	call-arguments.as \
 	call-arguments-5.swf \
 	call-arguments-5.swf.trace \

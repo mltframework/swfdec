@@ -44,6 +44,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_bitmap_data.c \
 	swfdec_bitmap_filter.c \
 	swfdec_bits.c \
+	swfdec_blur_filter.c \
 	swfdec_buffer.c \
 	swfdec_button.c \
 	swfdec_button_movie.c \

@@ -1115,6 +1115,13 @@ flash.filters.BevelFilter.prototype = new flash.filters.BitmapFilter ();
 
 ASSetNativeAccessor (flash.filters.BevelFilter.prototype, 1107, "8distance,8angle,8highlightColor,8highlightAlpha,8shadowColor,8shadowAlpha,8quality,8strength,8knockout,8blurX,8blurY,8type", 1);
 
+/* BlurFilter */
+
+flash.filters.BlurFilter = ASconstructor (1102, 0);
+flash.filters.BlurFilter.prototype = new flash.filters.BitmapFilter ();
+
+ASSetNativeAccessor (flash.filters.BlurFilter.prototype, 1102, "8blurX,8blurY,8quality", 1);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

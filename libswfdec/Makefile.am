@@ -45,6 +45,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_buffer.c \
 	swfdec_button.c \
 	swfdec_button_movie.c \
+	swfdec_button_movie_as.c \
 	swfdec_cache.c \
 	swfdec_cached.c \
 	swfdec_camera.c \

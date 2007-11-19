@@ -1088,6 +1088,17 @@ RemoteLSOUsage.getURLPageSupport = function () {
 };
 ASSetPropFlags (RemoteLSOUsage, "getURLPageSupport", 1);
 
+/* Button */
+
+Button = ASconstructor (105, 0);
+
+Button.prototype.useHandCursor = true;
+Button.prototype.enabled = true;
+
+Button.prototype.getDepth = ASnative (105, 3);
+ASSetNativeAccessor (Button.prototype, 105, "8scale9Grid,8filters,8cacheAsBitmap,8blendMode", 4);
+ASSetNativeAccessor (Button.prototype, 900, "8tabIndex", 200);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

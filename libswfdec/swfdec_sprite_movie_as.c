@@ -37,6 +37,22 @@
 #include "swfdec_resource.h"
 #include "swfdec_as_internal.h"
 
+SWFDEC_AS_NATIVE (900, 200, swfdec_sprite_movie_get_tabIndex)
+void
+swfdec_sprite_movie_get_tabIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.tabIndex (get)");
+}
+
+SWFDEC_AS_NATIVE (900, 201, swfdec_sprite_movie_set_tabIndex)
+void
+swfdec_sprite_movie_set_tabIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.tabIndex (set)");
+}
+
 SWFDEC_AS_NATIVE (900, 12, swfdec_sprite_movie_play)
 void
 swfdec_sprite_movie_play (SwfdecAsContext *cx, SwfdecAsObject *object,

@@ -271,16 +271,8 @@ ASSetNativeAccessor (SwfdecAsContext *cx, SwfdecAsObject *object,
   char **names;
   guint i, x, y;
 
-  if (argc < 3)
-    return;
+  SWFDEC_AS_CHECK (0, NULL, "ois|i", &target, &x, &s, &y);
 
-  target = swfdec_as_value_to_object (cx, &argv[0]);
-  x = swfdec_as_value_to_integer (cx, &argv[1]);
-  s = swfdec_as_value_to_string (cx, &argv[2]);
-  if (argc > 3)
-    y = swfdec_as_value_to_integer (cx, &argv[3]);
-  else
-    y = 0;
   names = g_strsplit (s, ",", -1);
   for (i = 0; names[i]; i++) {
     s = names[i];

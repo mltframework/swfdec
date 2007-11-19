@@ -133,6 +133,8 @@ struct _SwfdecMovie {
   gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
   /* drawing state */
+  SwfdecMovie *		mask_of;		/* movie this movie is a mask of or NULL if none */
+  SwfdecMovie *		masked_by;		/* movie we are masked by or NULL if none */
   /* FIXME: could it be that shape drawing (SwfdecGraphicMovie etc) uses these same objects? */
   SwfdecImage *		image;			/* image loaded via loadMovie */
   SwfdecRect		draw_extents;		/* extents of the items in the following list */

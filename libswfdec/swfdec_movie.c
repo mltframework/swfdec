@@ -796,6 +796,11 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   g_return_if_fail (color_transform != NULL);
   g_return_if_fail (inval != NULL);
   
+  if (movie->mask_of != NULL) {
+    SWFDEC_LOG ("not rendering %s %p, movie is a mask",
+	G_OBJECT_TYPE_NAME (movie), movie->name);
+    return;
+  }
   if (!swfdec_rect_intersect (NULL, &movie->extents, inval)) {
     SWFDEC_LOG ("not rendering %s %s, extents %g %g  %g %g are not in invalid area %g %g  %g %g",
 	G_OBJECT_TYPE_NAME (movie), movie->name, 
@@ -809,7 +814,11 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     return;
   }
 
-  cairo_save (cr);
+  if (movie->masked_by != NULL) {
+    cairo_push_group (cr);
+  } else {
+    cairo_save (cr);
+  }
   group = swfdec_movie_needs_group (movie);
   if (group) {
     SWFDEC_DEBUG ("pushing group for blend mode %u", movie->blend_mode);
@@ -855,6 +864,14 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
     cairo_paint (cr);
     cairo_pattern_destroy (pattern);
+  }
+  if (movie->masked_by) {
+    cairo_pattern_t *mask;
+    mask = swfdec_movie_mask (cr, movie->masked_by, &rect);
+    cairo_pop_group_to_source (cr);
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    cairo_mask (cr, mask);
+    cairo_pattern_destroy (mask);
   }
   cairo_restore (cr);
 }

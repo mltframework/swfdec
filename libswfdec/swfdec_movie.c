@@ -1159,7 +1159,7 @@ swfdec_movie_iterate_end (SwfdecMovie *movie)
 }
 
 typedef struct {
-  cairo_pattern_t *	mask;
+  SwfdecMovie *		movie;
   int			depth;
 } ClipEntry;
 
@@ -1203,11 +1203,13 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     SwfdecMovie *child = g->data;
 
     while (clip && clip->depth < child->depth) {
+      cairo_pattern_t *mask;
       SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip->depth, child->depth);
-      cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+      mask = swfdec_movie_mask (cr, clip->movie, inval);
       cairo_pop_group_to_source (cr);
-      cairo_mask (cr, clip->mask);
-      cairo_pattern_destroy (clip->mask);
+      cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+      cairo_mask (cr, mask);
+      cairo_pattern_destroy (mask);
       g_slice_free (ClipEntry, clip);
       clips = g_slist_delete_link (clips, clips);
       clip = clips ? clips->data : NULL;
@@ -1216,7 +1218,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     if (child->clip_depth) {
       clip = g_slice_new (ClipEntry);
       clips = g_slist_prepend (clips, clip);
-      clip->mask = swfdec_movie_mask (cr, child, inval);
+      clip->movie = child;
       clip->depth = child->clip_depth;
       SWFDEC_INFO ("clipping up to depth %d by using %s with depth %d", child->clip_depth,
 	  child->name, child->depth);
@@ -1228,11 +1230,13 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     swfdec_movie_render (child, cr, ctrans, inval);
   }
   while (clip) {
+    cairo_pattern_t *mask;
     SWFDEC_INFO ("unsetting clip depth %d", clip->depth);
-    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    mask = swfdec_movie_mask (cr, clip->movie, inval);
     cairo_pop_group_to_source (cr);
-    cairo_mask (cr, clip->mask);
-    cairo_pattern_destroy (clip->mask);
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    cairo_mask (cr, mask);
+    cairo_pattern_destroy (mask);
     g_slice_free (ClipEntry, clip);
     clips = g_slist_delete_link (clips, clips);
     clip = clips ? clips->data : NULL;

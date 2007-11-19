@@ -661,6 +661,15 @@ EXTRA_DIST = \
 	delete-prototypes-7.swf.trace \
 	delete-prototypes-8.swf \
 	delete-prototypes-8.swf.trace \
+	displacement-map-filter-properties.as \
+	displacement-map-filter-properties-5.swf \
+	displacement-map-filter-properties-5.swf.trace \
+	displacement-map-filter-properties-6.swf \
+	displacement-map-filter-properties-6.swf.trace \
+	displacement-map-filter-properties-7.swf \
+	displacement-map-filter-properties-7.swf.trace \
+	displacement-map-filter-properties-8.swf \
+	displacement-map-filter-properties-8.swf.trace \
 	divide.as \
 	divide-7.swf \
 	divide-7.swf.trace \

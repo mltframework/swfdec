@@ -1100,6 +1100,14 @@ ASSetNativeAccessor (Button.prototype, 105, "8scale9Grid,8filters,8cacheAsBitmap
 // FIXME: this should be done inside the Button constructor
 ASSetNativeAccessor (Button.prototype, 900, "8tabIndex", 200);
 
+/* BitmapFilter */
+
+flash.filters = {};
+
+flash.filters.BitmapFilter = ASconstructor(1112, 0);
+
+ASSetNative(flash.filters.BitmapFilter.prototype, 1112, "8clone", 1);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

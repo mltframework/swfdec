@@ -25,6 +25,7 @@
 #include <libswfdec/swfdec_types.h>
 
 struct _SwfdecColorTransform {
+  gboolean mask;			/* TRUE if this is a mask - masks are always black */
   /* naming here is taken from ActionScript, where ?a is the multiplier and ?b the offset */
   int ra, rb, ga, gb, ba, bb, aa, ab;
 };
@@ -52,6 +53,7 @@ struct _SwfdecColorTransform {
 SwfdecColor swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, guint ratio);
 void swfdec_color_set_source (cairo_t *cr, SwfdecColor color);
 void swfdec_color_transform_init_identity (SwfdecColorTransform * trans);
+void swfdec_color_transform_init_mask (SwfdecColorTransform * trans);
 void swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor color);
 gboolean swfdec_color_transform_is_identity (const SwfdecColorTransform * trans);
 void swfdec_color_transform_chain (SwfdecColorTransform *dest,

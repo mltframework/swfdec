@@ -773,7 +773,7 @@ swfdec_movie_mask (cairo_t *cr, SwfdecMovie *movie, const SwfdecRect *inval)
 {
   SwfdecColorTransform black;
 
-  swfdec_color_transform_init_color (&black, SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
+  swfdec_color_transform_init_mask (&black);
   cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
   swfdec_movie_render (movie, cr, &black, inval);
   return cairo_pop_group (cr);

@@ -1150,6 +1150,13 @@ flash.filters.DropShadowFilter.prototype = new flash.filters.BitmapFilter();
 
 ASSetNativeAccessor (flash.filters.DropShadowFilter.prototype, 1101, "8distance,8angle,8color,8alpha,8quality,8inner,8knockout,8blurX,8blurY,8strength,8hideObject", 1);
 
+/* GlowFilter */
+
+flash.filters.GlowFilter = ASconstructor (1103, 0);
+flash.filters.GlowFilter.prototype = new flash.filters.BitmapFilter ();
+
+ASSetNativeAccessor (flash.filters.GlowFilter.prototype, 1103, "8color,8alpha,8quality,8inner,8knockout,8blurX,8blurY,8strength", 1);
+
 /* GradientBevelFilter */
 
 flash.filters.GradientBevelFilter = ASconstructor (1108, 1000);

@@ -1129,6 +1129,13 @@ flash.filters.ColorMatrixFilter.prototype = new flash.filters.BitmapFilter ();
 
 ASSetNativeAccessor (flash.filters.ColorMatrixFilter.prototype, 1110, "8matrix", 1);
 
+/* ConvolutionFilter */
+
+flash.filters.ConvolutionFilter = ASconstructor (1109, 0);
+flash.filters.ConvolutionFilter.prototype = new flash.filters.BitmapFilter ();
+
+ASSetNativeAccessor (flash.filters.ConvolutionFilter.prototype, 1109, "8matrixX,8matrixY,8matrix,8divisor,8bias,8preserveAlpha,8clamp,8color,8alpha", 1);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

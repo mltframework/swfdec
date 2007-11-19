@@ -1042,6 +1042,24 @@ EXTRA_DIST = \
 	goto5.swf.trace \
 	gotoframe.swf \
 	gotoframe.swf.trace \
+	gradient-bevel-filter-properties.as \
+	gradient-bevel-filter-properties-5.swf \
+	gradient-bevel-filter-properties-5.swf.trace \
+	gradient-bevel-filter-properties-6.swf \
+	gradient-bevel-filter-properties-6.swf.trace \
+	gradient-bevel-filter-properties-7.swf \
+	gradient-bevel-filter-properties-7.swf.trace \
+	gradient-bevel-filter-properties-8.swf \
+	gradient-bevel-filter-properties-8.swf.trace \
+	gradient-glow-filter-properties.as \
+	gradient-glow-filter-properties-5.swf \
+	gradient-glow-filter-properties-5.swf.trace \
+	gradient-glow-filter-properties-6.swf \
+	gradient-glow-filter-properties-6.swf.trace \
+	gradient-glow-filter-properties-7.swf \
+	gradient-glow-filter-properties-7.swf.trace \
+	gradient-glow-filter-properties-8.swf \
+	gradient-glow-filter-properties-8.swf.trace \
 	height1.swf \
 	height1.swf.trace \
 	height2.swf \
@@ -2766,4 +2784,4 @@ EXTRA_DIST = \
 	xscale.swf \
 	xscale.swf.trace
 
-CLEANFILES = tmp
+glow = tmp

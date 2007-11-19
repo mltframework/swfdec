@@ -87,6 +87,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_flash_security.c \
 	swfdec_flv_decoder.c \
 	swfdec_font.c \
+	swfdec_gradient_bevel_filter.c \
 	swfdec_graphic.c \
 	swfdec_graphic_movie.c \
 	swfdec_image.c \

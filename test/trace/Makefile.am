@@ -245,6 +245,15 @@ EXTRA_DIST = \
 	attachmovie-object-6.swf.trace \
 	attachmovie-object-7.swf \
 	attachmovie-object-7.swf.trace \
+	bitmap-filter-properties.as \
+	bitmap-filter-properties-5.swf \
+	bitmap-filter-properties-5.swf.trace \
+	bitmap-filter-properties-6.swf \
+	bitmap-filter-properties-6.swf.trace \
+	bitmap-filter-properties-7.swf \
+	bitmap-filter-properties-7.swf.trace \
+	bitmap-filter-properties-8.swf \
+	bitmap-filter-properties-8.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \

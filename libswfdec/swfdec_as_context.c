@@ -1333,6 +1333,7 @@ swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   g_free (s);
 }
+
 static void
 swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
 {

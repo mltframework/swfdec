@@ -14,6 +14,15 @@ trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	README \
+	accessibility-properties.as \
+	accessibility-properties-5.swf \
+	accessibility-properties-5.swf.trace \
+	accessibility-properties-6.swf \
+	accessibility-properties-6.swf.trace \
+	accessibility-properties-7.swf \
+	accessibility-properties-7.swf.trace \
+	accessibility-properties-8.swf \
+	accessibility-properties-8.swf.trace \
 	abort-really-aborts.as \
 	abort-really-aborts-5.swf \
 	abort-really-aborts-5.swf.trace \
@@ -211,6 +220,15 @@ EXTRA_DIST = \
 	ASSetPropFlags-ignore-7.swf.trace \
 	ASSetPropFlags-ignore-8.swf \
 	ASSetPropFlags-ignore-8.swf.trace \
+	assetuperror.as \
+	assetuperror-5.swf \
+	assetuperror-5.swf.trace \
+	assetuperror-6.swf \
+	assetuperror-6.swf.trace \
+	assetuperror-7.swf \
+	assetuperror-7.swf.trace \
+	assetuperror-8.swf \
+	assetuperror-8.swf.trace \
 	atan2-5.swf \
 	atan2-5.swf.trace \
 	atan2-6.swf \
@@ -227,6 +245,24 @@ EXTRA_DIST = \
 	attachmovie-object-6.swf.trace \
 	attachmovie-object-7.swf \
 	attachmovie-object-7.swf.trace \
+	bevel-filter-properties.as \
+	bevel-filter-properties-5.swf \
+	bevel-filter-properties-5.swf.trace \
+	bevel-filter-properties-6.swf \
+	bevel-filter-properties-6.swf.trace \
+	bevel-filter-properties-7.swf \
+	bevel-filter-properties-7.swf.trace \
+	bevel-filter-properties-8.swf \
+	bevel-filter-properties-8.swf.trace \
+	bitmap-filter-properties.as \
+	bitmap-filter-properties-5.swf \
+	bitmap-filter-properties-5.swf.trace \
+	bitmap-filter-properties-6.swf \
+	bitmap-filter-properties-6.swf.trace \
+	bitmap-filter-properties-7.swf \
+	bitmap-filter-properties-7.swf.trace \
+	bitmap-filter-properties-8.swf \
+	bitmap-filter-properties-8.swf.trace \
 	bitwise.as \
 	bitwise-5.swf \
 	bitwise-5.swf.trace \
@@ -236,6 +272,15 @@ EXTRA_DIST = \
 	bitwise-7.swf.trace \
 	bitwise-8.swf \
 	bitwise-8.swf.trace \
+	blur-filter-properties.as \
+	blur-filter-properties-5.swf \
+	blur-filter-properties-5.swf.trace \
+	blur-filter-properties-6.swf \
+	blur-filter-properties-6.swf.trace \
+	blur-filter-properties-7.swf \
+	blur-filter-properties-7.swf.trace \
+	blur-filter-properties-8.swf \
+	blur-filter-properties-8.swf.trace \
 	boolean-properties.as \
 	boolean-properties-5.swf \
 	boolean-properties-5.swf.trace \
@@ -245,6 +290,15 @@ EXTRA_DIST = \
 	boolean-properties-7.swf.trace \
 	boolean-properties-8.swf \
 	boolean-properties-8.swf.trace \
+	button-properties.as \
+	button-properties-5.swf \
+	button-properties-5.swf.trace \
+	button-properties-6.swf \
+	button-properties-6.swf.trace \
+	button-properties-7.swf \
+	button-properties-7.swf.trace \
+	button-properties-8.swf \
+	button-properties-8.swf.trace \
 	call-arguments.as \
 	call-arguments-5.swf \
 	call-arguments-5.swf.trace \
@@ -275,6 +329,15 @@ EXTRA_DIST = \
 	callmethod-undefined-this-8.swf \
 	callmethod-undefined-this-8.swf.trace \
 	callmethod-undefined-this.as \
+	camera-properties.as \
+	camera-properties-5.swf \
+	camera-properties-5.swf.trace \
+	camera-properties-6.swf \
+	camera-properties-6.swf.trace \
+	camera-properties-7.swf \
+	camera-properties-7.swf.trace \
+	camera-properties-8.swf \
+	camera-properties-8.swf.trace \
 	case1-6.swf \
 	case1-6.swf.trace \
 	case1-7.swf \
@@ -359,6 +422,15 @@ EXTRA_DIST = \
 	color-properties-7.swf.trace\
 	color-properties-8.swf\
 	color-properties-8.swf.trace\
+	color-matrix-filter-properties.as \
+	color-matrix-filter-properties-5.swf \
+	color-matrix-filter-properties-5.swf.trace \
+	color-matrix-filter-properties-6.swf \
+	color-matrix-filter-properties-6.swf.trace \
+	color-matrix-filter-properties-7.swf \
+	color-matrix-filter-properties-7.swf.trace \
+	color-matrix-filter-properties-8.swf \
+	color-matrix-filter-properties-8.swf.trace \
 	color-setRGB.swf \
 	color-setRGB.swf.trace \
 	color-setTransform-alpha.swf \
@@ -369,6 +441,15 @@ EXTRA_DIST = \
 	color-setTransform-negative.swf.trace \
 	color-setTransform-full.swf \
 	color-setTransform-full.swf.trace \
+	color-transform-properties.as \
+	color-transform-properties-5.swf\
+	color-transform-properties-5.swf.trace\
+	color-transform-properties-6.swf\
+	color-transform-properties-6.swf.trace\
+	color-transform-properties-7.swf\
+	color-transform-properties-7.swf.trace\
+	color-transform-properties-8.swf\
+	color-transform-properties-8.swf.trace\
 	color1.swf \
 	color1.swf.trace \
 	comparisons-4.swf \
@@ -408,6 +489,51 @@ EXTRA_DIST = \
 	constructor-madness-8.swf.trace \
 	constructor-prototype.swf \
 	constructor-prototype.swf.trace \
+	context-menu.as \
+	context-menu-5.swf \
+	context-menu-5.swf.trace \
+	context-menu-6.swf \
+	context-menu-6.swf.trace \
+	context-menu-7.swf \
+	context-menu-7.swf.trace \
+	context-menu-8.swf \
+	context-menu-8.swf.trace \
+	context-menu-item.as \
+	context-menu-item-5.swf \
+	context-menu-item-5.swf.trace \
+	context-menu-item-6.swf \
+	context-menu-item-6.swf.trace \
+	context-menu-item-7.swf \
+	context-menu-item-7.swf.trace \
+	context-menu-item-8.swf \
+	context-menu-item-8.swf.trace \
+	context-menu-item-properties.as \
+	context-menu-item-properties-5.swf \
+	context-menu-item-properties-5.swf.trace \
+	context-menu-item-properties-6.swf \
+	context-menu-item-properties-6.swf.trace \
+	context-menu-item-properties-7.swf \
+	context-menu-item-properties-7.swf.trace \
+	context-menu-item-properties-8.swf \
+	context-menu-item-properties-8.swf.trace \
+	context-menu-properties.as \
+	context-menu-properties-5.swf \
+	context-menu-properties-5.swf.trace \
+	context-menu-properties-6.swf \
+	context-menu-properties-6.swf.trace \
+	context-menu-properties-7.swf \
+	context-menu-properties-7.swf.trace \
+	context-menu-properties-8.swf \
+	context-menu-properties-8.swf.trace \
+	convolution-filter-properties.as \
+	convolution-filter-properties-5.swf \
+	convolution-filter-properties-5.swf.trace \
+	convolution-filter-properties-6.swf \
+	convolution-filter-properties-6.swf.trace \
+	convolution-filter-properties-7.swf \
+	convolution-filter-properties-7.swf.trace \
+	convolution-filter-properties-8.swf \
+	convolution-filter-properties-8.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
 	crash-0.5.2-cvs-return-from-block.as \
@@ -544,6 +670,15 @@ EXTRA_DIST = \
 	delete-prototypes-7.swf.trace \
 	delete-prototypes-8.swf \
 	delete-prototypes-8.swf.trace \
+	displacement-map-filter-properties.as \
+	displacement-map-filter-properties-5.swf \
+	displacement-map-filter-properties-5.swf.trace \
+	displacement-map-filter-properties-6.swf \
+	displacement-map-filter-properties-6.swf.trace \
+	displacement-map-filter-properties-7.swf \
+	displacement-map-filter-properties-7.swf.trace \
+	displacement-map-filter-properties-8.swf \
+	displacement-map-filter-properties-8.swf.trace \
 	divide.as \
 	divide-7.swf \
 	divide-7.swf.trace \
@@ -569,6 +704,15 @@ EXTRA_DIST = \
 	double-to-string-7.swf \
 	double-to-string-7.swf.trace \
 	double-to-string-7.swf.trace.org \
+	drop-shadow-filter-properties.as \
+	drop-shadow-filter-properties-5.swf \
+	drop-shadow-filter-properties-5.swf.trace \
+	drop-shadow-filter-properties-6.swf \
+	drop-shadow-filter-properties-6.swf.trace \
+	drop-shadow-filter-properties-7.swf \
+	drop-shadow-filter-properties-7.swf.trace \
+	drop-shadow-filter-properties-8.swf \
+	drop-shadow-filter-properties-8.swf.trace \
 	duplicateMovieClip-events.c \
 	duplicateMovieClip-events-5.swf \
 	duplicateMovieClip-events-5.swf.trace \
@@ -667,6 +811,25 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	file-reference-constructor.as \
+	file-reference-constructor-7.swf \
+	file-reference-constructor-7.swf.trace \
+	file-reference-constructor-8.swf \
+	file-reference-constructor-8.swf.trace \
+	file-reference-properties.as \
+	file-reference-properties-5.swf \
+	file-reference-properties-5.swf.trace \
+	file-reference-properties-7.swf \
+	file-reference-properties-7.swf.trace \
+	file-reference-properties-8.swf \
+	file-reference-properties-8.swf.trace \
+	file-reference-list-properties.as \
+	file-reference-list-properties-5.swf \
+	file-reference-list-properties-5.swf.trace \
+	file-reference-list-properties-7.swf \
+	file-reference-list-properties-7.swf.trace \
+	file-reference-list-properties-8.swf \
+	file-reference-list-properties-8.swf.trace \
 	foreach-proto-simple.as \
 	foreach-proto-simple-5.swf \
 	foreach-proto-simple-5.swf.trace \
@@ -876,6 +1039,15 @@ EXTRA_DIST = \
 	global-variable-properties-6.swf.trace \
 	global-variable-properties-7.swf \
 	global-variable-properties-7.swf.trace \
+	glow-filter-properties.as \
+	glow-filter-properties-5.swf \
+	glow-filter-properties-5.swf.trace \
+	glow-filter-properties-6.swf \
+	glow-filter-properties-6.swf.trace \
+	glow-filter-properties-7.swf \
+	glow-filter-properties-7.swf.trace \
+	glow-filter-properties-8.swf \
+	glow-filter-properties-8.swf.trace \
 	goto1.swf \
 	goto1.swf.trace \
 	goto2.swf \
@@ -888,6 +1060,24 @@ EXTRA_DIST = \
 	goto5.swf.trace \
 	gotoframe.swf \
 	gotoframe.swf.trace \
+	gradient-bevel-filter-properties.as \
+	gradient-bevel-filter-properties-5.swf \
+	gradient-bevel-filter-properties-5.swf.trace \
+	gradient-bevel-filter-properties-6.swf \
+	gradient-bevel-filter-properties-6.swf.trace \
+	gradient-bevel-filter-properties-7.swf \
+	gradient-bevel-filter-properties-7.swf.trace \
+	gradient-bevel-filter-properties-8.swf \
+	gradient-bevel-filter-properties-8.swf.trace \
+	gradient-glow-filter-properties.as \
+	gradient-glow-filter-properties-5.swf \
+	gradient-glow-filter-properties-5.swf.trace \
+	gradient-glow-filter-properties-6.swf \
+	gradient-glow-filter-properties-6.swf.trace \
+	gradient-glow-filter-properties-7.swf \
+	gradient-glow-filter-properties-7.swf.trace \
+	gradient-glow-filter-properties-8.swf \
+	gradient-glow-filter-properties-8.swf.trace \
 	height1.swf \
 	height1.swf.trace \
 	height2.swf \
@@ -1034,6 +1224,15 @@ EXTRA_DIST = \
 	loadvars-decode-8.swf.trace \
 	local.swf \
 	local.swf.trace \
+	local-connection-properties.as \
+	local-connection-properties-5.swf \
+	local-connection-properties-5.swf.trace \
+	local-connection-properties-6.swf \
+	local-connection-properties-6.swf.trace \
+	local-connection-properties-7.swf \
+	local-connection-properties-7.swf.trace \
+	local-connection-properties-8.swf \
+	local-connection-properties-8.swf.trace \
 	lots-of-arguments.as \
 	lots-of-arguments-5.swf \
 	lots-of-arguments-5.swf.trace \
@@ -1067,6 +1266,15 @@ EXTRA_DIST = \
 	math-properties-6.swf.trace \
 	math-properties-7.swf \
 	math-properties-7.swf.trace \
+	microphone-properties.as \
+	microphone-properties-5.swf \
+	microphone-properties-5.swf.trace \
+	microphone-properties-6.swf \
+	microphone-properties-6.swf.trace \
+	microphone-properties-7.swf \
+	microphone-properties-7.swf.trace \
+	microphone-properties-8.swf \
+	microphone-properties-8.swf.trace \
 	mouse-properties.as \
 	mouse-properties-5.swf \
 	mouse-properties-5.swf.trace \
@@ -1507,8 +1715,49 @@ EXTRA_DIST = \
 	place-object-remove-name-6.swf.trace \
 	place-object-remove-name-7.swf \
 	place-object-remove-name-7.swf.trace \
+	point.as \
+	point-5.swf \
+	point-5.swf.trace \
+	point-6.swf \
+	point-6.swf.trace \
+	point-7.swf \
+	point-7.swf.trace \
+	point-8.swf \
+	point-8.swf.trace \
+	point-construct.as \
+	point-construct-5.swf \
+	point-construct-5.swf.trace \
+	point-construct-7.swf \
+	point-construct-7.swf.trace \
+	point-construct-8.swf \
+	point-construct-8.swf.trace \
+	point-properties.as \
+	point-properties-5.swf \
+	point-properties-5.swf.trace \
+	point-properties-7.swf \
+	point-properties-7.swf.trace \
+	point-properties-8.swf \
+	point-properties-8.swf.trace \
 	preload.swf \
 	preload.swf.trace \
+	print-job-init.as \
+	print-job-init-5.swf \
+	print-job-init-5.swf.trace \
+	print-job-init-6.swf \
+	print-job-init-6.swf.trace \
+	print-job-init-7.swf \
+	print-job-init-7.swf.trace \
+	print-job-init-8.swf \
+	print-job-init-8.swf.trace \
+	print-job-properties.as \
+	print-job-properties-5.swf \
+	print-job-properties-5.swf.trace \
+	print-job-properties-6.swf \
+	print-job-properties-6.swf.trace \
+	print-job-properties-7.swf \
+	print-job-properties-7.swf.trace \
+	print-job-properties-8.swf \
+	print-job-properties-8.swf.trace \
 	property-native.as \
 	property-native-5.swf \
 	property-native-5.swf.trace \
@@ -1603,6 +1852,15 @@ EXTRA_DIST = \
 	relational-6.swf.trace \
 	relational-7.swf \
 	relational-7.swf.trace \
+	remote-lso-usage-properties.as \
+	remote-lso-usage-properties-5.swf \
+	remote-lso-usage-properties-5.swf.trace \
+	remote-lso-usage-properties-6.swf \
+	remote-lso-usage-properties-6.swf.trace \
+	remote-lso-usage-properties-7.swf \
+	remote-lso-usage-properties-7.swf.trace \
+	remote-lso-usage-properties-8.swf \
+	remote-lso-usage-properties-8.swf.trace \
 	remove-depths.as \
 	remove-depths-5.swf \
 	remove-depths-5.swf.trace \
@@ -1787,6 +2045,15 @@ EXTRA_DIST = \
 	scope-chain-with-and-scope-chain-7.swf.trace \
 	scope-chain-with-and-scope-chain-8.swf \
 	scope-chain-with-and-scope-chain-8.swf.trace \
+	selection-properties.as \
+	selection-properties-5.swf \
+	selection-properties-5.swf.trace \
+	selection-properties-6.swf \
+	selection-properties-6.swf.trace \
+	selection-properties-7.swf \
+	selection-properties-7.swf.trace \
+	selection-properties-8.swf \
+	selection-properties-8.swf.trace \
 	set-overwrite-global-5.swf \
 	set-overwrite-global-6.swf \
 	set-overwrite-global-7.swf \
@@ -1899,6 +2166,15 @@ EXTRA_DIST = \
 	setvariable-function-target-6.swf.trace \
 	setvariable-function-target-7.swf \
 	setvariable-function-target-7.swf.trace \
+	shared-object-properties.as \
+	shared-object-properties-5.swf \
+	shared-object-properties-5.swf.trace \
+	shared-object-properties-6.swf \
+	shared-object-properties-6.swf.trace \
+	shared-object-properties-7.swf \
+	shared-object-properties-7.swf.trace \
+	shared-object-properties-8.swf \
+	shared-object-properties-8.swf.trace \
 	shift.as \
 	shift-5.swf \
 	shift-5.swf.trace \
@@ -2259,6 +2535,15 @@ EXTRA_DIST = \
 	text-field-variable-7.swf.trace \
 	text-field-variable-8.swf \
 	text-field-variable-8.swf.trace \
+	text-snapshot-properties.as \
+	text-snapshot-properties-5.swf \
+	text-snapshot-properties-5.swf.trace \
+	text-snapshot-properties-6.swf \
+	text-snapshot-properties-6.swf.trace \
+	text-snapshot-properties-7.swf \
+	text-snapshot-properties-7.swf.trace \
+	text-snapshot-properties-8.swf \
+	text-snapshot-properties-8.swf.trace \
 	textformat.as \
 	textformat-5.swf \
 	textformat-5.swf.trace \
@@ -2315,6 +2600,15 @@ EXTRA_DIST = \
 	trace_properties.as \
 	transform.swf \
 	transform.swf.trace \
+	transform-properties.as \
+	transform-properties-5.swf \
+	transform-properties-5.swf.trace \
+	transform-properties-6.swf \
+	transform-properties-6.swf.trace \
+	transform-properties-7.swf \
+	transform-properties-7.swf.trace \
+	transform-properties-8.swf \
+	transform-properties-8.swf.trace \
 	transform2.swf \
 	transform2.swf.trace \
 	transform2.swf.trace.org \
@@ -2496,7 +2790,16 @@ EXTRA_DIST = \
 	xml-properties2-6.swf.trace \
 	xml-properties2-7.swf \
 	xml-properties2-7.swf.trace \
+	xml-socket-properties.as \
+	xml-socket-properties-5.swf \
+	xml-socket-properties-5.swf.trace \
+	xml-socket-properties-6.swf \
+	xml-socket-properties-6.swf.trace \
+	xml-socket-properties-7.swf \
+	xml-socket-properties-7.swf.trace \
+	xml-socket-properties-8.swf \
+	xml-socket-properties-8.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
 
-CLEANFILES = tmp
+glow = tmp

@@ -29,6 +29,54 @@
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 
+SWFDEC_AS_NATIVE (1066, 0, swfdec_system_setClipboard)
+void
+swfdec_system_setClipboard (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("System.setClipboard (static)");
+}
+
+SWFDEC_AS_NATIVE (2107, 0, swfdec_system_showSettings)
+void
+swfdec_system_showSettings (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("System.showSettings (static)");
+}
+
+SWFDEC_AS_NATIVE (2107, 1, swfdec_system_get_exactSettings)
+void
+swfdec_system_get_exactSettings (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("System.exactSettings (static, get)");
+}
+
+SWFDEC_AS_NATIVE (2107, 2, swfdec_system_set_exactSettings)
+void
+swfdec_system_set_exactSettings (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("System.exactSettings (static, set)");
+}
+
+SWFDEC_AS_NATIVE (2107, 3, swfdec_system_get_useCodePage)
+void
+swfdec_system_get_useCodePage (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("System.useCodePage (static, get)");
+}
+
+SWFDEC_AS_NATIVE (2107, 4, swfdec_system_set_useCodePage)
+void
+swfdec_system_set_useCodePage (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("System.useCodePage (static, set)");
+}
+
 static void
 swfdec_system_has_audio (SwfdecPlayer *player, SwfdecAsValue *ret)
 {

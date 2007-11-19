@@ -15,6 +15,7 @@ endif
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
+	swfdec_accessibility.c \
 	swfdec_as_array.c \
 	swfdec_as_boolean.c \
 	swfdec_as_context.c \
@@ -39,12 +40,18 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_audio_event.c \
 	swfdec_audio_flv.c \
 	swfdec_audio_stream.c \
+	swfdec_bevel_filter.c \
+	swfdec_bitmap_data.c \
+	swfdec_bitmap_filter.c \
 	swfdec_bits.c \
+	swfdec_blur_filter.c \
 	swfdec_buffer.c \
 	swfdec_button.c \
 	swfdec_button_movie.c \
+	swfdec_button_movie_as.c \
 	swfdec_cache.c \
 	swfdec_cached.c \
+	swfdec_camera.c \
 	swfdec_character.c \
 	swfdec_codec_adpcm.c \
 	swfdec_codec_audio.c \
@@ -54,21 +61,34 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_codec_vp6_alpha.c \
 	swfdec_color.c \
 	swfdec_color_as.c \
+	swfdec_color_matrix_filter.c \
+	swfdec_color_transform.c \
+	swfdec_convolution_filter.c \
 	swfdec_debug.c \
 	swfdec_decoder.c \
+	swfdec_displacement_map_filter.c \
 	swfdec_draw.c \
+	swfdec_drop_shadow_filter.c \
 	swfdec_text_field.c \
 	swfdec_text_field_movie.c \
 	swfdec_text_field_movie_as.c \
 	swfdec_text_field_movie_html.c \
+	swfdec_text_renderer.c \
+	swfdec_text_snapshot.c \
+	swfdec_transform.c \
 	swfdec_enums.c \
 	swfdec_event.c \
+	swfdec_external_interface.c \
 	swfdec_file_loader.c \
+	swfdec_file_reference.c \
+	swfdec_file_reference_list.c \
 	swfdec_filter.c \
 	swfdec_filter_as.c \
 	swfdec_flash_security.c \
 	swfdec_flv_decoder.c \
 	swfdec_font.c \
+	swfdec_glow_filter.c \
+	swfdec_gradient_filter.c \
 	swfdec_graphic.c \
 	swfdec_graphic_movie.c \
 	swfdec_image.c \
@@ -80,7 +100,9 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_loader.c \
 	swfdec_loadertarget.c \
 	swfdec_loadvars_as.c \
+	swfdec_local_connection.c \
 	swfdec_marshal.c \
+	swfdec_microphone.c \
 	swfdec_morph_movie.c \
 	swfdec_morphshape.c \
 	swfdec_mouse_as.c \
@@ -95,6 +117,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_pattern.c \
 	swfdec_player.c \
 	swfdec_player_as.c \
+	swfdec_print_job.c \
 	swfdec_rect.c \
 	swfdec_rectangle.c \
 	swfdec_resource.c \
@@ -103,8 +126,10 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_script.c \
 	swfdec_security.c \
 	swfdec_security_allow.c \
+	swfdec_selection.c \
 	swfdec_shape.c \
 	swfdec_shape_parser.c \
+	swfdec_shared_object.c \
 	swfdec_sound.c \
 	swfdec_sound_object.c \
 	swfdec_stroke.c \
@@ -116,6 +141,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_swf_decoder.c \
 	swfdec_system.c \
 	swfdec_system_as.c \
+	swfdec_system_security.c \
 	swfdec_tag.c \
 	swfdec_text.c \
 	swfdec_text_format.c \
@@ -125,7 +151,8 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_video_movie.c \
 	swfdec_video_movie_as.c \
 	swfdec_xml_node.c \
-	swfdec_xml.c
+	swfdec_xml.c \
+	swfdec_xml_socket.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \

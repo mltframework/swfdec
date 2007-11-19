@@ -114,6 +114,37 @@ swfdec_player_clearInterval (SwfdecAsContext *cx, SwfdecAsObject *object,
 
 /*** VARIOUS ***/
 
+SWFDEC_AS_NATIVE (100, 4, swfdec_player_trace)
+void
+swfdec_player_trace (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_FIXME ("Is _global.trace supposed to do something?");
+}
+
+SWFDEC_AS_NATIVE (9, 0, swfdec_player_updateAfterEvent)
+void
+swfdec_player_updateAfterEvent (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("updateAfterEvent");
+}
+
+SWFDEC_AS_NATIVE (1021, 1, swfdec_player_showRedrawRegions)
+void
+swfdec_player_showRedrawRegions (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("showRedrawRegions");
+}
+
+static void
+swfdec_player_enableDebugConsole (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("enableDebugConsole");
+}
+
 static SwfdecAsFunction *
 swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
 {
@@ -240,16 +271,8 @@ ASSetNativeAccessor (SwfdecAsContext *cx, SwfdecAsObject *object,
   char **names;
   guint i, x, y;
 
-  if (argc < 3)
-    return;
+  SWFDEC_AS_CHECK (0, NULL, "ois|i", &target, &x, &s, &y);
 
-  target = swfdec_as_value_to_object (cx, &argv[0]);
-  x = swfdec_as_value_to_integer (cx, &argv[1]);
-  s = swfdec_as_value_to_string (cx, &argv[2]);
-  if (argc > 3)
-    y = swfdec_as_value_to_integer (cx, &argv[3]);
-  else
-    y = 0;
   names = g_strsplit (s, ",", -1);
   for (i = 0; names[i]; i++) {
     s = names[i];
@@ -306,4 +329,8 @@ swfdec_player_preinit_global (SwfdecAsContext *context, guint version)
       0, swfdec_player_ASnative, 2);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASconstructor,
       0, swfdec_player_ASconstructor, 2);
+  // FIXME: is this only the debug player?
+  swfdec_as_object_add_function (context->global,
+      SWFDEC_AS_STR_enableDebugConsole, 0, swfdec_player_enableDebugConsole,
+      2);
 }

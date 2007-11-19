@@ -1097,6 +1097,7 @@ Button.prototype.enabled = true;
 
 Button.prototype.getDepth = ASnative (105, 3);
 ASSetNativeAccessor (Button.prototype, 105, "8scale9Grid,8filters,8cacheAsBitmap,8blendMode", 4);
+// FIXME: this should be done inside the Button constructor
 ASSetNativeAccessor (Button.prototype, 900, "8tabIndex", 200);
 
 /* Global Functions */

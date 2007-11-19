@@ -1136,6 +1136,13 @@ flash.filters.ConvolutionFilter.prototype = new flash.filters.BitmapFilter ();
 
 ASSetNativeAccessor (flash.filters.ConvolutionFilter.prototype, 1109, "8matrixX,8matrixY,8matrix,8divisor,8bias,8preserveAlpha,8clamp,8color,8alpha", 1);
 
+/* DisplacementMapFilter */
+
+flash.filters.DisplacementMapFilter = ASconstructor (1111, 0);
+flash.filters.DisplacementMapFilter.prototype = new flash.filters.BitmapFilter ();
+
+ASSetNativeAccessor (flash.filters.DisplacementMapFilter.prototype, 1111, "8mapBitmap,8mapPoint,8componentX,8componentY,8scaleX,8scaleY,8mode,8color,8alpha", 1);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

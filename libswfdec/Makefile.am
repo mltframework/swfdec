@@ -40,6 +40,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_audio_event.c \
 	swfdec_audio_flv.c \
 	swfdec_audio_stream.c \
+	swfdec_bevel_filter.c \
 	swfdec_bitmap_data.c \
 	swfdec_bitmap_filter.c \
 	swfdec_bits.c \

@@ -1108,6 +1108,13 @@ flash.filters.BitmapFilter = ASconstructor(1112, 0);
 
 ASSetNative(flash.filters.BitmapFilter.prototype, 1112, "8clone", 1);
 
+/* BevelFilter */
+
+flash.filters.BevelFilter = ASconstructor (1107, 0);
+flash.filters.BevelFilter.prototype = new flash.filters.BitmapFilter ();
+
+ASSetNativeAccessor (flash.filters.BevelFilter.prototype, 1107, "8distance,8angle,8highlightColor,8highlightAlpha,8shadowColor,8shadowAlpha,8quality,8strength,8knockout,8blurX,8blurY,8type", 1);
+
 /* Global Functions */
 
 setInterval = ASnative (250, 0);

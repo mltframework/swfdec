@@ -399,18 +399,23 @@ function generate_names (o, prefix, identifier)
 
 function trace_properties (o, prefix, identifier)
 {
+  // prioritize some things in the naming
+  ASSetPropFlags (_global, "flash", 0, 4096);
   _global["mySecretId"] = "_global";
   _global.Object["mySecretId"] = "_global.Object";
   _global.Function["mySecretId"] = "_global.Function";
   _global.Function.prototype["mySecretId"] = "_global.Function.prototype";
   _global.XMLNode["mySecretId"] = "_global.XMLNode";
   _global.flash.text.TextRenderer["mySecretId"] = "_global.flash.text.TextRenderer";
+  _global.flash.filters.BitmapFilter["mySecretId"] = "_global.flash.filters.BitmapFilter";
   generate_names (_global.Object, "_global", "Object");
   generate_names (_global.Function, "_global", "Function");
   generate_names (_global.Function.prototype, "_global", "Function.prototype");
   generate_names (_global.XMLNode, "_global", "XMLNode");
   generate_names (_global.flash.text.TextRenderer, "_global.flash.text", "TextRenderer");
+  generate_names (_global.flash.filters.BitmapFilter, "_global.flash.filters", "BitmapFilter");
   generate_names (_global, "", "_global");
+  ASSetPropFlags (_global, "flash", 4096);
 
   if (typeof (o) == "object" || typeof (o) == "function")
   {

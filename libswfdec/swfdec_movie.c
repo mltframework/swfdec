@@ -329,6 +329,13 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   } else {
     player->roots = g_list_remove (player->roots, movie);
   }
+  /* unset masks */
+  if (movie->masked_by)
+    movie->masked_by->mask_of = NULL;
+  if (movie->mask_of)
+    movie->mask_of->masked_by = NULL;
+  movie->masked_by = NULL;
+  movie->mask_of = NULL;
   /* FIXME: figure out how to handle destruction pre-init/construct.
    * This is just a stop-gap measure to avoid dead movies in those queues */
   swfdec_player_remove_all_actions (player, movie);
@@ -796,7 +803,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   g_return_if_fail (color_transform != NULL);
   g_return_if_fail (inval != NULL);
   
-  if (movie->mask_of != NULL) {
+  if (movie->mask_of != NULL && !swfdec_color_transform_is_mask (color_transform)) {
     SWFDEC_LOG ("not rendering %s %p, movie is a mask",
 	G_OBJECT_TYPE_NAME (movie), movie->name);
     return;
@@ -814,10 +821,9 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     return;
   }
 
+  cairo_save (cr);
   if (movie->masked_by != NULL) {
     cairo_push_group (cr);
-  } else {
-    cairo_save (cr);
   }
   group = swfdec_movie_needs_group (movie);
   if (group) {
@@ -867,6 +873,11 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
   if (movie->masked_by) {
     cairo_pattern_t *mask;
+    if (movie->parent == movie->masked_by->parent) {
+      cairo_transform (cr, &movie->inverse_matrix);
+    } else {
+      SWFDEC_FIXME ("implement different parents when masking");
+    }
     mask = swfdec_movie_mask (cr, movie->masked_by, &rect);
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);

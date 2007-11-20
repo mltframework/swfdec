@@ -84,6 +84,15 @@ EXTRA_DIST = \
 	mask-and-clip-8-8.swf.png \
 	mask-and-clip-9-8.swf \
 	mask-and-clip-9-8.swf.png \
+	mask-different-parent.as \
+	mask-different-parent-5.swf \
+	mask-different-parent-5.swf.png \
+	mask-different-parent-6.swf \
+	mask-different-parent-6.swf.png \
+	mask-different-parent-7.swf \
+	mask-different-parent-7.swf.png \
+	mask-different-parent-8.swf \
+	mask-different-parent-8.swf.png \
 	mask-remove-clip.as \
 	mask-remove-clip-5.swf \
 	mask-remove-clip-5.swf.png \

@@ -89,6 +89,137 @@ swfdec_sound_object_get_sound (SwfdecSoundObject *sound, const char *name)
 
 /*** AS CODE ***/
 
+SWFDEC_AS_NATIVE (500, 0, swfdec_sound_object_getPan)
+void
+swfdec_sound_object_getPan (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.getPan");
+}
+
+SWFDEC_AS_NATIVE (500, 1, swfdec_sound_object_getTransform)
+void
+swfdec_sound_object_getTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.getTransform");
+}
+
+SWFDEC_AS_NATIVE (500, 2, swfdec_sound_object_getVolume)
+void
+swfdec_sound_object_getVolume (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.getVolume");
+}
+
+SWFDEC_AS_NATIVE (500, 3, swfdec_sound_object_setPan)
+void
+swfdec_sound_object_setPan (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.setPan");
+}
+
+SWFDEC_AS_NATIVE (500, 4, swfdec_sound_object_setTransform)
+void
+swfdec_sound_object_setTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.setTransform");
+}
+
+SWFDEC_AS_NATIVE (500, 5, swfdec_sound_object_setVolume)
+void
+swfdec_sound_object_setVolume (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.setVolume");
+}
+
+SWFDEC_AS_NATIVE (500, 9, swfdec_sound_object_getDuration)
+void
+swfdec_sound_object_getDuration (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.getDuration");
+}
+
+SWFDEC_AS_NATIVE (500, 10, swfdec_sound_object_setDuration)
+void
+swfdec_sound_object_setDuration (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.setDuration");
+}
+
+SWFDEC_AS_NATIVE (500, 11, swfdec_sound_object_getPosition)
+void
+swfdec_sound_object_getPosition (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.getPosition");
+}
+
+SWFDEC_AS_NATIVE (500, 12, swfdec_sound_object_setPosition)
+void
+swfdec_sound_object_setPosition (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.setPosition");
+}
+
+SWFDEC_AS_NATIVE (500, 13, swfdec_sound_object_loadSound)
+void
+swfdec_sound_object_loadSound (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.loadSound");
+}
+
+SWFDEC_AS_NATIVE (500, 14, swfdec_sound_object_getBytesLoaded)
+void
+swfdec_sound_object_getBytesLoaded (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.getBytesLoaded");
+}
+
+SWFDEC_AS_NATIVE (500, 15, swfdec_sound_object_getBytesTotal)
+void
+swfdec_sound_object_getBytesTotal (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.getBytesTotal");
+}
+
+SWFDEC_AS_NATIVE (500, 18, swfdec_sound_object_get_checkPolicyFile)
+void
+swfdec_sound_object_get_checkPolicyFile (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.checkPolicyFile (get)");
+}
+
+SWFDEC_AS_NATIVE (500, 19, swfdec_sound_object_set_checkPolicyFile)
+void
+swfdec_sound_object_set_checkPolicyFile (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.checkPolicyFile (set)");
+}
+
+SWFDEC_AS_NATIVE (500, 16, swfdec_sound_object_9areSoundsInaccessible)
+void
+swfdec_sound_object_9areSoundsInaccessible (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Sound.9areSoundsInaccessible");
+}
+
 SWFDEC_AS_NATIVE (500, 7, swfdec_sound_object_attachSound)
 void
 swfdec_sound_object_attachSound (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc, 

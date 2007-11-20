@@ -1171,6 +1171,15 @@ EXTRA_DIST = \
 	jump-out-of-with.as \
 	jump-out-of-with.swf \
 	jump-out-of-with.swf.trace \
+	key-properties.as \
+	key-properties-5.swf \
+	key-properties-5.swf.trace \
+	key-properties-6.swf \
+	key-properties-6.swf.trace \
+	key-properties-7.swf \
+	key-properties-7.swf.trace \
+	key-properties-8.swf \
+	key-properties-8.swf.trace \
 	level-property.as \
 	level-property-5.swf \
 	level-property-5.swf.trace \

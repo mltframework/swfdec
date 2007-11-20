@@ -105,7 +105,7 @@ function LoadVars () { };
 LoadVars.prototype.contentType = "application/x-www-form-urlencoded";
 
 LoadVars.prototype.load = ASnative (301, 0);
-//LoadVars.prototype.send = ASnative (301, 1);
+LoadVars.prototype.send = ASnative (301, 1);
 LoadVars.prototype.sendAndLoad = ASnative (301, 2);
 LoadVars.prototype.decode = ASnative (301, 3);
 
@@ -142,6 +142,11 @@ LoadVars.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
+LoadVars.prototype.addRequestHeader = function () {
+  // Same as XML?
+  var o = {}; o["Implement LoadVars.addRequestHeader"] ();
+};
+
 ASSetPropFlags(LoadVars.prototype, null, 131);
 
 /*** Sound ***/
@@ -170,7 +175,7 @@ XML.prototype = new XMLNode (1, "");
 ASSetPropFlags (XML, "prototype", 3);
 
 XML.prototype.load = ASnative (301, 0);
-//XML.prototype.send = ASnative (301, 1);
+XML.prototype.send = ASnative (301, 1);
 XML.prototype.sendAndLoad = ASnative (301, 2);
 XML.prototype.createElement = ASnative (253, 10);
 XML.prototype.createTextNode = ASnative (253, 11);
@@ -197,6 +202,11 @@ XML.prototype.getBytesLoaded = function () {
 
 XML.prototype.getBytesTotal = function () {
   return this._bytesTotal;
+};
+
+XML.prototype.addRequestHeader = function () {
+  // Same as LoadVars?
+  var o = {}; o["Implement XML.addRequestHeader"] ();
 };
 
 /*** System ***/

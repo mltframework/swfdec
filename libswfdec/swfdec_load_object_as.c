@@ -49,6 +49,14 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }
 
+SWFDEC_AS_NATIVE (301, 1, swfdec_load_object_as_send)
+void
+swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("LoadVars/XML.send");
+}
+
 SWFDEC_AS_NATIVE (301, 2, swfdec_load_object_as_sendAndLoad)
 void
 swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,

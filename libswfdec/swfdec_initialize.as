@@ -291,6 +291,24 @@ System.Product.prototype.installedVersion = function () {
 
 ASSetPropFlags (System.Product.prototype, null, 3);
 
+/*** System.IME ***/
+
+System.IME = {
+  ALPHANUMERIC_FULL: "ALPHANUMERIC_FULL",
+  ALPHANUMERIC_HALF: "ALPHANUMERIC_HALF",
+  CHINESE: "CHINESE",
+  JAPANESE_HIRAGANA: "JAPANESE_HIRAGANA",
+  JAPANESE_KATAKANA_FULL: "JAPANESE_KATAKANA_FULL",
+  JAPANESE_KATAKANA_HALF: "JAPANESE_KATAKANA_HALF",
+  KOREAN: "KOREAN",
+  UNKNOWN: "UNKNOWN"
+};
+
+AsBroadcaster.initialize (System.IME);
+
+ASSetNative (System.IME, 13, "8getEnabled,8setEnabled,8getConversionMode,8setConversionMode,8setCompositionString,8doConversion");
+ASSetPropFlags (System.IME, null, 7);
+
 /*** Color ***/
 
 Color = function (target) {

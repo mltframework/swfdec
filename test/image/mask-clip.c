@@ -41,11 +41,11 @@ do_movie (int version, int reverse)
   SWFDisplayItem_setMaskLevel (item, 2);
 
   item = SWFMovie_add (movie, get_rectangle (0, 255, 0));
-  SWFDisplayItem_moveTo (item, 50, 0);
+  SWFDisplayItem_moveTo (item, 0, 50);
   SWFDisplayItem_setDepth (item, 1);
   SWFDisplayItem_setName (item, "b");
 
-  item = SWFMovie_add (movie, get_rectangle (0, 255, 0));
+  item = SWFMovie_add (movie, get_rectangle (0, 0, 255));
   SWFDisplayItem_moveTo (item, 50, 0);
   SWFDisplayItem_setDepth (item, 3);
   SWFDisplayItem_setName (item, "c");

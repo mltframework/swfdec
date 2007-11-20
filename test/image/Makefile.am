@@ -51,6 +51,33 @@ EXTRA_DIST = \
 	load-jpeg-7.swf.png \
 	load-jpeg-8.swf \
 	load-jpeg-8.swf.png \
+	mask-remove-clip.as \
+	mask-remove-clip-5.swf \
+	mask-remove-clip-5.swf.png \
+	mask-remove-clip-6.swf \
+	mask-remove-clip-6.swf.png \
+	mask-remove-clip-7.swf \
+	mask-remove-clip-7.swf.png \
+	mask-remove-clip-8.swf \
+	mask-remove-clip-8.swf.png \
+	mask-textfield.as \
+	mask-textfield-5.swf \
+	mask-textfield-5.swf.png \
+	mask-textfield-6.swf \
+	mask-textfield-6.swf.png \
+	mask-textfield-7.swf \
+	mask-textfield-7.swf.png \
+	mask-textfield-8.swf \
+	mask-textfield-8.swf.png \
+	mask-with-textfield.as \
+	mask-with-textfield-5.swf \
+	mask-with-textfield-5.swf.png \
+	mask-with-textfield-6.swf \
+	mask-with-textfield-6.swf.png \
+	mask-with-textfield-7.swf \
+	mask-with-textfield-7.swf.png \
+	mask-with-textfield-8.swf \
+	mask-with-textfield-8.swf.png \
 	morph-gradient.c \
 	morph-gradient-4.swf \
 	morph-gradient-4.swf.png \

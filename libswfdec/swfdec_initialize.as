@@ -100,12 +100,9 @@ ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height,showMenu,displayS
 
 /*** NetConnection ***/
 
-function NetConnection () {
-  this.isConnected = false;
-  ASSetPropFlags (this, null, 7);
-  var func = ASnative (2100, 200);
-  func (this);
-}
+// FIXME: this should actually be a non-native function that calls the ASnative
+// function
+NetConnection = ASconstructor (2100, 200);
 
 ASSetNative (NetConnection.prototype, 2100, "6connect,6close,6call,6addHeader");
 NetConnection.prototype.addProperty ("connectedProxyType", ASnative (2100, 4), null);

@@ -1358,6 +1358,11 @@ EXTRA_DIST = \
 	moviecliploader-getprogress-7.swf.trace \
 	moviecliploader-getprogress-8.swf \
 	moviecliploader-getprogress-8.swf.trace \
+	moviecliploader-known-image-size.as \
+	moviecliploader-known-image-size-7.swf \
+	moviecliploader-known-image-size-7.swf.trace \
+	moviecliploader-known-image-size-8.swf \
+	moviecliploader-known-image-size-8.swf.trace \
 	moviecliploader-properties.as \
 	moviecliploader-properties-5.swf \
 	moviecliploader-properties-5.swf.trace \
@@ -2431,6 +2436,7 @@ EXTRA_DIST = \
 	super-this-7.swf.trace \
 	super-this-8.swf \
 	super-this-8.swf.trace \
+	swfdec.jpg \
 	system-capabilities-query.as \
 	system-capabilities-query-5.swf \
 	system-capabilities-query-5.swf.trace \

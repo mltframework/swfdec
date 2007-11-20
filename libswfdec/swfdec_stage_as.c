@@ -163,3 +163,34 @@ set_height (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
 }
 
+SWFDEC_AS_NATIVE (666, 9, swfdec_stage_get_showMenu)
+void
+swfdec_stage_get_showMenu (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.showMenu (get)");
+}
+
+SWFDEC_AS_NATIVE (666, 10, swfdec_stage_set_showMenu)
+void
+swfdec_stage_set_showMenu (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.showMenu (set)");
+}
+
+SWFDEC_AS_NATIVE (666, 11, swfdec_stage_get_displayState)
+void
+swfdec_stage_get_displayState (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.displayState (get)");
+}
+
+SWFDEC_AS_NATIVE (666, 12, swfdec_stage_set_displayState)
+void
+swfdec_stage_set_displayState (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.displayState (set)");
+}

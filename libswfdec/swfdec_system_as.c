@@ -61,20 +61,20 @@ swfdec_system_set_exactSettings (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("System.exactSettings (static, set)");
 }
 
-SWFDEC_AS_NATIVE (2107, 3, swfdec_system_get_useCodePage)
+SWFDEC_AS_NATIVE (2107, 3, swfdec_system_get_useCodepage)
 void
-swfdec_system_get_useCodePage (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_system_get_useCodepage (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("System.useCodePage (static, get)");
+  SWFDEC_STUB ("System.useCodepage (static, get)");
 }
 
-SWFDEC_AS_NATIVE (2107, 4, swfdec_system_set_useCodePage)
+SWFDEC_AS_NATIVE (2107, 4, swfdec_system_set_useCodepage)
 void
-swfdec_system_set_useCodePage (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_system_set_useCodepage (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("System.useCodePage (static, set)");
+  SWFDEC_STUB ("System.useCodepage (static, set)");
 }
 
 static void

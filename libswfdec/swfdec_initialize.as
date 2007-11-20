@@ -254,7 +254,7 @@ delete System.capabilities.Query;
 
 System.setClipboard = ASnative (1066, 0);
 System.showSettings = ASnative (2107, 0);
-ASSetNativeAccessor (System, 2107, "exactSettings,useCodePage", 1);
+ASSetNativeAccessor (System, 2107, "exactSettings,useCodepage", 1);
 ASSetPropFlags (System, "exactSettings,useCodePage", 128);
 
 /*** System.security */

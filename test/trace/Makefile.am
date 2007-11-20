@@ -2792,6 +2792,8 @@ EXTRA_DIST = \
 	xml-properties-6.swf.trace \
 	xml-properties-7.swf \
 	xml-properties-7.swf.trace \
+	xml-properties-8.swf \
+	xml-properties-8.swf.trace \
 	xml-properties2.as \
 	xml-properties2-5.swf \
 	xml-properties2-5.swf.trace \
@@ -2799,6 +2801,8 @@ EXTRA_DIST = \
 	xml-properties2-6.swf.trace \
 	xml-properties2-7.swf \
 	xml-properties2-7.swf.trace \
+	xml-properties2-8.swf \
+	xml-properties2-8.swf.trace \
 	xml-socket-properties.as \
 	xml-socket-properties-5.swf \
 	xml-socket-properties-5.swf.trace \

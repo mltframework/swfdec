@@ -556,8 +556,6 @@ swfdec_resource_emit_on_load_init (SwfdecResource *resource)
   if (resource->state != SWFDEC_RESOURCE_COMPLETE)
     return FALSE;
 
-  swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadInit, FALSE, NULL, 0);
-  resource->state = SWFDEC_RESOURCE_DONE;
   if (resource->movie && SWFDEC_IS_IMAGE_DECODER (resource->decoder)) {
     SwfdecImage *image = SWFDEC_IMAGE_DECODER (resource->decoder)->image;
     if (image) {
@@ -565,6 +563,8 @@ swfdec_resource_emit_on_load_init (SwfdecResource *resource)
       swfdec_movie_queue_update (SWFDEC_MOVIE (resource->movie), SWFDEC_MOVIE_INVALID_CONTENTS);
     }
   }
+  swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadInit, FALSE, NULL, 0);
+  resource->state = SWFDEC_RESOURCE_DONE;
   /* free now unneeded resources */
   if (resource->clip_loader) {
     g_object_unref (resource->clip_loader);

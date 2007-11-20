@@ -51,6 +51,39 @@ EXTRA_DIST = \
 	load-jpeg-7.swf.png \
 	load-jpeg-8.swf \
 	load-jpeg-8.swf.png \
+	mask-and-clip.c \
+	mask-and-clip-0-8.swf \
+	mask-and-clip-0-8.swf.png \
+	mask-and-clip-10-8.swf \
+	mask-and-clip-10-8.swf.png \
+	mask-and-clip-11-8.swf \
+	mask-and-clip-11-8.swf.png \
+	mask-and-clip-12-8.swf \
+	mask-and-clip-12-8.swf.png \
+	mask-and-clip-13-8.swf \
+	mask-and-clip-13-8.swf.png \
+	mask-and-clip-14-8.swf \
+	mask-and-clip-14-8.swf.png \
+	mask-and-clip-15-8.swf \
+	mask-and-clip-15-8.swf.png \
+	mask-and-clip-1-8.swf \
+	mask-and-clip-1-8.swf.png \
+	mask-and-clip-2-8.swf \
+	mask-and-clip-2-8.swf.png \
+	mask-and-clip-3-8.swf \
+	mask-and-clip-3-8.swf.png \
+	mask-and-clip-4-8.swf \
+	mask-and-clip-4-8.swf.png \
+	mask-and-clip-5-8.swf \
+	mask-and-clip-5-8.swf.png \
+	mask-and-clip-6-8.swf \
+	mask-and-clip-6-8.swf.png \
+	mask-and-clip-7-8.swf \
+	mask-and-clip-7-8.swf.png \
+	mask-and-clip-8-8.swf \
+	mask-and-clip-8-8.swf.png \
+	mask-and-clip-9-8.swf \
+	mask-and-clip-9-8.swf.png \
 	mask-remove-clip.as \
 	mask-remove-clip-5.swf \
 	mask-remove-clip-5.swf.png \

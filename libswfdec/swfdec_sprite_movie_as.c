@@ -53,6 +53,183 @@ swfdec_sprite_movie_set_tabIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("MovieClip.tabIndex (set)");
 }
 
+SWFDEC_AS_NATIVE (900, 300, swfdec_sprite_movie_get__lockroot)
+void
+swfdec_sprite_movie_get__lockroot (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip._lockroot (get)");
+}
+
+SWFDEC_AS_NATIVE (900, 301, swfdec_sprite_movie_set__lockroot)
+void
+swfdec_sprite_movie_set__lockroot (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip._lockroot (set)");
+}
+
+SWFDEC_AS_NATIVE (900, 401, swfdec_sprite_movie_get_cacheAsBitmap)
+void
+swfdec_sprite_movie_get_cacheAsBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.cacheAsBitmap (get)");
+}
+
+SWFDEC_AS_NATIVE (900, 402, swfdec_sprite_movie_set_cacheAsBitmap)
+void
+swfdec_sprite_movie_set_cacheAsBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.cacheAsBitmap (set)");
+}
+
+SWFDEC_AS_NATIVE (900, 403, swfdec_sprite_movie_get_opaqueBackground)
+void
+swfdec_sprite_movie_get_opaqueBackground (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.opaqueBackground (get)");
+}
+
+SWFDEC_AS_NATIVE (900, 404, swfdec_sprite_movie_set_opaqueBackground)
+void
+swfdec_sprite_movie_set_opaqueBackground (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.opaqueBackground (set)");
+}
+
+SWFDEC_AS_NATIVE (900, 405, swfdec_sprite_movie_get_scrollRect)
+void
+swfdec_sprite_movie_get_scrollRect (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.scrollRect (get)");
+}
+
+SWFDEC_AS_NATIVE (900, 406, swfdec_sprite_movie_set_scrollRect)
+void
+swfdec_sprite_movie_set_scrollRect (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.scrollRect (set)");
+}
+
+SWFDEC_AS_NATIVE (900, 417, swfdec_sprite_movie_get_filters)
+void
+swfdec_sprite_movie_get_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.filters (get)");
+}
+
+SWFDEC_AS_NATIVE (900, 418, swfdec_sprite_movie_set_filters)
+void
+swfdec_sprite_movie_set_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.filters (set)");
+}
+
+SWFDEC_AS_NATIVE (900, 419, swfdec_sprite_movie_get_transform)
+void
+swfdec_sprite_movie_get_transform (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.transform (get)");
+}
+
+SWFDEC_AS_NATIVE (900, 420, swfdec_sprite_movie_set_transform)
+void
+swfdec_sprite_movie_set_transform (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.transform (set)");
+}
+
+SWFDEC_AS_NATIVE (900, 500, swfdec_sprite_movie_get_blendMode)
+void
+swfdec_sprite_movie_get_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.blendMode (get)");
+}
+
+SWFDEC_AS_NATIVE (900, 501, swfdec_sprite_movie_set_blendMode)
+void
+swfdec_sprite_movie_set_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.blendMode (set)");
+}
+
+SWFDEC_AS_NATIVE (900, 2, swfdec_sprite_movie_localToGlobal)
+void
+swfdec_sprite_movie_localToGlobal (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.localToGlobal");
+}
+
+SWFDEC_AS_NATIVE (900, 3, swfdec_sprite_movie_globalToLocal)
+void
+swfdec_sprite_movie_globalToLocal (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.globalToLocal");
+}
+
+SWFDEC_AS_NATIVE (900, 8, swfdec_sprite_movie_attachAudio)
+void
+swfdec_sprite_movie_attachAudio (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.attachAudio");
+}
+
+SWFDEC_AS_NATIVE (900, 9, swfdec_sprite_movie_attachVideo)
+void
+swfdec_sprite_movie_attachVideo (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.attachVideo");
+}
+
+SWFDEC_AS_NATIVE (900, 23, swfdec_sprite_movie_getInstanceAtDepth)
+void
+swfdec_sprite_movie_getInstanceAtDepth (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.getInstanceAtDepth");
+}
+
+SWFDEC_AS_NATIVE (900, 24, swfdec_sprite_movie_getSWFVersion)
+void
+swfdec_sprite_movie_getSWFVersion (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.getSWFVersion");
+}
+
+SWFDEC_AS_NATIVE (900, 25, swfdec_sprite_movie_attachBitmap)
+void
+swfdec_sprite_movie_attachBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.attachBitmap");
+}
+
+SWFDEC_AS_NATIVE (900, 26, swfdec_sprite_movie_getRect)
+void
+swfdec_sprite_movie_getRect (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.getRect");
+}
+
 SWFDEC_AS_NATIVE (900, 12, swfdec_sprite_movie_play)
 void
 swfdec_sprite_movie_play (SwfdecAsContext *cx, SwfdecAsObject *object,

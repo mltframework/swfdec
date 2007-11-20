@@ -253,3 +253,38 @@ swfdec_sprite_movie_clear (SwfdecAsContext *cx, SwfdecAsObject *object,
   movie->draw_line = NULL;
 }
 
+SWFDEC_AS_NATIVE (901, 9, swfdec_sprite_movie_lineGradientStyle)
+void
+swfdec_sprite_movie_lineGradientStyle (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.lineGradientStyle");
+}
+
+SWFDEC_AS_NATIVE (901, 10, swfdec_sprite_movie_beginMeshFill)
+void
+swfdec_sprite_movie_beginMeshFill (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.beginMeshFill");
+}
+
+SWFDEC_AS_NATIVE (901, 11, swfdec_sprite_movie_beginBitmapFill)
+void
+swfdec_sprite_movie_beginBitmapFill (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.beginBitmapFill");
+}
+
+SWFDEC_AS_NATIVE (901, 12, swfdec_sprite_movie_get_scale9Grid)
+void
+swfdec_sprite_movie_get_scale9Grid (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.scale9Grid");
+}

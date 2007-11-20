@@ -275,6 +275,9 @@ ASSetNative (TextSnapshot.prototype, 1067, "6getCount,6setSelected,6getSelected,
 
 /* MovieClip */
 
+MovieClip.prototype.useHandCursor = true;
+MovieClip.prototype.enabled = true;
+
 MovieClip.prototype.meth = function (method) {
   var lower = method.toLowerCase ();
   if (lower == "post") {
@@ -339,30 +342,19 @@ MovieClip.prototype.getTextSnapshot = function () {
 };
 ASSetPropFlags (MovieClip.prototype, "getTextSnapshot", 128);
 
-MovieClip.prototype.attachMovie = ASnative (900, 0);
-MovieClip.prototype.swapDepths = ASnative (900, 1);
-MovieClip.prototype.hitTest = ASnative (900, 4);
-MovieClip.prototype.getBounds = ASnative (900, 5);
-MovieClip.prototype.getBytesTotal = ASnative (900, 6);
-MovieClip.prototype.getBytesLoaded = ASnative (900, 7);
-MovieClip.prototype.getDepth = ASnative (900, 10);
-MovieClip.prototype.setMask = ASnative (900, 11);
-MovieClip.prototype.play = ASnative (900, 12);
-MovieClip.prototype.stop = ASnative (900, 13);
-MovieClip.prototype.nextFrame = ASnative (900, 14);
-MovieClip.prototype.prevFrame = ASnative (900, 15);
-MovieClip.prototype.gotoAndPlay = ASnative (900, 16);
-MovieClip.prototype.gotoAndStop = ASnative (900, 17);
-// work around ming bug, causing these two to be lower cased
-MovieClip.prototype["duplicateMovieClip"] = ASnative (900, 18);
-MovieClip.prototype["removeMovieClip"] = ASnative (900, 19);
-MovieClip.prototype.startDrag = ASnative (900, 20);
-MovieClip.prototype.stopDrag = ASnative (900, 21);
-MovieClip.prototype.getNextHighestDepth = ASnative (900, 22);
-MovieClip.prototype.createTextField = ASnative (104, 200);
-ASSetPropFlags (MovieClip.prototype, "getDepth,setMask", 128);
 
-ASSetNative (MovieClip.prototype, 901, "6createEmptyMovieClip,6beginFill,6beginGradientFill,6moveTo,6lineTo,6curveTo,6lineStyle,6endFill,6clear");
+ASSetNative (MovieClip.prototype, 900, "attachMovie,swapDepths,localToGlobal,globalToLocal,hitTest,getBounds,getBytesTotal,getBytesLoaded,6attachAudio,6attachVideo,6getDepth,6setMask,play,stop,nextFrame,prevFrame,gotoAndPlay,gotoAndStop,duplicateMovieClip,removeMovieClip,startDrag,stopDrag,7getNextHighestDepth,7getInstanceAtDepth,getSWFVersion,8attachBitmap,8getRect");
+ASSetNativeAccessor (MovieClip.prototype, 900, "tabIndex", 200);
+ASSetNativeAccessor (MovieClip.prototype, 900, "_lockroot", 300);
+ASSetNativeAccessor (MovieClip.prototype, 900, "8cacheAsBitmap,8opaqueBackground,8scrollRect", 401);
+ASSetNativeAccessor (MovieClip.prototype, 900, "8filters,8transform", 417);
+ASSetNativeAccessor (MovieClip.prototype, 900, "8blendMode", 500);
+
+ASSetNative (MovieClip.prototype, 901, "6createEmptyMovieClip,6beginFill,6beginGradientFill,6moveTo,6lineTo,6curveTo,6lineStyle,6endFill,6clear,8lineGradientStyle,8beginMeshFill,8beginBitmapFill");
+ASSetNativeAccessor (MovieClip.prototype, 901, "8scale9Grid", 12);
+
+MovieClip.prototype.createTextField = ASnative (104, 200);
+
 ASSetPropFlags (MovieClip.prototype, null, 3);
 
 /* MovieClipLoader */

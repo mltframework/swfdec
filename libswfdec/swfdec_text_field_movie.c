@@ -717,6 +717,10 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   g_return_if_fail (trans != NULL);
   g_return_if_fail (inval != NULL);
 
+  /* textfields don't mask */
+  if (swfdec_color_transform_is_mask (trans))
+    return;
+
   text_movie = SWFDEC_TEXT_FIELD_MOVIE (movie);
   text = SWFDEC_TEXT_FIELD (movie->graphic);
 

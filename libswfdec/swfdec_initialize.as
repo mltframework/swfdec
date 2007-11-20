@@ -358,6 +358,7 @@ MovieClip.prototype["duplicateMovieClip"] = ASnative (900, 18);
 MovieClip.prototype["removeMovieClip"] = ASnative (900, 19);
 MovieClip.prototype.startDrag = ASnative (900, 20);
 MovieClip.prototype.stopDrag = ASnative (900, 21);
+MovieClip.prototype.getNextHighestDepth = ASnative (900, 22);
 MovieClip.prototype.createTextField = ASnative (104, 200);
 ASSetPropFlags (MovieClip.prototype, "getDepth,setMask", 128);
 

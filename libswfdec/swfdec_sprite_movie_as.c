@@ -117,8 +117,8 @@ swfdec_sprite_movie_getBytesTotal (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-// No ASnative number
-static void
+SWFDEC_AS_NATIVE (900, 22, swfdec_sprite_movie_getNextHighestDepth)
+void
 swfdec_sprite_movie_getNextHighestDepth (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
@@ -585,7 +585,4 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
   swfdec_as_object_set_variable_and_flags (player->MovieClip,
       SWFDEC_AS_STR_prototype, &val, SWFDEC_AS_VARIABLE_HIDDEN |
       SWFDEC_AS_VARIABLE_PERMANENT);
-  /* now add all the functions */
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_getNextHighestDepth, SWFDEC_TYPE_SPRITE_MOVIE, 
-      swfdec_sprite_movie_getNextHighestDepth, 0);
 };

@@ -2200,6 +2200,15 @@ EXTRA_DIST = \
 	shift-6.swf.trace \
 	shift-7.swf \
 	shift-7.swf.trace \
+	sound-properties.as \
+	sound-properties-5.swf \
+	sound-properties-5.swf.trace \
+	sound-properties-6.swf \
+	sound-properties-6.swf.trace \
+	sound-properties-7.swf \
+	sound-properties-7.swf.trace \
+	sound-properties-8.swf \
+	sound-properties-8.swf.trace \
 	stack-overflow.as \
 	stack-overflow-5.swf \
 	stack-overflow-5.swf.trace \

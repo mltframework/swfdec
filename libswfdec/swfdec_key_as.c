@@ -66,3 +66,18 @@ swfdec_key_isDown (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, (player->key_pressed[id / 8] & (1 << (id % 8))) ? TRUE : FALSE);
 }
 
+SWFDEC_AS_NATIVE (800, 3, swfdec_key_isToggled)
+void
+swfdec_key_isToggled (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SWFDEC_STUB ("Key.isToggled (static)");
+}
+
+SWFDEC_AS_NATIVE (800, 4, swfdec_key_isAccessible)
+void
+swfdec_key_isAccessible (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SWFDEC_STUB ("Key.isAccessible (static)");
+}

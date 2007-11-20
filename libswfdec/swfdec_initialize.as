@@ -98,6 +98,21 @@ Stage = { };
 AsBroadcaster.initialize (Stage);
 ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height,showMenu,displayState", 1);
 
+/*** NetConnection ***/
+
+function NetConnection () {
+  this.isConnected = false;
+  ASSetPropFlags (this, null, 7);
+  var func = ASnative (2100, 200);
+  func (this);
+}
+
+ASSetNative (NetConnection.prototype, 2100, "6connect,6close,6call,6addHeader");
+NetConnection.prototype.addProperty ("connectedProxyType", ASnative (2100, 4), null);
+NetConnection.prototype.proxyType = "none";
+NetConnection.prototype.addProperty ("usingTLS", ASnative (2100, 5), null);
+ASSetPropFlags (NetConnection.prototype, null, 3);
+
 /*** LOADVARS ***/
 
 function LoadVars () { };

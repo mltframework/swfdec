@@ -25,6 +25,7 @@
 #include "swfdec_net_connection.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_native_function.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -111,50 +112,75 @@ swfdec_net_connection_connect (SwfdecNetConnection *conn, const char *url)
 
 /*** AS CODE ***/
 
-static void
-swfdec_net_connection_do_connect (SwfdecAsContext *cx, SwfdecAsObject *obj,
+SWFDEC_AS_NATIVE (2100, 0, swfdec_net_connection_do_connect)
+void
+swfdec_net_connection_do_connect (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecNetConnection *conn = SWFDEC_NET_CONNECTION (obj);
+  SwfdecNetConnection *conn;
+  SwfdecAsValue val;
   const char *url;
 
-  if (SWFDEC_AS_VALUE_IS_STRING (&argv[0])) {
-    url = SWFDEC_AS_VALUE_GET_STRING (&argv[0]);
-  } else if (SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_CONNECTION, &conn, "v", &val);
+
+  if (SWFDEC_AS_VALUE_IS_STRING (&val)) {
+    url = SWFDEC_AS_VALUE_GET_STRING (&val);
+  } else if (SWFDEC_AS_VALUE_IS_NULL (&val)) {
     url = NULL;
   } else {
-    SWFDEC_FIXME ("untested argument to NetConnection.connect: type %u", argv[0].type);
+    SWFDEC_FIXME ("untested argument to NetConnection.connect: type %u", val.type);
     url = NULL;
   }
   swfdec_net_connection_connect (conn, url);
 }
 
+SWFDEC_AS_NATIVE (2100, 1, swfdec_net_connection_do_close)
 void
-swfdec_net_connection_init_context (SwfdecPlayer *player, guint version)
+swfdec_net_connection_do_close (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecAsContext *context;
-  SwfdecAsObject *conn, *proto;
-  SwfdecAsValue val;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-
-  context = SWFDEC_AS_CONTEXT (player);
-  proto = swfdec_as_object_new_empty (context);
-  if (proto == NULL)
-    return;
-  conn = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global, 
-      SWFDEC_AS_STR_NetConnection, SWFDEC_TYPE_NET_CONNECTION, 
-      SWFDEC_TYPE_NET_CONNECTION, NULL, 0, proto));
-  if (!conn)
-    return;
-  /* set the right properties on the NetConnection.prototype object */
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_connect, SWFDEC_TYPE_NET_CONNECTION,
-      swfdec_net_connection_do_connect, 1);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, conn);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  SWFDEC_STUB ("NetConnection.close");
 }
 
+SWFDEC_AS_NATIVE (2100, 2, swfdec_net_connection_do_call)
+void
+swfdec_net_connection_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("NetConnection.call");
+}
+
+SWFDEC_AS_NATIVE (2100, 3, swfdec_net_connection_do_addHeader)
+void
+swfdec_net_connection_do_addHeader (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("NetConnection.addHeader");
+}
+
+SWFDEC_AS_NATIVE (2100, 4, swfdec_net_connection_get_connectedProxyType)
+void
+swfdec_net_connection_get_connectedProxyType (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("NetConnection.connectedProxyType (get)");
+}
+
+SWFDEC_AS_NATIVE (2100, 5, swfdec_net_connection_get_usingTLS)
+void
+swfdec_net_connection_get_usingTLS (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("NetConnection.usingTLS (get)");
+}
+
+// not actually the constructor, but called from the constructor
+SWFDEC_AS_CONSTRUCTOR (2100, 200, swfdec_net_connection_construct, swfdec_net_connection_get_type)
+void
+swfdec_net_connection_construct (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  // FIXME: Set contentType and possible do some other stuff too
+}

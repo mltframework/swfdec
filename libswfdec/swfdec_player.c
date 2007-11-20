@@ -1860,7 +1860,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       context->state = SWFDEC_AS_CONTEXT_NEW;
       swfdec_sprite_movie_init_context (player, version);
       swfdec_video_movie_init_context (player, version);
-      swfdec_net_connection_init_context (player, version);
       swfdec_net_stream_init_context (player, version);
 
       swfdec_as_context_run_init_script (context, swfdec_initialize, 

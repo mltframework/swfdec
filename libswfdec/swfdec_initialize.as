@@ -113,6 +113,23 @@ NetConnection.prototype.proxyType = "none";
 NetConnection.prototype.addProperty ("usingTLS", ASnative (2100, 5), null);
 ASSetPropFlags (NetConnection.prototype, null, 3);
 
+/*** NetStream ***/
+
+NetStream.prototype.publish = function () {
+  var o = {}; o["Implement NetStream.publish"] ();
+};
+
+NetStream.prototype.receiveAudio = function (flag) {
+  var o = {}; o["Implement NetStream.receiveAudio"] ();
+};
+
+NetStream.prototype.receiveVideo = function (flag) {
+  var o = {}; o["Implement NetStream.receiveVideo"] ();
+};
+
+ASSetNative (NetStream.prototype, 2101, "6close,6attachAudio,6attachVideo,6send,6setBufferTime");
+ASSetPropFlags (NetStream.prototype, null, 3);
+
 /*** LOADVARS ***/
 
 function LoadVars () { };

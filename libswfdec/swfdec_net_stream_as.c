@@ -27,12 +27,17 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_player_internal.h"
 
-static void
-swfdec_net_stream_close (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+SWFDEC_AS_NATIVE (2101, 0, swfdec_net_stream_close)
+void
+swfdec_net_stream_close (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
+  SwfdecNetStream *stream;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_STREAM, &stream, "");
 
   swfdec_net_stream_set_loader (stream, NULL);
   swfdec_net_stream_set_playing (stream, TRUE);
@@ -64,13 +69,40 @@ swfdec_net_stream_pause (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, S
   swfdec_net_stream_set_playing (stream, playing);
 }
 
-static void
-swfdec_net_stream_setBufferTime (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+SWFDEC_AS_NATIVE (2101, 1, swfdec_net_stream_attachAudio)
+void
+swfdec_net_stream_attachAudio (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
+  SWFDEC_STUB ("NetStream.attachAudio");
+}
+
+SWFDEC_AS_NATIVE (2101, 2, swfdec_net_stream_attachVideo)
+void
+swfdec_net_stream_attachVideo (SwfdecAsContext *cx, SwfdecAsObject *obj,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("NetStream.attachVideo");
+}
+
+SWFDEC_AS_NATIVE (2101, 3, swfdec_net_stream_send)
+void
+swfdec_net_stream_send (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("NetStream.send");
+}
+
+SWFDEC_AS_NATIVE (2101, 4, swfdec_net_stream_setBufferTime)
+void
+swfdec_net_stream_setBufferTime (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecNetStream *stream;
   double d;
 
-  d = swfdec_as_value_to_number (cx, &argv[0]);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_STREAM, &stream, "n", &d);
+
   swfdec_net_stream_set_buffer_time (stream, d);
 }
 
@@ -125,12 +157,8 @@ swfdec_net_stream_init_context (SwfdecPlayer *player, guint version)
       swfdec_net_stream_pause, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, SWFDEC_TYPE_NET_STREAM,
       swfdec_net_stream_play, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_close, SWFDEC_TYPE_NET_STREAM,
-      swfdec_net_stream_close, 0);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_seek, SWFDEC_TYPE_NET_STREAM,
       swfdec_net_stream_do_seek, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_setBufferTime, SWFDEC_TYPE_NET_STREAM,
-      swfdec_net_stream_setBufferTime, 1);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, stream);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

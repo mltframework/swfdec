@@ -128,6 +128,23 @@ EXTRA_DIST = \
 	mask-remove-clip-7.swf.png \
 	mask-remove-clip-8.swf \
 	mask-remove-clip-8.swf.png \
+	mask-terminates-clip.c \
+	mask-terminates-clip-mask-5.swf \
+	mask-terminates-clip-mask-5.swf.png \
+	mask-terminates-clip-mask-6.swf \
+	mask-terminates-clip-mask-6.swf.png \
+	mask-terminates-clip-mask-7.swf \
+	mask-terminates-clip-mask-7.swf.png \
+	mask-terminates-clip-mask-8.swf \
+	mask-terminates-clip-mask-8.swf.png \
+	mask-terminates-clip-maskee-5.swf \
+	mask-terminates-clip-maskee-5.swf.png \
+	mask-terminates-clip-maskee-6.swf \
+	mask-terminates-clip-maskee-6.swf.png \
+	mask-terminates-clip-maskee-7.swf \
+	mask-terminates-clip-maskee-7.swf.png \
+	mask-terminates-clip-maskee-8.swf \
+	mask-terminates-clip-maskee-8.swf.png \
 	mask-textfield.as \
 	mask-textfield-5.swf \
 	mask-textfield-5.swf.png \

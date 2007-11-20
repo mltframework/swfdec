@@ -93,6 +93,23 @@ EXTRA_DIST = \
 	mask-and-clip-8-8.swf.png \
 	mask-and-clip-9-8.swf \
 	mask-and-clip-9-8.swf.png \
+	mask-clip.c \
+	mask-clip-mask-5.swf \
+	mask-clip-mask-5.swf.png \
+	mask-clip-mask-6.swf \
+	mask-clip-mask-6.swf.png \
+	mask-clip-mask-7.swf \
+	mask-clip-mask-7.swf.png \
+	mask-clip-mask-8.swf \
+	mask-clip-mask-8.swf.png \
+	mask-clip-maskee-5.swf \
+	mask-clip-maskee-5.swf.png \
+	mask-clip-maskee-6.swf \
+	mask-clip-maskee-6.swf.png \
+	mask-clip-maskee-7.swf \
+	mask-clip-maskee-7.swf.png \
+	mask-clip-maskee-8.swf \
+	mask-clip-maskee-8.swf.png \
 	mask-different-parent.as \
 	mask-different-parent-5.swf \
 	mask-different-parent-5.swf.png \

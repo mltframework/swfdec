@@ -564,6 +564,32 @@ swfdec_movie_rect_local_to_global (SwfdecMovie *movie, SwfdecRect *rect)
 }
 
 void
+swfdec_movie_global_to_local_matrix (SwfdecMovie *movie, cairo_matrix_t *matrix)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (matrix != NULL);
+
+  cairo_matrix_init_identity (matrix);
+  while (movie) {
+    cairo_matrix_multiply (matrix, &movie->inverse_matrix, matrix);
+    movie = movie->parent;
+  }
+}
+
+void
+swfdec_movie_local_to_global_matrix (SwfdecMovie *movie, cairo_matrix_t *matrix)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (matrix != NULL);
+
+  cairo_matrix_init_identity (matrix);
+  while (movie) {
+    cairo_matrix_multiply (matrix, matrix, &movie->matrix);
+    movie = movie->parent;
+  }
+}
+
+void
 swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
@@ -876,7 +902,11 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     if (movie->parent == movie->masked_by->parent) {
       cairo_transform (cr, &movie->inverse_matrix);
     } else {
-      SWFDEC_FIXME ("implement different parents when masking");
+      cairo_matrix_t mat;
+      swfdec_movie_local_to_global_matrix (movie, &mat);
+      cairo_transform (cr, &mat);
+      swfdec_movie_global_to_local_matrix (movie->masked_by, &mat);
+      cairo_transform (cr, &mat);
     }
     mask = swfdec_movie_mask (cr, movie->masked_by, &rect);
     cairo_pop_group_to_source (cr);

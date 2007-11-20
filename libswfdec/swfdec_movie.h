@@ -221,6 +221,12 @@ void		swfdec_movie_local_to_global	(SwfdecMovie *		movie,
 void		swfdec_movie_global_to_local	(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);
+void		swfdec_movie_global_to_local_matrix 
+						(SwfdecMovie *		movie,
+						 cairo_matrix_t *	matrix);
+void		swfdec_movie_local_to_global_matrix 
+						(SwfdecMovie *		movie,
+						 cairo_matrix_t *	matrix);
 void		swfdec_movie_rect_local_to_global (SwfdecMovie *	movie,
 						 SwfdecRect *		rect);
 void		swfdec_movie_rect_global_to_local (SwfdecMovie *	movie,

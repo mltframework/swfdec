@@ -529,6 +529,44 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (rval, obj);
 }
 
+SWFDEC_AS_NATIVE (900, 11, swfdec_sprite_movie_setMask)
+void
+swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
+        guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecMovie *movie, *mask;
+
+  /* yes, this works with regular movies */
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "O", &mask);
+
+  if (mask != NULL && !SWFDEC_IS_MOVIE (mask)) {
+    SWFDEC_FIXME ("mask is not a movie, what now?");
+    mask = NULL;
+  }
+  if (movie->masked_by)
+    movie->masked_by->mask_of = NULL;
+  if (movie->mask_of)
+    movie->mask_of->masked_by = NULL;
+  movie->masked_by = mask;
+  movie->mask_of = NULL;
+  if (movie->clip_depth) {
+    g_assert (movie->parent);
+    swfdec_movie_invalidate (movie->parent);
+    movie->clip_depth = 0;
+  } else {
+    swfdec_movie_invalidate (movie);
+  }
+  if (mask) {
+    if (mask->masked_by)
+      mask->masked_by->mask_of = NULL;
+    if (mask->mask_of)
+      mask->mask_of->masked_by = NULL;
+    mask->masked_by = NULL;
+    mask->mask_of = movie;
+    swfdec_movie_invalidate (mask);
+  }
+}
+
 void
 swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
 {

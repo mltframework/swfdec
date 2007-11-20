@@ -373,18 +373,16 @@ ASSetPropFlags(MovieClipLoader.prototype, null, 1027);
 
 TextField = ASconstructor (104, 0);
 TextField.getFontList = ASnative (104, 201);
-TextField.prototype.getTextFormat = ASnative (104, 101);
-TextField.prototype.setTextFormat = ASnative (104, 102);
-TextField.prototype.removeTextField = ASnative (104, 103);
-TextField.prototype.getNewTextFormat = ASnative (104, 104);
-TextField.prototype.setNewTextFormat = ASnative (104, 105);
-TextField.prototype.getDepth = ASnative (104, 106);
-TextField.prototype.replaceText = ASnative (104, 107);
-ASSetPropFlags (TextField.prototype, "replaceText", 1024);
 
+ASSetNative (TextField.prototype, 104, "6replaceSel,6getTextFormat,6setTextFormat,6removeTextField,6getNewTextFormat,6setNewTextFormat,6getDepth,7replaceText", 100);
 AsBroadcaster.initialize (TextField.prototype);
 
 ASSetPropFlags (TextField.prototype, null, 131);
+
+ASSetNativeAccessor (TextField.prototype, 104, "8gridFitType,8antiAliasType,8thickness,8sharpness,8filters", 300);
+// FIXME: this should be done inside the TextField constructor
+ASSetNativeAccessor (TextField.prototype, 900, "8tabIndex", 200);
+
 ASSetPropFlags (TextField, null, 131);
 
 /* TextFormat */

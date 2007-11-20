@@ -963,6 +963,96 @@ swfdec_text_field_movie_set_textColor (SwfdecAsContext *cx,
   text->format_new->color = swfdec_text_field_movie_int_to_color (cx, value);
 }
 
+SWFDEC_AS_NATIVE (104, 300, swfdec_text_field_movie_get_gridFitType)
+void
+swfdec_text_field_movie_get_gridFitType (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.gridFitType (get)");
+}
+
+SWFDEC_AS_NATIVE (104, 301, swfdec_text_field_movie_set_gridFitType)
+void
+swfdec_text_field_movie_set_gridFitType (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.gridFitType (set)");
+}
+
+SWFDEC_AS_NATIVE (104, 302, swfdec_text_field_movie_get_antiAliasType)
+void
+swfdec_text_field_movie_get_antiAliasType (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.antiAliasType (get)");
+}
+
+SWFDEC_AS_NATIVE (104, 303, swfdec_text_field_movie_set_antiAliasType)
+void
+swfdec_text_field_movie_set_antiAliasType (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.antiAliasType (set)");
+}
+
+SWFDEC_AS_NATIVE (104, 304, swfdec_text_field_movie_get_thickness)
+void
+swfdec_text_field_movie_get_thickness (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.thickness (get)");
+}
+
+SWFDEC_AS_NATIVE (104, 305, swfdec_text_field_movie_set_thickness)
+void
+swfdec_text_field_movie_set_thickness (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.thickness (set)");
+}
+
+SWFDEC_AS_NATIVE (104, 306, swfdec_text_field_movie_get_sharpness)
+void
+swfdec_text_field_movie_get_sharpness (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.sharpness (get)");
+}
+
+SWFDEC_AS_NATIVE (104, 307, swfdec_text_field_movie_set_sharpness)
+void
+swfdec_text_field_movie_set_sharpness (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.sharpness (set)");
+}
+
+SWFDEC_AS_NATIVE (104, 308, swfdec_text_field_movie_get_filters)
+void
+swfdec_text_field_movie_get_filters (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.filters (get)");
+}
+
+SWFDEC_AS_NATIVE (104, 309, swfdec_text_field_movie_set_filters)
+void
+swfdec_text_field_movie_set_filters (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.filters (set)");
+}
+
 /*
  * Native functions
  */
@@ -1098,6 +1188,15 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
+}
+
+SWFDEC_AS_NATIVE (104, 100, swfdec_text_field_movie_replaceSel)
+void
+swfdec_text_field_movie_replaceSel (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextField.replaceSel");
 }
 
 SWFDEC_AS_NATIVE (104, 107, swfdec_text_field_movie_replaceText)

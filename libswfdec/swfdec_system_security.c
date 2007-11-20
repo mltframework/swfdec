@@ -23,6 +23,10 @@
 
 #include "swfdec_as_internal.h"
 #include "swfdec_debug.h"
+#include "swfdec_as_strings.h"
+#include "swfdec_flash_security.h"
+#include "swfdec_resource.h"
+#include "swfdec_player_internal.h"
 
 // properties
 SWFDEC_AS_NATIVE (12, 0, swfdec_system_security_allowDomain)
@@ -76,7 +80,28 @@ swfdec_system_security_get_sandboxType (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("System.security.sandboxType (static, get)");
+  switch (SWFDEC_FLASH_SECURITY (SWFDEC_PLAYER (cx)->resource)->sandbox) {
+    case SWFDEC_SANDBOX_REMOTE:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_remote);
+      break;
+
+    case SWFDEC_SANDBOX_LOCAL_FILE:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_localWithFile);
+      break;
+
+    case SWFDEC_SANDBOX_LOCAL_NETWORK:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_localWithNetwork);
+      break;
+
+    case SWFDEC_SANDBOX_LOCAL_TRUSTED:
+      SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_localTrusted);
+      break;
+
+    case SWFDEC_SANDBOX_NONE:
+      // FIXME: is this correct?
+    default:
+      g_return_if_reached ();
+  }
 }
 
 SWFDEC_AS_NATIVE (12, 6, swfdec_system_security_set_sandboxType)
@@ -85,5 +110,5 @@ swfdec_system_security_set_sandboxType (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("System.security.sandboxType (static, set)");
+  // read-only
 }

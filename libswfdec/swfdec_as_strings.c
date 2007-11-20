@@ -446,5 +446,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("callee")
   SWFDEC_AS_CONSTANT_STRING ("caller")
   SWFDEC_AS_CONSTANT_STRING ("enableDebugConsole")
+  SWFDEC_AS_CONSTANT_STRING ("remote")
+  SWFDEC_AS_CONSTANT_STRING ("localWithFile")
+  SWFDEC_AS_CONSTANT_STRING ("localWithNetwork")
+  SWFDEC_AS_CONSTANT_STRING ("localTrusted")
   /* add more here */
 ;

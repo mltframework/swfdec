@@ -571,6 +571,8 @@ swfdec_movie_global_to_local_matrix (SwfdecMovie *movie, cairo_matrix_t *matrix)
 
   cairo_matrix_init_identity (matrix);
   while (movie) {
+    if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
+      swfdec_movie_update (movie);
     cairo_matrix_multiply (matrix, &movie->inverse_matrix, matrix);
     movie = movie->parent;
   }
@@ -584,6 +586,8 @@ swfdec_movie_local_to_global_matrix (SwfdecMovie *movie, cairo_matrix_t *matrix)
 
   cairo_matrix_init_identity (matrix);
   while (movie) {
+    if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
+      swfdec_movie_update (movie);
     cairo_matrix_multiply (matrix, matrix, &movie->matrix);
     movie = movie->parent;
   }

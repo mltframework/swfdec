@@ -51,6 +51,15 @@ EXTRA_DIST = \
 	load-jpeg-7.swf.png \
 	load-jpeg-8.swf \
 	load-jpeg-8.swf.png \
+	mask-affected-by-clip.c \
+	mask-affected-by-clip-5.swf \
+	mask-affected-by-clip-5.swf.png \
+	mask-affected-by-clip-6.swf \
+	mask-affected-by-clip-6.swf.png \
+	mask-affected-by-clip-7.swf \
+	mask-affected-by-clip-7.swf.png \
+	mask-affected-by-clip-8.swf \
+	mask-affected-by-clip-8.swf.png \
 	mask-and-clip.c \
 	mask-and-clip-0-8.swf \
 	mask-and-clip-0-8.swf.png \

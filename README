@@ -14,10 +14,8 @@ it crashes. If you encounter such a crash however, make sure to file a bug
 immediately.
 
 Swfdec contains some applications for testing and debugging the library. These 
-are available in the player/ and test/ directory. They are not installed. The
-applications in the player/ directory require GTK and ALSO to build, while the
-library does not. So if you are packaging Swfdec, you probably do not want to 
-make it depend on GTK or ALSA.
+are available in the player/ and test/ directory. They are not installed. Most 
+of them require the libswfdec-gtk library.
 
 The test/ directory contains subdirectories that run automated tests with the 
 provided SWF files in the directory. See the README files in those directories
@@ -64,7 +62,7 @@ Dependencies:
   cairo (>= 1.2.0 - >= 1.4.0 recommended) with png support enabled
   glib (>= 2.10.0)
   liboil (>= 0.3.6)
-  Pangocairo (aka Pango with cairo support)
+  Pangocairo (>= 1.16.0) - this is provided by Pango
   zlib (>= 1.1.4)
 
   FFMpeg (current SVN - optional, required for various audio and video formats)

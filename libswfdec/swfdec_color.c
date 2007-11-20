@@ -62,6 +62,9 @@ swfdec_color_apply_transform_premultiplied (SwfdecColor in,
 {
   int r, g, b, a, aold;
 
+  if (trans->mask)
+    return SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
+
   aold = SWFDEC_COLOR_A (in);
   if (aold == 0)
     return 0;
@@ -86,6 +89,9 @@ SwfdecColor
 swfdec_color_apply_transform (SwfdecColor in, const SwfdecColorTransform * trans)
 {
   int r, g, b, a;
+
+  if (trans->mask)
+    return SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
 
   r = SWFDEC_COLOR_R (in);
   g = SWFDEC_COLOR_G (in);
@@ -120,6 +126,7 @@ swfdec_color_transform_init_identity (SwfdecColorTransform * trans)
 {
   g_return_if_fail (trans != NULL);
   
+  trans->mask = FALSE;
   trans->ra = 256;
   trans->ga = 256;
   trans->ba = 256;
@@ -128,6 +135,15 @@ swfdec_color_transform_init_identity (SwfdecColorTransform * trans)
   trans->gb = 0;
   trans->bb = 0;
   trans->ab = 0;
+}
+
+void
+swfdec_color_transform_init_mask (SwfdecColorTransform *trans)
+{
+  g_return_if_fail (trans != NULL);
+  
+  trans->mask = TRUE;
+  /* don't init the other values so valgrind complains when they get accessed */
 }
 
 /**
@@ -141,6 +157,7 @@ swfdec_color_transform_init_identity (SwfdecColorTransform * trans)
 void
 swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor color)
 {
+  trans->mask = FALSE;
   trans->ra = 0;
   trans->rb = SWFDEC_COLOR_R (color);
   trans->ga = 0;
@@ -154,7 +171,8 @@ swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor colo
 gboolean
 swfdec_color_transform_is_identity (const SwfdecColorTransform * trans)
 {
-  return trans->ra == 256 && trans->ga == 256 && trans->ba == 256 && trans->aa == 256 &&
+  return trans->mask == FALSE && 
+      trans->ra == 256 && trans->ga == 256 && trans->ba == 256 && trans->aa == 256 &&
       trans->rb == 0 && trans->gb == 0 && trans->bb == 0 && trans->ab == 0;
 }
 
@@ -174,8 +192,13 @@ swfdec_color_transform_chain (SwfdecColorTransform *dest,
   g_return_if_fail (dest != NULL);
   g_return_if_fail (last != NULL);
   g_return_if_fail (first != NULL);
+  g_return_if_fail (!last->mask);
   
-  /* FIXME: CLAMP here? */
+  if (first->mask) {
+    swfdec_color_transform_init_mask (dest);
+    return;
+  }
+  dest->mask = FALSE;
   dest->ra = last->ra * first->ra >> 8;
   dest->rb = (last->ra * first->rb >> 8) + last->rb;
   dest->ga = last->ga * first->ga >> 8;

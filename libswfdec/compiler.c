@@ -83,7 +83,7 @@ main (int argc, char **argv)
     data = SWFAction_getByteCode (action, &len);
     contents = get_name (argv[i]);
     g_print ("/* compiled from %s */\n", argv[i]);
-    g_print ("const unsigned char %s[] = {\n", contents);
+    g_print ("static const unsigned char %s[] = {\n", contents);
     g_free (contents);
     write_data (data, len);
     g_print ("};\n\n");

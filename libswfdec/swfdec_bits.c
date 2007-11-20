@@ -387,6 +387,7 @@ swfdec_bits_get_color_transform (SwfdecBits * bits, SwfdecColorTransform * ct)
   int has_mult;
   int n_bits;
 
+  ct->mask = FALSE;
   has_add = swfdec_bits_getbit (bits);
   has_mult = swfdec_bits_getbit (bits);
   n_bits = swfdec_bits_getbits (bits, 4);

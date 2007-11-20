@@ -582,6 +582,10 @@ swfdec_image_png_load (SwfdecImage *image)
   swfdec_bits_init (&bits, image->raw_data);
   image->surface = cairo_image_surface_create_from_png_stream (
       swfdec_image_png_read, &bits);
+  image->width = cairo_image_surface_get_width (image->surface);
+  image->height = cairo_image_surface_get_height (image->surface);
+  swfdec_cached_load (SWFDEC_CACHED (image), image->height *
+      cairo_image_surface_get_stride (image->surface));
 }
 
 cairo_surface_t *
@@ -672,7 +676,7 @@ swfdec_image_detect (const guint8 *data)
 
   if (data[0] == 0xFF && data[1] == 0xD8)
     return SWFDEC_IMAGE_TYPE_JPEG2;
-  else if (data[0] == 89 && data[1] == 'P' &&
+  else if (data[0] == 0x89 && data[1] == 'P' &&
       data[2] == 'N' && data[3] == 'G')
     return SWFDEC_IMAGE_TYPE_PNG;
   else

@@ -344,6 +344,7 @@ MovieClip.prototype.getBounds = ASnative (900, 5);
 MovieClip.prototype.getBytesTotal = ASnative (900, 6);
 MovieClip.prototype.getBytesLoaded = ASnative (900, 7);
 MovieClip.prototype.getDepth = ASnative (900, 10);
+MovieClip.prototype.setMask = ASnative (900, 11);
 MovieClip.prototype.play = ASnative (900, 12);
 MovieClip.prototype.stop = ASnative (900, 13);
 MovieClip.prototype.nextFrame = ASnative (900, 14);
@@ -356,7 +357,7 @@ MovieClip.prototype["removeMovieClip"] = ASnative (900, 19);
 MovieClip.prototype.startDrag = ASnative (900, 20);
 MovieClip.prototype.stopDrag = ASnative (900, 21);
 MovieClip.prototype.createTextField = ASnative (104, 200);
-ASSetPropFlags (MovieClip.prototype, "getDepth", 128);
+ASSetPropFlags (MovieClip.prototype, "getDepth,setMask", 128);
 
 ASSetNative (MovieClip.prototype, 901, "6createEmptyMovieClip,6beginFill,6beginGradientFill,6moveTo,6lineTo,6curveTo,6lineStyle,6endFill,6clear");
 ASSetPropFlags (MovieClip.prototype, null, 3);

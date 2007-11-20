@@ -2209,7 +2209,7 @@ void
 swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, 
     double x, double y, double width, double height)
 {
-  static const SwfdecColorTransform trans = { 256, 0, 256, 0, 256, 0, 256, 0 };
+  static const SwfdecColorTransform trans = { FALSE, 256, 0, 256, 0, 256, 0, 256, 0 };
   GList *walk;
   SwfdecRect real;
 

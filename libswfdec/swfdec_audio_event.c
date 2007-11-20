@@ -114,7 +114,7 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
     return;
 
   pos = 0;
-  for (i = 0; i < dest_end - dest; i++) {
+  for (i = 0; i < (guint) (dest_end - dest); i++) {
     while (pos < event->n_envelopes &&
 	event->envelope[pos].offset <= global_offset + (i / 2))
       pos++;

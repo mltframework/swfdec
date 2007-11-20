@@ -286,5 +286,14 @@ swfdec_sprite_movie_get_scale9Grid (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.scale9Grid");
+  SWFDEC_STUB ("MovieClip.scale9Grid (get)");
+}
+
+SWFDEC_AS_NATIVE (901, 13, swfdec_sprite_movie_set_scale9Grid)
+void
+swfdec_sprite_movie_set_scale9Grid (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("MovieClip.scale9Grid (set)");
 }

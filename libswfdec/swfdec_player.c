@@ -1890,8 +1890,8 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
     player->height = height;
     g_object_notify (G_OBJECT (player), "default-height");
   }
-  player->internal_width = player->stage_width >= 0 ? (guint) player->stage_width : player->width;
-  player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
+  player->broadcasted_width = player->internal_width = player->stage_width >= 0 ? (guint) player->stage_width : player->width;
+  player->broadcasted_height = player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
   swfdec_player_update_scale (player);
 
   player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / player->rate / 10;
@@ -2384,19 +2384,22 @@ static void
 swfdec_player_update_size (gpointer playerp, gpointer unused)
 {
   SwfdecPlayer *player = playerp;
-  guint width, height;
 
   /* FIXME: only update if not fullscreen */
-  width = player->stage_width >=0 ? (guint) player->stage_width : player->width;
-  height = player->stage_height >=0 ? (guint) player->stage_height : player->height;
-  /* only broadcast once */
-  if (width == player->internal_width && height == player->internal_height)
+  player->internal_width = player->stage_width >=0 ? (guint) player->stage_width : player->width;
+  player->internal_height = player->stage_height >=0 ? (guint) player->stage_height : player->height;
+
+  if (player->scale_mode != SWFDEC_SCALE_NONE)
     return;
 
-  player->internal_width = width;
-  player->internal_height = height;
-  if (player->scale_mode == SWFDEC_SCALE_NONE)
-    swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
+  /* only broadcast once */
+  if (player->internal_width == player->broadcasted_width &&
+      player->internal_height == player->broadcasted_height)
+    return;
+
+  player->broadcasted_width = player->internal_width;
+  player->broadcasted_height = player->internal_height;
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
 }
 
 /**
@@ -2524,6 +2527,7 @@ swfdec_player_set_scale_mode (SwfdecPlayer *player, SwfdecScaleMode mode)
     player->scale_mode = mode;
     swfdec_player_update_scale (player);
     g_object_notify (G_OBJECT (player), "scale-mode");
+    swfdec_player_add_external_action (player, player, swfdec_player_update_size, NULL);
   }
 }
 

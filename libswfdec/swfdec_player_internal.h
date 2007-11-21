@@ -70,6 +70,8 @@ struct _SwfdecPlayer
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */
+  guint			broadcasted_width;	/* width given in the last onResize event */
+  guint			broadcasted_height;	/* height given in the last onResize event */
   gint			stage_width;		/* width set by the user */
   gint			stage_height;		/* height set by the user */
   SwfdecRectangle     	stage;			/* size of the stage set by user */

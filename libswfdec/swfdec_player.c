@@ -718,7 +718,7 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
   }
 }
 
-static void
+void
 swfdec_player_update_scale (SwfdecPlayer *player)
 {
   int width, height;

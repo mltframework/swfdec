@@ -125,6 +125,7 @@ set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (flags != player->align_flags) {
     player->align_flags = flags;
     g_object_notify (G_OBJECT (player), "alignment");
+    swfdec_player_update_scale (player);
   }
 }
 

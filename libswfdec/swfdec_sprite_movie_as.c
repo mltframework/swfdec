@@ -741,6 +741,13 @@ swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
     mask->masked_by = NULL;
     mask->mask_of = movie;
     swfdec_movie_invalidate (mask);
+    if (mask->clip_depth) {
+      g_assert (mask->parent);
+      swfdec_movie_invalidate (mask->parent);
+      mask->clip_depth = 0;
+    } else {
+      swfdec_movie_invalidate (mask);
+    }
   }
 }
 

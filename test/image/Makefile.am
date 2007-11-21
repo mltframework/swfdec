@@ -8,6 +8,39 @@ image_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
 EXTRA_DIST = \
 	README \
 	bw.jpg \
+	clip-change.c \
+	clip-change-backward-5.swf \
+	clip-change-backward-5.swf.png \
+	clip-change-backward-6.swf \
+	clip-change-backward-6.swf.png \
+	clip-change-backward-7.swf \
+	clip-change-backward-7.swf.png \
+	clip-change-backward-8.swf \
+	clip-change-backward-8.swf.png \
+	clip-change-forward-5.swf \
+	clip-change-forward-5.swf.png \
+	clip-change-forward-6.swf \
+	clip-change-forward-6.swf.png \
+	clip-change-forward-7.swf \
+	clip-change-forward-7.swf.png \
+	clip-change-forward-8.swf \
+	clip-change-forward-8.swf.png \
+	clip-change-remove-5.swf \
+	clip-change-remove-5.swf.png \
+	clip-change-remove-6.swf \
+	clip-change-remove-6.swf.png \
+	clip-change-remove-7.swf \
+	clip-change-remove-7.swf.png \
+	clip-change-remove-8.swf \
+	clip-change-remove-8.swf.png \
+	clip-change-set-5.swf \
+	clip-change-set-5.swf.png \
+	clip-change-set-6.swf \
+	clip-change-set-6.swf.png \
+	clip-change-set-7.swf \
+	clip-change-set-7.swf.png \
+	clip-change-set-8.swf \
+	clip-change-set-8.swf.png \
 	clip-transparent.swf \
 	clip-transparent.swf.png \
 	clip-transparent.xml \
@@ -51,6 +84,15 @@ EXTRA_DIST = \
 	load-jpeg-7.swf.png \
 	load-jpeg-8.swf \
 	load-jpeg-8.swf.png \
+	mask-affected-by-clip.c \
+	mask-affected-by-clip-5.swf \
+	mask-affected-by-clip-5.swf.png \
+	mask-affected-by-clip-6.swf \
+	mask-affected-by-clip-6.swf.png \
+	mask-affected-by-clip-7.swf \
+	mask-affected-by-clip-7.swf.png \
+	mask-affected-by-clip-8.swf \
+	mask-affected-by-clip-8.swf.png \
 	mask-and-clip.c \
 	mask-and-clip-0-8.swf \
 	mask-and-clip-0-8.swf.png \
@@ -84,6 +126,23 @@ EXTRA_DIST = \
 	mask-and-clip-8-8.swf.png \
 	mask-and-clip-9-8.swf \
 	mask-and-clip-9-8.swf.png \
+	mask-clip.c \
+	mask-clip-mask-5.swf \
+	mask-clip-mask-5.swf.png \
+	mask-clip-mask-6.swf \
+	mask-clip-mask-6.swf.png \
+	mask-clip-mask-7.swf \
+	mask-clip-mask-7.swf.png \
+	mask-clip-mask-8.swf \
+	mask-clip-mask-8.swf.png \
+	mask-clip-maskee-5.swf \
+	mask-clip-maskee-5.swf.png \
+	mask-clip-maskee-6.swf \
+	mask-clip-maskee-6.swf.png \
+	mask-clip-maskee-7.swf \
+	mask-clip-maskee-7.swf.png \
+	mask-clip-maskee-8.swf \
+	mask-clip-maskee-8.swf.png \
 	mask-different-parent.as \
 	mask-different-parent-5.swf \
 	mask-different-parent-5.swf.png \
@@ -102,6 +161,23 @@ EXTRA_DIST = \
 	mask-remove-clip-7.swf.png \
 	mask-remove-clip-8.swf \
 	mask-remove-clip-8.swf.png \
+	mask-terminates-clip.c \
+	mask-terminates-clip-mask-5.swf \
+	mask-terminates-clip-mask-5.swf.png \
+	mask-terminates-clip-mask-6.swf \
+	mask-terminates-clip-mask-6.swf.png \
+	mask-terminates-clip-mask-7.swf \
+	mask-terminates-clip-mask-7.swf.png \
+	mask-terminates-clip-mask-8.swf \
+	mask-terminates-clip-mask-8.swf.png \
+	mask-terminates-clip-maskee-5.swf \
+	mask-terminates-clip-maskee-5.swf.png \
+	mask-terminates-clip-maskee-6.swf \
+	mask-terminates-clip-maskee-6.swf.png \
+	mask-terminates-clip-maskee-7.swf \
+	mask-terminates-clip-maskee-7.swf.png \
+	mask-terminates-clip-maskee-8.swf \
+	mask-terminates-clip-maskee-8.swf.png \
 	mask-textfield.as \
 	mask-textfield-5.swf \
 	mask-textfield-5.swf.png \

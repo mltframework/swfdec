@@ -1218,8 +1218,8 @@ swfdec_as_array_do_sort (SwfdecAsObject *object, gint32 options,
 
   // init foreach data
   fdata.length = swfdec_as_array_length (object);
-  fdata.order_size =
-    MIN ((gint32)g_hash_table_size (object->properties) + 1, fdata.length + 1);
+  // FIXME: limit based on the actual amount of properties?
+  fdata.order_size = fdata.length + 1;
   fdata.order = g_new0 (SwfdecAsValue *, fdata.order_size);
   SWFDEC_AS_VALUE_SET_UNDEFINED (&fdata.undefined);
   fdata.order[0] = &fdata.undefined;

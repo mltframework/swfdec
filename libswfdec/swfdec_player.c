@@ -1029,7 +1029,7 @@ swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
   for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
     below_mouse = swfdec_movie_get_movie_at (walk->data, x, y, TRUE);
     if (below_mouse) {
-      if (below_mouse->receive_events == TRUE)
+      if (swfdec_movie_get_mouse_events (below_mouse))
 	break;
       below_mouse = NULL;
     }

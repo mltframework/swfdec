@@ -158,8 +158,6 @@ struct _SwfdecMovie {
   int			draw_x;			/* current x position for drawing */
   int			draw_y;			/* current y position for drawing */
 
-  /* event handling */
-  guint			receive_events;	      	/* "refcount", >0 to receive events */
   /* leftover unimplemented variables from the Actionscript spec */
 #if 0
   int droptarget;
@@ -187,6 +185,7 @@ struct _SwfdecMovieClass {
 						 double			y,
 						 gboolean		events);
   /* mouse handling */
+  gboolean		(* mouse_events)	(SwfdecMovie *		movie);
   void			(* mouse_in)      	(SwfdecMovie *		movie);
   void			(* mouse_out)      	(SwfdecMovie *		movie);
   void			(* mouse_press)      	(SwfdecMovie *		movie,
@@ -269,6 +268,7 @@ void		swfdec_movie_set_depth		(SwfdecMovie *		movie,
 void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);
+gboolean	swfdec_movie_get_mouse_events	(SwfdecMovie *		movie);
 #define swfdec_movie_contains(movie, x, y) \
   (swfdec_movie_get_movie_at ((movie), (x), (y), FALSE) != NULL)
 SwfdecMovie *	swfdec_movie_get_movie_at	(SwfdecMovie *		movie,

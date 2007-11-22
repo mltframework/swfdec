@@ -618,6 +618,28 @@ swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
 }
 
 /**
+ * swfdec_movie_get_mouse_events:
+ * @movie: a #SwfdecMovie
+ *
+ * Checks if this movie should respond to mouse events.
+ *
+ * Returns: %TRUE if this movie can receive mouse events
+ **/
+gboolean
+swfdec_movie_get_mouse_events (SwfdecMovie *movie)
+{
+  SwfdecMovieClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
+
+  klass = SWFDEC_MOVIE_GET_CLASS (movie);
+  if (klass->mouse_events)
+    return klass->mouse_events (movie);
+  else
+    return FALSE;
+}
+
+/**
  * swfdec_movie_get_movie_at:
  * @movie: a #SwfdecMovie
  * @x: x coordinate in parent's coordinate space
@@ -648,7 +670,7 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y, gboolean even
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   g_return_val_if_fail (klass->contains, NULL);
   ret = klass->contains (movie, x, y, events);
-  if (events && ret && !ret->receive_events)
+  if (events && ret && swfdec_movie_get_mouse_events (ret))
     ret = NULL;
 
   return ret;
@@ -671,7 +693,7 @@ swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean event
     if (got != NULL) {
       if (events) {
 	/* set the return value to the topmost movie */
-	if (got->receive_events) {
+	if (swfdec_movie_get_mouse_events (got)) {
 	  ret = got;
 	} else if (ret == NULL) {
 	  ret = movie;
@@ -1236,6 +1258,37 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
   g_assert (clips == NULL);
 }
 
+static gboolean
+swfdec_movie_mouse_events (SwfdecMovie *movie)
+{
+  return FALSE;
+}
+
+static void
+swfdec_movie_mouse_in (SwfdecMovie *movie)
+{
+}
+
+static void
+swfdec_movie_mouse_out (SwfdecMovie *movie)
+{
+}
+
+static void
+swfdec_movie_mouse_press (SwfdecMovie *movie, guint button)
+{
+}
+
+static void
+swfdec_movie_mouse_release (SwfdecMovie *movie, guint button)
+{
+}
+
+static void
+swfdec_movie_mouse_move (SwfdecMovie *movie, double x, double y)
+{
+}
+
 static void
 swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
@@ -1258,6 +1311,12 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   movie_class->render = swfdec_movie_do_render;
   movie_class->contains = swfdec_movie_do_contains;
   movie_class->iterate_end = swfdec_movie_iterate_end;
+  movie_class->mouse_events = swfdec_movie_mouse_events;
+  movie_class->mouse_in = swfdec_movie_mouse_in;
+  movie_class->mouse_out = swfdec_movie_mouse_out;
+  movie_class->mouse_press = swfdec_movie_mouse_press;
+  movie_class->mouse_release = swfdec_movie_mouse_release;
+  movie_class->mouse_move = swfdec_movie_mouse_move;
 }
 
 void

@@ -1273,7 +1273,25 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
 static gboolean
 swfdec_movie_mouse_events (SwfdecMovie *movie)
 {
-  return TRUE;
+  SwfdecAsObject *object;
+
+  /* root movies don't get event */
+  if (movie->parent == NULL)
+    return FALSE;
+  /* look if we have a script that gets events */
+  if (movie->events && swfdec_event_list_has_mouse_events (movie->events))
+    return TRUE;
+  /* otherwise, require at least one of the custom script handlers */
+  object = SWFDEC_AS_OBJECT (movie);
+  if (swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onRollOver) ||
+      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onRollOut) ||
+      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onDragOver) ||
+      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onDragOut) ||
+      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onPress) ||
+      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onRelease) ||
+      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onReleaseOutside))
+    return TRUE;
+  return FALSE;
 }
 
 static void

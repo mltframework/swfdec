@@ -932,6 +932,36 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
 }
 
 /**
+ * swfdec_as_object_has_variable:
+ * @object: a #SwfdecAsObject
+ * @variable: garbage-collected variable name
+ *
+ * Checks if a user-set @variable with the given name exists on @object. This 
+ * function does not check variables that are available via an overwritten get 
+ * function of the object's class.
+ *
+ * Returns: %TRUE if the @object contains the given @variable
+ **/
+gboolean
+swfdec_as_object_has_variable (SwfdecAsObject *object, const char *variable)
+{
+  guint i;
+  SwfdecAsVariable *var;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
+  
+  for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && object != NULL; i++) {
+    var = swfdec_as_object_hash_lookup (object, variable);
+    if (var) {
+      /* FIXME: propflags? */
+      return TRUE;
+    }
+    object = swfdec_as_object_get_prototype_internal (object);
+  }
+  return FALSE;
+}
+
+/**
  * swfdec_as_object_delete_variable:
  * @object: a #SwfdecAsObject
  * @variable: garbage-collected name of the variable

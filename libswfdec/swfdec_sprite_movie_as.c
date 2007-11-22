@@ -222,7 +222,11 @@ void
 swfdec_sprite_movie_getSWFVersion (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_INT (rval, cx->version);
+  if (object != NULL && SWFDEC_IS_MOVIE (object)) {
+    SWFDEC_AS_VALUE_SET_INT (rval, cx->version);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (rval, -1);
+  }
 }
 
 SWFDEC_AS_NATIVE (900, 25, swfdec_sprite_movie_attachBitmap)

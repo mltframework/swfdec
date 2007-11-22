@@ -1337,6 +1337,15 @@ EXTRA_DIST = \
 	movieclip-get-swf-version-load-7.swf.trace \
 	movieclip-get-swf-version-load-8.swf \
 	movieclip-get-swf-version-load-8.swf.trace \
+	movieclip-get-swf-version-object.as \
+	movieclip-get-swf-version-object-5.swf \
+	movieclip-get-swf-version-object-5.swf.trace \
+	movieclip-get-swf-version-object-6.swf \
+	movieclip-get-swf-version-object-6.swf.trace \
+	movieclip-get-swf-version-object-7.swf \
+	movieclip-get-swf-version-object-7.swf.trace \
+	movieclip-get-swf-version-object-8.swf \
+	movieclip-get-swf-version-object-8.swf.trace \
 	movieclip-get-instance-at-depth.as \
 	movieclip-get-instance-at-depth-5.swf \
 	movieclip-get-instance-at-depth-5.swf.trace \

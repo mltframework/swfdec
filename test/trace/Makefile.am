@@ -1319,6 +1319,24 @@ EXTRA_DIST = \
 	mouse-show-hide-6.swf.trace \
 	mouse-show-hide-7.swf \
 	mouse-show-hide-7.swf.trace \
+	movieclip-get-swf-version.as \
+	movieclip-get-swf-version-5.swf \
+	movieclip-get-swf-version-5.swf.trace \
+	movieclip-get-swf-version-6.swf \
+	movieclip-get-swf-version-6.swf.trace \
+	movieclip-get-swf-version-7.swf \
+	movieclip-get-swf-version-7.swf.trace \
+	movieclip-get-swf-version-8.swf \
+	movieclip-get-swf-version-8.swf.trace \
+	movieclip-get-swf-version-load.as \
+	movieclip-get-swf-version-load-5.swf \
+	movieclip-get-swf-version-load-5.swf.trace \
+	movieclip-get-swf-version-load-6.swf \
+	movieclip-get-swf-version-load-6.swf.trace \
+	movieclip-get-swf-version-load-7.swf \
+	movieclip-get-swf-version-load-7.swf.trace \
+	movieclip-get-swf-version-load-8.swf \
+	movieclip-get-swf-version-load-8.swf.trace \
 	movieclip-get-instance-at-depth.as \
 	movieclip-get-instance-at-depth-5.swf \
 	movieclip-get-instance-at-depth-5.swf.trace \

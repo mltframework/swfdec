@@ -1040,13 +1040,13 @@ swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
       if (below_mouse == player->mouse_grab &&
 	  player->mouse_below != player->mouse_grab) {
 	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
-	if (klass->mouse_out)
-	  klass->mouse_out (player->mouse_grab);
+	if (klass->mouse_in)
+	  klass->mouse_in (player->mouse_grab);
       } else if (below_mouse != player->mouse_grab &&
 	  player->mouse_below == player->mouse_grab) {
 	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
-	if (klass->mouse_in)
-	  klass->mouse_in (player->mouse_grab);
+	if (klass->mouse_out)
+	  klass->mouse_out (player->mouse_grab);
       }
     }
   } else {

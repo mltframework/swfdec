@@ -33,8 +33,6 @@ struct _SwfdecGtkWidgetPrivate
   gboolean		renderer_set;	/* TRUE if a special renderer has been set */
   cairo_surface_type_t	renderer;	/* the renderer that was set */
   gboolean		interactive;	/* TRUE if this widget propagates keyboard and mouse events */
-
-  int			button;		/* status of mouse button in displayed movie */
 };
 
 enum {
@@ -81,7 +79,7 @@ swfdec_gtk_widget_motion_notify (GtkWidget *gtkwidget, GdkEventMotion *event)
   gdk_window_get_pointer (gtkwidget->window, &x, &y, NULL);
 
   if (priv->interactive && priv->player)
-    swfdec_player_handle_mouse (priv->player, x, y, priv->button);
+    swfdec_player_mouse_move (priv->player, x, y);
   
   return FALSE;
 }
@@ -93,8 +91,7 @@ swfdec_gtk_widget_leave_notify (GtkWidget *gtkwidget, GdkEventCrossing *event)
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
   if (priv->interactive && priv->player) {
-    priv->button = 0;
-    swfdec_player_handle_mouse (priv->player, event->x, event->y, 0);
+    swfdec_player_mouse_move (priv->player, event->x, event->y);
   }
   return FALSE;
 }
@@ -105,10 +102,8 @@ swfdec_gtk_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
-  if (event->button == 1) {
-    priv->button = 1;
-    if (priv->interactive && priv->player)
-      swfdec_player_handle_mouse (priv->player, event->x, event->y, 1);
+  if (event->button <= 32 && priv->interactive && priv->player) {
+    swfdec_player_mouse_press (priv->player, event->x, event->y, event->button);
   }
   return FALSE;
 }
@@ -119,10 +114,8 @@ swfdec_gtk_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
-  if (event->button == 1) {
-    priv->button = 0;
-    if (priv->interactive && priv->player)
-      swfdec_player_handle_mouse (priv->player, event->x, event->y, 0);
+  if (event->button <= 32 && priv->interactive && priv->player) {
+    swfdec_player_mouse_release (priv->player, event->x, event->y, event->button);
   }
   return FALSE;
 }

@@ -102,7 +102,7 @@ swfdec_gtk_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
-  if (event->button <= 32 && priv->interactive && priv->player) {
+  if (event->type == GDK_BUTTON_PRESS && event->button <= 32 && priv->interactive && priv->player) {
     swfdec_player_mouse_press (priv->player, event->x, event->y, event->button);
   }
   return FALSE;

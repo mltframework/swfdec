@@ -670,7 +670,7 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y, gboolean even
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   g_return_val_if_fail (klass->contains, NULL);
   ret = klass->contains (movie, x, y, events);
-  if (events && ret && swfdec_movie_get_mouse_events (ret))
+  if (events && ret && !swfdec_movie_get_mouse_events (ret))
     ret = NULL;
 
   return ret;
@@ -680,8 +680,10 @@ static SwfdecMovie *
 swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean events)
 {
   GList *walk;
+  GSList *walk2;
   SwfdecMovie *ret, *got;
 
+  ret = NULL;
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *child = walk->data;
     
@@ -714,6 +716,16 @@ swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean event
       }
     }
   }
+  if (ret)
+    return ret;
+
+  for (walk2 = movie->draws; walk2; walk2 = walk2->next) {
+    SwfdecDraw *draw = walk2->data;
+
+    if (swfdec_draw_contains (draw, x, y))
+      return movie;
+  }
+
   return NULL;
 }
 

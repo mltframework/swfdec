@@ -62,9 +62,8 @@ void swfdec_bits_get_color_transform (SwfdecBits * bits,
 void swfdec_bits_get_matrix (SwfdecBits * bits, cairo_matrix_t *matrix, 
     cairo_matrix_t *inverse);
 guint swfdec_bits_skip_bytes (SwfdecBits *bits, guint bytes);
-char *swfdec_bits_get_string (SwfdecBits * bits);
 char *swfdec_bits_get_string_length (SwfdecBits * bits, guint len);
-char *swfdec_bits_get_string_with_version (SwfdecBits *bits, guint version);
+char *swfdec_bits_get_string (SwfdecBits *bits, guint version);
 SwfdecColor swfdec_bits_get_color (SwfdecBits * bits);
 SwfdecColor swfdec_bits_get_rgba (SwfdecBits * bits);
 void swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect);

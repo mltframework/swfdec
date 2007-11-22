@@ -64,7 +64,7 @@ swfdec_constant_pool_new_from_action (const guint8 *data, guint len, guint versi
   pool = g_malloc0 (sizeof (SwfdecConstantPool) + (n - 1) * sizeof (char *));
   pool->n_strings = n;
   for (i = 0; i < n; i++) {
-    pool->strings[i] = swfdec_bits_get_string_with_version (&bits, version);
+    pool->strings[i] = swfdec_bits_get_string (&bits, version);
     if (pool->strings[i] == NULL) {
       SWFDEC_ERROR ("not enough strings available");
       swfdec_constant_pool_free (pool);

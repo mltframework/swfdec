@@ -229,7 +229,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   }
 
   if (has_name) {
-    char *s = swfdec_bits_get_string_with_version (bits, version);
+    char *s = swfdec_bits_get_string (bits, version);
     name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), s);
     SWFDEC_LOG ("  name = %s", name);
   } else {
@@ -425,7 +425,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	  char *name;
 	  id = swfdec_bits_get_u16 (&bits);
 	  object = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (resource->decoder), id);
-	  name = swfdec_bits_get_string_with_version (&bits, SWFDEC_AS_CONTEXT (player)->version);
+	  name = swfdec_bits_get_string (&bits, SWFDEC_AS_CONTEXT (player)->version);
 	  if (object == NULL) {
 	    SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
 	  } else if (name == NULL) {

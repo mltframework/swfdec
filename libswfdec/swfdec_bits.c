@@ -481,18 +481,18 @@ swfdec_bits_skip_string (SwfdecBits *bits)
 }
 
 /**
- * swfdec_bits_get_string_with_version:
+ * swfdec_bits_get_string:
  * @bits: a #SwfdecBits
  * @version: Flash player version
  *
  * Prior to Flash 6, strings used to be encoded as LATIN1. Since Flash 6, 
- * strings are encoded as UTF-8. This version does the check automatically
+ * strings are encoded as UTF-8. This version does that check automatically
  * and converts strings to UTF-8.
  *
  * Returns: a UTF-8 encoded string or %NULL on error
  **/
 char *
-swfdec_bits_get_string_with_version (SwfdecBits *bits, guint version)
+swfdec_bits_get_string (SwfdecBits *bits, guint version)
 {
   const char *s;
   
@@ -514,13 +514,6 @@ swfdec_bits_get_string_with_version (SwfdecBits *bits, guint version)
     }
     return g_strdup (s);
   }
-}
-
-/* FIXME: deprecated - someone remove this */
-char *
-swfdec_bits_get_string (SwfdecBits * bits)
-{
-  return swfdec_bits_get_string_with_version (bits, 6);
 }
 
 /**

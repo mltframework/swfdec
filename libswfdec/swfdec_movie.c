@@ -1297,14 +1297,20 @@ swfdec_movie_mouse_out (SwfdecMovie *movie)
 static void
 swfdec_movie_mouse_press (SwfdecMovie *movie, guint button)
 {
+  if (button != 0)
+    return;
   swfdec_movie_queue_script (movie, SWFDEC_EVENT_PRESS);
 }
 
 static void
 swfdec_movie_mouse_release (SwfdecMovie *movie, guint button)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SwfdecPlayer *player;
+  
+  if (button != 0)
+    return;
 
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   if (player->mouse_below == movie)
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_RELEASE);
   else

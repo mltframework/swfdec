@@ -203,7 +203,18 @@ swfdec_sprite_movie_getInstanceAtDepth (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.getInstanceAtDepth");
+  SwfdecMovie *movie;
+  int depth;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "i", &depth);
+
+  // special case
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+    return;
+
+  movie = swfdec_movie_find (movie, depth);
+  if (movie != NULL)
+    SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
 }
 
 SWFDEC_AS_NATIVE (900, 24, swfdec_sprite_movie_getSWFVersion)

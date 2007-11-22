@@ -98,7 +98,6 @@ swfdec_system_security_get_sandboxType (SwfdecAsContext *cx,
       break;
 
     case SWFDEC_SANDBOX_NONE:
-      // FIXME: is this correct?
     default:
       g_return_if_reached ();
   }

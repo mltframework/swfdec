@@ -1034,7 +1034,7 @@ swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
       below_mouse = NULL;
     }
   }
-  if (player->mouse_button & 1) {
+  if (swfdec_player_is_mouse_pressed (player)) {
     /* a mouse grab is active */
     if (player->mouse_grab) {
       if (below_mouse == player->mouse_grab &&
@@ -2207,7 +2207,7 @@ swfdec_player_mouse_press (SwfdecPlayer *player, double x, double y,
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
   g_return_val_if_fail (button > 0 && button <= 32, FALSE);
 
-  g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, 0, &ret);
+  g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, button, &ret);
 
   return ret;
 }

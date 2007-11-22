@@ -174,6 +174,7 @@ void		swfdec_player_set_export_class	(SwfdecPlayer *		player,
 						 const char *		name,
 						 SwfdecAsObject *	object);
 
+#define swfdec_player_is_mouse_pressed(player) ((player)->mouse_button & 1)
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);
 void		swfdec_player_add_timeout	(SwfdecPlayer *		player,

@@ -1129,6 +1129,8 @@ swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
     if (klass->mouse_release)
       klass->mouse_release (player->mouse_grab, button);
+    if (button == 0)
+      player->mouse_grab = player->mouse_below;
   }
 
   /* FIXME: allow events to pass through */
@@ -1193,9 +1195,9 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
   SWFDEC_LOG ("handling mouse for %g %g %d", x, y, button);
   ret = swfdec_player_do_mouse_move (player, x, y);
   if (button > 0) {
-    ret |= swfdec_player_do_mouse_press (player, button);
+    ret |= swfdec_player_do_mouse_press (player, button - 1);
   } else if (button < 0) {
-    ret |= swfdec_player_do_mouse_release (player, -button);
+    ret |= swfdec_player_do_mouse_release (player, -button - 1);
   }
   swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);

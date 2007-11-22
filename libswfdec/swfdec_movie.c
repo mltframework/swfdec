@@ -1261,32 +1261,48 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
 static gboolean
 swfdec_movie_mouse_events (SwfdecMovie *movie)
 {
-  return FALSE;
+  return TRUE;
 }
 
 static void
 swfdec_movie_mouse_in (SwfdecMovie *movie)
 {
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)))
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_DRAG_OVER);
+  else
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OVER);
 }
 
 static void
 swfdec_movie_mouse_out (SwfdecMovie *movie)
 {
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)))
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_DRAG_OUT);
+  else
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OUT);
 }
 
 static void
 swfdec_movie_mouse_press (SwfdecMovie *movie, guint button)
 {
+  swfdec_movie_queue_script (movie, SWFDEC_EVENT_PRESS);
 }
 
 static void
 swfdec_movie_mouse_release (SwfdecMovie *movie, guint button)
 {
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+
+  if (player->mouse_below == movie)
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_RELEASE);
+  else
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_RELEASE_OUTSIDE);
 }
 
 static void
 swfdec_movie_mouse_move (SwfdecMovie *movie, double x, double y)
 {
+  /* nothing to do here, it's just there so we don't need to check for NULL */
 }
 
 static void

@@ -648,7 +648,7 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y, gboolean even
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   g_return_val_if_fail (klass->contains, NULL);
   ret = klass->contains (movie, x, y, events);
-  if (events && !ret->receive_events)
+  if (events && ret && !ret->receive_events)
     ret = NULL;
 
   return ret;

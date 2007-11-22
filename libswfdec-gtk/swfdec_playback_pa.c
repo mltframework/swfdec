@@ -76,7 +76,7 @@ stream_write_callback (pa_stream *pa,
 
   frag = malloc (bytes);
   if (frag == NULL) {
-    g_printerr ("Failed to allocate fragment of size %d\n", bytes);
+    g_printerr ("Failed to allocate fragment of size %d\n", (int)bytes);
     return;
   }
 

@@ -49,10 +49,14 @@ swfdec_graphic_movie_render (SwfdecMovie *movie, cairo_t *cr,
   swfdec_graphic_render (movie->graphic, cr, trans, inval);
 }
 
-static gboolean
-swfdec_graphic_movie_mouse_in (SwfdecMovie *movie, double x, double y)
+static SwfdecMovie *
+swfdec_graphic_movie_contains (SwfdecMovie *movie, double x, double y, 
+    gboolean events)
 {
-  return swfdec_graphic_mouse_in (movie->graphic, x, y);
+  if (swfdec_graphic_mouse_in (movie->graphic, x, y))
+    return movie;
+  else
+    return NULL;
 }
 
 static void
@@ -87,7 +91,7 @@ swfdec_graphic_movie_class_init (SwfdecGraphicMovieClass * g_class)
   movie_class->update_extents = swfdec_graphic_movie_update_extents;
   movie_class->replace = swfdec_graphic_movie_replace;
   movie_class->render = swfdec_graphic_movie_render;
-  movie_class->mouse_in = swfdec_graphic_movie_mouse_in;
+  movie_class->contains = swfdec_graphic_movie_contains;
 }
 
 static void

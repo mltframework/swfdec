@@ -208,7 +208,7 @@ swfdec_button_movie_init_movie (SwfdecMovie *mov)
   swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_UP);
 }
 
-static gboolean
+static gboolean G_GNUC_UNUSED
 swfdec_button_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 {
   GList *walk;
@@ -252,7 +252,7 @@ swfdec_button_movie_get_state (SwfdecButtonMovie *movie, gboolean mouse_in, int 
   }
 }
 
-static void
+static void G_GNUC_UNUSED
 swfdec_button_movie_mouse_change (SwfdecMovie *mov, double x, double y, 
     gboolean mouse_in, int button)
 {
@@ -272,8 +272,8 @@ swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
 
   movie_class->init_movie = swfdec_button_movie_init_movie;
   movie_class->update_extents = swfdec_button_movie_update_extents;
-  movie_class->mouse_in = swfdec_button_movie_mouse_in;
-  movie_class->mouse_change = swfdec_button_movie_mouse_change;
+  //movie_class->mouse_in = swfdec_button_movie_mouse_in;
+  //movie_class->mouse_change = swfdec_button_movie_mouse_change;
 }
 
 static void

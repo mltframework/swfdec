@@ -158,6 +158,8 @@ struct _SwfdecMovie {
   int			draw_x;			/* current x position for drawing */
   int			draw_y;			/* current y position for drawing */
 
+  /* event handling */
+  guint			receive_events;	      	/* "refcount", >0 to receive events */
   /* leftover unimplemented variables from the Actionscript spec */
 #if 0
   int droptarget;
@@ -180,15 +182,31 @@ struct _SwfdecMovieClass {
 						 const SwfdecColorTransform *trans,
 						 const SwfdecRect *	inval);
 
-  /* mouse handling */
-  gboolean		(* mouse_in)		(SwfdecMovie *		movie,
-						 double			x,
-						 double			y);
-  void			(* mouse_change)      	(SwfdecMovie *		movie,
+  SwfdecMovie *		(* contains)		(SwfdecMovie *		movie,
 						 double			x,
 						 double			y,
-						 gboolean		mouse_in,
-						 int			button);
+						 gboolean		events);
+  /* mouse handling */
+  void			(* mouse_in)      	(SwfdecMovie *		movie);
+  void			(* mouse_out)      	(SwfdecMovie *		movie);
+  void			(* mouse_press)      	(SwfdecMovie *		movie,
+						 guint			button);
+  void			(* mouse_release)      	(SwfdecMovie *		movie,
+						 guint			button);
+  void			(* mouse_move)      	(SwfdecMovie *		movie,
+						 double			x,
+						 double			y);
+  /* keyboard handling */
+  void			(* focus_in)		(SwfdecMovie *		movie,
+						 SwfdecMovie *		previous);
+  void			(* focus_out)		(SwfdecMovie *		movie,
+						 SwfdecMovie *		next);
+  void			(* key_pressed)		(SwfdecMovie *		movie,
+						 guint			keycode,
+						 guint			character);
+  void			(* key_released)      	(SwfdecMovie *		movie,
+						 guint			keycode,
+						 guint			character);
 
   /* iterating */
   void			(* iterate_start)     	(SwfdecMovie *		movie);
@@ -247,17 +265,16 @@ void		swfdec_movie_rect_global_to_local (SwfdecMovie *	movie,
 						 SwfdecRect *		rect);
 void		swfdec_movie_set_depth		(SwfdecMovie *		movie,
 						 int			depth);
+
 void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);
-void		swfdec_movie_send_mouse_change	(SwfdecMovie *		movie,
-						 gboolean		release);
-gboolean	swfdec_movie_mouse_in		(SwfdecMovie *		movie,
-						 double			x,
-						 double			y);
+#define swfdec_movie_contains(movie, x, y) \
+  (swfdec_movie_get_movie_at ((movie), (x), (y), FALSE) != NULL)
 SwfdecMovie *	swfdec_movie_get_movie_at	(SwfdecMovie *		movie,
 						 double			x,
-						 double			y);
+						 double			y,
+						 gboolean		events);
 char *		swfdec_movie_get_path		(SwfdecMovie *		movie,
 						 gboolean		dot);
 void		swfdec_movie_render		(SwfdecMovie *		movie,

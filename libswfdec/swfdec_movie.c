@@ -496,30 +496,6 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
   swfdec_player_add_action (player, movie, condition, importance);
 }
 
-/* NB: coordinates are in movie's coordiante system. Use swfdec_movie_get_mouse
- * if you have global coordinates */
-gboolean
-swfdec_movie_mouse_in (SwfdecMovie *movie, double x, double y)
-{
-  SwfdecMovieClass *klass;
-  GList *walk;
-
-  klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->mouse_in != NULL &&
-      klass->mouse_in (movie, x, y))
-    return TRUE;
-
-  for (walk = movie->list; walk; walk = walk->next) {
-    double tmp_x = x;
-    double tmp_y = y;
-    SwfdecMovie *cur = walk->data;
-    cairo_matrix_transform_point (&cur->inverse_matrix, &tmp_x, &tmp_y);
-    if (swfdec_movie_mouse_in (cur, tmp_x, tmp_y))
-      return TRUE;
-  }
-  return FALSE;
-}
-
 void
 swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
 {
@@ -641,46 +617,27 @@ swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
   swfdec_movie_global_to_local (movie, x, y);
 }
 
-void
-swfdec_movie_send_mouse_change (SwfdecMovie *movie, gboolean release)
-{
-  double x, y;
-  gboolean mouse_in;
-  int button;
-  SwfdecMovieClass *klass;
-
-  swfdec_movie_get_mouse (movie, &x, &y);
-  if (release) {
-    mouse_in = FALSE;
-    button = 0;
-  } else {
-    mouse_in = swfdec_movie_mouse_in (movie, x, y);
-    button = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->mouse_button;
-  }
-  klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  g_assert (klass->mouse_change != NULL);
-  klass->mouse_change (movie, x, y, mouse_in, button);
-}
-
 /**
  * swfdec_movie_get_movie_at:
  * @movie: a #SwfdecMovie
  * @x: x coordinate in parent's coordinate space
  * @y: y coordinate in the parent's coordinate space
+ * @events: %TRUE to only respect movies that receive events
  *
  * Gets the child at the given coordinates. The coordinates are in the 
  * coordinate system of @movie's parent (or the global coordinate system for
- * root movies).
+ * root movies). The @events parameter determines if movies that don't receive
+ * events should be respected.
  *
  * Returns: the child of @movie at the given coordinates or %NULL if none
  **/
 SwfdecMovie *
-swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
+swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y, gboolean events)
 {
-  GList *walk, *clip_walk;
-  int clip_depth = 0;
   SwfdecMovie *ret;
   SwfdecMovieClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
 
   SWFDEC_LOG ("%s %p getting mouse at: %g %g", G_OBJECT_TYPE_NAME (movie), movie, x, y);
   if (!swfdec_rect_contains (&movie->extents, x, y)) {
@@ -688,50 +645,52 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y)
   }
   cairo_matrix_transform_point (&movie->inverse_matrix, &x, &y);
 
-  /* first check if the movie can handle mouse events, and if it can,
-   * ignore its children.
-   * Dunno if that's correct */
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->mouse_change) {
-    if (swfdec_movie_mouse_in (movie, x, y))
-      return movie;
-    else
-      return NULL;
-  }
-  for (walk = clip_walk = g_list_last (movie->list); walk; walk = walk->prev) {
+  g_return_val_if_fail (klass->contains, NULL);
+  ret = klass->contains (movie, x, y, events);
+  if (events && !ret->receive_events)
+    ret = NULL;
+
+  return ret;
+}
+
+static SwfdecMovie *
+swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean events)
+{
+  GList *walk;
+  SwfdecMovie *ret, *got;
+
+  for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *child = walk->data;
-    if (walk == clip_walk) {
-      clip_depth = 0;
-      for (clip_walk = clip_walk->prev; clip_walk; clip_walk = clip_walk->prev) {
-	SwfdecMovie *clip = walk->data;
-	if (clip->clip_depth) {
-	  double tmpx = x, tmpy = y;
-	  cairo_matrix_transform_point (&clip->inverse_matrix, &tmpx, &tmpy);
-	  if (!swfdec_movie_mouse_in (clip, tmpx, tmpy)) {
-	    SWFDEC_LOG ("skipping depth %d to %d due to clipping", clip->depth, clip->clip_depth);
-	    clip_depth = child->clip_depth;
-	  }
-	  break;
+    
+    if (!child->visible) {
+      SWFDEC_LOG ("%s %s (depth %d) is invisible, ignoring", G_OBJECT_TYPE_NAME (movie), movie->name, movie->depth);
+      continue;
+    }
+    got = swfdec_movie_get_movie_at (child, x, y, events);
+    if (got != NULL) {
+      if (events) {
+	/* set the return value to the topmost movie */
+	if (got->receive_events) {
+	  ret = got;
+	} else if (ret == NULL) {
+	  ret = movie;
+	}
+      } else {
+	/* if thie is not a clipped movie, we've found something */
+	if (child->clip_depth == 0)
+	  return movie;
+      }
+    } else {
+      if (child->clip_depth) {
+	/* skip obscured movies */
+	SwfdecMovie *tmp = walk->next ? walk->next->data : NULL;
+	while (tmp && tmp->depth <= child->clip_depth) {
+	  walk = walk->next;
+	  tmp = walk->next ? walk->next->data : NULL;
 	}
       }
     }
-    if (child->clip_depth) {
-      SWFDEC_LOG ("resetting clip depth");
-      clip_depth = 0;
-      continue;
-    }
-    if (child->depth <= clip_depth && clip_depth) {
-      SWFDEC_DEBUG ("ignoring depth=%d, it's clipped (clip_depth %d)", child->depth, clip_depth);
-      continue;
-    }
-    if (!child->visible) {
-      SWFDEC_LOG ("child %s %s (depth %d) is invisible, ignoring", G_OBJECT_TYPE_NAME (movie), movie->name, movie->depth);
-      continue;
-    }
-
-    ret = swfdec_movie_get_movie_at (child, x, y);
-    if (ret)
-      return ret;
   }
   return NULL;
 }
@@ -1297,6 +1256,7 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   movie_class->render = swfdec_movie_do_render;
+  movie_class->contains = swfdec_movie_do_contains;
   movie_class->iterate_end = swfdec_movie_iterate_end;
 }
 

@@ -939,7 +939,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
  * Deletes the given variable if possible. If the variable is protected from 
  * deletion, it will not be deleted.
  *
- * Returns: See #SwfdecAsDeleteReutnr for details of the return value.
+ * Returns: See #SwfdecAsDeleteReturn for details of the return value.
  **/
 SwfdecAsDeleteReturn
 swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)

@@ -163,6 +163,13 @@ swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   stream->audio = g_object_ref (audio);
   sound->streams = g_list_prepend (sound->streams, stream);
 
+  /* If we failed to initialize the context, don't try to create the stream.
+   * We still have to get put in the list, because swfdec_playback.c expects
+   * to find it in the list for removal later.
+   */
+  if (sound->pa == NULL)
+    return;
+
   /* Create our stream */
   stream->pa = pa_stream_new(sound->pa,
 			     "swfdec stream",
@@ -237,10 +244,15 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
   g_assert_not_reached ();
 }
 static void
-context_state_callback (pa_context *pa, void *data) {
+context_state_callback (pa_context *pa, void *data)
+{
+  SwfdecPlayback *sound = data;
+
   switch (pa_context_get_state(pa)) {
   case PA_CONTEXT_FAILED:
-    g_printerr("PA context failed");
+    g_printerr ("PA context failed\n");
+    pa_context_unref (pa);
+    sound->pa = NULL;
     break;
 
   default:
@@ -279,7 +291,7 @@ swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
 
   sound->pa = pa_context_new (pa_api, "swfdec");
 
-  pa_context_set_state_callback (sound->pa, context_state_callback, NULL);
+  pa_context_set_state_callback (sound->pa, context_state_callback, sound);
   pa_context_connect (sound->pa,
 		      NULL, /* default server */
 		      0, /* default flags */
@@ -320,14 +332,16 @@ swfdec_playback_close (SwfdecPlayback *sound)
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);
 
-  op = pa_context_drain (sound->pa, context_drain_complete, NULL);
-  if (op == NULL) {
-    pa_context_disconnect (sound->pa);
-    pa_context_unref (sound->pa);
-  } else {
-    pa_operation_unref (op);
+  if (sound->pa != NULL) {
+    op = pa_context_drain (sound->pa, context_drain_complete, NULL);
+    if (op == NULL) {
+      pa_context_disconnect (sound->pa);
+      pa_context_unref (sound->pa);
+    } else {
+      pa_operation_unref (op);
+    }
+    pa_glib_mainloop_free (sound->pa_mainloop);
   }
-  pa_glib_mainloop_free (sound->pa_mainloop);
 
   g_main_context_unref (sound->context);
   g_free (sound);

@@ -102,12 +102,17 @@ vivi_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
 	vivi_widget_invalidate_click_area (debug);
 	debug->x = event->x;
 	debug->y = event->y;
-	swfdec_player_handle_mouse (player, debug->x, debug->y, debug->button);
+	swfdec_player_mouse_move (player, debug->x, debug->y);
 	vivi_widget_invalidate_click_area (debug);
 	break;
       case GDK_2BUTTON_PRESS:
 	debug->button = 1 - debug->button;
-	swfdec_player_handle_mouse (player, debug->x, debug->y, debug->button);
+	debug->x = event->x;
+	debug->y = event->y;
+	if (debug->button)
+	  swfdec_player_mouse_press (player, debug->x, debug->y, 1);
+	else
+	  swfdec_player_mouse_release (player, debug->x, debug->y, 1);
 	vivi_widget_invalidate_click_area (debug);
 	break;
       default:

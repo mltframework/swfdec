@@ -1250,30 +1250,6 @@ swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc,
 }
 
 /**
- * swfdec_as_object_has_function:
- * @object: a #SwfdecAsObject
- * @name: garbage-collected name of th function
- *
- * Convenience function that checks of @object has a variable that references 
- * a function.
- *
- * Returns: %TRUE if object.name is a function.
- **/
-gboolean
-swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
-{
-  SwfdecAsValue val;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
-  g_return_val_if_fail (name != NULL, FALSE);
-
-  swfdec_as_object_get_variable (object, name, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return FALSE;
-  return SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&val));
-}
-
-/**
  * swfdec_as_object_create:
  * @fun: constructor
  * @n_args: number of arguments

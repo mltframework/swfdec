@@ -99,8 +99,6 @@ typedef struct {
 } ByteOrderMark;
 
 static ByteOrderMark boms[] = {
-  /*{ "UTF-32BE", 4, {0x00, 0x00, 0xFE, 0xFF} },
-  { "UTF-32LE", 4, {0xFE, 0xFF, 0x00, 0x00} },*/
   { "UTF-8", 3, {0xEF, 0xBB, 0xBF, 0} },
   { "UTF-16BE", 2, {0xFE, 0xFF, 0, 0} },
   { "UTF-16LE", 2, {0xFF, 0xFE, 0, 0} },
@@ -116,6 +114,7 @@ swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
   guint size;
 
   /* get the text from the loader */
+  // TODO: Get rid of extra alloc when getting UTF-8 with bom
   size = swfdec_buffer_queue_get_depth (loader->queue);
   text = g_try_malloc (size + 1);
   if (text) {
@@ -142,11 +141,12 @@ swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
     }
 
     if (!strcmp (boms[i].name, "UTF-8")) {
-      if (!g_utf8_validate (text + boms[i].length, -1, NULL)) {
+      if (!g_utf8_validate (text + boms[i].length, size - boms[i].length,
+	    NULL)) {
 	SWFDEC_ERROR ("downloaded data is not valid UTF-8");
 	g_free (text);
 	text = NULL;
-	load_object->text = NULL;
+	load_object->text = g_strdup ("");
       } else {
 	if (boms[i].length == 0) {
 	  load_object->text = text;
@@ -158,10 +158,12 @@ swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
 	}
       }
     } else {
-      load_object->text = g_convert (text + boms[i].length, -1, "UTF-8",
-	  boms[i].name, NULL, NULL, NULL);
-      if (load_object->text == NULL)
+      load_object->text = g_convert (text + boms[i].length,
+	  size - boms[i].length, "UTF-8", boms[i].name, NULL, NULL, NULL);
+      if (load_object->text == NULL) {
 	SWFDEC_ERROR ("downloaded data is not valid %s", boms[i].name);
+	load_object->text = g_strdup ("");
+      }
       g_free (text);
       text = NULL;
     }

@@ -481,18 +481,18 @@ swfdec_bits_skip_string (SwfdecBits *bits)
 }
 
 /**
- * swfdec_bits_get_string_with_version:
+ * swfdec_bits_get_string:
  * @bits: a #SwfdecBits
  * @version: Flash player version
  *
  * Prior to Flash 6, strings used to be encoded as LATIN1. Since Flash 6, 
- * strings are encoded as UTF-8. This version does the check automatically
+ * strings are encoded as UTF-8. This version does that check automatically
  * and converts strings to UTF-8.
  *
  * Returns: a UTF-8 encoded string or %NULL on error
  **/
 char *
-swfdec_bits_get_string_with_version (SwfdecBits *bits, guint version)
+swfdec_bits_get_string (SwfdecBits *bits, guint version)
 {
   const char *s;
   
@@ -514,13 +514,6 @@ swfdec_bits_get_string_with_version (SwfdecBits *bits, guint version)
     }
     return g_strdup (s);
   }
-}
-
-/* FIXME: deprecated - someone remove this */
-char *
-swfdec_bits_get_string (SwfdecBits * bits)
-{
-  return swfdec_bits_get_string_with_version (bits, 6);
 }
 
 /**
@@ -550,13 +543,15 @@ swfdec_bits_skip_bytes (SwfdecBits *bits, guint n_bytes)
  * swfdec_bits_get_string_length:
  * @bits: a #SwfdecBits
  * @len: number of bytes to read
+ * @version: flash version number
  *
- * Reads the next @len bytes into a string and validates it as UTF-8.
+ * Reads the next @len bytes (not characters!) into a string and validates
+ * its encoding is correct based on supplied version number.
  *
- * Returns: a new string or %NULL on error
+ * Returns: a new UTF-8 string or %NULL on error
  **/
 char *
-swfdec_bits_get_string_length (SwfdecBits * bits, guint len)
+swfdec_bits_get_string_length (SwfdecBits * bits, guint len, guint version)
 {
   char *ret;
 
@@ -566,11 +561,19 @@ swfdec_bits_get_string_length (SwfdecBits * bits, guint len)
 
   ret = g_strndup ((char *) bits->ptr, len);
   bits->ptr += len;
-  if (!g_utf8_validate (ret, -1, NULL)) {
-    SWFDEC_ERROR ("parsed string is not valid utf-8");
-    g_free (ret);
-    ret = NULL;
+
+  if (version < 6) {
+    char *tmp = g_convert (ret, -1, "UTF-8", "LATIN1", NULL , NULL, NULL);
+    g_free(ret);
+    ret = tmp;
+  } else {
+    if (!g_utf8_validate (ret, -1, NULL)) {
+      SWFDEC_ERROR ("parsed string is not valid utf-8");
+      g_free (ret);
+      ret = NULL;
+    }
   }
+
   return ret;
 }
 

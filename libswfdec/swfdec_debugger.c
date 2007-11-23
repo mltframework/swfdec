@@ -71,7 +71,7 @@ swfdec_debugger_print_push (ScriptParser *parser, const guint8 *data, guint len)
     switch (type) {
       case 0: /* string */
 	{
-	  char *s = swfdec_bits_get_string_with_version (&bits, parser->version);
+	  char *s = swfdec_bits_get_string (&bits, parser->version);
 	  if (!s)
 	    goto error;
 	  g_string_append_c (string, '"');

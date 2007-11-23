@@ -48,7 +48,8 @@ swfdec_amf_parse_string (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsVal
   guint len = swfdec_bits_get_bu16 (bits);
   char *s;
   
-  s = swfdec_bits_get_string_length (bits, len);
+  /* FIXME: the supplied version is likely incorrect */
+  s = swfdec_bits_get_string_length (bits, len, context->version);
   if (s == NULL)
     return FALSE;
   SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_give_string (context, s));

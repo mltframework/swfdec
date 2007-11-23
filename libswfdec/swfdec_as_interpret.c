@@ -326,7 +326,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
     switch (type) {
       case 0: /* string */
 	{
-	  char *s = swfdec_bits_get_string_with_version (&bits, cx->version);
+	  char *s = swfdec_bits_get_string (&bits, cx->version);
 	  if (s == NULL)
 	    return;
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
@@ -1130,8 +1130,8 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   char *url, *target;
 
   swfdec_bits_init_data (&bits, data, len);
-  url = swfdec_bits_get_string_with_version (&bits, cx->version);
-  target = swfdec_bits_get_string_with_version (&bits, cx->version);
+  url = swfdec_bits_get_string (&bits, cx->version);
+  target = swfdec_bits_get_string (&bits, cx->version);
   if (url == NULL || target == NULL) {
     SWFDEC_ERROR ("not enough data in GetURL");
     g_free (url);
@@ -1797,7 +1797,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
 
   frame = cx->frame;
   swfdec_bits_init_data (&bits, data, len);
-  function_name = swfdec_bits_get_string_with_version (&bits, cx->version);
+  function_name = swfdec_bits_get_string (&bits, cx->version);
   if (function_name == NULL) {
     SWFDEC_ERROR ("could not parse function name");
     return;
@@ -1823,7 +1823,7 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
 	  args[i].preload = 0;
 	}
       }
-      args[i].name = swfdec_bits_get_string_with_version (&bits, cx->version);
+      args[i].name = swfdec_bits_get_string (&bits, cx->version);
       if (args[i].name == NULL || args[i].name == '\0') {
 	SWFDEC_ERROR ("empty argument name not allowed");
 	g_free (args);
@@ -2715,7 +2715,7 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
     try_data->register_number = swfdec_bits_get_u8 (&bits);
   } else {
     try_data->variable_name =
-      swfdec_bits_get_string_with_version (&bits, cx->version);
+      swfdec_bits_get_string (&bits, cx->version);
   }
 
   if (swfdec_bits_left (&bits)) {
@@ -2854,7 +2854,8 @@ swfdec_action_print_define_function (guint action, const guint8 *data, guint len
 
   string = g_string_new (v2 ? "DefineFunction2 " : "DefineFunction ");
   swfdec_bits_init_data (&bits, data, len);
-  function_name = swfdec_bits_get_string (&bits);
+  /* FIXME: version! */
+  function_name = swfdec_bits_get_string (&bits, 7);
   if (function_name == NULL) {
     SWFDEC_ERROR ("could not parse function name");
     g_string_free (string, TRUE);
@@ -2878,7 +2879,7 @@ swfdec_action_print_define_function (guint action, const guint8 *data, guint len
       preload = swfdec_bits_get_u8 (&bits);
     else
       preload = 0;
-    arg_name = swfdec_bits_get_string (&bits);
+    arg_name = swfdec_bits_get_string (&bits, 7);
     if (preload == 0 && (arg_name == NULL || *arg_name == '\0')) {
       SWFDEC_ERROR ("empty argument name not allowed");
       g_string_free (string, TRUE);
@@ -2924,8 +2925,8 @@ swfdec_action_print_get_url (guint action, const guint8 *data, guint len)
   char *url, *target, *ret;
 
   swfdec_bits_init_data (&bits, data, len);
-  url = swfdec_bits_get_string (&bits);
-  target = swfdec_bits_get_string (&bits);
+  url = swfdec_bits_get_string (&bits, 7);
+  target = swfdec_bits_get_string (&bits, 7);
   if (url == NULL) {
     SWFDEC_ERROR ("not enough data in GetURL");
     url = g_strdup ("???");
@@ -2982,7 +2983,7 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
       case 0: /* string */
 	{
 	  /* FIXME: need version! */
-	  char *s = swfdec_bits_get_string (&bits);
+	  char *s = swfdec_bits_get_string (&bits, 7);
 	  if (!s) {
 	    g_string_free (string, TRUE);
 	    return NULL;

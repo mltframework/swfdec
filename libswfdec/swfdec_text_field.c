@@ -185,14 +185,14 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->leading = swfdec_bits_get_s16 (b);
   }
 
-  text->variable = swfdec_bits_get_string (b);
+  text->variable = swfdec_bits_get_string (b, s->version);
   if (text->variable && *text->variable == 0) {
     g_free (text->variable);
     text->variable = NULL;
   }
 
   if (has_text)
-    text->input = swfdec_bits_get_string (b);
+    text->input = swfdec_bits_get_string (b, s->version);
 
   return SWFDEC_STATUS_OK;
 }

@@ -140,7 +140,7 @@ static gpointer
 swfedit_string_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   char *s;
-  s = swfdec_bits_get_string (bits);
+  s = swfdec_bits_get_string (bits, 7);
   if (s == NULL)
     s = g_strdup ("");
   return s;

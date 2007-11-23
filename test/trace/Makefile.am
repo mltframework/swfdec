@@ -1207,6 +1207,15 @@ EXTRA_DIST = \
 	loadobject-6.swf.trace \
 	loadobject-7.swf \
 	loadobject-7.swf.trace \
+	loadobject-bom.as \
+	loadobject-bom-5.swf \
+	loadobject-bom-5.swf.trace \
+	loadobject-bom-6.swf \
+	loadobject-bom-6.swf.trace \
+	loadobject-bom-7.swf \
+	loadobject-bom-7.swf.trace \
+	loadobject-bom-8.swf \
+	loadobject-bom-8.swf.trace \
 	loadvariables.as \
 	loadvariables-5.swf \
 	loadvariables-5.swf.trace \
@@ -2752,6 +2761,11 @@ EXTRA_DIST = \
 	unreproducable-random-7.swf.trace \
 	unreproducable-random-8.swf \
 	unreproducable-random-8.swf.trace \
+	utf-8-bom.txt \
+	utf-16-be-bom.txt \
+	utf-16-le-bom.txt \
+	utf-32-be-bom.txt \
+	utf-32-le-bom.txt \
 	values.as \
 	video.flv \
 	video-properties.as \

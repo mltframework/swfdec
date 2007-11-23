@@ -1617,6 +1617,15 @@ EXTRA_DIST = \
 	onresize-7.swf.trace \
 	onresize-8.swf \
 	onresize-8.swf.trace \
+	onUnload-prototype.as \
+	onUnload-prototype-5.swf \
+	onUnload-prototype-5.swf.trace \
+	onUnload-prototype-6.swf \
+	onUnload-prototype-6.swf.trace \
+	onUnload-prototype-7.swf \
+	onUnload-prototype-7.swf.trace \
+	onUnload-prototype-8.swf \
+	onUnload-prototype-8.swf.trace \
 	order.swf \
 	order.swf.trace \
 	parent-root.swf \

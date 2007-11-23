@@ -644,7 +644,7 @@ swfdec_movie_get_mouse_events (SwfdecMovie *movie)
  * @movie: a #SwfdecMovie
  * @x: x coordinate in parent's coordinate space
  * @y: y coordinate in the parent's coordinate space
- * @events: %TRUE to only respect movies that receive events
+ * @events: %TRUE to only prefer movies that receive events
  *
  * Gets the child at the given coordinates. The coordinates are in the 
  * coordinate system of @movie's parent (or the global coordinate system for
@@ -670,8 +670,6 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y, gboolean even
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   g_return_val_if_fail (klass->contains, NULL);
   ret = klass->contains (movie, x, y, events);
-  if (events && ret && !swfdec_movie_get_mouse_events (ret))
-    ret = NULL;
 
   return ret;
 }

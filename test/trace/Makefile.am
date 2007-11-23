@@ -1317,6 +1317,19 @@ EXTRA_DIST = \
 	microphone-properties-7.swf.trace \
 	microphone-properties-8.swf \
 	microphone-properties-8.swf.trace \
+	mouse-movie-below-nonevent-movie.as \
+	mouse-movie-below-nonevent-movie-5.swf \
+	mouse-movie-below-nonevent-movie-5.swf.act \
+	mouse-movie-below-nonevent-movie-5.swf.trace \
+	mouse-movie-below-nonevent-movie-6.swf \
+	mouse-movie-below-nonevent-movie-6.swf.act \
+	mouse-movie-below-nonevent-movie-6.swf.trace \
+	mouse-movie-below-nonevent-movie-7.swf \
+	mouse-movie-below-nonevent-movie-7.swf.act \
+	mouse-movie-below-nonevent-movie-7.swf.trace \
+	mouse-movie-below-nonevent-movie-8.swf \
+	mouse-movie-below-nonevent-movie-8.swf.act \
+	mouse-movie-below-nonevent-movie-8.swf.trace \
 	mouse-properties.as \
 	mouse-properties-5.swf \
 	mouse-properties-5.swf.trace \

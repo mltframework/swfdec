@@ -128,40 +128,51 @@ swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
     g_assert (i == size);
     text[size] = '\0';
 
-    for (i = 0; boms[i].length > 0; i++) {
-      if (size < boms[i].length)
-	continue;
+    if (load_object->target->context->version > 5) {
+      for (i = 0; boms[i].length > 0; i++) {
+	if (size < boms[i].length)
+	  continue;
 
-      for (j = 0; j < boms[i].length; j++) {
-	if ((guchar)text[j] != boms[i].data[j])
+	for (j = 0; j < boms[i].length; j++) {
+	  if ((guchar)text[j] != boms[i].data[j])
+	    break;
+	}
+	if (j == boms[i].length)
 	  break;
       }
-      if (j == boms[i].length)
-	break;
-    }
 
-    if (!strcmp (boms[i].name, "UTF-8")) {
-      if (!g_utf8_validate (text + boms[i].length, size - boms[i].length,
-	    NULL)) {
-	SWFDEC_ERROR ("downloaded data is not valid UTF-8");
-	g_free (text);
-	text = NULL;
-	load_object->text = g_strdup ("");
-      } else {
-	if (boms[i].length == 0) {
-	  load_object->text = text;
-	  text = NULL;
-	} else {
-	  load_object->text = g_strdup (text + boms[i].length);
+      if (!strcmp (boms[i].name, "UTF-8")) {
+	if (!g_utf8_validate (text + boms[i].length, size - boms[i].length,
+	      NULL)) {
+	  SWFDEC_ERROR ("downloaded data is not valid UTF-8");
 	  g_free (text);
 	  text = NULL;
+	  load_object->text = g_strdup ("");
+	} else {
+	  if (boms[i].length == 0) {
+	    load_object->text = text;
+	    text = NULL;
+	  } else {
+	    load_object->text = g_strdup (text + boms[i].length);
+	    g_free (text);
+	    text = NULL;
+	  }
 	}
+      } else {
+	load_object->text = g_convert (text + boms[i].length,
+	    size - boms[i].length, "UTF-8", boms[i].name, NULL, NULL, NULL);
+	if (load_object->text == NULL) {
+	  SWFDEC_ERROR ("downloaded data is not valid %s", boms[i].name);
+	  load_object->text = g_strdup ("");
+	}
+	g_free (text);
+	text = NULL;
       }
     } else {
-      load_object->text = g_convert (text + boms[i].length,
-	  size - boms[i].length, "UTF-8", boms[i].name, NULL, NULL, NULL);
+      load_object->text = g_convert (text, size, "UTF-8", "LATIN1", NULL, NULL,
+	  NULL);
       if (load_object->text == NULL) {
-	SWFDEC_ERROR ("downloaded data is not valid %s", boms[i].name);
+	SWFDEC_ERROR ("downloaded data is not valid LATIN1");
 	load_object->text = g_strdup ("");
       }
       g_free (text);

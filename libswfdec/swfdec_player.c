@@ -1129,8 +1129,14 @@ swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
     if (klass->mouse_release)
       klass->mouse_release (player->mouse_grab, button);
-    if (button == 0)
+    if (button == 0 && player->mouse_grab != player->mouse_below) {
       player->mouse_grab = player->mouse_below;
+      if (player->mouse_grab) {
+	klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+	if (klass->mouse_in)
+	  klass->mouse_in (player->mouse_grab);
+      }
+    }
   }
 
   /* FIXME: allow events to pass through */

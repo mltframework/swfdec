@@ -92,34 +92,82 @@ swfdec_load_object_loader_target_error (SwfdecLoaderTarget *target,
   swfdec_load_object_ondata (load_object);
 }
 
+typedef struct {
+  const char		*name;
+  guint			length;
+  guchar		data[4];
+} ByteOrderMark;
+
+static ByteOrderMark boms[] = {
+  /*{ "UTF-32BE", 4, {0x00, 0x00, 0xFE, 0xFF} },
+  { "UTF-32LE", 4, {0xFE, 0xFF, 0x00, 0x00} },*/
+  { "UTF-8", 3, {0xEF, 0xBB, 0xBF, 0} },
+  { "UTF-16BE", 2, {0xFE, 0xFF, 0, 0} },
+  { "UTF-16LE", 2, {0xFF, 0xFE, 0, 0} },
+  { "UTF-8", 0, {0, 0, 0, 0} }
+};
+
 static void
 swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
     SwfdecLoader *loader)
 {
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
+  char *text;
   guint size;
 
   /* get the text from the loader */
   size = swfdec_buffer_queue_get_depth (loader->queue);
-  load_object->text = g_try_malloc (size + 1);
-  if (load_object->text) {
+  text = g_try_malloc (size + 1);
+  if (text) {
     SwfdecBuffer *buffer;
-    guint i = 0;
+    guint i = 0, j;
     while ((buffer = swfdec_buffer_queue_pull_buffer (loader->queue))) {
-      memcpy (load_object->text + i, buffer->data, buffer->length);
+      memcpy (text + i, buffer->data, buffer->length);
       i += buffer->length;
       swfdec_buffer_unref (buffer);
     }
     g_assert (i == size);
-    load_object->text[size] = '\0';
-    /* FIXME: validate otherwise? */
-    if (!g_utf8_validate (load_object->text, size, NULL)) {
-      SWFDEC_ERROR ("downloaded data is not valid utf-8");
-      g_free (load_object->text);
-      load_object->text = NULL;
+    text[size] = '\0';
+
+    for (i = 0; boms[i].length > 0; i++) {
+      if (size < boms[i].length)
+	continue;
+
+      for (j = 0; j < boms[i].length; j++) {
+	if ((guchar)text[j] != boms[i].data[j])
+	  break;
+      }
+      if (j == boms[i].length)
+	break;
+    }
+
+    if (!strcmp (boms[i].name, "UTF-8")) {
+      if (!g_utf8_validate (text + boms[i].length, -1, NULL)) {
+	SWFDEC_ERROR ("downloaded data is not valid UTF-8");
+	g_free (text);
+	text = NULL;
+	load_object->text = NULL;
+      } else {
+	if (boms[i].length == 0) {
+	  load_object->text = text;
+	  text = NULL;
+	} else {
+	  load_object->text = g_strdup (text + boms[i].length);
+	  g_free (text);
+	  text = NULL;
+	}
+      }
+    } else {
+      load_object->text = g_convert (text + boms[i].length, -1, "UTF-8",
+	  boms[i].name, NULL, NULL, NULL);
+      if (load_object->text == NULL)
+	SWFDEC_ERROR ("downloaded data is not valid %s", boms[i].name);
+      g_free (text);
+      text = NULL;
     }
   } else {
     SWFDEC_ERROR ("not enough memory to copy %u bytes", size);
+    load_object->text = NULL;
   }
 
   /* break reference to the loader */

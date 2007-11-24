@@ -38,7 +38,7 @@ static void
 swfdec_security_allow_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
     SwfdecURLAllowFunc callback, gpointer user_data)
 {
-  callback ((SwfdecURL *)url, TRUE, user_data);
+  callback (url, TRUE, user_data);
 }
 
 static void

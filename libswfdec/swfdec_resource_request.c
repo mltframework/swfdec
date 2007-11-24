@@ -57,7 +57,7 @@ typedef struct {
 } AllowCallbackData;
 
 static void
-swfdec_player_request_resource_allow_callback (SwfdecURL *url,
+swfdec_player_request_resource_allow_callback (const SwfdecURL *url,
     gboolean allowed, gpointer data_)
 {
   AllowCallbackData *data = data_;
@@ -79,7 +79,6 @@ swfdec_player_request_resource_allow_callback (SwfdecURL *url,
 
   data->callback (data->player, loader, data->user_data);
 
-  swfdec_url_free (url);
   g_free (data);
 }
 
@@ -108,6 +107,8 @@ swfdec_player_request_resource_now (SwfdecPlayer *player,
 
   swfdec_security_allow_url (security, absolute,
       swfdec_player_request_resource_allow_callback, data);
+
+  swfdec_url_free (absolute);
 }
 
 static void

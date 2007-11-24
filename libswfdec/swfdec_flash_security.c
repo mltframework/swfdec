@@ -63,18 +63,18 @@ swfdec_flash_security_allow_cross_domain (SwfdecFlashSecurity *sec,
 
   if (g_slist_find_custom (sec->crossdomain_allowed, host,
 	(GCompareFunc)g_ascii_strcasecmp)) {
-    callback ((SwfdecURL *)url, TRUE, user_data);
+    callback (url, TRUE, user_data);
     return;
   }
 
   if (g_slist_find_custom (sec->crossdomain_denied, host,
 	(GCompareFunc)g_ascii_strcasecmp)) {
-    callback ((SwfdecURL *)url, FALSE, user_data);
+    callback (url, FALSE, user_data);
     return;
   }
 
   // TODO
-  callback ((SwfdecURL *)url, FALSE, user_data);
+  callback (url, FALSE, user_data);
   /*pending = g_new (SwfdecAllowURLPending, 1);
   pending->url = url;
   pending->callback = callback;
@@ -128,7 +128,7 @@ swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
       g_assert_not_reached ();
   }
 
-  callback ((SwfdecURL *)url, allowed, user_data);
+  callback (url, allowed, user_data);
 }
 
 static void

@@ -48,6 +48,12 @@ struct _SwfdecFlashSecurity
 
   SwfdecSandboxType	sandbox;	/* sandbox we are operating in */
   SwfdecURL *		url;		/* url this security was loaded from */
+
+  GSList *		crossdomain_pending;
+  GSList *		crossdomain_allowed;
+  GSList *		crossdomain_denied;
+
+  GSList *		allowurl_pending;
 };
 
 struct _SwfdecFlashSecurityClass

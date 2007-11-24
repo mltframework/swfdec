@@ -53,6 +53,41 @@ swfdec_flash_security_match_domain (const SwfdecURL *guard, const SwfdecURL *key
 }
 
 static void
+swfdec_flash_security_allow_cross_domain (SwfdecFlashSecurity *sec,
+    const SwfdecURL *url, SwfdecURLAllowFunc callback, gpointer user_data)
+{
+  //SwfdecAllowURLPending *pending;
+  const char *host;
+
+  host = swfdec_url_get_host (url);
+
+  if (g_slist_find_custom (sec->crossdomain_allowed, host,
+	(GCompareFunc)g_ascii_strcasecmp)) {
+    callback ((SwfdecURL *)url, TRUE, user_data);
+    return;
+  }
+
+  if (g_slist_find_custom (sec->crossdomain_denied, host,
+	(GCompareFunc)g_ascii_strcasecmp)) {
+    callback ((SwfdecURL *)url, FALSE, user_data);
+    return;
+  }
+
+  // TODO
+  callback ((SwfdecURL *)url, FALSE, user_data);
+  /*pending = g_new (SwfdecAllowURLPending, 1);
+  pending->url = url;
+  pending->callback = callback;
+  pending->user_data = user_data;
+
+  sec->allowurl_pending = g_slist_prepend (sec->allowurl_pending, pending);
+
+  if (g_slist_find_custom (sec->crossdomain_pending, host, g_ascii_strcasecmp))
+    return;
+  */
+}
+
+static void
 swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
     SwfdecURLAllowFunc callback, gpointer user_data)
 {
@@ -66,15 +101,25 @@ swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
     case SWFDEC_SANDBOX_REMOTE:
       if (swfdec_url_is_local (url)) {
 	allowed = FALSE;
+      } else if (swfdec_flash_security_match_domain (sec->url, url)) {
+	allowed = TRUE;
       } else {
-	allowed = swfdec_flash_security_match_domain (sec->url, url);
+	swfdec_flash_security_allow_cross_domain (sec, url, callback,
+	    user_data);
+	return;
       }
       break;
     case SWFDEC_SANDBOX_LOCAL_FILE:
       allowed = swfdec_url_is_local (url);
       break;
     case SWFDEC_SANDBOX_LOCAL_NETWORK:
-      allowed = !swfdec_url_is_local (url);
+      if (swfdec_url_is_local (url)) {
+	allowed = FALSE;
+      } else {
+	swfdec_flash_security_allow_cross_domain (sec, url, callback,
+	    user_data);
+	return;
+      }
       break;
     case SWFDEC_SANDBOX_LOCAL_TRUSTED:
       allowed = TRUE;

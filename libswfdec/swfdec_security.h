@@ -48,8 +48,10 @@ struct _SwfdecSecurityClass
 
   gboolean		(* allow)			(SwfdecSecurity *	guard,
 							 SwfdecSecurity *	from);
-  gboolean		(* allow_url)			(SwfdecSecurity *	guard,
-							 const SwfdecURL *	url);
+  void			(* allow_url)			(SwfdecSecurity *	guard,
+							 const SwfdecURL *	url,
+							 SwfdecURLAllowFunc	callback,
+							 gpointer		user_data);
 };
 
 GType			swfdec_security_get_type	(void);

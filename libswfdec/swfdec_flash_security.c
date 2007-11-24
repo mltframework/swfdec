@@ -52,27 +52,38 @@ swfdec_flash_security_match_domain (const SwfdecURL *guard, const SwfdecURL *key
   return g_ascii_strcasecmp (swfdec_url_get_host (guard), swfdec_url_get_host (key)) == 0;
 }
 
-static gboolean
-swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url)
+static void
+swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
+    SwfdecURLAllowFunc callback, gpointer user_data)
 {
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (guard);
+  gboolean allowed;
 
   switch (sec->sandbox) {
     case SWFDEC_SANDBOX_NONE:
-      return FALSE;
+      allowed = FALSE;
+      break;
     case SWFDEC_SANDBOX_REMOTE:
-      if (swfdec_url_is_local (url))
-	return FALSE;
-      return swfdec_flash_security_match_domain (sec->url, url);
+      if (swfdec_url_is_local (url)) {
+	allowed = FALSE;
+      } else {
+	allowed = swfdec_flash_security_match_domain (sec->url, url);
+      }
+      break;
     case SWFDEC_SANDBOX_LOCAL_FILE:
-      return swfdec_url_is_local (url);
+      allowed = swfdec_url_is_local (url);
+      break;
     case SWFDEC_SANDBOX_LOCAL_NETWORK:
-      return !swfdec_url_is_local (url);
+      allowed = !swfdec_url_is_local (url);
+      break;
     case SWFDEC_SANDBOX_LOCAL_TRUSTED:
-      return TRUE;
+      allowed = TRUE;
+      break;
     default:
-      g_return_val_if_reached (FALSE);
+      g_assert_not_reached ();
   }
+
+  callback ((SwfdecURL *)url, allowed, user_data);
 }
 
 static void

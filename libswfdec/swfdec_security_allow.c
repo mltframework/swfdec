@@ -34,10 +34,11 @@ swfdec_security_allow_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
   return TRUE;
 }
 
-static gboolean
-swfdec_security_allow_allow_url (SwfdecSecurity *guard, const SwfdecURL *url)
+static void
+swfdec_security_allow_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
+    SwfdecURLAllowFunc callback, gpointer user_data)
 {
-  return TRUE;
+  callback ((SwfdecURL *)url, TRUE, user_data);
 }
 
 static void

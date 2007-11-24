@@ -48,36 +48,66 @@ swfdec_resource_request_free (SwfdecResourceRequest *request)
   g_slice_free (SwfdecResourceRequest, request);
 }
 
+typedef struct {
+  SwfdecPlayer *		player;
+  SwfdecLoaderRequest		request;
+  SwfdecBuffer *		buffer;
+  SwfdecResourceFunc		callback;
+  gpointer			user_data;
+} AllowCallbackData;
+
+static void
+swfdec_player_request_resource_allow_callback (SwfdecURL *url,
+    gboolean allowed, gpointer data_)
+{
+  AllowCallbackData *data = data_;
+  SwfdecLoader *loader;
+
+  if (!allowed) {
+    SWFDEC_ERROR ("not allowing access to %s", swfdec_url_get_url (url));
+    loader = NULL;
+  } else {
+    if (data->buffer) {
+      loader = swfdec_loader_load (data->player->resource->loader, url,
+	  data->request, (const char *) data->buffer->data,
+	  data->buffer->length);
+    } else {
+      loader = swfdec_loader_load (data->player->resource->loader, url,
+	  data->request, NULL, 0);
+    }
+  }
+
+  data->callback (data->player, loader, data->user_data);
+
+  swfdec_url_free (url);
+  g_free (data);
+}
+
 void
 swfdec_player_request_resource_now (SwfdecPlayer *player,
     SwfdecSecurity *security, const char *url, SwfdecLoaderRequest req,
     SwfdecBuffer *buffer, SwfdecResourceFunc callback, gpointer user_data)
 {
-  SwfdecLoader *loader;
   SwfdecURL *absolute;
+  AllowCallbackData *data;
 
   // FIXME
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (SWFDEC_IS_SECURITY (security));
   g_return_if_fail (url != NULL);
 
+  data = g_new (AllowCallbackData, 1);
+  data->player = player;
+  data->request = req;
+  data->buffer = buffer;
+  data->callback = callback;
+  data->user_data = user_data;
+
   /* create absolute url first */
   absolute = swfdec_url_new_relative (swfdec_loader_get_url (player->resource->loader), url);
-  if (!swfdec_security_allow_url (security, absolute)) {
-    /* FIXME: Need to load policy file from given URL */
-    SWFDEC_ERROR ("not allowing access to %s", swfdec_url_get_url (absolute));
-    loader = NULL;
-  } else {
-    if (buffer) {
-      loader = swfdec_loader_load (player->resource->loader, absolute, req, 
-	  (const char *) buffer->data, buffer->length);
-    } else {
-      loader = swfdec_loader_load (player->resource->loader, absolute, req, NULL, 0);
-    }
-  }
-  swfdec_url_free (absolute);
 
-  callback (player, loader, user_data);
+  swfdec_security_allow_url (security, absolute,
+      swfdec_player_request_resource_allow_callback, data);
 }
 
 static void

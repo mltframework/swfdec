@@ -70,16 +70,21 @@ swfdec_security_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
  *
  * Returns: %TRUE if @url may be accessed.
  **/
-gboolean
-swfdec_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url)
+void
+swfdec_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
+    SwfdecURLAllowFunc callback, gpointer user_data)
 {
   SwfdecSecurityClass *klass;
+  gboolean val;
 
-  g_return_val_if_fail (SWFDEC_IS_SECURITY (guard), FALSE);
-  g_return_val_if_fail (url != NULL, FALSE);
+  // FIXME
+  g_return_if_fail (SWFDEC_IS_SECURITY (guard));
+  g_return_if_fail (url != NULL);
 
   klass = SWFDEC_SECURITY_GET_CLASS (guard);
-  g_return_val_if_fail (klass->allow_url, FALSE);
-  return klass->allow_url (guard, url);
+  g_return_if_fail (klass->allow_url);
+  val = klass->allow_url (guard, url);
+
+  callback ((SwfdecURL *)url, val, user_data);
 }
 

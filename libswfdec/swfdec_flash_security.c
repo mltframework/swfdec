@@ -73,6 +73,7 @@ swfdec_flash_security_call_pending (SwfdecFlashSecurity *sec, const char *host,
 
     if (!g_ascii_strcasecmp (swfdec_url_get_host (pending->url), host)) {
       pending->callback (pending->url, allow, pending->user_data);
+      swfdec_url_free (pending->url);
       g_free (pending);
       g_slist_free_1 (iter);
 

@@ -69,11 +69,13 @@ void		swfdec_player_request_resource		(SwfdecPlayer *		player,
 							 SwfdecResourceFunc	func,
 							 gpointer		data,
 							 GDestroyNotify		destroy);
-SwfdecLoader *	swfdec_player_request_resource_now	(SwfdecPlayer *		player,
+void		swfdec_player_request_resource_now	(SwfdecPlayer *		player,
 							 SwfdecSecurity *	security,
 							 const char *		url,
 							 SwfdecLoaderRequest	req,
-							 SwfdecBuffer *		buffer);
+							 SwfdecBuffer *		buffer,
+							 SwfdecResourceFunc	callback,
+							 gpointer		user_data);
 void		swfdec_player_request_unload		(SwfdecPlayer *		player,
 							 const char *		target,
 							 SwfdecResourceUnloadFunc func,

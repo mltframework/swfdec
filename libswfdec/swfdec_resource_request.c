@@ -48,16 +48,18 @@ swfdec_resource_request_free (SwfdecResourceRequest *request)
   g_slice_free (SwfdecResourceRequest, request);
 }
 
-SwfdecLoader *
-swfdec_player_request_resource_now (SwfdecPlayer *player, SwfdecSecurity *security,
-    const char *url, SwfdecLoaderRequest req, SwfdecBuffer *buffer)
+void
+swfdec_player_request_resource_now (SwfdecPlayer *player,
+    SwfdecSecurity *security, const char *url, SwfdecLoaderRequest req,
+    SwfdecBuffer *buffer, SwfdecResourceFunc callback, gpointer user_data)
 {
   SwfdecLoader *loader;
   SwfdecURL *absolute;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (SWFDEC_IS_SECURITY (security), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
+  // FIXME
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (SWFDEC_IS_SECURITY (security));
+  g_return_if_fail (url != NULL);
 
   /* create absolute url first */
   absolute = swfdec_url_new_relative (swfdec_loader_get_url (player->resource->loader), url);
@@ -74,30 +76,41 @@ swfdec_player_request_resource_now (SwfdecPlayer *player, SwfdecSecurity *securi
     }
   }
   swfdec_url_free (absolute);
-  return loader;
+
+  callback (player, loader, user_data);
 }
 
 static void
 swfdec_request_resource_perform_fscommand (SwfdecPlayer *player, SwfdecResourceRequest *request)
 {
   g_signal_emit_by_name (player, "fscommand", request->command, request->value);
+  swfdec_resource_request_free (request);
+}
+
+static void
+swfdec_request_resource_perform_load_callback (SwfdecPlayer *player,
+    SwfdecLoader *loader, gpointer data)
+{
+  SwfdecResourceRequest *request = data;
+
+  request->func (player, loader, request->data);
+  swfdec_resource_request_free (request);
 }
 
 static void
 swfdec_request_resource_perform_load (SwfdecPlayer *player, SwfdecResourceRequest *request)
 {
-  SwfdecLoader *loader;
-
   g_assert (player->resource);
-  loader = swfdec_player_request_resource_now (player, request->security, 
-      request->url, request->request, request->buffer);
-  request->func (player, loader, request->data);
+  swfdec_player_request_resource_now (player, request->security,
+      request->url, request->request, request->buffer,
+      swfdec_request_resource_perform_load_callback, request);
 }
 
 static void
 swfdec_request_resource_perform_unload (SwfdecPlayer *player, SwfdecResourceRequest *request)
 {
   request->unload (player, request->target, request->data);
+  swfdec_resource_request_free (request);
 }
 
 static void
@@ -117,9 +130,9 @@ swfdec_request_resource_perform_one (gpointer requestp, gpointer player)
       break;
     default:
       g_assert_not_reached ();
+      swfdec_resource_request_free (request);
       break;
   }
-  swfdec_resource_request_free (request);
 }
 
 void

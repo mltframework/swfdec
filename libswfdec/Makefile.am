@@ -118,6 +118,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_player.c \
 	swfdec_player_as.c \
 	swfdec_print_job.c \
+	swfdec_policy_loader.c \
 	swfdec_rect.c \
 	swfdec_rectangle.c \
 	swfdec_resource.c \
@@ -250,6 +251,7 @@ noinst_HEADERS = \
 	swfdec_path.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
+	swfdec_policy_loader.h \
 	swfdec_rect.h \
 	swfdec_resource.h \
 	swfdec_resource_request.h \

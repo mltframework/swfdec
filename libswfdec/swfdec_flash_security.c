@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include "swfdec_flash_security.h"
+#include "swfdec_policy_loader.h"
 #include "swfdec_debug.h"
 #include "swfdec_security_allow.h"
 
@@ -52,11 +53,92 @@ swfdec_flash_security_match_domain (const SwfdecURL *guard, const SwfdecURL *key
   return g_ascii_strcasecmp (swfdec_url_get_host (guard), swfdec_url_get_host (key)) == 0;
 }
 
+typedef struct {
+  SwfdecURL *		url;
+  SwfdecURLAllowFunc	callback;
+  gpointer		user_data;
+} SwfdecAllowURLPending;
+
+static void
+swfdec_flash_security_call_pending (SwfdecFlashSecurity *sec, const char *host,
+    gboolean allow)
+{
+  GSList *iter, *prev, *next;
+  SwfdecAllowURLPending *pending;
+
+  prev = NULL;
+  for (iter = sec->allow_url_pending; iter != NULL; iter = next) {
+    next = iter->next;
+    pending = iter->data;
+
+    if (!g_ascii_strcasecmp (swfdec_url_get_host (pending->url), host)) {
+      pending->callback (pending->url, allow, pending->user_data);
+      g_free (pending);
+      g_slist_free_1 (iter);
+
+      if (prev != NULL) {
+	prev->next = iter->next;
+	iter = prev;
+	iter->next = next;
+      } else {
+	iter = NULL;
+	sec->allow_url_pending = next;
+      }
+    }
+
+    prev = iter;
+  }
+}
+
+static void
+swfdec_flash_security_policy_loader_done (SwfdecPolicyLoader *policy_loader,
+    gboolean allow)
+{
+  SwfdecFlashSecurity *sec = policy_loader->sec;
+  char *host = g_strdup (policy_loader->host);
+
+  if (allow) {
+    sec->crossdomain_allowed = g_slist_prepend (sec->crossdomain_allowed, host);
+  } else {
+    sec->crossdomain_denied = g_slist_prepend (sec->crossdomain_denied, host);
+  }
+
+  sec->policy_loaders = g_slist_remove (sec->policy_loaders, policy_loader);
+
+  swfdec_flash_security_call_pending (sec, host, allow);
+}
+
+static void
+swfdec_flash_security_get_cross_domain_policy (SwfdecFlashSecurity *sec,
+    const char *host)
+{
+  GSList *iter;
+  SwfdecPolicyLoader *policy_loader;
+
+  for (iter = sec->policy_loaders; iter != NULL; iter = iter->next) {
+    policy_loader = iter->data;
+
+    if (!g_ascii_strcasecmp (policy_loader->host, host))
+      return;
+  }
+
+  policy_loader = swfdec_policy_loader_new (sec, host,
+      swfdec_flash_security_policy_loader_done);
+  if (policy_loader == NULL) {
+    sec->crossdomain_denied = g_slist_prepend (sec->crossdomain_denied,
+	g_strdup (host));
+    swfdec_flash_security_call_pending (sec, host, FALSE);
+    return;
+  }
+
+  sec->policy_loaders = g_slist_prepend (sec->policy_loaders, policy_loader);
+}
+
 static void
 swfdec_flash_security_allow_cross_domain (SwfdecFlashSecurity *sec,
     const SwfdecURL *url, SwfdecURLAllowFunc callback, gpointer user_data)
 {
-  //SwfdecAllowURLPending *pending;
+  SwfdecAllowURLPending *pending;
   const char *host;
 
   host = swfdec_url_get_host (url);
@@ -73,18 +155,14 @@ swfdec_flash_security_allow_cross_domain (SwfdecFlashSecurity *sec,
     return;
   }
 
-  // TODO
-  callback (url, FALSE, user_data);
-  /*pending = g_new (SwfdecAllowURLPending, 1);
-  pending->url = url;
+  pending = g_new (SwfdecAllowURLPending, 1);
+  pending->url = swfdec_url_copy (url);
   pending->callback = callback;
   pending->user_data = user_data;
 
-  sec->allowurl_pending = g_slist_prepend (sec->allowurl_pending, pending);
+  sec->allow_url_pending = g_slist_prepend (sec->allow_url_pending, pending);
 
-  if (g_slist_find_custom (sec->crossdomain_pending, host, g_ascii_strcasecmp))
-    return;
-  */
+  swfdec_flash_security_get_cross_domain_policy (sec, host);
 }
 
 static void

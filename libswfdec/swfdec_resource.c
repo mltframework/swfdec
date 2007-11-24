@@ -432,6 +432,7 @@ swfdec_resource_new (SwfdecPlayer *player, SwfdecLoader *loader, const char *var
   resource->version = 7;
   resource->player = player;
   resource->variables = g_strdup (variables);
+  SWFDEC_FLASH_SECURITY (resource)->player = player;
   swfdec_resource_set_loader (resource, loader);
 
   return resource;

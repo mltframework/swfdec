@@ -213,12 +213,38 @@ static void
 swfdec_flash_security_dispose (GObject *object)
 {
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (object);
+  GSList *iter;
+
+  for (iter = sec->policy_loaders; iter != NULL; iter = iter->next) {
+    g_free (iter->data);
+  }
+  g_slist_free (sec->policy_loaders);
+  sec->policy_loaders = NULL;
+
+  for (iter = sec->crossdomain_allowed; iter != NULL; iter = iter->next) {
+    g_free (iter->data);
+  }
+  g_slist_free (sec->crossdomain_allowed);
+  sec->crossdomain_allowed = NULL;
+
+  for (iter = sec->crossdomain_denied; iter != NULL; iter = iter->next) {
+    g_free (iter->data);
+  }
+  g_slist_free (sec->crossdomain_denied);
+  sec->crossdomain_denied = NULL;
+
+  for (iter = sec->allow_url_pending; iter != NULL; iter = iter->next) {
+    g_free (iter->data);
+  }
+  g_slist_free (sec->allow_url_pending);
+  sec->allow_url_pending = NULL;
 
   if (sec->url) {
     swfdec_url_free (sec->url);
     sec->url = NULL;
   }
   sec->sandbox = SWFDEC_SANDBOX_NONE;
+
   G_OBJECT_CLASS (swfdec_flash_security_parent_class)->dispose (object);
 }
 

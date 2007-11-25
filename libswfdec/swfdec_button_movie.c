@@ -37,6 +37,7 @@ swfdec_button_movie_update_extents (SwfdecMovie *movie,
       &SWFDEC_GRAPHIC (SWFDEC_BUTTON_MOVIE (movie)->button)->extents);
 }
 
+#if 0
 /* first index is 1 for menubutton, second index is previous state,
  * last index is current state
  * MSB in index is mouse OUT = 0, IN = 1
@@ -199,15 +200,17 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
   movie->mouse_in = mouse_in;
   movie->mouse_button = button;
 }
+#endif
 
 static void
 swfdec_button_movie_init_movie (SwfdecMovie *mov)
 {
-  SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
+  //SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
 
-  swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_UP);
+  //swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_UP);
 }
 
+#if 0
 static gboolean G_GNUC_UNUSED
 swfdec_button_movie_mouse_in (SwfdecMovie *movie, double x, double y)
 {
@@ -264,6 +267,7 @@ swfdec_button_movie_mouse_change (SwfdecMovie *mov, double x, double y,
   }
   swfdec_button_movie_change_mouse (movie, mouse_in, button);
 }
+#endif
 
 static void
 swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
@@ -272,8 +276,6 @@ swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
 
   movie_class->init_movie = swfdec_button_movie_init_movie;
   movie_class->update_extents = swfdec_button_movie_update_extents;
-  //movie_class->mouse_in = swfdec_button_movie_mouse_in;
-  //movie_class->mouse_change = swfdec_button_movie_mouse_change;
 }
 
 static void

@@ -459,7 +459,7 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
   
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
-  if (!SWFDEC_IS_SPRITE_MOVIE (movie))
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie) && !SWFDEC_IS_BUTTON_MOVIE (movie))
     return;
 
   switch (condition) {
@@ -1537,9 +1537,13 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     swfdec_movie_invalidate (movie);
   }
   if (events) {
-    if (movie->events)
-      swfdec_event_list_free (movie->events);
-    movie->events = swfdec_event_list_copy (events);
+    if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+      if (movie->events)
+	swfdec_event_list_free (movie->events);
+      movie->events = swfdec_event_list_copy (events);
+    } else {
+      SWFDEC_WARNING ("trying to set events on a %s, not allowed", G_OBJECT_TYPE_NAME (movie));
+    }
   }
 }
 

@@ -372,10 +372,10 @@ swfdec_button_movie_mouse_release (SwfdecMovie *movie, guint button)
   SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   if (player->mouse_below == movie) {
-    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
-  } else {
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OVER);
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+  } else {
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
   }
 }
 

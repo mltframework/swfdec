@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,8 +41,6 @@ struct _SwfdecButtonMovie {
 
   SwfdecButton *	button;		/* button we render */
   SwfdecButtonState	state;		/* current state we're in */
-  gboolean		mouse_in;	/* TRUE if mouse was inside last we checked */
-  int			mouse_button;	/* last mouse button */
 };
 
 struct _SwfdecButtonMovieClass {

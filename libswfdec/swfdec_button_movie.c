@@ -291,7 +291,7 @@ swfdec_button_movie_set_state (SwfdecButtonMovie *button, SwfdecButtonState stat
   /* remove all movies that aren't in the new state */
   new = 1 << state;
   if (button->state >= 0) {
-    old = 1 << movie->state;
+    old = 1 << button->state;
     for (walk = button->button->records; walk; walk = walk->next) {
       swfdec_bits_init (&bits, walk->data);
       i = swfdec_bits_get_u8 (&bits);

@@ -1905,6 +1905,24 @@ EXTRA_DIST = \
 	propflags-set-6.swf.trace \
 	propflags-set-7.swf \
 	propflags-set-7.swf.trace \
+	propflags-set-native.as \
+	propflags-set-native-5.swf \
+	propflags-set-native-5.swf.trace \
+	propflags-set-native-6.swf \
+	propflags-set-native-6.swf.trace \
+	propflags-set-native-7.swf \
+	propflags-set-native-7.swf.trace \
+	propflags-set-native-8.swf \
+	propflags-set-native-8.swf.trace \
+	propflags-set-proto.as \
+	propflags-set-proto-5.swf \
+	propflags-set-proto-5.swf.trace \
+	propflags-set-proto-6.swf \
+	propflags-set-proto-6.swf.trace \
+	propflags-set-proto-7.swf \
+	propflags-set-proto-7.swf.trace \
+	propflags-set-proto-8.swf \
+	propflags-set-proto-8.swf.trace \
 	register-count.swf \
 	register-count.swf.trace \
 	register-count.xml \

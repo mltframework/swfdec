@@ -150,7 +150,6 @@ swfdec_sprite_movie_set_transform (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("MovieClip.transform (set)");
 }
 
-
 static const char *blend_mode_names[] = {
   SWFDEC_AS_STR_normal,
   SWFDEC_AS_STR_layer,

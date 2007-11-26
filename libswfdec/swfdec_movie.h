@@ -47,6 +47,21 @@ typedef enum {
   SWFDEC_MOVIE_STATE_DESTROYED		/* swfdec_movie_destroy has been called */
 } SwfdecMovieState;
 
+#define SWFDEC_BLEND_MODE_NORMAL	1
+#define SWFDEC_BLEND_MODE_LAYER		2
+#define SWFDEC_BLEND_MODE_MULTIPLY	3
+#define SWFDEC_BLEND_MODE_SCREEN	4
+#define SWFDEC_BLEND_MODE_LIGHTEN	5
+#define SWFDEC_BLEND_MODE_DARKEN	6
+#define SWFDEC_BLEND_MODE_DIFFERENCE	7
+#define SWFDEC_BLEND_MODE_ADD		8
+#define SWFDEC_BLEND_MODE_SUBTRACT	9
+#define SWFDEC_BLEND_MODE_INVERT	10
+#define SWFDEC_BLEND_MODE_ALPHA		11
+#define SWFDEC_BLEND_MODE_ERASE		12
+#define SWFDEC_BLEND_MODE_OVERLAY	13
+#define SWFDEC_BLEND_MODE_HARDLIGHT	14
+
 struct _SwfdecContent {
   SwfdecGraphic *	graphic;	/* object to display */
   int	         	depth;		/* at which depth to display */

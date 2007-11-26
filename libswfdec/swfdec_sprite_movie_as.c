@@ -35,6 +35,7 @@
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_decoder.h"
 #include "swfdec_resource.h"
+#include "swfdec_utils.h"
 #include "swfdec_as_internal.h"
 
 SWFDEC_AS_NATIVE (900, 200, swfdec_sprite_movie_get_tabIndex)
@@ -149,12 +150,36 @@ swfdec_sprite_movie_set_transform (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("MovieClip.transform (set)");
 }
 
+static const char *blend_mode_names[] = {
+  SWFDEC_AS_STR_normal,
+  SWFDEC_AS_STR_layer,
+  SWFDEC_AS_STR_multiply,
+  SWFDEC_AS_STR_screen,
+  SWFDEC_AS_STR_lighten,
+  SWFDEC_AS_STR_darken,
+  SWFDEC_AS_STR_difference,
+  SWFDEC_AS_STR_add,
+  SWFDEC_AS_STR_subtract,
+  SWFDEC_AS_STR_invert,
+  SWFDEC_AS_STR_alpha,
+  SWFDEC_AS_STR_erase,
+  SWFDEC_AS_STR_overlay,
+  SWFDEC_AS_STR_hardlight
+};
+static const gsize num_blend_mode_names =
+  sizeof (blend_mode_names) / sizeof (blend_mode_names[0]);
+
 SWFDEC_AS_NATIVE (900, 500, swfdec_sprite_movie_get_blendMode)
 void
 swfdec_sprite_movie_get_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.blendMode (get)");
+  SwfdecMovie *movie;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
+
+  if (movie->blend_mode > 0 && movie->blend_mode <= num_blend_mode_names)
+    SWFDEC_AS_VALUE_SET_STRING (rval, blend_mode_names[movie->blend_mode - 1]);
 }
 
 SWFDEC_AS_NATIVE (900, 501, swfdec_sprite_movie_set_blendMode)
@@ -162,7 +187,35 @@ void
 swfdec_sprite_movie_set_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.blendMode (set)");
+  SwfdecMovie *movie;
+  SwfdecAsValue val;
+  const char *str;
+  int blend_mode;
+  gsize i;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "v", &val);
+
+  if (SWFDEC_AS_VALUE_IS_NUMBER (&val)) {
+    blend_mode = SWFDEC_AS_VALUE_GET_NUMBER (&val);
+  } else if (SWFDEC_AS_VALUE_IS_STRING (&val)) {
+    blend_mode = 0;
+    str = SWFDEC_AS_VALUE_GET_STRING (&val);
+    for (i = 0; i < num_blend_mode_names; i++) {
+      if (str == blend_mode_names[i]) { // case-sensitive
+	blend_mode = i + 1;
+	break;
+      }
+    }
+  } else if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    blend_mode = 0;
+  } else {
+    blend_mode = 1;
+  }
+
+  if ((guint)blend_mode != movie->blend_mode) {
+    movie->blend_mode = blend_mode;
+    swfdec_movie_invalidate (movie);
+  }
 }
 
 SWFDEC_AS_NATIVE (900, 2, swfdec_sprite_movie_localToGlobal)
@@ -223,7 +276,8 @@ swfdec_sprite_movie_getSWFVersion (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   if (object != NULL && SWFDEC_IS_MOVIE (object)) {
-    SWFDEC_AS_VALUE_SET_INT (rval, cx->version);
+    SWFDEC_AS_VALUE_SET_INT (rval,
+	swfdec_movie_get_version (SWFDEC_MOVIE (object)));
   } else {
     SWFDEC_AS_VALUE_SET_INT (rval, -1);
   }

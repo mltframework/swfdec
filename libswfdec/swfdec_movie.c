@@ -58,6 +58,8 @@ G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_AS_OBJECT)
 static void
 swfdec_movie_init (SwfdecMovie * movie)
 {
+  movie->blend_mode = 1;
+
   movie->xscale = 100;
   movie->yscale = 100;
   cairo_matrix_init_identity (&movie->original_transform);
@@ -757,26 +759,25 @@ static cairo_operator_t
 swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
 {
   switch (blend_mode) {
-    case 0:
-    case 1:
+    case SWFDEC_BLEND_MODE_NORMAL:
       SWFDEC_ERROR ("shouldn't need to get operator without blend mode?!");
-    case 2:
+    case SWFDEC_BLEND_MODE_LAYER:
       return CAIRO_OPERATOR_OVER;
-    case 8:
+    case SWFDEC_BLEND_MODE_ADD:
       return CAIRO_OPERATOR_ADD;
-    case 11:
+    case SWFDEC_BLEND_MODE_ALPHA:
       return CAIRO_OPERATOR_DEST_IN;
-    case 12:
+    case SWFDEC_BLEND_MODE_ERASE:
       return CAIRO_OPERATOR_DEST_OUT;
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 9:
-    case 10:
-    case 13:
-    case 14:
+    case SWFDEC_BLEND_MODE_MULTIPLY:
+    case SWFDEC_BLEND_MODE_SCREEN:
+    case SWFDEC_BLEND_MODE_LIGHTEN:
+    case SWFDEC_BLEND_MODE_DARKEN:
+    case SWFDEC_BLEND_MODE_DIFFERENCE:
+    case SWFDEC_BLEND_MODE_SUBTRACT:
+    case SWFDEC_BLEND_MODE_INVERT:
+    case SWFDEC_BLEND_MODE_OVERLAY:
+    case SWFDEC_BLEND_MODE_HARDLIGHT:
       SWFDEC_WARNING ("blend mode %u unimplemented in cairo", blend_mode);
       return CAIRO_OPERATOR_OVER;
     default:

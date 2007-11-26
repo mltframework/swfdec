@@ -26,6 +26,7 @@
 #include "swfdec_audio_event.h"
 #include "swfdec_debug.h"
 #include "swfdec_event.h"
+#include "swfdec_player_internal.h"
 
 G_DEFINE_TYPE (SwfdecButtonMovie, swfdec_button_movie, SWFDEC_TYPE_MOVIE)
 
@@ -203,11 +204,80 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
 #endif
 
 static void
+swfdec_button_movie_set_state (SwfdecButtonMovie *movie, SwfdecButtonState state)
+{
+  if (movie->state == state) {
+    SWFDEC_LOG ("not changing state, it's already in %d", state);
+    return;
+  }
+  SWFDEC_DEBUG ("changing state from %d to %d", movie->state, state);
+  movie->state = state;
+}
+
+static gboolean
+swfdec_button_movie_mouse_events (SwfdecMovie *movie)
+{
+  return TRUE;
+}
+
+static void
+swfdec_button_movie_mouse_in (SwfdecMovie *movie)
+{
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_in (movie);
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)))
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_DOWN);
+  else
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+}
+
+static void
+swfdec_button_movie_mouse_out (SwfdecMovie *movie)
+{
+  SwfdecButtonMovie *button = SWFDEC_BUTTON_MOVIE (movie);
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_out (movie);
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context))) {
+    swfdec_button_movie_set_state (button, SWFDEC_BUTTON_DOWN);
+  } else {
+    if (button->button->menubutton) {
+      swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
+    } else {
+      swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+    }
+  }
+}
+
+static void
+swfdec_button_movie_mouse_press (SwfdecMovie *movie, guint button)
+{
+  if (button != 0)
+    return;
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_press (movie, button);
+  swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_DOWN);
+}
+
+static void
+swfdec_button_movie_mouse_release (SwfdecMovie *movie, guint button)
+{
+  SwfdecPlayer *player;
+
+  if (button != 0)
+    return;
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  if (player->mouse_below == movie) {
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
+  } else {
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OVER);
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+  }
+}
+
+static void
 swfdec_button_movie_init_movie (SwfdecMovie *mov)
 {
-  //SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
+  SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
 
-  //swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_UP);
+  swfdec_button_movie_set_state (movie, SWFDEC_BUTTON_UP);
 }
 
 #if 0
@@ -237,24 +307,6 @@ swfdec_button_movie_mouse_in (SwfdecMovie *movie, double x, double y)
   return FALSE;
 }
 
-static SwfdecButtonState
-swfdec_button_movie_get_state (SwfdecButtonMovie *movie, gboolean mouse_in, int button)
-{
-  if (button) {
-    if (mouse_in)
-      return SWFDEC_BUTTON_DOWN;
-    else if (movie->button->menubutton)
-      return SWFDEC_BUTTON_UP;
-    else
-      return SWFDEC_BUTTON_OVER;
-  } else {
-    if (mouse_in)
-      return SWFDEC_BUTTON_OVER;
-    else
-      return SWFDEC_BUTTON_UP;
-  }
-}
-
 static void G_GNUC_UNUSED
 swfdec_button_movie_mouse_change (SwfdecMovie *mov, double x, double y, 
     gboolean mouse_in, int button)
@@ -276,6 +328,12 @@ swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
 
   movie_class->init_movie = swfdec_button_movie_init_movie;
   movie_class->update_extents = swfdec_button_movie_update_extents;
+
+  movie_class->mouse_events = swfdec_button_movie_mouse_events;
+  movie_class->mouse_in = swfdec_button_movie_mouse_in;
+  movie_class->mouse_out = swfdec_button_movie_mouse_out;
+  movie_class->mouse_press = swfdec_button_movie_mouse_press;
+  movie_class->mouse_release = swfdec_button_movie_mouse_release;
 }
 
 static void

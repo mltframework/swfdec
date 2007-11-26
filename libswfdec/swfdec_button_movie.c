@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,9 @@
 #include "swfdec_audio_event.h"
 #include "swfdec_debug.h"
 #include "swfdec_event.h"
+#include "swfdec_filter.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_resource.h"
 
 G_DEFINE_TYPE (SwfdecButtonMovie, swfdec_button_movie, SWFDEC_TYPE_MOVIE)
 
@@ -204,14 +206,119 @@ swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, i
 #endif
 
 static void
-swfdec_button_movie_set_state (SwfdecButtonMovie *movie, SwfdecButtonState state)
+swfdec_button_movie_perform_place (SwfdecButtonMovie *button, SwfdecBits *bits)
 {
-  if (movie->state == state) {
+  SwfdecMovie *movie = SWFDEC_MOVIE (button);
+  gboolean has_blend_mode, has_filters, v2;
+  SwfdecColorTransform ctrans;
+  SwfdecGraphic *graphic;
+  SwfdecPlayer *player;
+  cairo_matrix_t trans;
+  guint id, blend_mode;
+  SwfdecMovie *new;
+  int depth;
+
+  swfdec_bits_getbits (bits, 2); /* reserved */
+  has_blend_mode = swfdec_bits_getbit (bits);
+  has_filters = swfdec_bits_getbit (bits);
+  SWFDEC_LOG ("  has_blend_mode = %d", has_blend_mode);
+  SWFDEC_LOG ("  has_filters = %d", has_filters);
+  swfdec_bits_getbits (bits, 4); /* states */
+  id = swfdec_bits_get_u16 (bits);
+  depth = swfdec_bits_get_u16 (bits);
+  depth -= 16384;
+  if (swfdec_movie_find (movie, depth)) {
+    SWFDEC_WARNING ("depth %d already occupied, skipping placement.", depth + 16384);
+    return;
+  }
+  graphic = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (movie->resource->decoder), id);
+  if (!SWFDEC_IS_GRAPHIC (graphic)) {
+    SWFDEC_ERROR ("id %u does not specify a graphic", id);
+    return;
+  }
+
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  new = swfdec_movie_new (player, depth, movie, movie->resource, graphic, NULL);
+  swfdec_bits_get_matrix (bits, &trans, NULL);
+  if (swfdec_bits_left (bits)) {
+    v2 = TRUE;
+    swfdec_bits_get_color_transform (bits, &ctrans);
+    if (has_blend_mode) {
+      blend_mode = swfdec_bits_get_u8 (bits);
+      SWFDEC_LOG ("  blend mode = %u", blend_mode);
+    } else {
+      blend_mode = 0;
+    }
+    if (has_filters) {
+      GSList *filters = swfdec_filter_parse (player, bits);
+      g_slist_free (filters);
+    }
+  } else {
+    /* DefineButton1 record */
+    v2 = FALSE;
+    if (has_blend_mode || has_filters) {
+      SWFDEC_ERROR ("cool, a DefineButton1 with filters or blend mode");
+    }
+    blend_mode = 0;
+  }
+  swfdec_movie_set_static_properties (new, &trans, v2 ? &ctrans : NULL, 0, 0, blend_mode, NULL);
+  swfdec_movie_queue_script (new, SWFDEC_EVENT_INITIALIZE);
+  swfdec_movie_queue_script (new, SWFDEC_EVENT_CONSTRUCT);
+  swfdec_movie_queue_script (new, SWFDEC_EVENT_LOAD);
+  swfdec_movie_initialize (new);
+  if (swfdec_bits_left (bits)) {
+    SWFDEC_WARNING ("button record for id %u has %u bytes left", id,
+	swfdec_bits_left (bits) / 8);
+  }
+}
+
+static void
+swfdec_button_movie_set_state (SwfdecButtonMovie *button, SwfdecButtonState state)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (button);
+  SwfdecMovie *child;
+  SwfdecBits bits;
+  GSList *walk;
+  guint old, new, i;
+  int depth;
+
+  if (button->state == state) {
     SWFDEC_LOG ("not changing state, it's already in %d", state);
     return;
   }
-  SWFDEC_DEBUG ("changing state from %d to %d", movie->state, state);
-  movie->state = state;
+  SWFDEC_DEBUG ("changing state from %d to %d", button->state, state);
+  g_print ("changing state from %d to %d\n", button->state, state);
+  /* remove all movies that aren't in the new state */
+  new = 1 << state;
+  if (button->state >= 0) {
+    old = 1 << movie->state;
+    for (walk = button->button->records; walk; walk = walk->next) {
+      swfdec_bits_init (&bits, walk->data);
+      i = swfdec_bits_get_u8 (&bits);
+      if ((i & old) && !(i & new)) {
+	swfdec_bits_get_u16 (&bits);
+	depth = swfdec_bits_get_u16 (&bits);
+	child = swfdec_movie_find (movie, depth - 16384);
+	if (child) {
+	  swfdec_movie_remove (child);
+	} else {
+	  SWFDEC_WARNING ("no child at depth %d, none removed", depth);
+	}
+      }
+    }
+  } else {
+    /* to make sure that this never triggers when initializing */
+    old = 0;
+  }
+  button->state = state;
+  /* add all movies that are in the new state */
+  for (walk = button->button->records; walk; walk = walk->next) {
+    swfdec_bits_init (&bits, walk->data);
+    i = swfdec_bits_peek_u8 (&bits);
+    if ((i & old) || !(i & new))
+      continue;
+    swfdec_button_movie_perform_place (button, &bits);
+  }
 }
 
 static gboolean

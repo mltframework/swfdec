@@ -2,4 +2,5 @@
 
 trace (this + ": " + this.getSWFVersion ());
 
-loadMovie ("FSCommand:quit", "");
+if (_root["noquit"] != true)
+  loadMovie ("FSCommand:quit", "");

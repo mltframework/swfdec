@@ -277,7 +277,8 @@ swfdec_sprite_movie_getSWFVersion (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   if (object != NULL && SWFDEC_IS_MOVIE (object)) {
-    SWFDEC_AS_VALUE_SET_INT (rval, cx->version);
+    SWFDEC_AS_VALUE_SET_INT (rval,
+	swfdec_movie_get_version (SWFDEC_MOVIE (object)));
   } else {
     SWFDEC_AS_VALUE_SET_INT (rval, -1);
   }

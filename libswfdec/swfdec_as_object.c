@@ -214,6 +214,22 @@ swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable, guin
 }
 
 static gboolean
+swfdec_as_object_variable_enabled_in_version (SwfdecAsVariable *var,
+    guint version)
+{
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_6_UP && version < 6)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_NOT_6 && version == 6)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && version < 7)
+    return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && version < 8)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
     const char *variable, SwfdecAsValue *val, guint *flags)
 {
@@ -223,13 +239,8 @@ swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
     return FALSE;
 
   /* variable flag checks */
-  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_6_UP && object->context->version < 6)
-    return FALSE;
-  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_NOT_6 && object->context->version == 6)
-    return FALSE;
-  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && object->context->version < 7)
-    return FALSE;
-  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && object->context->version < 8)
+  if (!swfdec_as_object_variable_enabled_in_version (var,
+	object->context->version))
     return FALSE;
 
   if (var->get) {
@@ -355,31 +366,39 @@ swfdec_as_object_get_prototype (SwfdecAsObject *object)
 
 static SwfdecAsVariable *
 swfdec_as_object_hash_lookup_with_prototype (SwfdecAsObject *object,
-    const char *variable)
+    const char *variable, SwfdecAsObject **proto)
 {
   SwfdecAsVariable *var;
+  SwfdecAsObject *proto_;
 
   g_return_val_if_fail (swfdec_as_variable_name_is_valid (variable), NULL);
 
+  proto_ = NULL;
+
+  // match first level variable even if it has version flags that hide it in
+  // this version
   var = swfdec_as_object_hash_lookup (object, variable);
   if (var == NULL && variable != SWFDEC_AS_STR___proto__) {
     guint i;
-    SwfdecAsObject *proto;
 
-    proto = swfdec_as_object_get_prototype (object);
+    proto_ = swfdec_as_object_get_prototype (object);
 
-    for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && proto; i++) {
-      var = swfdec_as_object_hash_lookup (proto, variable);
+    for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && proto_; i++) {
+      var = swfdec_as_object_hash_lookup (proto_, variable);
       if (var && var->get)
 	break;
-      proto = swfdec_as_object_get_prototype (proto);
+      proto_ = swfdec_as_object_get_prototype (proto_);
       var = NULL;
     }
+
     if (i == SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
       swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
       return NULL;
     }
   }
+
+  if (proto != NULL)
+    *proto = proto_;
 
   return var;
 }
@@ -390,13 +409,27 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
 {
   SwfdecAsVariable *var;
   SwfdecAsWatch *watch;
+  SwfdecAsObject *proto;
 
   if (!swfdec_as_variable_name_is_valid (variable))
     return;
 
-  var = swfdec_as_object_hash_lookup_with_prototype (object, variable);
+  var = swfdec_as_object_hash_lookup_with_prototype (object, variable, &proto);
   if (swfdec_as_context_is_aborted (object->context))
     return;
+
+  // if variable is disabled in this version
+  if (var != NULL && !swfdec_as_object_variable_enabled_in_version (var,
+	object->context->version)) {
+    if (proto == NULL) {
+      // it's at the top level, remove getter and setter plus overwrite
+      var->get = NULL;
+      var->set = NULL;
+    } else {
+      // it's in proto, we create a new one at the top level
+      var = NULL;
+    }
+  }
 
   if (var == NULL) {
     var = swfdec_as_object_hash_create (object, variable, flags);
@@ -432,7 +465,8 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
       swfdec_as_function_call (watch->watch, object, 4, args, &ret);
       swfdec_as_context_run (object->context);
       swfdec_as_watch_unref (watch);
-      var = swfdec_as_object_hash_lookup_with_prototype (object, variable);
+      var = swfdec_as_object_hash_lookup_with_prototype (object, variable,
+	  NULL);
       if (swfdec_as_context_is_aborted (object->context))
 	return;
       if (var == NULL) {

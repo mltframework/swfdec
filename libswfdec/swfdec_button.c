@@ -83,6 +83,23 @@ swfdec_button_class_init (SwfdecButtonClass * g_class)
   graphic_class->create_movie = swfdec_button_create_movie;
 }
 
+static guint
+swfdec_button_translate_conditions (guint conditions)
+{
+  /* FIXME: This assumes IDLE<=>OVER_DOWN is the same as DRAG_OVER/OUT, is that correct? */
+  static const SwfdecEventType events[] = { SWFDEC_EVENT_ROLL_OVER, SWFDEC_EVENT_ROLL_OUT,
+    SWFDEC_EVENT_PRESS, SWFDEC_EVENT_RELEASE, SWFDEC_EVENT_DRAG_OUT, SWFDEC_EVENT_DRAG_OVER,
+    SWFDEC_EVENT_RELEASE_OUTSIDE, SWFDEC_EVENT_DRAG_OVER, SWFDEC_EVENT_DRAG_OUT };
+  guint i, ret;
+
+  ret = 0;
+  for (i = 0; i <= 8; i++) {
+    if (conditions & (1 << i))
+      ret |= events[i];
+  }
+  return ret;
+}
+
 int
 tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
 {
@@ -181,6 +198,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     condition = swfdec_bits_get_u16 (&bits);
     key = condition >> 9;
     condition &= 0x1FF;
+    condition = swfdec_button_translate_conditions (condition);
 
     SWFDEC_LOG (" length = %d", length);
 

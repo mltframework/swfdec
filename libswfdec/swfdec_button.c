@@ -64,10 +64,12 @@ swfdec_button_dispose (GObject *object)
 static SwfdecMovie *
 swfdec_button_create_movie (SwfdecGraphic *graphic, gsize *size)
 {
+  SwfdecButton *button = SWFDEC_BUTTON (graphic);
   SwfdecButtonMovie *movie = g_object_new (SWFDEC_TYPE_BUTTON_MOVIE, NULL);
 
-  movie->button = SWFDEC_BUTTON (graphic);
+  movie->button = button;
   *size = sizeof (SwfdecButtonMovie);
+  SWFDEC_MOVIE (movie)->events = swfdec_event_list_copy (button->events);
 
   return SWFDEC_MOVIE (movie);
 }

@@ -58,6 +58,8 @@ G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_AS_OBJECT)
 static void
 swfdec_movie_init (SwfdecMovie * movie)
 {
+  movie->blend_mode = 1;
+
   movie->xscale = 100;
   movie->yscale = 100;
   cairo_matrix_init_identity (&movie->original_transform);

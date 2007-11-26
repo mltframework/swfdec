@@ -154,7 +154,57 @@ void
 swfdec_sprite_movie_get_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.blendMode (get)");
+  SwfdecMovie *movie;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
+
+  switch (movie->blend_mode) {
+    case 1:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_normal);
+      break;
+    case 2:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_layer);
+      break;
+    case 3:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_multiply);
+      break;
+    case 4:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_screen);
+      break;
+    case 5:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_lighten);
+      break;
+    case 6:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_darken);
+      break;
+    case 7:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_difference);
+      break;
+    case 8:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_add);
+      break;
+    case 9:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_subtract);
+      break;
+    case 10:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_invert);
+      break;
+    case 11:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_alpha);
+      break;
+    case 12:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_erase);
+      break;
+    case 13:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_overlay);
+      break;
+    case 14:
+      SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_hardlight);
+      break;
+    default:
+      // nothing
+      break;
+  }
 }
 
 SWFDEC_AS_NATIVE (900, 501, swfdec_sprite_movie_set_blendMode)
@@ -162,7 +212,24 @@ void
 swfdec_sprite_movie_set_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.blendMode (set)");
+  SwfdecMovie *movie;
+  SwfdecAsValue val;
+  int blend_mode;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "v", &val);
+
+  if (cx->version >= 8) {
+    if (!SWFDEC_AS_VALUE_IS_NUMBER (&val))
+      return;
+    blend_mode = SWFDEC_AS_VALUE_GET_NUMBER (&val);
+  } else {
+    blend_mode = swfdec_as_value_to_integer (cx, &val);
+  }
+
+  if ((guint)blend_mode != movie->blend_mode) {
+    movie->blend_mode = SWFDEC_AS_VALUE_GET_NUMBER (&val);
+    swfdec_movie_invalidate (movie);
+  }
 }
 
 SWFDEC_AS_NATIVE (900, 2, swfdec_sprite_movie_localToGlobal)

@@ -1898,6 +1898,8 @@ EXTRA_DIST = \
 	propflags-6.swf.trace \
 	propflags-7.swf \
 	propflags-7.swf.trace \
+	propflags-8.swf \
+	propflags-8.swf.trace \
 	propflags-set.as \
 	propflags-set-5.swf \
 	propflags-set-5.swf.trace \
@@ -1905,6 +1907,8 @@ EXTRA_DIST = \
 	propflags-set-6.swf.trace \
 	propflags-set-7.swf \
 	propflags-set-7.swf.trace \
+	propflags-set-8.swf \
+	propflags-set-8.swf.trace \
 	propflags-set-native.as \
 	propflags-set-native-5.swf \
 	propflags-set-native-5.swf.trace \

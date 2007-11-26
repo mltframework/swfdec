@@ -419,6 +419,10 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
   /* special cases */
+  if (SWFDEC_IS_BUTTON_MOVIE (movie) && (
+	condition == SWFDEC_EVENT_CONSTRUCT || condition < SWFDEC_EVENT_PRESS))
+    return;
+
   if (condition == SWFDEC_EVENT_CONSTRUCT) {
     if (swfdec_movie_get_version (movie) <= 5)
       return;

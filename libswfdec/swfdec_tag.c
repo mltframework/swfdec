@@ -65,7 +65,7 @@ tag_func_protect (SwfdecSwfDecoder * s, guint tag)
   if (swfdec_bits_left (&s->b)) {
     /* FIXME: What's this for? */
     swfdec_bits_get_u16 (&s->b);
-    s->password = swfdec_bits_get_string (&s->b);
+    s->password = swfdec_bits_get_string (&s->b, s->version);
   }
   return SWFDEC_STATUS_OK;
 }
@@ -79,7 +79,7 @@ tag_func_frame_label (SwfdecSwfDecoder * s, guint tag)
     SWFDEC_WARNING ("frame %d already has a label (%s)", s->parse_sprite->parse_frame, frame->label);
     g_free (frame->label);
   }
-  frame->label = swfdec_bits_get_string (&s->b);
+  frame->label = swfdec_bits_get_string (&s->b, s->version);
   SWFDEC_LOG ("frame %d named %s", s->parse_sprite->parse_frame, frame->label);
 
   return SWFDEC_STATUS_OK;

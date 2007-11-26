@@ -310,7 +310,7 @@ swfdec_movie_remove (SwfdecMovie *movie)
  *
  * Removes this movie from its parent. After this it will no longer be present,
  * neither visually nor via ActionScript. This function will not cause an 
- * unload event. Compare with swfdec_movie_destroy ().
+ * unload event. Compare with swfdec_movie_remove ().
  **/
 void
 swfdec_movie_destroy (SwfdecMovie *movie)

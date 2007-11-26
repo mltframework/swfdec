@@ -117,6 +117,8 @@ swfdec_file_reference_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     target = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
   } else {
     target = object;
+    if (target == NULL)
+      return;
   }
 
   swfdec_as_object_add_native_variable (target, SWFDEC_AS_STR_creationDate,

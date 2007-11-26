@@ -143,7 +143,7 @@ tag_func_define_font_info (SwfdecSwfDecoder *s, guint tag)
   }
   len = swfdec_bits_get_u8 (&s->b);
   /* this string is locale specific */
-  name = swfdec_bits_get_string_length (&s->b, len);
+  name = swfdec_bits_get_string_length (&s->b, len, s->version);
   reserved = swfdec_bits_getbits (&s->b, 2);
   font->small = swfdec_bits_getbit (&s->b);
   jis = swfdec_bits_getbit (&s->b);
@@ -307,7 +307,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
   SWFDEC_DEBUG("langcode %d", langcode);
 
   font_name_len = swfdec_bits_get_u8 (bits);
-  font->name = swfdec_bits_get_string_length (bits, font_name_len);
+  font->name = swfdec_bits_get_string_length (bits, font_name_len, s->version);
   if (font->name == NULL) {
     SWFDEC_ERROR ("error reading font name");
   } else {
@@ -399,7 +399,7 @@ tag_func_define_font_3 (SwfdecSwfDecoder * s, guint tag)
   language = swfdec_bits_get_u8 (&s->b);
   SWFDEC_LOG (" language = %u", (guint) language);
   len = swfdec_bits_get_u8 (&s->b);
-  font->name = swfdec_bits_get_string_length (&s->b, len);
+  font->name = swfdec_bits_get_string_length (&s->b, len, s->version);
   if (font->name == NULL) {
     SWFDEC_ERROR ("error reading font name");
   } else {

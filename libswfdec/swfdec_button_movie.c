@@ -343,13 +343,13 @@ swfdec_button_movie_mouse_out (SwfdecMovie *movie)
   SwfdecButtonMovie *button = SWFDEC_BUTTON_MOVIE (movie);
   SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_out (movie);
   if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context))) {
-    swfdec_button_movie_set_state (button, SWFDEC_BUTTON_DOWN);
-  } else {
     if (button->button->menubutton) {
       swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
     } else {
       swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
     }
+  } else {
+    swfdec_button_movie_set_state (button, SWFDEC_BUTTON_UP);
   }
 }
 

@@ -139,8 +139,6 @@ swfdec_load_object_reset (SwfdecLoadObject *load_object)
     g_object_unref (load_object->loader);
     load_object->loader = NULL;
   }
-  g_free (load_object->text);
-  load_object->text = NULL;
 }
 
 static void

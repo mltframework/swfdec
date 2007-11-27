@@ -41,7 +41,6 @@ struct _SwfdecLoadObject {
   SwfdecAsObject	object;
 
   SwfdecAsObject	*target;	/* target object */
-  char *		text;		/* string that this LOAD_OBJECT displays */
   SwfdecLoader *	loader;		/* loader when loading or NULL */
 };
 

@@ -98,7 +98,7 @@ swfdec_button_translate_conditions (guint conditions)
   ret = 0;
   for (i = 0; i <= 8; i++) {
     if (conditions & (1 << i))
-      ret |= events[i];
+      ret |= (1 << events[i]);
   }
   return ret;
 }

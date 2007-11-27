@@ -107,6 +107,8 @@ swfdec_flash_security_policy_loader_done (SwfdecPolicyLoader *policy_loader,
   sec->policy_loaders = g_slist_remove (sec->policy_loaders, policy_loader);
 
   swfdec_flash_security_call_pending (sec, host, allow);
+
+  swfdec_policy_loader_free (policy_loader);
 }
 
 static void
@@ -217,7 +219,7 @@ swfdec_flash_security_dispose (GObject *object)
   GSList *iter;
 
   for (iter = sec->policy_loaders; iter != NULL; iter = iter->next) {
-    g_free (iter->data);
+    swfdec_policy_loader_free (iter->data);
   }
   g_slist_free (sec->policy_loaders);
   sec->policy_loaders = NULL;

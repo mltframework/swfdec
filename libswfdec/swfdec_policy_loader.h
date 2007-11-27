@@ -57,6 +57,7 @@ GType		swfdec_policy_loader_get_type	(void);
 SwfdecPolicyLoader *swfdec_policy_loader_new	(SwfdecFlashSecurity *	sec,
 						 const char *		host,
 						 SwfdecPolicyLoaderFunc	func);
+void		swfdec_policy_loader_free	(SwfdecPolicyLoader *	policy_loader);
 
 G_END_DECLS
 #endif

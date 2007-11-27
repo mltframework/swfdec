@@ -216,3 +216,9 @@ swfdec_policy_loader_new (SwfdecFlashSecurity *sec, const char *host,
 
   return policy_loader;
 }
+
+void
+swfdec_policy_loader_free (SwfdecPolicyLoader *policy_loader)
+{
+  g_object_unref (policy_loader);
+}

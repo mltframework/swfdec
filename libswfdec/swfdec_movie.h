@@ -271,7 +271,7 @@ SwfdecMovie *	swfdec_movie_resolve		(SwfdecMovie *		movie);
 guint		swfdec_movie_get_version	(SwfdecMovie *		movie);
 void		swfdec_movie_execute		(SwfdecMovie *		movie,
 						 SwfdecEventType	condition);
-gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
+void		swfdec_movie_queue_script	(SwfdecMovie *		movie,
   						 SwfdecEventType	condition);
 void		swfdec_movie_load_variables	(SwfdecMovie *		movie,
 						 const char *		url,

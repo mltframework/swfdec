@@ -277,7 +277,14 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
   swfdec_movie_invalidate (movie);
   swfdec_movie_set_depth (movie, -32769 - movie->depth); /* don't ask me why... */
 
-  return !swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
+  if ((movie->events && 
+	swfdec_event_list_has_conditions (movie->events, SWFDEC_AS_OBJECT (movie), SWFDEC_EVENT_UNLOAD, 0)) ||
+      swfdec_as_object_has_function (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onUnload)) {
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
+    return FALSE;
+  } else {
+    return TRUE;
+  }
 }
 
 /**
@@ -447,20 +454,17 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
  * @condition: the event that should happen
  *
  * Queues execution of all scripts associated with the given event.
- *
- * Returns: TRUE if there were any such events
  **/
-gboolean
+void
 swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
 {
   SwfdecPlayer *player;
-  gboolean ret = FALSE;
   guint importance;
   
-  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
   if (!SWFDEC_IS_SPRITE_MOVIE (movie))
-    return FALSE;
+    return;
 
   switch (condition) {
     case SWFDEC_EVENT_INITIALIZE:
@@ -489,23 +493,11 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
       importance = 2;
       break;
     default:
-      g_return_val_if_reached (FALSE);
-  }
-
-  if (movie->events &&
-      swfdec_event_list_has_conditions (movie->events, 
-	  SWFDEC_AS_OBJECT (movie), condition, 0)) {
-      ret = TRUE;
-  } else {
-    const char *name = swfdec_event_type_get_name (condition);
-    if (name != NULL &&
-	swfdec_as_object_has_function (SWFDEC_AS_OBJECT (movie), name))
-      ret = TRUE;
+      g_return_if_reached ();
   }
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   swfdec_player_add_action (player, movie, condition, importance);
-  return ret;
 }
 
 /* NB: coordinates are in movie's coordiante system. Use swfdec_movie_get_mouse

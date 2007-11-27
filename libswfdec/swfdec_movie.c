@@ -414,15 +414,22 @@ swfdec_movie_get_version (SwfdecMovie *movie)
 void
 swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
 {
+  SwfdecAsObject *thisp;
   const char *name;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
-  /* special cases */
-  if (SWFDEC_IS_BUTTON_MOVIE (movie) && (
-	condition == SWFDEC_EVENT_CONSTRUCT || condition < SWFDEC_EVENT_PRESS))
-    return;
+  if (SWFDEC_IS_BUTTON_MOVIE (movie)) {
+    /* these conditions don't exist for buttons */
+    if (condition == SWFDEC_EVENT_CONSTRUCT || condition < SWFDEC_EVENT_PRESS)
+      return;
+    thisp = SWFDEC_AS_OBJECT (movie->parent);
+    g_assert (thisp);
+  } else {
+    thisp = SWFDEC_AS_OBJECT (movie);
+  }
 
+  /* special cases */
   if (condition == SWFDEC_EVENT_CONSTRUCT) {
     if (swfdec_movie_get_version (movie) <= 5)
       return;
@@ -433,7 +440,7 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
   }
 
   if (movie->events) {
-    swfdec_event_list_execute (movie->events, SWFDEC_AS_OBJECT (movie), 
+    swfdec_event_list_execute (movie->events, thisp,
 	SWFDEC_SECURITY (movie->resource), condition, 0);
   }
   /* FIXME: how do we compute the version correctly here? */
@@ -441,11 +448,11 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
     return;
   name = swfdec_event_type_get_name (condition);
   if (name != NULL) {
-    swfdec_as_object_call_with_security (SWFDEC_AS_OBJECT (movie), 
+    swfdec_as_object_call_with_security (thisp,
 	SWFDEC_SECURITY (movie->resource), name, 0, NULL, NULL);
   }
   if (condition == SWFDEC_EVENT_CONSTRUCT)
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_constructor, 0, NULL, NULL);
+    swfdec_as_object_call (thisp, SWFDEC_AS_STR_constructor, 0, NULL, NULL);
 }
 
 /**

@@ -90,13 +90,21 @@ static guint
 swfdec_button_translate_conditions (guint conditions)
 {
   /* FIXME: This assumes IDLE<=>OVER_DOWN is the same as DRAG_OVER/OUT, is that correct? */
-  static const SwfdecEventType events[] = { SWFDEC_EVENT_ROLL_OVER, SWFDEC_EVENT_ROLL_OUT,
-    SWFDEC_EVENT_PRESS, SWFDEC_EVENT_RELEASE, SWFDEC_EVENT_DRAG_OUT, SWFDEC_EVENT_DRAG_OVER,
-    SWFDEC_EVENT_RELEASE_OUTSIDE, SWFDEC_EVENT_DRAG_OVER, SWFDEC_EVENT_DRAG_OUT };
+  static const SwfdecEventType events[] = { 
+    /* idle => over up */	SWFDEC_EVENT_ROLL_OVER, 
+    /* over up => idle */	SWFDEC_EVENT_ROLL_OUT,
+    /* over up => over down */	SWFDEC_EVENT_PRESS,
+    /* over down => over up */	SWFDEC_EVENT_RELEASE,
+    /* over down => out down */	SWFDEC_EVENT_DRAG_OUT,
+    /* out down => over down */	SWFDEC_EVENT_DRAG_OVER,
+    /* out down => idle */	SWFDEC_EVENT_RELEASE_OUTSIDE,
+    /* idle => over down */	SWFDEC_EVENT_DRAG_OVER,
+    /* over down => idle */	SWFDEC_EVENT_DRAG_OUT 
+  };
   guint i, ret;
 
   ret = 0;
-  for (i = 0; i <= 8; i++) {
+  for (i = 0; i <= G_N_ELEMENTS (events); i++) {
     if (conditions & (1 << i))
       ret |= (1 << events[i]);
   }

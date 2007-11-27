@@ -1988,6 +1988,15 @@ EXTRA_DIST = \
 	remove-movie-7.swf.trace \
 	remove-movie-8.swf \
 	remove-movie-8.swf.trace \
+	remove-with-onUnload.as \
+	remove-with-onUnload-5.swf \
+	remove-with-onUnload-5.swf.trace \
+	remove-with-onUnload-6.swf \
+	remove-with-onUnload-6.swf.trace \
+	remove-with-onUnload-7.swf \
+	remove-with-onUnload-7.swf.trace \
+	remove-with-onUnload-8.swf \
+	remove-with-onUnload-8.swf.trace \
 	removesprite-depths.as \
 	removesprite-depths-5.swf \
 	removesprite-depths-5.swf.trace \

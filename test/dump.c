@@ -282,23 +282,6 @@ dump_font (SwfdecFont *font)
 static void
 dump_button (SwfdecButton *button)
 {
-  GList *walk;
-
-#define SWFDEC_CONTENT_IN_STATE(content, state) \
-  ((content)->sequence->start <= state && \
-   (content)->sequence->end > state)
-  if (verbose) {
-    for (walk = button->records; walk; walk = walk->next) {
-      SwfdecContent *content = walk->data;
-
-      g_print ("  %s %s %s %s  %s %d\n", 
-	  SWFDEC_CONTENT_IN_STATE (content, SWFDEC_BUTTON_UP) ? "U" : " ",
-	  SWFDEC_CONTENT_IN_STATE (content, SWFDEC_BUTTON_OVER) ? "O" : " ",
-	  SWFDEC_CONTENT_IN_STATE (content, SWFDEC_BUTTON_DOWN) ? "D" : " ",
-	  SWFDEC_CONTENT_IN_STATE (content, SWFDEC_BUTTON_HIT) ? "H" : " ",
-	  G_OBJECT_TYPE_NAME (content->graphic), SWFDEC_CHARACTER (content->graphic)->id);
-    }
-  }
 }
 
 static const char *

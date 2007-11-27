@@ -264,10 +264,24 @@ swfdec_button_movie_mouse_change (SwfdecMovie *mov, double x, double y,
 #endif
 
 static void
+swfdec_button_movie_dispose (GObject *object)
+{
+  SwfdecButtonMovie *button = SWFDEC_BUTTON_MOVIE (object);
+
+  if (button->button) {
+    g_object_unref (button->button);
+    button->button = NULL;
+  }
+  G_OBJECT_CLASS (swfdec_button_movie_parent_class)->dispose (object);
+}
+
+static void
 swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
+  object_class->dispose = swfdec_button_movie_dispose;
   movie_class->init_movie = swfdec_button_movie_init_movie;
   movie_class->update_extents = swfdec_button_movie_update_extents;
 

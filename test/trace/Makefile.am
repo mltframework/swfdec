@@ -1032,6 +1032,8 @@ EXTRA_DIST = \
 	global-function-properties-6.swf.trace \
 	global-function-properties-7.swf \
 	global-function-properties-7.swf.trace \
+	global-function-properties-8.swf \
+	global-function-properties-8.swf.trace \
 	global-variable-properties.as \
 	global-variable-properties-5.swf \
 	global-variable-properties-5.swf.trace \
@@ -1039,6 +1041,8 @@ EXTRA_DIST = \
 	global-variable-properties-6.swf.trace \
 	global-variable-properties-7.swf \
 	global-variable-properties-7.swf.trace \
+	global-variable-properties-8.swf \
+	global-variable-properties-8.swf.trace \
 	glow-filter-properties.as \
 	glow-filter-properties-5.swf \
 	glow-filter-properties-5.swf.trace \
@@ -1302,6 +1306,8 @@ EXTRA_DIST = \
 	math-properties-6.swf.trace \
 	math-properties-7.swf \
 	math-properties-7.swf.trace \
+	math-properties-8.swf \
+	math-properties-8.swf.trace \
 	microphone-properties.as \
 	microphone-properties-5.swf \
 	microphone-properties-5.swf.trace \
@@ -1318,6 +1324,8 @@ EXTRA_DIST = \
 	mouse-properties-6.swf.trace \
 	mouse-properties-7.swf \
 	mouse-properties-7.swf.trace \
+	mouse-properties-8.swf \
+	mouse-properties-8.swf.trace \
 	mouse-scaled.as \
 	mouse-scaled-5.swf \
 	mouse-scaled-5.swf.act \
@@ -1544,6 +1552,8 @@ EXTRA_DIST = \
 	object-properties-6.swf.trace \
 	object-properties-7.swf \
 	object-properties-7.swf.trace \
+	object-properties-8.swf \
+	object-properties-8.swf.trace \
 	object-valueof.as \
 	object-valueof-5.swf \
 	object-valueof-5.swf.trace \
@@ -2393,6 +2403,8 @@ EXTRA_DIST = \
 	string-properties-6.swf.trace \
 	string-properties-7.swf \
 	string-properties-7.swf.trace \
+	string-properties-8.swf \
+	string-properties-8.swf.trace \
 	string-slice.as \
 	string-slice-5.swf \
 	string-slice-5.swf.trace \
@@ -2808,6 +2820,8 @@ EXTRA_DIST = \
 	video-properties-6.swf.trace \
 	video-properties-7.swf \
 	video-properties-7.swf.trace \
+	video-properties-8.swf \
+	video-properties-8.swf.trace \
 	waitforframe-huge.as \
 	waitforframe-huge-4.swf \
 	waitforframe-huge-4.swf.trace \

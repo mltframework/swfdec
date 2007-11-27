@@ -1,10 +1,10 @@
 _global.Object = function
   __proto__ (hpcn) = object
     __proto__ (hp) = _global.Object.prototype
-    apply (hpn) = function
+    apply (hp) = function
       __proto__ (hpn) = _global.Object.__proto__
       constructor (hp) = _global.Object.constructor
-    call (hpn) = function
+    call (hp) = function
       __proto__ (hpn) = _global.Object.__proto__
       constructor (hp) = _global.Object.constructor
     constructor (hp) = _global.Object.constructor

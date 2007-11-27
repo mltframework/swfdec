@@ -699,6 +699,16 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
     xml->status = XML_PARSE_STATUS_TAG_NOT_CLOSED;
 }
 
+// this is an old XML parsing function that is only available trough the
+// ASnative code
+SWFDEC_AS_NATIVE (300, 0, swfdec_xml_do_oldParseXML)
+void
+swfdec_xml_do_oldParseXML (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("XML.oldParseXML (not-really-named)");
+}
+
 SWFDEC_AS_NATIVE (253, 12, swfdec_xml_do_parseXML)
 void
 swfdec_xml_do_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,

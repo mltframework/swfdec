@@ -254,7 +254,7 @@ swfdec_movie_find (SwfdecMovie *movie, int depth)
 }
 
 static gboolean
-swfdec_movie_do_remove (SwfdecMovie *movie)
+swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
 {
   SwfdecPlayer *player;
 
@@ -267,7 +267,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
       walk = walk->next;
     if (walk == NULL)
       break;
-    swfdec_movie_remove (walk->data);
+    destroy &= swfdec_movie_do_remove (walk->data, destroy);
   }
   /* FIXME: all of this here or in destroy callback? */
   if (player->mouse_grab == movie)
@@ -275,16 +275,17 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
   if (player->mouse_drag == movie)
     player->mouse_drag = NULL;
   swfdec_movie_invalidate (movie);
-  swfdec_movie_set_depth (movie, -32769 - movie->depth); /* don't ask me why... */
+  movie->state = SWFDEC_MOVIE_STATE_REMOVED;
 
   if ((movie->events && 
 	swfdec_event_list_has_conditions (movie->events, SWFDEC_AS_OBJECT (movie), SWFDEC_EVENT_UNLOAD, 0)) ||
       swfdec_as_object_has_function (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onUnload)) {
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
-    return FALSE;
-  } else {
-    return TRUE;
+    destroy = FALSE;
   }
+  if (destroy)
+    swfdec_movie_destroy (movie);
+  return destroy;
 }
 
 /**
@@ -298,16 +299,14 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
 void
 swfdec_movie_remove (SwfdecMovie *movie)
 {
-  gboolean result;
-
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
   if (movie->state > SWFDEC_MOVIE_STATE_RUNNING)
     return;
-  result = swfdec_movie_do_remove (movie);
-  movie->state = SWFDEC_MOVIE_STATE_REMOVED;
-  if (result)
-    swfdec_movie_destroy (movie);
+  if (swfdec_movie_do_remove (movie, TRUE))
+    return;
+  
+  swfdec_movie_set_depth (movie, -32769 - movie->depth); /* don't ask me why... */
 }
 
 /**
@@ -325,9 +324,6 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
 
   g_assert (movie->state < SWFDEC_MOVIE_STATE_DESTROYED);
-  if (movie->state < SWFDEC_MOVIE_STATE_REMOVED) {
-    swfdec_movie_do_remove (movie);
-  }
   SWFDEC_LOG ("destroying movie %s", movie->name);
   while (movie->list) {
     swfdec_movie_destroy (movie->list->data);

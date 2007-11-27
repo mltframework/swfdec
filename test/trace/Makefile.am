@@ -1970,6 +1970,15 @@ EXTRA_DIST = \
 	remote-lso-usage-properties-7.swf.trace \
 	remote-lso-usage-properties-8.swf \
 	remote-lso-usage-properties-8.swf.trace \
+	remove-child-onUnload.as \
+	remove-child-onUnload-5.swf \
+	remove-child-onUnload-5.swf.trace \
+	remove-child-onUnload-6.swf \
+	remove-child-onUnload-6.swf.trace \
+	remove-child-onUnload-7.swf \
+	remove-child-onUnload-7.swf.trace \
+	remove-child-onUnload-8.swf \
+	remove-child-onUnload-8.swf.trace \
 	remove-depths.as \
 	remove-depths-5.swf \
 	remove-depths-5.swf.trace \

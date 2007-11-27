@@ -44,6 +44,8 @@ void			swfdec_loader_set_target	(SwfdecLoader *		loader,
 							 SwfdecLoaderTarget *	target);
 void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,
 							 SwfdecLoaderDataType	type);
+char *			swfdec_loader_get_text		(SwfdecLoader *		loader,
+							 guint			version);
 
 void			swfdec_string_append_urlencoded	(GString *		str,
 							 const char *		name,

@@ -61,21 +61,20 @@ swfdec_load_object_loader_target_parse (SwfdecLoaderTarget *target,
 }
 
 static void
-swfdec_load_object_ondata (SwfdecLoadObject *load_object)
+swfdec_load_object_ondata (SwfdecLoadObject *load_object, const char *text)
 {
   SwfdecAsValue val;
 
-  if (load_object->text) {
-    SWFDEC_AS_VALUE_SET_STRING (&val,
-	swfdec_as_context_get_string (load_object->target->context,
-	  load_object->text));
+  if (text != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (&val, text);
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   }
+
   swfdec_as_object_call (load_object->target, SWFDEC_AS_STR_onData, 1, &val,
       NULL);
-  swfdec_player_unroot_object (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (load_object)->context), 
-      G_OBJECT (load_object));
+  swfdec_player_unroot_object (SWFDEC_PLAYER (
+	SWFDEC_AS_OBJECT (load_object)->context), G_OBJECT (load_object));
 }
 
 static void
@@ -88,22 +87,10 @@ swfdec_load_object_loader_target_error (SwfdecLoaderTarget *target,
   swfdec_loader_set_target (loader, NULL);
   load_object->loader = NULL;
   g_object_unref (loader);
+
   /* emit onData */
-  swfdec_load_object_ondata (load_object);
+  swfdec_load_object_ondata (load_object, NULL);
 }
-
-typedef struct {
-  const char		*name;
-  guint			length;
-  guchar		data[4];
-} ByteOrderMark;
-
-static ByteOrderMark boms[] = {
-  { "UTF-8", 3, {0xEF, 0xBB, 0xBF, 0} },
-  { "UTF-16BE", 2, {0xFE, 0xFF, 0, 0} },
-  { "UTF-16LE", 2, {0xFF, 0xFE, 0, 0} },
-  { "UTF-8", 0, {0, 0, 0, 0} }
-};
 
 static void
 swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
@@ -111,84 +98,23 @@ swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
 {
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
   char *text;
-  guint size;
 
-  /* get the text from the loader */
-  // TODO: Get rid of extra alloc when getting UTF-8 with bom
-  size = swfdec_buffer_queue_get_depth (loader->queue);
-  text = g_try_malloc (size + 1);
-  if (text) {
-    SwfdecBuffer *buffer;
-    guint i = 0, j;
-    while ((buffer = swfdec_buffer_queue_pull_buffer (loader->queue))) {
-      memcpy (text + i, buffer->data, buffer->length);
-      i += buffer->length;
-      swfdec_buffer_unref (buffer);
-    }
-    g_assert (i == size);
-    text[size] = '\0';
-
-    if (load_object->target->context->version > 5) {
-      for (i = 0; boms[i].length > 0; i++) {
-	if (size < boms[i].length)
-	  continue;
-
-	for (j = 0; j < boms[i].length; j++) {
-	  if ((guchar)text[j] != boms[i].data[j])
-	    break;
-	}
-	if (j == boms[i].length)
-	  break;
-      }
-
-      if (!strcmp (boms[i].name, "UTF-8")) {
-	if (!g_utf8_validate (text + boms[i].length, size - boms[i].length,
-	      NULL)) {
-	  SWFDEC_ERROR ("downloaded data is not valid UTF-8");
-	  g_free (text);
-	  text = NULL;
-	  load_object->text = g_strdup ("");
-	} else {
-	  if (boms[i].length == 0) {
-	    load_object->text = text;
-	    text = NULL;
-	  } else {
-	    load_object->text = g_strdup (text + boms[i].length);
-	    g_free (text);
-	    text = NULL;
-	  }
-	}
-      } else {
-	load_object->text = g_convert (text + boms[i].length,
-	    size - boms[i].length, "UTF-8", boms[i].name, NULL, NULL, NULL);
-	if (load_object->text == NULL) {
-	  SWFDEC_ERROR ("downloaded data is not valid %s", boms[i].name);
-	  load_object->text = g_strdup ("");
-	}
-	g_free (text);
-	text = NULL;
-      }
-    } else {
-      load_object->text = g_convert (text, size, "UTF-8", "LATIN1", NULL, NULL,
-	  NULL);
-      if (load_object->text == NULL) {
-	SWFDEC_ERROR ("downloaded data is not valid LATIN1");
-	load_object->text = g_strdup ("");
-      }
-      g_free (text);
-      text = NULL;
-    }
-  } else {
-    SWFDEC_ERROR ("not enough memory to copy %u bytes", size);
-    load_object->text = NULL;
-  }
+  // get text
+  text =
+    swfdec_loader_get_text (loader, load_object->target->context->version);
 
   /* break reference to the loader */
   swfdec_loader_set_target (loader, NULL);
   load_object->loader = NULL;
   g_object_unref (loader);
+
   /* emit onData */
-  swfdec_load_object_ondata (load_object);
+  if (text != NULL) {
+    swfdec_load_object_ondata (load_object,
+	swfdec_as_context_give_string (load_object->target->context, text));
+  } else {
+    swfdec_load_object_ondata (load_object, SWFDEC_AS_STR_EMPTY);
+  }
 }
 
 static void

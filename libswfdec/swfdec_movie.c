@@ -261,10 +261,9 @@ swfdec_movie_do_remove (SwfdecMovie *movie)
   SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  movie->will_be_removed = TRUE;
   while (movie->list) {
     GList *walk = movie->list;
-    while (walk && SWFDEC_MOVIE (walk->data)->will_be_removed)
+    while (walk && SWFDEC_MOVIE (walk->data)->state >= SWFDEC_MOVIE_STATE_REMOVED)
       walk = walk->next;
     if (walk == NULL)
       break;
@@ -422,7 +421,7 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
       return;
     swfdec_movie_set_constructor (SWFDEC_SPRITE_MOVIE (movie));
   } else if (condition == SWFDEC_EVENT_ENTER) {
-    if (movie->will_be_removed)
+    if (movie->state >= SWFDEC_MOVIE_STATE_REMOVED)
       return;
   }
 

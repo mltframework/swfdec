@@ -518,7 +518,7 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
   mov = SWFDEC_MOVIE (movie);
   /* lots of things where we've got nothing to do */
   if (goto_frame == 0 || goto_frame > movie->n_frames || 
-      movie->sprite == NULL || mov->will_be_removed || goto_frame == movie->frame)
+      movie->sprite == NULL || mov->state >= SWFDEC_MOVIE_STATE_REMOVED || goto_frame == movie->frame)
     return;
 
   if (goto_frame > movie->sprite->parse_frame) {
@@ -656,7 +656,7 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
   guint goto_frame;
 
-  if (mov->will_be_removed)
+  if (mov->state >= SWFDEC_MOVIE_STATE_REMOVED)
     return;
 
   if (movie->sprite && movie->frame == (guint) -1)

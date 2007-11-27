@@ -145,7 +145,6 @@ struct _SwfdecMovie {
 
   /* iteration state */
   gboolean		visible;		/* whether we currently can be seen or iterate */
-  gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
   /* drawing state */
   SwfdecMovie *		mask_of;		/* movie this movie is a mask of or NULL if none */

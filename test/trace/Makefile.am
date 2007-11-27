@@ -2707,6 +2707,10 @@ EXTRA_DIST = \
 	totalframes.swf \
 	totalframes.swf.trace \
 	trace_properties.as \
+	trace_properties_names_5.as \
+	trace_properties_names_6.as \
+	trace_properties_names_7.as \
+	trace_properties_names_8.as \
 	transform.swf \
 	transform.swf.trace \
 	transform-properties.as \

@@ -30,6 +30,11 @@ G_BEGIN_DECLS
 typedef struct _SwfdecLoadObject SwfdecLoadObject;
 typedef struct _SwfdecLoadObjectClass SwfdecLoadObjectClass;
 
+typedef void (* SwfdecLoadObjectProgress) (SwfdecAsObject *target,
+    glong loaded, glong size);
+typedef void (* SwfdecLoadObjectFinish) (SwfdecAsObject *target,
+    const char *text);
+
 #define SWFDEC_TYPE_LOAD_OBJECT                    (swfdec_load_object_get_type())
 #define SWFDEC_IS_LOAD_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_LOAD_OBJECT))
 #define SWFDEC_IS_LOAD_OBJECT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_LOAD_OBJECT))
@@ -40,8 +45,11 @@ typedef struct _SwfdecLoadObjectClass SwfdecLoadObjectClass;
 struct _SwfdecLoadObject {
   SwfdecAsObject	object;
 
-  SwfdecAsObject	*target;	/* target object */
   SwfdecLoader *	loader;		/* loader when loading or NULL */
+
+  SwfdecAsObject	*target;	/* target object */
+  SwfdecLoadObjectProgress progress;
+  SwfdecLoadObjectFinish finish;
 };
 
 struct _SwfdecLoadObjectClass {
@@ -50,10 +58,12 @@ struct _SwfdecLoadObjectClass {
 
 GType		swfdec_load_object_get_type	(void);
 
-SwfdecAsObject *swfdec_load_object_new		(SwfdecAsObject *	target,
-						 const char *		url,
-						 SwfdecLoaderRequest	request,
-						 SwfdecBuffer *		data);
+SwfdecAsObject *swfdec_load_object_new		(SwfdecAsObject *		target,
+						 const char *			url,
+						 SwfdecLoaderRequest		request,
+						 SwfdecBuffer *			data,
+						 SwfdecLoadObjectProgress	progress,
+						 SwfdecLoadObjectFinish		finish);
 
 
 G_END_DECLS

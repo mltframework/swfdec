@@ -1188,9 +1188,8 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SwfdecMovie *movie;
     
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
-    if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    if (movie != NULL)
       swfdec_movie_load_variables (movie, url, method, NULL);
-    }
   } else if (internal) {
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL);
   } else {

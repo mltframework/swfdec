@@ -1567,7 +1567,8 @@ swfdec_movie_load_variables_on_finish (SwfdecAsObject *target,
 {
   swfdec_as_object_decode (target, text);
 
-  if (target->context->version >= 6)
+  // only call onData for sprite movies
+  if (target->context->version >= 6 && SWFDEC_IS_SPRITE_MOVIE (target))
     swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
 }
 

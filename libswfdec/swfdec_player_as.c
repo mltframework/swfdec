@@ -145,12 +145,22 @@ swfdec_player_enableDebugConsole (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SWFDEC_STUB ("enableDebugConsole");
 }
 
+static void
+swfdec_player_do_nothing (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+}
+
 static SwfdecAsFunction *
 swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
 {
+  gboolean x_exists;
   guint i;
 
+  x_exists = FALSE;
   for (i = 0; native_funcs[i].func != NULL; i++) {
+    if (native_funcs[i].x == x)
+      x_exists = TRUE;
     if (native_funcs[i].x == x && native_funcs[i].y == y) {
       SwfdecAsFunction *fun = swfdec_as_native_function_new (cx, native_funcs[i].name,
 	  native_funcs[i].func, 0, NULL);
@@ -161,8 +171,17 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
       return fun;
     }
   }
-  SWFDEC_WARNING ("no AsNative (%u, %u)", x, y);
-  return NULL;
+  SWFDEC_WARNING ("no ASnative (%u, %u)", x, y);
+  if (x_exists) {
+    SwfdecAsFunction *func;
+    char *name = g_strdup_printf ("ASnative (%u, %u)", x, y);
+    func = swfdec_as_native_function_new (cx, name, swfdec_player_do_nothing,
+	0, NULL);
+    g_free (name);
+    return func;
+  } else {
+    return NULL;
+  }
 }
 
 // same as ASnative, but also sets prototype
@@ -191,8 +210,6 @@ swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *object,
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
     SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
-  } else {
-    SWFDEC_FIXME ("ASconstructor for %u %u missing", x, y);
   }
 }
 
@@ -208,8 +225,6 @@ swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *object,
   func = swfdec_get_asnative (cx, x, y);
   if (func) {
     SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
-  } else {
-    SWFDEC_FIXME ("ASnative for %u %u missing", x, y);
   }
 }
 
@@ -247,10 +262,8 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
       s++;
     }
     function = swfdec_get_asnative (cx, x, y);
-    if (function == NULL) {
-      SWFDEC_FIXME ("no ASnative function for %u, %u, what now?", x, y);
+    if (function == NULL)
       break;
-    }
     SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
     swfdec_as_object_set_variable_and_flags (target,
 	swfdec_as_context_get_string (cx, s), &val, flags);

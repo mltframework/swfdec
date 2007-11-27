@@ -1562,27 +1562,13 @@ swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
 }
 
 static void
-swfdec_movie_load_variables_on_data (SwfdecAsContext *cx,
-    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
-    SwfdecAsValue *ret)
+swfdec_movie_load_variables_on_finish (SwfdecAsObject *target,
+    const char *text)
 {
-  SwfdecAsObject *target;
-  SwfdecAsValue val;
+  swfdec_as_object_decode (target, text);
 
-  if (argc < 1)
-    return;
-
-  if (!SWFDEC_AS_VALUE_IS_STRING (&argv[0]))
-    return;
-
-  swfdec_as_object_get_variable (object, SWFDEC_AS_STR_target, &val);
-  g_return_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val));
-  target = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-  g_return_if_fail (SWFDEC_IS_MOVIE (target));
-
-  swfdec_as_object_decode (target, swfdec_as_value_to_string (cx, &argv[0]));
-
-  if (cx->version >= 6)
+  // only call onData for sprite movies
+  if (target->context->version >= 6 && SWFDEC_IS_SPRITE_MOVIE (target))
     swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
 }
 
@@ -1590,10 +1576,6 @@ void
 swfdec_movie_load_variables (SwfdecMovie *movie, const char *url,
     SwfdecLoaderRequest request, SwfdecBuffer *data)
 {
-  SwfdecAsObject *loader;
-  SwfdecAsContext *context;
-  SwfdecAsValue val;
-
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (url != NULL);
 
@@ -1602,14 +1584,8 @@ swfdec_movie_load_variables (SwfdecMovie *movie, const char *url,
     return;
   }
 
-  context = SWFDEC_AS_OBJECT (movie)->context;
-  loader = swfdec_as_object_new_empty (context);
-  swfdec_as_object_add_function (loader, SWFDEC_AS_STR_onData, 0,
-      swfdec_movie_load_variables_on_data, 0);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (movie));
-  swfdec_as_object_set_variable (loader, SWFDEC_AS_STR_target, &val);
-
-  swfdec_load_object_new (loader, url, request, data);
+  swfdec_load_object_new (SWFDEC_AS_OBJECT (movie), url, request, data, NULL,
+      swfdec_movie_load_variables_on_finish);
 }
 
 char *

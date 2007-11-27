@@ -122,7 +122,6 @@ swfdec_button_movie_set_state (SwfdecButtonMovie *button, SwfdecButtonState stat
     return;
   }
   SWFDEC_DEBUG ("changing state from %d to %d", button->state, state);
-  g_print ("changing state from %d to %d\n", button->state, state);
   /* remove all movies that aren't in the new state */
   new = 1 << state;
   if (button->state >= 0) {

@@ -1223,6 +1223,15 @@ EXTRA_DIST = \
 	loadvariables-6.swf.trace \
 	loadvariables-7.swf \
 	loadvariables-7.swf.trace \
+	loadvariables-target.as \
+	loadvariables-target-5.swf \
+	loadvariables-target-5.swf.trace \
+	loadvariables-target-6.swf \
+	loadvariables-target-6.swf.trace \
+	loadvariables-target-7.swf \
+	loadvariables-target-7.swf.trace \
+	loadvariables-target-8.swf \
+	loadvariables-target-8.swf.trace \
 	loadvars.as \
 	loadvars-5.swf \
 	loadvars-5.swf.trace \

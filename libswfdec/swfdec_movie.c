@@ -279,7 +279,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
 
   if ((movie->events && 
 	swfdec_event_list_has_conditions (movie->events, SWFDEC_AS_OBJECT (movie), SWFDEC_EVENT_UNLOAD, 0)) ||
-      swfdec_as_object_has_function (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onUnload)) {
+      swfdec_as_object_has_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onUnload)) {
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
     destroy = FALSE;
   }

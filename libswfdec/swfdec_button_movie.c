@@ -165,18 +165,19 @@ swfdec_button_movie_mouse_events (SwfdecMovie *movie)
 static void
 swfdec_button_movie_mouse_in (SwfdecMovie *movie)
 {
-  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_in (movie);
   if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)))
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_DOWN);
   else
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_in (movie);
 }
 
 static void
 swfdec_button_movie_mouse_out (SwfdecMovie *movie)
 {
   SwfdecButtonMovie *button = SWFDEC_BUTTON_MOVIE (movie);
-  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_out (movie);
+
   if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context))) {
     if (button->button->menubutton) {
       swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
@@ -186,6 +187,8 @@ swfdec_button_movie_mouse_out (SwfdecMovie *movie)
   } else {
     swfdec_button_movie_set_state (button, SWFDEC_BUTTON_UP);
   }
+
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_out (movie);
 }
 
 static void
@@ -193,8 +196,9 @@ swfdec_button_movie_mouse_press (SwfdecMovie *movie, guint button)
 {
   if (button != 0)
     return;
-  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_press (movie, button);
   swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_DOWN);
+
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_press (movie, button);
 }
 
 static void
@@ -204,13 +208,17 @@ swfdec_button_movie_mouse_release (SwfdecMovie *movie, guint button)
 
   if (button != 0)
     return;
-  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   if (player->mouse_below == movie) {
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OVER);
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
   } else {
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
+  }
+
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
+
+  if (player->mouse_below == movie) {
+    swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OVER);
   }
 }
 

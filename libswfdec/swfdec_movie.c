@@ -448,7 +448,7 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
     return;
   name = swfdec_event_type_get_name (condition);
   if (name != NULL) {
-    swfdec_as_object_call_with_security (thisp,
+    swfdec_as_object_call_with_security (SWFDEC_AS_OBJECT (movie),
 	SWFDEC_SECURITY (movie->resource), name, 0, NULL, NULL);
   }
   if (condition == SWFDEC_EVENT_CONSTRUCT)

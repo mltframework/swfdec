@@ -165,6 +165,7 @@ struct _SwfdecMovieClass {
 						 gboolean		events);
   /* mouse handling */
   gboolean		(* mouse_events)	(SwfdecMovie *		movie);
+  SwfdecMouseCursor	(* mouse_cursor)	(SwfdecMovie *		movie);
   void			(* mouse_in)      	(SwfdecMovie *		movie);
   void			(* mouse_out)      	(SwfdecMovie *		movie);
   void			(* mouse_press)      	(SwfdecMovie *		movie,

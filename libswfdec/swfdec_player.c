@@ -920,11 +920,11 @@ swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
   if (!player->mouse_visible) {
     new = SWFDEC_MOUSE_CURSOR_NONE;
   } else if (player->mouse_grab != NULL) {
-    /* FIXME: this needs to be more sophisticated, since SwfdecEditText may
-     * want to have different mouse cursors depending on location (it supports
-     * links in theory)
-     */
-    if (SWFDEC_IS_BUTTON_MOVIE (player->mouse_grab))
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+
+    if (klass->mouse_cursor)
+      new = klass->mouse_cursor (player->mouse_grab);
+    else
       new = SWFDEC_MOUSE_CURSOR_CLICK;
   }
 

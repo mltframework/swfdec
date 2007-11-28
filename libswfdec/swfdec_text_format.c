@@ -1150,6 +1150,22 @@ void
 swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  static const char *arguments[] = {
+    SWFDEC_AS_STR_font,
+    SWFDEC_AS_STR_size,
+    SWFDEC_AS_STR_color,
+    SWFDEC_AS_STR_bold,
+    SWFDEC_AS_STR_italic,
+    SWFDEC_AS_STR_underline,
+    SWFDEC_AS_STR_url,
+    SWFDEC_AS_STR_target,
+    SWFDEC_AS_STR_align,
+    SWFDEC_AS_STR_leftMargin,
+    SWFDEC_AS_STR_rightMargin,
+    SWFDEC_AS_STR_indent,
+    SWFDEC_AS_STR_leading,
+    NULL
+  };
   SwfdecAsFunction *function;
   SwfdecAsObject *tmp;
   SwfdecAsValue val;
@@ -1172,37 +1188,14 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   function = swfdec_as_native_function_new (cx, SWFDEC_AS_STR_getTextExtent,
       swfdec_text_format_getTextExtent, 0, NULL);
   cx->Function = tmp;
+  if (function != NULL) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
+  }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
-  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
-
-  i = 0;
-  if (argc > i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_font, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_size, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_color, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_url, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_target, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_align, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_leftMargin, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_rightMargin, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_indent, &argv[i]);
-  if (argc > ++i)
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_leading, &argv[i]);
+  for (i = 0; i < argc && arguments[i] != NULL; i++) {
+    swfdec_as_object_set_variable (object, arguments[i], &argv[i]);
+  }
 }
 
 SwfdecTextFormat *

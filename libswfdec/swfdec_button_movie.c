@@ -248,11 +248,13 @@ swfdec_button_movie_hit_test (SwfdecButtonMovie *button, double x, double y)
     if ((swfdec_bits_get_u8 (&bits) & (1 << SWFDEC_BUTTON_HIT)) == 0)
       continue;
 
-    swfdec_bits_get_u16 (&bits); /* depth */
     id = swfdec_bits_get_u16 (&bits);
+    swfdec_bits_get_u16 (&bits); /* depth */
     graphic = swfdec_swf_decoder_get_character (dec, id);
-    if (!SWFDEC_IS_GRAPHIC (graphic))
+    if (!SWFDEC_IS_GRAPHIC (graphic)) {
+      SWFDEC_ERROR ("id %u is no graphic", id);
       continue;
+    }
     tmpx = x;
     tmpy = y;
     swfdec_bits_get_matrix (&bits, &matrix, &inverse);

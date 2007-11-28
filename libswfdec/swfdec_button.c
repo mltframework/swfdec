@@ -163,8 +163,8 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
       SWFDEC_LOG ("  reserved = %d", reserved);
     }
     states = swfdec_bits_getbits (&bits, 4);
-    swfdec_bits_get_u16 (&bits);
     gid = swfdec_bits_get_u16 (&bits);
+    swfdec_bits_get_u16 (&bits);
 
     SWFDEC_LOG ("  states: %s%s%s%s",
         states & (1 << SWFDEC_BUTTON_HIT) ? "HIT " : "", 
@@ -260,8 +260,8 @@ tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
 
     tmp = s->b;
     flags = swfdec_bits_get_u8 (&tmp);
-    swfdec_bits_get_u16 (&tmp);
     gid = swfdec_bits_get_u16 (&tmp);
+    swfdec_bits_get_u16 (&tmp);
     swfdec_bits_get_matrix (&tmp, &matrix, &inverse);
     buffer = swfdec_bits_get_buffer (&s->b, (swfdec_bits_left (&s->b) - swfdec_bits_left (&tmp)) / 8);
     if (buffer == NULL)

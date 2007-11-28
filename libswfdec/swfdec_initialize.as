@@ -20,6 +20,7 @@
 
 /*** GENERAL ***/
 
+ASSetPropFlags = ASnative (1, 0);
 ASSetNative = ASnative (4, 0);
 ASSetNativeAccessor = ASnative (4, 1);
 

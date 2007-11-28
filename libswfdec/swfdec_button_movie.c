@@ -229,46 +229,56 @@ swfdec_button_movie_init_movie (SwfdecMovie *mov)
   swfdec_button_movie_set_state (movie, SWFDEC_BUTTON_UP);
 }
 
-#if 0
-static gboolean G_GNUC_UNUSED
-swfdec_button_movie_mouse_in (SwfdecMovie *movie, double x, double y)
+static gboolean
+swfdec_button_movie_hit_test (SwfdecButtonMovie *button, double x, double y)
 {
-  GList *walk;
+  SwfdecSwfDecoder *dec;
+  GSList *walk;
   double tmpx, tmpy;
-  SwfdecButton *button = SWFDEC_BUTTON_MOVIE (movie)->button;
-  SwfdecContent *content;
 
-  for (walk = button->records; walk; walk = walk->next) {
-    cairo_matrix_t inverse;
-    content = walk->data;
-    if (content->end <= SWFDEC_BUTTON_HIT)
+  dec = SWFDEC_SWF_DECODER (SWFDEC_MOVIE (button)->resource->decoder);
+  for (walk = button->button->records; walk; walk = walk->next) {
+    SwfdecGraphic *graphic;
+    SwfdecBits bits;
+    cairo_matrix_t matrix, inverse;
+    guint id;
+
+    swfdec_bits_init (&bits, walk->data);
+
+    if ((swfdec_bits_get_u8 (&bits) & (1 << SWFDEC_BUTTON_HIT)) == 0)
+      continue;
+
+    swfdec_bits_get_u16 (&bits); /* depth */
+    id = swfdec_bits_get_u16 (&bits);
+    graphic = swfdec_swf_decoder_get_character (dec, id);
+    if (!SWFDEC_IS_GRAPHIC (graphic))
       continue;
     tmpx = x;
     tmpy = y;
-    swfdec_matrix_ensure_invertible (&content->transform, &inverse);
+    swfdec_bits_get_matrix (&bits, &matrix, &inverse);
     cairo_matrix_transform_point (&inverse, &tmpx, &tmpy);
 
     SWFDEC_LOG ("Checking button contents at %g %g (transformed from %g %g)", tmpx, tmpy, x, y);
-    if (swfdec_graphic_mouse_in (content->graphic, tmpx, tmpy))
+    if (swfdec_graphic_mouse_in (graphic, tmpx, tmpy))
       return TRUE;
     SWFDEC_LOG ("  missed");
   }
   return FALSE;
 }
 
-static void G_GNUC_UNUSED
-swfdec_button_movie_mouse_change (SwfdecMovie *mov, double x, double y, 
-    gboolean mouse_in, int button)
+static SwfdecMovie *
+swfdec_button_movie_contains (SwfdecMovie *movie, double x, double y, gboolean events)
 {
-  SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
-  SwfdecButtonState new_state = swfdec_button_movie_get_state (movie, mouse_in, button);
-
-  if (new_state != movie->state) {
-    swfdec_button_movie_change_state (movie, new_state);
+  if (events) {
+    /* check for movies in a higher layer that react to events */
+    SwfdecMovie *ret;
+    ret = SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->contains (movie, x, y, TRUE);
+    if (ret && ret != movie)
+      return ret;
   }
-  swfdec_button_movie_change_mouse (movie, mouse_in, button);
+  
+  return swfdec_button_movie_hit_test (SWFDEC_BUTTON_MOVIE (movie), x, y) ? movie : NULL;
 }
-#endif
 
 static void
 swfdec_button_movie_dispose (GObject *object)
@@ -291,6 +301,7 @@ swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
   object_class->dispose = swfdec_button_movie_dispose;
   movie_class->init_movie = swfdec_button_movie_init_movie;
   movie_class->update_extents = swfdec_button_movie_update_extents;
+  movie_class->contains = swfdec_button_movie_contains;
 
   movie_class->mouse_events = swfdec_button_movie_mouse_events;
   movie_class->mouse_in = swfdec_button_movie_mouse_in;

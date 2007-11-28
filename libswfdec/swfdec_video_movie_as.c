@@ -27,26 +27,35 @@
 #include "swfdec_internal.h"
 #include "swfdec_net_stream.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_as_internal.h"
 
-static void
-swfdec_video_attach_video (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+SWFDEC_AS_NATIVE (667, 1, swfdec_video_attach_video)
+void
+swfdec_video_attach_video (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (obj);
-  SwfdecNetStream *stream;
+  SwfdecVideoMovie *video;
+  SwfdecAsObject *stream;
 
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
-      !SWFDEC_IS_NET_STREAM (stream = (SwfdecNetStream *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_VIDEO_MOVIE, &video, "O", &stream);
+
+  if (stream == NULL || !SWFDEC_IS_NET_STREAM (stream)) {
     SWFDEC_WARNING ("calling attachVideo without a NetStream object");
     swfdec_video_movie_set_input (video, NULL);
     return;
   }
-  swfdec_video_movie_set_input (video, &stream->input);
+
+  swfdec_video_movie_set_input (video, &SWFDEC_NET_STREAM (stream)->input);
 }
 
-static void
-swfdec_video_clear (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+SWFDEC_AS_NATIVE (667, 2, swfdec_video_clear)
+void
+swfdec_video_clear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (obj);
+  SwfdecVideoMovie *video;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_VIDEO_MOVIE, &video, "");
 
   swfdec_video_movie_clear (video);
 }
@@ -76,7 +85,7 @@ swfdec_video_movie_init_context (SwfdecPlayer *player, guint version)
   /* set the right properties on the Video.prototype object */
   if (version >= 6) {
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachVideo,
-	SWFDEC_TYPE_VIDEO_MOVIE, swfdec_video_attach_video, 1);
+	SWFDEC_TYPE_VIDEO_MOVIE, swfdec_video_attach_video, 0);
     swfdec_as_object_add_function (proto, SWFDEC_AS_STR_clear,
 	SWFDEC_TYPE_VIDEO_MOVIE, swfdec_video_clear, 0);
   }

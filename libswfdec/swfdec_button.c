@@ -87,26 +87,25 @@ swfdec_button_class_init (SwfdecButtonClass * g_class)
 }
 
 static guint
-swfdec_button_translate_conditions (guint conditions)
+swfdec_button_translate_conditions (guint conditions, gboolean menu)
 {
-  /* FIXME: This assumes IDLE<=>OVER_DOWN is the same as DRAG_OVER/OUT, is that correct? */
-  static const SwfdecEventType events[] = { 
-    /* idle => over up */	SWFDEC_EVENT_ROLL_OVER, 
-    /* over up => idle */	SWFDEC_EVENT_ROLL_OUT,
-    /* over up => over down */	SWFDEC_EVENT_PRESS,
-    /* over down => over up */	SWFDEC_EVENT_RELEASE,
-    /* over down => out down */	SWFDEC_EVENT_DRAG_OUT,
-    /* out down => over down */	SWFDEC_EVENT_DRAG_OVER,
-    /* out down => idle */	SWFDEC_EVENT_RELEASE_OUTSIDE,
-    /* idle => over down */	SWFDEC_EVENT_DRAG_OVER,
-    /* over down => idle */	SWFDEC_EVENT_DRAG_OUT 
+  static const guint events[][2] = { 
+    /* idle => over up */	{ 1 << SWFDEC_EVENT_ROLL_OVER, 1 << SWFDEC_EVENT_ROLL_OVER },
+    /* over up => idle */	{ 1 << SWFDEC_EVENT_ROLL_OUT, 1 << SWFDEC_EVENT_ROLL_OUT },
+    /* over up => over down */	{ 1 << SWFDEC_EVENT_PRESS, 1 << SWFDEC_EVENT_PRESS },
+    /* over down => over up */	{ 1 << SWFDEC_EVENT_RELEASE, 1 << SWFDEC_EVENT_RELEASE },
+    /* over down => out down */	{ 1 << SWFDEC_EVENT_DRAG_OUT, 0 },
+    /* out down => over down */	{ 1 << SWFDEC_EVENT_DRAG_OVER, 0 },
+    /* out down => idle */	{ 1 << SWFDEC_EVENT_RELEASE_OUTSIDE, 1 << SWFDEC_EVENT_RELEASE_OUTSIDE },
+    /* idle => over down */	{ 0, 1 << SWFDEC_EVENT_DRAG_OVER },
+    /* over down => idle */	{ 0, 1 << SWFDEC_EVENT_DRAG_OUT }
   };
   guint i, ret;
 
   ret = 0;
   for (i = 0; i <= G_N_ELEMENTS (events); i++) {
     if (conditions & (1 << i))
-      ret |= (1 << events[i]);
+      ret |= events[i][menu ? 1 : 0];
   }
   return ret;
 }
@@ -209,7 +208,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     condition = swfdec_bits_get_u16 (&bits);
     key = condition >> 9;
     condition &= 0x1FF;
-    condition = swfdec_button_translate_conditions (condition);
+    condition = swfdec_button_translate_conditions (condition, button->menubutton);
 
     SWFDEC_LOG (" length = %d", length);
 

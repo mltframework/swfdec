@@ -141,9 +141,9 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
   while (swfdec_bits_peek_u8 (&bits)) {
     SwfdecBits tmp;
     SwfdecBuffer *buffer;
-    cairo_matrix_t trans;
+    cairo_matrix_t trans, inverse;
     SwfdecColorTransform ctrans;
-    guint states;
+    guint states, gid;
     gboolean has_blend_mode, has_filters;
 
     /* we parse the placement info into buffers each containing one palcement */
@@ -163,7 +163,8 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
       SWFDEC_LOG ("  reserved = %d", reserved);
     }
     states = swfdec_bits_getbits (&bits, 4);
-    swfdec_bits_skip_bytes (&bits, 4);
+    swfdec_bits_get_u16 (&bits);
+    gid = swfdec_bits_get_u16 (&bits);
 
     SWFDEC_LOG ("  states: %s%s%s%s",
         states & (1 << SWFDEC_BUTTON_HIT) ? "HIT " : "", 
@@ -171,7 +172,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
         states & (1 << SWFDEC_BUTTON_OVER) ? "OVER " : "",
 	states & (1 << SWFDEC_BUTTON_UP) ? "UP " : "");
 
-    swfdec_bits_get_matrix (&bits, &trans, NULL);
+    swfdec_bits_get_matrix (&bits, &trans, &inverse);
     SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
 	trans.xx, trans.yy, 
 	trans.xy, trans.yx,
@@ -187,8 +188,20 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
       SWFDEC_LOG ("  blend mode = %u", blend_mode);
     }
     buffer = swfdec_bits_get_buffer (&tmp, (swfdec_bits_left (&tmp) - swfdec_bits_left (&bits)) / 8);
-    g_assert (buffer);
+    if (buffer == NULL)
+      break;
     button->records = g_slist_prepend (button->records, buffer);
+    /* add hit state movies to button's extents */
+    if (states & (1 << SWFDEC_BUTTON_HIT)) {
+      SwfdecGraphic *graphic = swfdec_swf_decoder_get_character (s, gid);
+      if (SWFDEC_IS_GRAPHIC (graphic)) {
+	SwfdecRect rect;
+	swfdec_rect_transform (&rect, &graphic->extents, &inverse);
+	swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents, &SWFDEC_GRAPHIC (button)->extents, &rect);
+      } else {
+	SWFDEC_ERROR ("graphic for id %u not found", gid);
+      }
+    }
   }
   swfdec_bits_get_u8 (&bits);
   if (swfdec_bits_left (&bits)) {
@@ -229,7 +242,60 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
 int
 tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
 {
-  SWFDEC_ERROR ("implement DefineButton again");
+  guint id, flags;
+  SwfdecButton *button;
+
+  id = swfdec_bits_get_u16 (&s->b);
+  button = swfdec_swf_decoder_create_character (s, id, SWFDEC_TYPE_BUTTON);
+  if (!button)
+    return SWFDEC_STATUS_OK;
+
+  SWFDEC_LOG ("  ID: %d", id);
+
+  while (swfdec_bits_peek_u8 (&s->b)) {
+    SwfdecBits tmp;
+    SwfdecBuffer *buffer;
+    cairo_matrix_t matrix, inverse;
+    guint gid;
+
+    tmp = s->b;
+    flags = swfdec_bits_get_u8 (&tmp);
+    swfdec_bits_get_u16 (&tmp);
+    gid = swfdec_bits_get_u16 (&tmp);
+    swfdec_bits_get_matrix (&tmp, &matrix, &inverse);
+    buffer = swfdec_bits_get_buffer (&s->b, (swfdec_bits_left (&s->b) - swfdec_bits_left (&tmp)) / 8);
+    if (buffer == NULL)
+      break;
+    button->records = g_slist_prepend (button->records, buffer);
+    /* add hit state movies to button's extents */
+    if (flags & (1 << SWFDEC_BUTTON_HIT)) {
+      SwfdecGraphic *graphic = swfdec_swf_decoder_get_character (s, gid);
+      if (SWFDEC_IS_GRAPHIC (graphic)) {
+	SwfdecRect rect;
+	swfdec_rect_transform (&rect, &graphic->extents, &inverse);
+	swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents, &SWFDEC_GRAPHIC (button)->extents, &rect);
+      } else {
+	SWFDEC_ERROR ("graphic for id %u not found", gid);
+      }
+    }
+  }
+  
+  swfdec_bits_get_u8 (&s->b);
+  button->records = g_slist_reverse (button->records);
+
+  if (swfdec_bits_peek_u8 (&s->b)) {
+    char *script_name = g_strdup_printf ("Button%u", id);
+    button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
+    SWFDEC_LOG ("  event for button press");
+    swfdec_event_list_parse (button->events, &s->b, s->version, 1 << SWFDEC_EVENT_RELEASE, 
+	0, script_name);
+    g_free (script_name);
+  } else {
+    swfdec_bits_get_u8 (&s->b);
+  }
+  if (swfdec_bits_left (&s->b)) {
+    SWFDEC_WARNING ("%u bytes left after parsing script", swfdec_bits_left (&s->b) / 8);
+  }
 
   return SWFDEC_STATUS_OK;
 }

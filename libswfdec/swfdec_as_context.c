@@ -1401,7 +1401,7 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_context_init_global (context, version);
 
   /* run init script */
-  swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), 8);
+  swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), context->version);
 
   if (context->state == SWFDEC_AS_CONTEXT_NEW)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;

@@ -25,13 +25,15 @@ ASSetNative = ASnative (4, 0);
 ASSetNativeAccessor = ASnative (4, 1);
 
 flash = {};
-ASSetPropFlags (this, "flash", 4096);
 
 /*** Object ***/
 /* Only Flash extensions here, rest to swfdec_as_initialize.as */
 
 Object.registerClass = ASnative(101, 8);
 ASSetPropFlags (Object, null, 7);
+
+// so we can use it in this script
+ASSetPropFlags (Object, "addProperty", 0, 128);
 
 /*** Error ***/
 
@@ -76,7 +78,6 @@ AsBroadcaster.initialize = function (o) {
   o._listeners = [];
   ASSetPropFlags(o, "broadcastMessage,addListener,removeListener,_listeners", 131);
 };
-ASSetPropFlags(AsBroadcaster, null, 131);
 
 Key = { ALT: 18, BACKSPACE: 8, CAPSLOCK: 20, CONTROL: 17, DELETEKEY: 46, 
     DOWN: 40, END: 35, ENTER: 13, ESCAPE: 27, HOME: 36, INSERT: 45, LEFT: 37, 
@@ -204,6 +205,7 @@ XMLNode.prototype.getPrefixForNamespace = ASnative (253, 8);
 XML = ASconstructor (253, 9);
 
 XML.prototype = new XMLNode (1, "");
+delete XML.prototype.constructor;
 ASSetPropFlags (XML, "prototype", 3);
 
 XML.prototype.load = ASnative (301, 0);
@@ -258,6 +260,7 @@ ASSetPropFlags (System, "exactSettings,useCodePage", 128);
 /*** System.security */
 
 System.security = new Object();
+delete System.security.constructor;
 ASSetNative (System.security, 12, "allowDomain,7allowInsecureDomain,loadPolicyFile,chooseLocalSwfPath,escapeDomain");
 ASSetNativeAccessor (System.security, 12, "sandboxType", 5);
 
@@ -1164,6 +1167,7 @@ ASSetNative(flash.filters.BitmapFilter.prototype, 1112, "8clone", 1);
 
 flash.filters.BevelFilter = ASconstructor (1107, 0);
 flash.filters.BevelFilter.prototype = new flash.filters.BitmapFilter ();
+delete flash.filters.BevelFilter.prototype.constructor;
 
 ASSetNativeAccessor (flash.filters.BevelFilter.prototype, 1107, "8distance,8angle,8highlightColor,8highlightAlpha,8shadowColor,8shadowAlpha,8quality,8strength,8knockout,8blurX,8blurY,8type", 1);
 
@@ -1171,6 +1175,7 @@ ASSetNativeAccessor (flash.filters.BevelFilter.prototype, 1107, "8distance,8angl
 
 flash.filters.BlurFilter = ASconstructor (1102, 0);
 flash.filters.BlurFilter.prototype = new flash.filters.BitmapFilter ();
+delete flash.filters.BlurFilter.prototype.constructor;
 
 ASSetNativeAccessor (flash.filters.BlurFilter.prototype, 1102, "8blurX,8blurY,8quality", 1);
 
@@ -1178,6 +1183,7 @@ ASSetNativeAccessor (flash.filters.BlurFilter.prototype, 1102, "8blurX,8blurY,8q
 
 flash.filters.ColorMatrixFilter = ASconstructor (1110, 0);
 flash.filters.ColorMatrixFilter.prototype = new flash.filters.BitmapFilter ();
+delete flash.filters.ColorMatrixFilter.prototype.constructor;
 
 ASSetNativeAccessor (flash.filters.ColorMatrixFilter.prototype, 1110, "8matrix", 1);
 
@@ -1185,6 +1191,7 @@ ASSetNativeAccessor (flash.filters.ColorMatrixFilter.prototype, 1110, "8matrix",
 
 flash.filters.ConvolutionFilter = ASconstructor (1109, 0);
 flash.filters.ConvolutionFilter.prototype = new flash.filters.BitmapFilter ();
+delete flash.filters.ConvolutionFilter.prototype.constructor;
 
 ASSetNativeAccessor (flash.filters.ConvolutionFilter.prototype, 1109, "8matrixX,8matrixY,8matrix,8divisor,8bias,8preserveAlpha,8clamp,8color,8alpha", 1);
 
@@ -1192,6 +1199,7 @@ ASSetNativeAccessor (flash.filters.ConvolutionFilter.prototype, 1109, "8matrixX,
 
 flash.filters.DisplacementMapFilter = ASconstructor (1111, 0);
 flash.filters.DisplacementMapFilter.prototype = new flash.filters.BitmapFilter ();
+delete flash.filters.DisplacementMapFilter.prototype.constructor;
 
 ASSetNativeAccessor (flash.filters.DisplacementMapFilter.prototype, 1111, "8mapBitmap,8mapPoint,8componentX,8componentY,8scaleX,8scaleY,8mode,8color,8alpha", 1);
 
@@ -1199,6 +1207,7 @@ ASSetNativeAccessor (flash.filters.DisplacementMapFilter.prototype, 1111, "8mapB
 
 flash.filters.DropShadowFilter = ASconstructor (1101, 0);
 flash.filters.DropShadowFilter.prototype = new flash.filters.BitmapFilter();
+delete flash.filters.DropShadowFilter.prototype.constructor;
 
 ASSetNativeAccessor (flash.filters.DropShadowFilter.prototype, 1101, "8distance,8angle,8color,8alpha,8quality,8inner,8knockout,8blurX,8blurY,8strength,8hideObject", 1);
 
@@ -1206,6 +1215,7 @@ ASSetNativeAccessor (flash.filters.DropShadowFilter.prototype, 1101, "8distance,
 
 flash.filters.GlowFilter = ASconstructor (1103, 0);
 flash.filters.GlowFilter.prototype = new flash.filters.BitmapFilter ();
+delete flash.filters.GlowFilter.prototype.constructor;
 
 ASSetNativeAccessor (flash.filters.GlowFilter.prototype, 1103, "8color,8alpha,8quality,8inner,8knockout,8blurX,8blurY,8strength", 1);
 
@@ -1213,6 +1223,7 @@ ASSetNativeAccessor (flash.filters.GlowFilter.prototype, 1103, "8color,8alpha,8q
 
 flash.filters.GradientBevelFilter = ASconstructor (1108, 1000);
 flash.filters.GradientBevelFilter.prototype = new flash.filters.BitmapFilter ();
+delete flash.filters.GradientBevelFilter.prototype.constructor;
 
 ASSetNativeAccessor (flash.filters.GradientBevelFilter.prototype, 1108, "8distance,8angle,8colors,8alphas,8ratios,8blurX,8blurY,8quality,8strength,8knockout,8type", 1);
 
@@ -1220,6 +1231,7 @@ ASSetNativeAccessor (flash.filters.GradientBevelFilter.prototype, 1108, "8distan
 
 flash.filters.GradientGlowFilter = ASconstructor (1108, 0);
 flash.filters.GradientGlowFilter.prototype = o = new flash.filters.BitmapFilter ();
+delete flash.filters.GradientGlowFilter.prototype.constructor;
 ASSetNativeAccessor (flash.filters.GradientGlowFilter.prototype, 1108, "8distance,8angle,8colors,8alphas,8ratios,8blurX,8blurY,8quality,8strength,8knockout,8type", 1);
 
 /* Global Functions */
@@ -1235,6 +1247,12 @@ updateAfterEvent = ASnative (9, 0);
 /*** OH THE HUMANITY ***/
 
 o = null;
+
+/*** Set propflags that would have interfered with running this script */
+
+ASSetPropFlags (this, "flash", 4096);
+ASSetPropFlags (Object, "addProperty", 128);
+ASSetPropFlags (AsBroadcaster, null, 131);
 
 /*** GLOBAL PROPFLAGS */
 

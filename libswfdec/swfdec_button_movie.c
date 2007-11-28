@@ -210,11 +210,15 @@ swfdec_button_movie_mouse_release (SwfdecMovie *movie, guint button)
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
   if (player->mouse_below == movie) {
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+
+    SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
   } else {
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
-  }
 
-  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
+    /* NB: We don't chain to parent here for menubuttons*/
+    if (!SWFDEC_BUTTON_MOVIE (movie)->button->menubutton)
+      SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
+  }
 }
 
 static void

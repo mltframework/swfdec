@@ -1,0 +1,60 @@
+load _level0.button.instance1.up2
+load _level0.button.instance2.up3
+load _level0.button.instance3.up_down
+load _level0.button.instance4.up_over
+unload _level0.button.instance1.up2
+unload _level0.button.instance2.up3
+unload _level0.button.instance3.up_down
+load _level0.button.instance5.over4
+load _level0.button.instance6.over2
+load _level0.button.instance7.over_down
+button Idle => OverUp: _level0
+unload _level0.button.instance5.over4
+unload _level0.button.instance6.over2
+unload _level0.button.instance4.up_over
+load _level0.button.instance8.down2
+load _level0.button.instance9.down5
+load _level0.button.instance10.up_down
+button OverUp => OverDown: _level0
+unload _level0.button.instance8.down2
+unload _level0.button.instance9.down5
+unload _level0.button.instance10.up_down
+load _level0.button.instance11.over4
+load _level0.button.instance12.over2
+load _level0.button.instance13.up_over
+button OverDown => OutDown: _level0
+unload _level0.button.instance11.over4
+unload _level0.button.instance12.over2
+unload _level0.button.instance13.up_over
+load _level0.button.instance14.down2
+load _level0.button.instance15.down5
+load _level0.button.instance16.up_down
+button OutDown => OverDown: _level0
+unload _level0.button.instance14.down2
+unload _level0.button.instance15.down5
+unload _level0.button.instance16.up_down
+load _level0.button.instance17.over4
+load _level0.button.instance18.over2
+load _level0.button.instance19.up_over
+button OverDown => OverUp: _level0
+unload _level0.button.instance17.over4
+unload _level0.button.instance18.over2
+unload _level0.button.instance19.up_over
+load _level0.button.instance20.down2
+load _level0.button.instance21.down5
+load _level0.button.instance22.up_down
+button OverUp => OverDown: _level0
+unload _level0.button.instance20.down2
+unload _level0.button.instance21.down5
+unload _level0.button.instance22.up_down
+load _level0.button.instance23.over4
+load _level0.button.instance24.over2
+load _level0.button.instance25.up_over
+button OverDown => OutDown: _level0
+unload _level0.button.instance23.over4
+unload _level0.button.instance24.over2
+unload _level0.button.instance7.over_down
+load _level0.button.instance26.up2
+load _level0.button.instance27.up3
+load _level0.button.instance28.up_down
+button OutDown => Idle: _level0

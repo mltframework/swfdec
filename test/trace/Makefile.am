@@ -290,6 +290,31 @@ EXTRA_DIST = \
 	boolean-properties-7.swf.trace \
 	boolean-properties-8.swf \
 	boolean-properties-8.swf.trace \
+	button-events-button-5.swf \
+	button-events-button-5.swf.act \
+	button-events-button-5.swf.trace \
+	button-events-button-6.swf \
+	button-events-button-6.swf.act \
+	button-events-button-6.swf.trace \
+	button-events-button-7.swf \
+	button-events-button-7.swf.act \
+	button-events-button-7.swf.trace \
+	button-events-button-8.swf \
+	button-events-button-8.swf.act \
+	button-events-button-8.swf.trace \
+	button-events.c \
+	button-events-menu-5.swf \
+	button-events-menu-5.swf.act \
+	button-events-menu-5.swf.trace \
+	button-events-menu-6.swf \
+	button-events-menu-6.swf.act \
+	button-events-menu-6.swf.trace \
+	button-events-menu-7.swf \
+	button-events-menu-7.swf.act \
+	button-events-menu-7.swf.trace \
+	button-events-menu-8.swf \
+	button-events-menu-8.swf.act \
+	button-events-menu-8.swf.trace \
 	button-properties.as \
 	button-properties-5.swf \
 	button-properties-5.swf.trace \

@@ -280,12 +280,10 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 	key_code = 0;
 
       SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
-#define SWFDEC_IMPLEMENTED_EVENTS \
-  ((1<< SWFDEC_EVENT_LOAD) | (1<<SWFDEC_EVENT_UNLOAD) | (1<<SWFDEC_EVENT_ENTER) | \
-   (1<< SWFDEC_EVENT_INITIALIZE) | (1<<SWFDEC_EVENT_CONSTRUCT) | \
-   (1<< SWFDEC_EVENT_MOUSE_DOWN) | (1<<SWFDEC_EVENT_MOUSE_MOVE) | (1<<SWFDEC_EVENT_MOUSE_UP))
-      if (event_flags & ~SWFDEC_IMPLEMENTED_EVENTS) {
-	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & ~SWFDEC_IMPLEMENTED_EVENTS);
+#define SWFDEC_UNIMPLEMENTED_EVENTS \
+  ((1<< SWFDEC_EVENT_DATA) | (1<<SWFDEC_EVENT_KEY_PRESS))
+      if (event_flags & SWFDEC_UNIMPLEMENTED_EVENTS) {
+	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & SWFDEC_UNIMPLEMENTED_EVENTS);
       }
       swfdec_event_list_parse (events, &action_bits, version, 
 	  event_flags, key_code, script_name);

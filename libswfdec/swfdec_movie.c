@@ -424,6 +424,10 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
     if (condition == SWFDEC_EVENT_CONSTRUCT || condition < SWFDEC_EVENT_PRESS)
       return;
     thisp = SWFDEC_AS_OBJECT (movie->parent);
+    if (swfdec_movie_get_version (movie) <= 5) {
+      while (!SWFDEC_IS_SPRITE_MOVIE (thisp))
+	thisp = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (thisp)->parent);
+    }
     g_assert (thisp);
   } else {
     thisp = SWFDEC_AS_OBJECT (movie);

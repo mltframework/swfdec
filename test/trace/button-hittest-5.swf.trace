@@ -1,0 +1,9 @@
+button Idle => OverUp: _level0
+button OverUp => OverDown: _level0
+button OverDown => OutDown: _level0
+button OutDown => OverDown: _level0
+button OverDown => OverUp: _level0
+button OverUp => OverDown: _level0
+button OverDown => OutDown: _level0
+button OutDown => Idle: _level0
+button Idle => OverUp: _level0

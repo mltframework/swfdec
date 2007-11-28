@@ -62,27 +62,6 @@ typedef enum {
 #define SWFDEC_BLEND_MODE_OVERLAY	13
 #define SWFDEC_BLEND_MODE_HARDLIGHT	14
 
-struct _SwfdecContent {
-  SwfdecGraphic *	graphic;	/* object to display */
-  int	         	depth;		/* at which depth to display */
-  int			clip_depth;	/* clip depth of object */
-  guint			ratio;
-  cairo_matrix_t	transform;
-  SwfdecColorTransform	color_transform;
-  gboolean		has_transform : 1;
-  gboolean		has_color_transform : 1;
-  char *		name;
-  SwfdecEventList *	events;
-  guint			blend_mode;	/* operator to use when painting (aka blend mode) */   
-
-  /* only used by buttons */
-  SwfdecContent *	sequence;
-  guint			start;
-  guint			end;
-};
-#define SWFDEC_CONTENT_DEFAULT { NULL, -1, 0, 0, { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 }, \
-  { 256, 0, 256, 0, 256, 0, 256, 0 }, NULL, NULL, CAIRO_OPERATOR_OVER, NULL, 0, G_MAXUINT, FALSE }
-
 #define SWFDEC_TYPE_MOVIE                    (swfdec_movie_get_type())
 #define SWFDEC_IS_MOVIE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_MOVIE))
 #define SWFDEC_IS_MOVIE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_MOVIE))
@@ -220,8 +199,6 @@ SwfdecMovie *	swfdec_movie_new		(SwfdecPlayer *		player,
 						 SwfdecResource *	resource,
 						 SwfdecGraphic *	graphic,
 						 const char *		name);
-SwfdecMovie *	swfdec_movie_new_for_content  	(SwfdecMovie *		parent,
-						 const SwfdecContent *	content);
 SwfdecMovie *	swfdec_movie_duplicate		(SwfdecMovie *		movie, 
 						 const char *		name,
 						 int			depth);

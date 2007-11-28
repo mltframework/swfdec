@@ -37,7 +37,6 @@
 #include "swfdec_font.h"
 #include "swfdec_image.h"
 #include "swfdec_morphshape.h"
-#include "swfdec_movie.h" /* for SwfdecContent */
 #include "swfdec_pattern.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_script_internal.h"

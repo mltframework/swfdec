@@ -1604,34 +1604,6 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   return copy;
 }
 
-SwfdecMovie *
-swfdec_movie_new_for_content (SwfdecMovie *parent, const SwfdecContent *content)
-{
-  SwfdecPlayer *player;
-  SwfdecMovie *movie;
-
-  g_return_val_if_fail (SWFDEC_IS_MOVIE (parent), NULL);
-  g_return_val_if_fail (SWFDEC_IS_GRAPHIC (content->graphic), NULL);
-  g_return_val_if_fail (swfdec_movie_find (parent, content->depth) == NULL, NULL);
-
-  SWFDEC_DEBUG ("new movie for parent %p", parent);
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (parent)->context);
-  movie = swfdec_movie_new (player, content->depth, parent, parent->resource, content->graphic, 
-      content->name ? swfdec_as_context_get_string (SWFDEC_AS_CONTEXT (player), content->name) : NULL);
-
-  swfdec_movie_set_static_properties (movie, content->has_transform ? &content->transform : NULL,
-      content->has_color_transform ? &content->color_transform : NULL, 
-      content->ratio, content->clip_depth, content->blend_mode, content->events);
-  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_INITIALIZE);
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_CONSTRUCT);
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
-  }
-  swfdec_movie_initialize (movie);
-
-  return movie;
-}
-
 static void
 swfdec_movie_load_variables_on_finish (SwfdecAsObject *target,
     const char *text)

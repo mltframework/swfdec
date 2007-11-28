@@ -69,8 +69,6 @@ swfdec_button_create_movie (SwfdecGraphic *graphic, gsize *size)
 
   movie->button = g_object_ref (button);
   *size = sizeof (SwfdecButtonMovie);
-  g_print ("extents: %g %g  %g %g\n", graphic->extents.x0, graphic->extents.y0,
-      graphic->extents.x1, graphic->extents.y1);
   if (button->events)
     SWFDEC_MOVIE (movie)->events = swfdec_event_list_copy (button->events);
 

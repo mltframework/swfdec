@@ -2493,6 +2493,15 @@ EXTRA_DIST = \
 	stylesheet-parsecssfontfamily-6.swf.trace \
 	stylesheet-parsecssfontfamily-7.swf \
 	stylesheet-parsecssfontfamily-7.swf.trace \
+	stylesheet-properties.as \
+	stylesheet-properties-5.swf \
+	stylesheet-properties-5.swf.trace \
+	stylesheet-properties-6.swf \
+	stylesheet-properties-6.swf.trace \
+	stylesheet-properties-7.swf \
+	stylesheet-properties-7.swf.trace \
+	stylesheet-properties-8.swf \
+	stylesheet-properties-8.swf.trace \
 	substring.as \
 	substr.as \
 	substr-5.swf \

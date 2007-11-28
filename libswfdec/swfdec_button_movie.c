@@ -273,7 +273,7 @@ swfdec_button_movie_contains (SwfdecMovie *movie, double x, double y, gboolean e
     /* check for movies in a higher layer that react to events */
     SwfdecMovie *ret;
     ret = SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->contains (movie, x, y, TRUE);
-    if (ret && ret != movie)
+    if (ret && ret != movie && swfdec_movie_get_mouse_events (ret))
       return ret;
   }
   

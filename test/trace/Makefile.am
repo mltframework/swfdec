@@ -604,6 +604,15 @@ EXTRA_DIST = \
 	date-7.swf.trace \
 	date-8.swf \
 	date-8.swf.trace \
+	date-constructor.as \
+	date-constructor-5.swf \
+	date-constructor-5.swf.trace \
+	date-constructor-6.swf \
+	date-constructor-6.swf.trace \
+	date-constructor-7.swf \
+	date-constructor-7.swf.trace \
+	date-constructor-8.swf \
+	date-constructor-8.swf.trace \
 	date-properties.as \
 	date-properties-5.swf \
 	date-properties-5.swf.trace \

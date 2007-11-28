@@ -846,6 +846,13 @@ swfdec_text_format_do_set_url (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_text_format_set_string (object, PROP_URL, argc, argv);
 }
 
+static void
+swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("TextFormat.getTextExtent");
+}
+
 void
 swfdec_text_format_add (SwfdecTextFormat *format, const SwfdecTextFormat *from)
 {
@@ -1143,6 +1150,9 @@ void
 swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  SwfdecAsFunction *function;
+  SwfdecAsObject *tmp;
+  SwfdecAsValue val;
   guint i;
 
   if (!swfdec_as_context_is_constructing (cx)) {
@@ -1155,6 +1165,16 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_text_format_init_properties (cx);
 
   swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (object));
+
+  // FIXME: Need better way to create function without prototype/constructor
+  tmp = cx->Function;
+  cx->Function = NULL;
+  function = swfdec_as_native_function_new (cx, SWFDEC_AS_STR_getTextExtent,
+      swfdec_text_format_getTextExtent, 0, NULL);
+  cx->Function = tmp;
+
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
 
   i = 0;
   if (argc > i)

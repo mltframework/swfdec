@@ -69,6 +69,8 @@ swfdec_button_create_movie (SwfdecGraphic *graphic, gsize *size)
 
   movie->button = g_object_ref (button);
   *size = sizeof (SwfdecButtonMovie);
+  g_print ("extents: %g %g  %g %g\n", graphic->extents.x0, graphic->extents.y0,
+      graphic->extents.x1, graphic->extents.y1);
   if (button->events)
     SWFDEC_MOVIE (movie)->events = swfdec_event_list_copy (button->events);
 
@@ -141,7 +143,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
   while (swfdec_bits_peek_u8 (&bits)) {
     SwfdecBits tmp;
     SwfdecBuffer *buffer;
-    cairo_matrix_t trans, inverse;
+    cairo_matrix_t trans;
     SwfdecColorTransform ctrans;
     guint states, gid;
     gboolean has_blend_mode, has_filters;
@@ -172,7 +174,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
         states & (1 << SWFDEC_BUTTON_OVER) ? "OVER " : "",
 	states & (1 << SWFDEC_BUTTON_UP) ? "UP " : "");
 
-    swfdec_bits_get_matrix (&bits, &trans, &inverse);
+    swfdec_bits_get_matrix (&bits, &trans, NULL);
     SWFDEC_LOG ("matrix: %g %g  %g %g   %g %g",
 	trans.xx, trans.yy, 
 	trans.xy, trans.yx,
@@ -196,7 +198,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
       SwfdecGraphic *graphic = swfdec_swf_decoder_get_character (s, gid);
       if (SWFDEC_IS_GRAPHIC (graphic)) {
 	SwfdecRect rect;
-	swfdec_rect_transform (&rect, &graphic->extents, &inverse);
+	swfdec_rect_transform (&rect, &graphic->extents, &trans);
 	swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents, &SWFDEC_GRAPHIC (button)->extents, &rect);
       } else {
 	SWFDEC_ERROR ("graphic for id %u not found", gid);
@@ -255,14 +257,14 @@ tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
   while (swfdec_bits_peek_u8 (&s->b)) {
     SwfdecBits tmp;
     SwfdecBuffer *buffer;
-    cairo_matrix_t matrix, inverse;
+    cairo_matrix_t matrix;
     guint gid;
 
     tmp = s->b;
     flags = swfdec_bits_get_u8 (&tmp);
     gid = swfdec_bits_get_u16 (&tmp);
     swfdec_bits_get_u16 (&tmp);
-    swfdec_bits_get_matrix (&tmp, &matrix, &inverse);
+    swfdec_bits_get_matrix (&tmp, &matrix, NULL);
     buffer = swfdec_bits_get_buffer (&s->b, (swfdec_bits_left (&s->b) - swfdec_bits_left (&tmp)) / 8);
     if (buffer == NULL)
       break;
@@ -272,7 +274,7 @@ tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
       SwfdecGraphic *graphic = swfdec_swf_decoder_get_character (s, gid);
       if (SWFDEC_IS_GRAPHIC (graphic)) {
 	SwfdecRect rect;
-	swfdec_rect_transform (&rect, &graphic->extents, &inverse);
+	swfdec_rect_transform (&rect, &graphic->extents, &matrix);
 	swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents, &SWFDEC_GRAPHIC (button)->extents, &rect);
       } else {
 	SWFDEC_ERROR ("graphic for id %u not found", gid);

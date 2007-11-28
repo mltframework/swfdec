@@ -215,10 +215,6 @@ swfdec_button_movie_mouse_release (SwfdecMovie *movie, guint button)
   }
 
   SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
-
-  if (player->mouse_below == movie) {
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OVER);
-  }
 }
 
 static void

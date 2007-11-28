@@ -1184,12 +1184,16 @@ swfdec_as_context_ASSetPropFlags_foreach (SwfdecAsObject *object,
   return TRUE;
 }
 
-static void
+SWFDEC_AS_NATIVE (1, 0, swfdec_as_context_ASSetPropFlags)
+void
 swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   guint flags[2]; /* flags and mask - array so we can pass it as data pointer */
   SwfdecAsObject *obj;
+
+  if (argc < 3)
+    return;
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
     return;
@@ -1339,8 +1343,6 @@ swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
 {
   SwfdecAsValue val;
 
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASSetPropFlags, 0, 
-      swfdec_as_context_ASSetPropFlags, 3);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, NAN);
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_NaN, &val);
   SWFDEC_AS_VALUE_SET_NUMBER (&val, HUGE_VAL);
@@ -1399,7 +1401,7 @@ swfdec_as_context_startup (SwfdecAsContext *context, guint version)
   swfdec_as_context_init_global (context, version);
 
   /* run init script */
-  swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), 8);
+  swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), context->version);
 
   if (context->state == SWFDEC_AS_CONTEXT_NEW)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;

@@ -93,9 +93,6 @@ gboolean	swfdec_sprite_get_action	(SwfdecSprite *		sprite,
 int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,
 				      		 const char *		label);
 
-SwfdecContent *swfdec_content_new (int depth);
-void swfdec_content_free (SwfdecContent *content);
-
 int tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag);
 
 

@@ -71,6 +71,7 @@ gboolean		swfdec_event_list_has_conditions(SwfdecEventList *    list,
 							 SwfdecAsObject *     object,
 							 guint		      conditions,
 							 guint8		      key);
+gboolean		swfdec_event_list_has_mouse_events(SwfdecEventList *  list);
 							 
 
 G_END_DECLS

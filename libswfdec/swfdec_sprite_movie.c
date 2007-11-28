@@ -280,12 +280,10 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 	key_code = 0;
 
       SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
-#define SWFDEC_IMPLEMENTED_EVENTS \
-  ((1<< SWFDEC_EVENT_LOAD) | (1<<SWFDEC_EVENT_UNLOAD) | (1<<SWFDEC_EVENT_ENTER) | \
-   (1<< SWFDEC_EVENT_INITIALIZE) | (1<<SWFDEC_EVENT_CONSTRUCT) | \
-   (1<< SWFDEC_EVENT_MOUSE_DOWN) | (1<<SWFDEC_EVENT_MOUSE_MOVE) | (1<<SWFDEC_EVENT_MOUSE_UP))
-      if (event_flags & ~SWFDEC_IMPLEMENTED_EVENTS) {
-	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & ~SWFDEC_IMPLEMENTED_EVENTS);
+#define SWFDEC_UNIMPLEMENTED_EVENTS \
+  ((1<< SWFDEC_EVENT_DATA) | (1<<SWFDEC_EVENT_KEY_PRESS))
+      if (event_flags & SWFDEC_UNIMPLEMENTED_EVENTS) {
+	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & SWFDEC_UNIMPLEMENTED_EVENTS);
       }
       swfdec_event_list_parse (events, &action_bits, version, 
 	  event_flags, key_code, script_name);
@@ -518,7 +516,7 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
   mov = SWFDEC_MOVIE (movie);
   /* lots of things where we've got nothing to do */
   if (goto_frame == 0 || goto_frame > movie->n_frames || 
-      movie->sprite == NULL || mov->will_be_removed || goto_frame == movie->frame)
+      movie->sprite == NULL || mov->state >= SWFDEC_MOVIE_STATE_REMOVED || goto_frame == movie->frame)
     return;
 
   if (goto_frame > movie->sprite->parse_frame) {
@@ -656,7 +654,7 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
   guint goto_frame;
 
-  if (mov->will_be_removed)
+  if (mov->state >= SWFDEC_MOVIE_STATE_REMOVED)
     return;
 
   if (movie->sprite && movie->frame == (guint) -1)

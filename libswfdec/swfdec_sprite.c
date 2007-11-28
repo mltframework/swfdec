@@ -36,15 +36,6 @@
 
 G_DEFINE_TYPE (SwfdecSprite, swfdec_sprite, SWFDEC_TYPE_GRAPHIC)
 
-void
-swfdec_content_free (SwfdecContent *content)
-{
-  g_free (content->name);
-  if (content->events)
-    swfdec_event_list_free (content->events);
-  g_free (content);
-}
-
 static void
 swfdec_sprite_dispose (GObject *object)
 {
@@ -153,17 +144,6 @@ tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag)
   }
 
   return SWFDEC_STATUS_OK;
-}
-
-SwfdecContent *
-swfdec_content_new (int depth)
-{
-  SwfdecContent *content = g_new0 (SwfdecContent, 1);
-
-  cairo_matrix_init_identity (&content->transform);
-  swfdec_color_transform_init_identity (&content->color_transform);
-  content->depth = depth;
-  return content;
 }
 
 static SwfdecMovie *

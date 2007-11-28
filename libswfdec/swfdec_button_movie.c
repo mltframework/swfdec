@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,9 @@
 #include "swfdec_audio_event.h"
 #include "swfdec_debug.h"
 #include "swfdec_event.h"
+#include "swfdec_filter.h"
+#include "swfdec_player_internal.h"
+#include "swfdec_resource.h"
 
 G_DEFINE_TYPE (SwfdecButtonMovie, swfdec_button_movie, SWFDEC_TYPE_MOVIE)
 
@@ -37,167 +40,185 @@ swfdec_button_movie_update_extents (SwfdecMovie *movie,
       &SWFDEC_GRAPHIC (SWFDEC_BUTTON_MOVIE (movie)->button)->extents);
 }
 
-/* first index is 1 for menubutton, second index is previous state,
- * last index is current state
- * MSB in index is mouse OUT = 0, IN = 1
- * LSB in index is button UP = 0, DOWN = 1
- */
-static const SwfdecButtonCondition event_table[2][4][4] = {
-  { { -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_UP, -1 },
-    { SWFDEC_BUTTON_OUT_DOWN_TO_IDLE, -1, -1, SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN },
-    { SWFDEC_BUTTON_OVER_UP_TO_IDLE, -1, -1, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN },
-    { -1, SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP, -1 } },
-  { { -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_UP, -1 },
-    { -2, -1, -1, SWFDEC_BUTTON_IDLE_TO_OVER_DOWN },
-    { SWFDEC_BUTTON_OVER_UP_TO_IDLE, -1, -1, SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN },
-    { -1, SWFDEC_BUTTON_OVER_DOWN_TO_IDLE, SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP, -1 } }
-};
-static const int sound_table[2][4][4] = {
-  { { -1, -1,  1, -1 },
-    {  0, -1, -1, -1 },
-    {  0, -1, -1,  2 },
-    { -1, -1,  3, -1 } },
-  { { -1, -1,  1, -1 },
-    { -1, -1, -1,  1 },
-    {  0, -1, -1,  2 },
-    { -1,  0,  3, -1 } }
-};
-
-static const char *
-swfdec_button_condition_get_name (SwfdecButtonCondition condition)
-{
-  /* FIXME: check if these events are based on conditions or if they're independant of button type */
-  switch (condition) {
-    case SWFDEC_BUTTON_IDLE_TO_OVER_UP:
-      return SWFDEC_AS_STR_onRollOver;
-    case SWFDEC_BUTTON_OVER_UP_TO_IDLE:
-      return SWFDEC_AS_STR_onRollOut;
-    case SWFDEC_BUTTON_OVER_UP_TO_OVER_DOWN:
-      return SWFDEC_AS_STR_onPress;
-    case SWFDEC_BUTTON_OVER_DOWN_TO_OVER_UP:
-      return SWFDEC_AS_STR_onRelease;
-    case SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN:
-      return SWFDEC_AS_STR_onDragOut;
-    case SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN:
-      return SWFDEC_AS_STR_onDragOver;
-    case SWFDEC_BUTTON_OUT_DOWN_TO_IDLE:
-      return SWFDEC_AS_STR_onReleaseOutside;
-    case SWFDEC_BUTTON_IDLE_TO_OVER_DOWN:
-      return SWFDEC_AS_STR_onDragOver;
-    case SWFDEC_BUTTON_OVER_DOWN_TO_IDLE:
-      return SWFDEC_AS_STR_onDragOut;
-    default:
-      g_assert_not_reached ();
-      return NULL;
-  }
-}
-
 static void
-swfdec_button_movie_execute (SwfdecButtonMovie *movie,
-    SwfdecButtonCondition condition)
+swfdec_button_movie_perform_place (SwfdecButtonMovie *button, SwfdecBits *bits)
 {
-  const char *name;
+  SwfdecMovie *movie = SWFDEC_MOVIE (button);
+  gboolean has_blend_mode, has_filters, v2;
+  SwfdecColorTransform ctrans;
+  SwfdecGraphic *graphic;
+  SwfdecPlayer *player;
+  cairo_matrix_t trans;
+  guint id, blend_mode;
+  SwfdecMovie *new;
+  int depth;
 
-  if (movie->button->menubutton) {
-    g_assert ((condition & ((1 << SWFDEC_BUTTON_OVER_DOWN_TO_OUT_DOWN) \
-                         | (1 << SWFDEC_BUTTON_OUT_DOWN_TO_OVER_DOWN) \
-                         | (1 << SWFDEC_BUTTON_OUT_DOWN_TO_IDLE))) == 0);
-  } else {
-    g_assert ((condition & ((1 << SWFDEC_BUTTON_IDLE_TO_OVER_DOWN) \
-                         | (1 << SWFDEC_BUTTON_OVER_DOWN_TO_IDLE))) == 0);
-  }
-  if (movie->button->events)
-    swfdec_event_list_execute (movie->button->events, 
-	SWFDEC_AS_OBJECT (SWFDEC_MOVIE (movie)->parent), 
-	SWFDEC_SECURITY (SWFDEC_MOVIE (movie)->resource), condition, 0);
-  name = swfdec_button_condition_get_name (condition);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
-}
-
-#define CONTENT_IN_FRAME(content, frame) \
-  ((content)->sequence->start <= frame && \
-   (content)->sequence->end > frame)
-static void
-swfdec_button_movie_change_state (SwfdecButtonMovie *movie, SwfdecButtonState state)
-{
-  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-  GList *walk;
-
-  g_assert (movie->state != state);
-  SWFDEC_LOG ("changing state on button movie %p from %d to %d", movie,
-      movie->state, state);
-  /* do this in 2 loops - otherwise going down DOWN=>UP would
-   * remove children that are only in these 2 states (due to how
-   * adding them is handled)
-   */
-  for (walk = movie->button->records; walk; walk = walk->next) {
-    SwfdecContent *content = walk->data;
-    if (CONTENT_IN_FRAME (content, (guint) movie->state) &&
-	!CONTENT_IN_FRAME (content, (guint) state)) {
-      SwfdecMovie *child = swfdec_movie_find (mov, content->depth);
-      if (child)
-	swfdec_movie_remove (child);
-    }
-  }
-  for (walk = movie->button->records; walk; walk = walk->next) {
-    SwfdecContent *content = walk->data;
-    if (!CONTENT_IN_FRAME (content, (guint) movie->state) &&
-	CONTENT_IN_FRAME (content, (guint) state)) {
-      SwfdecMovie *child = swfdec_movie_find (mov, content->depth);
-      if (child) {
-	g_assert_not_reached ();
-      }
-      swfdec_movie_new_for_content (mov, content);
-    }
-  }
-  movie->state = state;
-}
-
-static void
-swfdec_button_movie_change_mouse (SwfdecButtonMovie *movie, gboolean mouse_in, int button)
-{
-  int event;
-  int sound;
-
-  if (movie->mouse_in == mouse_in &&
-      movie->mouse_button == button)
+  swfdec_bits_getbits (bits, 2); /* reserved */
+  has_blend_mode = swfdec_bits_getbit (bits);
+  has_filters = swfdec_bits_getbit (bits);
+  SWFDEC_LOG ("  has_blend_mode = %d", has_blend_mode);
+  SWFDEC_LOG ("  has_filters = %d", has_filters);
+  swfdec_bits_getbits (bits, 4); /* states */
+  id = swfdec_bits_get_u16 (bits);
+  depth = swfdec_bits_get_u16 (bits);
+  depth -= 16384;
+  if (swfdec_movie_find (movie, depth)) {
+    SWFDEC_WARNING ("depth %d already occupied, skipping placement.", depth + 16384);
     return;
-  SWFDEC_LOG ("changing mouse state %s: %s %s (%u) => %s %s (%u)", 
-      movie->button->menubutton ? "MENU" : "BUTTON",
-      movie->mouse_in ? "IN" : "OUT", movie->mouse_button ? "DOWN" : "UP",
-      (movie->mouse_in ? 2 : 0) + movie->mouse_button,
-      mouse_in ? "IN" : "OUT", button ? "DOWN" : "UP",
-      (mouse_in ? 2 : 0) + button);
-  event = event_table[movie->button->menubutton ? 1 : 0]
-		     [(movie->mouse_in ? 2 : 0) + movie->mouse_button]
-		     [(mouse_in ? 2 : 0) + button];
+  }
+  graphic = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (movie->resource->decoder), id);
+  if (!SWFDEC_IS_GRAPHIC (graphic)) {
+    SWFDEC_ERROR ("id %u does not specify a graphic", id);
+    return;
+  }
 
-#ifndef G_DISABLE_ASSERT
-  if (event == -1) {
-    g_error ("Unhandled event for %s: %u => %u",
-	movie->button->menubutton ? "menu" : "button",
-	(movie->mouse_in ? 2 : 0) + movie->mouse_button,
-	(mouse_in ? 2 : 0) + button);
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  new = swfdec_movie_new (player, depth, movie, movie->resource, graphic, NULL);
+  swfdec_bits_get_matrix (bits, &trans, NULL);
+  if (swfdec_bits_left (bits)) {
+    v2 = TRUE;
+    swfdec_bits_get_color_transform (bits, &ctrans);
+    if (has_blend_mode) {
+      blend_mode = swfdec_bits_get_u8 (bits);
+      SWFDEC_LOG ("  blend mode = %u", blend_mode);
+    } else {
+      blend_mode = 0;
+    }
+    if (has_filters) {
+      GSList *filters = swfdec_filter_parse (player, bits);
+      g_slist_free (filters);
+    }
+  } else {
+    /* DefineButton1 record */
+    v2 = FALSE;
+    if (has_blend_mode || has_filters) {
+      SWFDEC_ERROR ("cool, a DefineButton1 with filters or blend mode");
+    }
+    blend_mode = 0;
   }
-#endif
-  if (event >= 0) {
-    SWFDEC_LOG ("emitting event for condition %u", event);
-    swfdec_button_movie_execute (movie, event);
+  swfdec_movie_set_static_properties (new, &trans, v2 ? &ctrans : NULL, 0, 0, blend_mode, NULL);
+  swfdec_movie_queue_script (new, SWFDEC_EVENT_INITIALIZE);
+  swfdec_movie_queue_script (new, SWFDEC_EVENT_CONSTRUCT);
+  swfdec_movie_queue_script (new, SWFDEC_EVENT_LOAD);
+  swfdec_movie_initialize (new);
+  if (swfdec_bits_left (bits)) {
+    SWFDEC_WARNING ("button record for id %u has %u bytes left", id,
+	swfdec_bits_left (bits) / 8);
   }
-  sound = sound_table[movie->button->menubutton ? 1 : 0]
-		     [(movie->mouse_in ? 2 : 0) + movie->mouse_button]
-		     [(mouse_in ? 2 : 0) + button];
-  if (sound >= 0 && movie->button->sounds[sound]) {
-    SwfdecAudio *audio;
-    SWFDEC_LOG ("playing button sound %d", sound);
-    audio = swfdec_audio_event_new_from_chunk (
-	SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context),
-	movie->button->sounds[sound]);
-    if (audio)
-      g_object_unref (audio);
+}
+
+static void
+swfdec_button_movie_set_state (SwfdecButtonMovie *button, SwfdecButtonState state)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (button);
+  SwfdecMovie *child;
+  SwfdecBits bits;
+  GSList *walk;
+  guint old, new, i;
+  int depth;
+
+  if (button->state == state) {
+    SWFDEC_LOG ("not changing state, it's already in %d", state);
+    return;
   }
-  movie->mouse_in = mouse_in;
-  movie->mouse_button = button;
+  SWFDEC_DEBUG ("changing state from %d to %d", button->state, state);
+  /* remove all movies that aren't in the new state */
+  new = 1 << state;
+  if (button->state >= 0) {
+    old = 1 << button->state;
+    for (walk = button->button->records; walk; walk = walk->next) {
+      swfdec_bits_init (&bits, walk->data);
+      i = swfdec_bits_get_u8 (&bits);
+      if ((i & old) && !(i & new)) {
+	swfdec_bits_get_u16 (&bits);
+	depth = swfdec_bits_get_u16 (&bits);
+	child = swfdec_movie_find (movie, depth - 16384);
+	if (child) {
+	  swfdec_movie_remove (child);
+	} else {
+	  SWFDEC_WARNING ("no child at depth %d, none removed", depth);
+	}
+      }
+    }
+  } else {
+    /* to make sure that this never triggers when initializing */
+    old = 0;
+  }
+  button->state = state;
+  /* add all movies that are in the new state */
+  for (walk = button->button->records; walk; walk = walk->next) {
+    swfdec_bits_init (&bits, walk->data);
+    i = swfdec_bits_peek_u8 (&bits);
+    if ((i & old) || !(i & new))
+      continue;
+    swfdec_button_movie_perform_place (button, &bits);
+  }
+}
+
+static gboolean
+swfdec_button_movie_mouse_events (SwfdecMovie *movie)
+{
+  return TRUE;
+}
+
+static void
+swfdec_button_movie_mouse_in (SwfdecMovie *movie)
+{
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)))
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_DOWN);
+  else
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_in (movie);
+}
+
+static void
+swfdec_button_movie_mouse_out (SwfdecMovie *movie)
+{
+  SwfdecButtonMovie *button = SWFDEC_BUTTON_MOVIE (movie);
+
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context))) {
+    if (button->button->menubutton) {
+      swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
+    } else {
+      swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+    }
+  } else {
+    swfdec_button_movie_set_state (button, SWFDEC_BUTTON_UP);
+  }
+
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_out (movie);
+}
+
+static void
+swfdec_button_movie_mouse_press (SwfdecMovie *movie, guint button)
+{
+  if (button != 0)
+    return;
+  swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_DOWN);
+
+  SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_press (movie, button);
+}
+
+static void
+swfdec_button_movie_mouse_release (SwfdecMovie *movie, guint button)
+{
+  SwfdecPlayer *player;
+
+  if (button != 0)
+    return;
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  if (player->mouse_below == movie) {
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
+
+    SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
+  } else {
+    swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_UP);
+
+    /* NB: We don't chain to parent here for menubuttons*/
+    if (!SWFDEC_BUTTON_MOVIE (movie)->button->menubutton)
+      SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);
+  }
 }
 
 static void
@@ -205,75 +226,90 @@ swfdec_button_movie_init_movie (SwfdecMovie *mov)
 {
   SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
 
-  swfdec_button_movie_change_state (movie, SWFDEC_BUTTON_UP);
+  swfdec_button_movie_set_state (movie, SWFDEC_BUTTON_UP);
 }
 
 static gboolean
-swfdec_button_movie_mouse_in (SwfdecMovie *movie, double x, double y)
+swfdec_button_movie_hit_test (SwfdecButtonMovie *button, double x, double y)
 {
-  GList *walk;
+  SwfdecSwfDecoder *dec;
+  GSList *walk;
   double tmpx, tmpy;
-  SwfdecButton *button = SWFDEC_BUTTON_MOVIE (movie)->button;
-  SwfdecContent *content;
 
-  for (walk = button->records; walk; walk = walk->next) {
-    cairo_matrix_t inverse;
-    content = walk->data;
-    if (content->end <= SWFDEC_BUTTON_HIT)
+  dec = SWFDEC_SWF_DECODER (SWFDEC_MOVIE (button)->resource->decoder);
+  for (walk = button->button->records; walk; walk = walk->next) {
+    SwfdecGraphic *graphic;
+    SwfdecBits bits;
+    cairo_matrix_t matrix, inverse;
+    guint id;
+
+    swfdec_bits_init (&bits, walk->data);
+
+    if ((swfdec_bits_get_u8 (&bits) & (1 << SWFDEC_BUTTON_HIT)) == 0)
       continue;
+
+    id = swfdec_bits_get_u16 (&bits);
+    swfdec_bits_get_u16 (&bits); /* depth */
+    graphic = swfdec_swf_decoder_get_character (dec, id);
+    if (!SWFDEC_IS_GRAPHIC (graphic)) {
+      SWFDEC_ERROR ("id %u is no graphic", id);
+      continue;
+    }
     tmpx = x;
     tmpy = y;
-    swfdec_matrix_ensure_invertible (&content->transform, &inverse);
+    swfdec_bits_get_matrix (&bits, &matrix, &inverse);
     cairo_matrix_transform_point (&inverse, &tmpx, &tmpy);
 
     SWFDEC_LOG ("Checking button contents at %g %g (transformed from %g %g)", tmpx, tmpy, x, y);
-    if (swfdec_graphic_mouse_in (content->graphic, tmpx, tmpy))
+    if (swfdec_graphic_mouse_in (graphic, tmpx, tmpy))
       return TRUE;
     SWFDEC_LOG ("  missed");
   }
   return FALSE;
 }
 
-static SwfdecButtonState
-swfdec_button_movie_get_state (SwfdecButtonMovie *movie, gboolean mouse_in, int button)
+static SwfdecMovie *
+swfdec_button_movie_contains (SwfdecMovie *movie, double x, double y, gboolean events)
 {
-  if (button) {
-    if (mouse_in)
-      return SWFDEC_BUTTON_DOWN;
-    else if (movie->button->menubutton)
-      return SWFDEC_BUTTON_UP;
-    else
-      return SWFDEC_BUTTON_OVER;
-  } else {
-    if (mouse_in)
-      return SWFDEC_BUTTON_OVER;
-    else
-      return SWFDEC_BUTTON_UP;
+  if (events) {
+    /* check for movies in a higher layer that react to events */
+    SwfdecMovie *ret;
+    ret = SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->contains (movie, x, y, TRUE);
+    if (ret && ret != movie && swfdec_movie_get_mouse_events (ret))
+      return ret;
   }
+  
+  return swfdec_button_movie_hit_test (SWFDEC_BUTTON_MOVIE (movie), x, y) ? movie : NULL;
 }
 
 static void
-swfdec_button_movie_mouse_change (SwfdecMovie *mov, double x, double y, 
-    gboolean mouse_in, int button)
+swfdec_button_movie_dispose (GObject *object)
 {
-  SwfdecButtonMovie *movie = SWFDEC_BUTTON_MOVIE (mov);
-  SwfdecButtonState new_state = swfdec_button_movie_get_state (movie, mouse_in, button);
+  SwfdecButtonMovie *button = SWFDEC_BUTTON_MOVIE (object);
 
-  if (new_state != movie->state) {
-    swfdec_button_movie_change_state (movie, new_state);
+  if (button->button) {
+    g_object_unref (button->button);
+    button->button = NULL;
   }
-  swfdec_button_movie_change_mouse (movie, mouse_in, button);
+  G_OBJECT_CLASS (swfdec_button_movie_parent_class)->dispose (object);
 }
 
 static void
 swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
+  object_class->dispose = swfdec_button_movie_dispose;
   movie_class->init_movie = swfdec_button_movie_init_movie;
   movie_class->update_extents = swfdec_button_movie_update_extents;
+  movie_class->contains = swfdec_button_movie_contains;
+
+  movie_class->mouse_events = swfdec_button_movie_mouse_events;
   movie_class->mouse_in = swfdec_button_movie_mouse_in;
-  movie_class->mouse_change = swfdec_button_movie_mouse_change;
+  movie_class->mouse_out = swfdec_button_movie_mouse_out;
+  movie_class->mouse_press = swfdec_button_movie_mouse_press;
+  movie_class->mouse_release = swfdec_button_movie_mouse_release;
 }
 
 static void

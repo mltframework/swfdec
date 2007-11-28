@@ -37,7 +37,6 @@
 #include "swfdec_font.h"
 #include "swfdec_image.h"
 #include "swfdec_morphshape.h"
-#include "swfdec_movie.h" /* for SwfdecContent */
 #include "swfdec_pattern.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_script_internal.h"
@@ -253,77 +252,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s, guint define_sprite_tag)
   return SWFDEC_STATUS_OK;
 }
 
-#define CONTENT_IN_FRAME(content, frame) \
-  ((content)->sequence->start <= frame && \
-   (content)->sequence->end > frame)
-static guint
-swfdec_button_remove_duplicates (SwfdecButton *button, int depth, guint states)
-{
-  GList *walk;
-  guint taken = 0;
-  guint i;
-
-  /* 1) find out which states are already taken */
-  for (walk = button->records; walk; walk = walk->next) {
-    SwfdecContent *cur = walk->data;
-    if (cur->depth != depth)
-      continue;
-    for (i = 0; i < 4; i++) {
-      if (CONTENT_IN_FRAME (cur, i))
-	taken |= (1 << i);
-    }
-  }
-  /* 2) mark states that overlap */
-  taken &= states;
-  /* 3) remove the overlapping states */
-  if (taken) {
-    SWFDEC_ERROR ("overlapping contents in button, removing for depth %u and states %u",
-	depth, taken);
-    states &= ~taken;
-  }
-  return states;
-}
-
-static void
-swfdec_button_append_content (SwfdecButton *button, guint states, SwfdecContent *content)
-{
-  guint i;
-  SwfdecContent *cur = NULL;
-
-  states = swfdec_button_remove_duplicates (button, content->depth, states);
-
-  for (i = 0; i < 4; i++) {
-    if (!cur && (states & 1)) {
-      cur = content;
-      if (content->end != G_MAXUINT) {
-	/* need a copy here */
-	cur = swfdec_content_new (content->depth);
-	*cur = *content;
-	cur->sequence = cur;
-      }
-      cur->start = i;
-      button->records = g_list_append (button->records, cur);
-    }
-    if (cur && !(states & 1)) {
-      cur->end = i;
-      cur = NULL;
-    }
-    states >>= 1;
-  }
-  if (cur) {
-    SwfdecRect rect;
-    cur->end = 4;
-    swfdec_rect_transform (&rect, &content->graphic->extents, &cur->transform);
-    swfdec_rect_union (&SWFDEC_GRAPHIC (button)->extents,
-	&SWFDEC_GRAPHIC (button)->extents, &rect);
-  }
-  if (content->end == G_MAXUINT) {
-    SWFDEC_ERROR ("button record for graphic %u is not used in any state, discarding", 
-	SWFDEC_CHARACTER (content->graphic)->id);
-    swfdec_content_free (content);
-  }
-}
-
+#if 0
 static int
 tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
 {
@@ -505,6 +434,7 @@ tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
 
   return SWFDEC_STATUS_OK;
 }
+#endif
 
 static int
 tag_func_file_attributes (SwfdecSwfDecoder *s, guint tag)

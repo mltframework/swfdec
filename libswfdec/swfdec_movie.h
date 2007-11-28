@@ -62,27 +62,6 @@ typedef enum {
 #define SWFDEC_BLEND_MODE_OVERLAY	13
 #define SWFDEC_BLEND_MODE_HARDLIGHT	14
 
-struct _SwfdecContent {
-  SwfdecGraphic *	graphic;	/* object to display */
-  int	         	depth;		/* at which depth to display */
-  int			clip_depth;	/* clip depth of object */
-  guint			ratio;
-  cairo_matrix_t	transform;
-  SwfdecColorTransform	color_transform;
-  gboolean		has_transform : 1;
-  gboolean		has_color_transform : 1;
-  char *		name;
-  SwfdecEventList *	events;
-  guint			blend_mode;	/* operator to use when painting (aka blend mode) */   
-
-  /* only used by buttons */
-  SwfdecContent *	sequence;
-  guint			start;
-  guint			end;
-};
-#define SWFDEC_CONTENT_DEFAULT { NULL, -1, 0, 0, { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 }, \
-  { 256, 0, 256, 0, 256, 0, 256, 0 }, NULL, NULL, CAIRO_OPERATOR_OVER, NULL, 0, G_MAXUINT, FALSE }
-
 #define SWFDEC_TYPE_MOVIE                    (swfdec_movie_get_type())
 #define SWFDEC_IS_MOVIE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_MOVIE))
 #define SWFDEC_IS_MOVIE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_MOVIE))
@@ -145,7 +124,6 @@ struct _SwfdecMovie {
 
   /* iteration state */
   gboolean		visible;		/* whether we currently can be seen or iterate */
-  gboolean		will_be_removed;	/* it's known that this movie will not survive the next iteration */
 
   /* drawing state */
   SwfdecMovie *		mask_of;		/* movie this movie is a mask of or NULL if none */
@@ -181,15 +159,33 @@ struct _SwfdecMovieClass {
 						 const SwfdecColorTransform *trans,
 						 const SwfdecRect *	inval);
 
-  /* mouse handling */
-  gboolean		(* mouse_in)		(SwfdecMovie *		movie,
-						 double			x,
-						 double			y);
-  void			(* mouse_change)      	(SwfdecMovie *		movie,
+  SwfdecMovie *		(* contains)		(SwfdecMovie *		movie,
 						 double			x,
 						 double			y,
-						 gboolean		mouse_in,
-						 int			button);
+						 gboolean		events);
+  /* mouse handling */
+  gboolean		(* mouse_events)	(SwfdecMovie *		movie);
+  SwfdecMouseCursor	(* mouse_cursor)	(SwfdecMovie *		movie);
+  void			(* mouse_in)      	(SwfdecMovie *		movie);
+  void			(* mouse_out)      	(SwfdecMovie *		movie);
+  void			(* mouse_press)      	(SwfdecMovie *		movie,
+						 guint			button);
+  void			(* mouse_release)      	(SwfdecMovie *		movie,
+						 guint			button);
+  void			(* mouse_move)      	(SwfdecMovie *		movie,
+						 double			x,
+						 double			y);
+  /* keyboard handling */
+  void			(* focus_in)		(SwfdecMovie *		movie,
+						 SwfdecMovie *		previous);
+  void			(* focus_out)		(SwfdecMovie *		movie,
+						 SwfdecMovie *		next);
+  void			(* key_pressed)		(SwfdecMovie *		movie,
+						 guint			keycode,
+						 guint			character);
+  void			(* key_released)      	(SwfdecMovie *		movie,
+						 guint			keycode,
+						 guint			character);
 
   /* iterating */
   void			(* iterate_start)     	(SwfdecMovie *		movie);
@@ -204,8 +200,6 @@ SwfdecMovie *	swfdec_movie_new		(SwfdecPlayer *		player,
 						 SwfdecResource *	resource,
 						 SwfdecGraphic *	graphic,
 						 const char *		name);
-SwfdecMovie *	swfdec_movie_new_for_content  	(SwfdecMovie *		parent,
-						 const SwfdecContent *	content);
 SwfdecMovie *	swfdec_movie_duplicate		(SwfdecMovie *		movie, 
 						 const char *		name,
 						 int			depth);
@@ -248,17 +242,17 @@ void		swfdec_movie_rect_global_to_local (SwfdecMovie *	movie,
 						 SwfdecRect *		rect);
 void		swfdec_movie_set_depth		(SwfdecMovie *		movie,
 						 int			depth);
+
 void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);
-void		swfdec_movie_send_mouse_change	(SwfdecMovie *		movie,
-						 gboolean		release);
-gboolean	swfdec_movie_mouse_in		(SwfdecMovie *		movie,
-						 double			x,
-						 double			y);
+gboolean	swfdec_movie_get_mouse_events	(SwfdecMovie *		movie);
+#define swfdec_movie_contains(movie, x, y) \
+  (swfdec_movie_get_movie_at ((movie), (x), (y), FALSE) != NULL)
 SwfdecMovie *	swfdec_movie_get_movie_at	(SwfdecMovie *		movie,
 						 double			x,
-						 double			y);
+						 double			y,
+						 gboolean		events);
 char *		swfdec_movie_get_path		(SwfdecMovie *		movie,
 						 gboolean		dot);
 void		swfdec_movie_render		(SwfdecMovie *		movie,
@@ -272,7 +266,7 @@ SwfdecMovie *	swfdec_movie_resolve		(SwfdecMovie *		movie);
 guint		swfdec_movie_get_version	(SwfdecMovie *		movie);
 void		swfdec_movie_execute		(SwfdecMovie *		movie,
 						 SwfdecEventType	condition);
-gboolean      	swfdec_movie_queue_script	(SwfdecMovie *		movie,
+void		swfdec_movie_queue_script	(SwfdecMovie *		movie,
   						 SwfdecEventType	condition);
 void		swfdec_movie_load_variables	(SwfdecMovie *		movie,
 						 const char *		url,

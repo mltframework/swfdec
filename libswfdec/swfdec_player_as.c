@@ -33,6 +33,8 @@
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_interval.h"
+#include "swfdec_as_frame_internal.h"
+
 /* FIXME: to avoid duplicate definitions */
 #undef SWFDEC_AS_NATIVE
 #define SWFDEC_AS_NATIVE(x, y, func)
@@ -81,6 +83,16 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
     id = swfdec_interval_new_object (player, msecs, repeat, object, name, argc - 3, &argv[3]);
   }
   SWFDEC_AS_VALUE_SET_INT (rval, id);
+}
+
+SWFDEC_AS_NATIVE (2, 0, swfdec_player_ASnew)
+void
+swfdec_player_ASnew (SwfdecAsContext *cx, SwfdecAsObject *obj, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  g_return_if_fail (cx->frame->next != NULL);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, cx->frame->next->construct);
 }
 
 SWFDEC_AS_NATIVE (250, 0, swfdec_player_setInterval)

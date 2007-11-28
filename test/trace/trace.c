@@ -211,6 +211,7 @@ main (int argc, char **argv)
   GThreadPool *pool;
   GError *error = NULL;
 
+  g_log_set_always_fatal (G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING);
   g_thread_init (NULL);
   /* by default get rid of the loads of warnings the tests produce */
   g_setenv ("SWFDEC_DEBUG", "2", FALSE);

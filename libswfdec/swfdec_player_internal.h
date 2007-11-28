@@ -99,7 +99,8 @@ struct _SwfdecPlayer
   SwfdecMouseCursor	mouse_cursor;		/* cursor that should be shown */
   double      		mouse_x;		/* in stage coordinates */
   double		mouse_y;		/* in stage coordinates */
-  int			mouse_button; 		/* 0 for not pressed, 1 for pressed */
+  guint			mouse_button; 		/* 0 for not pressed, 1 for pressed */
+  SwfdecMovie *		mouse_below;		/* movie that currently is below the mouse */
   SwfdecMovie *		mouse_grab;		/* movie that currently has the mouse */
   SwfdecMovie *		mouse_drag;		/* current movie activated by startDrag */
   gboolean		mouse_drag_center;	/* TRUE to use center of movie at mouse, FALSE for movie's (0,0) */
@@ -173,6 +174,7 @@ void		swfdec_player_set_export_class	(SwfdecPlayer *		player,
 						 const char *		name,
 						 SwfdecAsObject *	object);
 
+#define swfdec_player_is_mouse_pressed(player) ((player)->mouse_button & 1)
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);
 void		swfdec_player_add_timeout	(SwfdecPlayer *		player,

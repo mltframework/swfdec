@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<swf version="8" compressed="0">
+  <Header framerate="1" frames="1">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <SetBackgroundColor>
+        <color>
+          <Color red="255" green="255" blue="255"/>
+        </color>
+      </SetBackgroundColor>
+      <DefineShape objectID="1">
+        <bounds>
+          <Rectangle left="0" right="1200" top="0" bottom="1200"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+              <Solid>
+                <color>
+                  <Color red="255" green="0" blue="0"/>
+                </color>
+              </Solid>
+	    </fillStyles>
+	    <lineStyles />
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup x="0" y="0" fillStyle1="1"/>
+              <LineTo x="0" y="1200"/>
+              <LineTo x="1200" y="0"/>
+              <LineTo x="0" y="-1200"/>
+              <LineTo x="-1200" y="0"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape>
+      <DefineSprite objectID="2" frames="1">
+        <tags>
+	  <PlaceObject2 replace="0" depth="1" objectID="1" />
+	  <ShowFrame/>
+	</tags>
+      </DefineSprite>
+      <DefineSprite objectID="3" frames="1">
+        <tags>
+	  <PlaceObject2 replace="0" depth="1" objectID="2" allflags1="5" allflags2="0">
+	    <events>
+	      <Event flags1="1" flags2="0">
+		<actions>
+		  <Dictionary>
+		    <strings>
+		      <String value="load "/>
+		      <String value="this"/>
+		    </strings>
+		  </Dictionary>
+		  <PushData>
+		    <items>
+		      <StackDictionaryLookup index="0"/>
+		      <StackDictionaryLookup index="1"/>
+		    </items>
+		  </PushData>
+		  <GetVariable/>
+		  <AddTyped/>
+		  <Trace/>
+		  <EndAction/>
+		</actions>
+	      </Event>
+	      <Event flags1="4" flags2="0">
+		<actions>
+		  <Dictionary>
+		    <strings>
+		      <String value="unload "/>
+		      <String value="this"/>
+		    </strings>
+		  </Dictionary>
+		  <PushData>
+		    <items>
+		      <StackDictionaryLookup index="0"/>
+		      <StackDictionaryLookup index="1"/>
+		    </items>
+		  </PushData>
+		  <GetVariable/>
+		  <AddTyped/>
+		  <Trace/>
+		  <EndAction/>
+		</actions>
+	      </Event>
+	      <Event flags1="0" flags2="0"/>
+	    </events>
+	  </PlaceObject2>
+	  <ShowFrame/>
+	</tags>
+      </DefineSprite>
+      <DefineButton objectID="4">
+        <buttons>
+          <Button hitTest="0" down="0" over="0" up="1" objectID="3" depth="1">
+            <transform>
+              <Transform transX="1200" transY="0"/>
+            </transform>
+          </Button>
+          <Button hitTest="0" down="0" over="1" up="0" objectID="3" depth="1">
+            <transform>
+              <Transform transX="1200" transY="1200"/>
+            </transform>
+          </Button>
+          <Button hitTest="0" down="1" over="0" up="0" objectID="3" depth="1">
+            <transform>
+              <Transform transX="0" transY="1200"/>
+            </transform>
+          </Button>
+          <Button hitTest="1" down="0" over="0" up="0" objectID="1" depth="1">
+            <transform>
+              <Transform transX="0" transY="0"/>
+            </transform>
+          </Button>
+          <Button hitTest="0" down="0" over="0" up="0"/>
+	</buttons>
+        <actions>
+	  <PushData>
+	    <items>
+	      <StackString value="this"/>
+	    </items>
+	  </PushData>
+	  <GetVariable/>
+	  <Trace/>
+          <EndAction/>
+        </actions>
+      </DefineButton>
+      <PlaceObject2 replace="0" depth="1" objectID="4" />
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

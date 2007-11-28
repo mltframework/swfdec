@@ -920,11 +920,11 @@ swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
   if (!player->mouse_visible) {
     new = SWFDEC_MOUSE_CURSOR_NONE;
   } else if (player->mouse_grab != NULL) {
-    /* FIXME: this needs to be more sophisticated, since SwfdecEditText may
-     * want to have different mouse cursors depending on location (it supports
-     * links in theory)
-     */
-    if (SWFDEC_IS_BUTTON_MOVIE (player->mouse_grab))
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+
+    if (klass->mouse_cursor)
+      new = klass->mouse_cursor (player->mouse_grab);
+    else
       new = SWFDEC_MOUSE_CURSOR_CLICK;
   }
 
@@ -1017,68 +1017,130 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
 }
 
 static void
-swfdec_player_update_mouse_position (SwfdecPlayer *player)
+swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
 {
   GList *walk;
-  SwfdecMovie *mouse_grab = NULL;
+  double x, y;
+  SwfdecMovie *below_mouse = NULL;
 
-  if (player->mouse_button) {
-    mouse_grab = player->mouse_grab;
-  } else {
-    double x, y;
-    /* if the mouse button is pressed the grab widget stays the same (I think) */
-    x = player->mouse_x;
-    y = player->mouse_y;
-    swfdec_player_stage_to_global (player, &x, &y);
-    for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
-      mouse_grab = swfdec_movie_get_movie_at (walk->data, x, y);
-      if (mouse_grab)
+  x = player->mouse_x;
+  y = player->mouse_y;
+  swfdec_player_stage_to_global (player, &x, &y);
+  for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
+    below_mouse = swfdec_movie_get_movie_at (walk->data, x, y, TRUE);
+    if (below_mouse) {
+      if (swfdec_movie_get_mouse_events (below_mouse))
 	break;
+      below_mouse = NULL;
     }
   }
-  SWFDEC_DEBUG ("%s %p has mouse at %g %g", 
-      mouse_grab ? G_OBJECT_TYPE_NAME (mouse_grab) : "---", 
-      mouse_grab, player->mouse_x, player->mouse_y);
-  if (player->mouse_grab && mouse_grab != player->mouse_grab)
-    swfdec_movie_send_mouse_change (player->mouse_grab, TRUE);
-  player->mouse_grab = mouse_grab;
-  if (mouse_grab)
-    swfdec_movie_send_mouse_change (mouse_grab, FALSE);
-}
-
-static void
-swfdec_player_do_mouse_move (SwfdecPlayer *player)
-{
-  GList *walk;
-
-  swfdec_player_update_drag_movie (player);
-  for (walk = player->movies; walk; walk = walk->next) {
-    swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
-  }
-  swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove);
-  swfdec_player_update_mouse_position (player);
-}
-
-static void
-swfdec_player_do_mouse_button (SwfdecPlayer *player)
-{
-  GList *walk;
-  guint event;
-  const char *event_name;
-
-  if (player->mouse_button) {
-    event = SWFDEC_EVENT_MOUSE_DOWN;
-    event_name = SWFDEC_AS_STR_onMouseDown;
+  if (swfdec_player_is_mouse_pressed (player)) {
+    /* a mouse grab is active */
+    if (player->mouse_grab) {
+      if (below_mouse == player->mouse_grab &&
+	  player->mouse_below != player->mouse_grab) {
+	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+	if (klass->mouse_in)
+	  klass->mouse_in (player->mouse_grab);
+      } else if (below_mouse != player->mouse_grab &&
+	  player->mouse_below == player->mouse_grab) {
+	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+	if (klass->mouse_out)
+	  klass->mouse_out (player->mouse_grab);
+      }
+    }
   } else {
-    event = SWFDEC_EVENT_MOUSE_UP;
-    event_name = SWFDEC_AS_STR_onMouseUp;
+    /* no mouse grab is active */
+    if (below_mouse != player->mouse_grab) {
+      if (player->mouse_grab) {
+	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+	if (klass->mouse_out)
+	  klass->mouse_out (player->mouse_grab);
+      }
+      if (below_mouse) {
+	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (below_mouse);
+	if (klass->mouse_in)
+	  klass->mouse_in (below_mouse);
+      }
+    }
+    player->mouse_grab = below_mouse;
   }
-  for (walk = player->movies; walk; walk = walk->next) {
-    swfdec_movie_queue_script (walk->data, event);
+  player->mouse_below = below_mouse;
+  SWFDEC_DEBUG ("%s %p has mouse at %g %g", 
+      player->mouse_grab ? G_OBJECT_TYPE_NAME (player->mouse_grab) : "---", 
+      player->mouse_grab, player->mouse_x, player->mouse_y);
+}
+
+static gboolean
+swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
+{
+  GList *walk;
+  
+  if (player->mouse_x != x || player->mouse_y != y) {
+    player->mouse_x = x;
+    player->mouse_y = y;
+    for (walk = player->movies; walk; walk = walk->next) {
+      swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
+    }
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove);
   }
-  swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, event_name);
-  if (player->mouse_grab)
-    swfdec_movie_send_mouse_change (player->mouse_grab, FALSE);
+  swfdec_player_grab_mouse_movie (player);
+  swfdec_player_update_drag_movie (player);
+
+  /* FIXME: allow events to pass through */
+  return TRUE;
+}
+
+static gboolean
+swfdec_player_do_mouse_press (SwfdecPlayer *player, guint button)
+{
+  GList *walk;
+
+  player->mouse_button |= 1 << button;
+  if (button == 0) {
+    for (walk = player->movies; walk; walk = walk->next) {
+      swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_DOWN);
+    }
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseDown);
+  }
+  if (player->mouse_grab) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+    if (klass->mouse_press)
+      klass->mouse_press (player->mouse_grab, button);
+  }
+
+  /* FIXME: allow events to pass through */
+  return TRUE;
+}
+
+static gboolean
+swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
+{
+  GList *walk;
+
+  player->mouse_button &= ~(1 << button);
+  if (button == 0) {
+    for (walk = player->movies; walk; walk = walk->next) {
+      swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_UP);
+    }
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseUp);
+  }
+  if (player->mouse_grab) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+    if (klass->mouse_release)
+      klass->mouse_release (player->mouse_grab, button);
+    if (button == 0 && player->mouse_grab != player->mouse_below) {
+      player->mouse_grab = player->mouse_below;
+      if (player->mouse_grab) {
+	klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+	if (klass->mouse_in)
+	  klass->mouse_in (player->mouse_grab);
+      }
+    }
+  }
+
+  /* FIXME: allow events to pass through */
+  return TRUE;
 }
 
 static void
@@ -1131,24 +1193,22 @@ static gboolean
 swfdec_player_do_handle_mouse (SwfdecPlayer *player, 
     double x, double y, int button)
 {
+  gboolean ret;
+
   if (!swfdec_player_lock (player))
     return FALSE;
 
-  SWFDEC_LOG ("handling mouse at %g %g %d", x, y, button);
-  if (player->mouse_x != x || player->mouse_y != y) {
-    player->mouse_x = x;
-    player->mouse_y = y;
-    swfdec_player_do_mouse_move (player);
-  }
-  if (player->mouse_button != button) {
-    player->mouse_button = button;
-    swfdec_player_do_mouse_button (player);
+  SWFDEC_LOG ("handling mouse for %g %g %d", x, y, button);
+  ret = swfdec_player_do_mouse_move (player, x, y);
+  if (button > 0) {
+    ret |= swfdec_player_do_mouse_press (player, button - 1);
+  } else if (button < 0) {
+    ret |= swfdec_player_do_mouse_release (player, -button - 1);
   }
   swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
 
-  /* FIXME: allow events to pass through */
-  return TRUE;
+  return ret;
 }
 
 void
@@ -1297,15 +1357,6 @@ swfdec_player_perform_actions (SwfdecPlayer *player)
   while (swfdec_player_do_action (player));
   for (walk = player->roots; walk; walk = walk->next) {
     swfdec_movie_update (walk->data);
-  }
-  /* update the state of the mouse when stuff below it moved */
-  if (swfdec_rectangle_contains_point (&player->invalid_extents, player->mouse_x, player->mouse_y)) {
-    SWFDEC_INFO ("=== NEED TO UPDATE mouse post-iteration ===");
-    swfdec_player_update_mouse_position (player);
-    while (swfdec_player_do_action (player));
-    for (walk = player->roots; walk; walk = walk->next) {
-      swfdec_movie_update (walk->data);
-    }
   }
 }
 
@@ -1536,7 +1587,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    * @player: the #SwfdecPlayer affected
    * @x: new x coordinate of the mouse
    * @y: new y coordinate of the mouse
-   * @button: 1 if the button is pressed, 0 if not
+   * @button: 0 for a mouse move, a positive number if a button was pressed,
+   *          a negative number if a button was released
    *
    * This signal is emitted whenever @player should respond to a mouse event. If
    * any of the handlers returns TRUE, swfdec_player_handle_mouse() will return 
@@ -1863,7 +1915,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
       swfdec_net_stream_init_context (player, version);
 
       swfdec_as_context_run_init_script (context, swfdec_initialize, 
-	  sizeof (swfdec_initialize), 8);
+	  sizeof (swfdec_initialize), context->version);
 
       if (context->state == SWFDEC_AS_CONTEXT_NEW) {
 	context->state = SWFDEC_AS_CONTEXT_RUNNING;
@@ -2113,31 +2165,86 @@ swfdec_init (void)
 }
 
 /**
- * swfdec_player_handle_mouse:
+ * swfdec_player_mouse_move:
  * @player: a #SwfdecPlayer
  * @x: x coordinate of mouse
  * @y: y coordinate of mouse
- * @button: 1 for pressed, 0 for not pressed
  *
- * Updates the current mouse status. If the mouse has left the area of @player,
+ * Updates the current mouse position. If the mouse has left the area of @player,
  * you should pass values outside the movie size for @x and @y. You will 
  * probably want to call swfdec_player_advance() before to update the player to
  * the correct time when calling this function.
  *
- * Returns: %TRUE if the mouse event was handled. %FALSE to propagate the event
- *          further. A mouse event may not be handled if the user clicked on a 
- *          translucent area.
+ * Returns: %TRUE if the mouse event was handled. %FALSE if the event should be
+ *	    propagated further. A mouse event may not be handled if the user 
+ *	    clicked on a translucent area.
  **/
 gboolean
-swfdec_player_handle_mouse (SwfdecPlayer *player, 
-    double x, double y, int button)
+swfdec_player_mouse_move (SwfdecPlayer *player, double x, double y)
 {
   gboolean ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
-  g_return_val_if_fail (button == 0 || button == 1, FALSE);
+
+  g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, 0, &ret);
+
+  return ret;
+}
+
+/**
+ * swfdec_player_mouse_press:
+ * @player: a #SwfdecPlayer
+ * @x: x coordinate of mouse
+ * @y: y coordinate of mouse
+ * @button: number of the button that was pressed. Swfdec supports up to 32
+ *          buttons.
+ *
+ * Tells the @player that the mouse button @button was pressed at the given
+ * coordinate.
+ *
+ * Returns: %TRUE if the mouse event was handled. %FALSE if the event should be
+ *	    propagated further. A mouse event may not be handled if the user 
+ *	    clicked on a translucent area.
+ **/
+gboolean
+swfdec_player_mouse_press (SwfdecPlayer *player, double x, double y, 
+    guint button)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (button > 0 && button <= 32, FALSE);
 
   g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, button, &ret);
+
+  return ret;
+}
+
+/**
+ * swfdec_player_mouse_release:
+ * @player: a #SwfdecPlayer
+ * @x: x coordinate of mouse
+ * @y: y coordinate of mouse
+ * @button: number of the button that was released. Swfdec supports up to 32
+ *          buttons.
+ *
+ * Tells the @player that the mouse button @button was released at the given
+ * coordinate.
+ *
+ * Returns: %TRUE if the mouse event was handled. %FALSE if the event should be
+ *	    propagated further. A mouse event may not be handled if the user 
+ *	    clicked on a translucent area.
+ **/
+gboolean
+swfdec_player_mouse_release (SwfdecPlayer *player, double x, double y, 
+    guint button)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (button > 0 && button <= 32, FALSE);
+
+  g_signal_emit (player, signals[HANDLE_MOUSE], 0, x, y, -button, &ret);
 
   return ret;
 }

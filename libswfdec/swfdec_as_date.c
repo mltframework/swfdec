@@ -1039,6 +1039,10 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   date->utc_offset =
     SWFDEC_PLAYER (SWFDEC_AS_OBJECT (date)->context)->system->utc_offset;
 
+  // don't accept arguments when not constructing
+  if (!cx->frame->construct)
+    argc = 0;
+
   // special case: ignore undefined and everything after it
   for (i = 0; i < argc; i++) {
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[i])) {

@@ -193,6 +193,15 @@ EXTRA_DIST = \
 	asnative-create-7.swf.trace \
 	asnative-create-8.swf \
 	asnative-create-8.swf.trace \
+	asnew.as \
+	asnew-5.swf \
+	asnew-5.swf.trace \
+	asnew-6.swf \
+	asnew-6.swf.trace \
+	asnew-7.swf \
+	asnew-7.swf.trace \
+	asnew-8.swf \
+	asnew-8.swf.trace \
 	assetnative.as \
 	assetnative-5.swf \
 	assetnative-5.swf.trace \

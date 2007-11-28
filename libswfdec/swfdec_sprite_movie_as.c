@@ -499,7 +499,7 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_movie_global_to_local (movie, &x, &y);
 
     if (shape) {
-      ret = swfdec_movie_mouse_in (movie, x, y);
+      ret = swfdec_movie_contains (movie, x, y);
     } else {
       ret = swfdec_rect_contains (&movie->original_extents, x, y);
     }

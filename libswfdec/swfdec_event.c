@@ -215,3 +215,18 @@ swfdec_event_list_has_conditions (SwfdecEventList *list, SwfdecAsObject *object,
   return FALSE;
 }
 
+#define MOUSE_EVENTS 0x1FC0
+gboolean
+swfdec_event_list_has_mouse_events (SwfdecEventList *list)
+{
+  guint i;
+
+  g_return_val_if_fail (list != NULL, FALSE);
+
+  for (i = 0; i < list->events->len; i++) {
+    SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
+    if (event->conditions & MOUSE_EVENTS)
+      return TRUE;
+  }
+  return FALSE;
+}

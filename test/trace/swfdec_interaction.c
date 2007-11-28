@@ -66,11 +66,11 @@ swfdec_interaction_scanner_message (GScanner *scanner, gchar *message, gboolean 
 }
 
 static void
-swfdec_command_append_mouse (SwfdecInteraction *inter, int x, int y, int button)
+swfdec_command_append_mouse (SwfdecInteraction *inter, SwfdecCommandType type, int x, int y, int button)
 {
   SwfdecCommand command;
 
-  command.command = SWFDEC_COMMAND_MOVE;
+  command.command = type;
   command.args.mouse.x = x;
   command.args.mouse.y = y;
   command.args.mouse.button = button;
@@ -151,13 +151,13 @@ swfdec_interaction_new (const char *data, guint length, GError **error)
 	  goto error;
 	}
 	j = scanner->value.v_int;
-	swfdec_command_append_mouse (inter, i, j, inter->mouse_button);
+	swfdec_command_append_mouse (inter, SWFDEC_COMMAND_MOVE, i, j, inter->mouse_button);
 	break;
       case SWFDEC_COMMAND_DOWN:
-	swfdec_command_append_mouse (inter, inter->mouse_x, inter->mouse_y, 1);
+	swfdec_command_append_mouse (inter, SWFDEC_COMMAND_DOWN, inter->mouse_x, inter->mouse_y, 1);
 	break;
       case SWFDEC_COMMAND_UP:
-	swfdec_command_append_mouse (inter, inter->mouse_x, inter->mouse_y, 0);
+	swfdec_command_append_mouse (inter, SWFDEC_COMMAND_UP, inter->mouse_x, inter->mouse_y, 1);
 	break;
       case SWFDEC_COMMAND_PRESS:
       case SWFDEC_COMMAND_RELEASE:
@@ -246,8 +246,8 @@ swfdec_interaction_advance (SwfdecInteraction *inter, SwfdecPlayer *player, guin
 	inter->time_elapsed -= command->args.time;
 	break;
       case SWFDEC_COMMAND_MOVE:
-	swfdec_player_handle_mouse (player, command->args.mouse.x, 
-	    command->args.mouse.y, command->args.mouse.button);
+	swfdec_player_mouse_move (player, command->args.mouse.x, 
+	    command->args.mouse.y);
 	break;
       case SWFDEC_COMMAND_PRESS:
 	swfdec_player_key_press (player, command->args.key.code, command->args.key.ascii);
@@ -255,9 +255,14 @@ swfdec_interaction_advance (SwfdecInteraction *inter, SwfdecPlayer *player, guin
       case SWFDEC_COMMAND_RELEASE:
 	swfdec_player_key_release (player, command->args.key.code, command->args.key.ascii);
 	break;
-      case SWFDEC_COMMAND_UP:
       case SWFDEC_COMMAND_DOWN:
-	/* these 2 get synthetisized into SWFDEC_COMMAND_MOVE */
+	swfdec_player_mouse_press (player, command->args.mouse.x, 
+	    command->args.mouse.y, command->args.mouse.button);
+	break;
+      case SWFDEC_COMMAND_UP:
+	swfdec_player_mouse_release (player, command->args.mouse.x, 
+	    command->args.mouse.y, command->args.mouse.button);
+	break;
       default:
 	g_assert_not_reached ();
 	return;

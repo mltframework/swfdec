@@ -932,6 +932,36 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
 }
 
 /**
+ * swfdec_as_object_has_variable:
+ * @object: a #SwfdecAsObject
+ * @variable: garbage-collected variable name
+ *
+ * Checks if a user-set @variable with the given name exists on @object. This 
+ * function does not check variables that are available via an overwritten get 
+ * function of the object's class.
+ *
+ * Returns: %TRUE if the @object contains the given @variable
+ **/
+gboolean
+swfdec_as_object_has_variable (SwfdecAsObject *object, const char *variable)
+{
+  guint i;
+  SwfdecAsVariable *var;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
+  
+  for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && object != NULL; i++) {
+    var = swfdec_as_object_hash_lookup (object, variable);
+    if (var) {
+      /* FIXME: propflags? */
+      return TRUE;
+    }
+    object = swfdec_as_object_get_prototype_internal (object);
+  }
+  return FALSE;
+}
+
+/**
  * swfdec_as_object_delete_variable:
  * @object: a #SwfdecAsObject
  * @variable: garbage-collected name of the variable
@@ -939,7 +969,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
  * Deletes the given variable if possible. If the variable is protected from 
  * deletion, it will not be deleted.
  *
- * Returns: See #SwfdecAsDeleteReutnr for details of the return value.
+ * Returns: See #SwfdecAsDeleteReturn for details of the return value.
  **/
 SwfdecAsDeleteReturn
 swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
@@ -1217,30 +1247,6 @@ swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc,
   sec = swfdec_security_allow_new ();
   swfdec_as_object_call_with_security (object, sec, name, argc, argv, return_value);
   g_object_unref (sec);
-}
-
-/**
- * swfdec_as_object_has_function:
- * @object: a #SwfdecAsObject
- * @name: garbage-collected name of th function
- *
- * Convenience function that checks of @object has a variable that references 
- * a function.
- *
- * Returns: %TRUE if object.name is a function.
- **/
-gboolean
-swfdec_as_object_has_function (SwfdecAsObject *object, const char *name)
-{
-  SwfdecAsValue val;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
-  g_return_val_if_fail (name != NULL, FALSE);
-
-  swfdec_as_object_get_variable (object, name, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return FALSE;
-  return SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&val));
 }
 
 /**

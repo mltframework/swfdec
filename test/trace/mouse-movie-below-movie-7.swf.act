@@ -1,0 +1,17 @@
+wait 300
+move 50, 50
+wait 300
+down
+wait 300
+move 140, 140
+wait 300
+move 50, 50
+wait 300
+up
+wait 300
+down
+wait 300
+move 140, 140
+wait 300
+up
+wait 300

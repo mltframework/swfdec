@@ -299,6 +299,44 @@ EXTRA_DIST = \
 	boolean-properties-7.swf.trace \
 	boolean-properties-8.swf \
 	boolean-properties-8.swf.trace \
+	button-events-button-5.swf \
+	button-events-button-5.swf.act \
+	button-events-button-5.swf.trace \
+	button-events-button-6.swf \
+	button-events-button-6.swf.act \
+	button-events-button-6.swf.trace \
+	button-events-button-7.swf \
+	button-events-button-7.swf.act \
+	button-events-button-7.swf.trace \
+	button-events-button-8.swf \
+	button-events-button-8.swf.act \
+	button-events-button-8.swf.trace \
+	button-events.c \
+	button-events-menu-5.swf \
+	button-events-menu-5.swf.act \
+	button-events-menu-5.swf.trace \
+	button-events-menu-6.swf \
+	button-events-menu-6.swf.act \
+	button-events-menu-6.swf.trace \
+	button-events-menu-7.swf \
+	button-events-menu-7.swf.act \
+	button-events-menu-7.swf.trace \
+	button-events-menu-8.swf \
+	button-events-menu-8.swf.act \
+	button-events-menu-8.swf.trace \
+	button-hittest-5.swf \
+	button-hittest-5.swf.act \
+	button-hittest-5.swf.trace \
+	button-hittest-6.swf \
+	button-hittest-6.swf.act \
+	button-hittest-6.swf.trace \
+	button-hittest-7.swf \
+	button-hittest-7.swf.act \
+	button-hittest-7.swf.trace \
+	button-hittest-8.swf \
+	button-hittest-8.swf.act \
+	button-hittest-8.swf.trace \
+	button-hittest.c \
 	button-properties.as \
 	button-properties-5.swf \
 	button-properties-5.swf.trace \
@@ -622,6 +660,19 @@ EXTRA_DIST = \
 	date-properties-7.swf.trace \
 	date-properties-8.swf \
 	date-properties-8.swf.trace \
+	definebutton-5.swf \
+	definebutton-5.swf.act \
+	definebutton-5.swf.trace \
+	definebutton-6.swf \
+	definebutton-6.swf.act \
+	definebutton-6.swf.trace \
+	definebutton-7.swf \
+	definebutton-7.swf.act \
+	definebutton-7.swf.trace \
+	definebutton-8.swf \
+	definebutton-8.swf.act \
+	definebutton-8.swf.trace \
+	definebutton.xml \
 	definefunction2-arguments.swf \
 	definefunction2-arguments.swf.trace \
 	definefunction2-arguments.xml \
@@ -1337,6 +1388,45 @@ EXTRA_DIST = \
 	microphone-properties-7.swf.trace \
 	microphone-properties-8.swf \
 	microphone-properties-8.swf.trace \
+	mouse-addProperty-relevant.as \
+	mouse-addProperty-relevant-5.swf \
+	mouse-addProperty-relevant-5.swf.act \
+	mouse-addProperty-relevant-5.swf.trace \
+	mouse-addProperty-relevant-6.swf \
+	mouse-addProperty-relevant-6.swf.act \
+	mouse-addProperty-relevant-6.swf.trace \
+	mouse-addProperty-relevant-7.swf \
+	mouse-addProperty-relevant-7.swf.act \
+	mouse-addProperty-relevant-7.swf.trace \
+	mouse-addProperty-relevant-8.swf \
+	mouse-addProperty-relevant-8.swf.act \
+	mouse-addProperty-relevant-8.swf.trace \
+	mouse-movie-below-movie.as \
+	mouse-movie-below-movie-5.swf \
+	mouse-movie-below-movie-5.swf.act \
+	mouse-movie-below-movie-5.swf.trace \
+	mouse-movie-below-movie-6.swf \
+	mouse-movie-below-movie-6.swf.act \
+	mouse-movie-below-movie-6.swf.trace \
+	mouse-movie-below-movie-7.swf \
+	mouse-movie-below-movie-7.swf.act \
+	mouse-movie-below-movie-7.swf.trace \
+	mouse-movie-below-movie-8.swf \
+	mouse-movie-below-movie-8.swf.act \
+	mouse-movie-below-movie-8.swf.trace \
+	mouse-movie-below-nonevent-movie.as \
+	mouse-movie-below-nonevent-movie-5.swf \
+	mouse-movie-below-nonevent-movie-5.swf.act \
+	mouse-movie-below-nonevent-movie-5.swf.trace \
+	mouse-movie-below-nonevent-movie-6.swf \
+	mouse-movie-below-nonevent-movie-6.swf.act \
+	mouse-movie-below-nonevent-movie-6.swf.trace \
+	mouse-movie-below-nonevent-movie-7.swf \
+	mouse-movie-below-nonevent-movie-7.swf.act \
+	mouse-movie-below-nonevent-movie-7.swf.trace \
+	mouse-movie-below-nonevent-movie-8.swf \
+	mouse-movie-below-nonevent-movie-8.swf.act \
+	mouse-movie-below-nonevent-movie-8.swf.trace \
 	mouse-properties.as \
 	mouse-properties-5.swf \
 	mouse-properties-5.swf.trace \
@@ -1611,6 +1701,15 @@ EXTRA_DIST = \
 	onresize-7.swf.trace \
 	onresize-8.swf \
 	onresize-8.swf.trace \
+	onUnload-prototype.as \
+	onUnload-prototype-5.swf \
+	onUnload-prototype-5.swf.trace \
+	onUnload-prototype-6.swf \
+	onUnload-prototype-6.swf.trace \
+	onUnload-prototype-7.swf \
+	onUnload-prototype-7.swf.trace \
+	onUnload-prototype-8.swf \
+	onUnload-prototype-8.swf.trace \
 	order.swf \
 	order.swf.trace \
 	parent-root.swf \
@@ -1994,6 +2093,15 @@ EXTRA_DIST = \
 	remote-lso-usage-properties-7.swf.trace \
 	remote-lso-usage-properties-8.swf \
 	remote-lso-usage-properties-8.swf.trace \
+	remove-child-onUnload.as \
+	remove-child-onUnload-5.swf \
+	remove-child-onUnload-5.swf.trace \
+	remove-child-onUnload-6.swf \
+	remove-child-onUnload-6.swf.trace \
+	remove-child-onUnload-7.swf \
+	remove-child-onUnload-7.swf.trace \
+	remove-child-onUnload-8.swf \
+	remove-child-onUnload-8.swf.trace \
 	remove-depths.as \
 	remove-depths-5.swf \
 	remove-depths-5.swf.trace \
@@ -2012,6 +2120,15 @@ EXTRA_DIST = \
 	remove-movie-7.swf.trace \
 	remove-movie-8.swf \
 	remove-movie-8.swf.trace \
+	remove-with-onUnload.as \
+	remove-with-onUnload-5.swf \
+	remove-with-onUnload-5.swf.trace \
+	remove-with-onUnload-6.swf \
+	remove-with-onUnload-6.swf.trace \
+	remove-with-onUnload-7.swf \
+	remove-with-onUnload-7.swf.trace \
+	remove-with-onUnload-8.swf \
+	remove-with-onUnload-8.swf.trace \
 	removesprite-depths.as \
 	removesprite-depths-5.swf \
 	removesprite-depths-5.swf.trace \

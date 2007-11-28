@@ -206,7 +206,12 @@ AC_ARG_ENABLE(mad,
 	enable_mad="no")
 
 if test "$enable_mad" = "yes"; then
-	AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
+        PKG_CHECK_EXISTS([mad],[
+		MAD_VER=0.15.0
+                PKG_CHECK_MODULES(MAD, mad >= $MAD_VER mad >= $MAD_VER, HAVE_MAD=yes, HAVE_MAD=no)
+        ], [
+                AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
+        ])
 	AC_SUBST(MAD_LIBS)
 	if test "x$HAVE_MAD" = xyes; then
 	  AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])

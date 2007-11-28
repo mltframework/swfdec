@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2007 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -62,7 +62,7 @@ struct _SwfdecButton {
 
   gboolean		menubutton;	/* treat as menubutton */
 
-  GList *		records;	/* the contained objects */
+  GSList *		records;	/* the contained objects */
   SwfdecEventList *	events;		/* the events triggered by this button */
   SwfdecSoundChunk *	sounds[4];    	/* for meaning of index see DefineButtonSound */
 };
@@ -72,8 +72,12 @@ struct _SwfdecButtonClass
   SwfdecGraphicClass	graphic_class;
 };
 
-GType		swfdec_button_get_type	(void);
+GType		swfdec_button_get_type	  	(void);
 
+int		tag_func_define_button		(SwfdecSwfDecoder *	s,
+						 guint			tag);
+int		tag_func_define_button_2	(SwfdecSwfDecoder *	s,
+						 guint			tag);
 
 G_END_DECLS
 #endif

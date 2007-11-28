@@ -113,10 +113,17 @@ void		swfdec_player_render		(SwfdecPlayer *	player,
 						 double		height);
 void		swfdec_player_advance		(SwfdecPlayer *	player,
 						 gulong		msecs);
-gboolean	swfdec_player_handle_mouse	(SwfdecPlayer *	player, 
+gboolean	swfdec_player_mouse_move	(SwfdecPlayer *	player, 
+						 double		x,
+						 double		y);
+gboolean	swfdec_player_mouse_press	(SwfdecPlayer *	player, 
 						 double		x,
 						 double		y,
-						 int		button);
+						 guint		button);
+gboolean	swfdec_player_mouse_release	(SwfdecPlayer *	player, 
+						 double		x,
+						 double		y,
+						 guint		button);
 gboolean	swfdec_player_key_press		(SwfdecPlayer *	player,
 						 guint		keycode,
 						 guint		character);

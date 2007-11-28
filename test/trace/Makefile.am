@@ -629,6 +629,19 @@ EXTRA_DIST = \
 	date-properties-7.swf.trace \
 	date-properties-8.swf \
 	date-properties-8.swf.trace \
+	definebutton-5.swf \
+	definebutton-5.swf.act \
+	definebutton-5.swf.trace \
+	definebutton-6.swf \
+	definebutton-6.swf.act \
+	definebutton-6.swf.trace \
+	definebutton-7.swf \
+	definebutton-7.swf.act \
+	definebutton-7.swf.trace \
+	definebutton-8.swf \
+	definebutton-8.swf.act \
+	definebutton-8.swf.trace \
+	definebutton.xml \
 	definefunction2-arguments.swf \
 	definefunction2-arguments.swf.trace \
 	definefunction2-arguments.xml \

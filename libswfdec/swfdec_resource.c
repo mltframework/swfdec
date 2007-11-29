@@ -431,8 +431,8 @@ swfdec_resource_new (SwfdecPlayer *player, SwfdecLoader *loader, const char *var
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
   resource->version = 7;
   resource->player = player;
-  resource->variables = g_strdup (variables);
   SWFDEC_FLASH_SECURITY (resource)->player = player;
+  resource->variables = g_strdup (variables);
   swfdec_resource_set_loader (resource, loader);
 
   return resource;
@@ -540,6 +540,7 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
     resource->version = SWFDEC_AS_CONTEXT (player)->version;
     resource->player = player;
+    SWFDEC_FLASH_SECURITY (resource)->player = player;
     resource->target = path;
     if (loader)
       resource->clip_loader = g_object_ref (loader);

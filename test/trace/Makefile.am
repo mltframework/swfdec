@@ -804,6 +804,15 @@ EXTRA_DIST = \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \
+	emptymovie-frames-bytes-5.swf \
+	emptymovie-frames-bytes-5.swf.trace \
+	emptymovie-frames-bytes-6.swf \
+	emptymovie-frames-bytes-6.swf.trace \
+	emptymovie-frames-bytes-7.swf \
+	emptymovie-frames-bytes-7.swf.trace \
+	emptymovie-frames-bytes-8.swf \
+	emptymovie-frames-bytes-8.swf.trace \
+	emptymovie-frames-bytes.as \
 	enumerate.as \
 	enumerate2-5.swf \
 	enumerate2-5.swf.trace \

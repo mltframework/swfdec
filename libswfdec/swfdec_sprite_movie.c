@@ -842,8 +842,13 @@ swfdec_sprite_movie_get_frames_loaded (SwfdecSpriteMovie *movie)
   g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), 0);
 
   resource = swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie));
-  if (resource == NULL)
-    return movie->n_frames;
+  if (resource == NULL) {
+    /* FIXME: can we set n_frames to 1 for movies without sprites instead? */
+    if (movie->sprite)
+      return movie->n_frames;
+    else
+      return 1;
+  }
   dec = resource->decoder;
   if (dec == NULL)
     return -1;
@@ -861,8 +866,13 @@ swfdec_sprite_movie_get_frames_total (SwfdecSpriteMovie *movie)
   g_return_val_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie), 0);
 
   resource = swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie));
-  if (resource == NULL)
-    return movie->n_frames;
+  if (resource == NULL) {
+    /* FIXME: can we set n_frames to 1 for movies without sprites instead? */
+    if (movie->sprite)
+      return movie->n_frames;
+    else
+      return 1;
+  }
   dec = resource->decoder;
   if (dec == NULL)
     return 0;

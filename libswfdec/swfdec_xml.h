@@ -67,16 +67,23 @@ struct _SwfdecXmlClass {
   SwfdecXmlNodeClass	xml_node_class;
 };
 
-GType		swfdec_xml_get_type	(void);
+GType		swfdec_xml_get_type		(void);
 
-char *		swfdec_xml_escape	(const char *		orginal);
-char *		swfdec_xml_escape_len	(const char *		orginal,
-					 gssize			length);
-char *		swfdec_xml_unescape	(SwfdecAsContext *	cx,
-					 const char *		orginal);
-char *		swfdec_xml_unescape_len	(SwfdecAsContext *	cx,
-					 const char *		orginal,
-					 gssize			length);
+char *		swfdec_xml_escape		(const char *		orginal);
+char *		swfdec_xml_escape_len		(const char *		orginal,
+						 gssize			length);
+char *		swfdec_xml_unescape		(SwfdecAsContext *	cx,
+						 const char *		orginal);
+char *		swfdec_xml_unescape_len		(SwfdecAsContext *	cx,
+						 const char *		orginal,
+						 gssize			length);
+
+SwfdecXml *	swfdec_xml_new			(SwfdecAsContext *	context,
+						 const char *		str,
+						 gboolean		ignore_white);
+SwfdecXml *	swfdec_xml_new_no_properties	(SwfdecAsContext *	context,
+						 const char *		str,
+						 gboolean		ignore_white);
 
 G_END_DECLS
 #endif

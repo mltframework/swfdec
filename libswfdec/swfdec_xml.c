@@ -847,3 +847,49 @@ swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	swfdec_as_value_to_string (cx, &argv[0]));
   }
 }
+
+SwfdecXml *
+swfdec_xml_new_no_properties (SwfdecAsContext *context, const char *str,
+    gboolean ignore_white)
+{
+  SwfdecAsValue val;
+  SwfdecXml *xml;
+  guint size;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+
+  size = sizeof (SwfdecXml);
+  if (!swfdec_as_context_use_mem (context, size))
+    return NULL;
+  xml = g_object_new (SWFDEC_TYPE_XML, NULL);
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (xml), context, size);
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XML, &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (xml),
+	SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  }
+
+  xml->ignoreWhite = ignore_white;
+
+  swfdec_xml_node_init_values (SWFDEC_XML_NODE (xml),
+      SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
+
+  SWFDEC_AS_VALUE_SET_STRING (&xml->contentType,
+      SWFDEC_AS_STR_application_x_www_form_urlencoded);
+
+  if (str != NULL)
+    swfdec_xml_parseXML (xml, str);
+
+  return xml;
+}
+
+SwfdecXml *
+swfdec_xml_new (SwfdecAsContext *context, const char *str,
+    gboolean ignore_white)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+
+  swfdec_xml_init_properties (context);
+
+  return swfdec_xml_new_no_properties (context, str, ignore_white);
+}

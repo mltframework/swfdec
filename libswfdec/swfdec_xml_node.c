@@ -82,18 +82,18 @@ swfdec_xml_node_num_children (SwfdecXmlNode *node)
   return swfdec_as_array_get_length (node->children);
 }
 
-static SwfdecXmlNode *
-swfdec_xml_node_get_child (SwfdecXmlNode *node, gint32 ind)
+SwfdecXmlNode *
+swfdec_xml_node_get_child (SwfdecXmlNode *node, gint32 index_)
 {
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), NULL);
-  g_return_val_if_fail (ind >= 0, NULL);
+  g_return_val_if_fail (index_ >= 0, NULL);
 
-  if (ind >= swfdec_xml_node_num_children (node))
+  if (index_ >= swfdec_xml_node_num_children (node))
     return NULL;
 
-  swfdec_as_array_get_value (node->children, ind, &val);
+  swfdec_as_array_get_value (node->children, index_, &val);
 
   g_return_val_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val), NULL);
   g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (
@@ -143,6 +143,18 @@ swfdec_xml_node_update_childNodes (SwfdecXmlNode *node)
   swfdec_as_array_append_with_flags (node->childNodes, num, vals,
       SWFDEC_AS_VARIABLE_CONSTANT);
   g_free (vals);
+}
+
+const char *
+swfdec_xml_node_get_attribute (SwfdecXmlNode *node, const char *name)
+{
+  SwfdecAsValue val;
+
+  if (swfdec_as_object_get_variable (node->attributes, name, &val)) {
+    return swfdec_as_value_to_string (SWFDEC_AS_OBJECT (node)->context, &val);
+  } else {
+    return NULL;
+  }
 }
 
 static const char *

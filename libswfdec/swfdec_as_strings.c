@@ -465,5 +465,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("overlay")
   SWFDEC_AS_CONSTANT_STRING ("hardlight")
   SWFDEC_AS_CONSTANT_STRING ("getTextExtent")
+  SWFDEC_AS_CONSTANT_STRING ("domain")
   /* add more here */
 ;

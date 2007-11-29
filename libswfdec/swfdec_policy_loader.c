@@ -34,6 +34,8 @@
 #include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource_request.h"
+#include "swfdec_xml.h"
+#include "swfdec_xml_node.h"
 
 /*** SWFDEC_LOADER_TARGET ***/
 
@@ -52,89 +54,87 @@ swfdec_policy_loader_target_error (SwfdecLoaderTarget *target,
   policy_loader->func (policy_loader, FALSE);
 }
 
-typedef struct {
-  const char		*name;
-  guint			length;
-  guchar		data[4];
-} ByteOrderMark;
+static gboolean
+swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
+    const char *host)
+{
+  SwfdecXml *xml;
+  gint32 i, j;
 
-static ByteOrderMark boms[] = {
-  { "UTF-8", 3, {0xEF, 0xBB, 0xBF, 0} },
-  { "UTF-16BE", 2, {0xFE, 0xFF, 0, 0} },
-  { "UTF-16LE", 2, {0xFF, 0xFE, 0, 0} },
-  { "UTF-8", 0, {0, 0, 0, 0} }
-};
+  xml = swfdec_xml_new_no_properties (context, text, TRUE);
+
+  if (xml == NULL) {
+    SWFDEC_ERROR ("failed to create an XML object for crossdomain policy");
+    return FALSE;
+  }
+
+  if (SWFDEC_XML_NODE (xml)->type != SWFDEC_XML_NODE_ELEMENT) {
+    SWFDEC_LOG ("empty crossdomain policy file");
+    return FALSE;
+  }
+
+  for (i = 0; i < swfdec_xml_node_num_children (SWFDEC_XML_NODE (xml)); i++) {
+    SwfdecXmlNode *node_cdp =
+      swfdec_xml_node_get_child (SWFDEC_XML_NODE (xml), i);
+
+    if (node_cdp->type != SWFDEC_XML_NODE_ELEMENT)
+      continue;
+
+    if (g_ascii_strcasecmp (node_cdp->name, "cross-domain-policy") != 0)
+      continue;
+
+    for (j = 0; j < swfdec_xml_node_num_children (node_cdp); j++) {
+      SwfdecXmlNode *node_aaf = swfdec_xml_node_get_child (node_cdp, j);
+      const char *value;
+
+      if (node_aaf->type != SWFDEC_XML_NODE_ELEMENT)
+	continue;
+
+      if (g_ascii_strcasecmp (node_aaf->name, "allow-access-from") != 0)
+	continue;
+
+      // FIXME: secure attribute?
+
+      value = swfdec_xml_node_get_attribute (node_aaf, SWFDEC_AS_STR_domain);
+      if (value != NULL) {
+	if (!strcmp (value, "*"))
+	  return TRUE;
+	if (!g_ascii_strcasecmp (value, host))
+	  return TRUE;
+	// FIXME: wildcards!
+      }
+    }
+  }
+
+  return FALSE;
+}
 
 static void
 swfdec_policy_loader_target_eof (SwfdecLoaderTarget *target,
     SwfdecLoader *loader)
 {
   SwfdecPolicyLoader *policy_loader = SWFDEC_POLICY_LOADER (target);
-  char *text, *xml;
-  guint size;
+  gboolean allow;
+  char *text;
 
-  /* get the text from the loader */
-  // TODO: Get rid of extra alloc when getting UTF-8 with bom
-  size = swfdec_buffer_queue_get_depth (loader->queue);
-  text = g_try_malloc (size + 1);
-  if (text) {
-    SwfdecBuffer *buffer;
-    guint i = 0, j;
-    while ((buffer = swfdec_buffer_queue_pull_buffer (loader->queue))) {
-      memcpy (text + i, buffer->data, buffer->length);
-      i += buffer->length;
-      swfdec_buffer_unref (buffer);
-    }
-    g_assert (i == size);
-    text[size] = '\0';
+  text = swfdec_loader_get_text (policy_loader->loader, 8);
 
-    for (i = 0; boms[i].length > 0; i++) {
-      if (size < boms[i].length)
-	continue;
-
-      for (j = 0; j < boms[i].length; j++) {
-	if ((guchar)text[j] != boms[i].data[j])
-	  break;
-      }
-      if (j == boms[i].length)
-	break;
-    }
-
-    if (!strcmp (boms[i].name, "UTF-8")) {
-      if (!g_utf8_validate (text + boms[i].length, size - boms[i].length,
-	    NULL)) {
-	SWFDEC_ERROR ("downloaded data is not valid UTF-8");
-	g_free (text);
-	text = NULL;
-	xml = NULL;
-      } else {
-	if (boms[i].length == 0) {
-	  xml = text;
-	  text = NULL;
-	} else {
-	  xml = g_strdup (text + boms[i].length);
-	  g_free (text);
-	  text = NULL;
-	}
-      }
-    } else {
-      xml = g_convert (text + boms[i].length,
-	  size - boms[i].length, "UTF-8", boms[i].name, NULL, NULL, NULL);
-      if (xml == NULL)
-	SWFDEC_ERROR ("downloaded data is not valid %s", boms[i].name);
-      g_free (text);
-      text = NULL;
-    }
+  if (text == NULL) {
+    SWFDEC_ERROR ("couldn't get text from crossdomain policy");
+    allow = FALSE;
   } else {
-    SWFDEC_ERROR ("not enough memory to copy %u bytes", size);
-    xml = NULL;
+    allow = swfdec_policy_loader_check (
+	SWFDEC_AS_CONTEXT (policy_loader->sec->player), text,
+	swfdec_url_get_host (policy_loader->sec->url));
   }
 
-  // TODO
-  policy_loader->func (policy_loader, TRUE);
+  g_free (text);
 
-  if (xml != NULL)
-    g_free (xml);
+  SWFDEC_LOG ("crossdomain policy %s access from %s to %s",
+      (allow ? "allows" : "doesn't allow"),
+      swfdec_url_get_host (policy_loader->sec->url), policy_loader->host);
+
+  policy_loader->func (policy_loader, allow);
 }
 
 static void

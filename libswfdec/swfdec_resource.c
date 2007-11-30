@@ -56,13 +56,14 @@ swfdec_resource_is_root (SwfdecResource *resource)
 {
   g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), FALSE);
 
-  return resource->movie == resource->player->roots->data;
+  return
+    resource->movie == SWFDEC_FLASH_SECURITY (resource)->player->roots->data;
 }
 
 static SwfdecPlayer *
 swfdec_resource_loader_target_get_player (SwfdecLoaderTarget *target)
 {
-  return SWFDEC_RESOURCE (target)->player;
+  return SWFDEC_FLASH_SECURITY (target)->player;
 }
 
 static void
@@ -97,7 +98,7 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     swfdec_resource_check_rights (instance);
     if (swfdec_resource_is_root (instance)) {
       swfdec_movie_initialize (SWFDEC_MOVIE (movie));
-      swfdec_player_perform_actions (instance->player);
+      swfdec_player_perform_actions (SWFDEC_FLASH_SECURITY (instance)->player);
     }
   } else {
     g_assert_not_reached ();
@@ -200,7 +201,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
 
   if (resource->movie)
     return TRUE;
-  player = resource->player;
+  player = SWFDEC_FLASH_SECURITY (resource)->player;
   movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (SWFDEC_AS_CONTEXT (player),
       player->roots->data, resource->target, resource->target + strlen (resource->target));
   if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
@@ -257,7 +258,8 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
     if (swfdec_buffer_queue_get_depth (loader->queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return;
     buffer = swfdec_buffer_queue_peek (loader->queue, 4);
-    dec = swfdec_decoder_new (resource->player, buffer);
+    dec =
+      swfdec_decoder_new (SWFDEC_FLASH_SECURITY (resource)->player, buffer);
     swfdec_buffer_unref (buffer);
     if (dec == NULL) {
       SWFDEC_ERROR ("no decoder found for format");
@@ -299,8 +301,8 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
       if (SWFDEC_IS_SWF_DECODER (dec))
 	resource->version = SWFDEC_SWF_DECODER (dec)->version;
       if (swfdec_resource_is_root (resource)) {
-	swfdec_player_initialize (resource->player, resource->version,
-	    dec->rate, dec->width, dec->height);
+	swfdec_player_initialize (SWFDEC_FLASH_SECURITY (resource)->player,
+	    resource->version, dec->rate, dec->width, dec->height);
       }
     }
     if (status & SWFDEC_STATUS_IMAGE)
@@ -430,7 +432,6 @@ swfdec_resource_new (SwfdecPlayer *player, SwfdecLoader *loader, const char *var
 
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
   resource->version = 7;
-  resource->player = player;
   SWFDEC_FLASH_SECURITY (resource)->player = player;
   resource->variables = g_strdup (variables);
   swfdec_resource_set_loader (resource, loader);
@@ -539,7 +540,6 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
   } else {
     resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
     resource->version = SWFDEC_AS_CONTEXT (player)->version;
-    resource->player = player;
     SWFDEC_FLASH_SECURITY (resource)->player = player;
     resource->target = path;
     if (loader)

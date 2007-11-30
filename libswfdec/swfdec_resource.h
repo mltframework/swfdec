@@ -47,7 +47,6 @@ struct _SwfdecResource
 {
   SwfdecFlashSecurity	flash_security;
 
-  SwfdecPlayer *	player;		/* player we belong to */
   guint			version;	/* version of this resource */
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
 

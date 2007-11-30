@@ -62,6 +62,10 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
   gint32 i, j;
   char *host_lower;
 
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (text != NULL, FALSE);
+  g_return_val_if_fail (host != NULL, FALSE);
+
   xml = swfdec_xml_new_no_properties (context, text, TRUE);
 
   if (xml == NULL) {
@@ -239,5 +243,7 @@ swfdec_policy_loader_new (SwfdecFlashSecurity *sec, const char *host,
 void
 swfdec_policy_loader_free (SwfdecPolicyLoader *policy_loader)
 {
+  g_return_if_fail (SWFDEC_IS_POLICY_LOADER (policy_loader));
+
   g_object_unref (policy_loader);
 }

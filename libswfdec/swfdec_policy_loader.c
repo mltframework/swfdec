@@ -60,6 +60,7 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
 {
   SwfdecXml *xml;
   gint32 i, j;
+  char *host_lower;
 
   xml = swfdec_xml_new_no_properties (context, text, TRUE);
 
@@ -72,6 +73,8 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
     SWFDEC_LOG ("empty crossdomain policy file");
     return FALSE;
   }
+
+  host_lower = g_ascii_strdown (host, -1);
 
   for (i = 0; i < swfdec_xml_node_num_children (SWFDEC_XML_NODE (xml)); i++) {
     SwfdecXmlNode *node_cdp =
@@ -97,14 +100,30 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
 
       value = swfdec_xml_node_get_attribute (node_aaf, SWFDEC_AS_STR_domain);
       if (value != NULL) {
-	if (!strcmp (value, "*"))
+	GPatternSpec *pattern;
+	char *value_lower;
+
+	// GPatternSpec uses ? as a wildcard character, but we won't
+	// And there can't be a host that has ? character
+	if (strchr (value, '?') != NULL)
+	  continue;
+
+	value_lower = g_ascii_strdown (value, -1);
+	pattern = g_pattern_spec_new (value_lower);
+	g_free (value_lower);
+
+	if (g_pattern_match_string (pattern, host_lower)) {
+	  g_free (host_lower);
+	  g_pattern_spec_free (pattern);
 	  return TRUE;
-	if (!g_ascii_strcasecmp (value, host))
-	  return TRUE;
-	// FIXME: wildcards!
+	}
+
+	g_pattern_spec_free (pattern);
       }
     }
   }
+
+  g_free (host_lower);
 
   return FALSE;
 }

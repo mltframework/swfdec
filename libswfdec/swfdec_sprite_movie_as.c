@@ -633,9 +633,11 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_INITIALIZE);
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
+    swfdec_movie_initialize (movie);
     swfdec_movie_execute (movie, SWFDEC_EVENT_CONSTRUCT);
+  } else {
+    swfdec_movie_initialize (movie);
   }
-  swfdec_movie_initialize (movie);
 }
 
 SWFDEC_AS_NATIVE (900, 0, swfdec_sprite_movie_attachMovie)

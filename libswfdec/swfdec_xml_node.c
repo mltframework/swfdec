@@ -150,6 +150,9 @@ swfdec_xml_node_get_attribute (SwfdecXmlNode *node, const char *name)
 {
   SwfdecAsValue val;
 
+  g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
   if (swfdec_as_object_get_variable (node->attributes, name, &val)) {
     return swfdec_as_value_to_string (SWFDEC_AS_OBJECT (node)->context, &val);
   } else {

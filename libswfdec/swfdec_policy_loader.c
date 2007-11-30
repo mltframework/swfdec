@@ -27,13 +27,10 @@
 #include "swfdec_policy_loader.h"
 #include "swfdec_flash_security.h"
 #include "swfdec_resource.h"
-#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
-#include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_resource_request.h"
 #include "swfdec_xml.h"
 #include "swfdec_xml_node.h"
 

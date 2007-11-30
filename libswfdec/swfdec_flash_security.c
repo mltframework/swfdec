@@ -66,6 +66,9 @@ swfdec_flash_security_call_pending (SwfdecFlashSecurity *sec, const char *host,
   GSList *iter, *prev, *next;
   SwfdecAllowURLPending *pending;
 
+  g_return_if_fail (SWFDEC_IS_FLASH_SECURITY (sec));
+  g_return_if_fail (host != NULL);
+
   prev = NULL;
   for (iter = sec->allow_url_pending; iter != NULL; iter = next) {
     next = iter->next;
@@ -118,6 +121,9 @@ swfdec_flash_security_get_cross_domain_policy (SwfdecFlashSecurity *sec,
   GSList *iter;
   SwfdecPolicyLoader *policy_loader;
 
+  g_return_if_fail (SWFDEC_IS_FLASH_SECURITY (sec));
+  g_return_if_fail (host != NULL);
+
   for (iter = sec->policy_loaders; iter != NULL; iter = iter->next) {
     policy_loader = iter->data;
 
@@ -143,6 +149,10 @@ swfdec_flash_security_allow_cross_domain (SwfdecFlashSecurity *sec,
 {
   SwfdecAllowURLPending *pending;
   const char *host;
+
+  g_assert (SWFDEC_IS_FLASH_SECURITY (sec));
+  g_assert (url != NULL);
+  g_assert (callback != NULL);
 
   host = swfdec_url_get_host (url);
 

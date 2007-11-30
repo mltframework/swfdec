@@ -90,10 +90,9 @@ swfdec_player_request_resource_now (SwfdecPlayer *player,
   SwfdecURL *absolute;
   AllowCallbackData *data;
 
-  // FIXME
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (SWFDEC_IS_SECURITY (security));
-  g_return_if_fail (url != NULL);
+  g_assert (SWFDEC_IS_PLAYER (player));
+  g_assert (SWFDEC_IS_SECURITY (security));
+  g_assert (url != NULL);
 
   data = g_new (AllowCallbackData, 1);
   data->player = player;

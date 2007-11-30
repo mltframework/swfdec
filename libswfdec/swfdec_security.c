@@ -76,12 +76,11 @@ swfdec_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
 {
   SwfdecSecurityClass *klass;
 
-  // FIXME
-  g_return_if_fail (SWFDEC_IS_SECURITY (guard));
-  g_return_if_fail (url != NULL);
+  g_assert (SWFDEC_IS_SECURITY (guard));
+  g_assert (url != NULL);
 
   klass = SWFDEC_SECURITY_GET_CLASS (guard);
-  g_return_if_fail (klass->allow_url);
+  g_assert (klass->allow_url);
   klass->allow_url (guard, url, callback, user_data);
 }
 

@@ -89,6 +89,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_font.c \
 	swfdec_glow_filter.c \
 	swfdec_gradient_filter.c \
+	swfdec_gradient_pattern.c \
 	swfdec_graphic.c \
 	swfdec_graphic_movie.c \
 	swfdec_image.c \
@@ -231,6 +232,7 @@ noinst_HEADERS = \
 	swfdec_flash_security.h \
 	swfdec_flv_decoder.h \
 	swfdec_font.h \
+	swfdec_gradient_pattern.h \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \

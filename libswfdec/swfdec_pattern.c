@@ -28,6 +28,7 @@
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_gradient_pattern.h"
 #include "swfdec_image.h"
 #include "swfdec_path.h"
 #include "swfdec_stroke.h"
@@ -235,124 +236,6 @@ swfdec_image_pattern_class_init (SwfdecImagePatternClass *klass)
 
 static void
 swfdec_image_pattern_init (SwfdecImagePattern *pattern)
-{
-}
-
-/*** GRADIENT PATTERN ***/
-
-typedef struct _SwfdecGradientPattern SwfdecGradientPattern;
-typedef struct _SwfdecGradientPatternClass SwfdecGradientPatternClass;
-
-typedef struct _SwfdecGradientEntry SwfdecGradientEntry;
-
-#define SWFDEC_TYPE_GRADIENT_PATTERN                    (swfdec_gradient_pattern_get_type())
-#define SWFDEC_IS_GRADIENT_PATTERN(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_GRADIENT_PATTERN))
-#define SWFDEC_IS_GRADIENT_PATTERN_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_GRADIENT_PATTERN))
-#define SWFDEC_GRADIENT_PATTERN(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_GRADIENT_PATTERN, SwfdecGradientPattern))
-#define SWFDEC_GRADIENT_PATTERN_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_GRADIENT_PATTERN, SwfdecGradientPatternClass))
-#define SWFDEC_GRADIENT_PATTERN_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_GRADIENT_PATTERN, SwfdecGradientPatternClass))
-
-struct _SwfdecGradientEntry {
-  guint ratio;
-  SwfdecColor color;
-};
-
-struct _SwfdecGradientPattern
-{
-  SwfdecPattern		pattern;
-
-  SwfdecGradientEntry	gradient[16];		/* gradient to paint */
-  SwfdecGradientEntry	end_gradient[16];     	/* end gradient for morphs */
-  guint			n_gradients;		/* number of gradients */
-  cairo_extend_t	extend;			/* extend of gradient */
-  gboolean		radial;			/* TRUE for radial gradient, FALSE for linear gradient */
-  double		focus;			/* focus point */
-};
-
-struct _SwfdecGradientPatternClass
-{
-  SwfdecPatternClass	pattern_class;
-};
-
-GType swfdec_gradient_pattern_get_type (void);
-G_DEFINE_TYPE (SwfdecGradientPattern, swfdec_gradient_pattern, SWFDEC_TYPE_PATTERN);
-
-static void
-swfdec_gradient_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
-{
-  guint i;
-
-  SwfdecGradientPattern *dpattern = SWFDEC_GRADIENT_PATTERN (dest);
-  SwfdecGradientPattern *spattern = SWFDEC_GRADIENT_PATTERN (source);
-
-  g_return_if_fail (spattern->end_gradient != NULL);
-  dpattern->radial = spattern->radial;
-  dpattern->focus = spattern->focus;
-  dpattern->extend = spattern->extend;
-  dpattern->n_gradients = spattern->n_gradients;
-  for (i = 0; i < spattern->n_gradients; i++) {
-    dpattern->gradient[i].color = swfdec_color_apply_morph (spattern->gradient[i].color,
-	spattern->end_gradient[i].color, ratio);
-    dpattern->gradient[i].ratio = (spattern->gradient[i].ratio * (65535 - ratio) +
-	spattern->end_gradient[i].ratio * ratio) / 65535;
-  }
-
-  SWFDEC_DRAW_CLASS (swfdec_gradient_pattern_parent_class)->morph (dest, source, ratio);
-}
-
-static cairo_pattern_t *
-swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransform *trans)
-{
-  guint i;
-  cairo_pattern_t *pattern;
-  SwfdecColor color;
-  double offset;
-  SwfdecGradientPattern *gradient = SWFDEC_GRADIENT_PATTERN (pat);
-
-#if 0
-  /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
-  if (gradient->radial)
-    pattern = cairo_pattern_create_radial (0, 0, 0, 0, 0, 16384);
-  else
-    pattern = cairo_pattern_create_linear (-16384.0, 0, 16384.0, 0);
-  cairo_pattern_set_matrix (pattern, &pat->transform);
-#else
-  {
-    cairo_matrix_t mat = pat->transform;
-    if (gradient->radial) {
-      pattern = cairo_pattern_create_radial ((16384.0 / 256.0) * gradient->focus, 
-	  0, 0, 0, 0, 16384 / 256.0);
-    } else {
-      pattern = cairo_pattern_create_linear (-16384.0 / 256.0, 0, 16384.0 / 256.0, 0);
-    }
-    cairo_matrix_scale (&mat, 1 / 256.0, 1 / 256.0);
-    mat.x0 /= 256.0;
-    mat.y0 /= 256.0;
-    cairo_pattern_set_matrix (pattern, &mat);
-  }
-#endif
-  cairo_pattern_set_extend (pattern, gradient->extend);
-  for (i = 0; i < gradient->n_gradients; i++){
-    color = swfdec_color_apply_transform (gradient->gradient[i].color,
-	trans);
-    offset = gradient->gradient[i].ratio / 255.0;
-    cairo_pattern_add_color_stop_rgba (pattern, offset,
-	SWFDEC_COLOR_R(color) / 255.0, SWFDEC_COLOR_G(color) / 255.0,
-	SWFDEC_COLOR_B(color) / 255.0, SWFDEC_COLOR_A(color) / 255.0);
-  }
-  return pattern;
-}
-
-static void
-swfdec_gradient_pattern_class_init (SwfdecGradientPatternClass *klass)
-{
-  SWFDEC_DRAW_CLASS (klass)->morph = swfdec_gradient_pattern_morph;
-
-  SWFDEC_PATTERN_CLASS (klass)->get_pattern = swfdec_gradient_pattern_get_pattern;
-}
-
-static void
-swfdec_gradient_pattern_init (SwfdecGradientPattern *pattern)
 {
 }
 

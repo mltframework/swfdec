@@ -108,3 +108,10 @@ static void
 swfdec_gradient_pattern_init (SwfdecGradientPattern *pattern)
 {
 }
+
+SwfdecDraw *
+swfdec_gradient_pattern_new (void)
+{
+  return g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
+}
+

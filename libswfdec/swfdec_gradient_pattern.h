@@ -60,6 +60,8 @@ struct _SwfdecGradientPatternClass
 
 GType		swfdec_gradient_pattern_get_type	(void);
 
+SwfdecDraw *	swfdec_gradient_pattern_new		(void);
+							 
 
 G_END_DECLS
 #endif

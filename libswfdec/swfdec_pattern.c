@@ -262,7 +262,7 @@ swfdec_pattern_do_parse (SwfdecBits *bits, SwfdecSwfDecoder *dec, gboolean rgba)
   } else if (paint_style_type == 0x10 || paint_style_type == 0x12 || paint_style_type == 0x13) {
     SwfdecGradientPattern *gradient;
     guint i, interpolation;
-    pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
+    pattern = SWFDEC_PATTERN (swfdec_gradient_pattern_new ());
     gradient = SWFDEC_GRADIENT_PATTERN (pattern);
     swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
     pattern->end_transform = pattern->start_transform;
@@ -409,7 +409,7 @@ swfdec_pattern_parse_morph (SwfdecBits *bits, SwfdecSwfDecoder *dec)
   } else if (paint_style_type == 0x10 || paint_style_type == 0x12 || paint_style_type == 0x13) {
     SwfdecGradientPattern *gradient;
     guint i, interpolation;
-    pattern = g_object_new (SWFDEC_TYPE_GRADIENT_PATTERN, NULL);
+    pattern = SWFDEC_PATTERN (swfdec_gradient_pattern_new ());
     gradient = SWFDEC_GRADIENT_PATTERN (pattern);
     swfdec_bits_get_matrix (bits, &pattern->start_transform, NULL);
     swfdec_bits_get_matrix (bits, &pattern->end_transform, NULL);

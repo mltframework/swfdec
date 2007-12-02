@@ -67,6 +67,9 @@ EXTRA_DIST = \
 	drawing-zorder-8.swf \
 	drawing-zorder-8.swf.org.png \
 	drawing-zorder-8.swf.png \
+	empty-gradient.swf \
+	empty-gradient.swf.png \
+	empty-gradient.xml \
 	fillstyle-order.swf \
 	fillstyle-order.swf.png \
 	fillstyle-order.xml \

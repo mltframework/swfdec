@@ -183,11 +183,16 @@ swfdec_gtk_loader_close (SwfdecLoader *loader)
   SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
 
   if (gtk->message) {
-    SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
+    gboolean eof;
 
-    soup_session_cancel_message (klass->session, gtk->message);
-    g_object_unref (gtk->message);
-    gtk->message = NULL;
+    g_object_get (loader, "eof", &eof, NULL);
+    if (!eof) {
+      SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
+
+      soup_session_cancel_message (klass->session, gtk->message);
+      g_object_unref (gtk->message);
+      gtk->message = NULL;
+    }
   }
 }
 #endif

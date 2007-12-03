@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<swf version="7" compressed="1">
+  <Header framerate="30" frames="1">
+    <size>
+      <Rectangle left="0" right="6120" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <DefineShape2 objectID="1">
+        <bounds>
+          <Rectangle left="500" right="5620" top="500" bottom="2500"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+	      <LinearGradient spreadMode="1" interpolationMode="0">
+		<matrix>
+		  <Transform scaleX="0.05625" scaleY="1" skewX="0" skewY="0" transX="3060" transY="1500"/>
+		</matrix>
+		<gradientColors>
+		  <GradientItem position="254">
+		    <color>
+		      <Color red="255" green="0" blue="0" alpha="255"/>
+		    </color>
+		  </GradientItem>
+		  <GradientItem position="0">
+		    <color>
+		      <Color red="0" green="0" blue="255" alpha="255"/>
+		    </color>
+		  </GradientItem>
+		  <GradientItem position="0">
+		    <color>
+		      <Color red="0" green="255" blue="0" alpha="255"/>
+		    </color>
+		  </GradientItem>
+		</gradientColors>
+	      </LinearGradient>
+            </fillStyles>
+	    <lineStyles />
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup x="500" y="500" fillStyle0="1"/>
+              <LineTo x="0" y="2000"/>
+              <LineTo x="5120" y="0"/>
+              <LineTo x="0" y="-2000"/>
+	      <LineTo x="-5120" y="0"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape2>
+      <PlaceObject2 replace="0" depth="0" objectID="1" />
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

@@ -216,6 +216,22 @@ swfdec_as_str_concat (SwfdecAsContext *cx, const char * s1, const char *s2)
 /**
  * swfdec_as_double_to_string:
  * @context: a #SwfdecAsContext
+ * @i: an integer that fits into 32 bits
+ *
+ * Converts @d into a string using the same conversion algorithm as the 
+ * official Flash player.
+ *
+ * Returns: a garbage-collected string
+ **/
+const char *
+swfdec_as_integer_to_string (SwfdecAsContext *context, int i)
+{
+  return swfdec_as_context_give_string (context, g_strdup_printf ("%d", i));
+}
+
+/**
+ * swfdec_as_double_to_string:
+ * @context: a #SwfdecAsContext
  * @d: a double
  *
  * Converts @d into a string using the same conversion algorithm as the 

@@ -73,6 +73,18 @@ EXTRA_DIST = \
 	fillstyle-order.swf \
 	fillstyle-order.swf.png \
 	fillstyle-order.xml \
+	gradient-beginGradientFill.as \
+	gradient-beginGradientFill-5.swf \
+	gradient-beginGradientFill-5.swf.png \
+	gradient-beginGradientFill-6.swf \
+	gradient-beginGradientFill-6.swf.png \
+	gradient-beginGradientFill-6.swf.org.png \
+	gradient-beginGradientFill-7.swf \
+	gradient-beginGradientFill-7.swf.png \
+	gradient-beginGradientFill-7.swf.org.png \
+	gradient-beginGradientFill-8.swf \
+	gradient-beginGradientFill-8.swf.org.png \
+	gradient-beginGradientFill-8.swf.png \
 	gradient-end-duplication.swf \
 	gradient-end-duplication.swf.png \
 	gradient-end-duplication.swf.org.png \

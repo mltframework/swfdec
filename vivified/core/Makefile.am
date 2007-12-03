@@ -4,6 +4,10 @@ libvivified_core_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_GTK_CFLAGS) $(VIVI_CFLAGS
 libvivified_core_la_LDFLAGS = $(SWFDEC_GTK_LIBS) $(VIVI_LIBS)
 
 libvivified_core_la_SOURCES = \
+	$(libvivified_core_sources) \
+	vivi_marshal.c
+
+libvivified_core_sources = \
 	vivi_application.c \
 	vivi_application_as.c \
 	vivi_application.c \
@@ -12,7 +16,6 @@ libvivified_core_la_SOURCES = \
 	vivi_function.c \
 	vivi_initialize.as \
 	vivi_initialize.s \
-	vivi_marshal.c \
 	vivi_ming.c \
 	vivi_player_as.c \
 	vivi_wrap.c \
@@ -43,9 +46,9 @@ CLEANFILES = \
 EXTRA_DIST = \
 	vivi_marshal.list
 
-vivi_function_list.h: $(libvivified_core_la_SOURCES)
+vivi_function_list.h: $(libvivified_core_source)
 	(cd $(srcdir) \
-	  && grep -he "^VIVI_FUNCTION" $(libvivified_core_la_SOURCES) \
+	  && grep -he "^VIVI_FUNCTION" $(libvivified_core_sources) \
 	 ) >> xgen-vfl \
 	&& (cmp -s xgen-vfl vivi_asnative.h || cp xgen-vfl vivi_function_list.h) \
 	&& rm -f xgen-vfl

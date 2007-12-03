@@ -807,8 +807,6 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       cairo_fill (cr);
     }
 
-    cairo_move_to (cr, x, y);
-
     skipped = 0;
     do {
       if (++linenum < MIN (text_movie->scroll, text_movie->scroll_max))
@@ -833,21 +831,18 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	  x + layout->offset_x + rect.x + rect.width < limit.x0)
 	continue;
 
+      cairo_move_to (cr, x, y);
+
       if (pango_layout_iter_at_last_line (iter_line))
 	cairo_rel_move_to (cr, 0, layout->last_line_offset_y);
       cairo_rel_move_to (cr, layout->offset_x + rect.x,
 	  pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped);
+
       line = pango_layout_iter_get_line_readonly (iter_line);
       pango_cairo_show_layout_line (cr, line);
-      cairo_rel_move_to (cr, -(layout->offset_x + rect.x),
-	  -(pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE -
-	    skipped));
-      if (pango_layout_iter_at_last_line (iter_line))
-	cairo_rel_move_to (cr, 0, -layout->last_line_offset_y);
     } while (pango_layout_iter_next_line (iter_line));
 
     if (linenum >= MIN (text_movie->scroll, text_movie->scroll_max)) {
-      cairo_rel_move_to (cr, 0, layout->height - skipped);
       y += layout->height - skipped;
       skipped = 0;
     }

@@ -105,8 +105,9 @@ swfdec_gradient_pattern_class_init (SwfdecGradientPatternClass *klass)
 }
 
 static void
-swfdec_gradient_pattern_init (SwfdecGradientPattern *pattern)
+swfdec_gradient_pattern_init (SwfdecGradientPattern *gradient)
 {
+  gradient->extend = CAIRO_EXTEND_PAD;
 }
 
 SwfdecDraw *

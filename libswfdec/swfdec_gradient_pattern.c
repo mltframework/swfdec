@@ -62,6 +62,10 @@ swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransf
   double offset;
   SwfdecGradientPattern *gradient = SWFDEC_GRADIENT_PATTERN (pat);
 
+  if (gradient->n_gradients == 0) {
+    /* cairo interprets an empty gradient as translucent, not as solid black */
+    return cairo_pattern_create_rgb (0, 0, 0);
+  }
 #if 0
   /* use this when https://bugs.freedesktop.org/show_bug.cgi?id=8341 is fixed */
   if (gradient->radial)

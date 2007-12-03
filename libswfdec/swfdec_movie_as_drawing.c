@@ -22,9 +22,11 @@
 #endif
 
 #include "swfdec_movie.h"
+#include "swfdec_as_internal.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
-#include "swfdec_as_internal.h"
+#include "swfdec_gradient_pattern.h"
 #include "swfdec_path.h"
 #include "swfdec_pattern.h"
 #include "swfdec_stroke.h"
@@ -69,6 +71,9 @@ swfdec_sprite_movie_end_fill (SwfdecMovie *movie, SwfdecDraw *new)
   }
 }
 
+#define SWFDEC_COLOR_FROM_COLOR_ALPHA(color, alpha) \
+  (((color) & 0xFFFFFF) | SWFDEC_COLOR_COMBINE (0, 0, 0, CLAMP ((alpha), 0, 100) * 255 / 100))
+
 SWFDEC_AS_NATIVE (901, 1, swfdec_sprite_movie_beginFill)
 void
 swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
@@ -84,16 +89,87 @@ swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc == 0)
     return;
   color = color & 0xFFFFFF;
-  if (argc > 1) {
-    alpha = CLAMP (alpha, 0, 100);
-    alpha = SWFDEC_COLOR_COMBINE (0, 0, 0, alpha * 255 / 100);
-  } else {
-    alpha = SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
+  if (argc <= 1) {
+    alpha = 255;
   }
-  color = color | alpha;
+  color = SWFDEC_COLOR_FROM_COLOR_ALPHA (color, alpha);
   draw = SWFDEC_DRAW (swfdec_pattern_new_color (color));
   swfdec_path_move_to (&draw->path, movie->draw_x, movie->draw_y);
   swfdec_sprite_movie_end_fill (movie, draw);
+}
+
+static inline guint
+swfdec_sprite_movie_gradient_fill_get_length (SwfdecAsObject *o)
+{
+  int length;
+  SwfdecAsValue val;
+
+  swfdec_as_object_get_variable (o, SWFDEC_AS_STR_length, &val);
+  length = swfdec_as_value_to_integer (o->context, &val);
+  return MAX (length, 0);
+}
+
+static int
+swfdec_sprite_movie_gradient_fill_check_length (SwfdecAsObject *colors, SwfdecAsObject *alphas, SwfdecAsObject *ratios)
+{
+  guint c, a, r;
+
+  c = swfdec_sprite_movie_gradient_fill_get_length (colors);
+  a = swfdec_sprite_movie_gradient_fill_get_length (alphas);
+  r = swfdec_sprite_movie_gradient_fill_get_length (ratios);
+  if (c != a || a != r)
+    return -1;
+  return c;
+}
+
+static void
+swfdec_sprite_movie_extract_matrix (SwfdecAsObject *o, cairo_matrix_t *mat)
+{
+  SwfdecAsContext *cx = o->context;
+  SwfdecAsValue val;
+
+  /* FIXME: This function does not call valueOf in the right order */
+  if (swfdec_as_object_get_variable (o, SWFDEC_AS_STR_matrixType, &val)) {
+    const char *s = swfdec_as_value_to_string (cx, &val);
+    cairo_matrix_init_translate (mat, SWFDEC_TWIPS_SCALE_FACTOR / 2.0, SWFDEC_TWIPS_SCALE_FACTOR / 2.0);
+    cairo_matrix_scale (mat, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0);
+    if (s == SWFDEC_AS_STR_box) {
+      double x, y, w, h, r;
+      cairo_matrix_t input;
+      swfdec_as_object_get_variable (o, SWFDEC_AS_STR_x, &val);
+      x = swfdec_as_value_to_number (cx, &val);
+      swfdec_as_object_get_variable (o, SWFDEC_AS_STR_y, &val);
+      y = swfdec_as_value_to_number (cx, &val);
+      swfdec_as_object_get_variable (o, SWFDEC_AS_STR_w, &val);
+      w = swfdec_as_value_to_number (cx, &val);
+      swfdec_as_object_get_variable (o, SWFDEC_AS_STR_h, &val);
+      h = swfdec_as_value_to_number (cx, &val);
+      swfdec_as_object_get_variable (o, SWFDEC_AS_STR_r, &val);
+      r = swfdec_as_value_to_number (cx, &val);
+      cairo_matrix_init_translate (&input, (x + w) / 2, (y + h) / 2);
+      cairo_matrix_scale (&input, w, h);
+      cairo_matrix_rotate (&input, r);
+      cairo_matrix_multiply (mat, mat, &input);
+    } else {
+      SWFDEC_WARNING ("my friend, there's no other matrixType than \"box\"");
+    }
+  } else {
+    cairo_matrix_t input;
+    swfdec_as_object_get_variable (o, SWFDEC_AS_STR_a, &val);
+    input.xx = swfdec_as_value_to_number (cx, &val);
+    swfdec_as_object_get_variable (o, SWFDEC_AS_STR_b, &val);
+    input.yx = swfdec_as_value_to_number (cx, &val);
+    swfdec_as_object_get_variable (o, SWFDEC_AS_STR_d, &val);
+    input.xy = swfdec_as_value_to_number (cx, &val);
+    swfdec_as_object_get_variable (o, SWFDEC_AS_STR_e, &val);
+    input.yy = swfdec_as_value_to_number (cx, &val);
+    swfdec_as_object_get_variable (o, SWFDEC_AS_STR_g, &val);
+    input.x0 = swfdec_as_value_to_number (cx, &val) * SWFDEC_TWIPS_SCALE_FACTOR;
+    swfdec_as_object_get_variable (o, SWFDEC_AS_STR_h, &val);
+    input.y0 = swfdec_as_value_to_number (cx, &val) * SWFDEC_TWIPS_SCALE_FACTOR;
+    cairo_matrix_init_scale (mat, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0);
+    cairo_matrix_multiply (mat, mat, &input);
+  }
 }
 
 SWFDEC_AS_NATIVE (901, 2, swfdec_sprite_movie_beginGradientFill)
@@ -101,7 +177,87 @@ void
 swfdec_sprite_movie_beginGradientFill (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_FIXME ("implement");
+  SwfdecGradientPattern *gradient;
+  SwfdecPattern *pattern;
+  SwfdecMovie *movie;
+  SwfdecDraw *draw;
+  SwfdecAsObject *colors, *alphas, *ratios, *matrix;
+  const char *s;
+  gboolean radial;
+  int i, len;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|sOOOO", &s, &colors, &alphas, &ratios, &matrix);
+  movie->draw_fill = NULL;
+  
+  if (colors == NULL || alphas == NULL || ratios == NULL || matrix == NULL) {
+    SWFDEC_ERROR ("could not convert one of the parameters to an object");
+    return;
+  }
+  if (s == SWFDEC_AS_STR_linear) {
+    radial = FALSE;
+  } else if (s == SWFDEC_AS_STR_radial) {
+    radial = TRUE;
+  } else {
+    SWFDEC_WARNING ("invalid fill type %s", s);
+    return;
+  }
+  len = swfdec_sprite_movie_gradient_fill_check_length (colors, alphas, ratios);
+  if (len < 0) {
+    SWFDEC_ERROR ("different lengths for colors, alphas and ratios, aborting");
+    return;
+  }
+  draw = swfdec_gradient_pattern_new ();
+  pattern = SWFDEC_PATTERN (draw);
+  gradient = SWFDEC_GRADIENT_PATTERN (draw);
+  gradient->radial = radial;
+  len = MIN (len, 8);
+  gradient->n_gradients = len;
+  for (i = 0; i < len; i++) {
+    int c, a, r;
+    SwfdecAsValue v;
+    int check = swfdec_sprite_movie_gradient_fill_check_length (colors, alphas, ratios);
+    if (check > i) {
+      const char *name = swfdec_as_integer_to_string (cx, i);
+      if (swfdec_as_object_get_variable (colors, name, &v)
+	  && SWFDEC_AS_VALUE_IS_NUMBER (&v))
+	c = swfdec_as_value_to_integer (cx, &v);
+      else
+	c = 0;
+      if (!swfdec_as_object_get_variable (alphas, name, &v)) {
+	a = c;
+      } else if (!SWFDEC_AS_VALUE_IS_NUMBER (&v)) {
+	a = 0;
+      } else {
+	a = swfdec_as_value_to_integer (cx, &v);
+      }
+      if (!swfdec_as_object_get_variable (ratios, name, &v))
+	r = CLAMP (a, 0, 255);
+      else if (!SWFDEC_AS_VALUE_IS_NUMBER (&v))
+	r = 0;
+      else
+	r = swfdec_as_value_to_integer (cx, &v);
+    } else {
+      c = a = r = 0;
+    }
+    if (r > 255 || r < 0) {
+      SWFDEC_WARNING ("ratio %d not in [0, 255], ignoring gradient", r);
+      g_object_unref (draw);
+      return;
+    } else if (r < 0) {
+      r = 0;
+    }
+    gradient->gradient[i].color = SWFDEC_COLOR_FROM_COLOR_ALPHA (c, a);
+    gradient->gradient[i].ratio = r;
+  }
+  swfdec_sprite_movie_extract_matrix (matrix, &pattern->start_transform);
+  pattern->transform = pattern->start_transform;
+  if (cairo_matrix_invert (&pattern->transform)) {
+    SWFDEC_ERROR ("gradient transform matrix not invertible, resetting");
+    cairo_matrix_init_identity (&pattern->transform);
+  }
+
+  swfdec_path_move_to (&draw->path, movie->draw_x, movie->draw_y);
+  swfdec_sprite_movie_end_fill (movie, draw);
 }
 
 SWFDEC_AS_NATIVE (901, 3, swfdec_sprite_movie_moveTo)

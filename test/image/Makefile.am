@@ -75,6 +75,7 @@ EXTRA_DIST = \
 	fillstyle-order.xml \
 	gradient-ratios.swf \
 	gradient-ratios.swf.png \
+	gradient-ratios.swf.org.png \
 	gradient-ratios.xml \
 	image-jpeg-alpha.swf \
 	image-jpeg-alpha.swf.png \

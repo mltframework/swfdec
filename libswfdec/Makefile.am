@@ -14,7 +14,8 @@ endif
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 
-libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
+# these are files that must be in SRCDIR
+libswfdec_source_files = \
 	swfdec_accessibility.c \
 	swfdec_as_array.c \
 	swfdec_as_boolean.c \
@@ -76,7 +77,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_text_renderer.c \
 	swfdec_text_snapshot.c \
 	swfdec_transform.c \
-	swfdec_enums.c \
 	swfdec_event.c \
 	swfdec_external_interface.c \
 	swfdec_file_loader.c \
@@ -102,7 +102,6 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_loadertarget.c \
 	swfdec_loadvars_as.c \
 	swfdec_local_connection.c \
-	swfdec_marshal.c \
 	swfdec_microphone.c \
 	swfdec_morph_movie.c \
 	swfdec_morphshape.c \
@@ -156,6 +155,11 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_xml_node.c \
 	swfdec_xml.c \
 	swfdec_xml_socket.c
+
+libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
+  	$(libswfdec_source_files) \
+	swfdec_enums.c \
+	swfdec_marshal.c
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
@@ -297,21 +301,21 @@ BUILT_SOURCES = \
 CLEANFILES = \
 	$(BUILT_SOURCES)
 
-swfdec_asnative.h: $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES)
+swfdec_asnative.h: $(libswfdec_source_files)
 	(cd $(srcdir) \
 	  && echo "#include \"swfdec_as_types.h\"" \
 	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) void func (SwfdecAsContext *cx, \\" \
 	  && echo "    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);" \
 	  && echo "#define SWFDEC_AS_CONSTRUCTOR(x,y,func,type) SWFDEC_AS_NATIVE(x,y,func) GType type (void);" \
-	  && grep -he "^SWFDEC_AS_CONSTRUCTOR" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \
-	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \
+	  && grep -he "^SWFDEC_AS_CONSTRUCTOR" $(libswfdec_source_files) \
+	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_source_files) \
 	  && echo "#undef SWFDEC_AS_CONSTRUCTOR" \
 	  && echo "#undef SWFDEC_AS_NATIVE" \
 	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) SWFDEC_AS_CONSTRUCTOR(x,y,func,NULL)" \
 	  && echo "#define SWFDEC_AS_CONSTRUCTOR(x,y,func,type) { x, y, func, G_STRINGIFY (func), type }," \
 	  && echo "static const struct { guint x, y; SwfdecAsNative func; const char *name; GType (* get_type) (void); } native_funcs[] = {" \
-	  && grep -he "^SWFDEC_AS_CONSTRUCTOR" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \
-	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES) \
+	  && grep -he "^SWFDEC_AS_CONSTRUCTOR" $(libswfdec_source_files) \
+	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_source_files) \
 	  && echo "  { 0, 0, NULL }" \
 	  && echo "};" \
 	  && echo "#undef SWFDEC_AS_CONSTRUCTOR" \

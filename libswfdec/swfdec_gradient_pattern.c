@@ -56,7 +56,7 @@ swfdec_gradient_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio
 static cairo_pattern_t *
 swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransform *trans)
 {
-  guint i;
+  guint i, ratio;
   cairo_pattern_t *pattern;
   SwfdecColor color;
   double offset;
@@ -89,13 +89,20 @@ swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransf
   }
 #endif
   cairo_pattern_set_extend (pattern, gradient->extend);
+  /* we check here that ratios increase linearly, because both gradients parsed 
+   * from the SWF and gradients created with beginGradientFill have this 
+   * behavior */
+  ratio = 0;
   for (i = 0; i < gradient->n_gradients; i++){
     color = swfdec_color_apply_transform (gradient->gradient[i].color,
 	trans);
-    offset = gradient->gradient[i].ratio / 255.0;
+    ratio = MAX (ratio, gradient->gradient[i].ratio);
+    offset = ratio / 255.0;
     cairo_pattern_add_color_stop_rgba (pattern, offset,
 	SWFDEC_COLOR_R(color) / 255.0, SWFDEC_COLOR_G(color) / 255.0,
 	SWFDEC_COLOR_B(color) / 255.0, SWFDEC_COLOR_A(color) / 255.0);
+    if (++ratio > 255)
+      break;
   }
   return pattern;
 }

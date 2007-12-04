@@ -1612,9 +1612,11 @@ static void
 swfdec_movie_load_variables_on_finish (SwfdecAsObject *target,
     const char *text)
 {
-  swfdec_as_object_decode (target, text);
+  if (text != NULL)
+    swfdec_as_object_decode (target, text);
 
   // only call onData for sprite movies
+  // FIXME: is it called even when loading fails?
   if (target->context->version >= 6 && SWFDEC_IS_SPRITE_MOVIE (target))
     swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
 }

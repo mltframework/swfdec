@@ -1649,6 +1649,9 @@ swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
   char **varlist, *p, *unescaped;
   guint i;
 
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (str != NULL);
+
   varlist = g_strsplit (str, "&", -1);
 
   for (i = 0; varlist[i] != NULL; i++) {

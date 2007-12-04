@@ -82,10 +82,16 @@ swfdec_image_decoder_eof (SwfdecDecoder *dec)
 {
   SwfdecImageDecoder *image = SWFDEC_IMAGE_DECODER (dec);
   SwfdecBuffer *buffer;
+  guint depth;
 
   if (image->queue == NULL)
     return 0;
-  /* FIXME: size checking */
+  depth = swfdec_buffer_queue_get_depth (image->queue);
+  if (depth == 0) {
+    swfdec_buffer_queue_unref (image->queue);
+    image->queue = NULL;
+    return SWFDEC_STATUS_ERROR;
+  }
   buffer = swfdec_buffer_queue_pull (image->queue,
       swfdec_buffer_queue_get_depth (image->queue));
   swfdec_buffer_queue_unref (image->queue);

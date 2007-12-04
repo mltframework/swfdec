@@ -613,6 +613,9 @@ EXTRA_DIST = \
 	crash-0.5.3-text-field-root-variable-7.swf.trace \
 	crash-0.5.3-text-field-root-variable-8.swf \
 	crash-0.5.3-text-field-root-variable-8.swf.trace \
+	crash-0.5.4-13379-catch-in-register.swf \
+	crash-0.5.4-13379-catch-in-register.swf.trace \
+	crash-0.5.4-13379-catch-in-register.xml \
 	crash-0.5.4-goto-in-constructor.c \
 	crash-0.5.4-goto-in-constructor-5.swf \
 	crash-0.5.4-goto-in-constructor-5.swf.trace \

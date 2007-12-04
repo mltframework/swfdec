@@ -2634,8 +2634,8 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
 
     if (try_data->use_register)
     {
-      if (swfdec_action_has_register (cx, try_data->register_number)) {
-	cx->frame->registers[try_data->register_number] = val;
+      if (try_data->register_number < frame->n_registers) {
+	frame->registers[try_data->register_number] = val;
       } else {
 	SWFDEC_ERROR ("cannot set Error to register %u: not enough registers",
 	    try_data->register_number);

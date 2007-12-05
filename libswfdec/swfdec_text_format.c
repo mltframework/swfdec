@@ -737,8 +737,7 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
       SWFDEC_AS_VALUE_IS_NULL (&argv[0]))
   {
     format->tab_stops = NULL;
-    swfdec_text_format_mark_unset (format,
-	PROP_TAB_STOPS);
+    swfdec_text_format_mark_unset (format, PROP_TAB_STOPS);
   }
   else if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) &&
 	SWFDEC_IS_AS_ARRAY (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))
@@ -756,8 +755,9 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
       if (len == 0)
 	return;
       format->tab_stops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
-      swfdec_text_format_mark_set (format,
-	  PROP_TAB_STOPS);
+      if (!format->tab_stops)
+	return;
+      swfdec_text_format_mark_set (format, PROP_TAB_STOPS);
     }
 
     swfdec_as_array_set_length (format->tab_stops, 0);
@@ -782,23 +782,25 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
 	  PROP_TAB_STOPS);
     } else {
       format->tab_stops = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
-      swfdec_text_format_mark_set (format,
-	  PROP_TAB_STOPS);
-      if (cx->version >= 8) {
-	SWFDEC_AS_VALUE_SET_INT (&val, -2147483648);
+      if (format->tab_stops != NULL) {
+	swfdec_text_format_mark_set (format, PROP_TAB_STOPS);
+	if (cx->version >= 8) {
+	  SWFDEC_AS_VALUE_SET_INT (&val, -2147483648);
+	} else {
+	  SWFDEC_AS_VALUE_SET_INT (&val, 0);
+	}
+	for (i = 0; i < len; i++) {
+	  swfdec_as_array_push (format->tab_stops, &val);
+	}
       } else {
-	SWFDEC_AS_VALUE_SET_INT (&val, 0);
-      }
-      for (i = 0; i < len; i++) {
-	swfdec_as_array_push (format->tab_stops, &val);
+	swfdec_text_format_mark_unset (format, PROP_TAB_STOPS);
       }
     }
   }
   else if (swfdec_text_format_is_set (format, PROP_TAB_STOPS))
   {
     swfdec_as_array_set_length (format->tab_stops, 0);
-    swfdec_text_format_mark_set (format,
-	PROP_TAB_STOPS);
+    swfdec_text_format_mark_set (format, PROP_TAB_STOPS);
   }
 }
 

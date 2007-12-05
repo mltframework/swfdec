@@ -110,13 +110,17 @@ swfdec_text_paragraph_add_block (SwfdecParagraph *paragraph, int index_,
   block->left_margin = format->left_margin * 20;
   block->right_margin = format->right_margin * 20;
 
-  length = swfdec_as_array_get_length (format->tab_stops);
-  block->tab_stops = pango_tab_array_new (length, TRUE);
-  for (i = 0; i < length; i++) {
-    swfdec_as_array_get_value (format->tab_stops, i, &val);
-    g_assert (SWFDEC_AS_VALUE_IS_NUMBER (&val));
-    pango_tab_array_set_tab (block->tab_stops, i, PANGO_TAB_LEFT,
-	SWFDEC_AS_VALUE_GET_NUMBER (&val) * 20);
+  if (format->tab_stops != NULL) {
+    length = swfdec_as_array_get_length (format->tab_stops);
+    block->tab_stops = pango_tab_array_new (length, TRUE);
+    for (i = 0; i < length; i++) {
+      swfdec_as_array_get_value (format->tab_stops, i, &val);
+      g_assert (SWFDEC_AS_VALUE_IS_NUMBER (&val));
+      pango_tab_array_set_tab (block->tab_stops, i, PANGO_TAB_LEFT,
+	  SWFDEC_AS_VALUE_GET_NUMBER (&val) * 20);
+    }
+  } else {
+    block->tab_stops = NULL;
   }
 
   paragraph->blocks = g_slist_prepend (paragraph->blocks, block);
@@ -368,7 +372,8 @@ swfdec_text_field_movie_free_paragraphs (SwfdecParagraph *paragraphs)
   for (i = 0; paragraphs[i].blocks != NULL; i++)
   {
     for (iter = paragraphs[i].blocks; iter != NULL; iter = iter->next) {
-      pango_tab_array_free (((SwfdecBlock *)(iter->data))->tab_stops);
+      if (((SwfdecBlock *)(iter->data))->tab_stops)
+	pango_tab_array_free (((SwfdecBlock *)(iter->data))->tab_stops);
       g_free (iter->data);
     }
     g_slist_free (paragraphs[i].blocks);
@@ -585,7 +590,8 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       // set block styles
       pango_layout_set_spacing (playout, block->leading);
-      pango_layout_set_tabs (playout, block->tab_stops);
+      if (block->tab_stops != NULL)
+	pango_layout_set_tabs (playout, block->tab_stops);
 
       // set text attributes
       attr_list = swfdec_text_field_movie_paragraph_get_attr_list (

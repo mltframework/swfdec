@@ -61,7 +61,6 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
   g_return_val_if_fail (text != NULL, FALSE);
-  g_return_val_if_fail (host != NULL, FALSE);
 
   xml = swfdec_xml_new_no_properties (context, text, TRUE);
 
@@ -75,7 +74,11 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
     return FALSE;
   }
 
-  host_lower = g_ascii_strdown (host, -1);
+  if (host != NULL) {
+    host_lower = g_ascii_strdown (host, -1);
+  } else {
+    host_lower = NULL;
+  }
 
   for (i = 0; i < swfdec_xml_node_num_children (SWFDEC_XML_NODE (xml)); i++) {
     SwfdecXmlNode *node_cdp =
@@ -90,6 +93,8 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
     for (j = 0; j < swfdec_xml_node_num_children (node_cdp); j++) {
       SwfdecXmlNode *node_aaf = swfdec_xml_node_get_child (node_cdp, j);
       const char *value;
+      GPatternSpec *pattern;
+      char *value_lower;
 
       if (node_aaf->type != SWFDEC_XML_NODE_ELEMENT)
 	continue;
@@ -100,10 +105,10 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
       // FIXME: secure attribute?
 
       value = swfdec_xml_node_get_attribute (node_aaf, SWFDEC_AS_STR_domain);
-      if (value != NULL) {
-	GPatternSpec *pattern;
-	char *value_lower;
+      if (value == NULL)
+	continue;
 
+      if (host != NULL) {
 	// GPatternSpec uses ? as a wildcard character, but we won't
 	// And there can't be a host that has ? character
 	if (strchr (value, '?') != NULL)
@@ -120,6 +125,10 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
 	}
 
 	g_pattern_spec_free (pattern);
+      } else {
+	// in case we don't have a host name, only match asterisks
+	if (value[strspn (value, "*")] == '\0')
+	  return TRUE;
       }
     }
   }

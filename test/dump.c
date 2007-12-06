@@ -150,6 +150,9 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	  /* FIXME add info about what sound etc */
 	  g_print ("   %4u start sound\n", j);
 	  break;
+	case SWFDEC_TAG_EXPORTASSETS:
+	  g_print ("   %4u export\n", j);
+	  break;
 	default:
 	  g_assert_not_reached ();
       }

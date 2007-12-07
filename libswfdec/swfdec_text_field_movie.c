@@ -49,6 +49,16 @@ swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
 }
 
 static void
+swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
+{
+  SwfdecRect rect;
+  
+  swfdec_rect_transform (&rect, 
+    &SWFDEC_GRAPHIC (SWFDEC_TEXT_FIELD_MOVIE (movie)->text)->extents, matrix);
+  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+}
+
+static void
 swfdec_text_field_movie_ensure_asterisks (SwfdecTextFieldMovie *text,
     guint length)
 {
@@ -1002,7 +1012,7 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
       graphic->extents.y1 - graphic->extents.y0 == height)
     return FALSE;
 
-  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_movie_invalidate_next (SWFDEC_MOVIE (text));
 
   if (!text->text->word_wrap && graphic->extents.x1 -
       graphic->extents.x0 != width)
@@ -1031,7 +1041,7 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   }
 
   swfdec_movie_queue_update (SWFDEC_MOVIE (text),
-      SWFDEC_MOVIE_INVALID_CONTENTS);
+      SWFDEC_MOVIE_INVALID_EXTENTS);
 
   return TRUE;
 }
@@ -1204,6 +1214,7 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   movie_class->iterate_start = swfdec_text_field_movie_iterate;
   movie_class->update_extents = swfdec_text_field_movie_update_extents;
   movie_class->render = swfdec_text_field_movie_render;
+  movie_class->invalidate = swfdec_text_field_movie_invalidate;
 }
 
 static void
@@ -1536,7 +1547,7 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
       end_index - start_index);
   text->input = g_string_insert (text->input, start_index, str);
 
-  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);
   swfdec_text_field_movie_update_scroll (text, TRUE);
 }
@@ -1597,7 +1608,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     }
   }
 
-  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);
   swfdec_text_field_movie_update_scroll (text, TRUE);
 }

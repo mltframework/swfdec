@@ -131,7 +131,7 @@ swfdec_movie_color_setRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
   movie->color_transform.gb = (color & 0xFF00) >> 8;
   movie->color_transform.ba = 0;
   movie->color_transform.bb = color & 0xFF;
-  swfdec_movie_invalidate (movie);
+  swfdec_movie_invalidate_last (movie);
 }
 
 static inline void
@@ -177,5 +177,5 @@ swfdec_movie_color_setTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
   parse_property (parse, SWFDEC_AS_STR_gb, &movie->color_transform.gb, FALSE);
   parse_property (parse, SWFDEC_AS_STR_bb, &movie->color_transform.bb, FALSE);
   parse_property (parse, SWFDEC_AS_STR_ab, &movie->color_transform.ab, FALSE);
-  swfdec_movie_invalidate (movie);
+  swfdec_movie_invalidate_last (movie);
 }

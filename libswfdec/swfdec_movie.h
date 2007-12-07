@@ -74,7 +74,6 @@ typedef enum {
   SWFDEC_MOVIE_UP_TO_DATE = 0,		/* everything OK */
   SWFDEC_MOVIE_INVALID_CHILDREN,	/* call update on children */
   SWFDEC_MOVIE_INVALID_EXTENTS,		/* recalculate extents */
-  SWFDEC_MOVIE_INVALID_CONTENTS,	/* trigger an invalidation */
   SWFDEC_MOVIE_INVALID_MATRIX		/* matrix is invalid, recalculate */
 } SwfdecMovieCacheState;
 
@@ -136,6 +135,10 @@ struct _SwfdecMovie {
   SwfdecDraw *		draw_line;	      	/* current line style or NULL */
   int			draw_x;			/* current x position for drawing */
   int			draw_y;			/* current y position for drawing */
+  
+  /* invalidatation state */
+  gboolean		invalidate_last;	/* TRUE if this movie's previous contents are already invalidated */
+  gboolean		invalidate_next;	/* TRUE if this movie should be invalidated before unlocking */
 
   /* leftover unimplemented variables from the Actionscript spec */
 #if 0
@@ -158,6 +161,9 @@ struct _SwfdecMovieClass {
 						 cairo_t *		cr,
 						 const SwfdecColorTransform *trans,
 						 const SwfdecRect *	inval);
+  void			(* invalidate)		(SwfdecMovie *		movie,
+						 const cairo_matrix_t *	movie_to_global,
+						 gboolean		new_contents);
 
   SwfdecMovie *		(* contains)		(SwfdecMovie *		movie,
 						 double			x,
@@ -220,7 +226,11 @@ void		swfdec_movie_set_static_properties
 						 int			clip_depth,
 						 guint			blend_mode,
 						 SwfdecEventList *	events);
-void		swfdec_movie_invalidate		(SwfdecMovie *		movie);
+void		swfdec_movie_invalidate_last	(SwfdecMovie *		movie);
+void		swfdec_movie_invalidate_next	(SwfdecMovie *		movie);
+void		swfdec_movie_invalidate		(SwfdecMovie *		movie,
+						 const cairo_matrix_t *	parent_to_global,
+						 gboolean		last);
 void		swfdec_movie_queue_update	(SwfdecMovie *		movie,
 						 SwfdecMovieCacheState	state);
 void		swfdec_movie_update		(SwfdecMovie *		movie);

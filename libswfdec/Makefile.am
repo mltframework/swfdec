@@ -70,13 +70,6 @@ libswfdec_source_files = \
 	swfdec_displacement_map_filter.c \
 	swfdec_draw.c \
 	swfdec_drop_shadow_filter.c \
-	swfdec_text_field.c \
-	swfdec_text_field_movie.c \
-	swfdec_text_field_movie_as.c \
-	swfdec_text_field_movie_html.c \
-	swfdec_text_renderer.c \
-	swfdec_text_snapshot.c \
-	swfdec_transform.c \
 	swfdec_event.c \
 	swfdec_external_interface.c \
 	swfdec_file_loader.c \
@@ -146,7 +139,14 @@ libswfdec_source_files = \
 	swfdec_system_security.c \
 	swfdec_tag.c \
 	swfdec_text.c \
+	swfdec_text_field.c \
+	swfdec_text_field_movie.c \
+	swfdec_text_field_movie_as.c \
+	swfdec_text_field_movie_html.c \
 	swfdec_text_format.c \
+	swfdec_text_renderer.c \
+	swfdec_text_snapshot.c \
+	swfdec_transform.c \
 	swfdec_url.c \
 	swfdec_utils.c \
 	swfdec_video.c \

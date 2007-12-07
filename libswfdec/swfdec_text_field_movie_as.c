@@ -473,7 +473,7 @@ swfdec_text_field_movie_set_background (SwfdecAsContext *cx,
 
   if (text->text->background != value) {
     text->text->background = value;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
 
@@ -506,7 +506,7 @@ swfdec_text_field_movie_set_backgroundColor (SwfdecAsContext *cx,
   color = swfdec_text_field_movie_int_to_color (cx, value);
   if (text->background_color != color) {
     text->background_color = color;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
 
@@ -536,7 +536,7 @@ swfdec_text_field_movie_set_border (SwfdecAsContext *cx,
 
   if (text->text->border != value) {
     text->text->border = value;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
 
@@ -570,7 +570,7 @@ swfdec_text_field_movie_set_borderColor (SwfdecAsContext *cx,
   color = swfdec_text_field_movie_int_to_color (cx, value);
   if (text->border_color != color) {
     text->border_color = color;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
 
@@ -615,7 +615,7 @@ swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
   if (value != text->hscroll) {
     text->hscroll = value;
     text->scroll_changed = TRUE;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
 
@@ -701,7 +701,7 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
     text->scroll_bottom += value - text->scroll;
     text->scroll = value;
     text->scroll_changed = TRUE;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
 
@@ -809,7 +809,7 @@ swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
       text->asterisks = NULL;
       text->asterisks_length = 0;
     }
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
 
@@ -839,7 +839,7 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   if (text->text->word_wrap != value) {
     text->text->word_wrap = value;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
     swfdec_text_field_movie_auto_size (text);
     // special case: don't set scrolling
   }
@@ -1140,7 +1140,7 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
       g_utf8_offset_to_pointer (text->input->str, end_index) -
       text->input->str);
 
-  swfdec_movie_invalidate (SWFDEC_MOVIE (text));
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);
   // special case: update the max values, not the current values
   swfdec_text_field_movie_update_scroll (text, FALSE);

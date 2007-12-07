@@ -110,7 +110,7 @@ swfdec_video_movie_set_ratio (SwfdecMovie *movie)
 
   if (video->input->set_ratio) {
     video->needs_update = TRUE;
-    swfdec_movie_invalidate (movie);
+    swfdec_movie_invalidate_last (movie);
   }
 }
 
@@ -151,7 +151,7 @@ swfdec_video_movie_set_input (SwfdecVideoMovie *movie, SwfdecVideoMovieInput *in
   if (input == NULL)
     return;
   if (movie->input->set_ratio) {
-    swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
   }
   movie->needs_update = TRUE;
   if (input->connect)
@@ -167,7 +167,7 @@ swfdec_video_movie_clear (SwfdecVideoMovie *movie)
     cairo_surface_destroy (movie->image);
     movie->image = NULL;
   }
-  swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
 }
 
 void
@@ -180,6 +180,6 @@ swfdec_video_movie_new_image (SwfdecVideoMovie *movie)
     movie->image = NULL;
   }
   movie->needs_update = TRUE;
-  swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
 }
 

@@ -288,10 +288,11 @@ swfdec_spite_movie_recompute_draw (SwfdecMovie *movie, SwfdecDraw *draw)
 {
   swfdec_draw_recompute (draw);
   if (swfdec_rect_inside (&movie->draw_extents, &draw->extents)) {
-    swfdec_movie_invalidate (movie);
+    swfdec_movie_invalidate_last (movie);
   } else {
+    swfdec_movie_invalidate_next (movie);
     swfdec_rect_union (&movie->draw_extents, &movie->draw_extents, &draw->extents);
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
   }
 }
 
@@ -399,7 +400,7 @@ swfdec_sprite_movie_clear (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
   if (movie->draws == NULL)
     return;
-  swfdec_movie_invalidate (movie);
+  swfdec_movie_invalidate_last (movie);
   swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
   swfdec_rect_init_empty (&movie->draw_extents);
   g_slist_foreach (movie->draws, (GFunc) g_object_unref, NULL);

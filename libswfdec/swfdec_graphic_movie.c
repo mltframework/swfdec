@@ -24,13 +24,14 @@
 #include "swfdec_graphic_movie.h"
 #include "swfdec_button.h"
 #include "swfdec_debug.h"
-#include "swfdec_text_field.h"
 #include "swfdec_movie.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_shape.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
 #include "swfdec_resource.h"
 #include "swfdec_text.h"
+#include "swfdec_text_field.h"
 
 G_DEFINE_TYPE (SwfdecGraphicMovie, swfdec_graphic_movie, SWFDEC_TYPE_MOVIE)
 
@@ -47,6 +48,15 @@ swfdec_graphic_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   swfdec_graphic_render (movie->graphic, cr, trans, inval);
+}
+
+static void
+swfdec_graphic_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
+{
+  SwfdecRect rect;
+
+  swfdec_rect_transform (&rect, &movie->graphic->extents, matrix);
+  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
 }
 
 static SwfdecMovie *
@@ -76,9 +86,10 @@ swfdec_graphic_movie_replace (SwfdecMovie *movie, SwfdecGraphic *graphic)
   }
   if (movie->graphic == graphic)
     return;
+  swfdec_movie_invalidate_next (movie);
   SWFDEC_LOG ("replacing %u with %u", SWFDEC_CHARACTER (movie->graphic)->id,
       SWFDEC_CHARACTER (graphic)->id);
-  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
   g_object_unref (movie->graphic);
   movie->graphic = g_object_ref (graphic);
 }
@@ -91,6 +102,7 @@ swfdec_graphic_movie_class_init (SwfdecGraphicMovieClass * g_class)
   movie_class->update_extents = swfdec_graphic_movie_update_extents;
   movie_class->replace = swfdec_graphic_movie_replace;
   movie_class->render = swfdec_graphic_movie_render;
+  movie_class->invalidate = swfdec_graphic_movie_invalidate;
   movie_class->contains = swfdec_graphic_movie_contains;
 }
 

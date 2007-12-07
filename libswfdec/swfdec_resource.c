@@ -94,7 +94,7 @@ swfdec_resource_loader_target_image (SwfdecResource *instance)
     movie->sprite = dec->main_sprite;
     g_assert (movie->sprite->parse_frame > 0);
     movie->n_frames = movie->sprite->n_frames;
-    swfdec_movie_invalidate (SWFDEC_MOVIE (movie));
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
     swfdec_resource_check_rights (instance);
     if (swfdec_resource_is_root (instance)) {
       swfdec_movie_initialize (SWFDEC_MOVIE (movie));
@@ -561,8 +561,9 @@ swfdec_resource_emit_on_load_init (SwfdecResource *resource)
   if (resource->movie && SWFDEC_IS_IMAGE_DECODER (resource->decoder)) {
     SwfdecImage *image = SWFDEC_IMAGE_DECODER (resource->decoder)->image;
     if (image) {
+      swfdec_movie_invalidate_next (SWFDEC_MOVIE (resource->movie));
+      swfdec_movie_queue_update (SWFDEC_MOVIE (resource->movie), SWFDEC_MOVIE_INVALID_EXTENTS);
       SWFDEC_MOVIE (resource->movie)->image = g_object_ref (image);
-      swfdec_movie_queue_update (SWFDEC_MOVIE (resource->movie), SWFDEC_MOVIE_INVALID_CONTENTS);
     }
   }
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadInit, FALSE, NULL, 0);

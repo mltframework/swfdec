@@ -961,9 +961,9 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
   y = CLAMP (y, player->mouse_drag_rect.y0, player->mouse_drag_rect.y1);
   SWFDEC_LOG ("mouse is at %g %g, originally (%g %g)", x, y, player->mouse_x, player->mouse_y);
   if (x != movie->matrix.x0 || y != movie->matrix.y0) {
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
     movie->matrix.x0 = x;
     movie->matrix.y0 = y;
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
 }
 
@@ -1350,14 +1350,9 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
 void
 swfdec_player_perform_actions (SwfdecPlayer *player)
 {
-  GList *walk;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   while (swfdec_player_do_action (player));
-  for (walk = player->roots; walk; walk = walk->next) {
-    swfdec_movie_update (walk->data);
-  }
 }
 
 /* used for breakpoints */
@@ -1389,6 +1384,31 @@ swfdec_player_lock (SwfdecPlayer *player)
   return TRUE;
 }
 
+/* runs queued invalidations for all movies and resets the movies */
+static void
+swfdec_player_update_movies (SwfdecPlayer *player)
+{
+  SwfdecMovie *movie;
+  GList *walk;
+
+  /* FIXME: This g_list_last could be slow */
+  for (walk = g_list_last (player->movies); walk; walk = walk->prev) {
+    movie = walk->data;
+
+    swfdec_movie_update (movie);
+    if (movie->invalidate_last) {
+      cairo_matrix_t matrix;
+
+      if (movie->parent)
+	swfdec_movie_local_to_global_matrix (movie->parent, &matrix);
+      else
+	cairo_matrix_init_identity (&matrix);
+      swfdec_movie_invalidate (movie, &matrix, TRUE);
+      movie->invalidate_last = FALSE;
+    }
+  }
+}
+
 /* used for breakpoints */
 void
 swfdec_player_unlock_soft (SwfdecPlayer *player)
@@ -1397,6 +1417,7 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
 
   SWFDEC_DEBUG ("UNLOCK");
   g_timer_stop (player->runtime);
+  swfdec_player_update_movies (player);
   swfdec_player_update_mouse_cursor (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);
@@ -1746,11 +1767,8 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
   SwfdecRect tmp;
   guint i;
 
-  if (swfdec_rect_is_empty (rect)) {
-    SWFDEC_ERROR ("called with an empty rectanle. In theory this shouldn't happen.");
-    SWFDEC_ERROR ("  However, degenerate matrixes can cause this. We need a fix for that.");
+  if (swfdec_rect_is_empty (rect))
     return;
-  }
 
   tmp = *rect;
   swfdec_player_global_to_stage (player, &tmp.x0, &tmp.y0);
@@ -1763,6 +1781,7 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
   if (swfdec_rectangle_is_empty (&r))
     return;
 
+  SWFDEC_LOG ("  invalidating %d %d  %d %d", r.x, r.y, r.width, r.height);
   /* FIXME: get region code into swfdec? */
   for (i = 0; i < player->invalidations->len; i++) {
     SwfdecRectangle *cur = &g_array_index (player->invalidations, SwfdecRectangle, i);

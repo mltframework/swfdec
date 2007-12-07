@@ -70,34 +70,87 @@ swfdec_movie_init (SwfdecMovie * movie)
   swfdec_color_transform_init_identity (&movie->original_ctrans);
 
   movie->visible = TRUE;
-  movie->cache_state = SWFDEC_MOVIE_INVALID_CONTENTS;
+  movie->cache_state = SWFDEC_MOVIE_INVALID_EXTENTS;
+  movie->invalidate_last = TRUE;
+  movie->invalidate_next = TRUE;
 
   swfdec_rect_init_empty (&movie->extents);
 }
 
 /**
  * swfdec_movie_invalidate:
- * @movie: movie to invalidate
+ * @movie: a #SwfdecMovie
+ * @parent_to_global: This is the matrix from the parent to the global matrix.
+ *                    It is only used for caching reasons
+ * @new_contents: %TRUE if this is the invalidation of the new contents, %FALSE 
+ *                if the old contents are invalidated.
  *
- * Invalidates the area currently occupied by movie. If the area this movie
- * occupies has changed, call swfdec_movie_queue_update () instead.
+ * Performs an instant invalidation on @movie. You most likely don't want to
+ * call this function directly, but use swfdec_movie_invalidate_last_last() or
+ * swfdec_movie_invalidate_next() instead.
  **/
 void
-swfdec_movie_invalidate (SwfdecMovie *movie)
+swfdec_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *parent_to_global,
+    gboolean new_contents)
 {
-  SwfdecRect rect = movie->extents;
+  SwfdecMovieClass *klass;
+  cairo_matrix_t matrix;
 
-  SWFDEC_LOG ("%s invalidating %g %g  %g %g", movie->name, 
-      rect.x0, rect.y0, rect.x1, rect.y1);
-  if (swfdec_rect_is_empty (&rect))
-    return;
-  while (movie->parent) {
-    movie = movie->parent;
-    if (movie->cache_state > SWFDEC_MOVIE_INVALID_EXTENTS)
+  if (new_contents) {
+    movie->invalidate_next = FALSE;
+  } else {
+    if (movie->invalidate_last)
       return;
-    swfdec_rect_transform (&rect, &rect, &movie->matrix);
+    movie->invalidate_last = TRUE;
   }
-  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+  g_assert (movie->cache_state <= SWFDEC_MOVIE_INVALID_CHILDREN);
+  SWFDEC_LOG ("invalidating %s %s at %s", G_OBJECT_TYPE_NAME (movie), 
+      movie->name, new_contents ? "end" : "start");
+  cairo_matrix_multiply (&matrix, &movie->matrix, parent_to_global);
+  klass = SWFDEC_MOVIE_GET_CLASS (movie);
+  klass->invalidate (movie, &matrix, new_contents);
+}
+
+/**
+ * swfdec_movie_invalidate_last:
+ * @movie: a #SwfdecMovie
+ *
+ * Ensures the movie's contents are invalidated. This function must be called
+ * before changing the movie or the output will have artifacts.
+ **/
+void
+swfdec_movie_invalidate_last (SwfdecMovie *movie)
+{
+  cairo_matrix_t matrix;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  if (movie->invalidate_last)
+    return;
+
+  if (movie->parent)
+    swfdec_movie_local_to_global_matrix (movie->parent, &matrix);
+  else
+    cairo_matrix_init_identity (&matrix);
+  swfdec_movie_invalidate (movie, &matrix, FALSE);
+  g_assert (movie->invalidate_last);
+}
+
+/**
+ * swfdec_movie_invalidate_last_next:
+ * @movie: a #SwfdecMovie
+ *
+ * Ensures the movie will be invalidated after script execution is done. So
+ * after calling this function you can modify position and contents of the 
+ * @movie in any way.
+ **/
+void
+swfdec_movie_invalidate_next (SwfdecMovie *movie)
+{
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+
+  swfdec_movie_invalidate_last (movie);
+  movie->invalidate_next = TRUE;
 }
 
 /**
@@ -112,9 +165,9 @@ swfdec_movie_queue_update (SwfdecMovie *movie, SwfdecMovieCacheState state)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
-  if (movie->cache_state < SWFDEC_MOVIE_INVALID_EXTENTS &&
-      state >= SWFDEC_MOVIE_INVALID_EXTENTS)
-    swfdec_movie_invalidate (movie);
+  if (state > SWFDEC_MOVIE_INVALID_EXTENTS) {
+    swfdec_movie_invalidate_next (movie);
+  }
   while (movie && movie->cache_state < state) {
     movie->cache_state = state;
     movie = movie->parent;
@@ -195,13 +248,9 @@ swfdec_movie_do_update (SwfdecMovie *movie)
     case SWFDEC_MOVIE_INVALID_MATRIX:
       swfdec_movie_update_matrix (movie);
       /* fall through */
-    case SWFDEC_MOVIE_INVALID_CONTENTS:
-      swfdec_movie_update_extents (movie);
-      swfdec_movie_invalidate (movie);
-      break;
     case SWFDEC_MOVIE_INVALID_EXTENTS:
       swfdec_movie_update_extents (movie);
-      break;
+      /* fall through */
     case SWFDEC_MOVIE_INVALID_CHILDREN:
       break;
     case SWFDEC_MOVIE_UP_TO_DATE:
@@ -274,7 +323,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
     player->mouse_grab = NULL;
   if (player->mouse_drag == movie)
     player->mouse_drag = NULL;
-  swfdec_movie_invalidate (movie);
+  swfdec_movie_invalidate_last (movie);
   movie->state = SWFDEC_MOVIE_STATE_REMOVED;
 
   if ((movie->events && 
@@ -1355,6 +1404,28 @@ swfdec_movie_mouse_move (SwfdecMovie *movie, double x, double y)
 }
 
 static void
+swfdec_movie_do_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
+{
+  GList *walk;
+  SwfdecRect rect;
+
+  if (movie->image) {
+    rect.x0 = rect.y0 = 0;
+    rect.x1 = movie->image->width * SWFDEC_TWIPS_SCALE_FACTOR;
+    rect.y1 = movie->image->height * SWFDEC_TWIPS_SCALE_FACTOR;
+  } else {
+    swfdec_rect_init_empty (&rect);
+  }
+  swfdec_rect_union (&rect, &rect, &movie->draw_extents);
+  swfdec_rect_transform (&rect, &rect, matrix);
+  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+
+  for (walk = movie->list; walk; walk = walk->next) {
+    swfdec_movie_invalidate (walk->data, matrix, last);
+  }
+}
+
+static void
 swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (movie_class);
@@ -1374,6 +1445,7 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   movie_class->render = swfdec_movie_do_render;
+  movie_class->invalidate = swfdec_movie_do_invalidate;
   movie_class->contains = swfdec_movie_do_contains;
   movie_class->iterate_end = swfdec_movie_iterate_end;
   movie_class->mouse_events = swfdec_movie_mouse_events;
@@ -1404,7 +1476,7 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
   if (movie->depth == depth)
     return;
 
-  swfdec_movie_invalidate (movie);
+  swfdec_movie_invalidate_last (movie);
   movie->depth = depth;
   if (movie->parent) {
     movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
@@ -1523,17 +1595,17 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     return;
   }
   if (transform) {
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
     movie->original_transform = *transform;
     movie->matrix.x0 = movie->original_transform.x0;
     movie->matrix.y0 = movie->original_transform.y0;
     movie->xscale = swfdec_matrix_get_xscale (&movie->original_transform);
     movie->yscale = swfdec_matrix_get_yscale (&movie->original_transform);
     movie->rotation = swfdec_matrix_get_rotation (&movie->original_transform);
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
   }
   if (ctrans) {
     movie->original_ctrans = *ctrans;
-    swfdec_movie_invalidate (movie);
+    swfdec_movie_invalidate_last (movie);
   }
   if (ratio >= 0 && (guint) ratio != movie->original_ratio) {
     SwfdecMovieClass *klass;
@@ -1545,11 +1617,11 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
   if (clip_depth && clip_depth != movie->clip_depth) {
     movie->clip_depth = clip_depth;
     /* FIXME: is this correct? */
-    swfdec_movie_invalidate (movie->parent ? movie->parent : movie);
+    swfdec_movie_invalidate_last (movie->parent ? movie->parent : movie);
   }
   if (blend_mode != movie->blend_mode) {
     movie->blend_mode = blend_mode;
-    swfdec_movie_invalidate (movie);
+    swfdec_movie_invalidate_last (movie);
   }
   if (events) {
     if (SWFDEC_IS_SPRITE_MOVIE (movie)) {

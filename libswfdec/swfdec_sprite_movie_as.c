@@ -214,7 +214,7 @@ swfdec_sprite_movie_set_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if ((guint)blend_mode != movie->blend_mode) {
     movie->blend_mode = blend_mode;
-    swfdec_movie_invalidate (movie);
+    swfdec_movie_invalidate_last (movie);
   }
 }
 
@@ -600,9 +600,9 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
 static void
 swfdec_sprite_movie_copy_props (SwfdecMovie *target, SwfdecMovie *src)
 {
+  swfdec_movie_queue_update (target, SWFDEC_MOVIE_INVALID_MATRIX);
   target->matrix = src->matrix;
   target->color_transform = src->color_transform;
-  swfdec_movie_queue_update (target, SWFDEC_MOVIE_INVALID_MATRIX);
 }
 
 static gboolean
@@ -799,10 +799,10 @@ swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
   movie->mask_of = NULL;
   if (movie->clip_depth) {
     g_assert (movie->parent);
-    swfdec_movie_invalidate (movie->parent);
+    swfdec_movie_invalidate_last (movie->parent);
     movie->clip_depth = 0;
   } else {
-    swfdec_movie_invalidate (movie);
+    swfdec_movie_invalidate_last (movie);
   }
   if (mask) {
     if (mask->masked_by)
@@ -811,13 +811,13 @@ swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
       mask->mask_of->masked_by = NULL;
     mask->masked_by = NULL;
     mask->mask_of = movie;
-    swfdec_movie_invalidate (mask);
+    swfdec_movie_invalidate_last (mask);
     if (mask->clip_depth) {
       g_assert (mask->parent);
-      swfdec_movie_invalidate (mask->parent);
+      swfdec_movie_invalidate_last (mask->parent);
       mask->clip_depth = 0;
     } else {
-      swfdec_movie_invalidate (mask);
+      swfdec_movie_invalidate_last (mask);
     }
   }
 }

@@ -24,6 +24,7 @@
 #include "swfdec_morph_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_draw.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_stroke.h"
 
 G_DEFINE_TYPE (SwfdecMorphMovie, swfdec_morph_movie, SWFDEC_TYPE_MOVIE)
@@ -47,10 +48,11 @@ swfdec_morph_movie_set_ratio (SwfdecMovie *movie)
 {
   SwfdecMorphMovie *mmovie = SWFDEC_MORPH_MOVIE (movie);
 
+  swfdec_movie_invalidate_next (movie);
   g_slist_foreach (mmovie->draws, (GFunc) g_object_unref, NULL);
   g_slist_free (mmovie->draws);
   mmovie->draws = NULL;
-  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_CONTENTS);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
 }
 
 static void
@@ -87,6 +89,15 @@ swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr,
 }
 
 static void
+swfdec_morph_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
+{
+  SwfdecRect rect;
+  
+  swfdec_rect_transform (&rect, &movie->original_extents, matrix);
+  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+}
+
+static void
 swfdec_morph_movie_dispose (GObject *object)
 {
   SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (object);
@@ -109,6 +120,7 @@ swfdec_morph_movie_class_init (SwfdecMorphMovieClass * g_class)
 
   movie_class->update_extents = swfdec_morph_movie_update_extents;
   movie_class->render = swfdec_morph_movie_render;
+  movie_class->invalidate = swfdec_morph_movie_invalidate;
   movie_class->set_ratio = swfdec_morph_movie_set_ratio;
   /* FIXME */
   //movie_class->handle_mouse = swfdec_morph_movie_handle_mouse;

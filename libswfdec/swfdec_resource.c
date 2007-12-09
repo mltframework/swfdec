@@ -287,11 +287,11 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
       }
       parsed += buffer->length;
       if (dec) {
-	status = swfdec_decoder_parse (dec, buffer);
+	status |= swfdec_decoder_parse (dec, buffer);
       } else {
 	swfdec_buffer_unref (buffer);
       }
-    } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_NEEDBITS | SWFDEC_STATUS_EOF)) == 0);
+    } while (parsed < 65536 && (status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_EOF)) == 0);
     if (status & SWFDEC_STATUS_ERROR) {
       SWFDEC_ERROR ("parsing error");
       swfdec_loader_set_target (loader, NULL);

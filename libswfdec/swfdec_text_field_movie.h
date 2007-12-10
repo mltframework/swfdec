@@ -110,6 +110,11 @@ struct _SwfdecTextFieldMovie {
   SwfdecColor		border_color;
   SwfdecColor		background_color;
 
+  gboolean		mouse_pressed;
+  int			cursor;
+  int			selection_end;
+  int			character_pressed;
+
   // FIXME: Temporary using image surface, until there is a way to get cairo_t
   // outside the rendering functions
   cairo_surface_t *	surface;

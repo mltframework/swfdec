@@ -1198,6 +1198,106 @@ swfdec_text_field_movie_iterate (SwfdecMovie *movie)
   }
 }
 
+static gboolean
+swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
+    double y, int *index_, gboolean *before)
+{
+  SwfdecLayout *layouts;
+
+  g_return_val_if_fail (index_ != NULL, FALSE);
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
+
+  *index_ = 0;
+  if (before != NULL)
+    *before = FALSE;
+
+  layouts = swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
+
+  swfdec_text_field_movie_free_layouts (layouts);
+
+  return TRUE;
+}
+
+static gboolean
+swfdec_text_field_movie_mouse_events (SwfdecMovie *movie)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+
+  // FIXME: is this correct?
+  return (text->text->editable || text->text->selectable);
+}
+
+static void
+swfdec_text_field_movie_mouse_press (SwfdecMovie *movie, guint button)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  double x, y;
+  int index_;
+  gboolean direct, before;
+
+  g_return_if_fail (text->text->editable || text->text->selectable);
+
+  if (button != 0)
+    return;
+
+  swfdec_movie_get_mouse (movie, &x, &y);
+
+  direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
+
+  text->mouse_pressed = TRUE;
+  text->cursor = index_;
+  text->selection_end = index_;
+
+  if (direct) {
+    text->character_pressed = index_;
+    if (before)
+      text->character_pressed--;
+  }
+}
+
+static void
+swfdec_text_field_movie_mouse_release (SwfdecMovie *movie, guint button)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  double x, y;
+  int index_;
+  gboolean direct, before;
+
+  g_return_if_fail (text->text->editable || text->text->selectable);
+
+  if (button != 0)
+    return;
+
+  swfdec_movie_get_mouse (movie, &x, &y);
+
+  direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
+
+  text->mouse_pressed = FALSE;
+
+  if (direct && text->character_pressed == index_ - (before ? 1 : 0)) {
+    SWFDEC_FIXME ("Clicking links in TextFields not implemented");
+  }
+}
+
+static void
+swfdec_text_field_movie_mouse_move (SwfdecMovie *movie, double x, double y)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  int index_;
+
+  g_return_if_fail (text->text->editable || text->text->selectable);
+
+  if (!text->text->selectable)
+    return;
+
+  if (!text->mouse_pressed)
+    return;
+
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, NULL);
+
+  text->selection_end = index_;
+}
+
 static void
 swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 {
@@ -1215,6 +1315,11 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   movie_class->update_extents = swfdec_text_field_movie_update_extents;
   movie_class->render = swfdec_text_field_movie_render;
   movie_class->invalidate = swfdec_text_field_movie_invalidate;
+
+  movie_class->mouse_events = swfdec_text_field_movie_mouse_events;
+  movie_class->mouse_press = swfdec_text_field_movie_mouse_press;
+  movie_class->mouse_release = swfdec_text_field_movie_mouse_release;
+  movie_class->mouse_move = swfdec_text_field_movie_mouse_move;
 }
 
 static void

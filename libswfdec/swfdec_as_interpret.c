@@ -116,7 +116,7 @@ swfdec_action_goto_frame (SwfdecAsContext *cx, guint action, const guint8 *data,
     SWFDEC_ERROR ("GotoFrame action length invalid (is %u, should be 2", len);
     return;
   }
-  frame = GUINT16_FROM_LE (*((guint16 *) data));
+  frame = (data[0] | data[1] << 8);
   if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
     SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
     swfdec_sprite_movie_goto (movie, frame + 1);
@@ -225,7 +225,7 @@ swfdec_script_skip_actions (SwfdecAsContext *cx, guint jump)
     if (*pc & 0x80) {
       if (pc + 2 >= endpc)
 	break;
-      pc += 3 + GUINT16_FROM_LE (*((guint16 *) (pc + 1)));
+      pc += 3 + (pc[1] | (pc[2] << 8));
     } else {
       pc++;
     }
@@ -1086,11 +1086,14 @@ swfdec_action_not (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
 static void
 swfdec_action_jump (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  gint16 offset;
+
   if (len != 2) {
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
     return;
   }
-  cx->frame->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
+  offset = data[0] | (data[1] << 8);
+  cx->frame->pc += 5 + (int) data;
 }
 
 static void
@@ -1100,8 +1103,10 @@ swfdec_action_if (SwfdecAsContext *cx, guint action, const guint8 *data, guint l
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
     return;
   }
-  if (swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1)))
-    cx->frame->pc += 5 + GINT16_FROM_LE (*((gint16*) data)); 
+  if (swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1))) {
+    gint16 offset = data[0] | (data[1] << 8);
+    cx->frame->pc += 5 + (int) offset;
+  }
   swfdec_as_stack_pop (cx);
 }
 
@@ -2946,21 +2951,27 @@ swfdec_action_print_get_url (guint action, const guint8 *data, guint len)
 static char *
 swfdec_action_print_if (guint action, const guint8 *data, guint len)
 {
+  gint16 offset;
+
   if (len != 2) {
     SWFDEC_ERROR ("If action length invalid (is %u, should be 2", len);
     return NULL;
   }
-  return g_strdup_printf ("If %d", GINT16_FROM_LE (*((gint16*) data)));
+  offset = data[0] | (data[1] << 8);
+  return g_strdup_printf ("If %d", (int) offset);
 }
 
 static char *
 swfdec_action_print_jump (guint action, const guint8 *data, guint len)
 {
+  gint16 offset;
+
   if (len != 2) {
     SWFDEC_ERROR ("Jump action length invalid (is %u, should be 2", len);
     return NULL;
   }
-  return g_strdup_printf ("Jump %d", GINT16_FROM_LE (*((gint16*) data)));
+  offset = data[0] | (data[1] << 8);
+  return g_strdup_printf ("Jump %d", (int) offset);
 }
 
 static char *

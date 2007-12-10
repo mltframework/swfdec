@@ -159,7 +159,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 static void
 swfdec_net_stream_timeout (SwfdecTimeout *timeout)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((guchar *) timeout - G_STRUCT_OFFSET (SwfdecNetStream, timeout));
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((void *) ((guchar *) timeout - G_STRUCT_OFFSET (SwfdecNetStream, timeout)));
 
   SWFDEC_LOG ("timeout fired");
   stream->timeout.callback = NULL;
@@ -322,7 +322,7 @@ swfdec_net_stream_loader_target_init (SwfdecLoaderTargetInterface *iface)
 static void
 swfdec_net_stream_input_connect (SwfdecVideoMovieInput *input, SwfdecVideoMovie *movie)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input));
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((void *)((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input)));
 
   stream->movies = g_list_prepend (stream->movies, movie);
   g_object_ref (stream);
@@ -331,7 +331,7 @@ swfdec_net_stream_input_connect (SwfdecVideoMovieInput *input, SwfdecVideoMovie 
 static void
 swfdec_net_stream_input_disconnect (SwfdecVideoMovieInput *input, SwfdecVideoMovie *movie)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input));
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((void *)((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input)));
 
   stream->movies = g_list_remove (stream->movies, movie);
   g_object_unref (stream);
@@ -340,7 +340,7 @@ swfdec_net_stream_input_disconnect (SwfdecVideoMovieInput *input, SwfdecVideoMov
 static cairo_surface_t *
 swfdec_net_stream_input_get_image (SwfdecVideoMovieInput *input)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input));
+  SwfdecNetStream *stream = SWFDEC_NET_STREAM ((void *)((guchar *) input - G_STRUCT_OFFSET (SwfdecNetStream, input)));
 
   return stream->surface;
 }

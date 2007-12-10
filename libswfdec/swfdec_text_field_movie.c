@@ -368,7 +368,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
   if (text->text->password)
     swfdec_text_field_movie_ensure_asterisks (text, max_length);
 
-  return (SwfdecParagraph *)g_array_free (paragraphs, FALSE);
+  return (SwfdecParagraph *) (void *) g_array_free (paragraphs, FALSE);
 }
 
 static void
@@ -698,7 +698,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
   if (num != NULL)
     *num = layouts->len;
 
-  return (SwfdecLayout *)g_array_free (layouts, FALSE);
+  return (SwfdecLayout *) (void *) g_array_free (layouts, FALSE);
 }
 
 static void

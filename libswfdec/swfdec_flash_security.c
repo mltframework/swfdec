@@ -217,6 +217,8 @@ swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
       break;
     default:
       g_assert_not_reached ();
+      allowed = FALSE;
+      break;
   }
 
   callback (url, allowed, user_data);

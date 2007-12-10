@@ -516,6 +516,7 @@ swfdec_text_field_movie_html_text_align_to_string (SwfdecTextAlign align)
       return "JUSTIFY";
     default:
       g_assert_not_reached ();
+      return "";
   }
 }
 

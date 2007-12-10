@@ -507,7 +507,7 @@ swfdec_player_perform_external_actions (SwfdecPlayer *player)
 static void
 swfdec_player_trigger_external_actions (SwfdecTimeout *advance)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) advance - G_STRUCT_OFFSET (SwfdecPlayer, external_timeout));
+  SwfdecPlayer *player = SWFDEC_PLAYER ((void *) ((guint8 *) advance - G_STRUCT_OFFSET (SwfdecPlayer, external_timeout)));
 
   player->external_timeout.callback = NULL;
   swfdec_player_perform_external_actions (player);
@@ -1254,7 +1254,7 @@ swfdec_player_execute_on_load_init (SwfdecPlayer *player)
 static void
 swfdec_player_iterate (SwfdecTimeout *timeout)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
+  SwfdecPlayer *player = SWFDEC_PLAYER ((void *) ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout)));
   GList *walk;
 
   /* add timeout again - do this first because later code can change it */

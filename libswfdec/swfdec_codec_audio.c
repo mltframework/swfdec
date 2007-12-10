@@ -45,7 +45,7 @@ swfdec_audio_decoder_uncompressed_decode_8bit (SwfdecAudioDecoder *decoder,
     return;
 
   ret = swfdec_buffer_new_and_alloc (buffer->length * 2);
-  out = (gint16 *) ret->data;
+  out = (gint16 *) (void *) ret->data;
   in = buffer->data;
   for (i = 0; i < buffer->length; i++) {
     *out = ((gint16) *in << 8) ^ (-1);

@@ -84,8 +84,8 @@ static void
 swfdec_interval_trigger (SwfdecTimeout *timeout)
 {
   SwfdecAsValue ret;
-  SwfdecInterval *interval = SWFDEC_INTERVAL (((guchar *) timeout) 
-      - G_STRUCT_OFFSET (SwfdecInterval, timeout));
+  SwfdecInterval *interval = SWFDEC_INTERVAL ((void *) (((guchar *) timeout) 
+      - G_STRUCT_OFFSET (SwfdecInterval, timeout)));
   SwfdecAsContext *context = SWFDEC_AS_OBJECT (interval)->context;
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
 

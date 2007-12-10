@@ -451,18 +451,21 @@ swfdec_image_lossless_load (SwfdecImage *image)
   } else if (format == 5) {
     SwfdecBuffer *buffer;
     int i, j;
+    guint32 *p;
+
     buffer = swfdec_bits_decompress (&bits, -1, 4 * image->width * image->height);
     if (buffer == NULL) {
       SWFDEC_ERROR ("failed to decompress data");
       data = g_malloc0 (4 * image->width * image->height);
       goto out;
     }
-    ptr = data = buffer->data;
+    data = buffer->data;
+    p = (void *) data;
     /* image is stored in 0RGB format.  We use ARGB/BGRA. */
     for (j = 0; j < image->height; j++) {
       for (i = 0; i < image->width; i++) {
-	*((guint32 *) ptr) = GUINT32_FROM_BE (*((guint32 *) ptr));
-	ptr += 4;
+	*p = GUINT32_FROM_BE (*p);
+	p++;
       }
     }
     /* FIXME: this can fail if the returned buffer does not contain malloc'd 
@@ -633,8 +636,8 @@ cairo_surface_t *
 swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTransform *trans)
 {
   cairo_surface_t *surface, *source;
-  guint8 *tdata;
-  const guint8 *sdata;
+  guint32 *tdata;
+  const guint32 *sdata;
   guint i, n;
   gboolean has_alpha = FALSE;
 
@@ -653,15 +656,16 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, const SwfdecColorTr
     return NULL;
   }
   /* FIXME: This code assumes a rowstride of 4 * width */
-  sdata = cairo_image_surface_get_data (source);
+  /* FIXME: This code assumes an alignment of 4 */
+  sdata = (void *) cairo_image_surface_get_data (source);
   n = image->width * image->height;
   for (i = 0; i < n; i++) {
-    ((guint32 *) tdata)[i] = swfdec_color_apply_transform_premultiplied (((guint32 *) sdata)[i], trans);
+    tdata[i] = swfdec_color_apply_transform_premultiplied (sdata[i], trans);
     /* optimization: check for alpha channel to speed up compositing */
     has_alpha = tdata[4 * i + SWFDEC_COLOR_INDEX_ALPHA] != 0xFF;
   }
   cairo_surface_destroy (source);
-  surface = cairo_image_surface_create_for_data (tdata,
+  surface = cairo_image_surface_create_for_data ((unsigned char *) tdata,
       has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
       image->width, image->height, image->width * 4);
   cairo_surface_set_user_data (surface, &key, tdata, g_free);

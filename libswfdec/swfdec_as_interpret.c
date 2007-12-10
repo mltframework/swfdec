@@ -1321,6 +1321,7 @@ swfdec_action_string_compare (SwfdecAsContext *cx, guint action, const guint8 *d
       cond = strcmp (l, r) < 0;
       break;
     default:
+      cond = FALSE;
       g_assert_not_reached ();
       break;
   }

@@ -542,7 +542,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       PangoAttrList *attr_list;
       SwfdecBlock *block;
       int width;
-      guint length;
+      guint length, start_index;
       gboolean end_of_paragraph;
 
       block = (SwfdecBlock *)iter->data;
@@ -608,26 +608,35 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	  &paragraphs[i], block->index_ + skip, trans);
 
       // add background for selection
+      start_index = paragraphs[i].index_ + block->index_ + skip;
       if (text->text->selectable && text->cursor != text->selection_end &&
-	  block->index_ + skip < MAX (text->cursor, text->selection_end)) {
+	  start_index < MAX (text->cursor, text->selection_end)) {
 	SwfdecColor color;
-	PangoAttribute *attr;
+	PangoAttribute *attr_fg, *attr_bg;
 
-	color = SWFDEC_COLOR_COMBINE (0, 0, 255, 255);
-	color = swfdec_color_apply_transform (color, trans);
-	attr = pango_attr_background_new (SWFDEC_COLOR_R (color),
-	    SWFDEC_COLOR_G (color), SWFDEC_COLOR_B (color));
+	color = SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
+	if (trans != NULL)
+	  color = swfdec_color_apply_transform (color, trans);
+	attr_fg = pango_attr_foreground_new (SWFDEC_COLOR_R (color) << 8,
+	    SWFDEC_COLOR_G (color) << 8, SWFDEC_COLOR_B (color) << 8);
 
-	if (MIN (text->cursor, text->selection_end) > block->index_ + skip) {
-	  attr->start_index =
-	    MIN (text->cursor, text->selection_end) - block->index_ + skip;
+	color = SWFDEC_COLOR_COMBINE (255, 255, 255, 255);
+	if (trans != NULL)
+	  color = swfdec_color_apply_transform (color, trans);
+	attr_bg = pango_attr_background_new (SWFDEC_COLOR_R (color) << 8,
+	    SWFDEC_COLOR_G (color) << 8, SWFDEC_COLOR_B (color) << 8);
+
+	if (MIN (text->cursor, text->selection_end) > start_index) {
+	  attr_fg->start_index = attr_bg->start_index =
+	    MIN (text->cursor, text->selection_end) - start_index;
 	} else {
-	  attr->start_index = 0;
+	  attr_fg->start_index = attr_bg->start_index = 0;
 	}
-	attr->end_index =
-	  MAX (text->cursor, text->selection_end) - block->index_ + skip;
+	attr_bg->end_index = attr_fg->end_index =
+	  MAX (text->cursor, text->selection_end) - start_index;
 
-	pango_attr_list_insert (attr_list, attr);
+	pango_attr_list_insert (attr_list, attr_fg);
+	pango_attr_list_insert (attr_list, attr_bg);
       }
 
       pango_layout_set_attributes (playout, attr_list);
@@ -1222,6 +1231,22 @@ swfdec_text_field_movie_iterate (SwfdecMovie *movie)
   }
 }
 
+static SwfdecMovie *
+swfdec_text_field_movie_contains (SwfdecMovie *movie, double x, double y,
+    gboolean events)
+{
+  if (events) {
+    /* check for movies in a higher layer that react to events */
+    SwfdecMovie *ret;
+    ret = SWFDEC_MOVIE_CLASS (swfdec_text_field_movie_parent_class)->contains (
+	movie, x, y, TRUE);
+    if (ret && ret != movie && swfdec_movie_get_mouse_events (ret))
+      return ret;
+  }
+  
+  return movie;
+}
+
 static gboolean
 swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
     double y, guint *index_, gboolean *before)
@@ -1341,6 +1366,7 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   movie_class->update_extents = swfdec_text_field_movie_update_extents;
   movie_class->render = swfdec_text_field_movie_render;
   movie_class->invalidate = swfdec_text_field_movie_invalidate;
+  movie_class->contains = swfdec_text_field_movie_contains;
 
   movie_class->mouse_events = swfdec_text_field_movie_mouse_events;
   movie_class->mouse_press = swfdec_text_field_movie_mouse_press;

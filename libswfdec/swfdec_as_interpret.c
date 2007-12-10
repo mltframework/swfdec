@@ -1093,7 +1093,7 @@ swfdec_action_jump (SwfdecAsContext *cx, guint action, const guint8 *data, guint
     return;
   }
   offset = data[0] | (data[1] << 8);
-  cx->frame->pc += 5 + (int) data;
+  cx->frame->pc += 5 + (int) offset;
 }
 
 static void

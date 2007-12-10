@@ -155,7 +155,7 @@ int jpeg_decoder_get_component_subsampling(JpegDecoder *dec, int id,
 int jpeg_decoder_get_component_ptr(JpegDecoder *dec, int id,
 	unsigned char **image, int *rowstride);
 
-unsigned char *jpeg_decoder_get_argb_image (JpegDecoder *dec);
+uint32_t *jpeg_decoder_get_argb_image (JpegDecoder *dec);
 int jpeg_decode_argb (uint8_t *data, int length, uint32_t **image,
     int *width, int *height);
 

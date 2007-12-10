@@ -54,23 +54,23 @@ encode_wav (SwfdecBuffer *buffer, SwfdecAudioFormat format)
   /* FIXME: too much magic in this memmove */
   memmove (data, "RIFF----WAVEfmt \020\0\0\0"
 		 "\001\0ccRRRRbbbbAAbbdata", 40);
-  *(guint32 *) &data[4] = GUINT32_TO_LE (buffer->length + 36);
-  *(guint16 *) &data[22] = GUINT16_TO_LE (swfdec_audio_format_get_channels (format));
-  *(guint32 *) &data[24] = GUINT32_TO_LE (swfdec_audio_format_get_rate (format));
+  *(guint32 *) (void *) &data[4] = GUINT32_TO_LE (buffer->length + 36);
+  *(guint16 *) (void *) &data[22] = GUINT16_TO_LE (swfdec_audio_format_get_channels (format));
+  *(guint32 *) (void *) &data[24] = GUINT32_TO_LE (swfdec_audio_format_get_rate (format));
   /* bits per sample */
   i = swfdec_audio_format_is_16bit (format) ? 2 : 1;
-  *(guint16 *) &data[34] = GUINT16_TO_LE (i * 8);
+  *(guint16 *) (void *) &data[34] = GUINT16_TO_LE (i * 8);
   /* block align */
   i *= swfdec_audio_format_get_channels (format);
-  *(guint16 *) &data[32] = GUINT16_TO_LE (i);
+  *(guint16 *) (void *) &data[32] = GUINT16_TO_LE (i);
   /* bytes per second */
   i *= swfdec_audio_format_get_rate (format);
-  *(guint32 *) &data[28] = GUINT32_TO_LE (i);
-  *(guint32 *) &data[40] = GUINT32_TO_LE (buffer->length);
+  *(guint32 *) (void *) &data[28] = GUINT32_TO_LE (i);
+  *(guint32 *) (void *) &data[40] = GUINT32_TO_LE (buffer->length);
   data += 44;
   if (swfdec_audio_format_is_16bit (format)) {
     for (i = 0; i < buffer->length; i += 2) {
-      *(gint16 *) (data + i) = GINT16_TO_LE (*(gint16* )(buffer->data + i));
+      *(gint16 *) (void *) (data + i) = GINT16_TO_LE (*(gint16* ) (void *) (buffer->data + i));
     }
   } else {
     memcpy (data, buffer->data, buffer->length);
@@ -134,7 +134,7 @@ export_sprite_sound (SwfdecSprite *sprite, const char *filename)
     } else
 #endif
     {
-      swfdec_audio_render (audio, (gint16 *) buffer->data, 0, i);
+      swfdec_audio_render (audio, (gint16 *) (void *) buffer->data, 0, i);
     }
     i = swfdec_audio_iterate (audio, i);
     i = MIN (i, 4096);

@@ -124,15 +124,15 @@ main (int argc, char **argv)
   }
   length /= 4;
   copy = g_malloc (length * 2);
-  convert_le_be ((gint16 *) data, length * 2);
+  convert_le_be ((void *) data, length * 2);
 
-  if (downsample_to_mono ((gint16 *) copy, (gint16 *) data, length)) {
+  if (downsample_to_mono ((void *) copy, (void *) data, length)) {
     guint rate;
     char *tmp = data;
     data = copy;
     copy = tmp;
     for (rate = 44100; rate > 5512 && length % 2 == 0; rate /= 2) {
-      if (!downsample_rate_mono ((gint16 *) copy, (gint16 *) data, length / 2))
+      if (!downsample_rate_mono ((void *) copy, (void *) data, length / 2))
 	break;
       length /= 2;
       g_print ("Info: downsampling from %u => %u successful\n", rate, rate / 2);
@@ -151,7 +151,7 @@ main (int argc, char **argv)
     length = cut_silence (data, length / 2,  4);
   }
 
-  convert_le_be ((gint16 *) data, length);
+  convert_le_be ((void *) data, length);
   length *= 2;
   if (!g_file_set_contents (argv[2], data, length, &error)) {
     g_printerr ("Error: %s\n", error->message);

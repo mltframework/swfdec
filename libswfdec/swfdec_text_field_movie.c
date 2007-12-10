@@ -606,6 +606,30 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       // set text attributes
       attr_list = swfdec_text_field_movie_paragraph_get_attr_list (
 	  &paragraphs[i], block->index_ + skip, trans);
+
+      // add background for selection
+      if (text->text->selectable && text->cursor != text->selection_end &&
+	  block->index_ + skip < MAX (text->cursor, text->selection_end)) {
+	SwfdecColor color;
+	PangoAttribute *attr;
+
+	color = SWFDEC_COLOR_COMBINE (0, 0, 255, 255);
+	color = swfdec_color_apply_transform (color, trans);
+	attr = pango_attr_background_new (SWFDEC_COLOR_R (color),
+	    SWFDEC_COLOR_G (color), SWFDEC_COLOR_B (color));
+
+	if (MIN (text->cursor, text->selection_end) > block->index_ + skip) {
+	  attr->start_index =
+	    MIN (text->cursor, text->selection_end) - block->index_ + skip;
+	} else {
+	  attr->start_index = 0;
+	}
+	attr->end_index =
+	  MAX (text->cursor, text->selection_end) - block->index_ + skip;
+
+	pango_attr_list_insert (attr_list, attr);
+      }
+
       pango_layout_set_attributes (playout, attr_list);
 
       if (text->text->password) {
@@ -1200,7 +1224,7 @@ swfdec_text_field_movie_iterate (SwfdecMovie *movie)
 
 static gboolean
 swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
-    double y, int *index_, gboolean *before)
+    double y, guint *index_, gboolean *before)
 {
   SwfdecLayout *layouts;
 
@@ -1232,7 +1256,7 @@ swfdec_text_field_movie_mouse_press (SwfdecMovie *movie, guint button)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   double x, y;
-  int index_;
+  guint index_;
   gboolean direct, before;
 
   g_return_if_fail (text->text->editable || text->text->selectable);
@@ -1249,9 +1273,11 @@ swfdec_text_field_movie_mouse_press (SwfdecMovie *movie, guint button)
   text->selection_end = index_;
 
   if (direct) {
-    text->character_pressed = index_;
+    text->character_pressed = index_ + 1;
     if (before)
       text->character_pressed--;
+  } else {
+    text->character_pressed = 0;
   }
 }
 
@@ -1260,7 +1286,7 @@ swfdec_text_field_movie_mouse_release (SwfdecMovie *movie, guint button)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   double x, y;
-  int index_;
+  guint index_;
   gboolean direct, before;
 
   g_return_if_fail (text->text->editable || text->text->selectable);
@@ -1268,13 +1294,13 @@ swfdec_text_field_movie_mouse_release (SwfdecMovie *movie, guint button)
   if (button != 0)
     return;
 
+  text->mouse_pressed = FALSE;
+
   swfdec_movie_get_mouse (movie, &x, &y);
 
   direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
 
-  text->mouse_pressed = FALSE;
-
-  if (direct && text->character_pressed == index_ - (before ? 1 : 0)) {
+  if (direct && text->character_pressed == index_ + 1 - (before ? 1 : 0)) {
     SWFDEC_FIXME ("Clicking links in TextFields not implemented");
   }
 }
@@ -1283,7 +1309,7 @@ static void
 swfdec_text_field_movie_mouse_move (SwfdecMovie *movie, double x, double y)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
-  int index_;
+  guint index_;
 
   g_return_if_fail (text->text->editable || text->text->selectable);
 

@@ -40,6 +40,7 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 
 typedef struct {
   PangoLayout *		layout;
+  guint			index_;
   int			offset_x;
   int			last_line_offset_y;
   int			height;

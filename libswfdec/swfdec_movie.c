@@ -1604,8 +1604,8 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     movie->rotation = swfdec_matrix_get_rotation (&movie->original_transform);
   }
   if (ctrans) {
-    movie->original_ctrans = *ctrans;
     swfdec_movie_invalidate_last (movie);
+    movie->original_ctrans = *ctrans;
   }
   if (ratio >= 0 && (guint) ratio != movie->original_ratio) {
     SwfdecMovieClass *klass;

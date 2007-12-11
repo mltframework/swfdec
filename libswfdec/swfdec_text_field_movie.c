@@ -1254,7 +1254,7 @@ swfdec_text_field_movie_format_for_index (SwfdecTextFieldMovie *text,
   GSList *iter;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), NULL);
-  g_return_val_if_fail (index_ > text->input->len, NULL);
+  g_return_val_if_fail (index_ <= text->input->len, NULL);
 
   if (text->formats == NULL)
     return NULL;
@@ -1274,7 +1274,7 @@ swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
   SwfdecTextFormat *format;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (index_ > text->input->len);
+  g_return_if_fail (index_ <= text->input->len);
 
   format = swfdec_text_field_movie_format_for_index (text, index_);
 

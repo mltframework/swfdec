@@ -115,6 +115,18 @@ swfdec_video_movie_set_ratio (SwfdecMovie *movie)
 }
 
 static void
+swfdec_video_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
+{
+  SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (movie);
+  SwfdecRect rect = { 0, 0, 
+    SWFDEC_TWIPS_SCALE_FACTOR * video->video->width, 
+    SWFDEC_TWIPS_SCALE_FACTOR * video->video->height };
+
+  swfdec_rect_transform (&rect, &rect, matrix);
+  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+}
+
+static void
 swfdec_video_movie_init_movie (SwfdecMovie *movie)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
@@ -132,6 +144,7 @@ swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
 
   movie_class->update_extents = swfdec_video_movie_update_extents;
   movie_class->render = swfdec_video_movie_render;
+  movie_class->invalidate = swfdec_video_movie_invalidate;
   movie_class->init_movie = swfdec_video_movie_init_movie;
   movie_class->set_ratio = swfdec_video_movie_set_ratio;
 }

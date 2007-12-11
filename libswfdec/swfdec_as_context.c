@@ -802,7 +802,7 @@ start:
   if (context->call_depth > 256) {
     /* we've exceeded our maximum call depth, throw an error and abort */
     swfdec_as_context_abort (context, "Stack overflow");
-    return;
+    goto error;
   }
   /* if security is NULL, the function may not be called */
   if (frame->security == NULL) {

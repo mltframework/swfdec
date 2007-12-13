@@ -825,19 +825,20 @@ swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
 void
 swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
   SwfdecAsValue val;
   SwfdecAsObject *proto;
 
-  player->MovieClip = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
+  priv->MovieClip = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_MovieClip, 0, NULL, 0));
-  if (player->MovieClip == NULL)
+  if (priv->MovieClip == NULL)
     return;
   proto = swfdec_as_object_new (context);
   if (!proto)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable_and_flags (player->MovieClip,
+  swfdec_as_object_set_variable_and_flags (priv->MovieClip,
       SWFDEC_AS_STR_prototype, &val, SWFDEC_AS_VARIABLE_HIDDEN |
       SWFDEC_AS_VARIABLE_PERMANENT);
 };

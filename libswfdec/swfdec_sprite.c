@@ -126,20 +126,21 @@ int
 tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag)
 {
   SwfdecPlayer *player = SWFDEC_DECODER (s)->player;
+  SwfdecPlayerPrivate *priv = player->priv;
   SwfdecColor color = swfdec_bits_get_color (&s->b);
 
-  if (player->bgcolor_set) {
+  if (priv->bgcolor_set) {
     /* only an INFO because it can be set by user, should be error if we check duplication of tag */
     SWFDEC_INFO ("background color has been set to %X already, setting to %X ignored",
-	player->bgcolor, color);
+	priv->bgcolor, color);
   } else {
     SWFDEC_LOG ("setting background color to %X", color);
     /* can't use swfdec_player_set_background_color() here, because the player is locked and doesn't emit signals */
-    player->bgcolor = color;
-    player->bgcolor_set = TRUE;
-    player->invalid_extents = player->stage;
-    g_array_set_size (player->invalidations, 1);
-    g_array_index (player->invalidations, SwfdecRectangle, 0) = player->stage;
+    priv->bgcolor = color;
+    priv->bgcolor_set = TRUE;
+    priv->invalid_extents = priv->stage;
+    g_array_set_size (priv->invalidations, 1);
+    g_array_index (priv->invalidations, SwfdecRectangle, 0) = priv->stage;
     g_object_notify (G_OBJECT (player), "background-color");
   }
 

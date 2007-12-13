@@ -193,7 +193,7 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
   if (should_play && stream->timeout.callback == NULL) {
     SWFDEC_DEBUG ("starting playback");
     stream->timeout.callback = swfdec_net_stream_timeout;
-    stream->timeout.timestamp = player->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
+    stream->timeout.timestamp = player->priv->time + SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
     swfdec_player_add_timeout (player, &stream->timeout);
     if (stream->flvdecoder->audio) {
       g_assert (stream->audio == NULL);

@@ -226,7 +226,7 @@ swfdec_policy_loader_new (SwfdecFlashSecurity *sec, const char *host,
   url_str = g_strdup_printf ("http://%s/crossdomain.xml", host);
   url = swfdec_url_new (url_str);
   g_free (url_str);
-  policy_loader->loader = swfdec_loader_load (sec->player->resource->loader,
+  policy_loader->loader = swfdec_loader_load (sec->player->priv->resource->loader,
       url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
   swfdec_url_free (url);
 

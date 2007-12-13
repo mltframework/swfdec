@@ -92,6 +92,8 @@ swfdec_audio_init (SwfdecAudio *audio)
 void
 swfdec_audio_add (SwfdecAudio *audio, SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_AUDIO (audio));
   g_return_if_fail (audio->player == NULL);
   if (player == NULL)
@@ -100,7 +102,8 @@ swfdec_audio_add (SwfdecAudio *audio, SwfdecPlayer *player)
 
   g_object_ref (audio);
   audio->player = player;
-  player->audio = g_list_append (player->audio, audio);
+  priv = player->priv;
+  priv->audio = g_list_append (priv->audio, audio);
   SWFDEC_INFO ("adding %s %p", G_OBJECT_TYPE_NAME (audio), audio);
 }
 
@@ -110,8 +113,9 @@ swfdec_audio_remove (SwfdecAudio *audio)
   g_return_if_fail (SWFDEC_IS_AUDIO (audio));
 
   if (audio->player != NULL) {
+    SwfdecPlayerPrivate *priv = audio->player->priv;
     SWFDEC_INFO ("removing %s %p", G_OBJECT_TYPE_NAME (audio), audio);
-    audio->player->audio = g_list_remove (audio->player->audio, audio);
+    priv->audio = g_list_remove (priv->audio, audio);
     if (audio->added) {
       g_signal_emit_by_name (audio->player, "audio-removed", audio);
       audio->added = FALSE;
@@ -197,7 +201,7 @@ swfdec_player_render_audio (SwfdecPlayer *player, gint16* dest,
   g_return_if_fail (n_samples > 0);
 
   SWFDEC_LOG ("rendering offset %u, samples %u", start_offset, n_samples);
-  for (walk = player->audio; walk; walk = walk->next) {
+  for (walk = player->priv->audio; walk; walk = walk->next) {
     audio = walk->data;
     swfdec_audio_render (audio, dest, start_offset, n_samples);
   }

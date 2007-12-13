@@ -332,7 +332,7 @@ swfdec_sound_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object, guin
      * We use the target in attachSound to look up the sound object to attach.
      * But I'm not sure what is used for global sounds.
      * So we just use a random one that looks good for now. */
-    sound->target = player->roots->data;
+    sound->target = player->priv->roots->data;
   } else {
     sound->target = swfdec_player_get_movie_from_value (player, &argv[0]);
   }

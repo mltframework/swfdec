@@ -494,7 +494,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
   g_assert (cx->frame);
   swfdec_player_request_resource_now (SWFDEC_PLAYER (cx), cx->frame->security, 
       url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL,
-      swfdec_net_stream_request_callback, stream);
+      swfdec_net_stream_request_callback, NULL, stream);
 }
 
 void

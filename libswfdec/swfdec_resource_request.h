@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef struct _SwfdecResourceRequest SwfdecResourceRequest;
 typedef void (* SwfdecResourceFunc) (SwfdecPlayer *player, SwfdecLoader *loader, gpointer data);
+typedef void (* SwfdecResourceAbortFunc) (SwfdecPlayer *player, gpointer data);
 typedef void (* SwfdecResourceUnloadFunc) (SwfdecPlayer *player, const char *target, gpointer data);
 
 typedef enum {
@@ -75,6 +76,7 @@ void		swfdec_player_request_resource_now	(SwfdecPlayer *		player,
 							 SwfdecLoaderRequest	req,
 							 SwfdecBuffer *		buffer,
 							 SwfdecResourceFunc	callback,
+							 SwfdecResourceAbortFunc	abort,
 							 gpointer		user_data);
 void		swfdec_player_request_unload		(SwfdecPlayer *		player,
 							 const char *		target,

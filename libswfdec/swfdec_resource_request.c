@@ -53,17 +53,25 @@ typedef struct {
   SwfdecLoaderRequest		request;
   SwfdecBuffer *		buffer;
   SwfdecResourceFunc		callback;
+  SwfdecResourceAbortFunc	abort;
   gpointer			user_data;
 } AllowCallbackData;
 
 static void
 swfdec_player_request_resource_allow_callback (const SwfdecURL *url,
-    gboolean allowed, gpointer data_)
+    int status, gpointer data_)
 {
   AllowCallbackData *data = data_;
   SwfdecLoader *loader;
 
-  if (!allowed) {
+  if (status < 0) {
+    if (data->abort != NULL)
+      data->abort (data->player, data->user_data);
+    g_free (data);
+    return;
+  }
+
+  if (status == 0) {
     SWFDEC_ERROR ("not allowing access to %s", swfdec_url_get_url (url));
     loader = NULL;
   } else {
@@ -85,7 +93,8 @@ swfdec_player_request_resource_allow_callback (const SwfdecURL *url,
 void
 swfdec_player_request_resource_now (SwfdecPlayer *player,
     SwfdecSecurity *security, const char *url, SwfdecLoaderRequest req,
-    SwfdecBuffer *buffer, SwfdecResourceFunc callback, gpointer user_data)
+    SwfdecBuffer *buffer, SwfdecResourceFunc callback,
+    SwfdecResourceAbortFunc abort, gpointer user_data)
 {
   SwfdecURL *absolute;
   AllowCallbackData *data;
@@ -99,6 +108,7 @@ swfdec_player_request_resource_now (SwfdecPlayer *player,
   data->request = req;
   data->buffer = buffer;
   data->callback = callback;
+  data->abort = abort;
   data->user_data = user_data;
 
   /* create absolute url first */
@@ -128,12 +138,22 @@ swfdec_request_resource_perform_load_callback (SwfdecPlayer *player,
 }
 
 static void
+swfdec_request_resource_perform_load_abort_callback (SwfdecPlayer *player,
+    gpointer data)
+{
+  SwfdecResourceRequest *request = data;
+
+  swfdec_resource_request_free (request);
+}
+
+static void
 swfdec_request_resource_perform_load (SwfdecPlayer *player, SwfdecResourceRequest *request)
 {
   g_assert (player->resource);
   swfdec_player_request_resource_now (player, request->security,
       request->url, request->request, request->buffer,
-      swfdec_request_resource_perform_load_callback, request);
+      swfdec_request_resource_perform_load_callback,
+      swfdec_request_resource_perform_load_abort_callback, request);
 }
 
 static void

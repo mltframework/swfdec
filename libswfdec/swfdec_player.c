@@ -843,6 +843,8 @@ swfdec_player_dispose (GObject *object)
   while (player->roots)
     swfdec_movie_destroy (player->roots->data);
   if (player->resource) {
+    swfdec_flash_security_free_pending (
+	SWFDEC_FLASH_SECURITY (player->resource));
     g_object_unref (player->resource);
     player->resource = NULL;
   }

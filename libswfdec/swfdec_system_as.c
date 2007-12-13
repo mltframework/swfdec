@@ -157,66 +157,66 @@ swfdec_system_has_screen_playback (SwfdecPlayer *player, SwfdecAsValue *ret)
 static void
 swfdec_system_is_debugger (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, player->system->debugger);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, player->priv->system->debugger);
 }
 
 static void
 swfdec_system_version (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (
-	SWFDEC_AS_CONTEXT (player), player->system->version));
+	SWFDEC_AS_CONTEXT (player), player->priv->system->version));
 }
 
 static void
 swfdec_system_manufacturer (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (
-	SWFDEC_AS_CONTEXT (player), player->system->manufacturer));
+	SWFDEC_AS_CONTEXT (player), player->priv->system->manufacturer));
 }
 
 static void
 swfdec_system_screen_width (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_INT (ret, player->system->screen_width);
+  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->system->screen_width);
 }
 
 static void
 swfdec_system_screen_height (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_INT (ret, player->system->screen_height);
+  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->system->screen_height);
 }
 
 static void
 swfdec_system_screen_dpi (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_INT (ret, player->system->dpi);
+  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->system->dpi);
 }
 
 static void
 swfdec_system_screen_color (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (
-	SWFDEC_AS_CONTEXT (player), player->system->color_mode));
+	SWFDEC_AS_CONTEXT (player), player->priv->system->color_mode));
 }
 
 static void
 swfdec_system_screen_par (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, player->system->par);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, player->priv->system->par);
 }
 
 static void
 swfdec_system_os (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (
-	SWFDEC_AS_CONTEXT (player), player->system->os));
+	SWFDEC_AS_CONTEXT (player), player->priv->system->os));
 }
 
 static void
 swfdec_system_language (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (
-	SWFDEC_AS_CONTEXT (player), player->system->language));
+	SWFDEC_AS_CONTEXT (player), player->priv->system->language));
 }
 
 static void
@@ -229,7 +229,7 @@ static void
 swfdec_system_player_type (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (
-	SWFDEC_AS_CONTEXT (player), player->system->player_type));
+	SWFDEC_AS_CONTEXT (player), player->priv->system->player_type));
 }
 
 static void
@@ -319,7 +319,7 @@ swfdec_system_query (SwfdecAsContext *cx, SwfdecAsObject *object,
       g_string_append (server, "&AR=");
       g_string_append (server, buffer);
     } else if (queries[i].name == SWFDEC_AS_STR_manufacturer) {
-      char *s = swfdec_as_string_escape (cx, player->system->server_manufacturer);
+      char *s = swfdec_as_string_escape (cx, player->priv->system->server_manufacturer);
       g_string_append_printf (server, "&M=%s", s);
       g_free (s);
     } else {

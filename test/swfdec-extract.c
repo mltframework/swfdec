@@ -261,7 +261,7 @@ main (int argc, char *argv[])
   player = swfdec_player_new_from_file (argv[1]);
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
-  if (!SWFDEC_IS_SPRITE_MOVIE (player->roots->data)) {
+  if (!SWFDEC_IS_SPRITE_MOVIE (player->priv->roots->data)) {
     g_printerr ("Error parsing file \"%s\"\n", argv[1]);
     g_object_unref (player);
     player = NULL;
@@ -270,11 +270,11 @@ main (int argc, char *argv[])
   id = strtol (argv[2], NULL, 0);
   if (id >= 0) {
     character = swfdec_swf_decoder_get_character (
-	SWFDEC_SWF_DECODER (SWFDEC_MOVIE (player->roots->data)->resource->decoder),
+	SWFDEC_SWF_DECODER (SWFDEC_MOVIE (player->priv->roots->data)->resource->decoder),
 	id);
   } else {
     character = SWFDEC_CHARACTER (SWFDEC_SWF_DECODER (
-	  SWFDEC_MOVIE (player->roots->data)->resource->decoder)->main_sprite);
+	  SWFDEC_MOVIE (player->priv->roots->data)->resource->decoder)->main_sprite);
   }
   if (SWFDEC_IS_SPRITE (character)) {
     if (!export_sprite_sound (SWFDEC_SPRITE (character), argv[3]))

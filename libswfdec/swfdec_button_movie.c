@@ -208,7 +208,7 @@ swfdec_button_movie_mouse_release (SwfdecMovie *movie, guint button)
   if (button != 0)
     return;
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  if (player->mouse_below == movie) {
+  if (player->priv->mouse_below == movie) {
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (movie), SWFDEC_BUTTON_OVER);
 
     SWFDEC_MOVIE_CLASS (swfdec_button_movie_parent_class)->mouse_release (movie, button);

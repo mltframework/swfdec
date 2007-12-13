@@ -34,7 +34,7 @@ swfdec_key_getAscii (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  SWFDEC_AS_VALUE_SET_INT (retval, player->last_character);
+  SWFDEC_AS_VALUE_SET_INT (retval, player->priv->last_character);
 }
 
 SWFDEC_AS_NATIVE (800, 1, swfdec_key_getCode)
@@ -44,7 +44,7 @@ swfdec_key_getCode (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  SWFDEC_AS_VALUE_SET_INT (retval, player->last_keycode);
+  SWFDEC_AS_VALUE_SET_INT (retval, player->priv->last_keycode);
 }
 
 SWFDEC_AS_NATIVE (800, 2, swfdec_key_isDown)
@@ -63,7 +63,7 @@ swfdec_key_isDown (SwfdecAsContext *cx, SwfdecAsObject *object,
     SWFDEC_FIXME ("id %u too big for a keycode", id);
     id %= 256;
   }
-  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, (player->key_pressed[id / 8] & (1 << (id % 8))) ? TRUE : FALSE);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, (player->priv->key_pressed[id / 8] & (1 << (id % 8))) ? TRUE : FALSE);
 }
 
 SWFDEC_AS_NATIVE (800, 3, swfdec_key_isToggled)

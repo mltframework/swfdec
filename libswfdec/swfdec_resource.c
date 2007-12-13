@@ -57,7 +57,7 @@ swfdec_resource_is_root (SwfdecResource *resource)
   g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), FALSE);
 
   return
-    resource->movie == SWFDEC_FLASH_SECURITY (resource)->player->roots->data;
+    resource->movie == SWFDEC_FLASH_SECURITY (resource)->player->priv->roots->data;
 }
 
 static SwfdecPlayer *
@@ -119,7 +119,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
     return;
   cx = SWFDEC_AS_OBJECT (resource->clip_loader)->context;
   g_assert (resource->target);
-  movie = swfdec_action_lookup_object (cx, SWFDEC_PLAYER (cx)->roots->data, 
+  movie = swfdec_action_lookup_object (cx, SWFDEC_PLAYER (cx)->priv->roots->data, 
       resource->target, resource->target + strlen (resource->target));
   if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
     SWFDEC_DEBUG ("no movie, not emitting signal");
@@ -203,7 +203,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
     return TRUE;
   player = SWFDEC_FLASH_SECURITY (resource)->player;
   movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (SWFDEC_AS_CONTEXT (player),
-      player->roots->data, resource->target, resource->target + strlen (resource->target));
+      player->priv->roots->data, resource->target, resource->target + strlen (resource->target));
   if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
     level = swfdec_player_get_level (player, resource->target);
     if (level < 0) {
@@ -498,7 +498,7 @@ swfdec_resource_do_unload (SwfdecPlayer *player, const char *target, gpointer re
   SwfdecSpriteMovie *movie;
   
   movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (
-      SWFDEC_AS_CONTEXT (player), player->roots->data, 
+      SWFDEC_AS_CONTEXT (player), player->priv->roots->data, 
       target, target + strlen (target));
   if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
     SWFDEC_DEBUG ("no movie, not unloading");

@@ -402,8 +402,8 @@ main (int argc, char *argv[])
   }
 
   player = swfdec_player_new_from_file (argv[1]);
-  if (player->resource->loader->error) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], player->resource->loader->error);
+  if (player->priv->resource->loader->error) {
+    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], player->priv->resource->loader->error);
     g_object_unref (player);
     return 1;
   }
@@ -415,7 +415,7 @@ main (int argc, char *argv[])
     player = NULL;
     return 1;
   }
-  s = (SwfdecSwfDecoder *) SWFDEC_MOVIE (player->roots->data)->resource->decoder;
+  s = (SwfdecSwfDecoder *) SWFDEC_MOVIE (player->priv->roots->data)->resource->decoder;
   /* FIXME: can happen after a _root.loadMovie() call */
   if (!SWFDEC_IS_SWF_DECODER (s)) {
     g_printerr ("Movie already unloaded from \"%s\"\n", argv[1]);

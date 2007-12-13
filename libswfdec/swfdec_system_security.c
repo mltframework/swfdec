@@ -80,7 +80,7 @@ swfdec_system_security_get_sandboxType (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  switch (SWFDEC_FLASH_SECURITY (SWFDEC_PLAYER (cx)->resource)->sandbox) {
+  switch (SWFDEC_FLASH_SECURITY (SWFDEC_PLAYER (cx)->priv->resource)->sandbox) {
     case SWFDEC_SANDBOX_REMOTE:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_remote);
       break;

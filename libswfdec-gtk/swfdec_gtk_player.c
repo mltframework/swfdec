@@ -21,7 +21,6 @@
 #include "config.h"
 #endif
 
-#include <libswfdec/swfdec_player_internal.h>
 #include "libswfdec-gtk/swfdec_gtk_loader.h"
 #include "libswfdec-gtk/swfdec_gtk_player.h"
 #include "libswfdec-gtk/swfdec_playback.h"

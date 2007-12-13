@@ -34,8 +34,8 @@ swfdec_mouse_show (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  SWFDEC_AS_VALUE_SET_INT (retval, player->mouse_visible ? 1 : 0);
-  player->mouse_visible = TRUE;
+  SWFDEC_AS_VALUE_SET_INT (retval, player->priv->mouse_visible ? 1 : 0);
+  player->priv->mouse_visible = TRUE;
 }
 
 SWFDEC_AS_NATIVE (5, 1, swfdec_mouse_hide)
@@ -45,7 +45,7 @@ swfdec_mouse_hide (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  SWFDEC_AS_VALUE_SET_INT (retval, player->mouse_visible ? 1 : 0);
-  player->mouse_visible = FALSE;
+  SWFDEC_AS_VALUE_SET_INT (retval, player->priv->mouse_visible ? 1 : 0);
+  player->priv->mouse_visible = FALSE;
 }
 

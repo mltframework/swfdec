@@ -349,7 +349,8 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path1, S
       SwfdecStyle *style = &g_array_index (parser->fillstyles, 
 	  SwfdecStyle, parser->fill1style - 1);
 
-      if (swfdec_sub_path_match (path1, path1)) {
+      if (swfdec_sub_path_match (path1, path1) &&
+	  (path2 == NULL || swfdec_sub_path_match (path2, path2))) {
 	style->subpaths = g_slist_prepend (style->subpaths, 
 	    GUINT_TO_POINTER (parser->subpaths->len - 1));
       } else {

@@ -66,7 +66,6 @@ swfdec_sub_path_match (SwfdecSubPath *from, SwfdecSubPath *to)
 typedef struct {
   SwfdecDraw *		draw;		/* drawing operation that should take the subpaths or NULL on parsing error */
   GSList *		subpaths;	/* indexes into SubPath array */
-  GSList *		subpaths2;	/* indexes into SubPath array */
 } SwfdecStyle;
 
 struct _SwfdecShapeParser {

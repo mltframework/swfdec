@@ -272,7 +272,7 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
       continue;
     if (style->subpaths) {
       swfdec_style_finish (style, (SwfdecSubPath *) (void *) parser->subpaths->data, 
-	  parser->subpaths2->len ? (SwfdecSubPath *) (void *) parser->subpaths->data : NULL, FALSE);
+	  parser->subpaths2->len ? (SwfdecSubPath *) (void *) parser->subpaths2->data : NULL, FALSE);
       parser->draws = g_slist_prepend (parser->draws, g_object_ref (style->draw));
     } else if (parser->parse_fill) {
       SWFDEC_WARNING ("fillstyle %u has no path", i);
@@ -286,7 +286,7 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
       continue;
     if (style->subpaths) {
       swfdec_style_finish (style, (SwfdecSubPath *) (void *) parser->subpaths->data, 
-	  parser->subpaths2->len ? (SwfdecSubPath *) (void *) parser->subpaths->data : NULL, TRUE);
+	  parser->subpaths2->len ? (SwfdecSubPath *) (void *) parser->subpaths2->data : NULL, TRUE);
       parser->draws = g_slist_prepend (parser->draws, g_object_ref (style->draw));
     } else {
       SWFDEC_WARNING ("linestyle %u has no path", i);

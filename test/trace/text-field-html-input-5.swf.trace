@@ -310,3 +310,39 @@ a<u>b</p>c
 21: a<u>b</p>c: multiline: 1 condenseWhite: 2
 undefined
 a<u>b</p>c
+22: a<p>b<li>c</p>d: multiline: 0 condenseWhite: 0
+undefined
+a<p>b<li>c</p>d
+22: a<p>b<li>c</p>d: multiline: 1 condenseWhite: 0
+undefined
+a<p>b<li>c</p>d
+22: a<p>b<li>c</p>d: multiline: 0 condenseWhite: 2
+undefined
+a<p>b<li>c</p>d
+22: a<p>b<li>c</p>d: multiline: 1 condenseWhite: 2
+undefined
+a<p>b<li>c</p>d
+23: a<p>b<textformat indent='10'>c</p>d: multiline: 0 condenseWhite: 0
+undefined
+a<p>b<textformat indent='10'>c</p>d
+23: a<p>b<textformat indent='10'>c</p>d: multiline: 1 condenseWhite: 0
+undefined
+a<p>b<textformat indent='10'>c</p>d
+23: a<p>b<textformat indent='10'>c</p>d: multiline: 0 condenseWhite: 2
+undefined
+a<p>b<textformat indent='10'>c</p>d
+23: a<p>b<textformat indent='10'>c</p>d: multiline: 1 condenseWhite: 2
+undefined
+a<p>b<textformat indent='10'>c</p>d
+24: a<p>b<font size='10'>c</p>d: multiline: 0 condenseWhite: 0
+undefined
+a<p>b<font size='10'>c</p>d
+24: a<p>b<font size='10'>c</p>d: multiline: 1 condenseWhite: 0
+undefined
+a<p>b<font size='10'>c</p>d
+24: a<p>b<font size='10'>c</p>d: multiline: 0 condenseWhite: 2
+undefined
+a<p>b<font size='10'>c</p>d
+24: a<p>b<font size='10'>c</p>d: multiline: 1 condenseWhite: 2
+undefined
+a<p>b<font size='10'>c</p>d

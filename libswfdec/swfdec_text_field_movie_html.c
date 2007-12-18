@@ -326,12 +326,20 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
       }
 
       if (found != NULL) {
-	while (data->tags_open != found) {
-	  tag = data->tags_open->data;
+	iter = data->tags_open;
+	while (iter != found) {
+	  tag = iter->data;
+	  iter = iter->next;
+	  if ((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
+	      (tag->name_length == 10 &&
+	       !g_strncasecmp (tag->name, "textformat", 10)))
+	    continue;
 	  swfdec_text_field_movie_html_parse_close_tag (data, tag, TRUE);
 	}
+	if (data->multiline)
+	  data->text = g_string_append_c (data->text, '\n');
 	swfdec_text_field_movie_html_parse_close_tag (data, found->data,
-	    FALSE);
+	    TRUE);
       }
     } else {
       if (data->tags_open != NULL) {

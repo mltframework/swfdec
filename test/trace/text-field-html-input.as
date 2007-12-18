@@ -54,7 +54,10 @@ var texts = [
   "a<li>b<p>c</p>d</li>e",
   "a<p align='right'>b<p align='center'>c",
   "a<p>b<u>c</p>d",
-  "a<u>b</p>c"
+  "a<u>b</p>c",
+  "a<p>b<li>c</p>d",
+  "a<p>b<textformat indent='10'>c</p>d",
+  "a<p>b<font size='10'>c</p>d"
 ];
 
 for (var i = 0; i < texts.length; i++) {

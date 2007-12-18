@@ -198,3 +198,35 @@ a<p>b
 13: a<p>b: multiline: 1 condenseWhite: 2
 undefined
 a<p>b
+14: a<li>b</li>c<li>d</li>e
+<li>f</li>g<br><li>h</li>i: multiline: 0 condenseWhite: 0
+undefined
+a<li>b</li>c<li>d</li>e
+<li>f</li>g<br><li>h</li>i
+14: a<li>b</li>c<li>d</li>e
+<li>f</li>g<br><li>h</li>i: multiline: 1 condenseWhite: 0
+undefined
+a<li>b</li>c<li>d</li>e
+<li>f</li>g<br><li>h</li>i
+14: a<li>b</li>c<li>d</li>e
+<li>f</li>g<br><li>h</li>i: multiline: 0 condenseWhite: 2
+undefined
+a<li>b</li>c<li>d</li>e
+<li>f</li>g<br><li>h</li>i
+14: a<li>b</li>c<li>d</li>e
+<li>f</li>g<br><li>h</li>i: multiline: 1 condenseWhite: 2
+undefined
+a<li>b</li>c<li>d</li>e
+<li>f</li>g<br><li>h</li>i
+15: a<li>b<li>c</li>d</li>e: multiline: 0 condenseWhite: 0
+undefined
+a<li>b<li>c</li>d</li>e
+15: a<li>b<li>c</li>d</li>e: multiline: 1 condenseWhite: 0
+undefined
+a<li>b<li>c</li>d</li>e
+15: a<li>b<li>c</li>d</li>e: multiline: 0 condenseWhite: 2
+undefined
+a<li>b<li>c</li>d</li>e
+15: a<li>b<li>c</li>d</li>e: multiline: 1 condenseWhite: 2
+undefined
+a<li>b<li>c</li>d</li>e

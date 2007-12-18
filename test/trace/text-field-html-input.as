@@ -46,7 +46,9 @@ var texts = [
   "a\r<br>\nb",
   "a<u>b<b>c</b>d</u>e",
   "a<font size='1' color='#ff0000'>b<font size='2' color='#00ff00'>c<font color='#0000ff'>d<u>e",
-  "a<p>b"
+  "a<p>b",
+  "a<li>b</li>c\r<li>d</li>e\n<li>f</li>g<br><li>h</li>i",
+  "a<li>b<li>c</li>d</li>e"
 ];
 
 for (var i = 0; i < texts.length; i++) {

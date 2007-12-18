@@ -334,9 +334,14 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
       {
 	data->text = g_string_append_c (data->text, '\n');
       }
-      else if ((name_length == 1 && !g_strncasecmp (name, "p", 1)) ||
-	  (name_length == 2 && !g_strncasecmp (name, "li", 2)) ||
-	  (name_length == 2 && !g_strncasecmp (name, "br", 2)))
+      else if (name_length == 2 && !g_strncasecmp (name, "li", 1))
+      {
+	if (data->text->len > 0 &&
+	    data->text->str[data->text->len - 1] != '\n' &&
+	    data->text->str[data->text->len - 1] != '\r')
+	  data->text = g_string_append_c (data->text, '\n');
+      }
+      else if (name_length == 1 && !g_strncasecmp (name, "p", 1))
       {
 	GSList *iter;
 

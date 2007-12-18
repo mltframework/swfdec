@@ -30,31 +30,33 @@ function format_to_string (fmt) {
   return str;
 }
 
-this.createTextField ("t", 1, 0, 0, 200, 200);
-
 var texts = [
   "a",
   "a\rb",
-  "a\r\nb",
+  // causes problems in my scritps, when converting from dos to unix newlines
+  //"a\r\nb",
+  "a\n\rb",
   "a\r\rb",
+  "a\n\nb",
   "a<p align='right'>b</p>c",
   "a<p align='right'>ä</p>c",
   "a<!-- b -->c",
   "a<!--->b",
   "a<br><li>b</li>c<p>d</p>e<br>",
   "a\r<br>\nb",
-  "a<u>b<b>c</b>d</u>e"
+  "a<u>b<b>c</b>d</u>e",
+  "a<font size='1' color='#ff0000'>b<font size='2' color='#00ff00'>c<font color='#0000ff'>d<u>e"
 ];
-
-t.html = true;
 
 for (var i = 0; i < texts.length; i++) {
   for (var j = 0; j <= 3; j++) {
+    this.createTextField ("t", 1, 0, 0, 200, 200);
+    t.html = true;
     t.multiline = j & 1;
     t.condenseWhite = j & 2;
     t.htmlText = texts[i];
 
-    trace (i + ": multiline: " + t.multiline + " condenseWhite: " + t.condenseWhite);
+    trace (i + ": " + texts[i] + ": multiline: " + t.multiline + " condenseWhite: " + t.condenseWhite);
 
     trace (t.text);
     trace (t.htmlText);

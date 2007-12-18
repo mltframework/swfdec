@@ -419,7 +419,7 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
 
   // condense the space with previous text also, if version >= 8
   if (data->condense_white && data->cx->version >= 8) {
-    if (data->text->len > 0
+    if (data->text->len > 0 &&
 	g_ascii_isspace (data->text->str[data->text->len - 1]))
       p += strspn (p, " \n\r\t");
   }

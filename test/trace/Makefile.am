@@ -2749,6 +2749,8 @@ EXTRA_DIST = \
 	text-field-get-text-format-8.swf \
 	text-field-get-text-format-8.swf.trace \
 	text-field-html-input.as \
+	text-field-html-input-5.swf \
+	text-field-html-input-5.swf.trace \
 	text-field-html-input-6.swf \
 	text-field-html-input-6.swf.trace \
 	text-field-html-input-7.swf \

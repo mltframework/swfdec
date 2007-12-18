@@ -39,11 +39,19 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 #define SWFDEC_TEXT_FIELD_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FIELD_MOVIE, SwfdecTextFieldMovieClass))
 
 typedef struct {
-  PangoLayout *		layout;
+  PangoLayout *		layout;		// layout to render
+
+  // the byte offset where this layout's text starts in text->input->str
   guint			index_;
-  int			offset_x;
-  int			height;
+
+  int			offset_x;	// x offset to apply before rendering
+
+  // dimensions for this layout, including offset_x, might be bigger than the
+  // rendering of PangoLayout needs
   int			width;
+  int			height;
+
+  // whether the layout starts with bullet point to be rendered separately
   gboolean		bullet;
 } SwfdecLayout;
 

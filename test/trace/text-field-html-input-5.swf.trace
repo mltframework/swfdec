@@ -230,3 +230,83 @@ a<li>b<li>c</li>d</li>e
 15: a<li>b<li>c</li>d</li>e: multiline: 1 condenseWhite: 2
 undefined
 a<li>b<li>c</li>d</li>e
+16: a<p>b</p>c<p>d</p>e
+<p>f</p>g<br><p>h</p>i: multiline: 0 condenseWhite: 0
+undefined
+a<p>b</p>c<p>d</p>e
+<p>f</p>g<br><p>h</p>i
+16: a<p>b</p>c<p>d</p>e
+<p>f</p>g<br><p>h</p>i: multiline: 1 condenseWhite: 0
+undefined
+a<p>b</p>c<p>d</p>e
+<p>f</p>g<br><p>h</p>i
+16: a<p>b</p>c<p>d</p>e
+<p>f</p>g<br><p>h</p>i: multiline: 0 condenseWhite: 2
+undefined
+a<p>b</p>c<p>d</p>e
+<p>f</p>g<br><p>h</p>i
+16: a<p>b</p>c<p>d</p>e
+<p>f</p>g<br><p>h</p>i: multiline: 1 condenseWhite: 2
+undefined
+a<p>b</p>c<p>d</p>e
+<p>f</p>g<br><p>h</p>i
+17: a<p>b<p>c</p>d</p>e: multiline: 0 condenseWhite: 0
+undefined
+a<p>b<p>c</p>d</p>e
+17: a<p>b<p>c</p>d</p>e: multiline: 1 condenseWhite: 0
+undefined
+a<p>b<p>c</p>d</p>e
+17: a<p>b<p>c</p>d</p>e: multiline: 0 condenseWhite: 2
+undefined
+a<p>b<p>c</p>d</p>e
+17: a<p>b<p>c</p>d</p>e: multiline: 1 condenseWhite: 2
+undefined
+a<p>b<p>c</p>d</p>e
+18: a<li>b<p>c</p>d</li>e: multiline: 0 condenseWhite: 0
+undefined
+a<li>b<p>c</p>d</li>e
+18: a<li>b<p>c</p>d</li>e: multiline: 1 condenseWhite: 0
+undefined
+a<li>b<p>c</p>d</li>e
+18: a<li>b<p>c</p>d</li>e: multiline: 0 condenseWhite: 2
+undefined
+a<li>b<p>c</p>d</li>e
+18: a<li>b<p>c</p>d</li>e: multiline: 1 condenseWhite: 2
+undefined
+a<li>b<p>c</p>d</li>e
+19: a<p align='right'>b<p align='center'>c: multiline: 0 condenseWhite: 0
+undefined
+a<p align='right'>b<p align='center'>c
+19: a<p align='right'>b<p align='center'>c: multiline: 1 condenseWhite: 0
+undefined
+a<p align='right'>b<p align='center'>c
+19: a<p align='right'>b<p align='center'>c: multiline: 0 condenseWhite: 2
+undefined
+a<p align='right'>b<p align='center'>c
+19: a<p align='right'>b<p align='center'>c: multiline: 1 condenseWhite: 2
+undefined
+a<p align='right'>b<p align='center'>c
+20: a<p>b<u>c</p>d: multiline: 0 condenseWhite: 0
+undefined
+a<p>b<u>c</p>d
+20: a<p>b<u>c</p>d: multiline: 1 condenseWhite: 0
+undefined
+a<p>b<u>c</p>d
+20: a<p>b<u>c</p>d: multiline: 0 condenseWhite: 2
+undefined
+a<p>b<u>c</p>d
+20: a<p>b<u>c</p>d: multiline: 1 condenseWhite: 2
+undefined
+a<p>b<u>c</p>d
+21: a<u>b</p>c: multiline: 0 condenseWhite: 0
+undefined
+a<u>b</p>c
+21: a<u>b</p>c: multiline: 1 condenseWhite: 0
+undefined
+a<u>b</p>c
+21: a<u>b</p>c: multiline: 0 condenseWhite: 2
+undefined
+a<u>b</p>c
+21: a<u>b</p>c: multiline: 1 condenseWhite: 2
+undefined
+a<u>b</p>c

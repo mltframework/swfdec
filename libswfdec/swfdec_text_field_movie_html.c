@@ -313,11 +313,33 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 
   if (close)
   {
-    if (data->tags_open != NULL) {
-      tag = data->tags_open->data;
-      if (name_length == tag->name_length &&
-	  !g_strncasecmp (name, tag->name, name_length))
-	swfdec_text_field_movie_html_parse_close_tag (data, tag, FALSE);
+    if (name_length == 1 && !g_strncasecmp (name, "p", 1)) {
+      GSList *iter, *found;
+
+      found = NULL;
+      iter = data->tags_open;
+      while (iter != NULL) {
+	tag = iter->data;
+	if (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1))
+	  found = iter;
+	iter = iter->next;
+      }
+
+      if (found != NULL) {
+	while (data->tags_open != found) {
+	  tag = data->tags_open->data;
+	  swfdec_text_field_movie_html_parse_close_tag (data, tag, TRUE);
+	}
+	swfdec_text_field_movie_html_parse_close_tag (data, found->data,
+	    FALSE);
+      }
+    } else {
+      if (data->tags_open != NULL) {
+	tag = data->tags_open->data;
+	if (name_length == tag->name_length &&
+	    !g_strncasecmp (name, tag->name, name_length))
+	  swfdec_text_field_movie_html_parse_close_tag (data, tag, FALSE);
+      }
     }
 
     end = strchr (end, '>');
@@ -340,19 +362,6 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 	    data->text->str[data->text->len - 1] != '\n' &&
 	    data->text->str[data->text->len - 1] != '\r')
 	  data->text = g_string_append_c (data->text, '\n');
-      }
-      else if (name_length == 1 && !g_strncasecmp (name, "p", 1))
-      {
-	GSList *iter;
-
-	for (iter = data->tags_open; iter != NULL; iter = iter->next) {
-	  ParserTag *f = iter->data;
-	  if ((f->name_length == 1 && !g_strncasecmp (f->name, "p", 1)) ||
-	      (f->name_length == 2 && !g_strncasecmp (f->name, "li", 2))) {
-	    data->text = g_string_append_c (data->text, '\n');
-	    break;
-	  }
-	}
       }
     }
 

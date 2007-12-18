@@ -14,22 +14,22 @@ trace (m.test);
 
 // object
 o = new Object();
-o.test = 1;
+o.test = 4;
 t.variable = "o.test";
 trace (t.text);
-o.test = 2;
-trace (o.text);
-t.text = 3;
+o.test = 5;
+trace (t.text);
+t.text = 6;
 trace (o.test);
 
 // nothing
 delete n;
-n.test = 1;
+n.test = 7;
 t.variable = "n.test";
 trace (t.text);
-n.test = 2;
-trace (o.text);
-t.text = 3;
+n.test = 8;
+trace (t.text);
+t.text = 9;
 trace (n.test);
 
 loadMovie ("FSCommand:quit", "");

@@ -44,8 +44,18 @@ static void
 swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
-  swfdec_rect_union (extents, extents,
-      &SWFDEC_GRAPHIC (SWFDEC_TEXT_FIELD_MOVIE (movie)->text)->extents);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecRect extended;
+
+  extended = SWFDEC_GRAPHIC (text->text)->extents;
+
+  // border is drawn partly outside the extents
+  if (text->text->border) {
+    extended.x1 += SWFDEC_TWIPS_TO_DOUBLE (1);
+    extended.y1 += SWFDEC_TWIPS_TO_DOUBLE (1);
+  }
+
+  swfdec_rect_union (extents, extents, &extended);
 }
 
 static void
@@ -819,10 +829,6 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   swfdec_rect_intersect (&limit, &movie->original_extents, inval);
 
-  cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0,
-      limit.y1 - limit.y0);
-  cairo_clip (cr);
-
   if (text->background) {
     cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0,
 	limit.y1 - limit.y0);
@@ -833,13 +839,13 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 
   if (text->border) {
-    // FIXME: border should be partly outside the extents and should not be
-    // scaled, but always be 1 pixel width
+    // FIXME: should not be scaled, but always be 1 pixel width
+    // TODO: should clip before to make things faster?
     cairo_rectangle (cr, movie->original_extents.x0 +
-	SWFDEC_DOUBLE_TO_TWIPS (1), movie->original_extents.y0,
-	movie->original_extents.x1 - movie->original_extents.x0 -
-	SWFDEC_DOUBLE_TO_TWIPS (1), movie->original_extents.y1 -
-	movie->original_extents.y0 - SWFDEC_DOUBLE_TO_TWIPS (1));
+	SWFDEC_DOUBLE_TO_TWIPS (0.5), movie->original_extents.y0 +
+	SWFDEC_DOUBLE_TO_TWIPS (0.5),
+	movie->original_extents.x1 - movie->original_extents.x0,
+	movie->original_extents.y1 - movie->original_extents.y0);
     color = swfdec_color_apply_transform (text_movie->border_color, trans);
     // always use full alpha
     swfdec_color_set_source (cr, color | SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
@@ -848,6 +854,10 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
     cairo_stroke (cr);
   }
+
+  cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0,
+      limit.y1 - limit.y0);
+  cairo_clip (cr);
 
   layouts = swfdec_text_field_movie_get_layouts (text_movie, NULL, cr,
       paragraphs, trans);

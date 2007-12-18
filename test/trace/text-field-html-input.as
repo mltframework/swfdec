@@ -41,8 +41,7 @@ var texts = [
   "a<p align='right'>ä</p>c",
   "a<!-- b -->c",
   "a<!--->b",
-  "a<br><li>b</li>c<p>d</p>e<br>",
-  'a<font color="#00ff00">b</font>c<font color="#0000ff">d<font>e'
+  "a<br><li>b</li>c<p>d</p>e<br>"
 ];
 
 t.html = true;

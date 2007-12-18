@@ -337,7 +337,7 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 	  (name_length == 2 && !g_strncasecmp (name, "li", 2)) ||
 	  (name_length == 2 && !g_strncasecmp (name, "br", 2)))
       {
-	    GSList *iter;
+	GSList *iter;
 
 	for (iter = data->tags_open; iter != NULL; iter = iter->next) {
 	  ParserTag *f = iter->data;
@@ -416,6 +416,13 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (p != NULL, NULL);
   g_return_val_if_fail (*p != '\0' && *p != '<', NULL);
+
+  // condense the space with previous text also, if version >= 8
+  if (data->condense_white && data->cx->version >= 8) {
+    if (data->text->len > 0
+	g_ascii_isspace (data->text->str[data->text->len - 1]))
+      p += strspn (p, " \n\r\t");
+  }
 
   // get the text
   // if condense_white: all whitespace blocks are converted to a single space

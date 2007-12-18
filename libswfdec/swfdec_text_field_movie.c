@@ -542,6 +542,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       // create layout
       playout = layout.layout = pango_cairo_create_layout (cr);
+      pango_layout_set_single_paragraph_mode (playout, TRUE);
 
       // set rendering position
       layout.offset_x = block->left_margin + block->block_indent;
@@ -630,8 +631,8 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
 	rect.x = 0;
 	rect.width = 0;
-	rect.y = -descent;
-	rect.height = ascent;
+	rect.y = -ascent * PANGO_SCALE;
+	rect.height = descent * PANGO_SCALE;
 
 	attr = pango_attr_shape_new (&rect, &rect);
 
@@ -746,7 +747,7 @@ swfdec_text_field_movie_line_position (SwfdecLayout *layouts, int line_num,
 
   g_return_if_fail (layouts != NULL);
 
-  current = 0;
+  current = 1;
   for (i = 0; layouts[i].layout != NULL && current < line_num; i++) {
     current += pango_layout_get_line_count (layouts[i].layout);
 

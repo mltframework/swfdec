@@ -749,6 +749,71 @@ swfdec_text_field_movie_free_layouts (SwfdecLayout *layouts)
 }
 
 static void
+swfdec_text_field_movie_line_position (SwfdecTextFieldMovie *text,
+    SwfdecLayout *layouts_, int line_num, int *pixels, int *layout_num,
+    int *line_in_layout)
+{
+  SwfdecLayout *layouts;
+  int linenum, i;
+
+  if (pixels != NULL)
+    *pixels = 0;
+
+  if (layout_num != NULL)
+    *layout_num = 0;
+
+  if (line_in_layout != NULL)
+    *line_in_layout = 0;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  if (layouts_ != NULL) {
+    layouts = layouts_;
+  } else {
+    layouts =
+      swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
+  }
+
+  linenum = 0;
+  for (i = 0; layouts[i].layout != NULL && linenum < line_num; i++)
+  {
+    PangoLayoutIter *iter_line;
+    int layout_lines;
+
+    iter_line = pango_layout_get_iter (layouts[i].layout);
+
+    layout_lines = 0;
+    do {
+      if (++linenum >= line_num) {
+	if (pixels != NULL) {
+	  PangoRectangle rect;
+
+	  pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
+	  pango_extents_to_pixels (NULL, &rect);
+
+	  *pixels += rect.y;
+	}
+	if (line_in_layout != NULL)
+	  *line_in_layout = layout_lines;
+	break;
+      }
+      layout_lines++;
+    } while (pango_layout_iter_next_line (iter_line));
+
+    if (linenum < line_num && pixels != NULL)
+      *pixels += layouts[i].height;
+
+    pango_layout_iter_free (iter_line);
+  }
+
+  if (layout_num != NULL)
+    *layout_num = i;
+
+  if (layouts_ == NULL)
+    swfdec_text_field_movie_free_layouts (layouts);
+}
+
+static void
 swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
@@ -758,7 +823,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecRect limit;
   SwfdecColor color;
   SwfdecParagraph *paragraphs;
-  int i, y, x, linenum;
+  int i, y, x, pixels, skip;
   gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
@@ -811,12 +876,15 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       paragraphs, trans);
 
   first = TRUE;
-  linenum = 0;
   x = movie->original_extents.x0 + EXTRA_MARGIN +
     MIN (text_movie->hscroll, text_movie->hscroll_max);
   y = movie->original_extents.y0 + EXTRA_MARGIN;
 
-  for (i = 0; layouts[i].layout != NULL && y < limit.y1; i++)
+  swfdec_text_field_movie_line_position (text_movie, layouts,
+      MIN (text_movie->scroll, text_movie->scroll_max), &pixels, &i, &skip);
+  y += pixels;
+
+  for (; layouts[i].layout != NULL && y < limit.y1; i++)
   {
     SwfdecLayout *layout = &layouts[i];
     PangoLayoutIter *iter_line;
@@ -826,8 +894,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
     iter_line = pango_layout_get_iter (layout->layout);
 
-    if (layout->bullet && linenum + 1 >=
-	MIN (text_movie->scroll, text_movie->scroll_max)) {
+    if (layout->bullet && skip == 0) {
       PangoColor color_p;
       PangoAttribute *attr;
       PangoAttrIterator *attr_iter;
@@ -856,16 +923,24 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       cairo_fill (cr);
     }
 
-    skipped = 0;
-    do {
-      if (++linenum < MIN (text_movie->scroll, text_movie->scroll_max))
-	continue;
+    if (skip > 0) {
+      for (skipped = 0; skipped < skip; skipped++) {
+	g_assert (!pango_layout_iter_at_last_line (iter_line));
+	pango_layout_iter_next_line (iter_line);
+      }
 
       pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
       pango_extents_to_pixels (NULL, &rect);
 
-      if (linenum == MIN (text_movie->scroll, text_movie->scroll_max))
-	skipped = rect.y;
+      skipped = rect.y;
+      skip = 0;
+    } else {
+      skipped = 0;
+    }
+
+    do {
+      pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
+      pango_extents_to_pixels (NULL, &rect);
 
       if (!first && y + rect.y + rect.height > movie->original_extents.y1)
 	break;
@@ -881,7 +956,6 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	continue;
 
       cairo_move_to (cr, x, y);
-
       if (pango_layout_iter_at_last_line (iter_line))
 	cairo_rel_move_to (cr, 0, layout->last_line_offset_y);
       cairo_rel_move_to (cr, layout->offset_x + rect.x,
@@ -891,10 +965,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       pango_cairo_show_layout_line (cr, line);
     } while (pango_layout_iter_next_line (iter_line));
 
-    if (linenum >= MIN (text_movie->scroll, text_movie->scroll_max)) {
-      y += layout->height - skipped;
-      skipped = 0;
-    }
+    y += layout->height - skipped;
 
     pango_layout_iter_free (iter_line);
   }
@@ -1283,71 +1354,6 @@ swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
     swfdec_player_launch (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context),
 	SWFDEC_LOADER_REQUEST_DEFAULT, format->url, format->target, NULL);
   }
-}
-
-static void
-swfdec_text_field_movie_line_position (SwfdecTextFieldMovie *text,
-    SwfdecLayout *layouts_, int line_num, int *pixels, int *layout_num,
-    int *line_in_layout)
-{
-  SwfdecLayout *layouts;
-  int linenum, i;
-
-  if (pixels != NULL)
-    *pixels = 0;
-
-  if (layout_num != NULL)
-    *layout_num = 0;
-
-  if (line_in_layout != NULL)
-    *line_in_layout = 0;
-
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-
-  if (layouts_ != NULL) {
-    layouts = layouts_;
-  } else {
-    layouts =
-      swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
-  }
-
-  linenum = 0;
-  for (i = 0; layouts[i].layout != NULL && linenum < line_num; i++)
-  {
-    PangoLayoutIter *iter_line;
-    int layout_lines;
-
-    iter_line = pango_layout_get_iter (layouts[i].layout);
-
-    layout_lines = 0;
-    do {
-      if (++linenum >= line_num) {
-	if (pixels != NULL) {
-	  PangoRectangle rect;
-
-	  pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
-	  pango_extents_to_pixels (NULL, &rect);
-
-	  *pixels += rect.y;
-	}
-	if (line_in_layout != NULL)
-	  *line_in_layout = layout_lines;
-	break;
-      }
-      layout_lines++;
-    } while (pango_layout_iter_next_line (iter_line));
-
-    if (linenum < line_num && pixels != NULL)
-      *pixels += layouts[i].height;
-
-    pango_layout_iter_free (iter_line);
-  }
-
-  if (layout_num != NULL)
-    *layout_num = i;
-
-  if (layouts_ == NULL)
-    swfdec_text_field_movie_free_layouts (layouts);
 }
 
 static gboolean

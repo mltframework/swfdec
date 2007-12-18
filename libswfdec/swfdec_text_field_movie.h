@@ -42,7 +42,6 @@ typedef struct {
   PangoLayout *		layout;
   guint			index_;
   int			offset_x;
-  int			last_line_offset_y;
   int			height;
   int			width;
   gboolean		bullet;

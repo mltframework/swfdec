@@ -444,25 +444,6 @@ swfdec_text_field_movie_paragraph_get_attr_list (
   return attr_list;
 }
 
-static int
-swfdec_text_field_movie_layout_get_last_line_baseline (PangoLayout *playout)
-{
-  int baseline;
-  PangoLayoutIter *iter;
-
-  g_return_val_if_fail (playout != NULL, 0);
-
-  iter = pango_layout_get_iter (playout);
-  while (!pango_layout_iter_at_last_line (iter))
-    pango_layout_iter_next_line (iter);
-
-  baseline = pango_layout_iter_get_baseline (iter) / PANGO_SCALE;
-
-  pango_layout_iter_free (iter);
-
-  return baseline;
-}
-
 static void
 swfdec_text_field_movie_attr_list_get_ascent_descent (PangoAttrList *attr_list,
     guint pos, int *ascent, int *descent)
@@ -543,7 +524,6 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       SwfdecBlock *block;
       int width;
       guint length;
-      gboolean end_of_paragraph;
 
       block = (SwfdecBlock *)iter->data;
       if (iter->next != NULL) {
@@ -639,19 +619,39 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	pango_attr_list_insert (attr_list, attr_bg);
       }
 
+      // add shape for newline character at the end
+      if (paragraphs[i].newline) {
+	int ascent, descent;
+	PangoRectangle rect;
+	PangoAttribute *attr;
+
+	swfdec_text_field_movie_attr_list_get_ascent_descent (attr_list,
+	    paragraphs[i].length - block->index_ - skip, &ascent, &descent);
+
+	rect.x = 0;
+	rect.width = 0;
+	rect.y = -descent;
+	rect.height = ascent;
+
+	attr = pango_attr_shape_new (&rect, &rect);
+
+	attr->end_index = paragraphs[i].length - block->index_ - skip;
+	attr->start_index = attr->end_index - 1;
+
+	pango_attr_list_insert (attr_list, attr);
+      }
+
       pango_layout_set_attributes (playout, attr_list);
 
       if (text->text->password) {
 	pango_layout_set_text (playout, text->asterisks, paragraphs[i].length -
-	    block->index_ - skip - (paragraphs[i].newline ? 1 : 0));
+	    block->index_ - skip);
       } else {
 	pango_layout_set_text (playout,
 	    text->input->str + paragraphs[i].index_ + block->index_ + skip,
-	    paragraphs[i].length - block->index_ - skip -
-	    (paragraphs[i].newline ? 1 : 0));
+	    paragraphs[i].length - block->index_ - skip);
       }
 
-      end_of_paragraph = TRUE;
       if (iter->next != NULL && text->text->word_wrap)
       {
 	PangoLayoutLine *line;
@@ -661,7 +661,6 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	pango_layout_index_to_line_x (playout, length - skip, FALSE, &line_num,
 	    NULL);
 	if (line_num < pango_layout_get_line_count (playout) - 1) {
-	  end_of_paragraph = FALSE;
 	  line = pango_layout_get_line_readonly (playout, line_num);
 	  skip_new = line->start_index + line->length - (length - skip);
 	  pango_layout_set_text (playout,
@@ -691,24 +690,6 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       pango_layout_get_pixel_size (playout, &layout.width, &layout.height);
       layout.width += layout.offset_x + block->right_margin;
-      layout.last_line_offset_y = 0;
-
-      // figure out if we need to add extra height because of the size of the
-      // line break character
-      if (end_of_paragraph && paragraphs[i].newline)
-      {
-	int ascent, descent;
-
-	swfdec_text_field_movie_attr_list_get_ascent_descent (attr_list,
-	    paragraphs[i].length - block->index_ - skip, &ascent, &descent);
-
-	if (ascent + descent > layout.height) {
-	  int baseline =
-	    swfdec_text_field_movie_layout_get_last_line_baseline (playout);
-	  layout.last_line_offset_y = ascent - baseline;
-	  layout.height = ascent + descent;
-	}
-      }
 
       pango_attr_list_unref (attr_list);
 
@@ -951,8 +932,6 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	continue;
 
       cairo_move_to (cr, x, y);
-      if (pango_layout_iter_at_last_line (iter_line))
-	cairo_rel_move_to (cr, 0, layout->last_line_offset_y);
       cairo_rel_move_to (cr, layout->offset_x + rect.x,
 	  pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped);
 

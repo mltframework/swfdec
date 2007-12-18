@@ -1285,12 +1285,77 @@ swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
   }
 }
 
+static void
+swfdec_text_field_movie_line_position (SwfdecTextFieldMovie *text,
+    SwfdecLayout *layouts_, int line_num, int *pixels, int *layout_num,
+    int *line_in_layout)
+{
+  SwfdecLayout *layouts;
+  int linenum, i;
+
+  if (pixels != NULL)
+    *pixels = 0;
+
+  if (layout_num != NULL)
+    *layout_num = 0;
+
+  if (line_in_layout != NULL)
+    *line_in_layout = 0;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  if (layouts_ != NULL) {
+    layouts = layouts_;
+  } else {
+    layouts =
+      swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
+  }
+
+  linenum = 0;
+  for (i = 0; layouts[i].layout != NULL && linenum < line_num; i++)
+  {
+    PangoLayoutIter *iter_line;
+    int layout_lines;
+
+    iter_line = pango_layout_get_iter (layouts[i].layout);
+
+    layout_lines = 0;
+    do {
+      if (++linenum >= line_num) {
+	if (pixels != NULL) {
+	  PangoRectangle rect;
+
+	  pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
+	  pango_extents_to_pixels (NULL, &rect);
+
+	  *pixels += rect.y;
+	}
+	if (line_in_layout != NULL)
+	  *line_in_layout = layout_lines;
+	break;
+      }
+      layout_lines++;
+    } while (pango_layout_iter_next_line (iter_line));
+
+    if (linenum < line_num && pixels != NULL)
+      *pixels += layouts[i].height;
+
+    pango_layout_iter_free (iter_line);
+  }
+
+  if (layout_num != NULL)
+    *layout_num = i;
+
+  if (layouts_ == NULL)
+    swfdec_text_field_movie_free_layouts (layouts);
+}
+
 static gboolean
 swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
     double y, guint *index_, gboolean *before)
 {
   SwfdecLayout *layouts;
-  int i, layout_index, trailing;
+  int i, layout_index, trailing, pixels;
   double layout_y, layout_x;
   gboolean direct;
 
@@ -1306,14 +1371,22 @@ swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
   if (layouts[0].layout == NULL)
     return FALSE;
 
-  i = 0;
   layout_y = y;
+  layout_x = x;
+
+  // take scrolling into account
+  swfdec_text_field_movie_line_position (text, layouts,
+      MIN (text->scroll, text->scroll_max), &pixels, NULL, NULL);
+  layout_y += pixels;
+  layout_x += MIN (text->hscroll, text->hscroll_max);
+
+  i = 0;
   while (layout_y > layouts[i].height && layouts[i + 1].layout != NULL) {
     layout_y -= layouts[i].height;
     i++;
   }
 
-  layout_x = x - layouts[i].offset_x;
+  layout_x -= layouts[i].offset_x;
 
   direct = pango_layout_xy_to_index (layouts[i].layout, layout_x * PANGO_SCALE,
       layout_y * PANGO_SCALE, &layout_index, &trailing);

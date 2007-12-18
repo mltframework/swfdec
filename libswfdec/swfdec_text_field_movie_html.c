@@ -52,12 +52,13 @@ typedef struct {
 } ParserData;
 
 static void
-swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag)
+swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag,
+    gboolean end)
 {
   g_return_if_fail (data != NULL);
   g_return_if_fail (tag != NULL);
 
-  if (data->multiline &&
+  if (data->multiline && !end &&
       ((tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) ||
        (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2))))
   {
@@ -316,7 +317,7 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
       tag = data->tags_open->data;
       if (name_length == tag->name_length &&
 	  !g_strncasecmp (name, tag->name, name_length))
-	swfdec_text_field_movie_html_parse_close_tag (data, tag);
+	swfdec_text_field_movie_html_parse_close_tag (data, tag, FALSE);
     }
 
     end = strchr (end, '>');
@@ -491,7 +492,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
     swfdec_text_format_add (text->format_new,
 	((ParserTag *)data.tags_open->data)->format);
     swfdec_text_field_movie_html_parse_close_tag (&data,
-	(ParserTag *)data.tags_open->data);
+	(ParserTag *)data.tags_open->data, TRUE);
   }
 
   // add parsed styles

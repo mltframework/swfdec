@@ -186,3 +186,15 @@ a<font size='1' color='#ff0000'>b<font size='2' color='#00ff00'>c<font color='#0
 12: a<font size='1' color='#ff0000'>b<font size='2' color='#00ff00'>c<font color='#0000ff'>d<u>e: multiline: 1 condenseWhite: 2
 undefined
 a<font size='1' color='#ff0000'>b<font size='2' color='#00ff00'>c<font color='#0000ff'>d<u>e
+13: a<p>b: multiline: 0 condenseWhite: 0
+undefined
+a<p>b
+13: a<p>b: multiline: 1 condenseWhite: 0
+undefined
+a<p>b
+13: a<p>b: multiline: 0 condenseWhite: 2
+undefined
+a<p>b
+13: a<p>b: multiline: 1 condenseWhite: 2
+undefined
+a<p>b

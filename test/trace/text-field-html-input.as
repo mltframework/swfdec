@@ -1,4 +1,4 @@
-// makeswf -v 7 -r 1 -o test-7.swf test.as
+// makeswf -v 7 -r 1 -o text-field-html-input-7.swf text-field-html-input.as
 
 var properties = [
   "align",
@@ -45,7 +45,8 @@ var texts = [
   "a<br><li>b</li>c<p>d</p>e<br>",
   "a\r<br>\nb",
   "a<u>b<b>c</b>d</u>e",
-  "a<font size='1' color='#ff0000'>b<font size='2' color='#00ff00'>c<font color='#0000ff'>d<u>e"
+  "a<font size='1' color='#ff0000'>b<font size='2' color='#00ff00'>c<font color='#0000ff'>d<u>e",
+  "a<p>b"
 ];
 
 for (var i = 0; i < texts.length; i++) {

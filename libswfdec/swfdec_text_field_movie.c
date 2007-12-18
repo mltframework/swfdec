@@ -799,7 +799,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecRect limit;
   SwfdecColor color;
   SwfdecParagraph *paragraphs;
-  int i, y, x, pixels, skip;
+  int i, y, x, skip;
   gboolean first;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
@@ -852,13 +852,12 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       paragraphs, trans);
 
   first = TRUE;
-  x = movie->original_extents.x0 + EXTRA_MARGIN +
+  x = movie->original_extents.x0 + SWFDEC_DOUBLE_TO_TWIPS (EXTRA_MARGIN) +
     MIN (text_movie->hscroll, text_movie->hscroll_max);
-  y = movie->original_extents.y0 + EXTRA_MARGIN;
+  y = movie->original_extents.y0 + SWFDEC_DOUBLE_TO_TWIPS (EXTRA_MARGIN);
 
   swfdec_text_field_movie_line_position (layouts,
-      MIN (text_movie->scroll, text_movie->scroll_max), &pixels, &i, &skip);
-  y += pixels;
+      MIN (text_movie->scroll, text_movie->scroll_max), NULL, &i, &skip);
 
   for (; layouts[i].layout != NULL && y < limit.y1; i++)
   {
@@ -1351,8 +1350,8 @@ swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
   if (layouts[0].layout == NULL)
     return FALSE;
 
-  layout_y = y;
-  layout_x = x;
+  layout_y = y - EXTRA_MARGIN;
+  layout_x = x - EXTRA_MARGIN;
 
   // take scrolling into account
   swfdec_text_field_movie_line_position (layouts,

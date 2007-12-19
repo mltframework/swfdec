@@ -1118,11 +1118,11 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
   swfdec_player_grab_mouse_movie (player);
   swfdec_player_update_drag_movie (player);
 
-  if (player->mouse_grab) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+  if (priv->mouse_grab) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
     if (klass->mouse_move) {
-      swfdec_movie_get_mouse (player->mouse_grab, &x, &y);
-      klass->mouse_move (player->mouse_grab, x, y);
+      swfdec_movie_get_mouse (priv->mouse_grab, &x, &y);
+      klass->mouse_move (priv->mouse_grab, x, y);
     }
   }
 

@@ -208,6 +208,8 @@ swfdec_load_object_new (SwfdecAsObject *target, const char *url,
   g_return_val_if_fail (url != NULL, NULL);
   g_return_val_if_fail (finish != NULL, NULL);
 
+  // FIXME: new load object request should overwrite the old one in version 8
+
   if (!swfdec_as_context_use_mem (target->context, sizeof (SwfdecLoadObject)))
     return NULL;
   load_object = SWFDEC_LOAD_OBJECT (g_object_new (

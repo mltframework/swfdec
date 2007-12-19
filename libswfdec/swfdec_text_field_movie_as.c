@@ -1328,12 +1328,10 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   edittext->indent = 0;
   edittext->leading = 0;
 
-  SWFDEC_GRAPHIC (edittext)->extents.x0 = SWFDEC_DOUBLE_TO_TWIPS (x);
-  SWFDEC_GRAPHIC (edittext)->extents.x1 =
-    SWFDEC_GRAPHIC (edittext)->extents.x0 + SWFDEC_DOUBLE_TO_TWIPS (width);
-  SWFDEC_GRAPHIC (edittext)->extents.y0 = SWFDEC_DOUBLE_TO_TWIPS (y);
-  SWFDEC_GRAPHIC (edittext)->extents.y1 =
-    SWFDEC_GRAPHIC (edittext)->extents.y0 + SWFDEC_DOUBLE_TO_TWIPS (height);
+  SWFDEC_GRAPHIC (edittext)->extents.x0 = 0;
+  SWFDEC_GRAPHIC (edittext)->extents.x1 = SWFDEC_DOUBLE_TO_TWIPS (width);
+  SWFDEC_GRAPHIC (edittext)->extents.y0 = 0;
+  SWFDEC_GRAPHIC (edittext)->extents.y1 = SWFDEC_DOUBLE_TO_TWIPS (height);
 
   movie = swfdec_movie_find (parent, depth);
   if (movie)
@@ -1344,6 +1342,11 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
   g_object_unref (edittext);
   swfdec_movie_initialize (movie);
+
+  movie->matrix.x0 = SWFDEC_DOUBLE_TO_TWIPS (x);
+  movie->matrix.y0 = SWFDEC_DOUBLE_TO_TWIPS (y);
+  movie->modified = TRUE;
+
   swfdec_movie_update (movie);
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);

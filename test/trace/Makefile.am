@@ -2640,6 +2640,8 @@ EXTRA_DIST = \
 	stylesheet-parsecolor-6.swf.trace \
 	stylesheet-parsecolor-7.swf \
 	stylesheet-parsecolor-7.swf.trace \
+	stylesheet-parsecolor-8.swf \
+	stylesheet-parsecolor-8.swf.trace \
 	stylesheet-parsecssfontfamily.as \
 	stylesheet-parsecssfontfamily-5.swf \
 	stylesheet-parsecssfontfamily-5.swf.trace \
@@ -2647,6 +2649,8 @@ EXTRA_DIST = \
 	stylesheet-parsecssfontfamily-6.swf.trace \
 	stylesheet-parsecssfontfamily-7.swf \
 	stylesheet-parsecssfontfamily-7.swf.trace \
+	stylesheet-parsecssfontfamily-8.swf \
+	stylesheet-parsecssfontfamily-8.swf.trace \
 	stylesheet-properties.as \
 	stylesheet-properties-5.swf \
 	stylesheet-properties-5.swf.trace \

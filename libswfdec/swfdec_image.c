@@ -190,7 +190,6 @@ swfdec_image_jpeg_load (SwfdecImage *image)
   image->surface = cairo_image_surface_create_for_data (data, CAIRO_FORMAT_RGB24,
       image->width, image->height, image->width * 4);
   cairo_surface_set_user_data (image->surface, &key, data, g_free);
-  cairo_surface_reference (image->surface);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -232,7 +231,6 @@ swfdec_image_jpeg2_load (SwfdecImage *image)
   image->surface = cairo_image_surface_create_for_data (data, CAIRO_FORMAT_RGB24,
       image->width, image->height, image->width * 4);
   cairo_surface_set_user_data (image->surface, &key, data, g_free);
-  cairo_surface_reference (image->surface);
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
@@ -298,7 +296,6 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   image->surface = cairo_image_surface_create_for_data (data,
       CAIRO_FORMAT_ARGB32, image->width, image->height, image->width * 4);
   cairo_surface_set_user_data (image->surface, &key, data, g_free);
-  cairo_surface_reference (image->surface);
 }
 
 static void
@@ -483,7 +480,6 @@ out:
       have_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
       image->width, image->height, image->width * 4);
   cairo_surface_set_user_data (image->surface, &key, data, g_free);
-  cairo_surface_reference (image->surface);
 }
 
 int

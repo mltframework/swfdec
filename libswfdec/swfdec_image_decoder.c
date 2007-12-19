@@ -74,6 +74,8 @@ swfdec_image_get_size (SwfdecImage *image, guint *w, guint *h)
   if (h)
     *h = cairo_image_surface_get_width (surface);
 
+  cairo_surface_destroy (surface);
+
   return TRUE;
 }
 

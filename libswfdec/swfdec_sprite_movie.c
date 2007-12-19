@@ -641,8 +641,8 @@ swfdec_sprite_movie_add (SwfdecAsObject *object)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
 
-  if (player->MovieClip)
-    swfdec_as_object_set_constructor (object, player->MovieClip);
+  if (player->priv->MovieClip)
+    swfdec_as_object_set_constructor (object, player->priv->MovieClip);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->add (object);
 }

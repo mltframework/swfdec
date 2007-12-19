@@ -53,26 +53,34 @@ typedef struct {
   SwfdecLoaderRequest		request;
   SwfdecBuffer *		buffer;
   SwfdecResourceFunc		callback;
+  SwfdecResourceAbortFunc	abort;
   gpointer			user_data;
 } AllowCallbackData;
 
 static void
 swfdec_player_request_resource_allow_callback (const SwfdecURL *url,
-    gboolean allowed, gpointer data_)
+    int status, gpointer data_)
 {
   AllowCallbackData *data = data_;
   SwfdecLoader *loader;
 
-  if (!allowed) {
+  if (status < 0) {
+    if (data->abort != NULL)
+      data->abort (data->player, data->user_data);
+    g_free (data);
+    return;
+  }
+
+  if (status == 0) {
     SWFDEC_ERROR ("not allowing access to %s", swfdec_url_get_url (url));
     loader = NULL;
   } else {
     if (data->buffer) {
-      loader = swfdec_loader_load (data->player->resource->loader, url,
+      loader = swfdec_loader_load (data->player->priv->resource->loader, url,
 	  data->request, (const char *) data->buffer->data,
 	  data->buffer->length);
     } else {
-      loader = swfdec_loader_load (data->player->resource->loader, url,
+      loader = swfdec_loader_load (data->player->priv->resource->loader, url,
 	  data->request, NULL, 0);
     }
   }
@@ -85,7 +93,8 @@ swfdec_player_request_resource_allow_callback (const SwfdecURL *url,
 void
 swfdec_player_request_resource_now (SwfdecPlayer *player,
     SwfdecSecurity *security, const char *url, SwfdecLoaderRequest req,
-    SwfdecBuffer *buffer, SwfdecResourceFunc callback, gpointer user_data)
+    SwfdecBuffer *buffer, SwfdecResourceFunc callback,
+    SwfdecResourceAbortFunc abort, gpointer user_data)
 {
   SwfdecURL *absolute;
   AllowCallbackData *data;
@@ -99,10 +108,11 @@ swfdec_player_request_resource_now (SwfdecPlayer *player,
   data->request = req;
   data->buffer = buffer;
   data->callback = callback;
+  data->abort = abort;
   data->user_data = user_data;
 
   /* create absolute url first */
-  absolute = swfdec_url_new_relative (swfdec_loader_get_url (player->resource->loader), url);
+  absolute = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), url);
 
   swfdec_security_allow_url (security, absolute,
       swfdec_player_request_resource_allow_callback, data);
@@ -128,12 +138,22 @@ swfdec_request_resource_perform_load_callback (SwfdecPlayer *player,
 }
 
 static void
+swfdec_request_resource_perform_load_abort_callback (SwfdecPlayer *player,
+    gpointer data)
+{
+  SwfdecResourceRequest *request = data;
+
+  swfdec_resource_request_free (request);
+}
+
+static void
 swfdec_request_resource_perform_load (SwfdecPlayer *player, SwfdecResourceRequest *request)
 {
-  g_assert (player->resource);
+  g_assert (player->priv->resource);
   swfdec_player_request_resource_now (player, request->security,
       request->url, request->request, request->buffer,
-      swfdec_request_resource_perform_load_callback, request);
+      swfdec_request_resource_perform_load_callback,
+      swfdec_request_resource_perform_load_abort_callback, request);
 }
 
 static void
@@ -172,8 +192,8 @@ swfdec_player_resource_request_perform (SwfdecPlayer *player)
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  list = player->resource_requests;
-  player->resource_requests = NULL;
+  list = player->priv->resource_requests;
+  player->priv->resource_requests = NULL;
   g_slist_foreach (list, swfdec_request_resource_perform_one, player);
   g_slist_free (list);
 }
@@ -201,7 +221,7 @@ swfdec_player_request_resource (SwfdecPlayer *player, SwfdecSecurity *security,
   request->destroy = destroy;
   request->data = data;
 
-  player->resource_requests = g_slist_append (player->resource_requests, request);
+  player->priv->resource_requests = g_slist_append (player->priv->resource_requests, request);
 }
 
 static gboolean
@@ -250,7 +270,7 @@ swfdec_player_request_fscommand (SwfdecPlayer *player, const char *command,
   request->command = g_ascii_strdown (command, -1);
   request->value = g_strdup (value);
 
-  player->resource_requests = g_slist_append (player->resource_requests, request);
+  player->priv->resource_requests = g_slist_append (player->priv->resource_requests, request);
   return TRUE;
 }
 
@@ -270,7 +290,7 @@ swfdec_player_request_unload (SwfdecPlayer *player, const char *target,
   request->data = data;
   request->destroy = destroy;
 
-  player->resource_requests = g_slist_append (player->resource_requests, request);
+  player->priv->resource_requests = g_slist_append (player->priv->resource_requests, request);
 }
 
 void
@@ -284,8 +304,8 @@ swfdec_player_resource_request_finish (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  g_slist_foreach (player->resource_requests, (GFunc) swfdec_resource_request_free, NULL);
-  g_slist_free (player->resource_requests);
-  player->resource_requests = NULL;
+  g_slist_foreach (player->priv->resource_requests, (GFunc) swfdec_resource_request_free, NULL);
+  g_slist_free (player->priv->resource_requests);
+  player->priv->resource_requests = NULL;
 }
 

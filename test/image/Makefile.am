@@ -219,6 +219,17 @@ EXTRA_DIST = \
 	mask-with-textfield-7.swf.png \
 	mask-with-textfield-8.swf \
 	mask-with-textfield-8.swf.png \
+	morph-end.c \
+	morph-end-4.swf \
+	morph-end-4.swf.png \
+	morph-end-5.swf \
+	morph-end-5.swf.png \
+	morph-end-6.swf \
+	morph-end-6.swf.png \
+	morph-end-7.swf \
+	morph-end-7.swf.png \
+	morph-end-8.swf \
+	morph-end-8.swf.png \
 	morph-gradient.c \
 	morph-gradient-4.swf \
 	morph-gradient-4.swf.png \

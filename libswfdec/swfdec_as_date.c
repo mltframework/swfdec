@@ -1036,8 +1036,11 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   date = SWFDEC_AS_DATE (object);
 
-  date->utc_offset =
-    SWFDEC_PLAYER (SWFDEC_AS_OBJECT (date)->context)->system->utc_offset;
+  /* FIXME: find a general solution here */
+  if (SWFDEC_IS_PLAYER (SWFDEC_AS_OBJECT (date)->context)) {
+    date->utc_offset =
+      SWFDEC_PLAYER (SWFDEC_AS_OBJECT (date)->context)->priv->system->utc_offset;
+  }
 
   // don't accept arguments when not constructing
   if (!cx->frame->construct)

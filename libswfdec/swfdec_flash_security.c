@@ -158,13 +158,13 @@ swfdec_flash_security_allow_cross_domain (SwfdecFlashSecurity *sec,
 
   if (g_slist_find_custom (sec->crossdomain_allowed, host,
 	(GCompareFunc)g_ascii_strcasecmp)) {
-    callback (url, TRUE, user_data);
+    callback (url, 1, user_data);
     return;
   }
 
   if (g_slist_find_custom (sec->crossdomain_denied, host,
 	(GCompareFunc)g_ascii_strcasecmp)) {
-    callback (url, FALSE, user_data);
+    callback (url, 0, user_data);
     return;
   }
 
@@ -183,17 +183,17 @@ swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
     SwfdecURLAllowFunc callback, gpointer user_data)
 {
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (guard);
-  gboolean allowed;
+  int status;
 
   switch (sec->sandbox) {
     case SWFDEC_SANDBOX_NONE:
-      allowed = FALSE;
+      status = 0;
       break;
     case SWFDEC_SANDBOX_REMOTE:
       if (swfdec_url_is_local (url)) {
-	allowed = FALSE;
+	status = 0;
       } else if (swfdec_flash_security_match_domain (sec->url, url)) {
-	allowed = TRUE;
+	status = 1;
       } else {
 	swfdec_flash_security_allow_cross_domain (sec, url, callback,
 	    user_data);
@@ -201,11 +201,15 @@ swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
       }
       break;
     case SWFDEC_SANDBOX_LOCAL_FILE:
-      allowed = swfdec_url_is_local (url);
+      if (swfdec_url_is_local (url)) {
+	status = 1;
+      } else {
+	status = 0;
+      }
       break;
     case SWFDEC_SANDBOX_LOCAL_NETWORK:
       if (swfdec_url_is_local (url)) {
-	allowed = FALSE;
+	status = 0;
       } else {
 	swfdec_flash_security_allow_cross_domain (sec, url, callback,
 	    user_data);
@@ -213,13 +217,30 @@ swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
       }
       break;
     case SWFDEC_SANDBOX_LOCAL_TRUSTED:
-      allowed = TRUE;
+      status = 1;
       break;
     default:
       g_assert_not_reached ();
+      status = 0;
+      break;
   }
 
-  callback (url, allowed, user_data);
+  callback (url, status, user_data);
+}
+
+void
+swfdec_flash_security_free_pending (SwfdecFlashSecurity *sec)
+{
+  GSList *iter;
+
+  for (iter = sec->allow_url_pending; iter != NULL; iter = iter->next) {
+    SwfdecAllowURLPending *pending = iter->data;
+    pending->callback (pending->url, -1, pending->user_data);
+    swfdec_url_free (pending->url);
+    g_free (pending);
+  }
+  g_slist_free (sec->allow_url_pending);
+  sec->allow_url_pending = NULL;
 }
 
 static void
@@ -227,6 +248,8 @@ swfdec_flash_security_dispose (GObject *object)
 {
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (object);
   GSList *iter;
+
+  g_assert (sec->allow_url_pending == NULL);
 
   for (iter = sec->policy_loaders; iter != NULL; iter = iter->next) {
     swfdec_policy_loader_free (iter->data);
@@ -245,12 +268,6 @@ swfdec_flash_security_dispose (GObject *object)
   }
   g_slist_free (sec->crossdomain_denied);
   sec->crossdomain_denied = NULL;
-
-  for (iter = sec->allow_url_pending; iter != NULL; iter = iter->next) {
-    g_free (iter->data);
-  }
-  g_slist_free (sec->allow_url_pending);
-  sec->allow_url_pending = NULL;
 
   if (sec->url) {
     swfdec_url_free (sec->url);

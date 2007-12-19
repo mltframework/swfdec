@@ -84,8 +84,8 @@ static void
 swfdec_interval_trigger (SwfdecTimeout *timeout)
 {
   SwfdecAsValue ret;
-  SwfdecInterval *interval = SWFDEC_INTERVAL (((guchar *) timeout) 
-      - G_STRUCT_OFFSET (SwfdecInterval, timeout));
+  SwfdecInterval *interval = SWFDEC_INTERVAL ((void *) (((guchar *) timeout) 
+      - G_STRUCT_OFFSET (SwfdecInterval, timeout)));
   SwfdecAsContext *context = SWFDEC_AS_OBJECT (interval)->context;
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
 
@@ -93,7 +93,7 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
     timeout->timestamp += SWFDEC_MSECS_TO_TICKS (interval->msecs);
     swfdec_player_add_timeout (SWFDEC_PLAYER (context), timeout);
   } else {
-    player->intervals = g_list_remove (player->intervals, interval);
+    player->priv->intervals = g_list_remove (player->priv->intervals, interval);
     interval->timeout.callback = NULL;
   }
   if (interval->fun_name) {
@@ -122,19 +122,19 @@ swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat,
   interval = g_object_new (SWFDEC_TYPE_INTERVAL, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (interval), context, size);
 
-  interval->id = ++player->interval_id;
+  interval->id = ++player->priv->interval_id;
   interval->msecs = msecs;
   interval->repeat = repeat;
   interval->object = object;
   interval->fun_name = fun_name;
   interval->n_args = n_args;
   interval->args = g_memdup (args, n_args * sizeof (SwfdecAsValue));
-  interval->timeout.timestamp = player->time + SWFDEC_MSECS_TO_TICKS (interval->msecs);
+  interval->timeout.timestamp = player->priv->time + SWFDEC_MSECS_TO_TICKS (interval->msecs);
   interval->timeout.callback = swfdec_interval_trigger;
   swfdec_player_add_timeout (player, &interval->timeout);
 
-  player->intervals = 
-    g_list_prepend (player->intervals, interval);
+  player->priv->intervals = 
+    g_list_prepend (player->priv->intervals, interval);
 
   return interval->id;
 }
@@ -172,12 +172,12 @@ swfdec_interval_remove (SwfdecPlayer *player, guint id)
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  for (walk = player->intervals; walk; walk = walk->next) {
+  for (walk = player->priv->intervals; walk; walk = walk->next) {
     SwfdecInterval *interval = walk->data;
     if (interval->id != id)
       continue;
 
-    player->intervals = g_list_delete_link (player->intervals, walk);
+    player->priv->intervals = g_list_delete_link (player->priv->intervals, walk);
     swfdec_player_remove_timeout (player, &interval->timeout);
     interval->timeout.callback = NULL;
     return;

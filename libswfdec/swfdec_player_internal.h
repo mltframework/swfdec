@@ -21,7 +21,6 @@
 #define _SWFDEC_PLAYER_INTERNAL_H_
 
 #include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_as_context.h>
 #include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_event.h>
 #include <libswfdec/swfdec_rect.h>
@@ -50,9 +49,9 @@ struct _SwfdecTimeout {
 
 #define SWFDEC_PLAYER_N_ACTION_QUEUES 4
 
-struct _SwfdecPlayer
+struct _SwfdecPlayerPrivate
 {
-  SwfdecAsContext	context;
+  SwfdecPlayer *	player;			/* backlink */
 
   /* global properties */
   SwfdecSystem *	system;			/* our system properties */
@@ -130,23 +129,6 @@ struct _SwfdecPlayer
   SwfdecRingBuffer *	actions[SWFDEC_PLAYER_N_ACTION_QUEUES]; /* all actions we've queued up so far */
 };
 
-struct _SwfdecPlayerClass
-{
-  SwfdecAsContextClass	context_class;
-
-  void			(* advance)		(SwfdecPlayer *		player,
-						 gulong			msecs,
-						 guint			audio_samples);
-  gboolean		(* handle_key)		(SwfdecPlayer *		player,
-						 guint			key,
-						 guint			character,
-						 gboolean		down);
-  gboolean		(* handle_mouse)	(SwfdecPlayer *		player,
-						 double			x,
-						 double			y,
-						 int			button);
-};
-
 void		swfdec_player_initialize	(SwfdecPlayer *		player,
 						 guint			version,
 						 guint			rate,
@@ -174,7 +156,7 @@ void		swfdec_player_set_export_class	(SwfdecPlayer *		player,
 						 const char *		name,
 						 SwfdecAsObject *	object);
 
-#define swfdec_player_is_mouse_pressed(player) ((player)->mouse_button & 1)
+#define swfdec_player_is_mouse_pressed(player) ((player)->priv->mouse_button & 1)
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);
 void		swfdec_player_add_timeout	(SwfdecPlayer *		player,

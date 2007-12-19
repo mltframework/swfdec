@@ -36,7 +36,7 @@ get_scaleMode (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  switch (player->scale_mode) {
+  switch (player->priv->scale_mode) {
     case SWFDEC_SCALE_SHOW_ALL:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_showAll);
       break;
@@ -85,16 +85,17 @@ get_align (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  SwfdecPlayerPrivate *priv = player->priv;
   char s[5];
   guint i = 0;
 
-  if (player->align_flags & SWFDEC_ALIGN_FLAG_LEFT)
+  if (priv->align_flags & SWFDEC_ALIGN_FLAG_LEFT)
     s[i++] = 'L';
-  if (player->align_flags & SWFDEC_ALIGN_FLAG_TOP)
+  if (priv->align_flags & SWFDEC_ALIGN_FLAG_TOP)
     s[i++] = 'T';
-  if (player->align_flags & SWFDEC_ALIGN_FLAG_RIGHT)
+  if (priv->align_flags & SWFDEC_ALIGN_FLAG_RIGHT)
     s[i++] = 'R';
-  if (player->align_flags & SWFDEC_ALIGN_FLAG_BOTTOM)
+  if (priv->align_flags & SWFDEC_ALIGN_FLAG_BOTTOM)
     s[i++] = 'B';
   s[i] = 0;
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
@@ -122,8 +123,8 @@ set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (strchr (s, 'b') || strchr (s, 'B'))
     flags |= SWFDEC_ALIGN_FLAG_BOTTOM;
 
-  if (flags != player->align_flags) {
-    player->align_flags = flags;
+  if (flags != player->priv->align_flags) {
+    player->priv->align_flags = flags;
     g_object_notify (G_OBJECT (player), "alignment");
     swfdec_player_update_scale (player);
   }
@@ -136,7 +137,7 @@ get_width (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  SWFDEC_AS_VALUE_SET_INT (ret, player->internal_width);
+  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->internal_width);
 }
 
 SWFDEC_AS_NATIVE (666, 7, get_height)
@@ -146,7 +147,7 @@ get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  SWFDEC_AS_VALUE_SET_INT (ret, player->internal_height);
+  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->internal_height);
 }
 
 /* FIXME: do this smarter */

@@ -305,6 +305,7 @@ swfdec_movie_find (SwfdecMovie *movie, int depth)
 static gboolean
 swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
 {
+  SwfdecPlayerPrivate *priv;
   SwfdecPlayer *player;
 
   SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
@@ -319,10 +320,11 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
     destroy &= swfdec_movie_do_remove (walk->data, destroy);
   }
   /* FIXME: all of this here or in destroy callback? */
-  if (player->mouse_grab == movie)
-    player->mouse_grab = NULL;
-  if (player->mouse_drag == movie)
-    player->mouse_drag = NULL;
+  priv = player->priv;
+  if (priv->mouse_grab == movie)
+    priv->mouse_grab = NULL;
+  if (priv->mouse_drag == movie)
+    priv->mouse_drag = NULL;
   swfdec_movie_invalidate_last (movie);
   movie->state = SWFDEC_MOVIE_STATE_REMOVED;
 
@@ -380,7 +382,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   if (movie->parent) {
     movie->parent->list = g_list_remove (movie->parent->list, movie);
   } else {
-    player->roots = g_list_remove (player->roots, movie);
+    player->priv->roots = g_list_remove (player->priv->roots, movie);
   }
   /* unset masks */
   if (movie->masked_by)
@@ -394,7 +396,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   swfdec_player_remove_all_actions (player, movie);
   if (klass->finish_movie)
     klass->finish_movie (movie);
-  player->movies = g_list_remove (player->movies, movie);
+  player->priv->movies = g_list_remove (player->priv->movies, movie);
   movie->state = SWFDEC_MOVIE_STATE_DESTROYED;
   /* unset prototype here, so we don't work in AS anymore */
   SWFDEC_AS_OBJECT (movie)->prototype = NULL;
@@ -422,7 +424,7 @@ swfdec_movie_set_constructor (SwfdecSpriteMovie *movie)
     }
   }
   if (constructor == NULL)
-    constructor = SWFDEC_PLAYER (context)->MovieClip;
+    constructor = SWFDEC_PLAYER (context)->priv->MovieClip;
 
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
 }
@@ -675,8 +677,8 @@ swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
   g_return_if_fail (y != NULL);
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  *x = player->mouse_x;
-  *y = player->mouse_y;
+  *x = player->priv->mouse_x;
+  *y = player->priv->mouse_y;
   swfdec_player_stage_to_global (player, x, y);
   swfdec_movie_global_to_local (movie, x, y);
 }
@@ -1076,7 +1078,7 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
     if (errno != 0 || *end != 0 || l > G_MAXINT)
       return NULL;
     i = l - 16384;
-    for (walk = player->roots; walk; walk = walk->next) {
+    for (walk = player->priv->roots; walk; walk = walk->next) {
       SwfdecMovie *cur = walk->data;
       if (cur->depth < i)
 	continue;
@@ -1133,7 +1135,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   }
   if (movie->parent == NULL && variable == SWFDEC_AS_STR__version) {
     SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (object->context,
-	  SWFDEC_PLAYER (object->context)->system->version));
+	  SWFDEC_PLAYER (object->context)->priv->system->version));
     *flags = 0;
     return TRUE;
   }
@@ -1391,7 +1393,7 @@ swfdec_movie_mouse_release (SwfdecMovie *movie, guint button)
     return;
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  if (player->mouse_below == movie)
+  if (player->priv->mouse_below == movie)
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_RELEASE);
   else
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_RELEASE_OUTSIDE);
@@ -1481,7 +1483,7 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
   if (movie->parent) {
     movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
   } else {
-    SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    SwfdecPlayerPrivate *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->priv;
     player->roots = g_list_sort (player->roots, swfdec_movie_compare_depths);
   }
   g_object_notify (G_OBJECT (movie), "depth");
@@ -1546,7 +1548,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
     /* invalidate the parent, so it gets visible */
     swfdec_movie_queue_update (parent, SWFDEC_MOVIE_INVALID_CHILDREN);
   } else {
-    player->roots = g_list_insert_sorted (player->roots, movie, swfdec_movie_compare_depths);
+    player->priv->roots = g_list_insert_sorted (player->priv->roots, movie, swfdec_movie_compare_depths);
   }
   /* set its name */
   if (name) {
@@ -1556,7 +1558,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
     movie->original_name = SWFDEC_AS_STR_EMPTY;
     if (SWFDEC_IS_SPRITE_MOVIE (movie) || SWFDEC_IS_BUTTON_MOVIE (movie)) {
       movie->name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), 
-	  g_strdup_printf ("instance%u", ++player->unnamed_count));
+	  g_strdup_printf ("instance%u", ++player->priv->unnamed_count));
     } else {
       movie->name = SWFDEC_AS_STR_EMPTY;
     }
@@ -1566,7 +1568,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
    * Setting the parent does a gotoAndPlay(0) for Sprites which can cause
    * new movies to be created (and added to this list)
    */
-  player->movies = g_list_prepend (player->movies, movie);
+  player->priv->movies = g_list_prepend (player->priv->movies, movie);
   /* only add the movie here, because it needs to be setup for the debugger */
   swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   /* only setup here, the resource assumes it can access the player via the movie */
@@ -1604,8 +1606,8 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     movie->rotation = swfdec_matrix_get_rotation (&movie->original_transform);
   }
   if (ctrans) {
-    movie->original_ctrans = *ctrans;
     swfdec_movie_invalidate_last (movie);
+    movie->original_ctrans = *ctrans;
   }
   if (ratio >= 0 && (guint) ratio != movie->original_ratio) {
     SwfdecMovieClass *klass;

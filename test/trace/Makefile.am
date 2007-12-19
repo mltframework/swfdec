@@ -616,6 +616,15 @@ EXTRA_DIST = \
 	crash-0.5.4-13379-catch-in-register.swf \
 	crash-0.5.4-13379-catch-in-register.swf.trace \
 	crash-0.5.4-13379-catch-in-register.xml \
+	crash-0.5.4-13491-stack-overflow.as \
+	crash-0.5.4-13491-stack-overflow-5.swf \
+	crash-0.5.4-13491-stack-overflow-5.swf.trace \
+	crash-0.5.4-13491-stack-overflow-6.swf \
+	crash-0.5.4-13491-stack-overflow-6.swf.trace \
+	crash-0.5.4-13491-stack-overflow-7.swf \
+	crash-0.5.4-13491-stack-overflow-7.swf.trace \
+	crash-0.5.4-13491-stack-overflow-8.swf \
+	crash-0.5.4-13491-stack-overflow-8.swf.trace \
 	crash-0.5.4-goto-in-constructor.c \
 	crash-0.5.4-goto-in-constructor-5.swf \
 	crash-0.5.4-goto-in-constructor-5.swf.trace \
@@ -625,6 +634,11 @@ EXTRA_DIST = \
 	crash-0.5.4-goto-in-constructor-7.swf.trace \
 	crash-0.5.4-goto-in-constructor-8.swf \
 	crash-0.5.4-goto-in-constructor-8.swf.trace \
+	crash-0.5.4-huge-image.as \
+	crash-0.5.4-huge-image-7.swf \
+	crash-0.5.4-huge-image-7.swf.trace \
+	crash-0.5.4-huge-image-8.swf \
+	crash-0.5.4-huge-image-8.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \
@@ -2723,6 +2737,7 @@ EXTRA_DIST = \
 	super-this-8.swf \
 	super-this-8.swf.trace \
 	swfdec.jpg \
+	swfdec-huge.jpg \
 	system-capabilities-query.as \
 	system-capabilities-query-5.swf \
 	system-capabilities-query-5.swf.trace \

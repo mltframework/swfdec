@@ -66,7 +66,6 @@ swfdec_sub_path_match (SwfdecSubPath *from, SwfdecSubPath *to)
 typedef struct {
   SwfdecDraw *		draw;		/* drawing operation that should take the subpaths or NULL on parsing error */
   GSList *		subpaths;	/* indexes into SubPath array */
-  GSList *		subpaths2;	/* indexes into SubPath array */
 } SwfdecStyle;
 
 struct _SwfdecShapeParser {
@@ -272,8 +271,8 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
     if (style->draw == NULL)
       continue;
     if (style->subpaths) {
-      swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, 
-	  parser->subpaths2->len ? (SwfdecSubPath *) parser->subpaths->data : NULL, FALSE);
+      swfdec_style_finish (style, (SwfdecSubPath *) (void *) parser->subpaths->data, 
+	  parser->subpaths2->len ? (SwfdecSubPath *) (void *) parser->subpaths2->data : NULL, FALSE);
       parser->draws = g_slist_prepend (parser->draws, g_object_ref (style->draw));
     } else if (parser->parse_fill) {
       SWFDEC_WARNING ("fillstyle %u has no path", i);
@@ -286,8 +285,8 @@ swfdec_shape_parser_finish (SwfdecShapeParser *parser)
     if (style->draw == NULL)
       continue;
     if (style->subpaths) {
-      swfdec_style_finish (style, (SwfdecSubPath *) parser->subpaths->data, 
-	  parser->subpaths2->len ? (SwfdecSubPath *) parser->subpaths->data : NULL, TRUE);
+      swfdec_style_finish (style, (SwfdecSubPath *) (void *) parser->subpaths->data, 
+	  parser->subpaths2->len ? (SwfdecSubPath *) (void *) parser->subpaths2->data : NULL, TRUE);
       parser->draws = g_slist_prepend (parser->draws, g_object_ref (style->draw));
     } else {
       SWFDEC_WARNING ("linestyle %u has no path", i);
@@ -350,7 +349,8 @@ swfdec_shape_parser_end_path (SwfdecShapeParser *parser, SwfdecSubPath *path1, S
       SwfdecStyle *style = &g_array_index (parser->fillstyles, 
 	  SwfdecStyle, parser->fill1style - 1);
 
-      if (swfdec_sub_path_match (path1, path1)) {
+      if (swfdec_sub_path_match (path1, path1) &&
+	  (path2 == NULL || swfdec_sub_path_match (path2, path2))) {
 	style->subpaths = g_slist_prepend (style->subpaths, 
 	    GUINT_TO_POINTER (parser->subpaths->len - 1));
       } else {

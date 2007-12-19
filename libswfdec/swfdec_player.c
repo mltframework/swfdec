@@ -242,8 +242,10 @@
 static SwfdecTick
 swfdec_player_get_next_event_time (SwfdecPlayer *player)
 {
-  if (player->timeouts) {
-    return ((SwfdecTimeout *) player->timeouts->data)->timestamp - player->time;
+  SwfdecPlayerPrivate *priv = player->priv;
+
+  if (priv->timeouts) {
+    return ((SwfdecTimeout *) priv->timeouts->data)->timestamp - priv->time;
   } else {
     return G_MAXUINT64;
   }
@@ -277,24 +279,26 @@ swfdec_player_get_next_event_time (SwfdecPlayer *player)
 void
 swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 {
+  SwfdecPlayerPrivate *priv;
   GList *walk;
   SwfdecTick next_tick;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (timeout != NULL);
-  g_return_if_fail (timeout->timestamp >= player->time);
+  g_return_if_fail (timeout->timestamp >= player->priv->time);
   g_return_if_fail (timeout->callback != NULL);
 
+  priv = player->priv;
   SWFDEC_LOG ("adding timeout %p in %"G_GUINT64_FORMAT" msecs", timeout, 
-      SWFDEC_TICKS_TO_MSECS (timeout->timestamp - player->time));
+      SWFDEC_TICKS_TO_MSECS (timeout->timestamp - priv->time));
   next_tick = swfdec_player_get_next_event_time (player);
   /* the order is important, on events with the same time, we make sure the new one is last */
-  for (walk = player->timeouts; walk; walk = walk->next) {
+  for (walk = priv->timeouts; walk; walk = walk->next) {
     SwfdecTimeout *cur = walk->data;
     if (cur->timestamp > timeout->timestamp)
       break;
   }
-  player->timeouts = g_list_insert_before (player->timeouts, walk, timeout);
+  priv->timeouts = g_list_insert_before (priv->timeouts, walk, timeout);
   if (next_tick != swfdec_player_get_next_event_time (player))
     g_object_notify (G_OBJECT (player), "next-event");
 }
@@ -310,16 +314,18 @@ swfdec_player_add_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 void
 swfdec_player_remove_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 {
+  SwfdecPlayerPrivate *priv;
   SwfdecTick next_tick;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (timeout != NULL);
-  g_return_if_fail (timeout->timestamp >= player->time);
+  g_return_if_fail (timeout->timestamp >= player->priv->time);
   g_return_if_fail (timeout->callback != NULL);
 
   SWFDEC_LOG ("removing timeout %p", timeout);
+  priv = player->priv;
   next_tick = swfdec_player_get_next_event_time (player);
-  player->timeouts = g_list_remove (player->timeouts, timeout);
+  priv->timeouts = g_list_remove (priv->timeouts, timeout);
   if (next_tick != swfdec_player_get_next_event_time (player))
     g_object_notify (G_OBJECT (player), "next-event");
 }
@@ -364,18 +370,19 @@ swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
 static void
 swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlayerAction *act)
 {
-  SwfdecPlayerAction *action = swfdec_ring_buffer_push (player->actions[importance]);
+  SwfdecPlayerPrivate *priv = player->priv;
+  SwfdecPlayerAction *action = swfdec_ring_buffer_push (priv->actions[importance]);
   if (action == NULL) {
     /* try to get rid of freed actions */
-    swfdec_player_compress_actions (player->actions[importance]);
-    action = swfdec_ring_buffer_push (player->actions[importance]);
+    swfdec_player_compress_actions (priv->actions[importance]);
+    action = swfdec_ring_buffer_push (priv->actions[importance]);
     if (action == NULL) {
-      if (swfdec_ring_buffer_get_size (player->actions[importance]) == 256) {
+      if (swfdec_ring_buffer_get_size (priv->actions[importance]) == 256) {
 	SWFDEC_WARNING ("256 levels of recursion were exceeded in one action list.");
       }
-      swfdec_ring_buffer_set_size (player->actions[importance],
-	  swfdec_ring_buffer_get_size (player->actions[importance]) + 16);
-      action = swfdec_ring_buffer_push (player->actions[importance]);
+      swfdec_ring_buffer_set_size (priv->actions[importance],
+	  swfdec_ring_buffer_get_size (priv->actions[importance]) + 16);
+      action = swfdec_ring_buffer_push (priv->actions[importance]);
       g_assert (action);
     }
   }
@@ -435,14 +442,16 @@ void
 swfdec_player_remove_all_actions (SwfdecPlayer *player, SwfdecMovie *movie)
 {
   SwfdecPlayerAction *action;
+  SwfdecPlayerPrivate *priv;
   guint i, j;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
+  priv = player->priv;
   for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
-    for (j = 0; j < swfdec_ring_buffer_get_n_elements (player->actions[i]); j++) {
-      action = swfdec_ring_buffer_peek_nth (player->actions[i], j);
+    for (j = 0; j < swfdec_ring_buffer_get_n_elements (priv->actions[i]); j++) {
+      action = swfdec_ring_buffer_peek_nth (priv->actions[i], j);
 
       if (action->movie == movie) {
 	SWFDEC_LOG ("removing action %p %u", 
@@ -457,11 +466,13 @@ static gboolean
 swfdec_player_do_action (SwfdecPlayer *player)
 {
   SwfdecPlayerAction *action;
+  SwfdecPlayerPrivate *priv;
   guint i;
 
+  priv = player->priv;
   for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
     do {
-      action = swfdec_ring_buffer_pop (player->actions[i]);
+      action = swfdec_ring_buffer_pop (priv->actions[i]);
       if (action == NULL)
 	break;
     } while (action->movie == NULL); /* skip removed actions */
@@ -483,18 +494,19 @@ static void
 swfdec_player_perform_external_actions (SwfdecPlayer *player)
 {
   SwfdecPlayerExternalAction *action;
+  SwfdecPlayerPrivate *priv = player->priv;
   guint i;
 
   /* remove timeout if it exists - do this before executing stuff below */
-  if (player->external_timeout.callback) {
-    swfdec_player_remove_timeout (player, &player->external_timeout);
-    player->external_timeout.callback = NULL;
+  if (priv->external_timeout.callback) {
+    swfdec_player_remove_timeout (player, &priv->external_timeout);
+    priv->external_timeout.callback = NULL;
   }
 
   /* we need to query the number of current actions so newly added ones aren't
    * executed in here */
-  for (i = swfdec_ring_buffer_get_n_elements (player->external_actions); i > 0; i--) {
-    action = swfdec_ring_buffer_pop (player->external_actions);
+  for (i = swfdec_ring_buffer_get_n_elements (priv->external_actions); i > 0; i--) {
+    action = swfdec_ring_buffer_pop (priv->external_actions);
     g_assert (action != NULL);
     /* skip removed actions */
     if (action->object == NULL) 
@@ -507,10 +519,10 @@ swfdec_player_perform_external_actions (SwfdecPlayer *player)
 static void
 swfdec_player_trigger_external_actions (SwfdecTimeout *advance)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) advance - G_STRUCT_OFFSET (SwfdecPlayer, external_timeout));
+  SwfdecPlayerPrivate *priv = (SwfdecPlayerPrivate *) ((void *) ((guint8 *) advance - G_STRUCT_OFFSET (SwfdecPlayerPrivate, external_timeout)));
 
-  player->external_timeout.callback = NULL;
-  swfdec_player_perform_external_actions (player);
+  priv->external_timeout.callback = NULL;
+  swfdec_player_perform_external_actions (priv->player);
 }
 
 void
@@ -518,38 +530,40 @@ swfdec_player_add_external_action (SwfdecPlayer *player, gpointer object,
     SwfdecActionFunc action_func, gpointer action_data)
 {
   SwfdecPlayerExternalAction *action;
+  SwfdecPlayerPrivate *priv;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (object != NULL);
   g_return_if_fail (action_func != NULL);
 
   SWFDEC_LOG ("adding external action %p %p %p", object, action_func, action_data);
-  action = swfdec_ring_buffer_push (player->external_actions);
+  priv = player->priv;
+  action = swfdec_ring_buffer_push (priv->external_actions);
   if (action == NULL) {
     /* FIXME: limit number of actions to not get inf loops due to scripts? */
-    swfdec_ring_buffer_set_size (player->external_actions,
-	swfdec_ring_buffer_get_size (player->external_actions) + 16);
-    action = swfdec_ring_buffer_push (player->external_actions);
+    swfdec_ring_buffer_set_size (priv->external_actions,
+	swfdec_ring_buffer_get_size (priv->external_actions) + 16);
+    action = swfdec_ring_buffer_push (priv->external_actions);
     g_assert (action);
   }
   action->object = object;
   action->func = action_func;
   action->data = action_data;
-  if (!player->external_timeout.callback) {
+  if (!priv->external_timeout.callback) {
     /* trigger execution immediately.
      * But if initialized, keep at least 100ms from when the last external 
      * timeout triggered. This is a crude method to get around infinite loops
      * when script actions executed by external actions trigger another external
      * action that would execute instantly.
      */
-    if (player->initialized) {
-      player->external_timeout.timestamp = MAX (player->time,
-	  player->external_timeout.timestamp + SWFDEC_MSECS_TO_TICKS (100));
+    if (priv->initialized) {
+      priv->external_timeout.timestamp = MAX (priv->time,
+	  priv->external_timeout.timestamp + SWFDEC_MSECS_TO_TICKS (100));
     } else {
-      player->external_timeout.timestamp = player->time;
+      priv->external_timeout.timestamp = priv->time;
     }
-    player->external_timeout.callback = swfdec_player_trigger_external_actions;
-    swfdec_player_add_timeout (player, &player->external_timeout);
+    priv->external_timeout.callback = swfdec_player_trigger_external_actions;
+    swfdec_player_add_timeout (player, &priv->external_timeout);
   }
 }
 
@@ -557,13 +571,15 @@ void
 swfdec_player_remove_all_external_actions (SwfdecPlayer *player, gpointer object)
 {
   SwfdecPlayerExternalAction *action;
+  SwfdecPlayerPrivate *priv;
   guint i;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (object != NULL);
 
-  for (i = 0; i < swfdec_ring_buffer_get_n_elements (player->external_actions); i++) {
-    action = swfdec_ring_buffer_peek_nth (player->external_actions, i);
+  priv = player->priv;
+  for (i = 0; i < swfdec_ring_buffer_get_n_elements (priv->external_actions); i++) {
+    action = swfdec_ring_buffer_peek_nth (priv->external_actions, i);
 
     if (action->object == object) {
       SWFDEC_LOG ("removing external action %p %p %p", 
@@ -612,8 +628,10 @@ G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
 void
 swfdec_player_remove_movie (SwfdecPlayer *player, SwfdecMovie *movie)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
+
   swfdec_movie_remove (movie);
-  player->movies = g_list_remove (player->movies, movie);
+  priv->movies = g_list_remove (priv->movies, movie);
 }
 
 static guint
@@ -668,49 +686,50 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     GParamSpec * pspec)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
+  SwfdecPlayerPrivate *priv = player->priv;
   
   switch (param_id) {
     case PROP_BACKGROUND_COLOR:
       g_value_set_uint (value, swfdec_player_get_background_color (player));
       break;
     case PROP_CACHE_SIZE:
-      g_value_set_uint (value, player->cache->max_size);
+      g_value_set_uint (value, priv->cache->max_size);
       break;
     case PROP_INITIALIZED:
       g_value_set_boolean (value, swfdec_player_is_initialized (player));
       break;
     case PROP_DEFAULT_WIDTH:
-      g_value_set_uint (value, player->width);
+      g_value_set_uint (value, priv->width);
       break;
     case PROP_DEFAULT_HEIGHT:
-      g_value_set_uint (value, player->height);
+      g_value_set_uint (value, priv->height);
       break;
     case PROP_RATE:
-      g_value_set_double (value, player->rate / 256.0);
+      g_value_set_double (value, priv->rate / 256.0);
       break;
     case PROP_MOUSE_CURSOR:
-      g_value_set_enum (value, player->mouse_cursor);
+      g_value_set_enum (value, priv->mouse_cursor);
       break;
     case PROP_NEXT_EVENT:
       g_value_set_uint (value, swfdec_player_get_next_event (player));
       break;
     case PROP_WIDTH:
-      g_value_set_int (value, player->stage_width);
+      g_value_set_int (value, priv->stage_width);
       break;
     case PROP_HEIGHT:
-      g_value_set_int (value, player->stage_height);
+      g_value_set_int (value, priv->stage_height);
       break;
     case PROP_ALIGNMENT:
-      g_value_set_enum (value, swfdec_player_alignment_from_flags (player->align_flags));
+      g_value_set_enum (value, swfdec_player_alignment_from_flags (priv->align_flags));
       break;
     case PROP_SCALE:
-      g_value_set_enum (value, player->scale_mode);
+      g_value_set_enum (value, priv->scale_mode);
       break;
     case PROP_SYSTEM:
-      g_value_set_object (value, player->system);
+      g_value_set_object (value, priv->system);
       break;
     case PROP_MAX_RUNTIME:
-      g_value_set_ulong (value, player->max_runtime);
+      g_value_set_ulong (value, priv->max_runtime);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -721,69 +740,70 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
 void
 swfdec_player_update_scale (SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   int width, height;
   double scale_x, scale_y;
 
-  player->stage.width = player->stage_width >= 0 ? player->stage_width : (int) player->width;
-  player->stage.height = player->stage_height >= 0 ? player->stage_height : (int) player->height;
-  if (player->stage.height == 0 || player->stage.width == 0) {
-    player->scale_x = 1.0;
-    player->scale_y = 1.0;
-    player->offset_x = 0;
-    player->offset_y = 0;
+  priv->stage.width = priv->stage_width >= 0 ? priv->stage_width : (int) priv->width;
+  priv->stage.height = priv->stage_height >= 0 ? priv->stage_height : (int) priv->height;
+  if (priv->stage.height == 0 || priv->stage.width == 0) {
+    priv->scale_x = 1.0;
+    priv->scale_y = 1.0;
+    priv->offset_x = 0;
+    priv->offset_y = 0;
     return;
   }
-  if (player->width == 0 || player->height == 0) {
+  if (priv->width == 0 || priv->height == 0) {
     scale_x = 1.0;
     scale_y = 1.0;
   } else {
-    scale_x = (double) player->stage.width / player->width;
-    scale_y = (double) player->stage.height / player->height;
+    scale_x = (double) priv->stage.width / priv->width;
+    scale_y = (double) priv->stage.height / priv->height;
   }
-  switch (player->scale_mode) {
+  switch (priv->scale_mode) {
     case SWFDEC_SCALE_SHOW_ALL:
-      player->scale_x = MIN (scale_x, scale_y);
-      player->scale_y = player->scale_x;
+      priv->scale_x = MIN (scale_x, scale_y);
+      priv->scale_y = priv->scale_x;
       break;
     case SWFDEC_SCALE_NO_BORDER:
-      player->scale_x = MAX (scale_x, scale_y);
-      player->scale_y = player->scale_x;
+      priv->scale_x = MAX (scale_x, scale_y);
+      priv->scale_y = priv->scale_x;
       break;
     case SWFDEC_SCALE_EXACT_FIT:
-      player->scale_x = scale_x;
-      player->scale_y = scale_y;
+      priv->scale_x = scale_x;
+      priv->scale_y = scale_y;
       break;
     case SWFDEC_SCALE_NONE:
-      player->scale_x = 1.0;
-      player->scale_y = 1.0;
+      priv->scale_x = 1.0;
+      priv->scale_y = 1.0;
       break;
     default:
       g_assert_not_reached ();
   }
-  width = player->stage.width - ceil (player->width * player->scale_x);
-  height = player->stage.height - ceil (player->height * player->scale_y);
-  if (player->align_flags & SWFDEC_ALIGN_FLAG_LEFT) {
-    player->offset_x = 0;
-  } else if (player->align_flags & SWFDEC_ALIGN_FLAG_RIGHT) {
-    player->offset_x = width;
+  width = priv->stage.width - ceil (priv->width * priv->scale_x);
+  height = priv->stage.height - ceil (priv->height * priv->scale_y);
+  if (priv->align_flags & SWFDEC_ALIGN_FLAG_LEFT) {
+    priv->offset_x = 0;
+  } else if (priv->align_flags & SWFDEC_ALIGN_FLAG_RIGHT) {
+    priv->offset_x = width;
   } else {
-    player->offset_x = width / 2;
+    priv->offset_x = width / 2;
   }
-  if (player->align_flags & SWFDEC_ALIGN_FLAG_TOP) {
-    player->offset_y = 0;
-  } else if (player->align_flags & SWFDEC_ALIGN_FLAG_BOTTOM) {
-    player->offset_y = height;
+  if (priv->align_flags & SWFDEC_ALIGN_FLAG_TOP) {
+    priv->offset_y = 0;
+  } else if (priv->align_flags & SWFDEC_ALIGN_FLAG_BOTTOM) {
+    priv->offset_y = height;
   } else {
-    player->offset_y = height / 2;
+    priv->offset_y = height / 2;
   }
   SWFDEC_LOG ("coordinate translation is %g * x + %d - %g * y + %d", 
-      player->scale_x, player->offset_x, player->scale_y, player->offset_y);
+      priv->scale_x, priv->offset_x, priv->scale_y, priv->offset_y);
 #if 0
   /* FIXME: make this emit the signal at the right time */
-  player->invalid.x0 = 0;
-  player->invalid.y0 = 0;
-  player->invalid.x1 = player->stage_width;
-  player->invalid.y1 = player->stage_height;
+  priv->invalid.x0 = 0;
+  priv->invalid.y0 = 0;
+  priv->invalid.x1 = priv->stage_width;
+  priv->invalid.y1 = priv->stage_height;
 #endif
 }
 
@@ -792,33 +812,34 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
     GParamSpec *pspec)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
+  SwfdecPlayerPrivate *priv = player->priv;
 
   switch (param_id) {
     case PROP_BACKGROUND_COLOR:
       swfdec_player_set_background_color (player, g_value_get_uint (value));
       break;
     case PROP_CACHE_SIZE:
-      player->cache->max_size = g_value_get_uint (value);
+      priv->cache->max_size = g_value_get_uint (value);
       break;
     case PROP_WIDTH:
-      swfdec_player_set_size (player, g_value_get_int (value), player->stage_height);
+      swfdec_player_set_size (player, g_value_get_int (value), priv->stage_height);
       break;
     case PROP_HEIGHT:
-      swfdec_player_set_size (player, player->stage_width, g_value_get_int (value));
+      swfdec_player_set_size (player, priv->stage_width, g_value_get_int (value));
       break;
     case PROP_ALIGNMENT:
-      player->align_flags = swfdec_player_alignment_to_flags (g_value_get_enum (value));
+      priv->align_flags = swfdec_player_alignment_to_flags (g_value_get_enum (value));
       swfdec_player_update_scale (player);
       break;
     case PROP_SCALE:
       swfdec_player_set_scale_mode (player, g_value_get_enum (value));
       break;
     case PROP_SYSTEM:
-      g_object_unref (player->system);
+      g_object_unref (priv->system);
       if (g_value_get_object (value)) {
-	player->system = SWFDEC_SYSTEM (g_value_dup_object (value));
+	priv->system = SWFDEC_SYSTEM (g_value_dup_object (value));
       } else {
-	player->system = swfdec_system_new ();
+	priv->system = swfdec_system_new ();
       }
       break;
     case PROP_MAX_RUNTIME:
@@ -834,20 +855,23 @@ static void
 swfdec_player_dispose (GObject *object)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
+  SwfdecPlayerPrivate *priv = player->priv;
   guint i;
 
   swfdec_player_stop_all_sounds (player);
   swfdec_player_resource_request_finish (player);
-  g_hash_table_destroy (player->registered_classes);
+  g_hash_table_destroy (priv->registered_classes);
 
-  while (player->roots)
-    swfdec_movie_destroy (player->roots->data);
-  if (player->resource) {
-    g_object_unref (player->resource);
-    player->resource = NULL;
+  while (priv->roots)
+    swfdec_movie_destroy (priv->roots->data);
+  if (priv->resource) {
+    swfdec_flash_security_free_pending (
+	SWFDEC_FLASH_SECURITY (priv->resource));
+    g_object_unref (priv->resource);
+    priv->resource = NULL;
   }
-  while (player->rooted_objects)
-    swfdec_player_unroot_object (player, player->rooted_objects->data);
+  while (priv->rooted_objects)
+    swfdec_player_unroot_object (player, priv->rooted_objects->data);
 
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
@@ -856,43 +880,43 @@ swfdec_player_dispose (GObject *object)
 #ifndef G_DISABLE_ASSERT
   {
     SwfdecPlayerExternalAction *action;
-    while ((action = swfdec_ring_buffer_pop (player->external_actions)) != NULL) {
+    while ((action = swfdec_ring_buffer_pop (priv->external_actions)) != NULL) {
       g_assert (action->object == NULL); /* skip removed actions */
     }
   }
   {
     SwfdecPlayerAction *action;
     for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
-      while ((action = swfdec_ring_buffer_pop (player->actions[i])) != NULL) {
+      while ((action = swfdec_ring_buffer_pop (priv->actions[i])) != NULL) {
 	g_assert (action->movie == NULL); /* skip removed actions */
       }
     }
   }
 #endif
-  swfdec_ring_buffer_free (player->external_actions);
+  swfdec_ring_buffer_free (priv->external_actions);
   for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
-    swfdec_ring_buffer_free (player->actions[i]);
+    swfdec_ring_buffer_free (priv->actions[i]);
   }
-  g_assert (player->movies == NULL);
-  g_assert (player->audio == NULL);
-  if (player->external_timeout.callback)
-    swfdec_player_remove_timeout (player, &player->external_timeout);
-  if (player->rate) {
-    swfdec_player_remove_timeout (player, &player->iterate_timeout);
+  g_assert (priv->movies == NULL);
+  g_assert (priv->audio == NULL);
+  if (priv->external_timeout.callback)
+    swfdec_player_remove_timeout (player, &priv->external_timeout);
+  if (priv->rate) {
+    swfdec_player_remove_timeout (player, &priv->iterate_timeout);
   }
-  g_assert (player->timeouts == NULL);
-  g_list_free (player->intervals);
-  player->intervals = NULL;
-  swfdec_cache_unref (player->cache);
-  if (player->system) {
-    g_object_unref (player->system);
-    player->system = NULL;
+  g_assert (priv->timeouts == NULL);
+  g_list_free (priv->intervals);
+  priv->intervals = NULL;
+  swfdec_cache_unref (priv->cache);
+  if (priv->system) {
+    g_object_unref (priv->system);
+    priv->system = NULL;
   }
-  g_array_free (player->invalidations, TRUE);
-  player->invalidations = NULL;
-  if (player->runtime) {
-    g_timer_destroy (player->runtime);
-    player->runtime = NULL;
+  g_array_free (priv->invalidations, TRUE);
+  priv->invalidations = NULL;
+  if (priv->runtime) {
+    g_timer_destroy (priv->runtime);
+    priv->runtime = NULL;
   }
 }
 
@@ -915,21 +939,22 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const ch
 static void
 swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   SwfdecMouseCursor new = SWFDEC_MOUSE_CURSOR_NORMAL;
 
-  if (!player->mouse_visible) {
+  if (!priv->mouse_visible) {
     new = SWFDEC_MOUSE_CURSOR_NONE;
-  } else if (player->mouse_grab != NULL) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+  } else if (priv->mouse_grab != NULL) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
 
     if (klass->mouse_cursor)
-      new = klass->mouse_cursor (player->mouse_grab);
+      new = klass->mouse_cursor (priv->mouse_grab);
     else
       new = SWFDEC_MOUSE_CURSOR_CLICK;
   }
 
-  if (new != player->mouse_cursor) {
-    player->mouse_cursor = new;
+  if (new != priv->mouse_cursor) {
+    priv->mouse_cursor = new;
     g_object_notify (G_OBJECT (player), "mouse-cursor");
   }
 }
@@ -937,29 +962,30 @@ swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
 static void
 swfdec_player_update_drag_movie (SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   double x, y;
   SwfdecMovie *movie;
 
-  if (player->mouse_drag == NULL)
+  if (priv->mouse_drag == NULL)
     return;
 
-  movie = player->mouse_drag;
+  movie = priv->mouse_drag;
   g_assert (movie->cache_state == SWFDEC_MOVIE_UP_TO_DATE);
-  x = player->mouse_x;
-  y = player->mouse_y;
+  x = priv->mouse_x;
+  y = priv->mouse_y;
   swfdec_player_stage_to_global (player, &x, &y);
   if (movie->parent)
     swfdec_movie_global_to_local (movie->parent, &x, &y);
-  if (player->mouse_drag_center) {
+  if (priv->mouse_drag_center) {
     x -= (movie->extents.x1 - movie->extents.x0) / 2;
     y -= (movie->extents.y1 - movie->extents.y0) / 2;
   } else {
-    x -= player->mouse_drag_x;
-    y -= player->mouse_drag_y;
+    x -= priv->mouse_drag_x;
+    y -= priv->mouse_drag_y;
   }
-  x = CLAMP (x, player->mouse_drag_rect.x0, player->mouse_drag_rect.x1);
-  y = CLAMP (y, player->mouse_drag_rect.y0, player->mouse_drag_rect.y1);
-  SWFDEC_LOG ("mouse is at %g %g, originally (%g %g)", x, y, player->mouse_x, player->mouse_y);
+  x = CLAMP (x, priv->mouse_drag_rect.x0, priv->mouse_drag_rect.x1);
+  y = CLAMP (y, priv->mouse_drag_rect.y0, priv->mouse_drag_rect.y1);
+  SWFDEC_LOG ("mouse is at %g %g, originally (%g %g)", x, y, priv->mouse_x, priv->mouse_y);
   if (x != movie->matrix.x0 || y != movie->matrix.y0) {
     swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
     movie->matrix.x0 = x;
@@ -982,32 +1008,35 @@ void
 swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean center,
     SwfdecRect *rect)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (drag == NULL || SWFDEC_IS_MOVIE (drag));
 
   /* FIXME: need to do anything with old drag? */
-  player->mouse_drag = drag;
-  player->mouse_drag_center = center;
+  priv = player->priv;
+  priv->mouse_drag = drag;
+  priv->mouse_drag_center = center;
   if (drag && !center) {
-    player->mouse_drag_x = player->mouse_x;
-    player->mouse_drag_y = player->mouse_y;
-    swfdec_player_stage_to_global (player, &player->mouse_drag_x, &player->mouse_drag_y);
+    priv->mouse_drag_x = priv->mouse_x;
+    priv->mouse_drag_y = priv->mouse_y;
+    swfdec_player_stage_to_global (player, &priv->mouse_drag_x, &priv->mouse_drag_y);
     if (drag->parent)
-      swfdec_movie_global_to_local (drag->parent, &player->mouse_drag_x, &player->mouse_drag_y);
-    player->mouse_drag_x -= drag->matrix.x0;
-    player->mouse_drag_y -= drag->matrix.y0;
+      swfdec_movie_global_to_local (drag->parent, &priv->mouse_drag_x, &priv->mouse_drag_y);
+    priv->mouse_drag_x -= drag->matrix.x0;
+    priv->mouse_drag_y -= drag->matrix.y0;
   }
   if (rect) {
-    player->mouse_drag_rect = *rect;
+    priv->mouse_drag_rect = *rect;
   } else {
-    player->mouse_drag_rect.x0 = -G_MAXDOUBLE;
-    player->mouse_drag_rect.y0 = -G_MAXDOUBLE;
-    player->mouse_drag_rect.x1 = G_MAXDOUBLE;
-    player->mouse_drag_rect.y1 = G_MAXDOUBLE;
+    priv->mouse_drag_rect.x0 = -G_MAXDOUBLE;
+    priv->mouse_drag_rect.y0 = -G_MAXDOUBLE;
+    priv->mouse_drag_rect.x1 = G_MAXDOUBLE;
+    priv->mouse_drag_rect.y1 = G_MAXDOUBLE;
   }
   SWFDEC_DEBUG ("starting drag in %g %g  %g %g", 
-      player->mouse_drag_rect.x0, player->mouse_drag_rect.y0,
-      player->mouse_drag_rect.x1, player->mouse_drag_rect.y1);
+      priv->mouse_drag_rect.x0, priv->mouse_drag_rect.y0,
+      priv->mouse_drag_rect.x1, priv->mouse_drag_rect.y1);
   /* FIXME: need a way to make sure we get updated */
   if (drag) {
     swfdec_movie_update (drag);
@@ -1019,14 +1048,15 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
 static void
 swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   GList *walk;
   double x, y;
   SwfdecMovie *below_mouse = NULL;
 
-  x = player->mouse_x;
-  y = player->mouse_y;
+  x = priv->mouse_x;
+  y = priv->mouse_y;
   swfdec_player_stage_to_global (player, &x, &y);
-  for (walk = g_list_last (player->roots); walk; walk = walk->prev) {
+  for (walk = g_list_last (priv->roots); walk; walk = walk->prev) {
     below_mouse = swfdec_movie_get_movie_at (walk->data, x, y, TRUE);
     if (below_mouse) {
       if (swfdec_movie_get_mouse_events (below_mouse))
@@ -1036,26 +1066,26 @@ swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
   }
   if (swfdec_player_is_mouse_pressed (player)) {
     /* a mouse grab is active */
-    if (player->mouse_grab) {
-      if (below_mouse == player->mouse_grab &&
-	  player->mouse_below != player->mouse_grab) {
-	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+    if (priv->mouse_grab) {
+      if (below_mouse == priv->mouse_grab &&
+	  priv->mouse_below != priv->mouse_grab) {
+	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
 	if (klass->mouse_in)
-	  klass->mouse_in (player->mouse_grab);
-      } else if (below_mouse != player->mouse_grab &&
-	  player->mouse_below == player->mouse_grab) {
-	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+	  klass->mouse_in (priv->mouse_grab);
+      } else if (below_mouse != priv->mouse_grab &&
+	  priv->mouse_below == priv->mouse_grab) {
+	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
 	if (klass->mouse_out)
-	  klass->mouse_out (player->mouse_grab);
+	  klass->mouse_out (priv->mouse_grab);
       }
     }
   } else {
     /* no mouse grab is active */
-    if (below_mouse != player->mouse_grab) {
-      if (player->mouse_grab) {
-	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+    if (below_mouse != priv->mouse_grab) {
+      if (priv->mouse_grab) {
+	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
 	if (klass->mouse_out)
-	  klass->mouse_out (player->mouse_grab);
+	  klass->mouse_out (priv->mouse_grab);
       }
       if (below_mouse) {
 	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (below_mouse);
@@ -1063,23 +1093,24 @@ swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
 	  klass->mouse_in (below_mouse);
       }
     }
-    player->mouse_grab = below_mouse;
+    priv->mouse_grab = below_mouse;
   }
-  player->mouse_below = below_mouse;
+  priv->mouse_below = below_mouse;
   SWFDEC_DEBUG ("%s %p has mouse at %g %g", 
-      player->mouse_grab ? G_OBJECT_TYPE_NAME (player->mouse_grab) : "---", 
-      player->mouse_grab, player->mouse_x, player->mouse_y);
+      priv->mouse_grab ? G_OBJECT_TYPE_NAME (priv->mouse_grab) : "---", 
+      priv->mouse_grab, priv->mouse_x, priv->mouse_y);
 }
 
 static gboolean
 swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   GList *walk;
   
-  if (player->mouse_x != x || player->mouse_y != y) {
-    player->mouse_x = x;
-    player->mouse_y = y;
-    for (walk = player->movies; walk; walk = walk->next) {
+  if (priv->mouse_x != x || priv->mouse_y != y) {
+    priv->mouse_x = x;
+    priv->mouse_y = y;
+    for (walk = priv->movies; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove);
@@ -1102,19 +1133,20 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
 static gboolean
 swfdec_player_do_mouse_press (SwfdecPlayer *player, guint button)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   GList *walk;
 
-  player->mouse_button |= 1 << button;
+  priv->mouse_button |= 1 << button;
   if (button == 0) {
-    for (walk = player->movies; walk; walk = walk->next) {
+    for (walk = priv->movies; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_DOWN);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseDown);
   }
-  if (player->mouse_grab) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+  if (priv->mouse_grab) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
     if (klass->mouse_press)
-      klass->mouse_press (player->mouse_grab, button);
+      klass->mouse_press (priv->mouse_grab, button);
   }
 
   /* FIXME: allow events to pass through */
@@ -1124,25 +1156,26 @@ swfdec_player_do_mouse_press (SwfdecPlayer *player, guint button)
 static gboolean
 swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   GList *walk;
 
-  player->mouse_button &= ~(1 << button);
+  priv->mouse_button &= ~(1 << button);
   if (button == 0) {
-    for (walk = player->movies; walk; walk = walk->next) {
+    for (walk = priv->movies; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_UP);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseUp);
   }
-  if (player->mouse_grab) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+  if (priv->mouse_grab) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
     if (klass->mouse_release)
-      klass->mouse_release (player->mouse_grab, button);
-    if (button == 0 && player->mouse_grab != player->mouse_below) {
-      player->mouse_grab = player->mouse_below;
-      if (player->mouse_grab) {
-	klass = SWFDEC_MOVIE_GET_CLASS (player->mouse_grab);
+      klass->mouse_release (priv->mouse_grab, button);
+    if (button == 0 && priv->mouse_grab != priv->mouse_below) {
+      priv->mouse_grab = priv->mouse_below;
+      if (priv->mouse_grab) {
+	klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
 	if (klass->mouse_in)
-	  klass->mouse_in (player->mouse_grab);
+	  klass->mouse_in (priv->mouse_grab);
       }
     }
   }
@@ -1154,18 +1187,19 @@ swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
 static void
 swfdec_player_emit_signals (SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   GList *walk;
 
   /* emit invalidate signal */
-  if (!swfdec_rectangle_is_empty (&player->invalid_extents)) {
-    g_signal_emit (player, signals[INVALIDATE], 0, &player->invalid_extents,
-	player->invalidations->data, player->invalidations->len);
-    swfdec_rectangle_init_empty (&player->invalid_extents);
-    g_array_set_size (player->invalidations, 0);
+  if (!swfdec_rectangle_is_empty (&priv->invalid_extents)) {
+    g_signal_emit (player, signals[INVALIDATE], 0, &priv->invalid_extents,
+	priv->invalidations->data, priv->invalidations->len);
+    swfdec_rectangle_init_empty (&priv->invalid_extents);
+    g_array_set_size (priv->invalidations, 0);
   }
 
   /* emit audio-added for all added audio streams */
-  for (walk = player->audio; walk; walk = walk->next) {
+  for (walk = priv->audio; walk; walk = walk->next) {
     SwfdecAudio *audio = walk->data;
 
     if (audio->added)
@@ -1178,17 +1212,18 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
 static gboolean
 swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint character, gboolean down)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   g_assert (keycode < 256);
 
   if (!swfdec_player_lock (player))
     return FALSE;
   /* set the correct variables */
-  player->last_keycode = keycode;
-  player->last_character = character;
+  priv->last_keycode = keycode;
+  priv->last_character = character;
   if (down) {
-    player->key_pressed[keycode / 8] |= 1 << keycode % 8;
+    priv->key_pressed[keycode / 8] |= 1 << keycode % 8;
   } else {
-    player->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
+    priv->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
   }
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp);
   swfdec_player_perform_actions (player);
@@ -1222,23 +1257,27 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
 void
 swfdec_player_global_to_stage (SwfdecPlayer *player, double *x, double *y)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (x != NULL);
   g_return_if_fail (y != NULL);
 
-  *x = *x / SWFDEC_TWIPS_SCALE_FACTOR * player->scale_x + player->offset_x;
-  *y = *y / SWFDEC_TWIPS_SCALE_FACTOR * player->scale_y + player->offset_y;
+  *x = *x / SWFDEC_TWIPS_SCALE_FACTOR * priv->scale_x + priv->offset_x;
+  *y = *y / SWFDEC_TWIPS_SCALE_FACTOR * priv->scale_y + priv->offset_y;
 }
 
 void
 swfdec_player_stage_to_global (SwfdecPlayer *player, double *x, double *y)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (x != NULL);
   g_return_if_fail (y != NULL);
 
-  *x = (*x - player->offset_x) / player->scale_x * SWFDEC_TWIPS_SCALE_FACTOR;
-  *y = (*y - player->offset_y) / player->scale_y * SWFDEC_TWIPS_SCALE_FACTOR;
+  *x = (*x - priv->offset_x) / priv->scale_x * SWFDEC_TWIPS_SCALE_FACTOR;
+  *y = (*y - priv->offset_y) / priv->scale_y * SWFDEC_TWIPS_SCALE_FACTOR;
 }
 
 static void
@@ -1248,7 +1287,7 @@ swfdec_player_execute_on_load_init (SwfdecPlayer *player)
 
   /* FIXME: This can be made a LOT faster with correct caching, but I'm lazy */
   do {
-    for (walk = player->movies; walk; walk = walk->next) {
+    for (walk = player->priv->movies; walk; walk = walk->next) {
       SwfdecMovie *movie = walk->data;
       SwfdecResource *resource = swfdec_movie_get_own_resource (movie);
       if (resource == NULL)
@@ -1262,19 +1301,20 @@ swfdec_player_execute_on_load_init (SwfdecPlayer *player)
 static void
 swfdec_player_iterate (SwfdecTimeout *timeout)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayer, iterate_timeout));
+  SwfdecPlayerPrivate *priv = (SwfdecPlayerPrivate *) ((void *) ((guint8 *) timeout - G_STRUCT_OFFSET (SwfdecPlayerPrivate, iterate_timeout)));
+  SwfdecPlayer *player = priv->player;
   GList *walk;
 
   /* add timeout again - do this first because later code can change it */
   /* FIXME: rounding issues? */
-  player->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / player->rate;
-  swfdec_player_add_timeout (player, &player->iterate_timeout);
+  priv->iterate_timeout.timestamp += SWFDEC_TICKS_PER_SECOND * 256 / priv->rate;
+  swfdec_player_add_timeout (player, &priv->iterate_timeout);
   swfdec_player_perform_external_actions (player);
   SWFDEC_INFO ("=== START ITERATION ===");
   /* start the iteration. This performs a goto next frame on all 
    * movies that are not stopped. It also queues onEnterFrame.
    */
-  for (walk = player->movies; walk; walk = walk->next) {
+  for (walk = priv->movies; walk; walk = walk->next) {
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
     if (klass->iterate_start)
       klass->iterate_start (walk->data);
@@ -1282,7 +1322,7 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
   swfdec_player_perform_actions (player);
   SWFDEC_INFO ("=== STOP ITERATION ===");
   /* this loop allows removal of walk->data */
-  walk = player->movies;
+  walk = priv->movies;
   while (walk) {
     SwfdecMovie *cur = walk->data;
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (cur);
@@ -1307,7 +1347,7 @@ swfdec_player_advance_audio (SwfdecPlayer *player, guint samples)
 
   /* don't use for loop here, because we need to advance walk before 
    * removing the audio */
-  walk = player->audio;
+  walk = player->priv->audio;
   while (walk) {
     audio = walk->data;
     walk = walk->next;
@@ -1319,6 +1359,7 @@ swfdec_player_advance_audio (SwfdecPlayer *player, guint samples)
 static void
 swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_samples)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   SwfdecTimeout *timeout;
   SwfdecTick target_time;
   guint frames_now;
@@ -1326,16 +1367,16 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
   if (!swfdec_player_lock (player))
     return;
 
-  target_time = player->time + SWFDEC_MSECS_TO_TICKS (msecs);
+  target_time = priv->time + SWFDEC_MSECS_TO_TICKS (msecs);
   SWFDEC_DEBUG ("advancing %lu msecs (%u audio frames)", msecs, audio_samples);
 
-  for (timeout = player->timeouts ? player->timeouts->data : NULL;
+  for (timeout = priv->timeouts ? priv->timeouts->data : NULL;
        timeout && timeout->timestamp <= target_time; 
-       timeout = player->timeouts ? player->timeouts->data : NULL) {
-    player->timeouts = g_list_remove (player->timeouts, timeout);
+       timeout = priv->timeouts ? priv->timeouts->data : NULL) {
+    priv->timeouts = g_list_remove (priv->timeouts, timeout);
     frames_now = SWFDEC_TICKS_TO_SAMPLES (timeout->timestamp) -
-      SWFDEC_TICKS_TO_SAMPLES (player->time);
-    player->time = timeout->timestamp;
+      SWFDEC_TICKS_TO_SAMPLES (priv->time);
+    priv->time = timeout->timestamp;
     swfdec_player_advance_audio (player, frames_now);
     audio_samples -= frames_now;
     SWFDEC_LOG ("activating timeout %p now (timeout is %"G_GUINT64_FORMAT", target time is %"G_GUINT64_FORMAT,
@@ -1343,10 +1384,10 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
     timeout->callback (timeout);
     swfdec_player_perform_actions (player);
   }
-  if (target_time > player->time) {
+  if (target_time > priv->time) {
     frames_now = SWFDEC_TICKS_TO_SAMPLES (target_time) -
-      SWFDEC_TICKS_TO_SAMPLES (player->time);
-    player->time = target_time;
+      SWFDEC_TICKS_TO_SAMPLES (priv->time);
+    priv->time = target_time;
     swfdec_player_advance_audio (player, frames_now);
     audio_samples -= frames_now;
   }
@@ -1368,10 +1409,10 @@ void
 swfdec_player_lock_soft (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_assert (swfdec_rectangle_is_empty (&player->invalid_extents));
+  g_assert (swfdec_rectangle_is_empty (&player->priv->invalid_extents));
 
   g_object_freeze_notify (G_OBJECT (player));
-  g_timer_start (player->runtime);
+  g_timer_start (player->priv->runtime);
   SWFDEC_DEBUG ("LOCKED");
 }
 
@@ -1379,10 +1420,10 @@ gboolean
 swfdec_player_lock (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
-  g_assert (swfdec_ring_buffer_get_n_elements (player->actions[0]) == 0);
-  g_assert (swfdec_ring_buffer_get_n_elements (player->actions[1]) == 0);
-  g_assert (swfdec_ring_buffer_get_n_elements (player->actions[2]) == 0);
-  g_assert (swfdec_ring_buffer_get_n_elements (player->actions[3]) == 0);
+  g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[0]) == 0);
+  g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[1]) == 0);
+  g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[2]) == 0);
+  g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[3]) == 0);
 
   if (swfdec_as_context_is_aborted (SWFDEC_AS_CONTEXT (player)))
     return FALSE;
@@ -1400,7 +1441,7 @@ swfdec_player_update_movies (SwfdecPlayer *player)
   GList *walk;
 
   /* FIXME: This g_list_last could be slow */
-  for (walk = g_list_last (player->movies); walk; walk = walk->prev) {
+  for (walk = g_list_last (player->priv->movies); walk; walk = walk->prev) {
     movie = walk->data;
 
     swfdec_movie_update (movie);
@@ -1424,7 +1465,7 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   SWFDEC_DEBUG ("UNLOCK");
-  g_timer_stop (player->runtime);
+  g_timer_stop (player->priv->runtime);
   swfdec_player_update_movies (player);
   swfdec_player_update_mouse_cursor (player);
   g_object_thaw_notify (G_OBJECT (player));
@@ -1437,10 +1478,10 @@ swfdec_player_unlock (SwfdecPlayer *player)
   SwfdecAsContext *context;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_assert (swfdec_ring_buffer_get_n_elements (player->actions[0]) == 0);
-  g_assert (swfdec_ring_buffer_get_n_elements (player->actions[1]) == 0);
-  g_assert (swfdec_ring_buffer_get_n_elements (player->actions[2]) == 0);
-  g_assert (swfdec_ring_buffer_get_n_elements (player->actions[3]) == 0);
+  g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[0]) == 0);
+  g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[1]) == 0);
+  g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[2]) == 0);
+  g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[3]) == 0);
   context = SWFDEC_AS_CONTEXT (player);
   g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_INTERRUPTED);
 
@@ -1480,13 +1521,14 @@ static void
 swfdec_player_mark (SwfdecAsContext *context)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
+  SwfdecPlayerPrivate *priv = player->priv;
 
-  g_hash_table_foreach (player->registered_classes, swfdec_player_mark_string_object, NULL);
-  swfdec_as_object_mark (player->MovieClip);
-  swfdec_as_object_mark (player->Video);
-  g_list_foreach (player->roots, (GFunc) swfdec_as_object_mark, NULL);
-  g_list_foreach (player->intervals, (GFunc) swfdec_as_object_mark, NULL);
-  g_list_foreach (player->rooted_objects, swfdec_player_mark_rooted_object, NULL);
+  g_hash_table_foreach (priv->registered_classes, swfdec_player_mark_string_object, NULL);
+  swfdec_as_object_mark (priv->MovieClip);
+  swfdec_as_object_mark (priv->Video);
+  g_list_foreach (priv->roots, (GFunc) swfdec_as_object_mark, NULL);
+  g_list_foreach (priv->intervals, (GFunc) swfdec_as_object_mark, NULL);
+  g_list_foreach (priv->rooted_objects, swfdec_player_mark_rooted_object, NULL);
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }
@@ -1497,17 +1539,18 @@ swfdec_player_get_time (SwfdecAsContext *context, GTimeVal *tv)
   *tv = context->start_time;
 
   /* FIXME: what granularity do we want? Currently it's milliseconds */
-  g_time_val_add (tv, SWFDEC_TICKS_TO_MSECS (SWFDEC_PLAYER (context)->time) * 1000);
+  g_time_val_add (tv, SWFDEC_TICKS_TO_MSECS (SWFDEC_PLAYER (context)->priv->time) * 1000);
 }
 
 static gboolean
 swfdec_player_check_continue (SwfdecAsContext *context)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
+  SwfdecPlayerPrivate *priv = player->priv;
 
-  if (player->max_runtime == 0)
+  if (priv->max_runtime == 0)
     return TRUE;
-  return g_timer_elapsed (player->runtime, NULL) * 1000 <= player->max_runtime;
+  return g_timer_elapsed (priv->runtime, NULL) * 1000 <= priv->max_runtime;
 }
 
 static void
@@ -1515,6 +1558,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecAsContextClass *context_class = SWFDEC_AS_CONTEXT_CLASS (klass);
+
+  g_type_class_add_private (klass, sizeof (SwfdecPlayerPrivate));
 
   object_class->get_property = swfdec_player_get_property;
   object_class->set_property = swfdec_player_set_property;
@@ -1715,27 +1760,31 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 static void
 swfdec_player_init (SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv;
   guint i;
 
-  player->system = swfdec_system_new ();
-  player->registered_classes = g_hash_table_new (g_direct_hash, g_direct_equal);
+  player->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (player, SWFDEC_TYPE_PLAYER, SwfdecPlayerPrivate);
+  priv->player = player;
+
+  priv->system = swfdec_system_new ();
+  priv->registered_classes = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
-    player->actions[i] = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
+    priv->actions[i] = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
   }
-  player->external_actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerExternalAction, 8);
-  player->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
-  player->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
+  priv->external_actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerExternalAction, 8);
+  priv->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
+  priv->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
 
-  player->runtime = g_timer_new ();
-  g_timer_stop (player->runtime);
-  player->max_runtime = 10 * 1000;
-  player->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
-  player->mouse_visible = TRUE;
-  player->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
-  player->iterate_timeout.callback = swfdec_player_iterate;
-  player->stage_width = -1;
-  player->stage_height = -1;
+  priv->runtime = g_timer_new ();
+  g_timer_stop (priv->runtime);
+  priv->max_runtime = 10 * 1000;
+  priv->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
+  priv->mouse_visible = TRUE;
+  priv->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
+  priv->iterate_timeout.callback = swfdec_player_iterate;
+  priv->stage_width = -1;
+  priv->stage_height = -1;
 
   swfdec_player_resource_request_init (player);
 }
@@ -1743,10 +1792,13 @@ swfdec_player_init (SwfdecPlayer *player)
 void
 swfdec_player_stop_all_sounds (SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  while (player->audio) {
-    swfdec_audio_remove (player->audio->data);
+  priv = player->priv;
+  while (priv->audio) {
+    swfdec_audio_remove (priv->audio->data);
   }
 }
 
@@ -1758,7 +1810,7 @@ swfdec_player_stop_sounds (SwfdecPlayer *player, SwfdecAudioRemoveFunc func, gpo
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (func);
 
-  walk = player->audio;
+  walk = player->priv->audio;
   while (walk) {
     SwfdecAudio *audio = walk->data;
     walk = walk->next;
@@ -1771,6 +1823,7 @@ swfdec_player_stop_sounds (SwfdecPlayer *player, SwfdecAudioRemoveFunc func, gpo
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   SwfdecRectangle r;
   SwfdecRect tmp;
   guint i;
@@ -1785,31 +1838,31 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
   /* FIXME: currently we clamp the rectangle to the visible area, it might
    * be useful to allow out-of-bounds drawing. In that case this needs to be
    * changed */
-  swfdec_rectangle_intersect (&r, &r, &player->stage);
+  swfdec_rectangle_intersect (&r, &r, &priv->stage);
   if (swfdec_rectangle_is_empty (&r))
     return;
 
   SWFDEC_LOG ("  invalidating %d %d  %d %d", r.x, r.y, r.width, r.height);
   /* FIXME: get region code into swfdec? */
-  for (i = 0; i < player->invalidations->len; i++) {
-    SwfdecRectangle *cur = &g_array_index (player->invalidations, SwfdecRectangle, i);
+  for (i = 0; i < priv->invalidations->len; i++) {
+    SwfdecRectangle *cur = &g_array_index (priv->invalidations, SwfdecRectangle, i);
     if (swfdec_rectangle_contains (cur, &r))
       break;
     if (swfdec_rectangle_contains (&r, cur)) {
       *cur = r;
-      swfdec_rectangle_union (&player->invalid_extents, &player->invalid_extents, &r);
+      swfdec_rectangle_union (&priv->invalid_extents, &priv->invalid_extents, &r);
     }
   }
-  if (i == player->invalidations->len) {
-    g_array_append_val (player->invalidations, r);
-    swfdec_rectangle_union (&player->invalid_extents, &player->invalid_extents, &r);
+  if (i == priv->invalidations->len) {
+    g_array_append_val (priv->invalidations, r);
+    swfdec_rectangle_union (&priv->invalid_extents, &priv->invalid_extents, &r);
   }
   SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %d %d  %d %d (%u subregions)",
       rect->x0, rect->y0, rect->x1, rect->y1,
-      player->invalid_extents.x, player->invalid_extents.y, 
-      player->invalid_extents.x + player->invalid_extents.width,
-      player->invalid_extents.y + player->invalid_extents.height,
-      player->invalidations->len);
+      priv->invalid_extents.x, priv->invalid_extents.y, 
+      priv->invalid_extents.x + priv->invalid_extents.width,
+      priv->invalid_extents.y + priv->invalid_extents.height,
+      priv->invalidations->len);
 }
 
 /**
@@ -1885,7 +1938,7 @@ swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
 
   depth = level - 16384;
   /* find movie */
-  for (walk = player->roots; walk; walk = walk->next) {
+  for (walk = player->priv->roots; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
     if (cur->depth < depth)
       continue;
@@ -1927,10 +1980,13 @@ void
 swfdec_player_initialize (SwfdecPlayer *player, guint version, 
     guint rate, guint width, guint height)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (rate > 0);
 
-  if (!player->initialized) {
+  priv = player->priv;
+  if (!priv->initialized) {
     SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
     swfdec_as_context_startup (context, version);
     /* reset state for initialization */
@@ -1946,37 +2002,37 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
 
       if (context->state == SWFDEC_AS_CONTEXT_NEW) {
 	context->state = SWFDEC_AS_CONTEXT_RUNNING;
-	swfdec_as_object_set_constructor (player->roots->data, player->MovieClip);
+	swfdec_as_object_set_constructor (priv->roots->data, priv->MovieClip);
       }
     }
-    player->initialized = TRUE;
+    priv->initialized = TRUE;
     g_object_notify (G_OBJECT (player), "initialized");
   } else {
     /* FIXME: need to kick all other movies out here */
-    swfdec_player_remove_timeout (player, &player->iterate_timeout);
+    swfdec_player_remove_timeout (player, &priv->iterate_timeout);
   }
 
   SWFDEC_INFO ("initializing player to size %ux%u and rate %u/256", width, height, rate);
-  if (rate != player->rate) {
-    player->rate = rate;
+  if (rate != priv->rate) {
+    priv->rate = rate;
     g_object_notify (G_OBJECT (player), "rate");
   }
-  if (player->width != width) {
-    player->width = width;
+  if (priv->width != width) {
+    priv->width = width;
     g_object_notify (G_OBJECT (player), "default-width");
   }
-  if (player->height != height) {
-    player->height = height;
+  if (priv->height != height) {
+    priv->height = height;
     g_object_notify (G_OBJECT (player), "default-height");
   }
-  player->broadcasted_width = player->internal_width = player->stage_width >= 0 ? (guint) player->stage_width : player->width;
-  player->broadcasted_height = player->internal_height = player->stage_height >= 0 ? (guint) player->stage_height : player->height;
+  priv->broadcasted_width = priv->internal_width = priv->stage_width >= 0 ? (guint) priv->stage_width : priv->width;
+  priv->broadcasted_height = priv->internal_height = priv->stage_height >= 0 ? (guint) priv->stage_height : priv->height;
   swfdec_player_update_scale (player);
 
-  player->iterate_timeout.timestamp = player->time + SWFDEC_TICKS_PER_SECOND * 256 / player->rate / 10;
-  swfdec_player_add_timeout (player, &player->iterate_timeout);
+  priv->iterate_timeout.timestamp = priv->time + SWFDEC_TICKS_PER_SECOND * 256 / priv->rate / 10;
+  swfdec_player_add_timeout (player, &priv->iterate_timeout);
   SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
-      &player->iterate_timeout, player->iterate_timeout.timestamp, player->time);
+      &priv->iterate_timeout, priv->iterate_timeout.timestamp, priv->time);
 }
 
 /**
@@ -1991,14 +2047,15 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
 SwfdecAsObject *
 swfdec_player_get_export_class (SwfdecPlayer *player, const char *name)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   SwfdecAsObject *ret;
   
-  ret = g_hash_table_lookup (player->registered_classes, name);
+  ret = g_hash_table_lookup (priv->registered_classes, name);
   if (ret) {
     SWFDEC_LOG ("found registered class %p for %s", ret, name);
     return ret;
   }
-  return player->MovieClip;
+  return priv->MovieClip;
 }
 
 /**
@@ -2013,15 +2070,18 @@ swfdec_player_get_export_class (SwfdecPlayer *player, const char *name)
 void
 swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAsObject *object)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (name != NULL);
   g_return_if_fail (object == NULL || SWFDEC_IS_AS_OBJECT (object));
 
+  priv = player->priv;
   if (object) {
     SWFDEC_LOG ("setting class %p for %s", object, name);
-    g_hash_table_insert (player->registered_classes, (gpointer) name, object);
+    g_hash_table_insert (priv->registered_classes, (gpointer) name, object);
   } else {
-    g_hash_table_remove (player->registered_classes, name);
+    g_hash_table_remove (priv->registered_classes, name);
   }
 }
 
@@ -2033,24 +2093,28 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
 void
 swfdec_player_root_object (SwfdecPlayer *player, GObject *object)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (G_IS_OBJECT (object));
 
+  priv = player->priv;
   g_object_ref (object);
-  player->rooted_objects = g_list_prepend (player->rooted_objects, object);
+  priv->rooted_objects = g_list_prepend (priv->rooted_objects, object);
 }
 
 void
 swfdec_player_unroot_object (SwfdecPlayer *player, GObject *object)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   GList *entry;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (G_IS_OBJECT (object));
-  entry = g_list_find (player->rooted_objects, object);
+  entry = g_list_find (priv->rooted_objects, object);
   g_return_if_fail (entry != NULL);
   g_object_unref (object);
-  player->rooted_objects = g_list_delete_link (player->rooted_objects, entry);
+  priv->rooted_objects = g_list_delete_link (priv->rooted_objects, entry);
 }
 
 /** PUBLIC API ***/
@@ -2097,7 +2161,7 @@ void
 swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (player->roots == NULL);
+  g_return_if_fail (player->priv->roots == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
   swfdec_player_set_loader_with_variables (player, loader, NULL);
@@ -2120,14 +2184,16 @@ void
 swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loader,
     const char *variables)
 {
+  SwfdecPlayerPrivate *priv;
   SwfdecMovie *movie;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (player->resource == NULL);
+  g_return_if_fail (player->priv->resource == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
-  player->resource = swfdec_resource_new (player, loader, variables);
-  movie = swfdec_movie_new (player, -16384, NULL, player->resource, NULL, SWFDEC_AS_STR__level0);
+  priv = player->priv;
+  priv->resource = swfdec_resource_new (player, loader, variables);
+  movie = swfdec_movie_new (player, -16384, NULL, priv->resource, NULL, SWFDEC_AS_STR__level0);
   movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);
 }
@@ -2343,6 +2409,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
     double x, double y, double width, double height)
 {
   static const SwfdecColorTransform trans = { FALSE, 256, 0, 256, 0, 256, 0, 256, 0 };
+  SwfdecPlayerPrivate *priv;
   GList *walk;
   SwfdecRect real;
 
@@ -2355,30 +2422,31 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
   if (!swfdec_player_is_initialized (player))
     return;
 
+  priv = player->priv;
   if (width == 0.0)
-    width = player->stage_width;
+    width = priv->stage_width;
   if (height == 0.0)
-    height = player->stage_height;
+    height = priv->stage_height;
   /* clip the area */
   cairo_save (cr);
   cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
   /* compute the rectangle */
-  x -= player->offset_x;
-  y -= player->offset_y;
-  real.x0 = floor (x * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_x;
-  real.y0 = floor (y * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_y;
-  real.x1 = ceil ((x + width) * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_x;
-  real.y1 = ceil ((y + height) * SWFDEC_TWIPS_SCALE_FACTOR) / player->scale_y;
+  x -= priv->offset_x;
+  y -= priv->offset_y;
+  real.x0 = floor (x * SWFDEC_TWIPS_SCALE_FACTOR) / priv->scale_x;
+  real.y0 = floor (y * SWFDEC_TWIPS_SCALE_FACTOR) / priv->scale_y;
+  real.x1 = ceil ((x + width) * SWFDEC_TWIPS_SCALE_FACTOR) / priv->scale_x;
+  real.y1 = ceil ((y + height) * SWFDEC_TWIPS_SCALE_FACTOR) / priv->scale_y;
   SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
       real.x0, real.y0, real.x1, real.y1);
   /* convert the cairo matrix */
-  cairo_translate (cr, player->offset_x, player->offset_y);
-  cairo_scale (cr, player->scale_x / SWFDEC_TWIPS_SCALE_FACTOR, player->scale_y / SWFDEC_TWIPS_SCALE_FACTOR);
-  swfdec_color_set_source (cr, player->bgcolor);
+  cairo_translate (cr, priv->offset_x, priv->offset_y);
+  cairo_scale (cr, priv->scale_x / SWFDEC_TWIPS_SCALE_FACTOR, priv->scale_y / SWFDEC_TWIPS_SCALE_FACTOR);
+  swfdec_color_set_source (cr, priv->bgcolor);
   cairo_paint (cr);
 
-  for (walk = player->roots; walk; walk = walk->next) {
+  for (walk = priv->roots; walk; walk = walk->next) {
     swfdec_movie_render (walk->data, cr, &trans, &real);
   }
   SWFDEC_INFO ("=== %p: END RENDER ===", player);
@@ -2396,11 +2464,14 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
 void
 swfdec_player_advance (SwfdecPlayer *player, gulong msecs)
 {
+  SwfdecPlayerPrivate *priv;
   guint frames;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  frames = SWFDEC_TICKS_TO_SAMPLES (player->time + SWFDEC_MSECS_TO_TICKS (msecs))
-    - SWFDEC_TICKS_TO_SAMPLES (player->time);
+  priv = player->priv;
+  frames = SWFDEC_TICKS_TO_SAMPLES (priv->time + SWFDEC_MSECS_TO_TICKS (msecs))
+    - SWFDEC_TICKS_TO_SAMPLES (priv->time);
   g_signal_emit (player, signals[ADVANCE], 0, msecs, frames);
 }
 
@@ -2421,7 +2492,7 @@ swfdec_player_is_initialized (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
 
-  return player->initialized;
+  return player->priv->initialized;
 }
 
 /**
@@ -2471,7 +2542,7 @@ swfdec_player_get_rate (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0.0);
 
-  return player->rate / 256.0;
+  return player->priv->rate / 256.0;
 }
 
 /**
@@ -2489,9 +2560,9 @@ swfdec_player_get_default_size (SwfdecPlayer *player, guint *width, guint *heigh
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   if (width)
-    *width = player->width;
+    *width = player->priv->width;
   if (height)
-    *height = player->height;
+    *height = player->priv->height;
 }
 
 /**
@@ -2509,30 +2580,31 @@ swfdec_player_get_size (SwfdecPlayer *player, int *width, int *height)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
   if (width)
-    *width = player->stage_width;
+    *width = player->priv->stage_width;
   if (height)
-    *height = player->stage_height;
+    *height = player->priv->stage_height;
 }
 
 static void
 swfdec_player_update_size (gpointer playerp, gpointer unused)
 {
   SwfdecPlayer *player = playerp;
+  SwfdecPlayerPrivate *priv = player->priv;
 
   /* FIXME: only update if not fullscreen */
-  player->internal_width = player->stage_width >=0 ? (guint) player->stage_width : player->width;
-  player->internal_height = player->stage_height >=0 ? (guint) player->stage_height : player->height;
+  priv->internal_width = priv->stage_width >=0 ? (guint) priv->stage_width : priv->width;
+  priv->internal_height = priv->stage_height >=0 ? (guint) priv->stage_height : priv->height;
 
-  if (player->scale_mode != SWFDEC_SCALE_NONE)
+  if (priv->scale_mode != SWFDEC_SCALE_NONE)
     return;
 
   /* only broadcast once */
-  if (player->internal_width == player->broadcasted_width &&
-      player->internal_height == player->broadcasted_height)
+  if (priv->internal_width == priv->broadcasted_width &&
+      priv->internal_height == priv->broadcasted_height)
     return;
 
-  player->broadcasted_width = player->internal_width;
-  player->broadcasted_height = player->internal_height;
+  priv->broadcasted_width = priv->internal_width;
+  priv->broadcasted_height = priv->internal_height;
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
 }
 
@@ -2548,19 +2620,21 @@ swfdec_player_update_size (gpointer playerp, gpointer unused)
 void
 swfdec_player_set_size (SwfdecPlayer *player, int width, int height)
 {
+  SwfdecPlayerPrivate *priv;
   gboolean changed = FALSE;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (width >= -1);
   g_return_if_fail (height >= -1);
 
-  if (player->stage_width != width) {
-    player->stage_width = width;
+  priv = player->priv;
+  if (priv->stage_width != width) {
+    priv->stage_width = width;
     g_object_notify (G_OBJECT (player), "width");
     changed = TRUE;
   }
-  if (player->stage_height != height) {
-    player->stage_height = height;
+  if (priv->stage_height != height) {
+    priv->stage_height = height;
     g_object_notify (G_OBJECT (player), "height");
     changed = TRUE;
   }
@@ -2583,7 +2657,7 @@ swfdec_player_get_audio (SwfdecPlayer *	player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
-  return player->audio;
+  return player->priv->audio;
 }
 
 /**
@@ -2600,7 +2674,7 @@ swfdec_player_get_background_color (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF));
 
-  return player->bgcolor;
+  return player->priv->bgcolor;
 }
 
 /**
@@ -2614,16 +2688,19 @@ swfdec_player_get_background_color (SwfdecPlayer *player)
 void
 swfdec_player_set_background_color (SwfdecPlayer *player, guint color)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  player->bgcolor_set = TRUE;
-  if (player->bgcolor == color)
+  priv = player->priv;
+  priv->bgcolor_set = TRUE;
+  if (priv->bgcolor == color)
     return;
-  player->bgcolor = color;
+  priv->bgcolor = color;
   g_object_notify (G_OBJECT (player), "background-color");
   if (swfdec_player_is_initialized (player)) {
     g_signal_emit (player, signals[INVALIDATE], 0, 0.0, 0.0, 
-	(double) player->width, (double) player->height);
+	(double) priv->width, (double) priv->height);
   }
 }
 
@@ -2641,7 +2718,7 @@ swfdec_player_get_scale_mode (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_SCALE_SHOW_ALL);
 
-  return player->scale_mode;
+  return player->priv->scale_mode;
 }
 
 /**
@@ -2655,10 +2732,13 @@ swfdec_player_get_scale_mode (SwfdecPlayer *player)
 void
 swfdec_player_set_scale_mode (SwfdecPlayer *player, SwfdecScaleMode mode)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  if (player->scale_mode != mode) {
-    player->scale_mode = mode;
+  priv = player->priv;
+  if (priv->scale_mode != mode) {
+    priv->scale_mode = mode;
     swfdec_player_update_scale (player);
     g_object_notify (G_OBJECT (player), "scale-mode");
     swfdec_player_add_external_action (player, player, swfdec_player_update_size, NULL);
@@ -2680,7 +2760,7 @@ swfdec_player_get_alignment (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_ALIGNMENT_CENTER);
 
-  return swfdec_player_alignment_from_flags (player->align_flags);
+  return swfdec_player_alignment_from_flags (player->priv->align_flags);
 }
 
 /**
@@ -2705,10 +2785,13 @@ swfdec_player_set_alignment (SwfdecPlayer *player, SwfdecAlignment align)
 void
 swfdec_player_set_align_flags (SwfdecPlayer *player, guint flags)
 {
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  if (flags != player->align_flags) {
-    player->align_flags = flags;
+  priv = player->priv;
+  if (flags != priv->align_flags) {
+    priv->align_flags = flags;
     swfdec_player_update_scale (player);
     g_object_notify (G_OBJECT (player), "alignment");
   }
@@ -2729,7 +2812,7 @@ swfdec_player_get_maximum_runtime (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
-  return player->max_runtime;
+  return player->priv->max_runtime;
 }
 
 /**
@@ -2753,7 +2836,7 @@ swfdec_player_set_maximum_runtime (SwfdecPlayer *player, gulong msecs)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  player->max_runtime = msecs;
+  player->priv->max_runtime = msecs;
   g_object_notify (G_OBJECT (player), "max-runtime");
 }
 

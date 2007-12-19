@@ -271,7 +271,7 @@ swfdec_audio_event_get (SwfdecPlayer *player, SwfdecSound *sound)
   if (player == NULL)
     return NULL;
 
-  for (walk = player->audio; walk; walk = walk->next) {
+  for (walk = player->priv->audio; walk; walk = walk->next) {
     SwfdecAudio *audio = walk->data;
     if (!SWFDEC_IS_AUDIO_EVENT (audio))
       continue;

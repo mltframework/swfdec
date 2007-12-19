@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <cairo.h>
+#include <libswfdec/swfdec_as_context.h>
 #include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_loader.h>
 
@@ -54,6 +55,7 @@ typedef enum {
 } SwfdecScaleMode;
 
 typedef struct _SwfdecPlayer SwfdecPlayer;
+typedef struct _SwfdecPlayerPrivate SwfdecPlayerPrivate;
 typedef struct _SwfdecPlayerClass SwfdecPlayerClass;
 
 #define SWFDEC_TYPE_PLAYER                    (swfdec_player_get_type())
@@ -62,6 +64,29 @@ typedef struct _SwfdecPlayerClass SwfdecPlayerClass;
 #define SWFDEC_PLAYER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_PLAYER, SwfdecPlayer))
 #define SWFDEC_PLAYER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_PLAYER, SwfdecPlayerClass))
 #define SWFDEC_PLAYER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_PLAYER, SwfdecPlayerClass))
+
+struct _SwfdecPlayer
+{
+  SwfdecAsContext	context;
+  SwfdecPlayerPrivate *	priv;
+};
+
+struct _SwfdecPlayerClass
+{
+  SwfdecAsContextClass	context_class;
+
+  void			(* advance)		(SwfdecPlayer *		player,
+						 gulong			msecs,
+						 guint			audio_samples);
+  gboolean		(* handle_key)		(SwfdecPlayer *		player,
+						 guint			key,
+						 guint			character,
+						 gboolean		down);
+  gboolean		(* handle_mouse)	(SwfdecPlayer *		player,
+						 double			x,
+						 double			y,
+						 int			button);
+};
 
 void		swfdec_init			(void);
 

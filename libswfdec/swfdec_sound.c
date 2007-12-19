@@ -549,9 +549,9 @@ swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source,
     }
   }
   if (channels == 2) {
-    swfdec_sound_buffer_render_stereo (dest, (const gint16 *) source->data, offset, n_samples, rate);
+    swfdec_sound_buffer_render_stereo (dest, (const void *) source->data, offset, n_samples, rate);
   } else {
-    swfdec_sound_buffer_render_mono (dest, (const gint16 *) source->data, offset, n_samples, rate);
+    swfdec_sound_buffer_render_mono (dest, (const void *) source->data, offset, n_samples, rate);
   }
   g_free (fixme);
 }

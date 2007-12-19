@@ -29,10 +29,10 @@ static int16_t jfif_matrix[24] = {
 };
 
 
-unsigned char * get_argb_444 (JpegDecoder *dec);
-unsigned char * get_argb_422 (JpegDecoder *dec);
-unsigned char * get_argb_422v (JpegDecoder *dec);
-unsigned char * get_argb_420 (JpegDecoder *dec);
+uint32_t * get_argb_444 (JpegDecoder *dec);
+uint32_t * get_argb_422 (JpegDecoder *dec);
+uint32_t * get_argb_422v (JpegDecoder *dec);
+uint32_t * get_argb_420 (JpegDecoder *dec);
 
 #if 0
 static void imagescale2h_u8 (unsigned char *dest, int d_rowstride,
@@ -66,7 +66,7 @@ int jpeg_decode_argb (uint8_t *data, int length, uint32_t **image,
   return TRUE;
 }
 
-unsigned char *
+uint32_t *
 jpeg_decoder_get_argb_image (JpegDecoder *dec)
 {
 
@@ -126,7 +126,7 @@ upsample (uint8_t *d, uint8_t *s, int n)
 
 }
 
-unsigned char *
+uint32_t *
 get_argb_444 (JpegDecoder *dec)
 {
   uint32_t *tmp;
@@ -151,10 +151,10 @@ get_argb_444 (JpegDecoder *dec)
     argbp += dec->width;
   }
   free(tmp);
-  return (unsigned char *)argb_image;
+  return argb_image;
 }
 
-unsigned char *
+uint32_t *
 get_argb_422 (JpegDecoder *dec)
 {
   uint32_t *tmp;
@@ -187,10 +187,10 @@ get_argb_422 (JpegDecoder *dec)
   free(tmp);
   free(tmp_u);
   free(tmp_v);
-  return (unsigned char *)argb_image;
+  return argb_image;
 }
 
-unsigned char *
+uint32_t *
 get_argb_422v (JpegDecoder *dec)
 {
   uint32_t *tmp;
@@ -232,10 +232,10 @@ get_argb_422v (JpegDecoder *dec)
   free(tmp);
   free(tmp_u);
   free(tmp_v);
-  return (unsigned char *)argb_image;
+  return argb_image;
 }
 
-unsigned char *
+uint32_t *
 get_argb_420 (JpegDecoder *dec)
 {
   uint32_t *tmp;
@@ -284,7 +284,7 @@ get_argb_420 (JpegDecoder *dec)
   free(tmp_u);
   free(tmp_v);
   free(tmp1);
-  return (unsigned char *)argb_image;
+  return argb_image;
 }
 
 #if 0

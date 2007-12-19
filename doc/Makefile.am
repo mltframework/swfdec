@@ -92,9 +92,11 @@ IGNORE_HFILES= \
 	swfdec_flv_decoder.h \
 	swfdec_flash_security.h \
 	swfdec_font.h \
+	swfdec_gradient_pattern.h \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
+	swfdec_image_decoder.h \
 	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_js.h \
@@ -112,6 +114,7 @@ IGNORE_HFILES= \
 	swfdec_path.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
+	swfdec_policy_loader.h \
 	swfdec_rect.h \
 	swfdec_resource.h \
 	swfdec_resource_request.h \

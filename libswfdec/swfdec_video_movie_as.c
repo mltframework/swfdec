@@ -74,7 +74,7 @@ swfdec_video_movie_init_context (SwfdecPlayer *player, guint version)
       SWFDEC_AS_STR_Video, 0, NULL, 0));
   if (video == NULL)
     return;
-  player->Video = video;
+  player->priv->Video = video;
   proto = swfdec_as_object_new_empty (context);
   if (proto == NULL)
     return;

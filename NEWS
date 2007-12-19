@@ -1,4 +1,18 @@
 
+ 0.5.5 ("cps")
+
+In time for Gnome's 2.21.4 release, here's a new Swfdec release. Features:
+- rework the input handling subsystem. All objects (including sliders) can now 
+  receive mouse events.
+- stub all script functions and properties from Flash 8
+- implement loading cross-domain policy files
+- implement MovieClip.beginGradientFill (Yes, that function is big enough for 
+  its own entry)
+- various fixes to clipping
+- Swfdec should compile and work fine on ARM architectures now
+- lots of bug fixes and small features additions
+- support reading text files in various formats
+
  0.5.4 ("2 advanced")
 
 Features left and right make this release. Unfortunately a lot of reorganization

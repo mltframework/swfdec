@@ -359,9 +359,9 @@ swfdec_bits_get_bdouble (SwfdecBits * b)
   SWFDEC_BYTES_CHECK (b, 8);
 
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-  d = *((double *) b->ptr);
+  memcpy (&d, b->ptr, 8);
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
-  tmp = *((guint64 *) b->ptr);
+  memcpy (&tmp, b->ptr, 8);
   tmp = GUINT64_FROM_BE (tmp);
   p = &tmp;
   d = *((double *) p);

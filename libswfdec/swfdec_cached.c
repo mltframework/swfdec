@@ -72,7 +72,7 @@ swfdec_cached_set_cache (SwfdecCached *cached, SwfdecCache *cache)
 static void
 swfdec_cached_unload_func (gpointer data)
 {
-  SwfdecCached *cached = SWFDEC_CACHED ((guint8 *) data - G_STRUCT_OFFSET (SwfdecCached, handle));
+  SwfdecCached *cached = SWFDEC_CACHED ((void *) ((guint8 *) data - G_STRUCT_OFFSET (SwfdecCached, handle)));
 
   cached->handle.unload = NULL;
   swfdec_cached_unload (cached);

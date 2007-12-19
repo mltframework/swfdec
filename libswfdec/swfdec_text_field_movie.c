@@ -44,8 +44,15 @@ static void
 swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
+  swfdec_rect_union (extents, extents,
+      &SWFDEC_GRAPHIC (SWFDEC_TEXT_FIELD_MOVIE (movie)->text)->extents);
+}
+
+static void
+swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
+{
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
-  SwfdecRect extended;
+  SwfdecRect rect, extended;
 
   extended = SWFDEC_GRAPHIC (text->text)->extents;
 
@@ -55,17 +62,9 @@ swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     extended.y1 += SWFDEC_TWIPS_TO_DOUBLE (1);
   }
 
-  swfdec_rect_union (extents, extents, &extended);
-}
-
-static void
-swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
-{
-  SwfdecRect rect;
-  
-  swfdec_rect_transform (&rect, 
-    &SWFDEC_GRAPHIC (SWFDEC_TEXT_FIELD_MOVIE (movie)->text)->extents, matrix);
-  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+  swfdec_rect_transform (&rect, &extended, matrix);
+  swfdec_player_invalidate (
+      SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
 }
 
 static void

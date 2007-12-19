@@ -214,7 +214,7 @@ swfdec_as_str_concat (SwfdecAsContext *cx, const char * s1, const char *s2)
 }
 
 /**
- * swfdec_as_double_to_string:
+ * swfdec_as_integer_to_string:
  * @context: a #SwfdecAsContext
  * @i: an integer that fits into 32 bits
  *

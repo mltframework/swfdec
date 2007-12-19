@@ -136,7 +136,8 @@ swfdec_style_sheet_parse_selectors (SwfdecAsContext *cx, const char *p,
   p = p + strspn (p, " \t\r\n");
 
   // special case: don't allow empty declarations if not totally empty
-  if (*(p-1) != '{' && (*p == '\0' || *p == '}'))
+  // except in version 8
+  if (cx->version < 8 && (*(p-1) != '{' && (*p == '\0' || *p == '}')))
     return NULL;
 
   return p;

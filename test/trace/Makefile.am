@@ -2631,6 +2631,8 @@ EXTRA_DIST = \
 	stylesheet-parse-6.swf.trace \
 	stylesheet-parse-7.swf \
 	stylesheet-parse-7.swf.trace \
+	stylesheet-parse-8.swf \
+	stylesheet-parse-8.swf.trace \
 	stylesheet-parsecolor.as \
 	stylesheet-parsecolor-5.swf \
 	stylesheet-parsecolor-5.swf.trace \

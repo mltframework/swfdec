@@ -7,9 +7,8 @@ t1.backgroundColor = 0x00FF00;
 
 this.createTextField ("t2", 1, 45, 45, 95, 95);
 
-// FIXME: we currently render right and bottom border one pixel too early
-//t2.border = true;
-//t2.borderColor = 0xFF0000;
+t2.border = true;
+t2.borderColor = 0xFF0000;
 t2.background = true;
 t2.backgroundColor = 0x0000FF;
 

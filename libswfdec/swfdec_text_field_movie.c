@@ -1361,8 +1361,8 @@ swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
   if (layouts[0].layout == NULL)
     return FALSE;
 
-  layout_y = y - EXTRA_MARGIN;
-  layout_x = x - EXTRA_MARGIN;
+  layout_y = y - EXTRA_MARGIN - SWFDEC_GRAPHIC (text->text)->extents.y0;
+  layout_x = x - EXTRA_MARGIN - SWFDEC_GRAPHIC (text->text)->extents.x0;
 
   // take scrolling into account
   swfdec_text_field_movie_line_position (layouts,

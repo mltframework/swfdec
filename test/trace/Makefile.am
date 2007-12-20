@@ -121,6 +121,15 @@ EXTRA_DIST = \
 	array-new-override-7.swf.trace \
 	array-new-override-8.swf \
 	array-new-override-8.swf.trace \
+	array-no-object.as \
+	array-no-object-5.swf \
+	array-no-object-5.swf.trace \
+	array-no-object-6.swf \
+	array-no-object-6.swf.trace \
+	array-no-object-7.swf \
+	array-no-object-7.swf.trace \
+	array-no-object-8.swf \
+	array-no-object-8.swf.trace \
 	array-properties.as \
 	array-properties-5.swf \
 	array-properties-5.swf.trace \

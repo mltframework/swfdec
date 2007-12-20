@@ -15,5 +15,8 @@ trace ("Check when XML's native properties are initialized");
 check_and_reset ();
 var tmp = new XML ();
 check_and_reset ();
+var tmp = _global.XML;
+trace (tmp ());
+check_and_reset ();
 
 loadMovie ("FSCommand:quit", "");

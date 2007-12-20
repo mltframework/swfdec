@@ -339,9 +339,9 @@ nsa
 <root><a /><b />c<f /><d /><g /></root>
 <root><a /><b />c<f /><d /><g /></root>
 <root><a /><b />c<f /><d /><g /></root>
+g
 root
-root
-root
+undefined
 <name />
 value
 Creating with: (0) undefined (undefined)

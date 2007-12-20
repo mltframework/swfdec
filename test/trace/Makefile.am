@@ -3075,6 +3075,8 @@ EXTRA_DIST = \
 	xml-errors-6.swf.trace \
 	xml-errors-7.swf \
 	xml-errors-7.swf.trace \
+	xml-errors-8.swf \
+	xml-errors-8.swf.trace \
 	xml-escape.as \
 	xml-escape-5.swf \
 	xml-escape-5.swf.trace \
@@ -3082,6 +3084,8 @@ EXTRA_DIST = \
 	xml-escape-6.swf.trace \
 	xml-escape-7.swf \
 	xml-escape-7.swf.trace \
+	xml-escape-8.swf \
+	xml-escape-8.swf.trace \
 	xml-init.as \
 	xml-init-5.swf \
 	xml-init-5.swf.trace \
@@ -3098,6 +3102,8 @@ EXTRA_DIST = \
 	xml-node-6.swf.trace \
 	xml-node-7.swf \
 	xml-node-7.swf.trace \
+	xml-node-8.swf \
+	xml-node-8.swf.trace \
 	xml-node-init.as \
 	xml-node-init-5.swf \
 	xml-node-init-5.swf.trace \
@@ -3114,11 +3120,15 @@ EXTRA_DIST = \
 	xml-other-6.swf.trace \
 	xml-other-7.swf \
 	xml-other-7.swf.trace \
+	xml-other-8.swf \
+	xml-other-8.swf.trace \
 	xml-parse.as \
 	xml-parse-6.swf \
 	xml-parse-6.swf.trace \
 	xml-parse-7.swf \
 	xml-parse-7.swf.trace \
+	xml-parse-8.swf \
+	xml-parse-8.swf.trace \
 	xml-parse-1.xml \
 	xml-parse-2.xml \
 	xml-properties.as \

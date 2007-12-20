@@ -24,16 +24,17 @@ valueOf called with
 19: valueOf!
 20: valueOf!
 21: valueOf!
-21: toString!
 22: valueOf!
+22: toString!
 23: valueOf!
-23: toString!
 24: valueOf!
 24: toString!
 25: valueOf!
 25: toString!
 26: valueOf!
 26: toString!
+27: valueOf!
+27: toString!
 <root />
 
 <root />
@@ -77,102 +78,107 @@ Constructing with: (18) true (string)
 true
 Constructing with: (19) _level0 (string)
 _level0
-Constructing with: (20) _level0 (movieclip)
+Constructing with: (20) Ã¤Ã¶Ã¼ (string)
+Ã¤Ã¶Ã¼
+Constructing with: (21) _level0 (movieclip)
 _level0
-Constructing with: (21) [object Object] (object)
+Constructing with: (22) [object Object] (object)
 [object Object]
-Constructing with: (22)  (undefined)
+Constructing with: (23)  (undefined)
 
-Constructing with: (23) [type Object] (object)
+Constructing with: (24) [type Object] (object)
 toString called
 [type Object]
-Constructing with: (24) [type Object] (object)
+Constructing with: (25) [type Object] (object)
 toString called with 
 [type Object]
-Constructing with: (25) [object Object] (object)
+Constructing with: (26) [object Object] (object)
 [object Object]
-Constructing with: (26)  (object)
-[type Object]
 Constructing with: (27)  (object)
+[type Object]
+Constructing with: (28)  (object)
 0: toString!
 [type Object]
-Constructing with: (28) null (object)
+Constructing with: (29) null (object)
 1: toString!
 [type Object]
-Constructing with: (29) true (object)
+Constructing with: (30) true (object)
 2: toString!
 [type Object]
-Constructing with: (30) false (object)
+Constructing with: (31) false (object)
 3: toString!
 [type Object]
-Constructing with: (31) 0 (object)
+Constructing with: (32) 0 (object)
 4: toString!
 [type Object]
-Constructing with: (32) 1 (object)
+Constructing with: (33) 1 (object)
 5: toString!
 [type Object]
-Constructing with: (33) 0.5 (object)
+Constructing with: (34) 0.5 (object)
 6: toString!
 [type Object]
-Constructing with: (34) -1 (object)
+Constructing with: (35) -1 (object)
 7: toString!
 [type Object]
-Constructing with: (35) -0.5 (object)
+Constructing with: (36) -0.5 (object)
 8: toString!
 [type Object]
-Constructing with: (36) Infinity (object)
+Constructing with: (37) Infinity (object)
 9: toString!
 [type Object]
-Constructing with: (37) -Infinity (object)
+Constructing with: (38) -Infinity (object)
 10: toString!
 [type Object]
-Constructing with: (38) NaN (object)
+Constructing with: (39) NaN (object)
 11: toString!
 [type Object]
-Constructing with: (39)  (object)
+Constructing with: (40)  (object)
 12: toString!
 
-Constructing with: (40) 0 (object)
+Constructing with: (41) 0 (object)
 13: toString!
 0
-Constructing with: (41) -0 (object)
+Constructing with: (42) -0 (object)
 14: toString!
 -0
-Constructing with: (42) 0.0 (object)
+Constructing with: (43) 0.0 (object)
 15: toString!
 0.0
-Constructing with: (43) 1 (object)
+Constructing with: (44) 1 (object)
 16: toString!
 1
-Constructing with: (44) Hello World! (object)
+Constructing with: (45) Hello World! (object)
 17: toString!
 Hello World!
-Constructing with: (45) true (object)
+Constructing with: (46) true (object)
 18: toString!
 true
-Constructing with: (46) _level0 (object)
+Constructing with: (47) _level0 (object)
 19: toString!
 _level0
-Constructing with: (47) _level0 (object)
+Constructing with: (48) Ã¤Ã¶Ã¼ (object)
 20: toString!
-[type Object]
-Constructing with: (48) [type Object] (object)
+Ã¤Ã¶Ã¼
+Constructing with: (49) _level0 (object)
 21: toString!
 [type Object]
-Constructing with: (49)  (object)
+Constructing with: (50) [type Object] (object)
 22: toString!
 [type Object]
-Constructing with: (50) [type Object] (object)
+Constructing with: (51)  (object)
 23: toString!
 [type Object]
-Constructing with: (51) [type Object] (object)
+Constructing with: (52) [type Object] (object)
 24: toString!
 [type Object]
-Constructing with: (52) [type Object] (object)
+Constructing with: (53) [type Object] (object)
 25: toString!
 [type Object]
-Constructing with: (53) [type Object] (object)
+Constructing with: (54) [type Object] (object)
 26: toString!
+[type Object]
+Constructing with: (55) [type Object] (object)
+27: toString!
 [type Object]
 undefined
 <?xml XML decl ?><!DOCTYPE doctype decl>
@@ -250,135 +256,142 @@ true
 Constructing with: (19) _level0 (string)
 undefined
 _level0
-Constructing with: (20) _level0 (movieclip)
+Constructing with: (20) Ã¤Ã¶Ã¼ (string)
+undefined
+Ã¤Ã¶Ã¼
+Constructing with: (21) _level0 (movieclip)
 undefined
 _level0
-Constructing with: (21) [object Object] (object)
+Constructing with: (22) [object Object] (object)
 undefined
 [object Object]
-Constructing with: (22)  (undefined)
+Constructing with: (23)  (undefined)
 undefined
 [object Object]
-Constructing with: (23) [type Object] (object)
+Constructing with: (24) [type Object] (object)
 toString called
 undefined
 [type Object]
-Constructing with: (24) [type Object] (object)
+Constructing with: (25) [type Object] (object)
 toString called with 
 undefined
 [type Object]
-Constructing with: (25) [object Object] (object)
+Constructing with: (26) [object Object] (object)
 undefined
 [object Object]
-Constructing with: (26)  (object)
+Constructing with: (27)  (object)
 undefined
 [type Object]
-Constructing with: (27)  (object)
+Constructing with: (28)  (object)
 0: toString!
 undefined
 [type Object]
-Constructing with: (28) null (object)
+Constructing with: (29) null (object)
 1: toString!
 undefined
 [type Object]
-Constructing with: (29) true (object)
+Constructing with: (30) true (object)
 2: toString!
 undefined
 [type Object]
-Constructing with: (30) false (object)
+Constructing with: (31) false (object)
 3: toString!
 undefined
 [type Object]
-Constructing with: (31) 0 (object)
+Constructing with: (32) 0 (object)
 4: toString!
 undefined
 [type Object]
-Constructing with: (32) 1 (object)
+Constructing with: (33) 1 (object)
 5: toString!
 undefined
 [type Object]
-Constructing with: (33) 0.5 (object)
+Constructing with: (34) 0.5 (object)
 6: toString!
 undefined
 [type Object]
-Constructing with: (34) -1 (object)
+Constructing with: (35) -1 (object)
 7: toString!
 undefined
 [type Object]
-Constructing with: (35) -0.5 (object)
+Constructing with: (36) -0.5 (object)
 8: toString!
 undefined
 [type Object]
-Constructing with: (36) Infinity (object)
+Constructing with: (37) Infinity (object)
 9: toString!
 undefined
 [type Object]
-Constructing with: (37) -Infinity (object)
+Constructing with: (38) -Infinity (object)
 10: toString!
 undefined
 [type Object]
-Constructing with: (38) NaN (object)
+Constructing with: (39) NaN (object)
 11: toString!
 undefined
 [type Object]
-Constructing with: (39)  (object)
+Constructing with: (40)  (object)
 12: toString!
 undefined
 
-Constructing with: (40) 0 (object)
+Constructing with: (41) 0 (object)
 13: toString!
 undefined
 0
-Constructing with: (41) -0 (object)
+Constructing with: (42) -0 (object)
 14: toString!
 undefined
 -0
-Constructing with: (42) 0.0 (object)
+Constructing with: (43) 0.0 (object)
 15: toString!
 undefined
 0.0
-Constructing with: (43) 1 (object)
+Constructing with: (44) 1 (object)
 16: toString!
 undefined
 1
-Constructing with: (44) Hello World! (object)
+Constructing with: (45) Hello World! (object)
 17: toString!
 undefined
 Hello World!
-Constructing with: (45) true (object)
+Constructing with: (46) true (object)
 18: toString!
 undefined
 true
-Constructing with: (46) _level0 (object)
+Constructing with: (47) _level0 (object)
 19: toString!
 undefined
 _level0
-Constructing with: (47) _level0 (object)
+Constructing with: (48) Ã¤Ã¶Ã¼ (object)
 20: toString!
 undefined
-[type Object]
-Constructing with: (48) [type Object] (object)
+Ã¤Ã¶Ã¼
+Constructing with: (49) _level0 (object)
 21: toString!
 undefined
 [type Object]
-Constructing with: (49)  (object)
+Constructing with: (50) [type Object] (object)
 22: toString!
 undefined
 [type Object]
-Constructing with: (50) [type Object] (object)
+Constructing with: (51)  (object)
 23: toString!
 undefined
 [type Object]
-Constructing with: (51) [type Object] (object)
+Constructing with: (52) [type Object] (object)
 24: toString!
 undefined
 [type Object]
-Constructing with: (52) [type Object] (object)
+Constructing with: (53) [type Object] (object)
 25: toString!
 undefined
 [type Object]
-Constructing with: (53) [type Object] (object)
+Constructing with: (54) [type Object] (object)
 26: toString!
+undefined
+[type Object]
+Constructing with: (55) [type Object] (object)
+27: toString!
 undefined
 [type Object]
 <root />
@@ -450,165 +463,173 @@ true
 Creating with: (19) _level0 (string)
 <_level0 />
 _level0
-Creating with: (20) _level0 (movieclip)
+Creating with: (20) Ã¤Ã¶Ã¼ (string)
+<Ã¤Ã¶Ã¼ />
+Ã¤Ã¶Ã¼
+Creating with: (21) _level0 (movieclip)
 <_level0 />
 _level0
-Creating with: (21) [object Object] (object)
+Creating with: (22) [object Object] (object)
 <[object Object] />
 [object Object]
-Creating with: (22)  (undefined)
+Creating with: (23)  (undefined)
 undefined
 undefined
-Creating with: (23) [type Object] (object)
-toString called
-<[type Object] />
-toString called
-[type Object]
 Creating with: (24) [type Object] (object)
+toString called
+<[type Object] />
+toString called
+[type Object]
+Creating with: (25) [type Object] (object)
 toString called with 
 <[type Object] />
 toString called with 
 [type Object]
-Creating with: (25) [object Object] (object)
+Creating with: (26) [object Object] (object)
 <[object Object] />
 [object Object]
-Creating with: (26)  (object)
-<[type Object] />
-[type Object]
 Creating with: (27)  (object)
+<[type Object] />
+[type Object]
+Creating with: (28)  (object)
 0: toString!
 <[type Object] />
 0: toString!
 [type Object]
-Creating with: (28) null (object)
+Creating with: (29) null (object)
 1: toString!
 <[type Object] />
 1: toString!
 [type Object]
-Creating with: (29) true (object)
+Creating with: (30) true (object)
 2: toString!
 <[type Object] />
 2: toString!
 [type Object]
-Creating with: (30) false (object)
+Creating with: (31) false (object)
 3: toString!
 <[type Object] />
 3: toString!
 [type Object]
-Creating with: (31) 0 (object)
+Creating with: (32) 0 (object)
 4: toString!
 <[type Object] />
 4: toString!
 [type Object]
-Creating with: (32) 1 (object)
+Creating with: (33) 1 (object)
 5: toString!
 <[type Object] />
 5: toString!
 [type Object]
-Creating with: (33) 0.5 (object)
+Creating with: (34) 0.5 (object)
 6: toString!
 <[type Object] />
 6: toString!
 [type Object]
-Creating with: (34) -1 (object)
+Creating with: (35) -1 (object)
 7: toString!
 <[type Object] />
 7: toString!
 [type Object]
-Creating with: (35) -0.5 (object)
+Creating with: (36) -0.5 (object)
 8: toString!
 <[type Object] />
 8: toString!
 [type Object]
-Creating with: (36) Infinity (object)
+Creating with: (37) Infinity (object)
 9: toString!
 <[type Object] />
 9: toString!
 [type Object]
-Creating with: (37) -Infinity (object)
+Creating with: (38) -Infinity (object)
 10: toString!
 <[type Object] />
 10: toString!
 [type Object]
-Creating with: (38) NaN (object)
+Creating with: (39) NaN (object)
 11: toString!
 <[type Object] />
 11: toString!
 [type Object]
-Creating with: (39)  (object)
+Creating with: (40)  (object)
 12: toString!
 < />
 12: toString!
 
-Creating with: (40) 0 (object)
+Creating with: (41) 0 (object)
 13: toString!
 <0 />
 13: toString!
 0
-Creating with: (41) -0 (object)
+Creating with: (42) -0 (object)
 14: toString!
 <-0 />
 14: toString!
 -0
-Creating with: (42) 0.0 (object)
+Creating with: (43) 0.0 (object)
 15: toString!
 <0.0 />
 15: toString!
 0.0
-Creating with: (43) 1 (object)
+Creating with: (44) 1 (object)
 16: toString!
 <1 />
 16: toString!
 1
-Creating with: (44) Hello World! (object)
+Creating with: (45) Hello World! (object)
 17: toString!
 <Hello World! />
 17: toString!
 Hello World!
-Creating with: (45) true (object)
+Creating with: (46) true (object)
 18: toString!
 <true />
 18: toString!
 true
-Creating with: (46) _level0 (object)
+Creating with: (47) _level0 (object)
 19: toString!
 <_level0 />
 19: toString!
 _level0
-Creating with: (47) _level0 (object)
+Creating with: (48) Ã¤Ã¶Ã¼ (object)
 20: toString!
-<[type Object] />
+<Ã¤Ã¶Ã¼ />
 20: toString!
-[type Object]
-Creating with: (48) [type Object] (object)
+Ã¤Ã¶Ã¼
+Creating with: (49) _level0 (object)
 21: toString!
 <[type Object] />
 21: toString!
-[type Object]
-Creating with: (49)  (object)
-22: toString!
-<[type Object] />
-22: toString!
 [type Object]
 Creating with: (50) [type Object] (object)
-23: toString!
+22: toString!
 <[type Object] />
-23: toString!
+22: toString!
 [type Object]
-Creating with: (51) [type Object] (object)
-24: toString!
+Creating with: (51)  (object)
+23: toString!
 <[type Object] />
-24: toString!
+23: toString!
 [type Object]
 Creating with: (52) [type Object] (object)
+24: toString!
+<[type Object] />
+24: toString!
+[type Object]
+Creating with: (53) [type Object] (object)
 25: toString!
 <[type Object] />
 25: toString!
 [type Object]
-Creating with: (53) [type Object] (object)
+Creating with: (54) [type Object] (object)
 26: toString!
 <[type Object] />
 26: toString!
+[type Object]
+Creating with: (55) [type Object] (object)
+27: toString!
+<[type Object] />
+27: toString!
 [type Object]
 application/x-www-form-urlencoded
 <!DOCTYPE doctype declaration >
@@ -696,28 +717,28 @@ Infinity
 Infinity
 true
 true
--2147483648
+0
 Infinity
 Testing with: (10) -Infinity (number)
 -Infinity
 -Infinity
 true
 true
--2147483648
+0
 -Infinity
 Testing with: (11) NaN (number)
 NaN
 NaN
 false
 false
--2147483648
+0
 NaN
 Testing with: (12)  (string)
 
 
 false
 false
--2147483648
+0
 
 Testing with: (13) 0 (string)
 0
@@ -752,44 +773,51 @@ Hello World!
 Hello World!
 false
 false
--2147483648
+0
 Hello World!
 Testing with: (18) true (string)
 true
 true
 false
 false
--2147483648
+0
 true
 Testing with: (19) _level0 (string)
 _level0
 _level0
 false
 false
--2147483648
+0
 _level0
-Testing with: (20) _level0 (movieclip)
+Testing with: (20) Ã¤Ã¶Ã¼ (string)
+Ã¤Ã¶Ã¼
+Ã¤Ã¶Ã¼
+false
+false
+0
+Ã¤Ã¶Ã¼
+Testing with: (21) _level0 (movieclip)
 _level0
 _level0
 true
 true
--2147483648
+0
 _level0
-Testing with: (21) [object Object] (object)
+Testing with: (22) [object Object] (object)
 [object Object]
 [object Object]
 true
 true
--2147483648
+0
 [object Object]
-Testing with: (22)  (undefined)
+Testing with: (23)  (undefined)
 [object Object]
 [object Object]
 true
 true
--2147483648
+0
 [object Object]
-Testing with: (23) [type Object] (object)
+Testing with: (24) [type Object] (object)
 toString called
 [type Object]
 toString called
@@ -800,10 +828,10 @@ toString called
 true
 toString called
 valueOf called
--2147483648
+0
 toString called
 [type Object]
-Testing with: (24) [type Object] (object)
+Testing with: (25) [type Object] (object)
 toString called with 
 [type Object]
 toString called with 
@@ -813,25 +841,25 @@ true
 toString called with 
 true
 toString called with 
--2147483648
+0
 toString called with 
 [type Object]
-Testing with: (25) [object Object] (object)
+Testing with: (26) [object Object] (object)
 [object Object]
 [object Object]
 true
 true
 valueOf called with 
--2147483648
+0
 [object Object]
-Testing with: (26)  (object)
+Testing with: (27)  (object)
 [type Object]
 [type Object]
 true
 true
 0
 [type Object]
-Testing with: (27)  (object)
+Testing with: (28)  (object)
 0: toString!
 [type Object]
 0: toString!
@@ -845,7 +873,7 @@ true
 0
 0: toString!
 [type Object]
-Testing with: (28) null (object)
+Testing with: (29) null (object)
 1: toString!
 [type Object]
 1: toString!
@@ -859,7 +887,7 @@ true
 0
 1: toString!
 [type Object]
-Testing with: (29) true (object)
+Testing with: (30) true (object)
 2: toString!
 [type Object]
 2: toString!
@@ -873,7 +901,7 @@ true
 1
 2: toString!
 [type Object]
-Testing with: (30) false (object)
+Testing with: (31) false (object)
 3: toString!
 [type Object]
 3: toString!
@@ -887,7 +915,7 @@ true
 0
 3: toString!
 [type Object]
-Testing with: (31) 0 (object)
+Testing with: (32) 0 (object)
 4: toString!
 [type Object]
 4: toString!
@@ -901,7 +929,7 @@ true
 0
 4: toString!
 [type Object]
-Testing with: (32) 1 (object)
+Testing with: (33) 1 (object)
 5: toString!
 [type Object]
 5: toString!
@@ -915,7 +943,7 @@ true
 1
 5: toString!
 [type Object]
-Testing with: (33) 0.5 (object)
+Testing with: (34) 0.5 (object)
 6: toString!
 [type Object]
 6: toString!
@@ -929,7 +957,7 @@ true
 0
 6: toString!
 [type Object]
-Testing with: (34) -1 (object)
+Testing with: (35) -1 (object)
 7: toString!
 [type Object]
 7: toString!
@@ -943,7 +971,7 @@ true
 -1
 7: toString!
 [type Object]
-Testing with: (35) -0.5 (object)
+Testing with: (36) -0.5 (object)
 8: toString!
 [type Object]
 8: toString!
@@ -957,7 +985,7 @@ true
 0
 8: toString!
 [type Object]
-Testing with: (36) Infinity (object)
+Testing with: (37) Infinity (object)
 9: toString!
 [type Object]
 9: toString!
@@ -968,10 +996,10 @@ true
 true
 9: toString!
 9: valueOf!
--2147483648
+0
 9: toString!
 [type Object]
-Testing with: (37) -Infinity (object)
+Testing with: (38) -Infinity (object)
 10: toString!
 [type Object]
 10: toString!
@@ -982,10 +1010,10 @@ true
 true
 10: toString!
 10: valueOf!
--2147483648
+0
 10: toString!
 [type Object]
-Testing with: (38) NaN (object)
+Testing with: (39) NaN (object)
 11: toString!
 [type Object]
 11: toString!
@@ -996,10 +1024,10 @@ true
 true
 11: toString!
 11: valueOf!
--2147483648
+0
 11: toString!
 [type Object]
-Testing with: (39)  (object)
+Testing with: (40)  (object)
 12: toString!
 
 12: toString!
@@ -1010,10 +1038,10 @@ true
 true
 12: toString!
 12: valueOf!
--2147483648
+0
 12: toString!
 
-Testing with: (40) 0 (object)
+Testing with: (41) 0 (object)
 13: toString!
 0
 13: toString!
@@ -1027,7 +1055,7 @@ true
 0
 13: toString!
 0
-Testing with: (41) -0 (object)
+Testing with: (42) -0 (object)
 14: toString!
 -0
 14: toString!
@@ -1041,7 +1069,7 @@ true
 0
 14: toString!
 -0
-Testing with: (42) 0.0 (object)
+Testing with: (43) 0.0 (object)
 15: toString!
 0.0
 15: toString!
@@ -1055,7 +1083,7 @@ true
 0
 15: toString!
 0.0
-Testing with: (43) 1 (object)
+Testing with: (44) 1 (object)
 16: toString!
 1
 16: toString!
@@ -1069,7 +1097,7 @@ true
 1
 16: toString!
 1
-Testing with: (44) Hello World! (object)
+Testing with: (45) Hello World! (object)
 17: toString!
 Hello World!
 17: toString!
@@ -1080,10 +1108,10 @@ true
 true
 17: toString!
 17: valueOf!
--2147483648
+0
 17: toString!
 Hello World!
-Testing with: (45) true (object)
+Testing with: (46) true (object)
 18: toString!
 true
 18: toString!
@@ -1094,10 +1122,10 @@ true
 true
 18: toString!
 18: valueOf!
--2147483648
+0
 18: toString!
 true
-Testing with: (46) _level0 (object)
+Testing with: (47) _level0 (object)
 19: toString!
 _level0
 19: toString!
@@ -1108,24 +1136,24 @@ true
 true
 19: toString!
 19: valueOf!
--2147483648
+0
 19: toString!
 _level0
-Testing with: (47) _level0 (object)
+Testing with: (48) Ã¤Ã¶Ã¼ (object)
 20: toString!
-[type Object]
+Ã¤Ã¶Ã¼
 20: toString!
-[type Object]
+Ã¤Ã¶Ã¼
 20: toString!
 true
 20: toString!
 true
 20: toString!
 20: valueOf!
--2147483648
+0
 20: toString!
-[type Object]
-Testing with: (48) [type Object] (object)
+Ã¤Ã¶Ã¼
+Testing with: (49) _level0 (object)
 21: toString!
 [type Object]
 21: toString!
@@ -1136,10 +1164,10 @@ true
 true
 21: toString!
 21: valueOf!
--2147483648
+0
 21: toString!
 [type Object]
-Testing with: (49)  (object)
+Testing with: (50) [type Object] (object)
 22: toString!
 [type Object]
 22: toString!
@@ -1153,7 +1181,7 @@ true
 0
 22: toString!
 [type Object]
-Testing with: (50) [type Object] (object)
+Testing with: (51)  (object)
 23: toString!
 [type Object]
 23: toString!
@@ -1164,10 +1192,10 @@ true
 true
 23: toString!
 23: valueOf!
--2147483648
+0
 23: toString!
 [type Object]
-Testing with: (51) [type Object] (object)
+Testing with: (52) [type Object] (object)
 24: toString!
 [type Object]
 24: toString!
@@ -1178,10 +1206,10 @@ true
 true
 24: toString!
 24: valueOf!
--2147483648
+0
 24: toString!
 [type Object]
-Testing with: (52) [type Object] (object)
+Testing with: (53) [type Object] (object)
 25: toString!
 [type Object]
 25: toString!
@@ -1192,10 +1220,10 @@ true
 true
 25: toString!
 25: valueOf!
--2147483648
+0
 25: toString!
 [type Object]
-Testing with: (53) [type Object] (object)
+Testing with: (54) [type Object] (object)
 26: toString!
 [type Object]
 26: toString!
@@ -1206,6 +1234,20 @@ true
 true
 26: toString!
 26: valueOf!
--2147483648
+0
 26: toString!
+[type Object]
+Testing with: (55) [type Object] (object)
+27: toString!
+[type Object]
+27: toString!
+[type Object]
+27: toString!
+true
+27: toString!
+true
+27: toString!
+27: valueOf!
+0
+27: toString!
 [type Object]

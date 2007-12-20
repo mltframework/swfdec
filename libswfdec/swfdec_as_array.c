@@ -860,19 +860,15 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SwfdecAsObject *object_new;
   SwfdecAsArray *array_new;
 
-  if (object == NULL)
+  if (object == NULL || argc == 0)
     return;
 
   length = swfdec_as_array_length (object);
 
-  if (argc > 0) {
-    start_index = swfdec_as_value_to_integer (cx, &argv[0]);
-    if (start_index < 0)
-      start_index = length + start_index;
-    start_index = CLAMP (start_index, 0, length);
-  } else {
-    start_index = 0;
-  }
+  start_index = swfdec_as_value_to_integer (cx, &argv[0]);
+  if (start_index < 0)
+    start_index = length + start_index;
+  start_index = CLAMP (start_index, 0, length);
 
   if (argc > 1) {
     num_remove = CLAMP (swfdec_as_value_to_integer (cx, &argv[1]), 0,

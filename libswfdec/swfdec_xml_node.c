@@ -742,6 +742,15 @@ swfdec_xml_node_insertAt (SwfdecXmlNode *node, SwfdecXmlNode *child, gint32 ind)
   g_assert (SWFDEC_IS_VALID_XML_NODE (child));
   g_assert (ind >= 0);
 
+  if (SWFDEC_AS_OBJECT (node)->context->version >= 8) {
+    SwfdecXmlNode *parent = node;
+    while (parent != NULL) {
+      if (parent == child)
+	return;
+      parent = parent->parent;
+    }
+  }
+
   // remove the previous parent of the child
   swfdec_xml_node_removeNode (child);
 
@@ -799,22 +808,12 @@ swfdec_xml_node_insertBefore (SwfdecAsContext *cx, SwfdecAsObject *object,
 void
 swfdec_xml_node_appendChild (SwfdecXmlNode *node, SwfdecXmlNode *child)
 {
-  SwfdecAsValue val;
-
   g_return_if_fail (SWFDEC_IS_VALID_XML_NODE (node));
   g_return_if_fail (SWFDEC_IS_VALID_XML_NODE (child));
   g_return_if_fail (node->children != NULL);
 
-  // remove the previous parent of the child
-  swfdec_xml_node_removeNode (child);
-
-  // append child to node's childNodes array
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (child));
-  swfdec_as_array_push (node->children, &val);
-  swfdec_xml_node_update_childNodes (node);
-
-  // set node as parent of child
-  child->parent = node;
+  swfdec_xml_node_insertAt (node, child,
+      swfdec_as_array_get_length (node->children));
 }
 
 SWFDEC_AS_NATIVE (253, 4, swfdec_xml_node_do_appendChild)

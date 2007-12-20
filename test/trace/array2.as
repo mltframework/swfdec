@@ -8,7 +8,7 @@ function pretty (arr, lvl) {
   var i;
   var str = "[";
   for (i = 0; i < arr.length; i++) {
-    if (arr[i] != null && arr[i].constructor == Array) {
+    if (arr[i] instanceOf Array) {
       str = str + pretty (arr[i], lvl + 1);
     } else {
       str = str + arr[i];
@@ -21,7 +21,7 @@ function pretty (arr, lvl) {
 }
 
 function mytrace (arr) {
-  if (arr != null && arr.constructor == Array) {
+  if (arr instanceOf Array) {
     trace (pretty (arr, 0));
   } else {
     trace (arr);
@@ -407,6 +407,8 @@ mytrace (a);
 
 mytrace ("# Special cases");
 
+a = new Array (1, "b", "c", 4);		// no arguments
+mytrace (a.splice ());
 a = new Array ();			// empty array
 mytrace (a.splice (0));
 mytrace (a);
@@ -471,6 +473,45 @@ sortall (a, null, 0, Array.UNIQUESORT | Array.CASEINSENSITIVE);
 a = new Array ([1,2,3], [1,2,3,4], [], [1,2], [1]);
 sortall (a, compare_array_length, 0, 0);
 
+// indexed array with undefined values
+a = new Array ();
+a[0] = "a";
+a[2] = "b";
+a[3] = undefined;
+a[4] = "c";
+a.length = 10;
+var ret = c.sort (Array.RETURNINDEXEDARRAY);
+#if __SWF_VERSION__ <= 6
+mytrace (ret.slice (-3));
+#else
+mytrace (ret.slice (0, 3));
+#endif
+
+// array with undefined values
+a = new Array ();
+a[0] = "a";
+a[2] = "b";
+a[3] = undefined;
+a[4] = "c";
+a.length = 10;
+mytrace (a.sort ());
+
+// unique sort with one undefined values
+a = new Array ("a", "b");
+a.length = 3;
+mytrace (a.sort (Array.UNIQUESORT));
+
+a = new Array ("a", undefined, "b");
+mytrace (a.sort (Array.UNIQUESORT));
+
+a = new Array ("a", undefined, "b");
+a.length = 4;
+mytrace (a.sort (Array.UNIQUESORT));
+
+// sort with non-integer and non-object argument
+a = new Array ("b", "a", "c");
+mytrace (a.sort ("moi"));
+
 
 mytrace ("## Fake Array (Object with Array's methods)");
 
@@ -502,6 +543,11 @@ fake.length++;
 trace (fake.length + ": " + fake.join (":"));
 trace (fake.shift ());
 trace (fake.length + ": " + fake.join (":"));
+// shift on the last element
+fake.length = 1;
+trace (fake.shift ());
+trace (fake.length + ": " + fake.join (":"));
+fake.length = 5;
 
 trace (fake.reverse ());
 trace (fake.length + ": " + fake.join (":"));

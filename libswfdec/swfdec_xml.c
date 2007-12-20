@@ -822,10 +822,8 @@ void
 swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!swfdec_as_context_is_constructing (cx)) {
-    SWFDEC_FIXME ("What do we do if not constructing?");
+  if (!swfdec_as_context_is_constructing (cx))
     return;
-  }
 
   g_assert (SWFDEC_IS_XML (object));
 

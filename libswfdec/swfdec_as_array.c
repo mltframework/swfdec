@@ -1030,7 +1030,7 @@ swfdec_as_array_foreach_sort_rename (SwfdecAsObject *object,
     return variable;
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
-    value = &fdata->undefined;
+    return NULL;
 
   for (i = 0; i < fdata->order_size; i++) {
     if (fdata->order[i] == value) {
@@ -1108,7 +1108,8 @@ swfdec_as_array_sort_set_undefined_indexedarray (SwfdecAsObject *object,
     do {
       var = swfdec_as_double_to_string (object->context, num);
       num++;
-    } while (swfdec_as_object_get_variable (object, var, &val));
+    } while (swfdec_as_object_get_variable (object, var, &val) &&
+	!SWFDEC_AS_VALUE_IS_UNDEFINED (&val));
     var = swfdec_as_double_to_string (fdata->object_new->context, idx + i);
     SWFDEC_AS_VALUE_SET_INT (&val, num - 1);
     swfdec_as_object_set_variable (fdata->object_new, var, &val);

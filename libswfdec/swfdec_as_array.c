@@ -569,9 +569,8 @@ swfdec_as_array_new (SwfdecAsContext *context)
   ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Array, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return NULL;
-  swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
 
   swfdec_as_array_set_length (SWFDEC_AS_ARRAY (ret), 0);
 

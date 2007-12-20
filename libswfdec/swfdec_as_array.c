@@ -1127,8 +1127,6 @@ swfdec_as_array_foreach_sort_compare_undefined (SwfdecAsObject *object,
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
     return TRUE;
 
-  fdata->defined_values++;
-
   // when testing for uniquesort the custom compare function is NOT used
   if (swfdec_as_array_sort_compare (object->context, value, &fdata->undefined,
 	fdata->options, NULL, fdata->fields) == 0)
@@ -1239,7 +1237,7 @@ swfdec_as_array_do_sort (SwfdecAsObject *object, gint32 options,
       fdata.defined_values < fdata.length)
   {
     // uniquesort used, and we have exactly one undefined value test if
-    // anything equeals to that
+    // anything equals to that
     if (!swfdec_as_object_foreach (object,
 	  swfdec_as_array_foreach_sort_compare_undefined, &fdata))
     {

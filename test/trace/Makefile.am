@@ -139,6 +139,15 @@ EXTRA_DIST = \
 	array-properties-7.swf.trace \
 	array-properties-8.swf \
 	array-properties-8.swf.trace \
+	array-sort-on.as \
+	array-sort-on-5.swf \
+	array-sort-on-5.swf.trace \
+	array-sort-on-6.swf \
+	array-sort-on-6.swf.trace \
+	array-sort-on-7.swf \
+	array-sort-on-7.swf.trace \
+	array-sort-on-8.swf \
+	array-sort-on-8.swf.trace \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \

@@ -23,7 +23,6 @@
 #include "config.h"
 #endif
 
-#include <string.h>
 #include "swfdec_character.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"

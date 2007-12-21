@@ -54,6 +54,9 @@ typedef enum {
   SWFDEC_SCALE_NONE
 } SwfdecScaleMode;
 
+/* forward declarations */
+typedef struct _SwfdecPlayerScripting SwfdecPlayerScripting;
+
 typedef struct _SwfdecPlayer SwfdecPlayer;
 typedef struct _SwfdecPlayerPrivate SwfdecPlayerPrivate;
 typedef struct _SwfdecPlayerClass SwfdecPlayerClass;
@@ -129,6 +132,10 @@ gulong		swfdec_player_get_maximum_runtime
 void		swfdec_player_set_maximum_runtime 
 						(SwfdecPlayer *	player,
 						 gulong		msecs);
+SwfdecPlayerScripting *
+		swfdec_player_get_scripting	(SwfdecPlayer *	player);
+void		swfdec_player_set_scripting	(SwfdecPlayer *	player,
+						 SwfdecPlayerScripting *scripting);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,

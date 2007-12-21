@@ -110,6 +110,7 @@ libswfdec_source_files = \
 	swfdec_pattern.c \
 	swfdec_player.c \
 	swfdec_player_as.c \
+	swfdec_player_scripting.c \
 	swfdec_print_job.c \
 	swfdec_policy_loader.c \
 	swfdec_rect.c \
@@ -189,6 +190,7 @@ public_headers = \
 	swfdec_keys.h \
 	swfdec_loader.h \
 	swfdec_player.h \
+	swfdec_player_scripting.h \
 	swfdec_rectangle.h \
 	swfdec_script.h \
 	swfdec_system.h \

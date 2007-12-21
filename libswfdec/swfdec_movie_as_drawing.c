@@ -266,9 +266,9 @@ swfdec_sprite_movie_moveTo (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie;
-  int x, y;
+  double x, y;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|ii", &x, &y);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|nn", &x, &y);
 
   x = SWFDEC_DOUBLE_TO_TWIPS (x);
   y = SWFDEC_DOUBLE_TO_TWIPS (y);
@@ -302,9 +302,9 @@ swfdec_sprite_movie_lineTo (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie;
-  int x, y;
+  double x, y;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "ii", &x, &y);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "nn", &x, &y);
 
   x = SWFDEC_DOUBLE_TO_TWIPS (x);
   y = SWFDEC_DOUBLE_TO_TWIPS (y);
@@ -326,9 +326,9 @@ swfdec_sprite_movie_curveTo (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie;
-  int x, y, c_x, c_y;
+  double x, y, c_x, c_y;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "iiii", &c_x, &c_y, &x, &y);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "nnnn", &c_x, &c_y, &x, &y);
 
   x = SWFDEC_DOUBLE_TO_TWIPS (x);
   y = SWFDEC_DOUBLE_TO_TWIPS (y);

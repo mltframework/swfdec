@@ -933,6 +933,15 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	externalinterface-escape.as \
+	externalinterface-escape-5.swf \
+	externalinterface-escape-5.swf.trace \
+	externalinterface-escape-6.swf \
+	externalinterface-escape-6.swf.trace \
+	externalinterface-escape-7.swf \
+	externalinterface-escape-7.swf.trace \
+	externalinterface-escape-8.swf \
+	externalinterface-escape-8.swf.trace \
 	file-reference-constructor.as \
 	file-reference-constructor-7.swf \
 	file-reference-constructor-7.swf.trace \

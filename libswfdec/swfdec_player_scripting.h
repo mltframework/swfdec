@@ -45,12 +45,12 @@ struct _SwfdecPlayerScriptingClass
 {
   GObjectClass		object_class;
 
-  char *		(* get_id)	(SwfdecPlayerScripting *scripting,
+  char *		(* js_get_id)	(SwfdecPlayerScripting *scripting,
 					 SwfdecPlayer *		player);
-  char *		(* call_js)	(SwfdecPlayerScripting *scripting,
+  char *		(* js_call)	(SwfdecPlayerScripting *scripting,
 					 SwfdecPlayer *         player,
 					 const char *		code);
-  char *		(* call_xml)	(SwfdecPlayerScripting *scripting,
+  char *		(* xml_call)	(SwfdecPlayerScripting *scripting,
 					 SwfdecPlayer *         player,
 					 const char *		xml);
 };

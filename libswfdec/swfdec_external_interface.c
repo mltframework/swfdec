@@ -53,8 +53,8 @@ swfdec_external_interface__objectID (SwfdecAsContext *cx,
     return;
   }
   klass = SWFDEC_PLAYER_SCRIPTING_GET_CLASS (scripting);
-  if (klass->get_id) {
-    char *s = klass->get_id (scripting, player);
+  if (klass->js_get_id) {
+    char *s = klass->js_get_id (scripting, player);
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
   } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);

@@ -118,7 +118,7 @@ swfdec_xml_escape (const char *orginal)
 
 char *
 swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
-    gssize length)
+    gssize length, gboolean unescape_nbsp)
 {
   int i;
   const char *p, *start;
@@ -134,8 +134,12 @@ swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
       if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
 	    strlen (xml_entities[i].escaped))) {
 	// FIXME: Do this cleaner
-	if (xml_entities[i].character == '\xa0')
-	  string = g_string_append_c (string, '\xc2');
+	if (xml_entities[i].character == '\xa0') {
+	  if (unescape_nbsp)
+	    string = g_string_append_c (string, '\xc2');
+	  else
+	    continue;
+	}
 	string = g_string_append_c (string, xml_entities[i].character);
 	p += strlen (xml_entities[i].escaped);
 	break;
@@ -156,7 +160,7 @@ swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
 char *
 swfdec_xml_unescape (SwfdecAsContext *cx, const char *orginal)
 {
-  return swfdec_xml_unescape_len (cx, orginal, strlen (orginal));
+  return swfdec_xml_unescape_len (cx, orginal, strlen (orginal), TRUE);
 }
 
 // this is never declared, only available as ASnative (100, 5)
@@ -502,7 +506,7 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
   }
 
   unescaped = swfdec_xml_unescape_len (SWFDEC_AS_OBJECT (xml)->context, p + 1,
-      end - (p + 1));
+      end - (p + 1), TRUE);
   value = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
       unescaped);
   SWFDEC_AS_VALUE_SET_STRING (&val, value);

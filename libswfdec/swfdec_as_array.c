@@ -1043,6 +1043,7 @@ swfdec_as_array_foreach_sort_rename (SwfdecAsObject *object,
   }
 
   g_assert_not_reached ();
+  return NULL;
 }
 
 // fills fdata->object_new array using indexes based on the fdata->order
@@ -1079,6 +1080,7 @@ swfdec_as_array_foreach_sort_indexedarray (SwfdecAsObject *object,
   }
 
   g_assert_not_reached ();
+  return FALSE;
 }
 
 // sets undefined values in the fdata->object_new array to indexes of undefined
@@ -1193,6 +1195,7 @@ swfdec_as_array_foreach_sort_populate (SwfdecAsObject *object,
   }
 
   g_assert_not_reached ();
+  return FALSE;
 }
 
 static void

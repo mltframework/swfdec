@@ -57,7 +57,7 @@ swfdec_external_interface__objectID (SwfdecAsContext *cx,
     char *s = klass->js_get_id (scripting, player);
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
   } else {
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
+    SWFDEC_AS_VALUE_SET_NULL (ret);
   }
 }
 
@@ -75,7 +75,22 @@ void
 swfdec_external_interface__evalJS (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("ExternalInterface._evalJS (static)");
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  SwfdecPlayerScripting *scripting = player->priv->scripting;
+  SwfdecPlayerScriptingClass *klass;
+  const char *s;
+  
+  SWFDEC_AS_VALUE_SET_NULL (ret);
+  if (scripting == NULL || argc == 0)
+    return;
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+  klass = SWFDEC_PLAYER_SCRIPTING_GET_CLASS (scripting);
+  if (klass->js_call) {
+    char *t = klass->js_call (scripting, player, s);
+    if (t != NULL) {
+      SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, t));
+    }
+  }
 }
 
 SWFDEC_AS_NATIVE (14, 4, swfdec_external_interface__callOut)
@@ -84,7 +99,22 @@ swfdec_external_interface__callOut (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("ExternalInterface._callOut (static)");
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  SwfdecPlayerScripting *scripting = player->priv->scripting;
+  SwfdecPlayerScriptingClass *klass;
+  const char *s;
+  
+  SWFDEC_AS_VALUE_SET_NULL (ret);
+  if (scripting == NULL || argc == 0)
+    return;
+  s = swfdec_as_value_to_string (cx, &argv[0]);
+  klass = SWFDEC_PLAYER_SCRIPTING_GET_CLASS (scripting);
+  if (klass->xml_call) {
+    char *t = klass->xml_call (scripting, player, s);
+    if (t != NULL) {
+      SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, t));
+    }
+  }
 }
 
 SWFDEC_AS_NATIVE (14, 5, swfdec_external_interface__escapeXML)

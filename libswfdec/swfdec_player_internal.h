@@ -68,6 +68,7 @@ struct _SwfdecPlayerPrivate
   SwfdecColor		bgcolor;		/* background color */
   SwfdecResource *	resource;		/* initial resource loaded */
   SwfdecPlayerScripting *scripting;		/* scripting object */
+  GHashTable *		scripting_callbacks;	/* GC string => SwfdecAsFunction mapping of script callbacks */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */

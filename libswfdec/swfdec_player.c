@@ -868,6 +868,7 @@ swfdec_player_dispose (GObject *object)
   swfdec_player_stop_all_sounds (player);
   swfdec_player_resource_request_finish (player);
   g_hash_table_destroy (priv->registered_classes);
+  g_hash_table_destroy (priv->scripting_callbacks);
 
   while (priv->roots)
     swfdec_movie_destroy (priv->roots->data);
@@ -1523,6 +1524,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   SwfdecPlayerPrivate *priv = player->priv;
 
   g_hash_table_foreach (priv->registered_classes, swfdec_player_mark_string_object, NULL);
+  g_hash_table_foreach (priv->scripting_callbacks, swfdec_player_mark_string_object, NULL);
   swfdec_as_object_mark (priv->MovieClip);
   swfdec_as_object_mark (priv->Video);
   g_list_foreach (priv->roots, (GFunc) swfdec_as_object_mark, NULL);
@@ -1770,6 +1772,7 @@ swfdec_player_init (SwfdecPlayer *player)
 
   priv->system = swfdec_system_new ();
   priv->registered_classes = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->scripting_callbacks = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
     priv->actions[i] = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);

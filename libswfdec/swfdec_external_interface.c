@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "swfdec_as_internal.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
@@ -67,7 +68,19 @@ swfdec_external_interface__addCallback (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("ExternalInterface._addCallback (static)");
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
+  SwfdecAsObject *fun;
+  const char *name;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, FALSE);
+  SWFDEC_AS_CHECK (0, NULL, "sO", &name, &fun);
+
+  /* FIXME: do we allow setting if scripting is unsupported? */
+  if (!SWFDEC_IS_AS_FUNCTION (fun))
+    return;
+
+  g_hash_table_insert (priv->scripting_callbacks, (gpointer) name, fun);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, TRUE);
 }
 
 SWFDEC_AS_NATIVE (14, 3, swfdec_external_interface__evalJS)

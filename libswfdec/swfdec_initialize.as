@@ -1138,7 +1138,7 @@ flash.external.ExternalInterface._toXML = function (value) {
     return value ? "<true/>" : "<false/>";
   } else if (value.hasOwnProperty ("length")) {
     return flash.external.ExternalInterface._arrayToXML (value);
-  } else if (t == "object") {
+  } else if (type == "object") {
     return flash.external.ExternalInterface._objectToXML (value);
   } else {
     return "<null/>";

@@ -153,6 +153,9 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	case SWFDEC_TAG_EXPORTASSETS:
 	  g_print ("   %4u export\n", j);
 	  break;
+	case SWFDEC_TAG_DOINITACTION:
+	  g_print ("   %4u init action\n", j);
+	  break;
 	default:
 	  g_assert_not_reached ();
       }

@@ -503,6 +503,29 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 }
 
 /**
+ * swfdec_as_double_to_integer:
+ * @d: any double
+ *
+ * Converts the given double to an integer using the same rules as the Flash
+ * player.
+ *
+ * Returns: an integer
+ **/
+int
+swfdec_as_double_to_integer (double d)
+{
+  if (!isfinite (d))
+    return 0;
+  if (d < 0) {
+    d = fmod (-d, 4294967296.0);
+    return - (guint) d;
+  } else {
+    d = fmod (d, 4294967296.0);
+    return (guint) d;
+  }
+}
+
+/**
  * swfdec_as_value_to_integer:
  * @context: a #SwfdecAsContext
  * @value: value to convert
@@ -518,15 +541,7 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value
   double d;
   
   d = swfdec_as_value_to_number (context, value);
-  if (!isfinite (d))
-    return 0;
-  if (d < 0) {
-    d = fmod (-d, 4294967296.0);
-    return - (guint) d;
-  } else {
-    d = fmod (d, 4294967296.0);
-    return (guint) d;
-  }
+  return swfdec_as_double_to_integer (d);
 }
 
 /**

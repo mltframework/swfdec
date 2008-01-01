@@ -1406,6 +1406,24 @@ EXTRA_DIST = \
 	local-connection-properties-7.swf.trace \
 	local-connection-properties-8.swf \
 	local-connection-properties-8.swf.trace \
+	localToGlobal-propflags.as \
+	localToGlobal-propflags-5.swf \
+	localToGlobal-propflags-5.swf.trace \
+	localToGlobal-propflags-6.swf \
+	localToGlobal-propflags-6.swf.trace \
+	localToGlobal-propflags-7.swf \
+	localToGlobal-propflags-7.swf.trace \
+	localToGlobal-propflags-8.swf \
+	localToGlobal-propflags-8.swf.trace \
+	localToGlobal-various.as \
+	localToGlobal-various-5.swf \
+	localToGlobal-various-5.swf.trace \
+	localToGlobal-various-6.swf \
+	localToGlobal-various-6.swf.trace \
+	localToGlobal-various-7.swf \
+	localToGlobal-various-7.swf.trace \
+	localToGlobal-various-8.swf \
+	localToGlobal-various-8.swf.trace \
 	lots-of-arguments.as \
 	lots-of-arguments-5.swf \
 	lots-of-arguments-5.swf.trace \

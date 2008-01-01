@@ -65,6 +65,8 @@ void		swfdec_as_object_call_with_security
 						 guint			argc,
 						 SwfdecAsValue *	argv,
 						 SwfdecAsValue *	return_value);
+SwfdecAsValue *	swfdec_as_object_peek_variable	(SwfdecAsObject *       object,
+						 const char *		name);
 void		swfdec_as_object_collect	(SwfdecAsObject *     	object);
 guint		swfdec_as_object_foreach_remove	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeach func,

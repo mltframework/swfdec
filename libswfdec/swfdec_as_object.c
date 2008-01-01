@@ -862,6 +862,34 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
 }
 
 /**
+ * swfdec_as_object_peek_variable:
+ * @object: the object to query
+ * @name: name of the variable to query
+ *
+ * Checks if the given @object contains a variable wih the given @name and if 
+ * so, returns a pointer to its value. This pointer will be valid until calling
+ * a setting function on the given object again.
+ * <warning><para>This function is internal as it provides a pointer to an 
+ * internal structure. Do not use it unless you are sure you need to. This
+ * function skips prototypes, variables added via swfdec_as_value_add_variable()
+ * and does not verify visibility flags.</para></warning>
+ *
+ * Returns: a pointer to the queried variable or %NULL if it doesn't exist
+ **/
+SwfdecAsValue *
+swfdec_as_object_peek_variable (SwfdecAsObject *object, const char *name)
+{
+  SwfdecAsVariable *var;
+  
+  var = swfdec_as_object_hash_lookup (object, name);
+  if (var == NULL ||
+      var->get != NULL)
+    return NULL;
+
+  return &var->value;
+}
+
+/**
  * swfdec_as_object_get_variable:
  * @object: a #SwfdecAsObject
  * @variable: a garbage-collected string containing the name of the variable

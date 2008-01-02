@@ -950,12 +950,20 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_pattern_t *mask;
     if (movie->parent == movie->masked_by->parent) {
       cairo_transform (cr, &movie->inverse_matrix);
+      rect = *inval;
     } else {
-      cairo_matrix_t mat;
+      cairo_matrix_t mat, mat2;
       swfdec_movie_local_to_global_matrix (movie, &mat);
+      swfdec_movie_global_to_local_matrix (movie->masked_by, &mat2);
+      cairo_matrix_multiply (&mat, &mat2, &mat);
       cairo_transform (cr, &mat);
-      swfdec_movie_global_to_local_matrix (movie->masked_by, &mat);
-      cairo_transform (cr, &mat);
+      if (cairo_matrix_invert (&mat) == CAIRO_STATUS_SUCCESS && FALSE) {
+	swfdec_rect_transform (&rect, &rect, &mat);
+      } else {
+	SWFDEC_INFO ("non-invertible matrix when computing invalid area");
+	rect.x0 = rect.y0 = -G_MAXDOUBLE;
+	rect.x1 = rect.y1 = G_MAXDOUBLE;
+      }
     }
     mask = swfdec_movie_mask (cr, movie->masked_by, &rect);
     cairo_pop_group_to_source (cr);

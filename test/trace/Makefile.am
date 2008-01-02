@@ -1535,6 +1535,15 @@ EXTRA_DIST = \
 	mouse-show-hide-6.swf.trace \
 	mouse-show-hide-7.swf \
 	mouse-show-hide-7.swf.trace \
+	movie-enumerate.as \
+	movie-enumerate-5.swf \
+	movie-enumerate-5.swf.trace \
+	movie-enumerate-6.swf \
+	movie-enumerate-6.swf.trace \
+	movie-enumerate-7.swf \
+	movie-enumerate-7.swf.trace \
+	movie-enumerate-8.swf \
+	movie-enumerate-8.swf.trace \
 	movieclip-get-swf-version.as \
 	movieclip-get-swf-version-5.swf \
 	movieclip-get-swf-version-5.swf.trace \

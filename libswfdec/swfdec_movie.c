@@ -1227,6 +1227,27 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val, flags);
 }
 
+static gboolean
+swfdec_movie_foreach_variable (SwfdecAsObject *object, SwfdecAsVariableForeach func, gpointer data)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+  SwfdecAsValue val;
+  GList *walk;
+  gboolean ret;
+
+  ret = SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->foreach (object, func, data);
+
+  for (walk = movie->list; walk && ret; walk = walk->next) {
+    SwfdecMovie *cur = walk->data;
+    if (cur->original_name == SWFDEC_AS_STR_EMPTY)
+      continue;
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, walk->data);
+    ret &= func (object, cur->name, &val, 0, data);
+  }
+
+  return ret;
+}
+
 static char *
 swfdec_movie_get_debug (SwfdecAsObject *object)
 {
@@ -1434,6 +1455,7 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   asobject_class->mark = swfdec_movie_mark;
   asobject_class->get = swfdec_movie_get_variable;
   asobject_class->set = swfdec_movie_set_variable;
+  asobject_class->foreach = swfdec_movie_foreach_variable;
   asobject_class->debug = swfdec_movie_get_debug;
 
   g_object_class_install_property (object_class, PROP_DEPTH,

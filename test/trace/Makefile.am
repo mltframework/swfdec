@@ -1596,6 +1596,15 @@ EXTRA_DIST = \
 	movieclip-target-6.swf.trace \
 	movieclip-target-7.swf \
 	movieclip-target-7.swf.trace \
+	movieclip-version.as \
+	movieclip-version-5.swf \
+	movieclip-version-5.swf.trace \
+	movieclip-version-6.swf \
+	movieclip-version-6.swf.trace \
+	movieclip-version-7.swf \
+	movieclip-version-7.swf.trace \
+	movieclip-version-8.swf \
+	movieclip-version-8.swf.trace \
 	moviecliploader-constructor.as \
 	moviecliploader-constructor-5.swf \
 	moviecliploader-constructor-5.swf.trace \

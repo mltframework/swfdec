@@ -1133,12 +1133,6 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     *flags = 0;
     return TRUE;
   }
-  if (movie->parent == NULL && variable == SWFDEC_AS_STR__version) {
-    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (object->context,
-	  SWFDEC_PLAYER (object->context)->priv->system->version));
-    *flags = 0;
-    return TRUE;
-  }
   
   movie = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (movie) {
@@ -1489,6 +1483,22 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
   g_object_notify (G_OBJECT (movie), "depth");
 }
 
+static void
+swfdec_movie_set_version (SwfdecMovie *movie)
+{
+  SwfdecAsObject *o;
+  SwfdecAsContext *cx;
+  SwfdecAsValue val;
+
+  if (movie->parent != NULL)
+    return;
+
+  o = SWFDEC_AS_OBJECT (movie);
+  cx = o->context;
+  SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, SWFDEC_PLAYER (cx)->priv->system->version));
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_$version, &val);
+}
+
 /**
  * swfdec_movie_new:
  * @player: a #SwfdecPlayer
@@ -1571,11 +1581,13 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
   player->priv->movies = g_list_prepend (player->priv->movies, movie);
   /* only add the movie here, because it needs to be setup for the debugger */
   swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
+  swfdec_movie_set_version (movie);
   /* only setup here, the resource assumes it can access the player via the movie */
   if (resource->movie == NULL) {
     g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
     resource->movie = SWFDEC_SPRITE_MOVIE (movie);
   }
+
   return movie;
 }
 

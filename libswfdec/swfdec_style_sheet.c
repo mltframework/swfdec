@@ -259,8 +259,8 @@ swfdec_style_sheet_update (SwfdecAsContext *cx, SwfdecAsObject *object,
   for (iter = style->listeners; iter != NULL; iter = iter->next) {
     g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (iter->data));
     text = iter->data;
-    g_assert (text->style_sheet_input != NULL);
-    swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
+    if (text->style_sheet_input != NULL)
+      swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
   }
 }
 

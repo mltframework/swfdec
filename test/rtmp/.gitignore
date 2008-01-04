@@ -1,0 +1,10 @@
+*~
+.deps
+.libs
+
+Makefile
+Makefile.in
+*.lo
+*.o
+
+rtmp-server

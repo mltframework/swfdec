@@ -354,6 +354,7 @@ player/Makefile
 test/Makefile
 test/custom/Makefile
 test/image/Makefile
+test/rtmp/Makefile
 test/sound/Makefile
 test/trace/Makefile
 test/various/Makefile

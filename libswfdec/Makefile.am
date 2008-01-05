@@ -124,6 +124,7 @@ libswfdec_source_files = \
 	swfdec_shape.c \
 	swfdec_shape_parser.c \
 	swfdec_shared_object.c \
+	swfdec_socket.c \
 	swfdec_sound.c \
 	swfdec_sound_object.c \
 	swfdec_sprite.c \
@@ -194,6 +195,7 @@ public_headers = \
 	swfdec_player_scripting.h \
 	swfdec_rectangle.h \
 	swfdec_script.h \
+	swfdec_socket.h \
 	swfdec_stream.h \
 	swfdec_system.h \
 	swfdec_url.h

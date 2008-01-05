@@ -43,6 +43,10 @@ void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,
 char *			swfdec_loader_get_text		(SwfdecLoader *		loader,
 							 guint			version);
 
+/* swfdec_socket.c */
+void			swfdec_socket_send		(SwfdecSocket *		sock,
+							 SwfdecBuffer *		buffer);
+
 
 G_END_DECLS
 #endif

@@ -27,6 +27,7 @@
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
 #include <libswfdec/swfdec_security.h>
+#include <libswfdec/swfdec_socket.h>
 #include <libswfdec/swfdec_system.h>
 
 G_BEGIN_DECLS
@@ -69,6 +70,7 @@ struct _SwfdecPlayerPrivate
   SwfdecResource *	resource;		/* initial resource loaded */
   SwfdecPlayerScripting *scripting;		/* scripting object */
   GHashTable *		scripting_callbacks;	/* GC string => SwfdecAsFunction mapping of script callbacks */
+  GType			socket_type;		/* type to use for creating sockets */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */
@@ -158,6 +160,10 @@ SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
 void		swfdec_player_set_export_class	(SwfdecPlayer *		player,
 						 const char *		name,
 						 SwfdecAsObject *	object);
+
+SwfdecSocket *	swfdec_player_create_socket	(SwfdecPlayer *		player,
+						 const char *		hostname,
+						 guint			port);
 
 #define swfdec_player_is_mouse_pressed(player) ((player)->priv->mouse_button & 1)
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,

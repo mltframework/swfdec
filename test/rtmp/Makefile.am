@@ -1,6 +1,5 @@
 noinst_PROGRAMS = rtmp-server
 
-check_PROGRAMS = sound
 TESTS = $(check_PROGRAMS)
 
 rtmp_server_SOURCES = rtmp_server.c

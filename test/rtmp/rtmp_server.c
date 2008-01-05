@@ -45,6 +45,7 @@ do_read (SoupSocket *conn, gpointer unused)
   buf = swfdec_buffer_new_and_alloc (16);
   while ((status = soup_socket_read (conn, buf->data, buf->length, &buf->length)) == SOUP_SOCKET_OK) {
     hexdump (buf);
+    soup_socket_write (conn, buf->data, buf->length, &buf->length);
     buf->length = 16;
   }
   swfdec_buffer_unref (buf);

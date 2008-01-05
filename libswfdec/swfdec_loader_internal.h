@@ -22,6 +22,7 @@
 
 #include "swfdec_loader.h"
 #include "swfdec_loadertarget.h"
+#include "swfdec_stream_target.h"
 
 G_BEGIN_DECLS
 
@@ -34,6 +35,13 @@ typedef enum {
   SWFDEC_LOADER_STATE_ERROR		/* loader is in error state */
 } SwfdecLoaderState;
 
+/* swfdec_stream.c */
+const char *		swfdec_stream_describe		(SwfdecStream *		stream);
+void			swfdec_stream_close		(SwfdecStream *		stream);
+void			swfdec_stream_set_target	(SwfdecStream *		stream,
+							 SwfdecStreamTarget *	target);
+
+/* swfdec_loader.c */
 SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
 							 const SwfdecURL *    	url,
 							 SwfdecLoaderRequest	request,

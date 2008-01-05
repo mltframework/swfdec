@@ -127,11 +127,13 @@ libswfdec_source_files = \
 	swfdec_shared_object.c \
 	swfdec_sound.c \
 	swfdec_sound_object.c \
-	swfdec_stroke.c \
 	swfdec_sprite.c \
 	swfdec_sprite_movie.c \
 	swfdec_sprite_movie_as.c \
 	swfdec_stage_as.c \
+	swfdec_stream.c \
+	swfdec_stream_target.c \
+	swfdec_stroke.c \
 	swfdec_style_sheet.c \
 	swfdec_swf_decoder.c \
 	swfdec_system.c \
@@ -193,6 +195,7 @@ public_headers = \
 	swfdec_player_scripting.h \
 	swfdec_rectangle.h \
 	swfdec_script.h \
+	swfdec_stream.h \
 	swfdec_system.h \
 	swfdec_url.h
 
@@ -273,9 +276,10 @@ noinst_HEADERS = \
 	swfdec_sound_object.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
-	swfdec_style_sheet.h \
 	swfdec_swf_decoder.h \
+	swfdec_stream_target.h \
 	swfdec_stroke.h \
+	swfdec_style_sheet.h \
 	swfdec_tag.h \
 	swfdec_text.h \
 	swfdec_text_format.h \

@@ -233,9 +233,11 @@ run_test (const char *filename)
   g_free (basename);
 
   loader = swfdec_file_loader_new (filename);
-  if (loader->error) {
-    g_print ("  ERROR: %s\n", loader->error);
+  g_object_get (loader, "error", &basename, NULL);
+  if (basename) {
+    g_print ("  ERROR: %s\n", basename);
     g_object_unref (loader);
+    g_free (basename);
     goto error;
   }
   player = swfdec_player_new (NULL);

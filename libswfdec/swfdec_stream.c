@@ -74,6 +74,17 @@ typedef enum {
   SWFDEC_STREAM_STATE_ERROR		/* loader is in error state */
 } SwfdecStreamState;
 
+struct _SwfdecStreamPrivate
+{
+  SwfdecPlayer *	player;		/* player to queue target notificaions in */
+  SwfdecStreamTarget *	target;		/* SwfdecStreamTarget that gets notified about loading progress */
+  SwfdecStreamState	state;		/* SwfdecStreamState the stream is currently in */
+  SwfdecStreamState	processed_state;/* SwfdecStreamState the target knows about */
+  gboolean		queued;		/* TRUE if we have queued an action already */
+  char *		error;		/* error message if in error state or NULL */
+  SwfdecBufferQueue *	queue;		/* SwfdecBufferQueue managing the input buffers */
+};
+
 enum {
   PROP_0,
   PROP_ERROR,
@@ -87,7 +98,7 @@ static void
 swfdec_stream_get_property (GObject *object, guint param_id, GValue *value, 
     GParamSpec * pspec)
 {
-  SwfdecStream *stream = SWFDEC_STREAM (object);
+  SwfdecStreamPrivate *stream = SWFDEC_STREAM (object)->priv;
   
   switch (param_id) {
     case PROP_ERROR:
@@ -121,7 +132,7 @@ swfdec_stream_set_property (GObject *object, guint param_id, const GValue *value
 static void
 swfdec_stream_dispose (GObject *object)
 {
-  SwfdecStream *stream = SWFDEC_STREAM (object);
+  SwfdecStreamPrivate *stream = SWFDEC_STREAM (object)->priv;
 
   /* targets are supposed to keep a reference around */
   g_assert (stream->target == NULL);
@@ -139,6 +150,8 @@ static void
 swfdec_stream_class_init (SwfdecStreamClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  g_type_class_add_private (klass, sizeof (SwfdecStreamPrivate));
 
   object_class->dispose = swfdec_stream_dispose;
   object_class->get_property = swfdec_stream_get_property;
@@ -158,7 +171,11 @@ swfdec_stream_class_init (SwfdecStreamClass *klass)
 static void
 swfdec_stream_init (SwfdecStream *stream)
 {
-  stream->queue = swfdec_buffer_queue_new ();
+  SwfdecStreamPrivate *priv;
+
+  stream->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (stream, SWFDEC_TYPE_STREAM, SwfdecStreamPrivate);
+
+  priv->queue = swfdec_buffer_queue_new ();
 }
 
 /*** INTERNAL API ***/
@@ -167,29 +184,31 @@ static void
 swfdec_stream_process (gpointer streamp, gpointer unused)
 {
   SwfdecStream *stream = streamp;
+  SwfdecStreamPrivate *priv = stream->priv;
 
-  g_assert (stream->target != NULL);
+  g_assert (priv->target != NULL);
 
-  stream->queued = FALSE;
-  if (stream->state == stream->processed_state &&
-      stream->state != SWFDEC_STREAM_STATE_OPEN)
+  priv->queued = FALSE;
+  if (priv->state == priv->processed_state &&
+      priv->state != SWFDEC_STREAM_STATE_OPEN)
     return;
-  g_assert (stream->state != SWFDEC_STREAM_STATE_CLOSED);
+  g_assert (priv->state != SWFDEC_STREAM_STATE_CLOSED);
   g_object_ref (stream);
-  if (stream->state == SWFDEC_STREAM_STATE_ERROR) {
-    swfdec_stream_target_error (stream->target, stream);
+  if (priv->state == SWFDEC_STREAM_STATE_ERROR) {
+    swfdec_stream_target_error (priv->target, stream);
   } else {
-    while (stream->state != stream->processed_state) {
-      if (stream->processed_state == SWFDEC_STREAM_STATE_CONNECTING) {
-	stream->processed_state = SWFDEC_STREAM_STATE_OPEN;
-	swfdec_stream_target_open (stream->target, stream);
-      } else if (stream->processed_state == SWFDEC_STREAM_STATE_OPEN) {
-	stream->processed_state = SWFDEC_STREAM_STATE_CLOSED;
-	swfdec_stream_target_close (stream->target, stream);
+    while (priv->state != priv->processed_state) {
+      if (priv->processed_state == SWFDEC_STREAM_STATE_CONNECTING) {
+	priv->processed_state = SWFDEC_STREAM_STATE_OPEN;
+	swfdec_stream_target_open (priv->target, stream);
+      } else if (priv->processed_state == SWFDEC_STREAM_STATE_OPEN) {
+	swfdec_stream_target_parse (priv->target, stream);
+	priv->processed_state = SWFDEC_STREAM_STATE_CLOSED;
+	swfdec_stream_target_close (priv->target, stream);
       }
     }
-    if (stream->processed_state == SWFDEC_STREAM_STATE_OPEN) {
-      swfdec_stream_target_parse (stream->target, stream);
+    if (priv->processed_state == SWFDEC_STREAM_STATE_OPEN) {
+      swfdec_stream_target_parse (priv->target, stream);
     }
   }
   g_object_unref (stream);
@@ -198,12 +217,14 @@ swfdec_stream_process (gpointer streamp, gpointer unused)
 static void
 swfdec_stream_queue_processing (SwfdecStream *stream)
 {
-  if (stream->queued)
+  SwfdecStreamPrivate *priv = stream->priv;
+
+  if (priv->queued)
     return;
-  stream->queued = TRUE;
-  if (stream->target) {
-    g_assert (stream->player);
-    swfdec_player_add_external_action (stream->player, stream,
+  priv->queued = TRUE;
+  if (priv->target) {
+    g_assert (priv->player);
+    swfdec_player_add_external_action (priv->player, stream,
 	swfdec_stream_process, NULL);
   }
 }
@@ -211,42 +232,47 @@ swfdec_stream_queue_processing (SwfdecStream *stream)
 void
 swfdec_stream_close (SwfdecStream *stream)
 {
+  SwfdecStreamPrivate *priv;
   SwfdecStreamClass *klass;
 
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
-  
-  if (stream->state == SWFDEC_STREAM_STATE_ERROR &&
-      stream->state == SWFDEC_STREAM_STATE_CLOSED)
+
+  priv = stream->priv;
+  if (priv->state == SWFDEC_STREAM_STATE_ERROR &&
+      priv->state == SWFDEC_STREAM_STATE_CLOSED)
     return;
 
   klass = SWFDEC_STREAM_GET_CLASS (stream);
 
   if (klass->close)
     klass->close (stream);
-  stream->state = SWFDEC_STREAM_STATE_CLOSED;
-  stream->processed_state = SWFDEC_STREAM_STATE_CLOSED;
+  priv->state = SWFDEC_STREAM_STATE_CLOSED;
+  priv->processed_state = SWFDEC_STREAM_STATE_CLOSED;
 }
 
 void
 swfdec_stream_set_target (SwfdecStream *stream, SwfdecStreamTarget *target)
 {
+  SwfdecStreamPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
   if (target != NULL) {
-    g_return_if_fail (stream->processed_state == SWFDEC_STREAM_STATE_CONNECTING);
+    g_return_if_fail (stream->priv->processed_state == SWFDEC_STREAM_STATE_CONNECTING);
     g_return_if_fail (SWFDEC_IS_STREAM_TARGET (target));
   }
 
-  if (stream->target) {
-    swfdec_player_remove_all_external_actions (stream->player, stream);
+  priv = stream->priv;
+  if (priv->target) {
+    swfdec_player_remove_all_external_actions (priv->player, stream);
   }
-  stream->queued = FALSE;
-  stream->target = target;
+  priv->queued = FALSE;
+  priv->target = target;
   if (target) {
-    stream->player = swfdec_stream_target_get_player (target);
-    if (stream->state != SWFDEC_STREAM_STATE_CONNECTING)
+    priv->player = swfdec_stream_target_get_player (target);
+    if (priv->state != SWFDEC_STREAM_STATE_CONNECTING)
       swfdec_stream_queue_processing (stream);
   } else {
-    stream->player = NULL;
+    priv->player = NULL;
   }
 }
 
@@ -286,17 +312,20 @@ swfdec_stream_describe (SwfdecStream *stream)
 void
 swfdec_stream_error (SwfdecStream *stream, const char *error)
 {
+  SwfdecStreamPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
   g_return_if_fail (error != NULL);
 
-  if (stream->error) {
+  priv = stream->priv;
+  if (priv->error) {
     SWFDEC_ERROR ("another error in stream for %s: %s", swfdec_stream_describe (stream), error);
     return;
   }
 
   SWFDEC_ERROR ("error in stream for %s: %s", swfdec_stream_describe (stream), error);
-  stream->state = SWFDEC_STREAM_STATE_ERROR;
-  stream->error = g_strdup (error);
+  priv->state = SWFDEC_STREAM_STATE_ERROR;
+  priv->error = g_strdup (error);
   swfdec_stream_queue_processing (stream);
 }
 
@@ -312,9 +341,9 @@ void
 swfdec_stream_open (SwfdecStream *stream, const char *url)
 {
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
-  g_return_if_fail (stream->state == SWFDEC_STREAM_STATE_CONNECTING);
+  g_return_if_fail (stream->priv->state == SWFDEC_STREAM_STATE_CONNECTING);
 
-  stream->state = SWFDEC_STREAM_STATE_OPEN;
+  stream->priv->state = SWFDEC_STREAM_STATE_OPEN;
   g_object_notify (G_OBJECT (stream), "open");
   swfdec_stream_queue_processing (stream);
 }
@@ -332,10 +361,10 @@ void
 swfdec_stream_push (SwfdecStream *stream, SwfdecBuffer *buffer)
 {
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
-  g_return_if_fail (stream->state == SWFDEC_STREAM_STATE_OPEN);
+  g_return_if_fail (stream->priv->state == SWFDEC_STREAM_STATE_OPEN);
   g_return_if_fail (buffer != NULL);
 
-  swfdec_buffer_queue_push (stream->queue, buffer);
+  swfdec_buffer_queue_push (stream->priv->queue, buffer);
   /* FIXME */
   if (SWFDEC_IS_LOADER (stream))
     g_object_notify (G_OBJECT (stream), "loaded");
@@ -352,11 +381,11 @@ void
 swfdec_stream_eof (SwfdecStream *stream)
 {
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
-  g_return_if_fail (stream->state == SWFDEC_STREAM_STATE_OPEN);
+  g_return_if_fail (stream->priv->state == SWFDEC_STREAM_STATE_OPEN);
 
+  stream->priv->state = SWFDEC_STREAM_STATE_CLOSED;
   g_object_notify (G_OBJECT (stream), "open");
   g_object_notify (G_OBJECT (stream), "eof");
-  stream->state = SWFDEC_STREAM_STATE_CLOSED;
   swfdec_stream_queue_processing (stream);
 }
 

@@ -28,6 +28,7 @@ G_BEGIN_DECLS
 
 typedef struct _SwfdecStream SwfdecStream;
 typedef struct _SwfdecStreamClass SwfdecStreamClass;
+typedef struct _SwfdecStreamPrivate SwfdecStreamPrivate;
 
 #define SWFDEC_TYPE_STREAM                    (swfdec_stream_get_type())
 #define SWFDEC_IS_STREAM(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_STREAM))
@@ -41,13 +42,7 @@ struct _SwfdecStream
   GObject		object;
 
   /*< private >*/
-  SwfdecPlayer *	player;		/* player to queue target notificaions in */
-  gpointer		target;		/* SwfdecStreamTarget that gets notified about loading progress */
-  guint			state;		/* SwfdecStreamState the stream is currently in */
-  guint			processed_state;/* SwfdecStreamState the target knows about */
-  gboolean		queued;		/* TRUE if we have queued an action already */
-  char *		error;		/* error message if in error state or NULL */
-  SwfdecBufferQueue *	queue;		/* SwfdecBufferQueue managing the input buffers */
+  SwfdecStreamPrivate *	priv;
 };
 
 struct _SwfdecStreamClass

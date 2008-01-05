@@ -82,7 +82,7 @@ swfdec_stream_target_open (SwfdecStreamTarget *target, SwfdecStream *stream)
   g_return_if_fail (SWFDEC_IS_STREAM_TARGET (target));
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
 
-  SWFDEC_LOG ("opening %s (state %u)", swfdec_stream_describe (stream), stream->state);
+  SWFDEC_LOG ("opening %s", swfdec_stream_describe (stream));
 
   iface = SWFDEC_STREAM_TARGET_GET_INTERFACE (target);
   if (iface->open)
@@ -97,7 +97,7 @@ swfdec_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *stream)
   g_return_if_fail (SWFDEC_IS_STREAM_TARGET (target));
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
 
-  SWFDEC_LOG ("parsing %s (state %u)", swfdec_stream_describe (stream), stream->state);
+  SWFDEC_LOG ("parsing %s", swfdec_stream_describe (stream));
 
   iface = SWFDEC_STREAM_TARGET_GET_INTERFACE (target);
   if (iface->parse)
@@ -112,7 +112,7 @@ swfdec_stream_target_close (SwfdecStreamTarget *target, SwfdecStream *stream)
   g_return_if_fail (SWFDEC_IS_STREAM_TARGET (target));
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
 
-  SWFDEC_LOG ("close on %s (state %u)", swfdec_stream_describe (stream), stream->state);
+  SWFDEC_LOG ("close on %s", swfdec_stream_describe (stream));
 
   iface = SWFDEC_STREAM_TARGET_GET_INTERFACE (target);
   if (iface->close)
@@ -127,7 +127,7 @@ swfdec_stream_target_error (SwfdecStreamTarget *target, SwfdecStream *stream)
   g_return_if_fail (SWFDEC_IS_STREAM_TARGET (target));
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
 
-  SWFDEC_LOG ("error on %s (state %u)", swfdec_stream_describe (stream), stream->state);
+  SWFDEC_LOG ("error on %s", swfdec_stream_describe (stream));
 
   iface = SWFDEC_STREAM_TARGET_GET_INTERFACE (target);
   if (iface->error)

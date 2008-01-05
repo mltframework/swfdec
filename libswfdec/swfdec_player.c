@@ -621,7 +621,8 @@ enum {
   PROP_SCALE,
   PROP_SCRIPTING,
   PROP_SYSTEM,
-  PROP_MAX_RUNTIME
+  PROP_MAX_RUNTIME,
+  PROP_SOCKET_TYPE
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -734,6 +735,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_MAX_RUNTIME:
       g_value_set_ulong (value, priv->max_runtime);
+      break;
+    case PROP_SOCKET_TYPE:
+      g_value_set_gtype (value, priv->socket_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -851,6 +855,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_MAX_RUNTIME:
       swfdec_player_set_maximum_runtime (player, g_value_get_ulong (value));
+      break;
+    case PROP_SOCKET_TYPE:
+      priv->socket_type = g_value_get_gtype (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -1611,6 +1618,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_MAX_RUNTIME,
       g_param_spec_ulong ("max-runtime", "maximum runtime", "maximum time in msecs scripts may run in the player before aborting",
 	  0, G_MAXULONG, 10 * 1000, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_SOCKET_TYPE,
+      g_param_spec_gtype ("socket type", "socket type", "type to use for creating sockets",
+	  SWFDEC_TYPE_SOCKET, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1780,6 +1790,7 @@ swfdec_player_init (SwfdecPlayer *player)
   priv->external_actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerExternalAction, 8);
   priv->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
   priv->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
+  priv->socket_type = SWFDEC_TYPE_SOCKET;
 
   priv->runtime = g_timer_new ();
   g_timer_stop (priv->runtime);

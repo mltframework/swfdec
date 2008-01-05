@@ -108,7 +108,7 @@ handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
 }
 
 static void
-swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
+swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
 {
   GIOChannel *channel;
   Stream *stream;
@@ -171,7 +171,7 @@ swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
 }
 
 static void
-swfdec_stream_close (Stream *stream)
+swfdec_playback_stream_close (Stream *stream)
 {
   close (stream->dsp_fd);
   g_source_destroy (stream->source);
@@ -202,7 +202,7 @@ advance_before (SwfdecPlayer *player, guint msecs, guint audio_samples, gpointer
 static void
 audio_added (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
 {
-  swfdec_stream_open (sound, audio);
+  swfdec_playback_stream_open (sound, audio);
 }
 
 static void
@@ -213,7 +213,7 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
   for (walk = sound->streams; walk; walk = walk->next) {
     Stream *stream = walk->data;
     if (stream->audio == audio) {
-      swfdec_stream_close (stream);
+      swfdec_playback_stream_close (stream);
       return;
     }
   }
@@ -235,7 +235,7 @@ swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), sound);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), sound);
   for (walk = swfdec_player_get_audio (player); walk; walk = walk->next) {
-    swfdec_stream_open (sound, walk->data);
+    swfdec_playback_stream_open (sound, walk->data);
   }
   g_main_context_ref (context);
   sound->context = context;
@@ -254,7 +254,7 @@ swfdec_playback_close (SwfdecPlayback *sound)
 #define REMOVE_HANDLER(obj,func,data) REMOVE_HANDLER_FULL (obj, func, data, 1)
 
   while (sound->streams)
-    swfdec_stream_close (sound->streams->data);
+    swfdec_playback_stream_close (sound->streams->data);
   REMOVE_HANDLER (sound->player, advance_before, sound);
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);

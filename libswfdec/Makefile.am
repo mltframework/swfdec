@@ -92,7 +92,6 @@ libswfdec_source_files = \
 	swfdec_load_object.c \
 	swfdec_load_object_as.c \
 	swfdec_loader.c \
-	swfdec_loadertarget.c \
 	swfdec_loadvars_as.c \
 	swfdec_local_connection.c \
 	swfdec_microphone.c \
@@ -251,7 +250,6 @@ noinst_HEADERS = \
 	swfdec_interval.h \
 	swfdec_load_object.h \
 	swfdec_loader_internal.h \
-	swfdec_loadertarget.h \
 	swfdec_marshal.h \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \

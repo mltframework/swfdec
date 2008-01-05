@@ -161,7 +161,7 @@ swfdec_stream_class_init (SwfdecStreamClass *klass)
       g_param_spec_string ("error", "error", "NULL when no error or string describing error",
 	  NULL, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_OPEN,
-      g_param_spec_boolean ("eof", "eof", "TRUE while data is flowing",
+      g_param_spec_boolean ("open", "open", "TRUE while data is flowing",
 	  FALSE, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_EOF,
       g_param_spec_boolean ("eof", "eof", "TRUE when all data has been transmitted",
@@ -180,6 +180,14 @@ swfdec_stream_init (SwfdecStream *stream)
 
 /*** INTERNAL API ***/
 
+SwfdecBufferQueue *
+swfdec_stream_get_queue (SwfdecStream *stream)
+{
+  g_return_val_if_fail (SWFDEC_IS_STREAM (stream), NULL);
+
+  return stream->priv->queue;
+}
+
 static void
 swfdec_stream_process (gpointer streamp, gpointer unused)
 {
@@ -192,7 +200,7 @@ swfdec_stream_process (gpointer streamp, gpointer unused)
   if (priv->state == priv->processed_state &&
       priv->state != SWFDEC_STREAM_STATE_OPEN)
     return;
-  g_assert (priv->state != SWFDEC_STREAM_STATE_CLOSED);
+  g_assert (priv->processed_state != SWFDEC_STREAM_STATE_CLOSED);
   g_object_ref (stream);
   if (priv->state == SWFDEC_STREAM_STATE_ERROR) {
     swfdec_stream_target_error (priv->target, stream);
@@ -338,7 +346,7 @@ swfdec_stream_error (SwfdecStream *stream, const char *error)
  * swfdec_stream_push() can be called.
  **/
 void
-swfdec_stream_open (SwfdecStream *stream, const char *url)
+swfdec_stream_open (SwfdecStream *stream)
 {
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
   g_return_if_fail (stream->priv->state == SWFDEC_STREAM_STATE_CONNECTING);

@@ -112,7 +112,7 @@ stream_drain_complete (pa_stream *pa, int success, void *data)
 }
 
 static void
-swfdec_stream_close (Stream *stream)
+swfdec_playback_stream_close (Stream *stream)
 {
   /* Pull it off of the active stream list. */
   stream->sound->streams = g_list_remove (stream->sound->streams, stream);
@@ -148,7 +148,7 @@ stream_state_callback (pa_stream *pa, void *data)
 }
 
 static void
-swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
+swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
 {
   Stream *stream;
   pa_sample_spec spec = {
@@ -178,7 +178,7 @@ swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
 			     );
   if (stream->pa == NULL) {
     g_printerr("Failed to create PA stream\n");
-    swfdec_stream_close(stream);
+    swfdec_playback_stream_close(stream);
     return;
   }
 
@@ -200,7 +200,7 @@ swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   if (err != 0) {
     g_printerr ("Failed to connect PA stream: %s\n",
 		pa_strerror(pa_context_errno(sound->pa)));
-    swfdec_stream_close(stream);
+    swfdec_playback_stream_close(stream);
     return;
   }
 }
@@ -226,7 +226,7 @@ advance_before (SwfdecPlayer *player, guint msecs, guint audio_samples, gpointer
 static void
 audio_added (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
 {
-  swfdec_stream_open (sound, audio);
+  swfdec_playback_stream_open (sound, audio);
 }
 
 static void
@@ -237,7 +237,7 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
   for (walk = sound->streams; walk; walk = walk->next) {
     Stream *stream = walk->data;
     if (stream->audio == audio) {
-      swfdec_stream_close (stream);
+      swfdec_playback_stream_close (stream);
       return;
     }
   }
@@ -299,7 +299,7 @@ swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
 		      );
 
   for (walk = swfdec_player_get_audio (player); walk; walk = walk->next) {
-    swfdec_stream_open (sound, walk->data);
+    swfdec_playback_stream_open (sound, walk->data);
   }
   g_main_context_ref (context);
   sound->context = context;
@@ -327,7 +327,7 @@ swfdec_playback_close (SwfdecPlayback *sound)
 #define REMOVE_HANDLER(obj,func,data) REMOVE_HANDLER_FULL (obj, func, data, 1)
 
   while (sound->streams)
-    swfdec_stream_close (sound->streams->data);
+    swfdec_playback_stream_close (sound->streams->data);
   REMOVE_HANDLER (sound->player, advance_before, sound);
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);

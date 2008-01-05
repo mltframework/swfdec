@@ -100,7 +100,8 @@ swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
 
   real_uri = soup_uri_to_string (soup_message_get_uri (gtk->message), FALSE);
   swfdec_gtk_loader_set_size (gtk);
-  swfdec_loader_open (SWFDEC_LOADER (gtk), real_uri);
+  swfdec_loader_set_url (SWFDEC_LOADER (gtk), real_uri);
+  swfdec_stream_open (SWFDEC_STREAM (gtk));
   gtk->opened = TRUE;
   g_free (real_uri);
 }
@@ -114,7 +115,7 @@ swfdec_gtk_loader_push (SoupMessage *msg, gpointer loader)
   swfdec_gtk_loader_ensure_open (gtk);
   buffer = swfdec_buffer_new_and_alloc (msg->response.length);
   memcpy (buffer->data, msg->response.body, msg->response.length);
-  swfdec_loader_push (loader, buffer);
+  swfdec_stream_push (loader, buffer);
 }
 
 static void
@@ -122,10 +123,10 @@ swfdec_gtk_loader_finished (SoupMessage *msg, gpointer loader)
 {
   if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
     swfdec_gtk_loader_ensure_open (loader);
-    swfdec_loader_eof (loader);
+    swfdec_stream_eof (loader);
   } else {
     char *s = g_strdup_printf ("%u %s", msg->status_code, msg->reason_phrase);
-    swfdec_loader_error (loader, s);
+    swfdec_stream_error (loader, s);
     g_free (s);
   }
 }
@@ -178,14 +179,14 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
 
 #ifdef HAVE_HTTP
 static void
-swfdec_gtk_loader_close (SwfdecLoader *loader)
+swfdec_gtk_loader_close (SwfdecStream *stream)
 {
-  SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
+  SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (stream);
 
   if (gtk->message) {
     gboolean eof;
 
-    g_object_get (loader, "eof", &eof, NULL);
+    g_object_get (stream, "eof", &eof, NULL);
     if (!eof) {
       SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
 
@@ -202,12 +203,14 @@ swfdec_gtk_loader_class_init (SwfdecGtkLoaderClass *klass)
 {
 #ifdef HAVE_HTTP
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecStreamClass *stream_class = SWFDEC_STREAM_CLASS (klass);
   SwfdecLoaderClass *loader_class = SWFDEC_LOADER_CLASS (klass);
 
   object_class->dispose = swfdec_gtk_loader_dispose;
 
+  stream_class->close = swfdec_gtk_loader_close;
+
   loader_class->load = swfdec_gtk_loader_load;
-  loader_class->close = swfdec_gtk_loader_close;
   
   klass->session = soup_session_async_new ();
 #endif

@@ -405,11 +405,6 @@ main (int argc, char *argv[])
   }
 
   player = swfdec_player_new_from_file (argv[1]);
-  if (player->priv->resource->loader->error) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], player->priv->resource->loader->error);
-    g_object_unref (player);
-    return 1;
-  }
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
   if (!swfdec_player_is_initialized (player)) {

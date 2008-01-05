@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <libswfdec/swfdec_buffer.h>
+#include <libswfdec/swfdec_stream.h>
 #include <libswfdec/swfdec_url.h>
 
 G_BEGIN_DECLS
@@ -55,24 +56,17 @@ typedef struct _SwfdecLoaderClass SwfdecLoaderClass;
 
 struct _SwfdecLoader
 {
-  GObject		object;
+  SwfdecStream		stream;
 
   /*< private >*/
-  guint			state;		/* SwfdecLoaderState the loader is currently in */
-  guint			processed_state;/* SwfdecLoaderState the target knows about */
-  gboolean		queued;		/* TRUE if we have queued an action already */
   SwfdecURL *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
   glong			size;		/* number of bytes in stream or -1 if unknown */
-  char *		error;		/* error message if in error state or NULL */
-  gpointer		target;		/* SwfdecLoaderTarget that gets notified about loading progress */
-  gpointer		player;		/* SwfdecPlayer belonging to target or %NULL */
-  SwfdecBufferQueue *	queue;		/* SwfdecBufferQueue managing the input buffers */
   SwfdecLoaderDataType	data_type;	/* type this stream is in (identified by swfdec) */
 };
 
 struct _SwfdecLoaderClass
 {
-  GObjectClass		object_class;
+  SwfdecStreamClass	stream_class;
 
   /* initialize the loader. The URL will be set already. */
   void			(* load)	(SwfdecLoader *			loader, 
@@ -80,19 +74,12 @@ struct _SwfdecLoaderClass
 					 SwfdecLoaderRequest		request,
 					 const char *			data,
 					 gsize				data_len);
-  /* if open, close the loader. NB: you may not call push() or eof() after the loader has been closed */
-  void			(* close)	(SwfdecLoader *			loader);
 };
 
 GType		swfdec_loader_get_type		(void);
 
-void		swfdec_loader_open		(SwfdecLoader *		loader,
+void		swfdec_loader_set_url		(SwfdecLoader *		loader,
 						 const char *		url);
-void		swfdec_loader_push		(SwfdecLoader *		loader,
-						 SwfdecBuffer *		buffer);
-void		swfdec_loader_eof		(SwfdecLoader *		loader);
-void		swfdec_loader_error		(SwfdecLoader *		loader,
-						 const char *		error);
 const SwfdecURL *
 		swfdec_loader_get_url		(SwfdecLoader *		loader);
 void		swfdec_loader_set_size		(SwfdecLoader *		loader,

@@ -28,22 +28,23 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
-#include "swfdec_loadertarget.h"
+#include "swfdec_stream_target.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource_request.h"
 
-/*** SWFDEC_LOADER_TARGET ***/
+/*** SWFDEC_STREAM_TARGET ***/
 
 static SwfdecPlayer *
-swfdec_load_object_loader_target_get_player (SwfdecLoaderTarget *target)
+swfdec_load_object_stream_target_get_player (SwfdecStreamTarget *target)
 {
   return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
 }
 
 static void
-swfdec_load_object_loader_target_parse (SwfdecLoaderTarget *target,
-    SwfdecLoader *loader)
+swfdec_load_object_stream_target_parse (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
 {
+  SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
 
   if (load_object->progress != NULL) {
@@ -53,13 +54,14 @@ swfdec_load_object_loader_target_parse (SwfdecLoaderTarget *target,
 }
 
 static void
-swfdec_load_object_loader_target_error (SwfdecLoaderTarget *target,
-    SwfdecLoader *loader)
+swfdec_load_object_stream_target_error (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
 {
+  SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
 
   /* break reference to the loader */
-  swfdec_loader_set_target (loader, NULL);
+  swfdec_stream_set_target (SWFDEC_STREAM (loader), NULL);
   load_object->loader = NULL;
   g_object_unref (loader);
 
@@ -72,9 +74,10 @@ swfdec_load_object_loader_target_error (SwfdecLoaderTarget *target,
 }
 
 static void
-swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
-    SwfdecLoader *loader)
+swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
 {
+  SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
   char *text;
 
@@ -83,7 +86,7 @@ swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
     swfdec_loader_get_text (loader, load_object->target->context->version);
 
   /* break reference to the loader */
-  swfdec_loader_set_target (loader, NULL);
+  swfdec_stream_set_target (stream, NULL);
   load_object->loader = NULL;
   g_object_unref (loader);
 
@@ -101,24 +104,24 @@ swfdec_load_object_loader_target_eof (SwfdecLoaderTarget *target,
 }
 
 static void
-swfdec_load_object_loader_target_init (SwfdecLoaderTargetInterface *iface)
+swfdec_load_object_stream_target_init (SwfdecStreamTargetInterface *iface)
 {
-  iface->get_player = swfdec_load_object_loader_target_get_player;
-  iface->parse = swfdec_load_object_loader_target_parse;
-  iface->eof = swfdec_load_object_loader_target_eof;
-  iface->error = swfdec_load_object_loader_target_error;
+  iface->get_player = swfdec_load_object_stream_target_get_player;
+  iface->parse = swfdec_load_object_stream_target_parse;
+  iface->close = swfdec_load_object_stream_target_close;
+  iface->error = swfdec_load_object_stream_target_error;
 }
 
 /*** SWFDEC_LOAD_OBJECT ***/
 
 G_DEFINE_TYPE_WITH_CODE (SwfdecLoadObject, swfdec_load_object, SWFDEC_TYPE_AS_OBJECT,
-    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_load_object_loader_target_init))
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_load_object_stream_target_init))
 
 static void
 swfdec_load_object_reset (SwfdecLoadObject *load_object)
 {
   if (load_object->loader) {
-    swfdec_loader_set_target (load_object->loader, NULL);
+    swfdec_stream_set_target (SWFDEC_STREAM (load_object->loader), NULL);
     g_object_unref (load_object->loader);
     load_object->loader = NULL;
   }
@@ -168,9 +171,9 @@ swfdec_load_object_got_loader (SwfdecPlayer *player, SwfdecLoader *loader, gpoin
   }
   load_object->loader = loader;
 
-  swfdec_loader_set_target (load_object->loader,
-      SWFDEC_LOADER_TARGET (load_object));
-  swfdec_loader_set_data_type (load_object->loader, SWFDEC_LOADER_DATA_TEXT);
+  swfdec_stream_set_target (SWFDEC_STREAM (loader),
+      SWFDEC_STREAM_TARGET (load_object));
+  swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_TEXT);
 }
 
 static gboolean

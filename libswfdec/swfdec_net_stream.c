@@ -29,7 +29,7 @@
 #include "swfdec_audio_flv.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
-#include "swfdec_loadertarget.h"
+#include "swfdec_stream_target.h"
 #include "swfdec_resource_request.h"
 
 /* NB: code and level must be rooted gc-strings */
@@ -216,27 +216,27 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
   }
 }
 
-/*** SWFDEC_LOADER_TARGET interface ***/
+/*** SWFDEC_STREAM_TARGET interface ***/
 
 static SwfdecPlayer *
-swfdec_net_stream_loader_target_get_player (SwfdecLoaderTarget *target)
+swfdec_net_stream_stream_target_get_player (SwfdecStreamTarget *target)
 {
   return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
 }
 
 static void
-swfdec_net_stream_loader_target_error (SwfdecLoaderTarget *target, 
-    SwfdecLoader *loader)
+swfdec_net_stream_stream_target_error (SwfdecStreamTarget *target, 
+    SwfdecStream *stream)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
+  SwfdecNetStream *ns = SWFDEC_NET_STREAM (target);
 
-  if (stream->flvdecoder == NULL)
-    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_StreamNotFound,
+  if (ns->flvdecoder == NULL)
+    swfdec_net_stream_onstatus (ns, SWFDEC_AS_STR_NetStream_Play_StreamNotFound,
 	SWFDEC_AS_STR_error);
 }
 
 static void
-swfdec_net_stream_loader_target_recheck (SwfdecNetStream *stream)
+swfdec_net_stream_stream_target_recheck (SwfdecNetStream *stream)
 {
   if (stream->buffering) {
     guint first, last;
@@ -256,65 +256,63 @@ swfdec_net_stream_loader_target_recheck (SwfdecNetStream *stream)
 }
 
 static void
-swfdec_net_stream_loader_target_parse (SwfdecLoaderTarget *target, 
-    SwfdecLoader *loader)
+swfdec_net_stream_stream_target_parse (SwfdecStreamTarget *target, 
+    SwfdecStream *stream)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
+  SwfdecNetStream *ns = SWFDEC_NET_STREAM (target);
+  SwfdecBufferQueue *queue;
   SwfdecStatus status;
   
-  if (loader->state != SWFDEC_LOADER_STATE_EOF && swfdec_buffer_queue_get_depth (loader->queue) == 0) {
-    SWFDEC_INFO ("nothing to do");
-    return;
-  }
-  if (stream->flvdecoder == NULL) {
+  if (ns->flvdecoder == NULL) {
     /* FIXME: add mp3 support */
-    stream->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
-    SWFDEC_DECODER (stream->flvdecoder)->player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context);
-    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Play_Start,
+    ns->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
+    SWFDEC_DECODER (ns->flvdecoder)->player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context);
+    swfdec_net_stream_onstatus (ns, SWFDEC_AS_STR_NetStream_Play_Start,
 	SWFDEC_AS_STR_status);
-    swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_FLV);
+    swfdec_loader_set_data_type (SWFDEC_LOADER (stream), SWFDEC_LOADER_DATA_FLV);
   }
 
   status = SWFDEC_STATUS_OK;
+  queue = swfdec_stream_get_queue (stream);
   do {
-    SwfdecBuffer *buffer = swfdec_buffer_queue_pull_buffer (loader->queue);
+    SwfdecBuffer *buffer = swfdec_buffer_queue_pull_buffer (queue);
     if (buffer == NULL)
       break;
     status &= ~SWFDEC_STATUS_NEEDBITS;
-    status |= swfdec_decoder_parse (SWFDEC_DECODER (stream->flvdecoder), buffer);
+    status |= swfdec_decoder_parse (SWFDEC_DECODER (ns->flvdecoder), buffer);
   } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_EOF)) == 0);
 
   if (status & SWFDEC_STATUS_IMAGE)
-    swfdec_net_stream_loader_target_recheck (stream);
+    swfdec_net_stream_stream_target_recheck (ns);
 }
 
 static void
-swfdec_net_stream_loader_target_eof (SwfdecLoaderTarget *target, 
-    SwfdecLoader *loader)
+swfdec_net_stream_stream_target_close (SwfdecStreamTarget *target, 
+    SwfdecStream *stream)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (target);
+  SwfdecNetStream *ns = SWFDEC_NET_STREAM (target);
   guint first, last;
 
-  swfdec_decoder_eof (SWFDEC_DECODER (stream->flvdecoder));
-  swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Flush,
+  swfdec_decoder_eof (SWFDEC_DECODER (ns->flvdecoder));
+  swfdec_net_stream_onstatus (ns, SWFDEC_AS_STR_NetStream_Buffer_Flush,
       SWFDEC_AS_STR_status);
-  swfdec_net_stream_video_goto (stream, stream->current_time);
-  stream->buffering = FALSE;
-  if (swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last) &&
-      stream->current_time + stream->buffer_time <= last) {
-    swfdec_net_stream_onstatus (stream, SWFDEC_AS_STR_NetStream_Buffer_Full,
+  swfdec_net_stream_video_goto (ns, ns->current_time);
+  ns->buffering = FALSE;
+  if (swfdec_flv_decoder_get_video_info (ns->flvdecoder, &first, &last) &&
+      ns->current_time + ns->buffer_time <= last) {
+    swfdec_net_stream_onstatus (ns, SWFDEC_AS_STR_NetStream_Buffer_Full,
 	SWFDEC_AS_STR_status);
   }
-  swfdec_net_stream_loader_target_recheck (stream);
+  swfdec_net_stream_stream_target_recheck (ns);
 }
 
 static void
-swfdec_net_stream_loader_target_init (SwfdecLoaderTargetInterface *iface)
+swfdec_net_stream_stream_target_init (SwfdecStreamTargetInterface *iface)
 {
-  iface->get_player = swfdec_net_stream_loader_target_get_player;
-  iface->parse = swfdec_net_stream_loader_target_parse;
-  iface->eof = swfdec_net_stream_loader_target_eof;
-  iface->error = swfdec_net_stream_loader_target_error;
+  iface->get_player = swfdec_net_stream_stream_target_get_player;
+  iface->parse = swfdec_net_stream_stream_target_parse;
+  iface->close = swfdec_net_stream_stream_target_close;
+  iface->error = swfdec_net_stream_stream_target_error;
 }
 
 /*** SWFDEC VIDEO MOVIE INPUT ***/
@@ -348,7 +346,7 @@ swfdec_net_stream_input_get_image (SwfdecVideoMovieInput *input)
 /*** SWFDEC_NET_STREAM ***/
 
 G_DEFINE_TYPE_WITH_CODE (SwfdecNetStream, swfdec_net_stream, SWFDEC_TYPE_AS_OBJECT,
-    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_net_stream_loader_target_init))
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_net_stream_stream_target_init))
 
 static void
 swfdec_net_stream_dispose (GObject *object)
@@ -504,9 +502,10 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
   g_return_if_fail (loader == NULL || SWFDEC_IS_LOADER (loader));
 
   if (stream->loader) {
-    swfdec_loader_set_target (stream->loader, NULL);
-    swfdec_loader_close (stream->loader);
-    g_object_unref (stream->loader);
+    SwfdecStream *lstream = SWFDEC_STREAM (loader);
+    swfdec_stream_close (lstream);
+    swfdec_stream_set_target (lstream, NULL);
+    g_object_unref (lstream);
   }
   if (stream->flvdecoder) {
     g_object_unref (stream->flvdecoder);
@@ -516,7 +515,7 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
   stream->buffering = TRUE;
   if (loader) {
     g_object_ref (loader);
-    swfdec_loader_set_target (loader, SWFDEC_LOADER_TARGET (stream));
+    swfdec_stream_set_target (SWFDEC_STREAM (loader), SWFDEC_STREAM_TARGET (stream));
   }
   swfdec_net_stream_set_playing (stream, TRUE);
 }

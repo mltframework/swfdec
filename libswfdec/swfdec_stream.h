@@ -22,7 +22,6 @@
 
 #include <glib-object.h>
 #include <libswfdec/swfdec_buffer.h>
-#include <libswfdec/swfdec_player.h>
 
 G_BEGIN_DECLS
 
@@ -57,8 +56,7 @@ struct _SwfdecStreamClass
 
 GType		swfdec_stream_get_type		(void);
 
-void		swfdec_stream_open		(SwfdecStream *		stream,
-						 const char *		url);
+void		swfdec_stream_open		(SwfdecStream *		stream);
 void		swfdec_stream_push		(SwfdecStream *		stream,
 						 SwfdecBuffer *		buffer);
 void		swfdec_stream_eof		(SwfdecStream *		stream);

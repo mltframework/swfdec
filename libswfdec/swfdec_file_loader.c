@@ -25,7 +25,6 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_buffer.h"
 #include "swfdec_debug.h"
-#include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
 
 /**
@@ -42,6 +41,7 @@ static void
 swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, SwfdecLoaderRequest request, 
     const char *data, gsize data_len)
 {
+  SwfdecStream *stream = SWFDEC_STREAM (loader);
   const SwfdecURL *url;
   SwfdecBuffer *buffer;
   GError *error = NULL;
@@ -49,11 +49,11 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, SwfdecLoade
 
   url = swfdec_loader_get_url (loader);
   if (!g_str_equal (swfdec_url_get_protocol (url), "file")) {
-    swfdec_loader_error (loader, "Don't know how to handle this protocol");
+    swfdec_stream_error (stream, "Don't know how to handle this protocol");
     return;
   }
   if (swfdec_url_get_host (url)) {
-    swfdec_loader_error (loader, "filenames cannot have hostnames");
+    swfdec_stream_error (stream, "filenames cannot have hostnames");
     return;
   }
 
@@ -62,13 +62,13 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, SwfdecLoade
   buffer = swfdec_buffer_new_from_file (real, &error);
   g_free (real);
   if (buffer == NULL) {
-    swfdec_loader_error (loader, error->message);
+    swfdec_stream_error (stream, error->message);
     g_error_free (error);
   } else {
     swfdec_loader_set_size (loader, buffer->length);
-    swfdec_loader_open (loader, 0);
-    swfdec_loader_push (loader, buffer);
-    swfdec_loader_eof (loader);
+    swfdec_stream_open (stream);
+    swfdec_stream_push (stream, buffer);
+    swfdec_stream_eof (stream);
   }
 }
 
@@ -99,6 +99,7 @@ swfdec_file_loader_new (const char *filename)
 {
   SwfdecBuffer *buf;
   SwfdecLoader *loader;
+  SwfdecStream *stream;
   GError *error = NULL;
   char *url_string;
   SwfdecURL *url;
@@ -121,15 +122,16 @@ swfdec_file_loader_new (const char *filename)
   url = swfdec_url_new (url_string);
   g_free (url_string);
   loader = g_object_new (SWFDEC_TYPE_FILE_LOADER, "url", url, NULL);
+  stream = SWFDEC_STREAM (loader);
   swfdec_url_free (url);
   if (buf == NULL) {
-    swfdec_loader_error (loader, error->message);
+    swfdec_stream_error (stream, error->message);
     g_error_free (error);
   } else {
     swfdec_loader_set_size (loader, buf->length);
-    swfdec_loader_open (loader, 0);
-    swfdec_loader_push (loader, buf);
-    swfdec_loader_eof (loader);
+    swfdec_stream_open (stream);
+    swfdec_stream_push (stream, buf);
+    swfdec_stream_eof (stream);
   }
   return loader;
 }

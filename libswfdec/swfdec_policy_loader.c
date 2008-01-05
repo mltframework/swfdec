@@ -34,17 +34,17 @@
 #include "swfdec_xml.h"
 #include "swfdec_xml_node.h"
 
-/*** SWFDEC_LOADER_TARGET ***/
+/*** SWFDEC_STREAM_TARGET ***/
 
 static SwfdecPlayer *
-swfdec_policy_loader_target_get_player (SwfdecLoaderTarget *target)
+swfdec_policy_stream_target_get_player (SwfdecStreamTarget *target)
 {
   return SWFDEC_POLICY_LOADER (target)->sec->player;
 }
 
 static void
-swfdec_policy_loader_target_error (SwfdecLoaderTarget *target,
-    SwfdecLoader *loader)
+swfdec_policy_stream_target_error (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
 {
   SwfdecPolicyLoader *policy_loader = SWFDEC_POLICY_LOADER (target);
 
@@ -139,8 +139,8 @@ swfdec_policy_loader_check (SwfdecAsContext *context, const char *text,
 }
 
 static void
-swfdec_policy_loader_target_eof (SwfdecLoaderTarget *target,
-    SwfdecLoader *loader)
+swfdec_policy_stream_target_close (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
 {
   SwfdecPolicyLoader *policy_loader = SWFDEC_POLICY_LOADER (target);
   gboolean allow;
@@ -167,17 +167,17 @@ swfdec_policy_loader_target_eof (SwfdecLoaderTarget *target,
 }
 
 static void
-swfdec_policy_loader_loader_target_init (SwfdecLoaderTargetInterface *iface)
+swfdec_policy_loader_stream_target_init (SwfdecStreamTargetInterface *iface)
 {
-  iface->get_player = swfdec_policy_loader_target_get_player;
-  iface->eof = swfdec_policy_loader_target_eof;
-  iface->error = swfdec_policy_loader_target_error;
+  iface->get_player = swfdec_policy_stream_target_get_player;
+  iface->close = swfdec_policy_stream_target_close;
+  iface->error = swfdec_policy_stream_target_error;
 }
 
 /*** SWFDEC_POLICY_LOADER ***/
 
 G_DEFINE_TYPE_WITH_CODE (SwfdecPolicyLoader, swfdec_policy_loader, G_TYPE_OBJECT,
-    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_policy_loader_loader_target_init))
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_policy_loader_stream_target_init))
 
 static void
 swfdec_policy_loader_dispose (GObject *object)
@@ -185,7 +185,7 @@ swfdec_policy_loader_dispose (GObject *object)
   SwfdecPolicyLoader *policy_loader = SWFDEC_POLICY_LOADER (object);
 
   g_assert (policy_loader->loader);
-  swfdec_loader_set_target (policy_loader->loader, NULL);
+  swfdec_stream_set_target (SWFDEC_STREAM (policy_loader->loader), NULL);
   g_object_unref (policy_loader->loader);
   policy_loader->loader = NULL;
 
@@ -239,9 +239,9 @@ swfdec_policy_loader_new (SwfdecFlashSecurity *sec, const char *host,
   policy_loader->host = g_strdup (host);
   policy_loader->func = func;
 
-  swfdec_loader_set_target (policy_loader->loader,
-      SWFDEC_LOADER_TARGET (policy_loader));
-  swfdec_loader_set_data_type (policy_loader->loader, SWFDEC_LOADER_DATA_TEXT);
+  swfdec_stream_set_target (SWFDEC_STREAM (policy_loader->loader),
+      SWFDEC_STREAM_TARGET (policy_loader));
+  swfdec_loader_set_data_type (policy_loader->loader, SWFDEC_LOADER_DATA_XML);
 
   return policy_loader;
 }

@@ -25,7 +25,6 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_buffer.h"
 #include "swfdec_debug.h"
-#include "swfdec_loadertarget.h"
 #include "swfdec_player_internal.h"
 
 /*** gtk-doc ***/
@@ -35,14 +34,13 @@
  * @title: SwfdecLoader
  * @short_description: object used for input
  *
- * SwfdecLoader is the base class used for input. Since developers normally 
- * need to adapt input to the needs of their application, this class is 
- * provided to be adapted to their needs.
+ * SwfdecLoader is the base class used for reading input. Since developers 
+ * normally need to adapt input to the needs of their application, this class 
+ * is provided to be adapted to their needs. It is used both for HTTP and
+ * RTMP access.
  *
  * Since Flash files can load new resources while operating, a #SwfdecLoader
- * can be instructed to load another resource. It's the loader's responsibility
- * to make sure the player is allowed to access the resource and provide its
- * data.
+ * can be instructed to load another resource.
  *
  * For convenience, a #SwfdecLoader for file access is provided by Swfdec.
  */
@@ -50,8 +48,17 @@
 /**
  * SwfdecLoader:
  *
- * This is the base class used for providing input. It is abstract, use a 
+ * This is the base object used for providing input. It is abstract, use a 
  * subclass to provide your input.
+ */
+
+/**
+ * SwfdecLoaderClass:
+ * @load: initialize a new loader based on a parent loader object. The new 
+ *        loader will already have its URL set.
+ *
+ * This is the base class used for input. If you create a subclass, you are 
+ * supposed to set the function pointers listed above.
  */
 
 /**
@@ -87,15 +94,19 @@
 
 enum {
   PROP_0,
-  PROP_ERROR,
-  PROP_EOF,
   PROP_DATA_TYPE,
   PROP_SIZE,
   PROP_LOADED,
   PROP_URL
 };
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecLoader, swfdec_loader, G_TYPE_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (SwfdecLoader, swfdec_loader, SWFDEC_TYPE_STREAM)
+
+static const char *
+swfdec_loader_describe (SwfdecStream *stream)
+{
+  return swfdec_url_get_url (SWFDEC_LOADER (stream)->url);
+}
 
 static void
 swfdec_loader_get_property (GObject *object, guint param_id, GValue *value, 
@@ -104,12 +115,6 @@ swfdec_loader_get_property (GObject *object, guint param_id, GValue *value,
   SwfdecLoader *loader = SWFDEC_LOADER (object);
   
   switch (param_id) {
-    case PROP_ERROR:
-      g_value_set_string (value, loader->error);
-      break;
-    case PROP_EOF:
-      g_value_set_boolean (value, loader->state == SWFDEC_LOADER_STATE_EOF);
-      break;
     case PROP_DATA_TYPE:
       g_value_set_enum (value, loader->data_type);
       break;
@@ -135,9 +140,6 @@ swfdec_loader_set_property (GObject *object, guint param_id, const GValue *value
   SwfdecLoader *loader = SWFDEC_LOADER (object);
 
   switch (param_id) {
-    case PROP_ERROR:
-      swfdec_loader_error (loader, g_value_get_string (value));
-      break;
     case PROP_SIZE:
       if (loader->size == -1 && g_value_get_long (value) >= 0)
 	swfdec_loader_set_size (loader, g_value_get_long (value));
@@ -160,11 +162,10 @@ swfdec_loader_dispose (GObject *object)
 {
   SwfdecLoader *loader = SWFDEC_LOADER (object);
 
-  /* targets are supposed to keep a reference around */
-  g_assert (loader->target == NULL);
-  swfdec_buffer_queue_unref (loader->queue);
-  swfdec_url_free (loader->url);
-  g_free (loader->error);
+  if (loader->url) {
+    swfdec_url_free (loader->url);
+    loader->url = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_loader_parent_class)->dispose (object);
 }
@@ -173,17 +174,12 @@ static void
 swfdec_loader_class_init (SwfdecLoaderClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecStreamClass *stream_class = SWFDEC_STREAM_CLASS (klass);
 
   object_class->dispose = swfdec_loader_dispose;
   object_class->get_property = swfdec_loader_get_property;
   object_class->set_property = swfdec_loader_set_property;
 
-  g_object_class_install_property (object_class, PROP_ERROR,
-      g_param_spec_string ("error", "error", "NULL when no error or string describing error",
-	  NULL, G_PARAM_READABLE));
-  g_object_class_install_property (object_class, PROP_EOF,
-      g_param_spec_boolean ("eof", "eof", "TRUE when all data has been handed to the loader",
-	  FALSE, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_DATA_TYPE,
       g_param_spec_enum ("data-type", "data type", "the data's type as identified by Swfdec",
 	  SWFDEC_TYPE_LOADER_DATA_TYPE, SWFDEC_LOADER_DATA_UNKNOWN, G_PARAM_READABLE));
@@ -196,65 +192,19 @@ swfdec_loader_class_init (SwfdecLoaderClass *klass)
   g_object_class_install_property (object_class, PROP_URL,
       g_param_spec_boxed ("url", "url", "URL for this file",
 	  SWFDEC_TYPE_URL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+  stream_class->describe = swfdec_loader_describe;
 }
 
 static void
 swfdec_loader_init (SwfdecLoader *loader)
 {
-  loader->queue = swfdec_buffer_queue_new ();
   loader->data_type = SWFDEC_LOADER_DATA_UNKNOWN;
 
   loader->size = -1;
 }
 
 /*** INTERNAL API ***/
-
-static void
-swfdec_loader_process (gpointer loaderp, gpointer unused)
-{
-  SwfdecLoader *loader = loaderp;
-
-  g_assert (loader->target != NULL);
-
-  loader->queued = FALSE;
-  if (loader->state == loader->processed_state)
-    return;
-  g_assert (loader->state != SWFDEC_LOADER_STATE_CLOSED);
-  if (loader->state == SWFDEC_LOADER_STATE_ERROR) {
-    swfdec_loader_target_error (loader->target, loader);
-    return;
-  }
-  g_object_ref (loader);
-  while (loader->state != loader->processed_state) {
-    if (loader->processed_state == SWFDEC_LOADER_STATE_NEW) {
-      loader->processed_state = SWFDEC_LOADER_STATE_OPEN;
-      swfdec_loader_target_open (loader->target, loader);
-    } else if (loader->processed_state == SWFDEC_LOADER_STATE_OPEN) {
-      loader->processed_state = SWFDEC_LOADER_STATE_READING;
-      swfdec_loader_target_parse (loader->target, loader);
-    } else if (loader->processed_state == SWFDEC_LOADER_STATE_READING) {
-      loader->processed_state = SWFDEC_LOADER_STATE_EOF;
-      swfdec_loader_target_eof (loader->target, loader);
-    }
-    /* stupid reentrancy */
-    if (loader->processed_state == SWFDEC_LOADER_STATE_NEW)
-      break;
-  }
-  g_object_unref (loader);
-}
-
-static void
-swfdec_loader_queue_processing (SwfdecLoader *loader)
-{
-  if (loader->queued)
-    return;
-  loader->queued = TRUE;
-  if (loader->target) {
-    g_assert (loader->player);
-    swfdec_player_add_external_action (loader->player, loader,
-	swfdec_loader_process, NULL);
-  }
-}
 
 SwfdecLoader *
 swfdec_loader_load (SwfdecLoader *loader, const SwfdecURL *url,
@@ -274,140 +224,7 @@ swfdec_loader_load (SwfdecLoader *loader, const SwfdecURL *url,
   return ret;
 }
 
-void
-swfdec_loader_close (SwfdecLoader *loader)
-{
-  SwfdecLoaderClass *klass;
-
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  klass = SWFDEC_LOADER_GET_CLASS (loader);
-  
-  if (klass->close)
-    klass->close (loader);
-  if (loader->state != SWFDEC_LOADER_STATE_ERROR) {
-    loader->state = SWFDEC_LOADER_STATE_CLOSED;
-    loader->processed_state = SWFDEC_LOADER_STATE_CLOSED;
-  }
-}
-
-void
-swfdec_loader_set_target (SwfdecLoader *loader, SwfdecLoaderTarget *target)
-{
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (target == NULL || SWFDEC_IS_LOADER_TARGET (target));
-
-  if (loader->target) {
-    swfdec_player_remove_all_external_actions (loader->player, loader);
-  }
-  loader->queued = FALSE;
-  loader->target = target;
-  loader->processed_state = SWFDEC_LOADER_STATE_NEW;
-  if (target) {
-    loader->player = swfdec_loader_target_get_player (target);
-    swfdec_loader_queue_processing (loader);
-  } else {
-    loader->player = NULL;
-  }
-}
-
 /** PUBLIC API ***/
-
-/**
- * swfdec_loader_error:
- * @loader: a #SwfdecLoader
- * @error: a string describing the error
- *
- * Moves the loader in the error state if it wasn't before. A loader that is in
- * the error state will not process any more data. Also, internal error 
- * handling scripts may be executed.
- **/
-void
-swfdec_loader_error (SwfdecLoader *loader, const char *error)
-{
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (error != NULL);
-
-  if (loader->error) {
-    SWFDEC_ERROR ("another error in loader for %s: %s", swfdec_url_get_url (loader->url), error);
-    return;
-  }
-
-  SWFDEC_ERROR ("error in loader for %s: %s", swfdec_url_get_url (loader->url), error);
-  loader->state = SWFDEC_LOADER_STATE_ERROR;
-  loader->error = g_strdup (error);
-  swfdec_loader_queue_processing (loader);
-}
-
-/**
- * swfdec_loader_open:
- * @loader: a #SwfdecLoader
- * @url: the real URL used for this loader if it has changed (e.g. after HTTP 
- *       redirects) or %NULL if it hasn't changed
- *
- * Call this function when your loader opened the resulting file. For HTTP this
- * is when having received the headers. You must call this function before 
- * swfdec_laoder_push() can be called.
- **/
-void
-swfdec_loader_open (SwfdecLoader *loader, const char *url)
-{
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (loader->state == SWFDEC_LOADER_STATE_NEW);
-
-  loader->state = SWFDEC_LOADER_STATE_OPEN;
-  if (url) {
-    swfdec_url_free (loader->url);
-    loader->url = swfdec_url_new (url);
-    g_object_notify (G_OBJECT (loader), "url");
-  }
-  swfdec_loader_queue_processing (loader);
-}
-
-/**
- * swfdec_loader_push:
- * @loader: a #SwfdecLoader
- * @buffer: new data to make available. The loader takes the reference
- *          to the buffer.
- *
- * Makes the data in @buffer available to @loader and processes it. The @loader
- * must be open.
- **/
-void
-swfdec_loader_push (SwfdecLoader *loader, SwfdecBuffer *buffer)
-{
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (loader->state == SWFDEC_LOADER_STATE_OPEN || loader->state == SWFDEC_LOADER_STATE_READING);
-  g_return_if_fail (buffer != NULL);
-
-  swfdec_buffer_queue_push (loader->queue, buffer);
-  g_object_notify (G_OBJECT (loader), "loaded");
-  loader->state = SWFDEC_LOADER_STATE_READING;
-  if (loader->processed_state == SWFDEC_LOADER_STATE_READING)
-    loader->processed_state = SWFDEC_LOADER_STATE_OPEN;
-  swfdec_loader_queue_processing (loader);
-}
-
-/**
- * swfdec_loader_eof:
- * @loader: a #SwfdecLoader
- *
- * Indicates to @loader that no more data will follow. The loader must be open.
- **/
-void
-swfdec_loader_eof (SwfdecLoader *loader)
-{
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (loader->state == SWFDEC_LOADER_STATE_OPEN || loader->state == SWFDEC_LOADER_STATE_READING);
-
-  if (loader->size == 0) {
-    gulong bytes = swfdec_loader_get_loaded (loader);
-    if (bytes)
-      swfdec_loader_set_size (loader, bytes);
-  }
-  g_object_notify (G_OBJECT (loader), "eof");
-  loader->state = SWFDEC_LOADER_STATE_EOF;
-  swfdec_loader_queue_processing (loader);
-}
 
 /**
  * swfdec_loader_get_filename:
@@ -455,6 +272,27 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
   }
 
   return ret;
+}
+
+/**
+ * swfdec_loader_set_url:
+ * @loader: the loader to update
+ * @url: string specifying the new URL. The url must be a valid absolute URL.
+ *
+ * Updates the url of the given @loader to point to the new @url. This is useful
+ * whe encountering HTTP redirects, as the loader is supposed to reference the
+ * final URL after all rdirections.
+ * This function may not be called after calling swfdec_loader_open().
+ **/
+void
+swfdec_loader_set_url (SwfdecLoader *loader, const char *url)
+{
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  g_return_if_fail (url != NULL);
+  /* g_return_if_fail (LOADER_IS_NOT_OPEN_YET) */
+
+  swfdec_url_free (loader->url);
+  loader->url = swfdec_url_new (url);
 }
 
 /**
@@ -550,10 +388,13 @@ swfdec_loader_get_size (SwfdecLoader *loader)
 gulong
 swfdec_loader_get_loaded (SwfdecLoader *loader)
 {
+  SwfdecBufferQueue *queue;
+
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), 0);
 
-  return swfdec_buffer_queue_get_depth (loader->queue) + 
-    swfdec_buffer_queue_get_offset (loader->queue);
+  queue = swfdec_stream_get_queue (SWFDEC_STREAM (loader));
+  return swfdec_buffer_queue_get_depth (queue) + 
+    swfdec_buffer_queue_get_offset (queue);
 }
 
 /**
@@ -605,18 +446,20 @@ static ByteOrderMark boms[] = {
 char *
 swfdec_loader_get_text (SwfdecLoader *loader, guint version)
 {
+  SwfdecBufferQueue *queue;
   SwfdecBuffer *buffer;
   char *text;
   guint size, i, j;
 
   /* get the text from the loader */
-  size = swfdec_buffer_queue_get_depth (loader->queue);
+  queue = swfdec_stream_get_queue (SWFDEC_STREAM (loader));
+  size = swfdec_buffer_queue_get_depth (queue);
   if (size == 0) {
     SWFDEC_LOG ("empty loader, returning empty string");
     return g_strdup ("");
   }
 
-  buffer = swfdec_buffer_queue_peek (loader->queue, size);
+  buffer = swfdec_buffer_queue_peek (queue, size);
   if (!buffer)
     return NULL;
 
@@ -660,47 +503,5 @@ swfdec_loader_get_text (SwfdecLoader *loader, guint version)
   swfdec_buffer_unref (buffer);
 
   return text;
-}
-
-/*** X-WWW-FORM-URLENCODED ***/
-
-/* if speed ever gets an issue, use a 256 byte array instead of strchr */
-static const char *urlencode_unescaped="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.,:/()'";
-static void
-swfdec_urlencode_append_string (GString *str, const char *s)
-{
-  g_assert (s != NULL);
-  while (*s) {
-    if (strchr (urlencode_unescaped, *s))
-      g_string_append_c (str, *s);
-    else if (*s == ' ')
-      g_string_append_c (str, '+');
-    else
-      g_string_append_printf (str, "%%%02X", (guint) *s);
-    s++;
-  }
-}
-
-/**
- * swfdec_string_append_urlencoded:
- * @str: a #GString
- * @name: name of the property to append
- * @value: value of property to append or NULL for empty
- *
- * Appends a name/value pair in encoded as 'application/x-www-form-urlencoded' 
- * to the given @str
- **/
-void
-swfdec_string_append_urlencoded (GString *str, const char *name, const char *value)
-{
-  g_return_if_fail (str != NULL);
-  g_return_if_fail (name != NULL);
-
-  if (str->len > 0)
-    g_string_append_c (str, '&');
-  swfdec_urlencode_append_string (str, name);
-  g_string_append_c (str, '=');
-  if (value)
-    swfdec_urlencode_append_string (str, value);
 }
 

@@ -35,21 +35,21 @@
 #include "swfdec_flash_security.h"
 #include "swfdec_image_decoder.h"
 #include "swfdec_loader_internal.h"
-#include "swfdec_loadertarget.h"
 #include "swfdec_movie_clip_loader.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource_request.h"
 #include "swfdec_script.h"
 #include "swfdec_sprite.h"
+#include "swfdec_stream_target.h"
 #include "swfdec_swf_decoder.h"
 #include "swfdec_utils.h"
 
 
-static void swfdec_resource_loader_target_init (SwfdecLoaderTargetInterface *iface);
+static void swfdec_resource_stream_target_init (SwfdecStreamTargetInterface *iface);
 G_DEFINE_TYPE_WITH_CODE (SwfdecResource, swfdec_resource, SWFDEC_TYPE_FLASH_SECURITY,
-    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_resource_loader_target_init))
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_resource_stream_target_init))
 
-/*** SWFDEC_LOADER_TARGET interface ***/
+/*** SWFDEC_STREAM_TARGET interface ***/
 
 static gboolean 
 swfdec_resource_is_root (SwfdecResource *resource)
@@ -61,7 +61,7 @@ swfdec_resource_is_root (SwfdecResource *resource)
 }
 
 static SwfdecPlayer *
-swfdec_resource_loader_target_get_player (SwfdecLoaderTarget *target)
+swfdec_resource_stream_target_get_player (SwfdecStreamTarget *target)
 {
   return SWFDEC_FLASH_SECURITY (target)->player;
 }
@@ -81,7 +81,7 @@ swfdec_resource_check_rights (SwfdecResource *resource)
 }
 
 static void
-swfdec_resource_loader_target_image (SwfdecResource *instance)
+swfdec_resource_stream_target_image (SwfdecResource *instance)
 {
   SwfdecSpriteMovie *movie = instance->movie;
 
@@ -209,7 +209,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
     if (level < 0) {
       SWFDEC_WARNING ("%s does not reference a movie, not loading %s", resource->target,
 	  swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
-      swfdec_loader_close (resource->loader);
+      swfdec_stream_close (SWFDEC_STREAM (resource->loader));
       swfdec_player_unroot_object (player, G_OBJECT (resource));
       return FALSE;
     }
@@ -225,8 +225,9 @@ swfdec_resource_create_movie (SwfdecResource *resource)
 }
 
 static void
-swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_stream_target_open (SwfdecStreamTarget *target, SwfdecStream *stream)
 {
+  SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
   const char *query;
 
@@ -246,18 +247,21 @@ swfdec_resource_loader_target_open (SwfdecLoaderTarget *target, SwfdecLoader *lo
 }
 
 static void
-swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *stream)
 {
+  SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
+  SwfdecBufferQueue *queue;
   SwfdecBuffer *buffer;
   SwfdecDecoder *dec = resource->decoder;
   SwfdecStatus status;
   guint parsed;
 
-  if (dec == NULL && swfdec_buffer_queue_get_offset (loader->queue) == 0) {
-    if (swfdec_buffer_queue_get_depth (loader->queue) < SWFDEC_DECODER_DETECT_LENGTH)
+  queue = swfdec_stream_get_queue (stream);
+  if (dec == NULL && swfdec_buffer_queue_get_offset (queue) == 0) {
+    if (swfdec_buffer_queue_get_depth (queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return;
-    buffer = swfdec_buffer_queue_peek (loader->queue, 4);
+    buffer = swfdec_buffer_queue_peek (queue, 4);
     dec =
       swfdec_decoder_new (SWFDEC_FLASH_SECURITY (resource)->player, buffer);
     swfdec_buffer_unref (buffer);
@@ -271,19 +275,19 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 	dec->bytes_total = total;
     }
   }
-  while (swfdec_buffer_queue_get_depth (loader->queue)) {
+  while (swfdec_buffer_queue_get_depth (queue)) {
     parsed = 0;
     status = 0;
     do {
-      buffer = swfdec_buffer_queue_peek_buffer (loader->queue);
+      buffer = swfdec_buffer_queue_peek_buffer (queue);
       if (buffer == NULL)
 	break;
       if (parsed + buffer->length <= 65536) {
 	swfdec_buffer_unref (buffer);
-	buffer = swfdec_buffer_queue_pull_buffer (loader->queue);
+	buffer = swfdec_buffer_queue_pull_buffer (queue);
       } else {
 	swfdec_buffer_unref (buffer);
-	buffer = swfdec_buffer_queue_pull (loader->queue, 65536 - parsed);
+	buffer = swfdec_buffer_queue_pull (queue, 65536 - parsed);
       }
       parsed += buffer->length;
       if (dec) {
@@ -294,7 +298,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
     } while (parsed < 65536 && (status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_EOF)) == 0);
     if (status & SWFDEC_STATUS_ERROR) {
       SWFDEC_ERROR ("parsing error");
-      swfdec_loader_set_target (loader, NULL);
+      swfdec_stream_set_target (SWFDEC_STREAM (loader), NULL);
       return;
     }
     if ((status & SWFDEC_STATUS_INIT)) {
@@ -306,7 +310,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
       }
     }
     if (status & SWFDEC_STATUS_IMAGE)
-      swfdec_resource_loader_target_image (resource);
+      swfdec_resource_stream_target_image (resource);
     swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
     if (status & SWFDEC_STATUS_EOF)
       return;
@@ -314,7 +318,7 @@ swfdec_resource_loader_target_parse (SwfdecLoaderTarget *target, SwfdecLoader *l
 }
 
 static void
-swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_stream_target_close (SwfdecStreamTarget *target, SwfdecStream *stream)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
   SwfdecAsValue val;
@@ -324,7 +328,7 @@ swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loa
     SwfdecDecoder *dec = resource->decoder;
     swfdec_decoder_eof (dec);
     if (dec->data_type != SWFDEC_LOADER_DATA_UNKNOWN)
-      swfdec_loader_set_data_type (loader, dec->data_type);
+      swfdec_loader_set_data_type (SWFDEC_LOADER (stream), dec->data_type);
   }
   SWFDEC_AS_VALUE_SET_INT (&val, 0); /* FIXME */
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
@@ -332,7 +336,7 @@ swfdec_resource_loader_target_eof (SwfdecLoaderTarget *target, SwfdecLoader *loa
 }
 
 static void
-swfdec_resource_loader_target_error (SwfdecLoaderTarget *target, SwfdecLoader *loader)
+swfdec_resource_stream_target_error (SwfdecStreamTarget *target, SwfdecStream *stream)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
   const char *message;
@@ -356,13 +360,13 @@ swfdec_resource_loader_target_error (SwfdecLoaderTarget *target, SwfdecLoader *l
 }
 
 static void
-swfdec_resource_loader_target_init (SwfdecLoaderTargetInterface *iface)
+swfdec_resource_stream_target_init (SwfdecStreamTargetInterface *iface)
 {
-  iface->get_player = swfdec_resource_loader_target_get_player;
-  iface->open = swfdec_resource_loader_target_open;
-  iface->parse = swfdec_resource_loader_target_parse;
-  iface->error = swfdec_resource_loader_target_error;
-  iface->eof = swfdec_resource_loader_target_eof;
+  iface->get_player = swfdec_resource_stream_target_get_player;
+  iface->open = swfdec_resource_stream_target_open;
+  iface->parse = swfdec_resource_stream_target_parse;
+  iface->error = swfdec_resource_stream_target_error;
+  iface->close = swfdec_resource_stream_target_close;
 }
 
 static void
@@ -371,7 +375,7 @@ swfdec_resource_dispose (GObject *object)
   SwfdecResource *resource = SWFDEC_RESOURCE (object);
 
   if (resource->loader) {
-    swfdec_loader_set_target (resource->loader, NULL);
+    swfdec_stream_set_target (SWFDEC_STREAM (resource->loader), NULL);
     g_object_unref (resource->loader);
     resource->loader = NULL;
   }
@@ -416,7 +420,7 @@ swfdec_resource_set_loader (SwfdecResource *resource, SwfdecLoader *loader)
   g_return_if_fail (resource->loader == NULL);
 
   resource->loader = g_object_ref (loader);
-  swfdec_loader_set_target (resource->loader, SWFDEC_LOADER_TARGET (resource));
+  swfdec_stream_set_target (SWFDEC_STREAM (resource->loader), SWFDEC_STREAM_TARGET (resource));
   swfdec_flash_security_set_url (SWFDEC_FLASH_SECURITY (resource),
       swfdec_loader_get_url (loader));
   resource->state = SWFDEC_RESOURCE_REQUESTED;

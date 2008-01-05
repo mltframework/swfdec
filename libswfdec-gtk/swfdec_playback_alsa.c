@@ -118,7 +118,7 @@ try_write (Stream *stream)
 }
 
 static void
-swfdec_stream_remove_handlers (Stream *stream)
+swfdec_playback_stream_remove_handlers (Stream *stream)
 {
   guint i;
 
@@ -131,7 +131,7 @@ swfdec_stream_remove_handlers (Stream *stream)
   }
 }
 
-static void swfdec_stream_start (Stream *stream);
+static void swfdec_playback_stream_start (Stream *stream);
 static gboolean
 handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
 {
@@ -140,7 +140,7 @@ handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
 
   state = snd_pcm_state (stream->pcm);
   if (state != SND_PCM_STATE_RUNNING) {
-    swfdec_stream_start (stream);
+    swfdec_playback_stream_start (stream);
   } else {
     try_write (stream);
   }
@@ -148,7 +148,7 @@ handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
 }
 
 static void
-swfdec_stream_install_handlers (Stream *stream)
+swfdec_playback_stream_install_handlers (Stream *stream)
 {
   GIOChannel *channel;
 
@@ -172,7 +172,7 @@ swfdec_stream_install_handlers (Stream *stream)
 }
 
 static void
-swfdec_stream_start (Stream *stream)
+swfdec_playback_stream_start (Stream *stream)
 {
   snd_pcm_state_t state = snd_pcm_state (stream->pcm);
   switch (state) {
@@ -186,7 +186,7 @@ swfdec_stream_start (Stream *stream)
       //g_print ("offset: %u (delay: %ld)\n", sound->offset, delay);
       if (try_write (stream)) {
 	ALSA_ERROR (snd_pcm_start (stream->pcm), "error starting",);
-	swfdec_stream_install_handlers (stream);
+	swfdec_playback_stream_install_handlers (stream);
       }
       break;
     case SND_PCM_STATE_OPEN:
@@ -201,7 +201,7 @@ swfdec_stream_start (Stream *stream)
 }
 
 static void
-swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
+swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
 {
   Stream *stream;
   snd_pcm_t *ret;
@@ -259,7 +259,7 @@ swfdec_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   if (stream->n_sources > 0)
     stream->sources = g_new0 (GSource *, stream->n_sources);
   sound->streams = g_list_prepend (sound->streams, stream);
-  swfdec_stream_start (stream);
+  swfdec_playback_stream_start (stream);
   return;
 
 fail:
@@ -267,10 +267,10 @@ fail:
 }
 
 static void
-swfdec_stream_close (Stream *stream)
+swfdec_playback_stream_close (Stream *stream)
 {
   ALSA_TRY (snd_pcm_close (stream->pcm), "failed closing");
-  swfdec_stream_remove_handlers (stream);
+  swfdec_playback_stream_remove_handlers (stream);
   g_free (stream->sources);
   stream->sound->streams = g_list_remove (stream->sound->streams, stream);
   g_object_unref (stream->audio);
@@ -298,7 +298,7 @@ advance_before (SwfdecPlayer *player, guint msecs, guint audio_samples, gpointer
 static void
 audio_added (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
 {
-  swfdec_stream_open (sound, audio);
+  swfdec_playback_stream_open (sound, audio);
 }
 
 static void
@@ -309,7 +309,7 @@ audio_removed (SwfdecPlayer *player, SwfdecAudio *audio, SwfdecPlayback *sound)
   for (walk = sound->streams; walk; walk = walk->next) {
     Stream *stream = walk->data;
     if (stream->audio == audio) {
-      swfdec_stream_close (stream);
+      swfdec_playback_stream_close (stream);
       return;
     }
   }
@@ -330,7 +330,7 @@ swfdec_playback_open (SwfdecPlayer *player, GMainContext *context)
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), sound);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), sound);
   for (walk = swfdec_player_get_audio (player); walk; walk = walk->next) {
-    swfdec_stream_open (sound, walk->data);
+    swfdec_playback_stream_open (sound, walk->data);
   }
   g_main_context_ref (context);
   sound->context = context;
@@ -349,7 +349,7 @@ swfdec_playback_close (SwfdecPlayback *sound)
 #define REMOVE_HANDLER(obj,func,data) REMOVE_HANDLER_FULL (obj, func, data, 1)
 
   while (sound->streams)
-    swfdec_stream_close (sound->streams->data);
+    swfdec_playback_stream_close (sound->streams->data);
   REMOVE_HANDLER (sound->player, advance_before, sound);
   REMOVE_HANDLER (sound->player, audio_added, sound);
   REMOVE_HANDLER (sound->player, audio_removed, sound);

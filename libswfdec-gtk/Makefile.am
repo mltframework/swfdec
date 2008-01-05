@@ -23,12 +23,12 @@ noinst_HEADERS = \
 
 libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	-I$(top_srcdir) $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS) \
-	$(AUDIO_CFLAGS) $(HTTP_CFLAGS) \
+	$(AUDIO_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Swfdec-Gtk\"
 libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	-version-info $(SWFDEC_LIBVERSION) \
 	-export-symbols-regex '^(swfdec_.*)' \
-	$(GTK_LIBS) $(SWFDEC_LIBS) $(AUDIO_LIBS) $(HTTP_LIBS)
+	$(GTK_LIBS) $(SWFDEC_LIBS) $(AUDIO_LIBS) 
 libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec-gtk
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 	swfdec-gtk.h \

@@ -97,7 +97,7 @@ AC_SUBST(PANGO_CFLAGS)
 
 AC_ARG_ENABLE(gtk,
 	AS_HELP_STRING([--enable-gtk],
-			[enable Gtk integration (default=yes)])],
+			[enable build of libswfdec-gtk (default=yes)])],
 	enable_gtk=$enableval,
 	enable_gtk="yes")
 
@@ -107,12 +107,8 @@ dnl
 GTK_VER=2.8.0
 AC_SUBST(GTK_VER)
 if test "$enable_gtk" = "yes"; then
-	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER, HAVE_GTK=yes, HAVE_GTK=no)
-	if test "x$HAVE_GTK" = xyes; then
-	  AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
-	else
-	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_VER])
-	fi
+	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER libsoup-2.2 >= 2.2.0, HAVE_GTK=yes)
+	AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
 else
 	AC_MSG_NOTICE([Gtk support was not enabled.])
 fi
@@ -265,24 +261,6 @@ else
 fi
 AM_CONDITIONAL(HAVE_GST, [test "x$HAVE_GST" = xyes])
 
-
-AC_ARG_ENABLE(soup,
-	AS_HELP_STRING([--enable-soup],
-			[enable libsoup HTTP support for swfdec-gtk (default=yes)])],
-	enable_libsoup=$enableval,
-	enable_libsoup="yes")
-
-if test "$enable_libsoup" = "yes"; then
-	PKG_CHECK_MODULES(HTTP, libsoup-2.2 >= 2.2.0, HAVE_HTTP=yes, HAVE_HTTP=no)
-	if test "x$HAVE_HTTP" = xyes; then
-	  AC_DEFINE(HAVE_HTTP, 1, [Define if libsoup is enabled])
-	else
-	  AC_MSG_ERROR([Couldn't find libsoup-2.2.])
-	fi
-else
-	AC_MSG_NOTICE([libsoup HTTP support was not enabled.])
-fi
-AM_CONDITIONAL(HAVE_HTTP, [test "x$HAVE_HTTP" = xyes])
 
 AC_ARG_ENABLE(vivified,
 	AS_HELP_STRING([--enable-vivified],

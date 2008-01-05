@@ -14,6 +14,7 @@ libswfdec_gtk_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 	swfdec_gtk_keys.c \
 	swfdec_gtk_loader.c \
 	swfdec_gtk_player.c \
+	swfdec_gtk_socket.c \
 	swfdec_gtk_widget.c
 
 noinst_HEADERS = \
@@ -34,6 +35,7 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 	swfdec_gtk_keys.h \
 	swfdec_gtk_loader.h \
 	swfdec_gtk_player.h \
+	swfdec_gtk_socket.h \
 	swfdec_gtk_widget.h
 
 EXTRA_DIST = \

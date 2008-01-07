@@ -21,12 +21,112 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "swfdec_test_test.h"
 #include "swfdec_test_function.h"
 
+static void
+swfdec_test_throw (SwfdecAsContext *cx, const char *message, ...)
+{
+  SwfdecAsValue val;
+
+  if (!swfdec_as_context_catch (cx, &val)) {
+    va_list varargs;
+    char *s;
+
+    va_start (varargs, message);
+    s = g_strdup_vprintf (message, varargs);
+    va_end (varargs);
+
+    /* FIXME: Throw a real object here? */
+    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (cx, s));
+  }
+  swfdec_as_context_throw (cx, &val);
+}
+
 /*** trace capturing ***/
 
+static void
+swfdec_test_test_trace_stop (SwfdecTestTest *test)
+{
+  if (test->trace_filename == NULL)
+    return;
 
+  if (test->trace_buffer &&
+      test->trace_offset != test->trace_buffer->data + test->trace_buffer->length)
+    test->trace_failed = TRUE;
+
+  if (test->trace_failed) {
+    /* FIXME: produce a diff here */
+    swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "invalid trace output");
+  }
+
+  if (test->trace_buffer) {
+    swfdec_buffer_unref (test->trace_buffer);
+    test->trace_buffer = NULL;
+  }
+  g_free (test->trace_filename);
+  test->trace_filename = NULL;
+}
+
+static void
+swfdec_test_test_trace_start (SwfdecTestTest *test, const char *filename)
+{
+  GError *error = NULL;
+
+  g_assert (test->trace_filename == NULL);
+
+  test->trace_filename = g_strdup (filename);
+  test->trace_buffer = swfdec_buffer_new_from_file (filename, &error);
+  if (test->trace_buffer == NULL) {
+    swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "Could not start trace: %s", error->message);
+    g_error_free (error);
+    return;
+  }
+  test->trace_offset = test->trace_buffer->data;
+}
+
+static void
+swfdec_test_test_trace_cb (SwfdecPlayer *player, const char *message, SwfdecTestTest *test)
+{
+  gsize len;
+
+  if (test->trace_buffer == NULL || test->trace_failed)
+    return;
+
+  len = strlen (message);
+  if (len + 1 > test->trace_buffer->length - (test->trace_offset -test->trace_buffer->data)) {
+    test->trace_failed = TRUE;
+    return;
+  }
+  if (memcmp (message, test->trace_offset, len) != 0) {
+    test->trace_failed = TRUE;
+    return;
+  }
+  test->trace_offset += len;
+  if (test->trace_offset[0] != '\n') {
+    test->trace_failed = TRUE;
+    return;
+  }
+  test->trace_offset++;
+}
+
+SWFDEC_TEST_FUNCTION ("Test_trace", swfdec_test_test_trace, 0)
+void
+swfdec_test_test_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+  const char *filename;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
+
+  swfdec_test_test_trace_stop (test);
+  if (filename[0] == '\0')
+    return;
+  swfdec_test_test_trace_start (test, filename);
+}
 
 /*** SWFDEC_TEST_TEST ***/
 
@@ -37,9 +137,13 @@ swfdec_test_test_dispose (GObject *object)
 {
   SwfdecTestTest *test = SWFDEC_TEST_TEST (object);
 
+  /* FIXME: this can throw, is that ok? */
+  swfdec_test_test_trace_stop (test);
+
   g_free (test->filename);
   test->filename = NULL;
   if (test->player) {
+    g_signal_handlers_disconnect_matched (test, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, test);
     g_object_unref (test->player);
     test->player = NULL;
   }
@@ -60,20 +164,6 @@ swfdec_test_test_init (SwfdecTestTest *this)
 {
 }
 
-#if 0
-static void
-swfdec_test_throw (SwfdecAsContext *cx, const char *error)
-{
-  SwfdecAsValue val;
-
-  if (!swfdec_as_context_catch (cx, &val)) {
-    /* FIXME: Throw a real object here? */
-    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, error));
-  }
-  swfdec_as_context_throw (cx, &val);
-}
-#endif
-
 static void
 swfdec_test_test_fscommand (SwfdecPlayer *player, const char *command, 
     const char *para, SwfdecTestTest *test)
@@ -91,6 +181,7 @@ swfdec_test_test_ensure_player (SwfdecTestTest *test)
 
   test->player = swfdec_player_new_from_file (test->filename);
   g_signal_connect (test, "fscommand", G_CALLBACK (swfdec_test_test_fscommand), test);
+  g_signal_connect (test, "trace", G_CALLBACK (swfdec_test_test_trace_cb), test);
   return TRUE;
 }
 
@@ -98,6 +189,7 @@ static void
 swfdec_test_do_reset (SwfdecTestTest *test, const char *filename)
 {
   if (test->player) {
+    g_signal_handlers_disconnect_matched (test, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, test);
     g_object_unref (test->player);
     test->player = NULL;
   }
@@ -153,7 +245,7 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
 
-  swfdec_test_do_reset (test, filename);
+  swfdec_test_do_reset (test, filename[0] ? filename : NULL);
 }
 
 SWFDEC_TEST_FUNCTION ("Test_rate", swfdec_test_test_get_rate, 0)

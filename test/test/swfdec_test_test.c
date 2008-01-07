@@ -155,3 +155,16 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   swfdec_test_do_reset (test, filename);
 }
+
+SWFDEC_TEST_FUNCTION ("Test_rate", swfdec_test_test_get_rate, 0)
+void
+swfdec_test_test_get_rate (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "");
+
+  SWFDEC_AS_VALUE_SET_NUMBER (retval, test->player ? swfdec_player_get_rate (test->player) : 0);
+}
+

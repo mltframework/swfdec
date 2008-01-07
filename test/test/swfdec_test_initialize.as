@@ -18,7 +18,9 @@
  */
 
 Test = Native.Test;
-Test.reset = Native.reset;
+Test.reset = Native.Test_reset;
+Test.prototype = {};
+Test.prototype.addProperty ("rate", Native.Test_get_rate, null);
 
 print = function (s) {
   if (s)

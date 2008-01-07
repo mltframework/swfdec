@@ -18,7 +18,8 @@ SUBDIRS= \
 	$(GTK_SUBDIRS) \
 	$(VIVI_SUBDIRS) \
 	data \
-	test
+	test \
+	tools
 
 ACLOCAL_FLAGS = -I m4
 

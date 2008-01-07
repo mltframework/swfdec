@@ -1,0 +1,17 @@
+*~
+.deps
+.libs
+
+Makefile
+Makefile.in
+*.lo
+*.o
+
+libswfedit.la
+
+dump
+parse
+swfdec-extract
+swfedit
+swfscript
+crashfinder

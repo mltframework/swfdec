@@ -5,6 +5,7 @@ swfdec_test_sources = \
 	swfdec_test.c \
 	swfdec_test_function.c \
 	swfdec_test_function.h \
+	swfdec_test_global.c \
 	swfdec_test_test.c \
 	swfdec_test_test.h
 

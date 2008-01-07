@@ -26,4 +26,15 @@
 #include "swfdec_test_function.h"
 #include "swfdec_test_initialize.h"
 
+SWFDEC_TEST_FUNCTION ("print", swfdec_test_print, 0)
+void
+swfdec_test_print (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  const char *s;
+
+  SWFDEC_AS_CHECK (0, NULL, "s", s);
+
+  g_print ("%s\n", s);
+}
 

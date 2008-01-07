@@ -18,3 +18,9 @@
  */
 
 Test = Native.Test;
+Test.reset = Native.reset;
+
+print = function (s) {
+  if (s)
+    Native.print ("INFO: " + s);
+};

@@ -231,7 +231,7 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
 
       for (i = 0; i < length; i++) {
 	swfdec_as_object_get_variable (array,
-	    swfdec_as_double_to_string (cx, i), &argv_pass[i]);
+	    swfdec_as_integer_to_string (cx, i), &argv_pass[i]);
       }
     } else {
       length = 0;

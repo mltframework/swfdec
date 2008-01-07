@@ -121,13 +121,14 @@ swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
     gssize length, gboolean unescape_nbsp)
 {
   int i;
-  const char *p, *start;
+  const char *p, *start, *end;
   GString *string;
 
   string = g_string_new ("");
 
   p = start = orginal;
-  while ((p = strchr (p, '&')) != NULL && p - orginal < length) {
+  end = orginal + length;
+  while ((p = memchr (p, '&', end - p)) != NULL) {
     string = g_string_append_len (string, start, p - start);
 
     for (i = 0; xml_entities[i].escaped != NULL; i++) {

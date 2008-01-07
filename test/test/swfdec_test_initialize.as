@@ -18,11 +18,17 @@
  */
 
 Test = Native.Test;
-Test.reset = Native.Test_reset;
 Test.prototype = {};
+Test.prototype.advance = Native.Test_advance;
+Test.prototype.reset = Native.Test_reset;
+Test.prototype.trace = Native.Test_trace;
 Test.prototype.addProperty ("rate", Native.Test_get_rate, null);
 
 print = function (s) {
   if (s)
     Native.print ("INFO: " + s);
+};
+error = function (s) {
+  if (s)
+    Native.print ("ERROR: " + s);
 };

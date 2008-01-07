@@ -33,7 +33,7 @@ swfdec_test_print (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 {
   const char *s;
 
-  SWFDEC_AS_CHECK (0, NULL, "s", s);
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
 
   g_print ("%s\n", s);
 }

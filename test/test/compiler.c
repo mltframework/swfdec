@@ -21,7 +21,7 @@ main (int argc, char **argv)
   SWFAction action;
   char *contents;
   GError *error = NULL;
-  gsize len;
+  int len;
   byte *data;
 
   if (argc != 3) {
@@ -38,7 +38,11 @@ main (int argc, char **argv)
     return 1;
   }
   action = newSWFAction (contents);
-  data = SWFAction_getByteCode (action, &len);
+  if (SWFAction_compile (action, 8, &len) != 0) {
+    g_printerr ("compilation failed\n");
+    return 1;
+  }
+  data = SWFAction_getByteCode (action, NULL);
   contents = g_malloc (len + sizeof (HEADER));
   memcpy (contents, HEADER, sizeof (HEADER));
   memcpy (contents + sizeof (HEADER), data, len);

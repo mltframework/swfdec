@@ -50,7 +50,7 @@ vivi_function_list.h: $(libvivified_core_source)
 	(cd $(srcdir) \
 	  && grep -he "^VIVI_FUNCTION" $(libvivified_core_sources) \
 	 ) >> xgen-vfl \
-	&& (cmp -s xgen-vfl vivi_asnative.h || cp xgen-vfl vivi_function_list.h) \
+	&& (cmp -s xgen-vfl vivi_function_list.h || cp xgen-vfl vivi_function_list.h) \
 	&& rm -f xgen-vfl
 
 vivi_marshal.h: vivi_marshal.list Makefile

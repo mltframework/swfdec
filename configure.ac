@@ -354,6 +354,7 @@ player/Makefile
 test/Makefile
 test/image/Makefile
 test/sound/Makefile
+test/test/Makefile
 test/trace/Makefile
 test/various/Makefile
 vivified/Makefile

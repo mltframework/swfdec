@@ -1,4 +1,4 @@
-SUBDIRS = image sound trace various
+SUBDIRS = image sound test trace various
 
 
 if WITH_GTK

@@ -1,0 +1,30 @@
+check_PROGRAMS = test
+TESTS = $(check_PROGRAMS)
+
+swfdec_test_sources = \
+	swfdec_test.c \
+	swfdec_test_function.c \
+	swfdec_test_function.h \
+	swfdec_test_test.c \
+	swfdec_test_test.h
+
+BUILT_SOURCES = \
+	swfdec_test_function_list.h
+
+CLEANFILES = \
+	$(BUILT_SOURCES)
+
+test_SOURCES = \
+	$(swfdec_test_sources) \
+	$(BUILT_SOURCES)
+
+test_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
+test_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS) $(CAIRO_LIBS)
+
+swfdec_test_function_list.h: $(swfdec_test_sources)
+	(cd $(srcdir) \
+	  && grep -he "^SWFDEC_TEST_FUNCTION" $(swfdec_test_sources) \
+	 ) >> xgen-sfl \
+	&& (cmp -s xgen-sfl swfdec_test_function_list.h || cp xgen-sfl swfdec_test_function_list.h) \
+	&& rm -f xgen-sfl
+

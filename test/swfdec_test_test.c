@@ -111,6 +111,7 @@ swfdec_test_test_trace_stop (SwfdecTestTest *test)
   g_slist_foreach (test->trace_captured, (GFunc) g_free, NULL);
   g_slist_free (test->trace_captured);
   test->trace_captured = NULL;
+  test->trace_failed = FALSE;
 }
 
 static void

@@ -1,16 +1,5 @@
-check_PROGRAMS = trace
-
-TESTS = $(check_PROGRAMS)
-
-trace_SOURCES = \
-	swfdec_interaction.c \
-	trace.c
-
-noinst_HEADERS = \
-	swfdec_interaction.h
-
-trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
-trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
+check-local:
+	../test $(srcdir)/*.swf
 
 EXTRA_DIST = \
 	README \
@@ -3214,5 +3203,3 @@ EXTRA_DIST = \
 	xml-socket-properties-8.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
-
-glow = tmp

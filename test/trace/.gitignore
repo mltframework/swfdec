@@ -1,12 +1,2 @@
-*~
-CVS
-.cvsignore
-.deps
-.libs
-
 Makefile
 Makefile.in
-*.o
-
-tmp
-trace

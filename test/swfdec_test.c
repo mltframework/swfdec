@@ -84,6 +84,14 @@ main (int argc, char **argv)
   };
   GOptionContext *ctx;
 
+  /* set the right warning levels */
+  g_log_set_always_fatal (G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING);
+  /* by default get rid of the loads of warnings the tests produce */
+  g_setenv ("SWFDEC_DEBUG", "2", FALSE);
+
+  g_thread_init (NULL);
+  swfdec_init ();
+
   ctx = g_option_context_new ("");
   g_option_context_add_main_entries (ctx, options, "options");
   g_option_context_parse (ctx, &argc, &argv, &error);
@@ -95,12 +103,6 @@ main (int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  if (argc < 2) {
-    g_printerr ("ERROR: Usage: %s [OPTIONS] filename\n", argv[0]);
-    return EXIT_FAILURE;
-  }
-
-  swfdec_init ();
   script = load_script (script_filename);
   g_free (script_filename);
   if (script == NULL)
@@ -117,9 +119,22 @@ main (int argc, char **argv)
     g_print ("ERROR: Not enough memory");
     return EXIT_FAILURE;
   }
-  for (i = 1; i < argc; i++) {
-    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (context, argv[i]));
-    swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+  if (argc < 2) {
+    GDir *dir;
+    const char *file;
+    dir = g_dir_open (".", 0, NULL);
+    while ((file = g_dir_read_name (dir))) {
+      if (!g_str_has_suffix (file, ".swf"))
+	continue;
+      SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (context, file));
+      swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+    }
+    g_dir_close (dir);
+  } else {
+    for (i = 1; i < argc; i++) {
+      SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (context, argv[i]));
+      swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+    }
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
   swfdec_as_object_set_variable (context->global, 

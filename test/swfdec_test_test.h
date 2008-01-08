@@ -48,6 +48,7 @@ struct _SwfdecTestTest
   SwfdecBuffer *	trace_buffer;	/* buffer containing the file */
   guchar *		trace_offset;	/* how far we've parsed the trace data */
   gboolean		trace_failed;	/* TRUE if the tacing failed */
+  GSList *		trace_captured;	/* captured trace strings (newest first) */
 };
 
 struct _SwfdecTestTestClass

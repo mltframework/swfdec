@@ -22,6 +22,7 @@
 #endif
 
 #include <string.h>
+#include <unistd.h>
 
 #include "swfdec_test_test.h"
 #include "swfdec_test_function.h"
@@ -47,6 +48,43 @@ swfdec_test_throw (SwfdecAsContext *cx, const char *message, ...)
 
 /*** trace capturing ***/
 
+static char *
+swfdec_test_test_trace_diff (SwfdecTestTest *test)
+{
+  const char *command[] = { "diff", "-u", test->trace_filename, NULL, NULL };
+  char *tmp, *diff;
+  int fd;
+  GSList *walk;
+
+  fd = g_file_open_tmp (NULL, &tmp, NULL);
+  if (fd < 0)
+    return FALSE;
+
+  test->trace_captured = g_slist_reverse (test->trace_captured);
+  for (walk = test->trace_captured; walk; walk = walk->next) {
+    const char *s = walk->data;
+    ssize_t len = strlen (s);
+    if (write (fd, s, len) != len ||
+        write (fd, "\n", 1) != 1) {
+      close (fd);
+      unlink (tmp);
+      g_free (tmp);
+      return NULL;
+    }
+  }
+  close (fd);
+  command[3] = tmp;
+  if (!g_spawn_sync (NULL, (char **) command, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
+	&diff, NULL, NULL, NULL)) {
+    unlink (tmp);
+    g_free (tmp);
+    return NULL;
+  }
+  unlink (tmp);
+  g_free (tmp);
+  return diff;
+}
+
 static void
 swfdec_test_test_trace_stop (SwfdecTestTest *test)
 {
@@ -58,8 +96,10 @@ swfdec_test_test_trace_stop (SwfdecTestTest *test)
     test->trace_failed = TRUE;
 
   if (test->trace_failed) {
+    char *diff = swfdec_test_test_trace_diff (test);
     /* FIXME: produce a diff here */
-    swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "invalid trace output");
+    swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "invalid trace output:\n%s", diff);
+    g_free (diff);
   }
 
   if (test->trace_buffer) {
@@ -68,6 +108,9 @@ swfdec_test_test_trace_stop (SwfdecTestTest *test)
   }
   g_free (test->trace_filename);
   test->trace_filename = NULL;
+  g_slist_foreach (test->trace_captured, (GFunc) g_free, NULL);
+  g_slist_free (test->trace_captured);
+  test->trace_captured = NULL;
 }
 
 static void
@@ -92,7 +135,11 @@ swfdec_test_test_trace_cb (SwfdecPlayer *player, const char *message, SwfdecTest
 {
   gsize len;
 
-  if (test->trace_buffer == NULL || test->trace_failed)
+  if (test->trace_buffer == NULL)
+    return;
+  
+  test->trace_captured = g_slist_prepend (test->trace_captured, g_strdup (message));
+  if (test->trace_failed)
     return;
 
   len = strlen (message);
@@ -179,9 +226,11 @@ swfdec_test_test_ensure_player (SwfdecTestTest *test)
   if (test->filename == NULL)
     return FALSE;
 
+  if (test->player)
+    return TRUE;
   test->player = swfdec_player_new_from_file (test->filename);
-  g_signal_connect (test, "fscommand", G_CALLBACK (swfdec_test_test_fscommand), test);
-  g_signal_connect (test, "trace", G_CALLBACK (swfdec_test_test_trace_cb), test);
+  g_signal_connect (test->player, "fscommand", G_CALLBACK (swfdec_test_test_fscommand), test);
+  g_signal_connect (test->player, "trace", G_CALLBACK (swfdec_test_test_trace_cb), test);
   return TRUE;
 }
 
@@ -209,16 +258,21 @@ swfdec_test_test_advance (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "i", &msecs);
 
-  if (msecs <= 0 || test->player_quit)
+  if (msecs < 0 || test->player_quit)
     return;
   swfdec_test_test_ensure_player (test);
-  while (msecs > 0 && !test->player_quit) {
-    int next_event = swfdec_player_get_next_event (test->player);
-    if (next_event < 0)
-      break;
-    next_event = MIN (next_event, msecs);
-    swfdec_player_advance (test->player, next_event);
-    msecs -= next_event;
+  if (msecs == 0) {
+    if (!test->player_quit)
+      swfdec_player_advance (test->player, 0);
+  } else {
+    while (msecs > 0 && !test->player_quit) {
+      int next_event = swfdec_player_get_next_event (test->player);
+      if (next_event < 0)
+	break;
+      next_event = MIN (next_event, msecs);
+      swfdec_player_advance (test->player, next_event);
+      msecs -= next_event;
+    }
   }
 }
 
@@ -248,7 +302,7 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   swfdec_test_do_reset (test, filename[0] ? filename : NULL);
 }
 
-SWFDEC_TEST_FUNCTION ("Test_rate", swfdec_test_test_get_rate, 0)
+SWFDEC_TEST_FUNCTION ("Test_get_rate", swfdec_test_test_get_rate, 0)
 void
 swfdec_test_test_get_rate (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)

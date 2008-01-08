@@ -33,17 +33,15 @@ EXTRA_DIST = \
 	button-hittest-8.swf.trace \
 	button-hittest.c \
 	definebutton-5.swf \
-	definebutton-5.swf.act \
 	definebutton-5.swf.trace \
 	definebutton-6.swf \
-	definebutton-6.swf.act \
 	definebutton-6.swf.trace \
 	definebutton-7.swf \
-	definebutton-7.swf.act \
 	definebutton-7.swf.trace \
 	definebutton-8.swf \
-	definebutton-8.swf.act \
 	definebutton-8.swf.trace \
+	definebutton.stas \
+	definebutton.sts \
 	definebutton.xml \
 	mouse-addProperty-relevant.as \
 	mouse-addProperty-relevant-5.swf \

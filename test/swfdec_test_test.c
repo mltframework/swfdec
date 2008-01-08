@@ -111,7 +111,6 @@ swfdec_test_test_trace_stop (SwfdecTestTest *test)
   g_slist_foreach (test->trace_captured, (GFunc) g_free, NULL);
   g_slist_free (test->trace_captured);
   test->trace_captured = NULL;
-  test->trace_failed = FALSE;
 }
 
 static void
@@ -120,8 +119,10 @@ swfdec_test_test_trace_start (SwfdecTestTest *test, const char *filename)
   GError *error = NULL;
 
   g_assert (test->trace_filename == NULL);
+  g_assert (test->trace_captured == NULL);
 
   test->trace_filename = g_strdup (filename);
+  test->trace_failed = FALSE;
   test->trace_buffer = swfdec_buffer_new_from_file (filename, &error);
   if (test->trace_buffer == NULL) {
     swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "Could not start trace: %s", error->message);
@@ -226,10 +227,10 @@ swfdec_test_test_ensure_player (SwfdecTestTest *test)
 {
   if (test->filename == NULL)
     return FALSE;
-
   if (test->player)
     return TRUE;
-  test->player_quit = FALSE;
+
+  g_assert (test->player_quit == FALSE);
   test->player = swfdec_player_new_from_file (test->filename);
   g_signal_connect (test->player, "fscommand", G_CALLBACK (swfdec_test_test_fscommand), test);
   g_signal_connect (test->player, "trace", G_CALLBACK (swfdec_test_test_trace_cb), test);
@@ -248,6 +249,7 @@ swfdec_test_do_reset (SwfdecTestTest *test, const char *filename)
     return;
 
   test->filename = g_strdup (filename);
+  test->player_quit = FALSE;
 }
 
 SWFDEC_TEST_FUNCTION ("Test_advance", swfdec_test_test_advance, 0)

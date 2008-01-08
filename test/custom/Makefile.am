@@ -4,42 +4,32 @@ check-local:
 	done
 
 EXTRA_DIST = \
+	button-events.c \
+	button-events.stas \
+	button-events.sts \
 	button-events-button-5.swf \
-	button-events-button-5.swf.act \
 	button-events-button-5.swf.trace \
 	button-events-button-6.swf \
-	button-events-button-6.swf.act \
 	button-events-button-6.swf.trace \
 	button-events-button-7.swf \
-	button-events-button-7.swf.act \
 	button-events-button-7.swf.trace \
 	button-events-button-8.swf \
-	button-events-button-8.swf.act \
 	button-events-button-8.swf.trace \
-	button-events.c \
 	button-events-menu-5.swf \
-	button-events-menu-5.swf.act \
 	button-events-menu-5.swf.trace \
 	button-events-menu-6.swf \
-	button-events-menu-6.swf.act \
 	button-events-menu-6.swf.trace \
 	button-events-menu-7.swf \
-	button-events-menu-7.swf.act \
 	button-events-menu-7.swf.trace \
 	button-events-menu-8.swf \
-	button-events-menu-8.swf.act \
 	button-events-menu-8.swf.trace \
 	button-hittest-5.swf \
-	button-hittest-5.swf.act \
 	button-hittest-5.swf.trace \
 	button-hittest-6.swf \
-	button-hittest-6.swf.act \
 	button-hittest-6.swf.trace \
 	button-hittest-7.swf \
-	button-hittest-7.swf.act \
 	button-hittest-7.swf.trace \
 	button-hittest-8.swf \
-	button-hittest-8.swf.act \
 	button-hittest-8.swf.trace \
 	button-hittest.c \
 	definebutton-5.swf \
@@ -95,14 +85,13 @@ EXTRA_DIST = \
 	mouse-movie-below-nonevent-movie-8.swf.act \
 	mouse-movie-below-nonevent-movie-8.swf.trace \
 	mouse-scaled.as \
+	mouse-scaled.stas \
+	mouse-scaled.sts \
 	mouse-scaled-5.swf \
-	mouse-scaled-5.swf.act \
 	mouse-scaled-5.swf.trace \
 	mouse-scaled-6.swf \
-	mouse-scaled-6.swf.act \
 	mouse-scaled-6.swf.trace \
 	mouse-scaled-6.swf.trace.org \
 	mouse-scaled-7.swf \
-	mouse-scaled-7.swf.act \
 	mouse-scaled-7.swf.trace \
 	mouse-scaled-7.swf.trace.org

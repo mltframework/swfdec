@@ -1,19 +1,6 @@
-*~
-CVS
-.cvsignore
 .deps
-.libs
 
-Makefile
-Makefile.in
-*.lo
-*.o
+swfdec_test_function_list.h
 
-libswfedit.la
-
-dump
-parse
-swfdec-extract
-swfedit
-swfscript
-crashfinder
+compiler
+test

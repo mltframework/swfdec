@@ -1,4 +1,4 @@
-SUBDIRS = image sound trace various
+SUBDIRS = custom image sound trace various
 
 noinst_PROGRAMS = test
 

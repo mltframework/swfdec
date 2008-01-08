@@ -352,6 +352,7 @@ libswfdec/jpeg/Makefile
 libswfdec-gtk/Makefile
 player/Makefile
 test/Makefile
+test/custom/Makefile
 test/image/Makefile
 test/sound/Makefile
 test/trace/Makefile

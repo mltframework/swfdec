@@ -264,7 +264,8 @@ swfdec_test_test_advance (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
 
   if (msecs < 0 || test->player_quit)
     return;
-  swfdec_test_test_ensure_player (test);
+  if (!swfdec_test_test_ensure_player (test))
+    return;
   if (msecs == 0) {
     if (!test->player_quit)
       swfdec_player_advance (test->player, 0);
@@ -291,6 +292,58 @@ swfdec_test_test_reset (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
 
   swfdec_test_do_reset (test, filename);
+}
+
+SWFDEC_TEST_FUNCTION ("Test_mouse_move", swfdec_test_test_mouse_move, 0)
+void
+swfdec_test_test_mouse_move (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+  double x, y;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn", &x, &y);
+
+  if (!swfdec_test_test_ensure_player (test))
+    return;
+
+  swfdec_player_mouse_move (test->player, x, y);
+}
+
+SWFDEC_TEST_FUNCTION ("Test_mouse_press", swfdec_test_test_mouse_press, 0)
+void
+swfdec_test_test_mouse_press (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+  double x, y;
+  int button;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn|i", &x, &y, &button);
+
+  if (!swfdec_test_test_ensure_player (test))
+    return;
+
+  button = CLAMP (button, 1, 32);
+  swfdec_player_mouse_press (test->player, x, y, button);
+}
+
+SWFDEC_TEST_FUNCTION ("Test_mouse_release", swfdec_test_test_mouse_release, 0)
+void
+swfdec_test_test_mouse_release (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+  double x, y;
+  int button;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn|i", &x, &y, &button);
+
+  if (!swfdec_test_test_ensure_player (test))
+    return;
+
+  button = CLAMP (button, 1, 32);
+  swfdec_player_mouse_release (test->player, x, y, button);
 }
 
 SWFDEC_TEST_FUNCTION ("Test", swfdec_test_test_new, swfdec_test_test_get_type)

@@ -1,6 +1,6 @@
 check-local:
-	for file in $(srcdir)/*.swf; do \
-	  ../test --script $$file.sts $$file; \
+	for file in $(srcdir)/*.sts; do \
+	  ../test --script $$file $(srcdir)/`basename $$file .sts`*.swf; \
 	done
 
 EXTRA_DIST = \

@@ -17,12 +17,18 @@
  * Boston, MA  02110-1301  USA
  */
 
+Image = Native.Image;
+Image.prototype = {};
+Image.prototype.compare = Native.Image_compare;
+Image.prototype.save = Native.Image_save;
+
 Test = Native.Test;
 Test.prototype = {};
 Test.prototype.advance = Native.Test_advance;
 Test.prototype.mouse_move = Native.Test_mouse_move;
 Test.prototype.mouse_press = Native.Test_mouse_press;
 Test.prototype.mouse_release = Native.Test_mouse_release;
+Test.prototype.render = Native.Test_render;
 Test.prototype.reset = Native.Test_reset;
 Test.prototype.trace = Native.Test_trace;
 Test.prototype.addProperty ("rate", Native.Test_get_rate, null);

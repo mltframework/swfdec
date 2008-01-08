@@ -26,6 +26,7 @@
 
 #include "swfdec_test_test.h"
 #include "swfdec_test_function.h"
+#include "swfdec_test_image.h"
 
 static void
 swfdec_test_throw (SwfdecAsContext *cx, const char *message, ...)
@@ -344,6 +345,36 @@ swfdec_test_test_mouse_release (SwfdecAsContext *cx, SwfdecAsObject *object, gui
 
   button = CLAMP (button, 1, 32);
   swfdec_player_mouse_release (test->player, x, y, button);
+}
+
+SWFDEC_TEST_FUNCTION ("Test_render", swfdec_test_test_render, 0)
+void
+swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+  SwfdecAsObject *image;
+  int x, y, w, h;
+  cairo_t *cr;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|iiii", &x, &y, &w, &h);
+
+  if (!swfdec_test_test_ensure_player (test))
+    return;
+
+  if (argc == 0) {
+    swfdec_player_get_size (test->player, &w, &h);
+    if (w < 0 || h < 0)
+      swfdec_player_get_default_size (test->player, (guint *) &w, (guint *) &h);
+  }
+  image = swfdec_test_image_new (cx, w, h);
+  if (image == NULL)
+    return;
+  cr = cairo_create (SWFDEC_TEST_IMAGE (image)->surface);
+  cairo_translate (cr, -x, -y);
+  swfdec_player_render (test->player, cr, x, y, w, h);
+  cairo_destroy (cr);
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, image);
 }
 
 SWFDEC_TEST_FUNCTION ("Test", swfdec_test_test_new, swfdec_test_test_get_type)

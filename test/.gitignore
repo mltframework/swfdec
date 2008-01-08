@@ -1,4 +1,6 @@
 .deps
+.libs
+*.o
 
 swfdec_test_function_list.h
 

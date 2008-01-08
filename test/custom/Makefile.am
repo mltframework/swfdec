@@ -44,17 +44,15 @@ EXTRA_DIST = \
 	definebutton.sts \
 	definebutton.xml \
 	mouse-addProperty-relevant.as \
+	mouse-addProperty-relevant.stas \
+	mouse-addProperty-relevant.sts \
 	mouse-addProperty-relevant-5.swf \
-	mouse-addProperty-relevant-5.swf.act \
 	mouse-addProperty-relevant-5.swf.trace \
 	mouse-addProperty-relevant-6.swf \
-	mouse-addProperty-relevant-6.swf.act \
 	mouse-addProperty-relevant-6.swf.trace \
 	mouse-addProperty-relevant-7.swf \
-	mouse-addProperty-relevant-7.swf.act \
 	mouse-addProperty-relevant-7.swf.trace \
 	mouse-addProperty-relevant-8.swf \
-	mouse-addProperty-relevant-8.swf.act \
 	mouse-addProperty-relevant-8.swf.trace \
 	mouse-movie-below-movie.as \
 	mouse-movie-below-movie-5.swf \

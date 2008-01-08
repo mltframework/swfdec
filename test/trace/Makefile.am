@@ -1,5 +1,5 @@
 check-local:
-	../test $(srcdir)/*.swf
+	../test --script $(srcdir)/default.sts $(srcdir)/*.swf
 
 EXTRA_DIST = \
 	README \

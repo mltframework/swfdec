@@ -216,7 +216,7 @@ static void
 swfdec_test_test_fscommand (SwfdecPlayer *player, const char *command, 
     const char *para, SwfdecTestTest *test)
 {
-  if (g_ascii_strcasecmp (command, "quit")) {
+  if (g_ascii_strcasecmp (command, "quit") == 0) {
     test->player_quit = TRUE;
   }
 }
@@ -229,6 +229,7 @@ swfdec_test_test_ensure_player (SwfdecTestTest *test)
 
   if (test->player)
     return TRUE;
+  test->player_quit = FALSE;
   test->player = swfdec_player_new_from_file (test->filename);
   g_signal_connect (test->player, "fscommand", G_CALLBACK (swfdec_test_test_fscommand), test);
   g_signal_connect (test->player, "trace", G_CALLBACK (swfdec_test_test_trace_cb), test);

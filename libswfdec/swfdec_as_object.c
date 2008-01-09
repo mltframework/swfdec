@@ -101,7 +101,7 @@
  * @variable: garbage-collected name of the current variables
  * @value: value of the current variable
  * @flags: Flags associated with the current variable
- * @data: User dta passed to swfdec_as_object_foreach()
+ * @data: User data passed to swfdec_as_object_foreach()
  *
  * Function prototype for the swfdec_as_object_foreach() function.
  *

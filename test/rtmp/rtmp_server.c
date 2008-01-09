@@ -30,7 +30,7 @@ socket_print (SoupSocket *sock, const char *format, ...)
 {
   va_list varargs;
 
-  g_print ("%s ", (char *) g_object_get_data (G_OBJECT (sock), "name"));
+  g_print ("%p ", sock);
   va_start (varargs, format);
   g_vprintf (format, varargs);
   va_end (varargs);
@@ -66,17 +66,9 @@ do_read (SoupSocket *conn, gpointer unused)
 }
 
 static void
-assign_name (SoupSocket *sock)
-{
-  static guint count = 0;
-  g_object_set_data_full (G_OBJECT (sock), "name", g_strdup_printf ("%u", ++count), g_free);
-}
-
-static void
 new_connection (SoupSocket *server, SoupSocket *conn, gpointer unused)
 {
-  assign_name (conn);
-  g_object_set (conn, SOUP_SOCKET_FLAG_NONBLOCKING, TRUE, SOUP_SOCKET_FLAG_NODELAY, TRUE, NULL);
+  g_object_ref (conn);
   socket_print (conn, "new connection\n");
   g_signal_connect (conn, "readable", G_CALLBACK (do_read), NULL);
   do_read (conn, NULL);

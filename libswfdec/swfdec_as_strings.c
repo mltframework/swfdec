@@ -485,5 +485,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("y")
   SWFDEC_AS_CONSTANT_STRING ("idMap")
   SWFDEC_AS_CONSTANT_STRING ("id")
+  SWFDEC_AS_CONSTANT_STRING ("onClose")
+  SWFDEC_AS_CONSTANT_STRING ("onConnect")
   /* add more here */
 ;

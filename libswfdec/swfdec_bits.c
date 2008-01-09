@@ -742,7 +742,7 @@ out:
     buffer->length = z.total_out;
   } else {
     if (buffer->length < z.total_out) {
-      SWFDEC_WARNING ("Not enough data decompressed: %lu instead of %u expected",
+      SWFDEC_WARNING ("Not enough data decompressed: %lu instead of %"G_GSIZE_FORMAT" expected",
 	  z.total_out, buffer->length);
       memset (buffer->data + z.total_out, 0, buffer->length - z.total_out);
     }

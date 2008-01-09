@@ -105,7 +105,7 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag)
       SWFDEC_ERROR ("empty sound chunk");
       return SWFDEC_STATUS_OK;
     }
-    SWFDEC_LOG ("got a buffer with %u samples, %d skip and %u bytes mp3 data", n_samples, skip,
+    SWFDEC_LOG ("got a buffer with %u samples, %d skip and %"G_GSIZE_FORMAT" bytes mp3 data", n_samples, skip,
 	chunk->length);
     /* use this to write out the stream data to stdout - nice way to get an mp3 file :) */
     //write (1, (void *) chunk->data, chunk->length);
@@ -208,7 +208,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   sample_bytes = swfdec_audio_format_get_bytes_per_sample (sound->decoded_format);
   n_samples = sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format);
 
-  SWFDEC_LOG ("after decoding, got %u samples, should get %u and skip %u", 
+  SWFDEC_LOG ("after decoding, got %"G_GSIZE_FORMAT" samples, should get %u and skip %u", 
       tmp->length / sample_bytes, n_samples, sound->skip);
   if (sound->skip) {
     SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, sound->skip * sample_bytes, 
@@ -218,7 +218,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   }
   if (tmp->length > n_samples * sample_bytes) {
     SwfdecBuffer *tmp2 = swfdec_buffer_new_subbuffer (tmp, 0, n_samples * sample_bytes);
-    SWFDEC_DEBUG ("%u samples in %u bytes should be available, but %u bytes are, cutting them off",
+    SWFDEC_DEBUG ("%u samples in %u bytes should be available, but %"G_GSIZE_FORMAT" bytes are, cutting them off",
 	n_samples, n_samples * sample_bytes, tmp->length);
     swfdec_buffer_unref (tmp);
     tmp = tmp2;
@@ -226,7 +226,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
     /* we handle this case in swfdec_sound_render */
     /* FIXME: this message is important when writing new codecs, so I made it a warning.
      * It's probably not worth more than INFO for the usual case though */
-    SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %u bytes are",
+    SWFDEC_WARNING ("%u samples in %u bytes should be available, but only %"G_GSIZE_FORMAT" bytes are",
 	n_samples, n_samples * sample_bytes, tmp->length);
   }
   /* only assign here, the decoding code checks this variable */

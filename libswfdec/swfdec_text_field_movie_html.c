@@ -458,7 +458,7 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
 	end = strchr (p, '\0');
     }
 
-    unescaped = swfdec_xml_unescape_len (data->cx, p, end - p);
+    unescaped = swfdec_xml_unescape_len (data->cx, p, end - p, TRUE);
     data->text = g_string_append (data->text, unescaped);
     g_free (unescaped);
 

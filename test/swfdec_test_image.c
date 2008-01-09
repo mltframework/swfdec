@@ -1,0 +1,222 @@
+/* Swfdec
+ * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "swfdec_test_image.h"
+#include "swfdec_test_function.h"
+
+#define SWFDEC_TEST_IMAGE_IS_VALID(image) ((image)->surface && \
+    cairo_surface_status ((image)->surface) == CAIRO_STATUS_SUCCESS)
+
+SwfdecAsObject *
+swfdec_test_image_new (SwfdecAsContext *context, guint width, guint height)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *ret;
+
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecTestImage)))
+    return NULL;
+
+  ret = g_object_new (SWFDEC_TYPE_TEST_IMAGE, NULL);
+  swfdec_as_object_add (ret, context, sizeof (SwfdecTestImage));
+  swfdec_as_object_get_variable (context->global, 
+      swfdec_as_context_get_string (context, "Image"), &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+
+  SWFDEC_TEST_IMAGE (ret)->surface = 
+    cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+  return ret;
+}
+
+/*** SWFDEC_TEST_IMAGE ***/
+
+G_DEFINE_TYPE (SwfdecTestImage, swfdec_test_image, SWFDEC_TYPE_AS_OBJECT)
+
+static void
+swfdec_test_image_dispose (GObject *object)
+{
+  SwfdecTestImage *image = SWFDEC_TEST_IMAGE (object);
+
+  if (image->surface) {
+    cairo_surface_destroy (image->surface);
+    image->surface = NULL;
+  }
+
+  G_OBJECT_CLASS (swfdec_test_image_parent_class)->dispose (object);
+}
+
+static void
+swfdec_test_image_class_init (SwfdecTestImageClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->dispose = swfdec_test_image_dispose;
+}
+
+static void
+swfdec_test_image_init (SwfdecTestImage *this)
+{
+}
+
+/*** AS CODE ***/
+
+/* Compare two buffers, returning the number of pixels that are
+ * different and the maximum difference of any single color channel in
+ * result_ret.
+ *
+ * This function should be rewritten to compare all formats supported by
+ * cairo_format_t instead of taking a mask as a parameter.
+ */
+static gboolean
+buffer_diff_core (unsigned char *buf_a,
+		  unsigned char *buf_b,
+		  unsigned char *buf_diff,
+		  int		width,
+		  int		height,
+		  int		stride_a,
+		  int		stride_b,
+		  int		stride_diff)
+{
+    int x, y;
+    gboolean result = TRUE;
+    guint32 *row_a, *row_b, *row;
+
+    for (y = 0; y < height; y++) {
+	row_a = (guint32 *) (buf_a + y * stride_a);
+	row_b = (guint32 *) (buf_b + y * stride_b);
+	row = (guint32 *) (buf_diff + y * stride_diff);
+	for (x = 0; x < width; x++) {
+	    /* check if the pixels are the same */
+	    if (row_a[x] != row_b[x]) {
+		int channel;
+		static const unsigned int threshold = 3;
+		guint32 diff_pixel = 0;
+
+		/* calculate a difference value for all 4 channels */
+		for (channel = 0; channel < 4; channel++) {
+		    int value_a = (row_a[x] >> (channel*8)) & 0xff;
+		    int value_b = (row_b[x] >> (channel*8)) & 0xff;
+		    unsigned int diff;
+		    diff = ABS (value_a - value_b);
+		    if (diff <= threshold)
+		      continue;
+		    diff *= 4;  /* emphasize */
+		    diff += 128; /* make sure it's visible */
+		    if (diff > 255)
+		        diff = 255;
+		    diff_pixel |= diff << (channel*8);
+		}
+
+		row[x] = diff_pixel;
+		if (diff_pixel)
+		  result = FALSE;
+	    } else {
+		row[x] = 0;
+	    }
+	    row[x] |= 0xff000000; /* Set ALPHA to 100% (opaque) */
+	}
+    }
+    return result;
+}
+
+SWFDEC_TEST_FUNCTION ("Image_compare", swfdec_test_image_compare, 0)
+void
+swfdec_test_image_compare (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestImage *image, *compare;
+  int w, h;
+  cairo_surface_t *diff;
+  
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "O", &compare);
+
+  if (!SWFDEC_IS_TEST_IMAGE (compare))
+    return;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+  if (!SWFDEC_TEST_IMAGE_IS_VALID (image) ||
+      !SWFDEC_TEST_IMAGE_IS_VALID (compare))
+    return;
+
+  g_assert (cairo_surface_get_type (image->surface) == CAIRO_SURFACE_TYPE_IMAGE);
+  g_assert (cairo_surface_get_type (compare->surface) == CAIRO_SURFACE_TYPE_IMAGE);
+
+  w = cairo_image_surface_get_width (image->surface);
+  if (w != cairo_image_surface_get_width (compare->surface))
+    return;
+  h = cairo_image_surface_get_height (image->surface);
+  if (h != cairo_image_surface_get_height (compare->surface))
+    return;
+  diff = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+
+  if (!buffer_diff_core (cairo_image_surface_get_data (image->surface), 
+	cairo_image_surface_get_data (compare->surface), 
+	cairo_image_surface_get_data (diff), 
+	w, h, 
+	cairo_image_surface_get_stride (image->surface),
+	cairo_image_surface_get_stride (compare->surface),
+	cairo_image_surface_get_stride (diff)) != 0) {
+    cairo_surface_destroy (diff);
+    return;
+  }
+  cairo_surface_destroy (diff);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
+}
+
+SWFDEC_TEST_FUNCTION ("Image_save", swfdec_test_image_save, 0)
+void
+swfdec_test_image_save (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestImage *image;
+  const char *filename;
+  
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "s", &filename);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+  if (!SWFDEC_TEST_IMAGE_IS_VALID (image))
+    return;
+
+  if (cairo_surface_write_to_png (image->surface, filename) != CAIRO_STATUS_SUCCESS)
+    return;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
+}
+
+SWFDEC_TEST_FUNCTION ("Image", swfdec_test_image_create, swfdec_test_image_get_type)
+void
+swfdec_test_image_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestImage *image;
+  const char *filename;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "|s", &filename);
+
+  if (filename[0] == '\0')
+    return;
+
+  image->surface = cairo_image_surface_create_from_png (filename);
+}
+

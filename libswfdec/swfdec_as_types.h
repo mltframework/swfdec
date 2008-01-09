@@ -127,6 +127,7 @@ char *		swfdec_as_value_to_debug	(const SwfdecAsValue *	value);
 /* special conversion functions */
 const char *	swfdec_as_integer_to_string	(SwfdecAsContext *      context,
 						 int			i);
+int		swfdec_as_double_to_integer	(double			d);
 const char *	swfdec_as_double_to_string	(SwfdecAsContext *	context,
 						 double			d);
 const char *	swfdec_as_str_concat		(SwfdecAsContext *	cx,

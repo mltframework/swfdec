@@ -33,7 +33,7 @@ typedef void (* SwfdecBufferFreeFunc) (unsigned char *data, gpointer priv);
 struct _SwfdecBuffer
 {
   unsigned char *	data;		/* memory region (consider as read only) */
-  guint			length;		/* length of the memory region pointer do by @data */
+  gsize			length;		/* length of the memory region pointer do by @data */
 
   /*< private >*/
   int			ref_count;	/* guess */
@@ -59,11 +59,11 @@ struct _SwfdecBufferQueue
 GType swfdec_buffer_queue_get_type  (void);
 
 SwfdecBuffer *swfdec_buffer_new (void);
-SwfdecBuffer *swfdec_buffer_new_and_alloc (guint size);
-SwfdecBuffer *swfdec_buffer_new_and_alloc0 (guint size);
-SwfdecBuffer *swfdec_buffer_new_for_data (unsigned char *data, guint size);
-SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, guint offset,
-    guint length);
+SwfdecBuffer *swfdec_buffer_new_and_alloc (gsize size);
+SwfdecBuffer *swfdec_buffer_new_and_alloc0 (gsize size);
+SwfdecBuffer *swfdec_buffer_new_for_data (unsigned char *data, gsize size);
+SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, gsize offset,
+    gsize length);
 SwfdecBuffer *swfdec_buffer_new_from_file (const char *filename, GError **error);
 SwfdecBuffer *swfdec_buffer_ref (SwfdecBuffer * buffer);
 SwfdecBuffer *swfdec_buffer_get_super (SwfdecBuffer *buffer);

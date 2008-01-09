@@ -87,7 +87,7 @@ swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
     swfdec_buffer_unref (chunk);
     return;
   }
-  SWFDEC_LOG ("adding %u samples in %u bytes to frame %u", n_samples, 
+  SWFDEC_LOG ("adding %u samples in %"G_GSIZE_FORMAT" bytes to frame %u", n_samples, 
       chunk ? chunk->length : 0, frame);
   sprite->frames[frame].sound_skip = skip;
   sprite->frames[frame].sound_block = chunk;

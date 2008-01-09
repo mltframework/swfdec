@@ -36,40 +36,20 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_player_internal.h"
 
+enum {
+  UPDATE,
+  LAST_SIGNAL
+};
+
 G_DEFINE_TYPE (SwfdecStyleSheet, swfdec_style_sheet, SWFDEC_TYPE_AS_OBJECT)
-
-static void
-swfdec_style_sheet_dispose (GObject *object)
-{
-  SwfdecStyleSheet *style = SWFDEC_STYLESHEET (object);
-
-  if (style->listeners != NULL) {
-    g_slist_free (style->listeners);
-    style->listeners = NULL;
-  }
-}
-
-static void
-swfdec_style_sheet_mark (SwfdecAsObject *object)
-{
-  SwfdecStyleSheet *style = SWFDEC_STYLESHEET (object);
-  GSList *iter;
-
-  for (iter = style->listeners; iter != NULL; iter = iter->next) {
-    swfdec_as_object_mark (iter->data);
-  }
-
-  SWFDEC_AS_OBJECT_CLASS (swfdec_style_sheet_parent_class)->mark (object);
-}
+static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
 swfdec_style_sheet_class_init (SwfdecStyleSheetClass *klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
-
-  object_class->dispose = swfdec_style_sheet_dispose;
-  asobject_class->mark = swfdec_style_sheet_mark;
+  signals[UPDATE] = g_signal_new ("update", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
 }
 
 static void
@@ -252,17 +232,10 @@ swfdec_style_sheet_update (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecStyleSheet *style;
-  SwfdecTextFieldMovie *text;
-  GSList *iter;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_STYLESHEET, &style, "");
 
-  for (iter = style->listeners; iter != NULL; iter = iter->next) {
-    g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (iter->data));
-    text = iter->data;
-    g_assert (text->style_sheet_input != NULL);
-    swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
-  }
+  g_signal_emit (style, signals[UPDATE], 0);
 }
 
 SWFDEC_AS_NATIVE (113, 101, swfdec_style_sheet_parseCSSInternal)
@@ -344,30 +317,6 @@ swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   g_assert (SWFDEC_IS_STYLESHEET (object));
-}
-
-void
-swfdec_style_sheet_add_listener (SwfdecStyleSheet *style,
-    SwfdecAsObject *listener)
-{
-  g_return_if_fail (SWFDEC_IS_STYLESHEET (style));
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (listener));
-
-  g_return_if_fail (g_slist_find (style->listeners, listener) == NULL);
-
-  style->listeners = g_slist_prepend (style->listeners, listener);
-}
-
-void
-swfdec_style_sheet_remove_listener (SwfdecStyleSheet *style,
-    SwfdecAsObject *listener)
-{
-  g_return_if_fail (SWFDEC_IS_STYLESHEET (style));
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (listener));
-
-  g_return_if_fail (g_slist_find (style->listeners, listener) != NULL);
-
-  style->listeners = g_slist_remove (style->listeners, listener);
 }
 
 static SwfdecTextFormat *

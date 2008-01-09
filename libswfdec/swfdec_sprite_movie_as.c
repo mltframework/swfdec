@@ -223,7 +223,27 @@ void
 swfdec_sprite_movie_localToGlobal (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.localToGlobal");
+  SwfdecMovie *movie;
+  SwfdecAsObject *o;
+  SwfdecAsValue *xv, *yv;
+  double x, y;
+  
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "O", &o);
+
+  xv = swfdec_as_object_peek_variable (o, SWFDEC_AS_STR_x);
+  if (xv == NULL || !SWFDEC_AS_VALUE_IS_NUMBER (xv))
+    return;
+  yv = swfdec_as_object_peek_variable (o, SWFDEC_AS_STR_y);
+  if (yv == NULL || !SWFDEC_AS_VALUE_IS_NUMBER (yv))
+    return;
+
+  x = SWFDEC_AS_VALUE_GET_NUMBER (xv);
+  y = SWFDEC_AS_VALUE_GET_NUMBER (yv);
+  x = swfdec_as_double_to_integer (x * SWFDEC_TWIPS_SCALE_FACTOR);
+  y = swfdec_as_double_to_integer (y * SWFDEC_TWIPS_SCALE_FACTOR);
+  swfdec_movie_local_to_global (movie, &x, &y);
+  SWFDEC_AS_VALUE_SET_NUMBER (xv, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) x));
+  SWFDEC_AS_VALUE_SET_NUMBER (yv, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) y));
 }
 
 SWFDEC_AS_NATIVE (900, 3, swfdec_sprite_movie_globalToLocal)
@@ -231,7 +251,27 @@ void
 swfdec_sprite_movie_globalToLocal (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.globalToLocal");
+  SwfdecMovie *movie;
+  SwfdecAsObject *o;
+  SwfdecAsValue *xv, *yv;
+  double x, y;
+  
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "O", &o);
+
+  xv = swfdec_as_object_peek_variable (o, SWFDEC_AS_STR_x);
+  if (xv == NULL || !SWFDEC_AS_VALUE_IS_NUMBER (xv))
+    return;
+  yv = swfdec_as_object_peek_variable (o, SWFDEC_AS_STR_y);
+  if (yv == NULL || !SWFDEC_AS_VALUE_IS_NUMBER (yv))
+    return;
+
+  x = SWFDEC_AS_VALUE_GET_NUMBER (xv);
+  y = SWFDEC_AS_VALUE_GET_NUMBER (yv);
+  x = swfdec_as_double_to_integer (x * SWFDEC_TWIPS_SCALE_FACTOR);
+  y = swfdec_as_double_to_integer (y * SWFDEC_TWIPS_SCALE_FACTOR);
+  swfdec_movie_global_to_local (movie, &x, &y);
+  SWFDEC_AS_VALUE_SET_NUMBER (xv, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) x));
+  SWFDEC_AS_VALUE_SET_NUMBER (yv, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) y));
 }
 
 SWFDEC_AS_NATIVE (900, 8, swfdec_sprite_movie_attachAudio)

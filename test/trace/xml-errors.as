@@ -20,7 +20,15 @@ var tests = [
   "<a A/><b/>",		// invalid attributes
   "<a A=x></a><b/>",
   "<a A='x></a><b/>",
-  "<a/><!-- <b/>"	// comment not closed
+  "<a/><!-- <b/>",	// comment not closed
+  "<>a",		// empty tag
+  "</>a",
+  "<a",			// non terminated tag
+  "<a/",
+  "</a",
+  "</a b='c'",
+  "<a b='c'",
+  "<a ='b'/>"		// empty attribute
 ];
 
 for (var i = 0; i < tests.length; i++) {

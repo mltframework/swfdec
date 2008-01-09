@@ -328,11 +328,11 @@ swfdec_loader_error (SwfdecLoader *loader, const char *error)
   g_return_if_fail (error != NULL);
 
   if (loader->error) {
-    SWFDEC_ERROR ("another error in loader %p: %s", loader, error);
+    SWFDEC_ERROR ("another error in loader for %s: %s", swfdec_url_get_url (loader->url), error);
     return;
   }
 
-  SWFDEC_ERROR ("error in loader %p: %s", loader, error);
+  SWFDEC_ERROR ("error in loader for %s: %s", swfdec_url_get_url (loader->url), error);
   loader->state = SWFDEC_LOADER_STATE_ERROR;
   loader->error = g_strdup (error);
   swfdec_loader_queue_processing (loader);

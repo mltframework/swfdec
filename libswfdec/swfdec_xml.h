@@ -76,7 +76,8 @@ char *		swfdec_xml_unescape		(SwfdecAsContext *	cx,
 						 const char *		orginal);
 char *		swfdec_xml_unescape_len		(SwfdecAsContext *	cx,
 						 const char *		orginal,
-						 gssize			length);
+						 gssize			length,
+						 gboolean		unescape_nbsp);
 
 SwfdecXml *	swfdec_xml_new			(SwfdecAsContext *	context,
 						 const char *		str,

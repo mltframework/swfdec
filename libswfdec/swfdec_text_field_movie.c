@@ -1149,8 +1149,8 @@ swfdec_text_field_movie_dispose (GObject *object)
 
   if (text->style_sheet) {
     if (SWFDEC_IS_STYLESHEET (text->style_sheet)) {
-      swfdec_style_sheet_remove_listener (
-	  SWFDEC_STYLESHEET (text->style_sheet), SWFDEC_AS_OBJECT (text));
+      g_signal_handlers_disconnect_matched (text->style_sheet, 
+	  G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, text);
     }
     text->style_sheet = NULL;
   }

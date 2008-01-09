@@ -619,6 +619,7 @@ enum {
   PROP_HEIGHT,
   PROP_ALIGNMENT,
   PROP_SCALE,
+  PROP_SCRIPTING,
   PROP_SYSTEM,
   PROP_MAX_RUNTIME
 };
@@ -724,6 +725,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_SCALE:
       g_value_set_enum (value, priv->scale_mode);
+      break;
+    case PROP_SCRIPTING:
+      g_value_set_object (value, priv->scripting);
       break;
     case PROP_SYSTEM:
       g_value_set_object (value, priv->system);
@@ -834,6 +838,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
     case PROP_SCALE:
       swfdec_player_set_scale_mode (player, g_value_get_enum (value));
       break;
+    case PROP_SCRIPTING:
+      swfdec_player_set_scripting (player, g_value_get_object (value));
+      break;
     case PROP_SYSTEM:
       g_object_unref (priv->system);
       if (g_value_get_object (value)) {
@@ -861,6 +868,7 @@ swfdec_player_dispose (GObject *object)
   swfdec_player_stop_all_sounds (player);
   swfdec_player_resource_request_finish (player);
   g_hash_table_destroy (priv->registered_classes);
+  g_hash_table_destroy (priv->scripting_callbacks);
 
   while (priv->roots)
     swfdec_movie_destroy (priv->roots->data);
@@ -1524,6 +1532,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   SwfdecPlayerPrivate *priv = player->priv;
 
   g_hash_table_foreach (priv->registered_classes, swfdec_player_mark_string_object, NULL);
+  g_hash_table_foreach (priv->scripting_callbacks, swfdec_player_mark_string_object, NULL);
   swfdec_as_object_mark (priv->MovieClip);
   swfdec_as_object_mark (priv->Video);
   g_list_foreach (priv->roots, (GFunc) swfdec_as_object_mark, NULL);
@@ -1601,6 +1610,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_SCALE,
       g_param_spec_enum ("scale-mode", "scale mode", "method used to scale the movie",
 	  SWFDEC_TYPE_SCALE_MODE, SWFDEC_SCALE_SHOW_ALL, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_SCRIPTING,
+      g_param_spec_object ("scripting", "scripting", "external scripting implementation",
+	  SWFDEC_TYPE_PLAYER_SCRIPTING, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_SCALE,
       g_param_spec_object ("system", "system", "object holding system information",
 	  SWFDEC_TYPE_SYSTEM, G_PARAM_READWRITE));
@@ -1768,6 +1780,7 @@ swfdec_player_init (SwfdecPlayer *player)
 
   priv->system = swfdec_system_new ();
   priv->registered_classes = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->scripting_callbacks = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
     priv->actions[i] = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
@@ -2840,3 +2853,46 @@ swfdec_player_set_maximum_runtime (SwfdecPlayer *player, gulong msecs)
   g_object_notify (G_OBJECT (player), "max-runtime");
 }
 
+/**
+ * swfdec_player_get_scripting:
+ * @player: a #SwfdecPlayer
+ *
+ * Gets the current scripting implementation in use. If no implementation is in 
+ * use (the default), %NULL is returned.
+ *
+ * Returns: the current scripting implementation used or %NULL if none
+ **/
+SwfdecPlayerScripting *
+swfdec_player_get_scripting (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  return player->priv->scripting;
+}
+
+/**
+ * swfdec_player_set_scripting:
+ * @player: a #SwfdecPlayer
+ * @scripting: the scripting implementation to use or %NULL to disable scripting
+ *
+ * Sets the implementation to use for external scripting in the given @player.
+ * Note that this is different from the internal script engine. See the 
+ * #SwfdecPlayerScripting paragraph for details about external scripting.
+ **/
+void
+swfdec_player_set_scripting (SwfdecPlayer *player, SwfdecPlayerScripting *scripting)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (scripting == NULL || SWFDEC_IS_PLAYER_SCRIPTING (scripting));
+
+  priv = player->priv;
+  if (priv->scripting == scripting)
+    return;
+
+  if (priv->scripting)
+    g_object_unref (priv->scripting);
+  priv->scripting = g_object_ref (scripting);
+  g_object_notify (G_OBJECT (player), "scripting");
+}

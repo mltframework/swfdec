@@ -897,6 +897,13 @@ swfdec_text_field_movie_get_styleSheet (SwfdecAsContext *cx,
 }
 
 static void
+swfdec_text_field_movie_style_sheet_update (SwfdecTextFieldMovie *text)
+{
+  if (text->style_sheet_input)
+    swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
+}
+
+static void
 swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
@@ -923,17 +930,17 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
     return;
 
   if (text->style_sheet != NULL && SWFDEC_IS_STYLESHEET (text->style_sheet)) {
-    swfdec_style_sheet_remove_listener (SWFDEC_STYLESHEET (text->style_sheet),
-	object);
+    g_signal_handlers_disconnect_by_func (text->style_sheet,
+	 swfdec_text_field_movie_style_sheet_update, text);
   }
 
   text->style_sheet = value;
 
-  if (value != NULL && SWFDEC_IS_STYLESHEET (value)) {
-    if (text->style_sheet_input)
-      swfdec_text_field_movie_set_text (text, text->style_sheet_input, TRUE);
+  if (SWFDEC_IS_STYLESHEET (value)) {
+    g_signal_connect_swapped (value, "update",
+	G_CALLBACK (swfdec_text_field_movie_style_sheet_update), text);
 
-    swfdec_style_sheet_add_listener (SWFDEC_STYLESHEET (value), object);
+    swfdec_text_field_movie_style_sheet_update (text);
   }
 }
 

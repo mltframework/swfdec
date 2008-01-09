@@ -58,3 +58,27 @@ Testing: <a A='x></a><b/>
 Testing: <a/><!-- <b/>
 <a />
 -5
+Testing: <>a
+
+-6
+Testing: </>a
+
+-6
+Testing: <a
+
+-6
+Testing: <a/
+
+-6
+Testing: </a
+
+-6
+Testing: </a b='c'
+
+-6
+Testing: <a b='c'
+
+-6
+Testing: <a ='b'/>
+
+-6

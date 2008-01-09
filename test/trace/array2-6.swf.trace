@@ -221,6 +221,7 @@ b
 [b, c]
 [1, [object Object], 3, 4]
 # Special cases
+undefined
 []
 []
 []
@@ -563,6 +564,12 @@ sort customfunc 30 [[1, 2, 3], [1, 2, 3, 4], [], [1, 2], [1]]
 sort customfunc 31 [[1, 2, 3], [1, 2, 3, 4], [], [1, 2], [1]]
 [1, 0, 3, 4, 2]
 [[1, 2, 3], [1, 2, 3, 4], [], [1, 2], [1]]
+undefined
+[, , , , , , , a, b, c]
+[, a, b]
+[, a, b]
+0
+undefined
 ## Fake Array (Object with Array's methods)
 [type Function]
 5
@@ -576,16 +583,18 @@ z
 6: z:y:a:b:c:x
 z
 6: y:a:b:c:x:x
-x,x,c,b,a,y
-6: x:x:c:b:a:y
-x:x:c:b:a:y:a:x,x,c,b,a,y
-6: x:x:c:b:a:y
-x,c
-6: x:x:c:b:a:y
-c,b,a
-5: x:x:i:j:y
-i,j,x,x,y
-5: i:j:x:x:y
+y
+1: y
+x,c,b,a,y
+5: x:c:b:a:y
+x:c:b:a:y:a:x,c,b,a,y
+5: x:c:b:a:y
+c,b
+5: x:c:b:a:y
+b,a,y
+4: x:c:i:j
+c,i,j,x
+4: c:i:j:x
 [object Object]
 4, 3
 ## Done

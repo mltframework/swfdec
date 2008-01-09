@@ -950,12 +950,20 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_pattern_t *mask;
     if (movie->parent == movie->masked_by->parent) {
       cairo_transform (cr, &movie->inverse_matrix);
+      rect = *inval;
     } else {
-      cairo_matrix_t mat;
+      cairo_matrix_t mat, mat2;
       swfdec_movie_local_to_global_matrix (movie, &mat);
+      swfdec_movie_global_to_local_matrix (movie->masked_by, &mat2);
+      cairo_matrix_multiply (&mat, &mat2, &mat);
       cairo_transform (cr, &mat);
-      swfdec_movie_global_to_local_matrix (movie->masked_by, &mat);
-      cairo_transform (cr, &mat);
+      if (cairo_matrix_invert (&mat) == CAIRO_STATUS_SUCCESS && FALSE) {
+	swfdec_rect_transform (&rect, &rect, &mat);
+      } else {
+	SWFDEC_INFO ("non-invertible matrix when computing invalid area");
+	rect.x0 = rect.y0 = -G_MAXDOUBLE;
+	rect.x1 = rect.y1 = G_MAXDOUBLE;
+      }
     }
     mask = swfdec_movie_mask (cr, movie->masked_by, &rect);
     cairo_pop_group_to_source (cr);
@@ -1133,12 +1141,6 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     *flags = 0;
     return TRUE;
   }
-  if (movie->parent == NULL && variable == SWFDEC_AS_STR__version) {
-    SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_get_string (object->context,
-	  SWFDEC_PLAYER (object->context)->priv->system->version));
-    *flags = 0;
-    return TRUE;
-  }
   
   movie = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (movie) {
@@ -1231,6 +1233,27 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
   swfdec_movie_call_variable_listeners (movie, variable, val);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val, flags);
+}
+
+static gboolean
+swfdec_movie_foreach_variable (SwfdecAsObject *object, SwfdecAsVariableForeach func, gpointer data)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+  SwfdecAsValue val;
+  GList *walk;
+  gboolean ret;
+
+  ret = SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->foreach (object, func, data);
+
+  for (walk = movie->list; walk && ret; walk = walk->next) {
+    SwfdecMovie *cur = walk->data;
+    if (cur->original_name == SWFDEC_AS_STR_EMPTY)
+      continue;
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, walk->data);
+    ret &= func (object, cur->name, &val, 0, data);
+  }
+
+  return ret;
 }
 
 static char *
@@ -1440,6 +1463,7 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   asobject_class->mark = swfdec_movie_mark;
   asobject_class->get = swfdec_movie_get_variable;
   asobject_class->set = swfdec_movie_set_variable;
+  asobject_class->foreach = swfdec_movie_foreach_variable;
   asobject_class->debug = swfdec_movie_get_debug;
 
   g_object_class_install_property (object_class, PROP_DEPTH,
@@ -1487,6 +1511,22 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
     player->roots = g_list_sort (player->roots, swfdec_movie_compare_depths);
   }
   g_object_notify (G_OBJECT (movie), "depth");
+}
+
+static void
+swfdec_movie_set_version (SwfdecMovie *movie)
+{
+  SwfdecAsObject *o;
+  SwfdecAsContext *cx;
+  SwfdecAsValue val;
+
+  if (movie->parent != NULL)
+    return;
+
+  o = SWFDEC_AS_OBJECT (movie);
+  cx = o->context;
+  SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, SWFDEC_PLAYER (cx)->priv->system->version));
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_$version, &val);
 }
 
 /**
@@ -1571,11 +1611,13 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
   player->priv->movies = g_list_prepend (player->priv->movies, movie);
   /* only add the movie here, because it needs to be setup for the debugger */
   swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
+  swfdec_movie_set_version (movie);
   /* only setup here, the resource assumes it can access the player via the movie */
   if (resource->movie == NULL) {
     g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
     resource->movie = SWFDEC_SPRITE_MOVIE (movie);
   }
+
   return movie;
 }
 

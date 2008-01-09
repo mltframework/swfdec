@@ -209,8 +209,6 @@ swfdec_gtk_loader_class_init (SwfdecGtkLoaderClass *klass)
   loader_class->load = swfdec_gtk_loader_load;
   loader_class->close = swfdec_gtk_loader_close;
   
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
   klass->session = soup_session_async_new ();
 #endif
 }

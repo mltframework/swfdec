@@ -352,10 +352,12 @@ libswfdec/jpeg/Makefile
 libswfdec-gtk/Makefile
 player/Makefile
 test/Makefile
+test/custom/Makefile
 test/image/Makefile
 test/sound/Makefile
 test/trace/Makefile
 test/various/Makefile
+tools/Makefile
 vivified/Makefile
 vivified/core/Makefile
 vivified/dock/Makefile

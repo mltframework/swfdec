@@ -134,7 +134,7 @@ swfdec_swf_decoder_deflate (SwfdecSwfDecoder * s, SwfdecBuffer *buffer)
     guint max = buffer->length;
 
     if (dec->bytes_loaded + max > s->buffer->length) {
-      SWFDEC_WARNING ("%u bytes more than declared filesize", 
+      SWFDEC_WARNING ("%"G_GSIZE_FORMAT" bytes more than declared filesize", 
 	  dec->bytes_loaded + max - s->buffer->length);
       max = s->buffer->length - dec->bytes_loaded;
     }

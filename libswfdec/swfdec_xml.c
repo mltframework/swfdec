@@ -118,24 +118,29 @@ swfdec_xml_escape (const char *orginal)
 
 char *
 swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
-    gssize length)
+    gssize length, gboolean unescape_nbsp)
 {
   int i;
-  const char *p, *start;
+  const char *p, *start, *end;
   GString *string;
 
   string = g_string_new ("");
 
   p = start = orginal;
-  while ((p = strchr (p, '&')) != NULL && p - orginal < length) {
+  end = orginal + length;
+  while ((p = memchr (p, '&', end - p)) != NULL) {
     string = g_string_append_len (string, start, p - start);
 
     for (i = 0; xml_entities[i].escaped != NULL; i++) {
       if (!g_ascii_strncasecmp (p, xml_entities[i].escaped,
 	    strlen (xml_entities[i].escaped))) {
 	// FIXME: Do this cleaner
-	if (xml_entities[i].character == '\xa0')
-	  string = g_string_append_c (string, '\xc2');
+	if (xml_entities[i].character == '\xa0') {
+	  if (unescape_nbsp)
+	    string = g_string_append_c (string, '\xc2');
+	  else
+	    continue;
+	}
 	string = g_string_append_c (string, xml_entities[i].character);
 	p += strlen (xml_entities[i].escaped);
 	break;
@@ -156,7 +161,7 @@ swfdec_xml_unescape_len (SwfdecAsContext *cx, const char *orginal,
 char *
 swfdec_xml_unescape (SwfdecAsContext *cx, const char *orginal)
 {
-  return swfdec_xml_unescape_len (cx, orginal, strlen (orginal));
+  return swfdec_xml_unescape_len (cx, orginal, strlen (orginal), TRUE);
 }
 
 // this is never declared, only available as ASnative (100, 5)
@@ -348,19 +353,12 @@ swfdec_xml_set_status (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  // special case
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
-    return;
-
-  // special case, call toString of objects
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
-    swfdec_as_value_to_string (cx, &argv[0]);
-
+  swfdec_as_value_to_string (cx, &argv[0]);
   d = swfdec_as_value_to_number (cx, &argv[0]);
   if (!isfinite (d))
-    SWFDEC_XML (object)->status = G_MININT32;
+    SWFDEC_XML (object)->status = 0;
   else
-    SWFDEC_XML (object)->status = (int) d;
+    SWFDEC_XML (object)->status = d;
 }
 
 static const char *
@@ -509,7 +507,7 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
   }
 
   unescaped = swfdec_xml_unescape_len (SWFDEC_AS_OBJECT (xml)->context, p + 1,
-      end - (p + 1));
+      end - (p + 1), TRUE);
   value = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
       unescaped);
   SWFDEC_AS_VALUE_SET_STRING (&val, value);
@@ -822,10 +820,8 @@ void
 swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!swfdec_as_context_is_constructing (cx)) {
-    SWFDEC_FIXME ("What do we do if not constructing?");
+  if (!swfdec_as_context_is_constructing (cx))
     return;
-  }
 
   g_assert (SWFDEC_IS_XML (object));
 

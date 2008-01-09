@@ -1,16 +1,5 @@
-check_PROGRAMS = trace
-
-TESTS = $(check_PROGRAMS)
-
-trace_SOURCES = \
-	swfdec_interaction.c \
-	trace.c
-
-noinst_HEADERS = \
-	swfdec_interaction.h
-
-trace_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
-trace_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
+check-local:
+	../test --script $(srcdir)/default.sts $(srcdir)/*.swf
 
 EXTRA_DIST = \
 	README \
@@ -121,6 +110,15 @@ EXTRA_DIST = \
 	array-new-override-7.swf.trace \
 	array-new-override-8.swf \
 	array-new-override-8.swf.trace \
+	array-no-object.as \
+	array-no-object-5.swf \
+	array-no-object-5.swf.trace \
+	array-no-object-6.swf \
+	array-no-object-6.swf.trace \
+	array-no-object-7.swf \
+	array-no-object-7.swf.trace \
+	array-no-object-8.swf \
+	array-no-object-8.swf.trace \
 	array-properties.as \
 	array-properties-5.swf \
 	array-properties-5.swf.trace \
@@ -130,6 +128,15 @@ EXTRA_DIST = \
 	array-properties-7.swf.trace \
 	array-properties-8.swf \
 	array-properties-8.swf.trace \
+	array-sort-on.as \
+	array-sort-on-5.swf \
+	array-sort-on-5.swf.trace \
+	array-sort-on-6.swf \
+	array-sort-on-6.swf.trace \
+	array-sort-on-7.swf \
+	array-sort-on-7.swf.trace \
+	array-sort-on-8.swf \
+	array-sort-on-8.swf.trace \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \
@@ -639,6 +646,15 @@ EXTRA_DIST = \
 	crash-0.5.4-huge-image-7.swf.trace \
 	crash-0.5.4-huge-image-8.swf \
 	crash-0.5.4-huge-image-8.swf.trace \
+	crash-0.5.5-stylesheet-update.as \
+	crash-0.5.5-stylesheet-update-5.swf \
+	crash-0.5.5-stylesheet-update-5.swf.trace \
+	crash-0.5.5-stylesheet-update-6.swf \
+	crash-0.5.5-stylesheet-update-6.swf.trace \
+	crash-0.5.5-stylesheet-update-7.swf \
+	crash-0.5.5-stylesheet-update-7.swf.trace \
+	crash-0.5.5-stylesheet-update-8.swf \
+	crash-0.5.5-stylesheet-update-8.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \
@@ -915,6 +931,15 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	externalinterface-escape.as \
+	externalinterface-escape-5.swf \
+	externalinterface-escape-5.swf.trace \
+	externalinterface-escape-6.swf \
+	externalinterface-escape-6.swf.trace \
+	externalinterface-escape-7.swf \
+	externalinterface-escape-7.swf.trace \
+	externalinterface-escape-8.swf \
+	externalinterface-escape-8.swf.trace \
 	file-reference-constructor.as \
 	file-reference-constructor-7.swf \
 	file-reference-constructor-7.swf.trace \
@@ -1379,6 +1404,24 @@ EXTRA_DIST = \
 	local-connection-properties-7.swf.trace \
 	local-connection-properties-8.swf \
 	local-connection-properties-8.swf.trace \
+	localToGlobal-propflags.as \
+	localToGlobal-propflags-5.swf \
+	localToGlobal-propflags-5.swf.trace \
+	localToGlobal-propflags-6.swf \
+	localToGlobal-propflags-6.swf.trace \
+	localToGlobal-propflags-7.swf \
+	localToGlobal-propflags-7.swf.trace \
+	localToGlobal-propflags-8.swf \
+	localToGlobal-propflags-8.swf.trace \
+	localToGlobal-various.as \
+	localToGlobal-various-5.swf \
+	localToGlobal-various-5.swf.trace \
+	localToGlobal-various-6.swf \
+	localToGlobal-various-6.swf.trace \
+	localToGlobal-various-7.swf \
+	localToGlobal-various-7.swf.trace \
+	localToGlobal-various-8.swf \
+	localToGlobal-various-8.swf.trace \
 	lots-of-arguments.as \
 	lots-of-arguments-5.swf \
 	lots-of-arguments-5.swf.trace \
@@ -1490,6 +1533,15 @@ EXTRA_DIST = \
 	mouse-show-hide-6.swf.trace \
 	mouse-show-hide-7.swf \
 	mouse-show-hide-7.swf.trace \
+	movie-enumerate.as \
+	movie-enumerate-5.swf \
+	movie-enumerate-5.swf.trace \
+	movie-enumerate-6.swf \
+	movie-enumerate-6.swf.trace \
+	movie-enumerate-7.swf \
+	movie-enumerate-7.swf.trace \
+	movie-enumerate-8.swf \
+	movie-enumerate-8.swf.trace \
 	movieclip-get-swf-version.as \
 	movieclip-get-swf-version-5.swf \
 	movieclip-get-swf-version-5.swf.trace \
@@ -1551,6 +1603,15 @@ EXTRA_DIST = \
 	movieclip-target-6.swf.trace \
 	movieclip-target-7.swf \
 	movieclip-target-7.swf.trace \
+	movieclip-version.as \
+	movieclip-version-5.swf \
+	movieclip-version-5.swf.trace \
+	movieclip-version-6.swf \
+	movieclip-version-6.swf.trace \
+	movieclip-version-7.swf \
+	movieclip-version-7.swf.trace \
+	movieclip-version-8.swf \
+	movieclip-version-8.swf.trace \
 	moviecliploader-constructor.as \
 	moviecliploader-constructor-5.swf \
 	moviecliploader-constructor-5.swf.trace \
@@ -3074,6 +3135,8 @@ EXTRA_DIST = \
 	xml-errors-6.swf.trace \
 	xml-errors-7.swf \
 	xml-errors-7.swf.trace \
+	xml-errors-8.swf \
+	xml-errors-8.swf.trace \
 	xml-escape.as \
 	xml-escape-5.swf \
 	xml-escape-5.swf.trace \
@@ -3081,6 +3144,8 @@ EXTRA_DIST = \
 	xml-escape-6.swf.trace \
 	xml-escape-7.swf \
 	xml-escape-7.swf.trace \
+	xml-escape-8.swf \
+	xml-escape-8.swf.trace \
 	xml-init.as \
 	xml-init-5.swf \
 	xml-init-5.swf.trace \
@@ -3097,6 +3162,8 @@ EXTRA_DIST = \
 	xml-node-6.swf.trace \
 	xml-node-7.swf \
 	xml-node-7.swf.trace \
+	xml-node-8.swf \
+	xml-node-8.swf.trace \
 	xml-node-init.as \
 	xml-node-init-5.swf \
 	xml-node-init-5.swf.trace \
@@ -3113,11 +3180,15 @@ EXTRA_DIST = \
 	xml-other-6.swf.trace \
 	xml-other-7.swf \
 	xml-other-7.swf.trace \
+	xml-other-8.swf \
+	xml-other-8.swf.trace \
 	xml-parse.as \
 	xml-parse-6.swf \
 	xml-parse-6.swf.trace \
 	xml-parse-7.swf \
 	xml-parse-7.swf.trace \
+	xml-parse-8.swf \
+	xml-parse-8.swf.trace \
 	xml-parse-1.xml \
 	xml-parse-2.xml \
 	xml-properties.as \
@@ -3149,5 +3220,3 @@ EXTRA_DIST = \
 	xml-socket-properties-8.swf.trace \
 	xscale.swf \
 	xscale.swf.trace
-
-glow = tmp

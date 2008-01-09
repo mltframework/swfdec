@@ -114,7 +114,7 @@ swfdec_buffer_new (void)
  * Returns: a new #SwfdecBuffer with buffer->data pointing to new data
  **/
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc (guint size)
+swfdec_buffer_new_and_alloc (gsize size)
 {
   SwfdecBuffer *buffer = swfdec_buffer_new ();
 
@@ -135,7 +135,7 @@ swfdec_buffer_new_and_alloc (guint size)
  * Returns: a new #SwfdecBuffer with buffer->data pointing to new data
  **/
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc0 (guint size)
+swfdec_buffer_new_and_alloc0 (gsize size)
 {
   SwfdecBuffer *buffer = swfdec_buffer_new ();
 
@@ -156,7 +156,7 @@ swfdec_buffer_new_and_alloc0 (guint size)
  * Returns: a new #SwfdecBuffer pointing to @data
  **/
 SwfdecBuffer *
-swfdec_buffer_new_for_data (unsigned char *data, guint size)
+swfdec_buffer_new_for_data (unsigned char *data, gsize size)
 {
   SwfdecBuffer *buffer;
   
@@ -189,7 +189,7 @@ swfdec_buffer_free_subbuffer (unsigned char *data, gpointer priv)
  * Returns: a new #SwfdecBuffer managing the indicated region.
  **/
 SwfdecBuffer *
-swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, guint offset, guint length)
+swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, gsize offset, gsize length)
 {
   SwfdecBuffer *subbuffer;
   

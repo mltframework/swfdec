@@ -188,7 +188,7 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
     }
     skip = bytes_per_sample * (event->start_sample / granule);
     if (skip >= event->decoded->length) {
-      SWFDEC_WARNING ("start sample %u > total number of samples %u",
+      SWFDEC_WARNING ("start sample %u > total number of samples %"G_GSIZE_FORMAT,
 	  event->start_sample / granule, event->decoded->length / bytes_per_sample);
       swfdec_buffer_unref (event->decoded);
       event->decoded = swfdec_buffer_new ();
@@ -206,7 +206,7 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
     }
     keep = bytes_per_sample * (event->stop_sample / granule - event->start_sample / granule);
     if (keep > event->decoded->length) {
-      SWFDEC_WARNING ("stop sample %u outside of decoded number of samples %u",
+      SWFDEC_WARNING ("stop sample %u outside of decoded number of samples %"G_GSIZE_FORMAT,
 	  event->stop_sample / granule, event->decoded->length / bytes_per_sample +
 	  event->start_sample / granule);
     } else if (keep < event->decoded->length) {

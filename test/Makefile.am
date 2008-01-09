@@ -1,44 +1,41 @@
-SUBDIRS = image sound trace various
+SUBDIRS = custom image sound trace various
 
+noinst_PROGRAMS = test
 
-if WITH_GTK
-noinst_LTLIBRARIES = libswfedit.la
-noinst_PROGRAMS = swfdec-extract dump swfedit swfscript crashfinder
-else
-noinst_PROGRAMS = swfdec-extract dump crashfinder
-endif
+swfdec_test_sources = \
+	swfdec_test.c \
+	swfdec_test_function.c \
+	swfdec_test_global.c \
+	swfdec_test_image.c \
+	swfdec_test_test.c
 
-crashfinder_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
-crashfinder_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
-crashfinder_SOURCES = crashfinder.c
+BUILT_SOURCES = \
+	swfdec_test_function_list.h
 
-dump_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS) $(PANGO_CFLAGS)
-dump_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS) $(PANGO_LIBS)
+CLEANFILES = \
+	$(BUILT_SOURCES)
 
-swfdec_extract_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
-swfdec_extract_LDFLAGS = $(SWFDEC_LIBS) $(CAIRO_LIBS)
+test_SOURCES = \
+	$(swfdec_test_sources) \
+	$(BUILT_SOURCES)
 
-libswfedit_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS)
-libswfedit_la_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS)
-
-swfedit_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS)
-swfedit_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS)
-swfedit_LDADD = libswfedit.la
-
-swfscript_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS)
-swfscript_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS)
-swfscript_LDADD = libswfedit.la
-
-libswfedit_la_SOURCES = \
-	swfdec_out.c \
-	swfedit_file.c \
-	swfedit_list.c \
-	swfedit_tag.c \
-	swfedit_token.c
+EXTRA_DIST = \
+	swfdec_test_initialize.as
 
 noinst_HEADERS = \
-	swfdec_out.h \
-	swfedit_file.h \
-	swfedit_list.h \
-	swfedit_tag.h \
-	swfedit_token.h
+	swfdec_test_function.h \
+	swfdec_test_function_list.h \
+	swfdec_test_image.h \
+	swfdec_test_initialize.h \
+	swfdec_test_test.h
+	
+test_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
+test_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS) $(CAIRO_LIBS)
+
+swfdec_test_function_list.h: $(swfdec_test_sources)
+	(cd $(srcdir) \
+	  && grep -he "^SWFDEC_TEST_FUNCTION" $(swfdec_test_sources) \
+	 ) >> xgen-sfl \
+	&& (cmp -s xgen-sfl swfdec_test_function_list.h || cp xgen-sfl swfdec_test_function_list.h) \
+	&& rm -f xgen-sfl
+

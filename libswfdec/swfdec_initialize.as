@@ -1034,60 +1034,204 @@ flash.external = {};
 flash.external.ExternalInterface = function () {
 };
 
-flash.external.ExternalInterface.addCallback = function () {
-  var o = {}; o["Implement ExternalInterface.addCallback (static)"] ();
+flash.external.ExternalInterface.addCallback = function (name, instance, method) {
+  if (!method || !flash.external.ExternalInterface.available)
+    return false;
+
+  flash.external.ExternalInterface._initJS ();
+  return flash.external.ExternalInterface._addCallback (name, function (request) {
+    return flash.external.ExternalInterface._callIn (instance, method, request);
+  });
 };
 
-flash.external.ExternalInterface.call = function () {
-  var o = {}; o["Implement ExternalInterface.call (static)"] ();
+flash.external.ExternalInterface.call = function (name) {
+  if (!flash.external.ExternalInterface.available)
+    return null;
+
+  flash.external.ExternalInterface._initJS ();
+  var request = "try { ";
+  var id = flash.external.ExternalInterface._objectID ();
+  if (id != null)
+    request += id + ".SetReturnValue(";
+  request += "__flash__toXML (" + name + "(";
+  for (var i = 1; i < arguments.length; i++) {
+    if (i > 1)
+      request += ",";
+    request += flash.external.ExternalInterface._toJS (arguments[i]);
+  }
+  request += ")) ";
+  if (id != null)
+    request += ")";
+  request += "; } catch (e) { ";
+  if (id != null) {
+    request += id + ".SetReturnValue(\"<undefined/>\"); }";
+  } else {
+    request += "\"<undefined/>\"; }";
+  }
+  var result = flash.external.ExternalInterface._evalJS (request);
+  if (result == null) {
+    request = "<invoke name=\"" + name + "\" returntype=\"xml\">" + flash.external.ExternalInterface._argumentsToXML (arguments) + "</invoke>";
+    result = flash.external.ExternalInterface._callOut (request);
+  }
+  if (result == null)
+    return null;
+
+  var xml = new XML ();
+  xml.ignoreWhite = true;
+  xml.parseXML (result);
+  return flash.external.ExternalInterface._toAS (xml.firstChild);
 };
 
-flash.external.ExternalInterface._callIn = function () {
-  var o = {}; o["Implement ExternalInterface._callIn (static)"] ();
+flash.external.ExternalInterface._callIn = function (instance, method, request) {
+  var xml = new XML();
+  xml.ignoreWhite = true;
+  xml.parseXML (request);
+  var args = null;
+  for (var i = 0; i < xml.firstChild.childNodes.length; i++) {
+    if (xml.firstChild.childNodes[i].nodeName == "arguments") {
+      args = xml.firstChild.childNodes[i];
+      break;
+    }
+  }
+  var result = method.apply (instance, flash.external.ExternalInterface._argumentsToAS (args));
+  if (xml.firstChild.attributes.returntype == "javascript")
+    return flash.external.ExternalInterface._toJS (result);
+  else
+    return flash.external.ExternalInterface._toXML (result);
 };
 
-flash.external.ExternalInterface._toXML = function () {
-  var o = {}; o["Implement ExternalInterface._toXML (static)"] ();
+flash.external.ExternalInterface._arrayToXML = function (array) {
+  var s = "<array>";
+  for (var i = 0; i < array.length; i++) {
+    s += "<property id=\"" + i + "\">" + flash.external.ExternalInterface._toXML (array[i]) + "</property>";
+  }
+  return s + "</array>";
 };
 
-flash.external.ExternalInterface._objectToXML = function () {
-  var o = {}; o["Implement ExternalInterface._objectToXML (static)"] ();
+flash.external.ExternalInterface._argumentsToXML = function (args) {
+  var s = "<arguments>";
+  for (var i = 0; i < args.length; i++) {
+    s += flash.external.ExternalInterface._toXML (args[i]);
+  }
+  return s + "</arguments>";
 };
 
-flash.external.ExternalInterface._arrayToXML = function () {
-  var o = {}; o["Implement ExternalInterface._arrayToXML (static)"] ();
+flash.external.ExternalInterface._objectToXML = function (obj) {
+  var s = "<object>";
+  for (var prop in obj) {
+      s += "<property id=\"" + prop + "\">" + flash.external.ExternalInterface._toXML (obj[prop]) + "</property>";
+  }
+  return s + "</object>";
 };
 
-flash.external.ExternalInterface._argumentsToXML = function () {
-  var o = {}; o["Implement ExternalInterface._argumentsToXML (static)"] ();
+flash.external.ExternalInterface._toXML = function (value) {
+  var type = typeof(value);
+  if (type == "string") {
+    return "<string>" + flash.external.ExternalInterface._escapeXML(value) + "</string>";
+  } else if (type == "undefined") {
+    return "<undefined/>";
+  } else if (type == "number") {
+    return "<number>" + value + "</number>";
+  } else if (value == null) {
+    return "<null/>";
+  } else if (type == "boolean") {
+    return value ? "<true/>" : "<false/>";
+  } else if (value.hasOwnProperty ("length")) {
+    return flash.external.ExternalInterface._arrayToXML (value);
+  } else if (type == "object") {
+    return flash.external.ExternalInterface._objectToXML (value);
+  } else {
+    return "<null/>";
+  }
 };
 
-flash.external.ExternalInterface._toAS = function () {
-  var o = {}; o["Implement ExternalInterface._toAS (static)"] ();
+flash.external.ExternalInterface._objectToAS = function (xml) {
+  var o = {};
+  for (i = 0; i < xml.childNodes.length; i++) {
+    if (xml.childNodes[i].nodeName == "property")
+      o[xml.childNodes[i].attributes.id] = flash.external.ExternalInterface._toAS (xml.childNodes[i].firstChild);
+  }
+  return o;
 };
 
-flash.external.ExternalInterface._objectToAS = function () {
-  var o = {}; o["Implement ExternalInterface._objectToAS (static)"] ();
+flash.external.ExternalInterface._arrayToAS = function (xml) {
+  var a = [];
+  for (i = 0; i < xml.childNodes.length; i++) {
+    if (xml.childNodes[i].nodeName == "property")
+      a[xml.childNodes[i].attributes.id] = flash.external.ExternalInterface._toAS (xml.childNodes[i].firstChild);
+  }
+  return a;
 };
 
-flash.external.ExternalInterface._arrayToAS = function () {
-  var o = {}; o["Implement ExternalInterface._arrayToAS (static)"] ();
+flash.external.ExternalInterface._toAS = function (xml) {
+  var type = xml.nodeName;
+  if (type == "number") {
+    return Number (xml.firstChild.toString());
+  } else if (type == "string") {
+    return flash.external.ExternalInterface._unescapeXML (String (xml.firstChild));
+  } else if (type == "false") {
+    return false;
+  } else if (type == "true") {
+    return true;
+  } else if (type == "null") {
+    return null;
+  } else if (type == "undefined") {
+    return undefined;
+  } else if (type == "object") {
+    return flash.external.ExternalInterface._objectToAS (xml);
+  } else if (type == "array") {
+    return flash.external.ExternalInterface._arrayToAS (xml);
+  } else if (type == "class") {
+    return String (xml.firstChild);
+  } else {
+    return undefined;
+  }
 };
 
-flash.external.ExternalInterface._argumentsToAS = function () {
-  var o = {}; o["Implement ExternalInterface._argumentsToAS (static)"] ();
+flash.external.ExternalInterface._argumentsToAS = function (xml) {
+  var args = [];
+  for (var i = 0; i < xml.childNodes.length; i++) {
+    args.push (flash.external.ExternalInterface._toAS (xml.childNodes [i]));
+  }
+  return args;
 };
 
-flash.external.ExternalInterface._toJS = function () {
-  var o = {}; o["Implement ExternalInterface._toJS (static)"] ();
+flash.external.ExternalInterface._arrayToJS = function (array) {
+  var s = "[";
+  for (var i = 0; i < array.length; i++) {
+    if (i != 0)
+      s += ",";
+    s += flash.external.ExternalInterface._toJS (array[_l1]);
+  }
+  return s + "]";
 };
 
-flash.external.ExternalInterface._objectToJS = function () {
-  var o = {}; o["Implement ExternalInterface._objectToJS (static)"] ();
+flash.external.ExternalInterface._objectToJS = function (obj) {
+  var s = "({";
+  var needs_comma = false;
+  for (var prop in obj) {
+    if (needs_comma) {
+      s += ",";
+    }
+    needs_comma = true;
+    s += prop + ":" + flash.external.ExternalInterface._toJS (obj[prop]);
+  }
+  return s + "})";
 };
 
-flash.external.ExternalInterface._arrayToJS = function () {
-  var o = {}; o["Implement ExternalInterface._arrayToJS (static)"] ();
+flash.external.ExternalInterface._toJS = function (value) {
+  var type = typeof (value);
+  if (type == "string") {
+    return "\"" + flash.external.ExternalInterface._jsQuoteString (flash.external.ExternalInterface._unescapeXML (value)) + "\"";
+  } else if (type == "object") {
+    if (value instanceof Array) {
+      return flash.external.ExternalInterface._arrayToJS (value);
+    } else {
+      return flash.external.ExternalInterface._objectToJS (value);
+    }
+  } else {
+    return String (value);
+  }
 };
 
 ASSetNative (flash.external.ExternalInterface, 14, "8_initJS,8_objectID,8_addCallback,8_evalJS,8_callOut,8_escapeXML,8_unescapeXML,8_jsQuoteString");

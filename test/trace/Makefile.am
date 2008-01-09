@@ -702,6 +702,8 @@ EXTRA_DIST = \
 	date-properties-7.swf.trace \
 	date-properties-8.swf \
 	date-properties-8.swf.trace \
+	default.stas \
+	default.sts
 	definebutton-5.swf \
 	definebutton-5.swf.act \
 	definebutton-5.swf.trace \

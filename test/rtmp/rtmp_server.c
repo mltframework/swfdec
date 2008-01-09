@@ -23,6 +23,18 @@
 #include <libsoup/soup.h>
 #include <libsoup/soup-address.h>
 #include <libswfdec/swfdec.h>
+#include <glib/gprintf.h>
+
+static void
+socket_print (SoupSocket *sock, const char *format, ...)
+{
+  va_list varargs;
+
+  g_print ("%s ", (char *) g_object_get_data (G_OBJECT (sock), "name"));
+  va_start (varargs, format);
+  g_vprintf (format, varargs);
+  va_end (varargs);
+}
 
 static void
 hexdump (SwfdecBuffer *buffer)
@@ -44,18 +56,28 @@ do_read (SoupSocket *conn, gpointer unused)
 
   buf = swfdec_buffer_new_and_alloc (16);
   while ((status = soup_socket_read (conn, buf->data, buf->length, &buf->length)) == SOUP_SOCKET_OK) {
+    socket_print (conn, "\n");
     hexdump (buf);
     soup_socket_write (conn, buf->data, buf->length, &buf->length);
     buf->length = 16;
   }
   swfdec_buffer_unref (buf);
-  g_print ("status: %u\n", (guint) status);
+  socket_print (conn, "status: %u\n", (guint) status);
+}
+
+static void
+assign_name (SoupSocket *sock)
+{
+  static guint count = 0;
+  g_object_set_data_full (G_OBJECT (sock), "name", g_strdup_printf ("%u", ++count), g_free);
 }
 
 static void
 new_connection (SoupSocket *server, SoupSocket *conn, gpointer unused)
 {
-  g_print ("WOOT!\n");
+  assign_name (conn);
+  g_object_set (conn, SOUP_SOCKET_FLAG_NONBLOCKING, TRUE, SOUP_SOCKET_FLAG_NODELAY, TRUE, NULL);
+  socket_print (conn, "new connection\n");
   g_signal_connect (conn, "readable", G_CALLBACK (do_read), NULL);
   do_read (conn, NULL);
 }

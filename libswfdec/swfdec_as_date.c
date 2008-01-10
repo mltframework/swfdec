@@ -918,37 +918,34 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   memset (&brokentime, 0, sizeof (brokentime));
 
-  i = 0;
-
-  if (argc > i) {
-    if (swfdec_as_date_value_to_number_and_integer_floor (cx, &argv[i++], &d,
+  if (argc > 0) {
+    if (swfdec_as_date_value_to_number_and_integer_floor (cx, &argv[0], &d,
 	  &num)) {
       year = num;
     } else {
       // special case: if year is not finite set it to -1900
       year = -1900;
     }
+  } else {
+    return;
   }
 
   // if we don't got atleast two values, return undefined
   // do it only here, so valueOf first arg is called
-  if (argc < 2) {
+  if (argc < 2) 
     return;
+
+  if (swfdec_as_date_value_to_number_and_integer (cx, &argv[1], &d,
+	&num)) {
+    brokentime.month = num;
+  } else {
+    // special case: if month is not finite set year to -1900
+    year = -1900;
+    brokentime.month = 0;
   }
 
-  if (argc > i) {
-    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
-	  &num)) {
-      brokentime.month = num;
-    } else {
-      // special case: if month is not finite set year to -1900
-      year = -1900;
-      brokentime.month = 0;
-    }
-  }
-
-  if (argc > i) {
-    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
+  if (argc > 2) {
+    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[2], &d,
 	  &num)) {
       brokentime.day_of_month = num;
     } else {
@@ -959,8 +956,8 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     brokentime.day_of_month = 1;
   }
 
-  if (argc > i) {
-    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
+  if (argc > 3) {
+    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[3], &d,
 	  &num)) {
       brokentime.hours = num;
     } else {
@@ -969,8 +966,8 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     }
   }
 
-  if (argc > i) {
-    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
+  if (argc > 4) {
+    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[4], &d,
 	  &num)) {
       brokentime.minutes = num;
     } else {
@@ -979,8 +976,8 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     }
   }
 
-  if (argc > i) {
-    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
+  if (argc > 5) {
+    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[5], &d,
 	  &num)) {
       brokentime.seconds = num;
     } else {
@@ -995,8 +992,8 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     brokentime.year = year;
   }
 
-  if (argc > i) {
-    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[i++], &d,
+  if (argc > 6) {
+    if (swfdec_as_date_value_to_number_and_integer (cx, &argv[6], &d,
 	  &num)) {
       brokentime.milliseconds = num;
     } else {

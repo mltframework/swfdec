@@ -248,105 +248,103 @@ swfdec_as_integer_to_string (SwfdecAsContext *context, int i)
 const char *
 swfdec_as_double_to_string (SwfdecAsContext *context, double d)
 {
+  gboolean found = FALSE, gotdot = FALSE;
+  guint digits = 15;
+  char tmp[50], *end, *start, *s;
+
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), SWFDEC_AS_STR_EMPTY);
 
-  switch (fpclassify (d)) {
-    case FP_ZERO:
-      return SWFDEC_AS_STR_0;
-    case FP_INFINITE:
-      return d < 0 ? SWFDEC_AS_STR__Infinity : SWFDEC_AS_STR_Infinity;
-    case FP_NAN:
-      return SWFDEC_AS_STR_NaN;
-    default:
-      {
-	gboolean found = FALSE, gotdot = FALSE;
-	guint digits = 15;
-	char tmp[50], *end, *start, *s;
-	tmp[0] = ' ';
-	s = &tmp[1];
-	if (ABS (d) > 0.00001 && ABS (d) < 1e+15) {
-	  g_ascii_formatd (s, 50, "%.22f", d);
-	} else {
-	  g_ascii_formatd (s, 50, "%.25e", d);
-	}
-	start = s;
-	/* skip - sign */
-	if (*start == '-')
-	  start++;
-	/* count digits (maximum allowed is 15) */
-	while (digits) {
-	  if (*start == '.') {
-	    start++;
-	    gotdot = TRUE;
-	    continue;
-	  }
-	  if (*start < '0' || *start > '9')
-	    break;
-	  if (found || *start != '0') {
-	    digits--;
-	    found = TRUE;
-	  }
-	  start++;
-	}
-	end = start;
-	/* go to end of string */
-	while (*end != 'e' && *end != 0)
-	  end++;
-	/* round using the next digit */
-	if (*start >= '5' && *start <= '9') {
-	  char *finish = NULL;
-	  /* skip all 9s at the end */
-	  while (start[-1] == '9')
-	    start--;
-	  /* if we're before the dot, replace 9s with 0s */
-	  if (start[-1] == '.') {
-	    finish = start;
-	    start--;
-	  }
-	  while (start[-1] == '9') {
-	    start[-1] = '0';
-	    start--;
-	  }
-	  /* write out correct number */
-	  if (start[-1] == '-') {
-	    s--;
-	    start[-2] = '-';
-	    start[-1] = '1';
-	  } else if (start[-1] == ' ') {
-	    s--;
-	    start[-1] = '1';
-	  } else {
-	    start[-1]++;
-	  }
-	  /* reposition cursor at end */
-	  if (finish)
-	    start = finish;
-	}
-	/* remove trailing zeros (note we skipped zero above, so there will be non-0 bytes left) */
-	if (gotdot) {
-	  while (start[-1] == '0')
-	    start--;
-	  if (start[-1] == '.')
-	    start--;
-	}
-	/* add exponent */
-	if (*end == 'e') {
-	  /* 'e' */
-	  *start++ = *end++;
-	  /* + or - */
-	  *start++ = *end++;
-	  /* skip 0s */
-	  while (*end == '0')
-	    end++;
-	  /* add rest */
-	  while (*end != 0)
-	    *start++ = *end++;
-	}
-	/* end string */
-	*start = 0;
-	return swfdec_as_context_get_string (context, s);
-      }
+  if (isnan (d))
+    return SWFDEC_AS_STR_NaN;
+  if (!isinf (d))
+    return d < 0 ? SWFDEC_AS_STR__Infinity : SWFDEC_AS_STR_Infinity;
+  /* stupid -0.0 */
+  if (fabs (d) == 0.0)
+    return SWFDEC_AS_STR_0;
+
+  tmp[0] = ' ';
+  s = &tmp[1];
+  if (ABS (d) > 0.00001 && ABS (d) < 1e+15) {
+    g_ascii_formatd (s, 50, "%.22f", d);
+  } else {
+    g_ascii_formatd (s, 50, "%.25e", d);
   }
+  start = s;
+  /* skip - sign */
+  if (*start == '-')
+    start++;
+  /* count digits (maximum allowed is 15) */
+  while (digits) {
+    if (*start == '.') {
+      start++;
+      gotdot = TRUE;
+      continue;
+    }
+    if (*start < '0' || *start > '9')
+      break;
+    if (found || *start != '0') {
+      digits--;
+      found = TRUE;
+    }
+    start++;
+  }
+  end = start;
+  /* go to end of string */
+  while (*end != 'e' && *end != 0)
+    end++;
+  /* round using the next digit */
+  if (*start >= '5' && *start <= '9') {
+    char *finish = NULL;
+    /* skip all 9s at the end */
+    while (start[-1] == '9')
+      start--;
+    /* if we're before the dot, replace 9s with 0s */
+    if (start[-1] == '.') {
+      finish = start;
+      start--;
+    }
+    while (start[-1] == '9') {
+      start[-1] = '0';
+      start--;
+    }
+    /* write out correct number */
+    if (start[-1] == '-') {
+      s--;
+      start[-2] = '-';
+      start[-1] = '1';
+    } else if (start[-1] == ' ') {
+      s--;
+      start[-1] = '1';
+    } else {
+      start[-1]++;
+    }
+    /* reposition cursor at end */
+    if (finish)
+      start = finish;
+  }
+  /* remove trailing zeros (note we skipped zero above, so there will be non-0 bytes left) */
+  if (gotdot) {
+    while (start[-1] == '0')
+      start--;
+    if (start[-1] == '.')
+      start--;
+  }
+  /* add exponent */
+  if (*end == 'e') {
+    /* 'e' */
+    *start++ = *end++;
+    /* + or - */
+    *start++ = *end++;
+    /* skip 0s */
+    while (*end == '0')
+      end++;
+    /* add rest */
+    while (*end != 0)
+      *start++ = *end++;
+  }
+  /* end string */
+  *start = 0;
+  return swfdec_as_context_get_string (context, s);
 }
 
 /**

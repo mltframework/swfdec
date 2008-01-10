@@ -1298,7 +1298,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   SwfdecAsContext *context;
   SwfdecAsFunction *cur;
   SwfdecAsFrame *frame;
-  guint size;
+  guint size = 0;
   GType type = 0;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));

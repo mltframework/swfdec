@@ -80,6 +80,7 @@ libswfdec_source_files = \
 	swfdec_flash_security.c \
 	swfdec_flv_decoder.c \
 	swfdec_font.c \
+	swfdec_function_list.c \
 	swfdec_glow_filter.c \
 	swfdec_gradient_filter.c \
 	swfdec_gradient_pattern.c \
@@ -242,6 +243,7 @@ noinst_HEADERS = \
 	swfdec_flash_security.h \
 	swfdec_flv_decoder.h \
 	swfdec_font.h \
+	swfdec_function_list.h \
 	swfdec_gradient_pattern.h \
 	swfdec_graphic.h \
 	swfdec_graphic_movie.h \

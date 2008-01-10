@@ -492,7 +492,7 @@ swfdec_video_decoder_gst_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
     SwfdecVideoImage *image)
 {
   SwfdecGstVideo *player = (SwfdecGstVideo *) dec;
-#define ALIGN(x, n) (((x) + (n) - 1) & (~((n) - 1)))
+#define SWFDEC_ALIGN(x, n) (((x) + (n) - 1) & (~((n) - 1)))
   GstBuffer *buf;
   GstCaps *caps;
   GstStructure *structure;
@@ -542,17 +542,18 @@ swfdec_video_decoder_gst_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer,
       break;
     case SWFDEC_VIDEO_FORMAT_I420:
       image->plane[0] = buf->data;
-      image->rowstride[0] = ALIGN (image->width, 4);
-      image->plane[1] = image->plane[0] + image->rowstride[0] * ALIGN (image->height, 2);
-      image->rowstride[1] = ALIGN (image->width, 8) / 2;
-      image->plane[2] = image->plane[1] + image->rowstride[1] * ALIGN (image->height, 2) / 2;
+      image->rowstride[0] = SWFDEC_ALIGN (image->width, 4);
+      image->plane[1] = image->plane[0] + image->rowstride[0] * SWFDEC_ALIGN (image->height, 2);
+      image->rowstride[1] = SWFDEC_ALIGN (image->width, 8) / 2;
+      image->plane[2] = image->plane[1] + image->rowstride[1] * SWFDEC_ALIGN (image->height, 2) / 2;
       image->rowstride[2] = image->rowstride[1];
-      g_assert (image->plane[2] + image->rowstride[2] * ALIGN (image->height, 2) / 2 == image->plane[0] + buf->size);
+      g_assert (image->plane[2] + image->rowstride[2] * SWFDEC_ALIGN (image->height, 2) / 2 == image->plane[0] + buf->size);
       break;
     default:
       g_return_val_if_reached (FALSE);
   }
   return TRUE;
+#undef SWFDEC_ALIGN
 }
 
 static GstCaps *

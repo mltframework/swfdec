@@ -69,8 +69,8 @@ swfdec_load_object_stream_target_error (SwfdecStreamTarget *target,
   load_object->finish (load_object->target, NULL);
 
   /* unroot */
-  swfdec_player_unroot_object (SWFDEC_PLAYER (
-	SWFDEC_AS_OBJECT (load_object)->context), G_OBJECT (load_object));
+  swfdec_player_unroot (SWFDEC_PLAYER (
+	SWFDEC_AS_OBJECT (load_object)->context), load_object);
 }
 
 static void
@@ -99,8 +99,8 @@ swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
   }
 
   /* unroot */
-  swfdec_player_unroot_object (SWFDEC_PLAYER (
-	SWFDEC_AS_OBJECT (load_object)->context), G_OBJECT (load_object));
+  swfdec_player_unroot (SWFDEC_PLAYER (
+	SWFDEC_AS_OBJECT (load_object)->context), load_object);
 }
 
 static void
@@ -225,8 +225,7 @@ swfdec_load_object_new (SwfdecAsObject *target, const char *url,
   if (!swfdec_load_object_load (load_object, url, request, data))
     return NULL;
 
-  swfdec_player_root_object (SWFDEC_PLAYER (target->context),
-      G_OBJECT (load_object));
+  swfdec_player_root (SWFDEC_PLAYER (target->context), load_object, (GFunc) swfdec_as_object_mark);
 
   return SWFDEC_AS_OBJECT (load_object);
 }

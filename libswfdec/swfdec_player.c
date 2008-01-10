@@ -885,9 +885,8 @@ swfdec_player_dispose (GObject *object)
     g_object_unref (priv->resource);
     priv->resource = NULL;
   }
-  while (priv->rooted_objects)
-    swfdec_player_unroot_object (player, priv->rooted_objects->data);
 
+  swfdec_function_list_clear (&priv->rooted);
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
 
@@ -1515,16 +1514,6 @@ swfdec_player_mark_string_object (gpointer key, gpointer value, gpointer data)
 }
 
 static void
-swfdec_player_mark_rooted_object (gpointer object, gpointer unused)
-{
-  if (SWFDEC_IS_RESOURCE (object)) {
-    swfdec_resource_mark (object);
-  } else if (SWFDEC_IS_AS_OBJECT (object)) {
-    swfdec_as_object_mark (object);
-  }
-}
-
-static void
 swfdec_player_mark (SwfdecAsContext *context)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
@@ -1536,7 +1525,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   swfdec_as_object_mark (priv->Video);
   g_list_foreach (priv->roots, (GFunc) swfdec_as_object_mark, NULL);
   g_list_foreach (priv->intervals, (GFunc) swfdec_as_object_mark, NULL);
-  g_list_foreach (priv->rooted_objects, swfdec_player_mark_rooted_object, NULL);
+  swfdec_function_list_execute (&priv->rooted, player);
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }
@@ -2099,68 +2088,6 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
   } else {
     g_hash_table_remove (priv->registered_classes, name);
   }
-}
-
-/* FIXME:
- * I don't like the idea of rooting arbitrary objects very much. And so far, 
- * this API is only necessary for the objects used for loading data. So it seems
- * like a good idea to revisit the refcounting and GCing of resources.
- */
-void
-swfdec_player_root_object (SwfdecPlayer *player, GObject *object)
-{
-  SwfdecPlayerPrivate *priv;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (G_IS_OBJECT (object));
-
-  priv = player->priv;
-  g_object_ref (object);
-  priv->rooted_objects = g_list_prepend (priv->rooted_objects, object);
-}
-
-void
-swfdec_player_unroot_object (SwfdecPlayer *player, GObject *object)
-{
-  SwfdecPlayerPrivate *priv = player->priv;
-  GList *entry;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (G_IS_OBJECT (object));
-  entry = g_list_find (priv->rooted_objects, object);
-  g_return_if_fail (entry != NULL);
-  g_object_unref (object);
-  priv->rooted_objects = g_list_delete_link (priv->rooted_objects, entry);
-}
-
-/**
- * swfdec_player_create_socket:
- * @player: a #SwfdecPlayer
- * @hostname: the host name to connect to.
- * @port: the port to connect to
- *
- * Creates a new socket connecting to the given hostname and port.
- *
- * Returns: a new socket or %NULL if no socket implementation exists
- **/
-/* FIXME: always return a socket? */
-SwfdecSocket *
-swfdec_player_create_socket (SwfdecPlayer *player, const char *hostname, guint port)
-{
-  SwfdecSocket *sock;
-  SwfdecSocketClass *klass;
-
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (hostname != NULL, NULL);
-  g_return_val_if_fail (port > 0, NULL);
-
-  if (player->priv->socket_type == 0)
-    return NULL;
-  klass = g_type_class_ref (player->priv->socket_type);
-  sock = klass->create (hostname, port);
-  g_type_class_unref (klass);
-
-  return sock;
 }
 
 /** PUBLIC API ***/

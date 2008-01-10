@@ -23,6 +23,7 @@
 #include <libswfdec/swfdec_player.h>
 #include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_event.h>
+#include <libswfdec/swfdec_function_list.h>
 #include <libswfdec/swfdec_player_scripting.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
@@ -62,7 +63,6 @@ struct _SwfdecPlayerPrivate
   guint			width;			/* width of movie */
   guint			height;			/* height of movie */
   GList *		roots;			/* all the root movies */
-  GList *		rooted_objects;		/* all the objects we keep track of */
   GSList *		resource_requests;	/* all external requested URIs - see swfdec_resource_request.[ch] */
   SwfdecCache *		cache;			/* player cache */
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
@@ -88,6 +88,7 @@ struct _SwfdecPlayerPrivate
 
   guint			unnamed_count;		/* variable used for naming unnamed movies */
   /* ActionScript */
+  SwfdecFunctionList	rooted;	  		/* all the objects we keep track of */
   guint			interval_id;		/* id returned from setInterval call */
   GList *		intervals;		/* all currently running intervals */
   GHashTable *		registered_classes;	/* name => SwfdecAsObject constructor */
@@ -151,10 +152,10 @@ void		swfdec_player_unlock		(SwfdecPlayer *		player);
 void		swfdec_player_unlock_soft	(SwfdecPlayer *		player);
 void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 
-void		swfdec_player_root_object	(SwfdecPlayer *		player,
-						 GObject *		object);
-void		swfdec_player_unroot_object	(SwfdecPlayer *		player,
-						 GObject *		object);
+#define swfdec_player_root(player, data, mark_func) \
+    swfdec_function_list_add (&(player)->priv->rooted, (mark_func), (data), NULL)
+#define swfdec_player_unroot(player, data) \
+    swfdec_function_list_remove (&(player)->priv->rooted, (data))
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
 						 const char *		name);
 void		swfdec_player_set_export_class	(SwfdecPlayer *		player,

@@ -210,7 +210,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
       SWFDEC_WARNING ("%s does not reference a movie, not loading %s", resource->target,
 	  swfdec_url_get_url (swfdec_loader_get_url (resource->loader)));
       swfdec_stream_close (SWFDEC_STREAM (resource->loader));
-      swfdec_player_unroot_object (player, G_OBJECT (resource));
+      swfdec_player_unroot (player, resource);
       return FALSE;
     }
     movie = swfdec_player_get_movie_at_level (player, level);
@@ -220,7 +220,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
   } else {
     movie = swfdec_resource_replace_movie (movie, resource);
   }
-  swfdec_player_unroot_object (player, G_OBJECT (resource));
+  swfdec_player_unroot (player, resource);
   return TRUE;
 }
 
@@ -548,7 +548,7 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
     resource->target = path;
     if (loader)
       resource->clip_loader = g_object_ref (loader);
-    swfdec_player_root_object (player, G_OBJECT (resource));
+    swfdec_player_root (player, resource, (GFunc) swfdec_resource_mark);
     swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
 	url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
   }

@@ -542,7 +542,7 @@ swfdec_text_field_movie_html_text_append_paragraph (SwfdecTextFieldMovie *text,
   SwfdecTextFormat *format, *format_prev, *format_font;
   GSList *iter, *fonts, *iter_font;
   guint index_, index_prev;
-  gboolean textformat, bullet, font;
+  gboolean textformat, bullet, font = FALSE;
   char *escaped;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), string);

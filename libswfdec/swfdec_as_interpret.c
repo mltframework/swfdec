@@ -39,6 +39,7 @@
 #include <math.h>
 #include <string.h>
 #include "swfdec_decoder.h"
+#include "swfdec_load_object.h"
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
@@ -1161,6 +1162,18 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 }
 
 static void
+swfdec_as_interpret_load_variables_on_finish (SwfdecAsObject *target,
+    const char *text)
+{
+  if (text != NULL)
+    swfdec_as_object_decode (target, text);
+
+  // only call onData for sprite movies
+  // FIXME: is it called even when loading fails?
+  swfdec_movie_queue_script (SWFDEC_MOVIE (target), SWFDEC_EVENT_DATA);
+}
+
+static void
 swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *target, *url;
@@ -1193,8 +1206,10 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SwfdecMovie *movie;
     
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
-    if (movie != NULL)
-      swfdec_movie_load_variables (movie, url, method, NULL);
+    if (movie != NULL) {
+      swfdec_load_object_new (SWFDEC_AS_OBJECT (movie), url, method, NULL, NULL,
+	  swfdec_as_interpret_load_variables_on_finish);
+    }
   } else if (internal) {
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL);
   } else {

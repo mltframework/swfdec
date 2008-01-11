@@ -256,7 +256,7 @@ swfdec_as_double_to_string (SwfdecAsContext *context, double d)
 
   if (isnan (d))
     return SWFDEC_AS_STR_NaN;
-  if (!isinf (d))
+  if (isinf (d))
     return d < 0 ? SWFDEC_AS_STR__Infinity : SWFDEC_AS_STR_Infinity;
   /* stupid -0.0 */
   if (fabs (d) == 0.0)

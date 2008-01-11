@@ -38,6 +38,7 @@ void			swfdec_url_free			(SwfdecURL *		url);
 const char *		swfdec_url_get_url		(const SwfdecURL *      url);
 const char *		swfdec_url_get_protocol		(const SwfdecURL *      url);
 const char *		swfdec_url_get_host		(const SwfdecURL *      url);
+guint			swfdec_url_get_port		(const SwfdecURL *	url);
 const char *		swfdec_url_get_path		(const SwfdecURL *      url);
 const char *		swfdec_url_get_query		(const SwfdecURL *      url);
 

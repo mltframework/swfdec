@@ -1724,35 +1724,6 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   return copy;
 }
 
-static void
-swfdec_movie_load_variables_on_finish (SwfdecAsObject *target,
-    const char *text)
-{
-  if (text != NULL)
-    swfdec_as_object_decode (target, text);
-
-  // only call onData for sprite movies
-  // FIXME: is it called even when loading fails?
-  if (target->context->version >= 6 && SWFDEC_IS_SPRITE_MOVIE (target))
-    swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 0, NULL, NULL);
-}
-
-void
-swfdec_movie_load_variables (SwfdecMovie *movie, const char *url,
-    SwfdecLoaderRequest request, SwfdecBuffer *data)
-{
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (url != NULL);
-
-  if (request != SWFDEC_LOADER_REQUEST_DEFAULT) {
-    SWFDEC_FIXME ("loadVariables: Different request-modes not supported");
-    return;
-  }
-
-  swfdec_load_object_new (SWFDEC_AS_OBJECT (movie), url, request, data, NULL,
-      swfdec_movie_load_variables_on_finish);
-}
-
 char *
 swfdec_movie_get_path (SwfdecMovie *movie, gboolean dot)
 {

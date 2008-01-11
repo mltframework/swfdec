@@ -20,7 +20,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <stdlib.h>
 #include <string.h>
+
 #include "swfdec_url.h"
 #include "swfdec_debug.h"
 
@@ -49,6 +52,7 @@ struct _SwfdecURL {
   char *	url;			/* the complete url */
   char *	protocol;		/* http, file, rtmp, ... */
   char *	host;			/* can be NULL for files */
+  guint		port;			/* can be NULL */
   char *	path;	  		/* can be NULL for root path */
   char *	query;			/* can be NULL */
 };
@@ -63,6 +67,19 @@ swfdec_url_get_type (void)
        (GBoxedCopyFunc) swfdec_url_copy, (GBoxedFreeFunc) swfdec_url_free);
 
   return type;
+}
+
+static void *
+swfdec_memrchr (const void *s, int c, size_t n)
+{
+  void *cur, *next;
+
+  cur = memchr (s, c, n);
+  if (cur == NULL)
+    return NULL;
+  while ((next = memchr (cur, c, n)))
+    cur = next;
+  return cur;
 }
 
 /**
@@ -81,6 +98,7 @@ swfdec_url_new (const char *string)
 
   g_return_val_if_fail (string != NULL, NULL);
 
+  /* FIXME: error checking? */
   SWFDEC_DEBUG ("new url: %s", string);
   url = g_slice_new0 (SwfdecURL);
   url->url = g_strdup (string);
@@ -96,8 +114,15 @@ swfdec_url_new (const char *string)
     url->host = g_strdup (string);
     return url;
   }
-  if (s != string)
-    url->host = g_strndup (string, s - string);
+  if (s != string) {
+    char *colon = swfdec_memrchr (string, ':', s - string);
+    if (colon) {
+      url->port = strtoul (colon + 1, &colon, 10);
+      url->host = g_strndup (string, colon - string);
+    } else {
+      url->host = g_strndup (string, s - string);
+    }
+  }
   string = s + 1;
   s = strchr (string, '?');
   if (s == NULL) {
@@ -263,8 +288,7 @@ swfdec_url_has_protocol (const SwfdecURL *url, const char *protocol)
  * swfdec_url_get_host:
  * @url: a #SwfdecURL
  *
- * Gets the host for @url. If the host includes a portnumber, it will be present
- * in the returned string.
+ * Gets the host for @url. 
  *
  * Returns: the host or %NULL if none (typically for file URLs).
  **/
@@ -274,6 +298,23 @@ swfdec_url_get_host (const SwfdecURL *url)
   g_return_val_if_fail (url != NULL, NULL);
 
   return url->host;
+}
+
+/**
+ * swfdec_url_get_port:
+ * @url: a #SwfdecURL
+ *
+ * Gets the port number specified by the given @url. If the @url does not 
+ * specify a port number, 0 will be returned.
+ *
+ * Returns: the specified port or 0 if none was given.
+ **/
+guint
+swfdec_url_get_port (const SwfdecURL *url)
+{
+  g_return_val_if_fail (url != NULL, 0);
+
+  return url->port;
 }
 
 /**

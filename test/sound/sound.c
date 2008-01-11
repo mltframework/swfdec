@@ -43,7 +43,7 @@ audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original, const char *filename)
   /* must hold since we are rendering it */
   g_assert (compare->length % 4 == 0);
   if (original->length % 4 != 0) {
-    g_print ("  ERROR: %s: filesize (%u bytes) not multiple of 4\n", filename,
+    g_print ("  ERROR: %s: filesize (%"G_GSIZE_FORMAT" bytes) not multiple of 4\n", filename,
 	original->length);
     return FALSE;
   }

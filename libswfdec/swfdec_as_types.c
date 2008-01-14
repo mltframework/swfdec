@@ -482,10 +482,19 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	char *end;
 	double d;
 	
+	// FIXME: We should most likely copy Tamarin's code here (MathUtils.cpp)
 	s = SWFDEC_AS_VALUE_GET_STRING (&tmp);
 	if (s == SWFDEC_AS_STR_EMPTY)
 	  return NAN;
-	d = g_ascii_strtod (s, &end);
+	if (s[0] == '0' && s[1] == 'x') {
+	  if (context->version <= 5)
+	    return NAN;
+	  d = g_ascii_strtoll (s + 2, &end, 16);
+	} else {
+	  if (strchr (s, 'x') != NULL)
+	    return NAN;
+	  d = g_ascii_strtod (s, &end);
+	}
 	if (*end == '\0')
 	  return d == -0.0 ? 0.0 : d;
 	else

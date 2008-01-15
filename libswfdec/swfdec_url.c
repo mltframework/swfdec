@@ -50,9 +50,9 @@
 
 struct _SwfdecURL {
   char *	url;			/* the complete url */
-  char *	protocol;		/* http, file, rtmp, ... */
-  char *	host;			/* can be NULL for files */
-  guint		port;			/* can be NULL */
+  char *	protocol;		/* lowercase, http, file, rtmp, ... */
+  char *	host;			/* lowercase, can be NULL for files */
+  guint		port;			/* can be 0 */
   char *	path;	  		/* can be NULL for root path */
   char *	query;			/* can be NULL */
 };
@@ -111,16 +111,16 @@ swfdec_url_new (const char *string)
   string = s + 3;
   s = strchr (string, '/');
   if (s == NULL) {
-    url->host = g_strdup (string);
+    url->host = g_ascii_strdown (string, -1);
     return url;
   }
   if (s != string) {
     char *colon = swfdec_memrchr (string, ':', s - string);
     if (colon) {
       url->port = strtoul (colon + 1, &colon, 10);
-      url->host = g_strndup (string, colon - string);
+      url->host = g_ascii_strdown (string, colon - string);
     } else {
-      url->host = g_strndup (string, s - string);
+      url->host = g_ascii_strdown (string, s - string);
     }
   }
   string = s + 1;
@@ -134,6 +134,63 @@ swfdec_url_new (const char *string)
   if (*s)
     url->query = g_strdup (s);
   return url;
+}
+
+/**
+ * swfdec_url_new_components:
+ * @protocol: protocol to use
+ * @hostname: hostname or IP address or %NULL
+ * @port: port number or 0. Must be 0 if no hostname is given
+ * @path: a path or %NULL
+ * @query: the query string or %NULL
+ *
+ * Creates a new URL from the given components.
+ *
+ * Returns: a new url pointing to the url from the given components
+ **/
+SwfdecURL *
+swfdec_url_new_components (const char *protocol, const char *hostname, 
+    guint port, const char *path, const char *query)
+{
+  GString *url;
+  SwfdecURL *result;
+
+  g_return_val_if_fail (protocol != NULL, NULL);
+  g_return_val_if_fail (hostname != NULL || port == 0, NULL);
+  g_return_val_if_fail (port < 65536, NULL);
+
+  url = g_string_new (protocol);
+  g_string_append (url, "://");
+  if (hostname) {
+    g_string_append (url, hostname);
+    if (port) {
+      g_string_append_printf (url, ":%u", port);
+    }
+  }
+  g_string_append (url, "/");
+  if (path)
+    g_string_append (url, path);
+  if (query) {
+    g_string_append (url, "?");
+    g_string_append (url, query);
+  }
+  result = swfdec_url_new (url->str);
+  g_string_free (url, TRUE);
+  return result;
+}
+
+/**
+ * swfdec_url_new_parent:
+ * @url: a #SwfdecURL
+ *
+ * Creates a new url that is the parent of @url.
+ *
+ * Returns: a new url pointing to the parent of @url.
+ **/
+SwfdecURL *
+swfdec_url_new_parent (const SwfdecURL *url)
+{
+  return swfdec_url_new_relative (url, "");
 }
 
 /**
@@ -206,6 +263,7 @@ swfdec_url_copy (const SwfdecURL *url)
   copy->url = g_strdup (url->url);
   copy->protocol = g_strdup (url->protocol);
   copy->host = g_strdup (url->host);
+  copy->port = url->port;
   copy->path = g_strdup (url->path);
   copy->query = g_strdup (url->query);
 
@@ -288,7 +346,7 @@ swfdec_url_has_protocol (const SwfdecURL *url, const char *protocol)
  * swfdec_url_get_host:
  * @url: a #SwfdecURL
  *
- * Gets the host for @url. 
+ * Gets the host for @url as a lower case string.
  *
  * Returns: the host or %NULL if none (typically for file URLs).
  **/
@@ -351,6 +409,47 @@ swfdec_url_get_query (const SwfdecURL *url)
   g_return_val_if_fail (url != NULL, NULL);
 
   return url->query;
+}
+
+/**
+ * swfdec_url_is_parent:
+ * @parent: the supposed parent url
+ * @child: the supposed child url
+ *
+ * Checks if the given @parent url is a parent url of the given @child url. The
+ * algorithm used is the same as checking policy files if hey apply. If @parent
+ * equals @child, %TRUE is returned. This function does not compare query 
+ * strings.
+ *
+ * Returns: %TRUE if @parent is a parent of @child, %FALSE otherwise.
+ **/
+gboolean
+swfdec_url_is_parent (const SwfdecURL *parent, const SwfdecURL *child)
+{
+  gsize len;
+
+  g_return_val_if_fail (parent != NULL, FALSE);
+  g_return_val_if_fail (child != NULL, FALSE);
+
+  if (!g_str_equal (parent->protocol, child->protocol))
+    return FALSE;
+  if (parent->host == NULL) {
+    if (child->host != NULL)
+      return FALSE;
+  } else {
+    if (child->host == NULL || !g_str_equal (parent->host, child->host))
+      return FALSE;
+  }
+  if (parent->port != child->port)
+    return FALSE;
+  if (parent->path == NULL)
+    return TRUE;
+  if (child->path == NULL)
+    return TRUE;
+  len = strlen (parent->path);
+  if (strncmp (parent->path, child->path, len) != 0)
+    return FALSE;
+  return child->path[len] == '\0' || child->path[len] == '/';
 }
 
 /**

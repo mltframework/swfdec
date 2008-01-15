@@ -1399,6 +1399,7 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
   }
   g_assert (audio_samples == 0);
   
+  g_object_notify (G_OBJECT (player), "next-event");
   swfdec_player_unlock (player);
 }
 
@@ -1578,7 +1579,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       g_param_spec_enum ("mouse-cursor", "mouse cursor", "how the mouse pointer should be presented",
 	  SWFDEC_TYPE_MOUSE_CURSOR, SWFDEC_MOUSE_CURSOR_NONE, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_NEXT_EVENT,
-      g_param_spec_long ("next-event", "next event", "how many milliseconds until the next event or 0 when no event pending",
+      g_param_spec_long ("next-event", "next event", "how many milliseconds until the next event or -1 when no event pending",
 	  -1, G_MAXLONG, -1, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_CACHE_SIZE,
       g_param_spec_uint ("cache-size", "cache size", "maximum cache size in bytes",

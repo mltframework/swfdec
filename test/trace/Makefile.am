@@ -306,31 +306,6 @@ EXTRA_DIST = \
 	boolean-properties-7.swf.trace \
 	boolean-properties-8.swf \
 	boolean-properties-8.swf.trace \
-	button-events-button-5.swf \
-	button-events-button-5.swf.act \
-	button-events-button-5.swf.trace \
-	button-events-button-6.swf \
-	button-events-button-6.swf.act \
-	button-events-button-6.swf.trace \
-	button-events-button-7.swf \
-	button-events-button-7.swf.act \
-	button-events-button-7.swf.trace \
-	button-events-button-8.swf \
-	button-events-button-8.swf.act \
-	button-events-button-8.swf.trace \
-	button-events.c \
-	button-events-menu-5.swf \
-	button-events-menu-5.swf.act \
-	button-events-menu-5.swf.trace \
-	button-events-menu-6.swf \
-	button-events-menu-6.swf.act \
-	button-events-menu-6.swf.trace \
-	button-events-menu-7.swf \
-	button-events-menu-7.swf.act \
-	button-events-menu-7.swf.trace \
-	button-events-menu-8.swf \
-	button-events-menu-8.swf.act \
-	button-events-menu-8.swf.trace \
 	button-hittest-5.swf \
 	button-hittest-5.swf.act \
 	button-hittest-5.swf.trace \
@@ -703,20 +678,7 @@ EXTRA_DIST = \
 	date-properties-8.swf \
 	date-properties-8.swf.trace \
 	default.stas \
-	default.sts
-	definebutton-5.swf \
-	definebutton-5.swf.act \
-	definebutton-5.swf.trace \
-	definebutton-6.swf \
-	definebutton-6.swf.act \
-	definebutton-6.swf.trace \
-	definebutton-7.swf \
-	definebutton-7.swf.act \
-	definebutton-7.swf.trace \
-	definebutton-8.swf \
-	definebutton-8.swf.act \
-	definebutton-8.swf.trace \
-	definebutton.xml \
+	default.sts \
 	definefunction2-arguments.swf \
 	definefunction2-arguments.swf.trace \
 	definefunction2-arguments.xml \
@@ -1468,45 +1430,6 @@ EXTRA_DIST = \
 	microphone-properties-7.swf.trace \
 	microphone-properties-8.swf \
 	microphone-properties-8.swf.trace \
-	mouse-addProperty-relevant.as \
-	mouse-addProperty-relevant-5.swf \
-	mouse-addProperty-relevant-5.swf.act \
-	mouse-addProperty-relevant-5.swf.trace \
-	mouse-addProperty-relevant-6.swf \
-	mouse-addProperty-relevant-6.swf.act \
-	mouse-addProperty-relevant-6.swf.trace \
-	mouse-addProperty-relevant-7.swf \
-	mouse-addProperty-relevant-7.swf.act \
-	mouse-addProperty-relevant-7.swf.trace \
-	mouse-addProperty-relevant-8.swf \
-	mouse-addProperty-relevant-8.swf.act \
-	mouse-addProperty-relevant-8.swf.trace \
-	mouse-movie-below-movie.as \
-	mouse-movie-below-movie-5.swf \
-	mouse-movie-below-movie-5.swf.act \
-	mouse-movie-below-movie-5.swf.trace \
-	mouse-movie-below-movie-6.swf \
-	mouse-movie-below-movie-6.swf.act \
-	mouse-movie-below-movie-6.swf.trace \
-	mouse-movie-below-movie-7.swf \
-	mouse-movie-below-movie-7.swf.act \
-	mouse-movie-below-movie-7.swf.trace \
-	mouse-movie-below-movie-8.swf \
-	mouse-movie-below-movie-8.swf.act \
-	mouse-movie-below-movie-8.swf.trace \
-	mouse-movie-below-nonevent-movie.as \
-	mouse-movie-below-nonevent-movie-5.swf \
-	mouse-movie-below-nonevent-movie-5.swf.act \
-	mouse-movie-below-nonevent-movie-5.swf.trace \
-	mouse-movie-below-nonevent-movie-6.swf \
-	mouse-movie-below-nonevent-movie-6.swf.act \
-	mouse-movie-below-nonevent-movie-6.swf.trace \
-	mouse-movie-below-nonevent-movie-7.swf \
-	mouse-movie-below-nonevent-movie-7.swf.act \
-	mouse-movie-below-nonevent-movie-7.swf.trace \
-	mouse-movie-below-nonevent-movie-8.swf \
-	mouse-movie-below-nonevent-movie-8.swf.act \
-	mouse-movie-below-nonevent-movie-8.swf.trace \
 	mouse-properties.as \
 	mouse-properties-5.swf \
 	mouse-properties-5.swf.trace \
@@ -1516,18 +1439,6 @@ EXTRA_DIST = \
 	mouse-properties-7.swf.trace \
 	mouse-properties-8.swf \
 	mouse-properties-8.swf.trace \
-	mouse-scaled.as \
-	mouse-scaled-5.swf \
-	mouse-scaled-5.swf.act \
-	mouse-scaled-5.swf.trace \
-	mouse-scaled-6.swf \
-	mouse-scaled-6.swf.act \
-	mouse-scaled-6.swf.trace \
-	mouse-scaled-6.swf.trace.org \
-	mouse-scaled-7.swf \
-	mouse-scaled-7.swf.act \
-	mouse-scaled-7.swf.trace \
-	mouse-scaled-7.swf.trace.org \
 	mouse-show-hide.as \
 	mouse-show-hide-5.swf \
 	mouse-show-hide-5.swf.trace \

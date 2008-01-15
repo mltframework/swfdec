@@ -33,6 +33,7 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_movie.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsArray, swfdec_as_array, SWFDEC_TYPE_AS_OBJECT)
@@ -590,7 +591,7 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   const char *var, *str, *sep;
   SwfdecAsValue val;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   if (argc > 0) {
@@ -626,7 +627,7 @@ void
 swfdec_as_array_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   swfdec_as_array_join (cx, object, 0, NULL, ret);
@@ -637,7 +638,7 @@ void
 swfdec_as_array_do_push (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   // if 0 args, just return the length
@@ -659,7 +660,7 @@ swfdec_as_array_do_pop (SwfdecAsContext *cx, SwfdecAsObject *object,
   gint32 length;
   const char *var;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   // we allow negative indexes here, but not 0
@@ -686,7 +687,7 @@ swfdec_as_array_do_unshift (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   gint32 length;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   if (argc) {
@@ -710,7 +711,7 @@ swfdec_as_array_do_shift (SwfdecAsContext *cx, SwfdecAsObject *object,
   gint32 length;
   const char *var;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   // don't allow negative length
@@ -760,7 +761,7 @@ swfdec_as_array_reverse (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   gint32 length;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   length = swfdec_as_array_length (object);
@@ -780,7 +781,7 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsArray *array_new;
   const char *var;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   object_new = swfdec_as_array_new (cx);
@@ -816,7 +817,7 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   gint32 length, start_index, num;
   SwfdecAsArray *array_new;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   length = swfdec_as_array_length (object);
@@ -857,7 +858,7 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object,
   gint32 length, start_index, num_remove, num_add;
   SwfdecAsArray *array_new;
 
-  if (object == NULL || argc == 0)
+  if (object == NULL || SWFDEC_IS_MOVIE (object) || argc == 0)
     return;
 
   length = swfdec_as_array_length (object);
@@ -1277,7 +1278,7 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   gint32 options;
   SwfdecAsFunction *custom_compare_func;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   pos = 0;
@@ -1310,7 +1311,7 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char **fields;
   gint32 options;
 
-  if (object == NULL)
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
 
   if (argc < 1)

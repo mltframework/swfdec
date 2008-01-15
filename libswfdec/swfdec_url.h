@@ -30,6 +30,12 @@ typedef struct _SwfdecURL SwfdecURL;
 GType			swfdec_url_get_type		(void) G_GNUC_CONST;
 
 SwfdecURL *		swfdec_url_new			(const char *		string);
+SwfdecURL *		swfdec_url_new_components	(const char *		protocol,
+							 const char *		hostname, 
+							 guint			port,
+							 const char *		path,
+							 const char *		query);
+SwfdecURL *		swfdec_url_new_parent	      	(const SwfdecURL *	url);
 SwfdecURL *		swfdec_url_new_relative	      	(const SwfdecURL *	url,
 							 const char *		string);
 SwfdecURL *		swfdec_url_copy			(const SwfdecURL *      url);
@@ -45,6 +51,8 @@ const char *		swfdec_url_get_query		(const SwfdecURL *      url);
 gboolean		swfdec_url_has_protocol		(const SwfdecURL *	url,
 							 const char *		protocol);
 
+gboolean		swfdec_url_is_parent		(const SwfdecURL *	parent,
+							 const SwfdecURL *	child);
 gboolean		swfdec_url_is_local		(const SwfdecURL *	url);
 							 
 

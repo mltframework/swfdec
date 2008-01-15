@@ -92,6 +92,15 @@ EXTRA_DIST = \
 	arguments-8.swf.trace \
 	array.swf \
 	array.swf.trace \
+	array-movieclip.as \
+	array-movieclip-5.swf \
+	array-movieclip-5.swf.trace \
+	array-movieclip-6.swf \
+	array-movieclip-6.swf.trace \
+	array-movieclip-7.swf \
+	array-movieclip-7.swf.trace \
+	array-movieclip-8.swf \
+	array-movieclip-8.swf.trace \
 	array-new.as \
 	array-new-5.swf \
 	array-new-5.swf.trace \

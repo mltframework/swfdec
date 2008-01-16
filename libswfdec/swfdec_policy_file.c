@@ -113,10 +113,10 @@ swfdec_policy_file_parse (SwfdecPolicyFile *file, const char *text)
   }
 }
 
-/*** SWFDEC_LOADER_TARGET ***/
+/*** SWFDEC_STREAM_TARGET ***/
 
 static SwfdecPlayer *
-swfdec_policy_file_target_get_player (SwfdecLoaderTarget *target)
+swfdec_policy_file_target_get_player (SwfdecStreamTarget *target)
 {
   return SWFDEC_POLICY_FILE (target)->player;
 }
@@ -128,7 +128,7 @@ swfdec_policy_file_finished_loading (SwfdecPolicyFile *file, const char *text)
   SwfdecPolicyFile *next;
   GList *link;
 
-  swfdec_loader_set_target (file->stream, NULL);
+  swfdec_stream_set_target (file->stream, NULL);
   file->stream = NULL;
 
   if (text)
@@ -156,8 +156,8 @@ swfdec_policy_file_finished_loading (SwfdecPolicyFile *file, const char *text)
 }
 
 static void
-swfdec_policy_file_target_error (SwfdecLoaderTarget *target,
-    SwfdecLoader *loader)
+swfdec_policy_file_target_error (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
 {
   SwfdecPolicyFile *file = SWFDEC_POLICY_FILE (target);
 
@@ -165,15 +165,20 @@ swfdec_policy_file_target_error (SwfdecLoaderTarget *target,
 }
 
 static void
-swfdec_policy_file_target_eof (SwfdecLoaderTarget *target,
-    SwfdecLoader *loader)
+swfdec_policy_file_target_close (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
 {
   SwfdecPolicyFile *file = SWFDEC_POLICY_FILE (target);
   char *text;
 
-  swfdec_loader_set_target (loader, NULL);
+  swfdec_stream_set_target (stream, NULL);
   file->stream = NULL;
-  text = swfdec_loader_get_text (loader, 8);
+  if (SWFDEC_IS_LOADER (stream)) {
+    text = swfdec_loader_get_text (SWFDEC_LOADER (stream), 8);
+  } else {
+    SWFDEC_FIXME ("rewrite swfdec_loader_get_text() to swfdec_buffer_queue_get_text()");
+    text = NULL;
+  }
 
   if (text == NULL) {
     SWFDEC_ERROR ("couldn't get text from crossdomain policy file %s", 
@@ -184,17 +189,17 @@ swfdec_policy_file_target_eof (SwfdecLoaderTarget *target,
 }
 
 static void
-swfdec_policy_file_loader_target_init (SwfdecLoaderTargetInterface *iface)
+swfdec_policy_file_stream_target_init (SwfdecStreamTargetInterface *iface)
 {
   iface->get_player = swfdec_policy_file_target_get_player;
-  iface->eof = swfdec_policy_file_target_eof;
+  iface->close = swfdec_policy_file_target_close;
   iface->error = swfdec_policy_file_target_error;
 }
 
 /*** SWFDEC_POLICY_FILE ***/
 
 G_DEFINE_TYPE_WITH_CODE (SwfdecPolicyFile, swfdec_policy_file, G_TYPE_OBJECT,
-    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_LOADER_TARGET, swfdec_policy_file_loader_target_init))
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_policy_file_stream_target_init))
 
 static void
 swfdec_policy_file_dispose (GObject *object)
@@ -202,7 +207,7 @@ swfdec_policy_file_dispose (GObject *object)
   SwfdecPolicyFile *file = SWFDEC_POLICY_FILE (object);
 
   if (file->stream) {
-    swfdec_loader_set_target (file->stream, NULL);
+    swfdec_stream_set_target (file->stream, NULL);
     g_object_unref (file->stream);
     file->stream = NULL;
     g_slist_foreach (file->requests, (GFunc) swfdec_policy_file_request_free, NULL);
@@ -245,9 +250,9 @@ swfdec_policy_file_new (SwfdecPlayer *player, const SwfdecURL *url)
   if (swfdec_url_has_protocol (url, "xmlsocket")) {
     SWFDEC_FIXME ("implement xmlsocket: protocol");
   } else {
-    file->stream = swfdec_loader_load (player->priv->resource->loader, url, 
-	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
-    swfdec_loader_set_target (file->stream, SWFDEC_LOADER_TARGET (file));
+    file->stream = SWFDEC_STREAM (swfdec_loader_load (player->priv->resource->loader,
+	  url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0));
+    swfdec_stream_set_target (file->stream, SWFDEC_STREAM_TARGET (file));
   }
   player->priv->loading_policy_files = 
     g_list_prepend (player->priv->loading_policy_files, file);

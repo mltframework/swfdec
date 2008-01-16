@@ -2098,6 +2098,36 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
   }
 }
 
+/**
+ * swfdec_player_create_socket:
+ * @player: a #SwfdecPlayer
+ * @hostname: the host name to connect to.
+ * @port: the port to connect to
+ *
+ * Creates a new socket connecting to the given hostname and port.
+ *
+ * Returns: a new socket or %NULL if no socket implementation exists
+ **/
+/* FIXME: always return a socket? */
+SwfdecSocket *
+swfdec_player_create_socket (SwfdecPlayer *player, const char *hostname, guint port)
+{
+  SwfdecSocket *sock;
+  SwfdecSocketClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (hostname != NULL, NULL);
+  g_return_val_if_fail (port > 0, NULL);
+
+  if (player->priv->socket_type == 0)
+    return NULL;
+  klass = g_type_class_ref (player->priv->socket_type);
+  sock = klass->create (hostname, port);
+  g_type_class_unref (klass);
+
+  return sock;
+}
+
 /** PUBLIC API ***/
 
 /**

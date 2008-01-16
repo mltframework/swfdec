@@ -46,7 +46,7 @@ swfdec_xml_socket_ensure_closed (SwfdecXmlSocket *xml)
   g_object_unref (xml->socket);
   xml->socket = NULL;
 
-  swfdec_player_unroot_object (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (xml)->context), G_OBJECT (xml));
+  swfdec_player_unroot (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (xml)->context), xml);
   cur = g_object_get_qdata (G_OBJECT (xml->target), xml_socket_quark);
   if (cur != xml)
     g_object_set_qdata (G_OBJECT (xml->target), xml_socket_quark, cur);
@@ -201,7 +201,7 @@ swfdec_xml_socket_create (SwfdecAsObject *target, const char *hostname, guint po
 
   xml = g_object_new (SWFDEC_TYPE_XML_SOCKET, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (xml), cx, sizeof (SwfdecXmlSocket));
-  swfdec_player_root_object (SWFDEC_PLAYER (cx), G_OBJECT (xml));
+  swfdec_player_root (SWFDEC_PLAYER (cx), xml, (GFunc) swfdec_as_object_mark);
 
   xml->target = target;
   xml->socket = sock;

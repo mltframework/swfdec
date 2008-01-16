@@ -42,7 +42,7 @@ struct _SwfdecPolicyFile {
   SwfdecPlayer *	player;		/* player we're loaded from */
   SwfdecURL *		load_url;	/* url we're loaded from */
   SwfdecURL *		url;		/* parent url we check with */
-  SwfdecLoader *	stream;		/* stream we are loading or NULL if done loading */
+  SwfdecStream *	stream;		/* stream we are loading or NULL if done loading */
   GSList *		allowed_hosts;	/* list of GPatternSpec of the allowed hosts */
 
   GSList *		requests;	/* requests waiting for this file to finish loading */

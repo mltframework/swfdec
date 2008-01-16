@@ -870,6 +870,10 @@ swfdec_player_dispose (GObject *object)
   g_hash_table_destroy (priv->registered_classes);
   g_hash_table_destroy (priv->scripting_callbacks);
 
+  g_slist_foreach (priv->policy_files, (GFunc) g_object_unref, NULL);
+  g_slist_free (priv->policy_files);
+  priv->policy_files = NULL;
+
   while (priv->roots)
     swfdec_movie_destroy (priv->roots->data);
   if (priv->resource) {

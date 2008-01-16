@@ -23,7 +23,6 @@
 
 #include <string.h>
 #include "swfdec_flash_security.h"
-#include "swfdec_policy_loader.h"
 #include "swfdec_debug.h"
 #include "swfdec_security_allow.h"
 
@@ -47,227 +46,10 @@ swfdec_flash_security_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
   }
 }
 
-static gboolean
-swfdec_flash_security_match_domain (const SwfdecURL *guard, const SwfdecURL *key)
-{
-  return g_ascii_strcasecmp (swfdec_url_get_host (guard), swfdec_url_get_host (key)) == 0;
-}
-
-typedef struct {
-  SwfdecURL *		url;
-  SwfdecURLAllowFunc	callback;
-  gpointer		user_data;
-} SwfdecAllowURLPending;
-
-static void
-swfdec_flash_security_call_pending (SwfdecFlashSecurity *sec, const char *host,
-    gboolean allow)
-{
-  GSList *iter, *prev, *next;
-  SwfdecAllowURLPending *pending;
-
-  g_return_if_fail (SWFDEC_IS_FLASH_SECURITY (sec));
-  g_return_if_fail (host != NULL);
-
-  prev = NULL;
-  for (iter = sec->allow_url_pending; iter != NULL; iter = next) {
-    next = iter->next;
-    pending = iter->data;
-
-    if (!g_ascii_strcasecmp (swfdec_url_get_host (pending->url), host)) {
-      pending->callback (pending->url, allow, pending->user_data);
-      swfdec_url_free (pending->url);
-      g_free (pending);
-      g_slist_free_1 (iter);
-
-      if (prev != NULL) {
-	prev->next = iter->next;
-	iter = prev;
-	iter->next = next;
-      } else {
-	iter = NULL;
-	sec->allow_url_pending = next;
-      }
-    }
-
-    prev = iter;
-  }
-}
-
-static void
-swfdec_flash_security_policy_loader_done (SwfdecPolicyLoader *policy_loader,
-    gboolean allow)
-{
-  SwfdecFlashSecurity *sec = policy_loader->sec;
-  char *host = g_strdup (policy_loader->host);
-
-  if (allow) {
-    sec->crossdomain_allowed = g_slist_prepend (sec->crossdomain_allowed, host);
-  } else {
-    sec->crossdomain_denied = g_slist_prepend (sec->crossdomain_denied, host);
-  }
-
-  sec->policy_loaders = g_slist_remove (sec->policy_loaders, policy_loader);
-
-  swfdec_flash_security_call_pending (sec, host, allow);
-
-  swfdec_policy_loader_free (policy_loader);
-}
-
-static void
-swfdec_flash_security_get_cross_domain_policy (SwfdecFlashSecurity *sec,
-    const char *host)
-{
-  GSList *iter;
-  SwfdecPolicyLoader *policy_loader;
-
-  g_return_if_fail (SWFDEC_IS_FLASH_SECURITY (sec));
-  g_return_if_fail (host != NULL);
-
-  for (iter = sec->policy_loaders; iter != NULL; iter = iter->next) {
-    policy_loader = iter->data;
-
-    if (!g_ascii_strcasecmp (policy_loader->host, host))
-      return;
-  }
-
-  policy_loader = swfdec_policy_loader_new (sec, host,
-      swfdec_flash_security_policy_loader_done);
-  if (policy_loader == NULL) {
-    sec->crossdomain_denied = g_slist_prepend (sec->crossdomain_denied,
-	g_strdup (host));
-    swfdec_flash_security_call_pending (sec, host, FALSE);
-    return;
-  }
-
-  sec->policy_loaders = g_slist_prepend (sec->policy_loaders, policy_loader);
-}
-
-static void
-swfdec_flash_security_allow_cross_domain (SwfdecFlashSecurity *sec,
-    const SwfdecURL *url, SwfdecURLAllowFunc callback, gpointer user_data)
-{
-  SwfdecAllowURLPending *pending;
-  const char *host;
-
-  g_assert (SWFDEC_IS_FLASH_SECURITY (sec));
-  g_assert (url != NULL);
-  g_assert (callback != NULL);
-
-  host = swfdec_url_get_host (url);
-
-  if (g_slist_find_custom (sec->crossdomain_allowed, host,
-	(GCompareFunc)g_ascii_strcasecmp)) {
-    callback (url, 1, user_data);
-    return;
-  }
-
-  if (g_slist_find_custom (sec->crossdomain_denied, host,
-	(GCompareFunc)g_ascii_strcasecmp)) {
-    callback (url, 0, user_data);
-    return;
-  }
-
-  pending = g_new (SwfdecAllowURLPending, 1);
-  pending->url = swfdec_url_copy (url);
-  pending->callback = callback;
-  pending->user_data = user_data;
-
-  sec->allow_url_pending = g_slist_prepend (sec->allow_url_pending, pending);
-
-  swfdec_flash_security_get_cross_domain_policy (sec, host);
-}
-
-static void
-swfdec_flash_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
-    SwfdecURLAllowFunc callback, gpointer user_data)
-{
-  SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (guard);
-  int status;
-
-  switch (sec->sandbox) {
-    case SWFDEC_SANDBOX_NONE:
-      status = 0;
-      break;
-    case SWFDEC_SANDBOX_REMOTE:
-      if (swfdec_url_is_local (url)) {
-	status = 0;
-      } else if (swfdec_flash_security_match_domain (sec->url, url)) {
-	status = 1;
-      } else {
-	swfdec_flash_security_allow_cross_domain (sec, url, callback,
-	    user_data);
-	return;
-      }
-      break;
-    case SWFDEC_SANDBOX_LOCAL_FILE:
-      if (swfdec_url_is_local (url)) {
-	status = 1;
-      } else {
-	status = 0;
-      }
-      break;
-    case SWFDEC_SANDBOX_LOCAL_NETWORK:
-      if (swfdec_url_is_local (url)) {
-	status = 0;
-      } else {
-	swfdec_flash_security_allow_cross_domain (sec, url, callback,
-	    user_data);
-	return;
-      }
-      break;
-    case SWFDEC_SANDBOX_LOCAL_TRUSTED:
-      status = 1;
-      break;
-    default:
-      g_assert_not_reached ();
-      status = 0;
-      break;
-  }
-
-  callback (url, status, user_data);
-}
-
-void
-swfdec_flash_security_free_pending (SwfdecFlashSecurity *sec)
-{
-  GSList *iter;
-
-  for (iter = sec->allow_url_pending; iter != NULL; iter = iter->next) {
-    SwfdecAllowURLPending *pending = iter->data;
-    pending->callback (pending->url, -1, pending->user_data);
-    swfdec_url_free (pending->url);
-    g_free (pending);
-  }
-  g_slist_free (sec->allow_url_pending);
-  sec->allow_url_pending = NULL;
-}
-
 static void
 swfdec_flash_security_dispose (GObject *object)
 {
   SwfdecFlashSecurity *sec = SWFDEC_FLASH_SECURITY (object);
-  GSList *iter;
-
-  g_assert (sec->allow_url_pending == NULL);
-
-  for (iter = sec->policy_loaders; iter != NULL; iter = iter->next) {
-    swfdec_policy_loader_free (iter->data);
-  }
-  g_slist_free (sec->policy_loaders);
-  sec->policy_loaders = NULL;
-
-  for (iter = sec->crossdomain_allowed; iter != NULL; iter = iter->next) {
-    g_free (iter->data);
-  }
-  g_slist_free (sec->crossdomain_allowed);
-  sec->crossdomain_allowed = NULL;
-
-  for (iter = sec->crossdomain_denied; iter != NULL; iter = iter->next) {
-    g_free (iter->data);
-  }
-  g_slist_free (sec->crossdomain_denied);
-  sec->crossdomain_denied = NULL;
 
   if (sec->url) {
     swfdec_url_free (sec->url);
@@ -287,7 +69,6 @@ swfdec_flash_security_class_init (SwfdecFlashSecurityClass *klass)
   object_class->dispose = swfdec_flash_security_dispose;
 
   security_class->allow = swfdec_flash_security_allow;
-  security_class->allow_url = swfdec_flash_security_allow_url;
 }
 
 static void

@@ -35,19 +35,11 @@ swfdec_security_allow_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
 }
 
 static void
-swfdec_security_allow_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
-    SwfdecURLAllowFunc callback, gpointer user_data)
-{
-  callback (url, TRUE, user_data);
-}
-
-static void
 swfdec_security_allow_class_init (SwfdecSecurityAllowClass *klass)
 {
   SwfdecSecurityClass *security_class = SWFDEC_SECURITY_CLASS (klass);
 
   security_class->allow = swfdec_security_allow_allow;
-  security_class->allow_url = swfdec_security_allow_allow_url;
 }
 
 static void

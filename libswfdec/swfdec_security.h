@@ -47,21 +47,13 @@ struct _SwfdecSecurityClass
   GObjectClass		object_class;
 
   gboolean		(* allow)			(SwfdecSecurity *	guard,
-							 SwfdecSecurity *	from);
-  void			(* allow_url)			(SwfdecSecurity *	guard,
-							 const SwfdecURL *	url,
-							 SwfdecURLAllowFunc	callback,
-							 gpointer		user_data);
+							 SwfdecSecurity *	key);
 };
 
 GType			swfdec_security_get_type	(void);
 
 gboolean		swfdec_security_allow		(SwfdecSecurity *	guard,
 							 SwfdecSecurity *	key);
-void			swfdec_security_allow_url	(SwfdecSecurity *	guard,
-							 const SwfdecURL *	url,
-							 SwfdecURLAllowFunc	callback,
-							 gpointer		user_data);
 
 
 G_END_DECLS

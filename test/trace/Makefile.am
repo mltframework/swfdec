@@ -2087,6 +2087,15 @@ EXTRA_DIST = \
 	propflags-set-proto-7.swf.trace \
 	propflags-set-proto-8.swf \
 	propflags-set-proto-8.swf.trace \
+	rectangle-contains.as \
+	rectangle-contains-5.swf \
+	rectangle-contains-5.swf.trace \
+	rectangle-contains-6.swf \
+	rectangle-contains-6.swf.trace \
+	rectangle-contains-7.swf \
+	rectangle-contains-7.swf.trace \
+	rectangle-contains-8.swf \
+	rectangle-contains-8.swf.trace \
 	rectangle-equals.as \
 	rectangle-equals-5.swf \
 	rectangle-equals-5.swf.trace \

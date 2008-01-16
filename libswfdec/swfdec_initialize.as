@@ -885,11 +885,12 @@ flash.geom.Rectangle.prototype.containsPoint = function (point) {
 };
 
 flash.geom.Rectangle.prototype.containsRectangle = function (rect) {
-  return (this.x <= rect.x && this.y <= rect.y &&
-      this.x + this.width >= rect.x && this.y + this.height >= rect.y &&
-      this.x <= rect.x + rect.width && this.y <= rect.y + rect.height &&
-      this.x + this.width >= rect.x + rect.width &&
-      this.y + this.height >= rect.y + rect.height);
+  var tr = this.x + this.width;
+  var tb = this.y + this.height;
+  var rr = rect.x + rect.width;
+  var rb = rect.y + rect.height;
+  return (rect.x >= this.x && rect.x < tr && rect.y >= this.y && rect.y < tb &&
+      rr > this.x && rr <= tr && rb > this.y && rb <= tb);
 };
 
 flash.geom.Rectangle.prototype.isEmpty = function () {

@@ -20,4 +20,27 @@ for (var i = 0; i < values.length; i++) {
   trace (rect.contains (values[i], 20));
 }
 
+var realContains = flash.geom.Rectangle.prototype.contains;
+flash.geom.Rectangle.prototype.contains = function () {
+  trace ("contains called");
+  return realContains.apply (this, arguments);
+};
+
+var realContainsPoint = flash.geom.Rectangle.prototype.containsPoint;
+flash.geom.Rectangle.prototype.containsPoint = function () {
+  trace ("containsPoint called");
+  return realContainsPoint.apply (this, arguments);
+};
+
+var realContainsRectangle = flash.geom.Rectangle.prototype.containsRectangle;
+flash.geom.Rectangle.prototype.containsRectangle = function () {
+  trace ("containsRectangle called");
+  return realContainsRectangle.apply (this, arguments);
+};
+
+var rect = new Rectangle (10, 20, 30, 40);
+trace (rect.contains (20, 20));
+trace (rect.containsPoint (new Point (20, 20)));
+trace (rect.containsRectangle (new Rectangle (20, 20, 10, 10)));
+
 loadMovie ("FSCommand:quit", "");

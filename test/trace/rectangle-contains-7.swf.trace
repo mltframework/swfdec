@@ -852,3 +852,9 @@ false
 27: valueOf!
 27: valueOf!
 false
+contains called
+true
+containsPoint called
+true
+containsRectangle called
+true

@@ -61,26 +61,3 @@ swfdec_security_allow (SwfdecSecurity *guard, SwfdecSecurity *key)
   return klass->allow (guard, key);
 }
 
-/**
- * swfdec_security_allow_url:
- * @guard: security that is in effect
- * @url: URL that should be accessed
- *
- * Asks @guard to check if the given @url may be accessed.
- *
- * Returns: %TRUE if @url may be accessed.
- **/
-void
-swfdec_security_allow_url (SwfdecSecurity *guard, const SwfdecURL *url,
-    SwfdecURLAllowFunc callback, gpointer user_data)
-{
-  SwfdecSecurityClass *klass;
-
-  g_assert (SWFDEC_IS_SECURITY (guard));
-  g_assert (url != NULL);
-
-  klass = SWFDEC_SECURITY_GET_CLASS (guard);
-  g_assert (klass->allow_url);
-  klass->allow_url (guard, url, callback, user_data);
-}
-

@@ -114,8 +114,7 @@ swfdec_player_request_resource_now (SwfdecPlayer *player,
   /* create absolute url first */
   absolute = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), url);
 
-  swfdec_security_allow_url (security, absolute,
-      swfdec_player_request_resource_allow_callback, data);
+  swfdec_player_request_resource_allow_callback (absolute, TRUE, data);
 
   swfdec_url_free (absolute);
 }

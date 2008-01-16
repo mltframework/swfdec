@@ -112,7 +112,7 @@ libswfdec_source_files = \
 	swfdec_player_as.c \
 	swfdec_player_scripting.c \
 	swfdec_print_job.c \
-	swfdec_policy_loader.c \
+	swfdec_policy_file.c \
 	swfdec_rect.c \
 	swfdec_rectangle.c \
 	swfdec_resource.c \
@@ -264,7 +264,7 @@ noinst_HEADERS = \
 	swfdec_path.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
-	swfdec_policy_loader.h \
+	swfdec_policy_file.h \
 	swfdec_rect.h \
 	swfdec_resource.h \
 	swfdec_resource_request.h \

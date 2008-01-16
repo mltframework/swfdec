@@ -133,6 +133,9 @@ struct _SwfdecPlayerPrivate
   /* iterating */
   GList *		movies;			/* list of all movies that want to be iterated */
   SwfdecRingBuffer *	actions[SWFDEC_PLAYER_N_ACTION_QUEUES]; /* all actions we've queued up so far */
+
+  /* security */
+  GSList *		policy_files;		/* list of SwfdecPolicyLoader objects, most recent first */
 };
 
 void		swfdec_player_initialize	(SwfdecPlayer *		player,

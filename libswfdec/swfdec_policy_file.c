@@ -34,6 +34,20 @@
 #include "swfdec_xml.h"
 #include "swfdec_xml_node.h"
 
+typedef struct _SwfdecPolicyFileRequest SwfdecPolicyFileRequest;
+struct _SwfdecPolicyFileRequest {
+  SwfdecURL *	  	url;		/* URL we are supposed to check */
+  SwfdecPolicyFunc	func;		/* function to call when we know if access is (not) allowed */
+  gpointer		data;		/* data to pass to func */
+};
+
+static void
+swfdec_policy_file_request_free (SwfdecPolicyFileRequest *request)
+{
+  swfdec_url_free (request->url);
+  g_slice_free (SwfdecPolicyFileRequest, request);
+}
+
 /*** PARSING THE FILE ***/
 
 static void
@@ -108,13 +122,46 @@ swfdec_policy_file_target_get_player (SwfdecLoaderTarget *target)
 }
 
 static void
+swfdec_policy_file_finished_loading (SwfdecPolicyFile *file, const char *text)
+{
+  SwfdecPlayerPrivate *priv;
+  SwfdecPolicyFile *next;
+  GList *link;
+
+  swfdec_loader_set_target (file->stream, NULL);
+  file->stream = NULL;
+
+  if (text)
+    swfdec_policy_file_parse (file, text);
+
+  priv = file->player->priv;
+  link = g_list_find (priv->loading_policy_files, file);
+  next = link->next ? link->next->data : NULL;
+  priv->loading_policy_files = g_list_delete_link (priv->loading_policy_files, link);
+  priv->policy_files = g_slist_prepend (priv->policy_files, file);
+  if (next) {
+    next->requests = g_slist_concat (next->requests, file->requests);
+  } else {
+    GSList *walk;
+
+    for (walk = file->requests; walk; walk = walk->next) {
+      SwfdecPolicyFileRequest *request = walk->data;
+      gboolean allow = swfdec_player_allow_now (file->player, request->url);
+      request->func (file->player, allow, request->data);
+      swfdec_policy_file_request_free (request);
+    }
+    g_slist_free (file->requests);
+  }
+  file->requests = NULL;
+}
+
+static void
 swfdec_policy_file_target_error (SwfdecLoaderTarget *target,
     SwfdecLoader *loader)
 {
   SwfdecPolicyFile *file = SWFDEC_POLICY_FILE (target);
 
-  swfdec_loader_set_target (loader, NULL);
-  file->stream = NULL;
+  swfdec_policy_file_finished_loading (file, NULL);
 }
 
 static void
@@ -131,10 +178,8 @@ swfdec_policy_file_target_eof (SwfdecLoaderTarget *target,
   if (text == NULL) {
     SWFDEC_ERROR ("couldn't get text from crossdomain policy file %s", 
 	swfdec_url_get_url (file->load_url));
-    return;
   }
-
-  swfdec_policy_file_parse (file, text);
+  swfdec_policy_file_finished_loading (file, text);
   g_free (text);
 }
 
@@ -160,6 +205,11 @@ swfdec_policy_file_dispose (GObject *object)
     swfdec_loader_set_target (file->stream, NULL);
     g_object_unref (file->stream);
     file->stream = NULL;
+    g_slist_foreach (file->requests, (GFunc) swfdec_policy_file_request_free, NULL);
+    g_slist_free (file->requests);
+    file->requests = NULL;
+  } else {
+    g_assert (file->requests == NULL);
   }
   swfdec_url_free (file->load_url);
   swfdec_url_free (file->url);
@@ -199,7 +249,8 @@ swfdec_policy_file_new (SwfdecPlayer *player, const SwfdecURL *url)
 	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0);
     swfdec_loader_set_target (file->stream, SWFDEC_LOADER_TARGET (file));
   }
-  player->priv->policy_files = g_slist_prepend (player->priv->policy_files, file);
+  player->priv->loading_policy_files = 
+    g_list_prepend (player->priv->loading_policy_files, file);
 
   return file;
 }
@@ -243,15 +294,53 @@ swfdec_policy_file_allow (SwfdecPolicyFile *file, const SwfdecURL *url)
   return FALSE;
 }
 
-void
-swfdec_player_load_policy_file (SwfdecPlayer *player, const SwfdecURL *url)
+/*** PLAYER API ***/
+
+gboolean
+swfdec_player_allow_now (SwfdecPlayer *player, const SwfdecURL *url)
 {
-  SWFDEC_FIXME ("implement");
+  GSList *walk;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (url != NULL, FALSE);
+
+  for (walk = player->priv->policy_files; walk; walk = walk->next) {
+    if (swfdec_policy_file_allow (walk->data, url))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 void
-swfdec_player_check_policy_files (SwfdecPlayer *player, 
-    SwfdecPolicyFileFunc func, gpointer data)
+swfdec_player_allow_or_load (SwfdecPlayer *player, const SwfdecURL *url, 
+    const SwfdecURL *load_url, SwfdecPolicyFunc func, gpointer data)
 {
-  SWFDEC_FIXME ("implement");
+  SwfdecPlayerPrivate *priv;
+  SwfdecPolicyFileRequest *request;
+  SwfdecPolicyFile *file;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (url != NULL);
+  g_return_if_fail (func);
+
+  if (swfdec_player_allow_now (player, url)) {
+    func (player, TRUE, data);
+    return;
+  }
+  if (load_url)
+    swfdec_policy_file_new (player, load_url);
+
+  priv = player->priv;
+  if (priv->loading_policy_files == NULL) {
+    func (player, FALSE, data);
+    return;
+  }
+  request = g_slice_new (SwfdecPolicyFileRequest);
+  request->url = swfdec_url_copy (url);
+  request->func = func;
+  request->data = data;
+
+  file = priv->loading_policy_files->data;
+  file->requests = g_slist_append (file->requests, request);
 }
+

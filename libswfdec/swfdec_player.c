@@ -877,6 +877,9 @@ swfdec_player_dispose (GObject *object)
   g_hash_table_destroy (priv->registered_classes);
   g_hash_table_destroy (priv->scripting_callbacks);
 
+  g_list_foreach (priv->loading_policy_files, (GFunc) g_object_unref, NULL);
+  g_list_free (priv->loading_policy_files);
+  priv->loading_policy_files = NULL;
   g_slist_foreach (priv->policy_files, (GFunc) g_object_unref, NULL);
   g_slist_free (priv->policy_files);
   priv->policy_files = NULL;

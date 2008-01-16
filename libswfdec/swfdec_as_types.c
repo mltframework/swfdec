@@ -486,12 +486,14 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	s = SWFDEC_AS_VALUE_GET_STRING (&tmp);
 	if (s == SWFDEC_AS_STR_EMPTY)
 	  return NAN;
-	if (s[0] == '0' && s[1] == 'x') {
+	if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
 	  if (context->version <= 5)
 	    return NAN;
 	  d = g_ascii_strtoll (s + 2, &end, 16);
+	} else if (s[0] == '0' && s[strspn (s, "01234567")] == '\0') {
+	  d = g_ascii_strtoll (s, &end, 8);
 	} else {
-	  if (strchr (s, 'x') != NULL)
+	  if (strpbrk (s, "xXiI") != NULL)
 	    return NAN;
 	  d = g_ascii_strtod (s, &end);
 	}

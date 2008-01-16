@@ -1275,7 +1275,9 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
     // special case, strtol parses things that we shouldn't parse
     if (radix == 16) {
       const char *end = s + strspn (s, " \t\r\n");
-      if (end != s && end[0] == '0' && end[1] == 'x') {
+      if (end != s && (end[0] == '-' || end[0] == '+'))
+	end++;
+      if (end != s && end[0] == '0' && (end[1] == 'x' || end[1] == 'X')) {
 	SWFDEC_AS_VALUE_SET_NUMBER (retval, 0);
 	return;
       }
@@ -1284,15 +1286,18 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
     radix = 0;
   }
 
-  // special case
-  if ((s[0] == '-' || s[0] == '+') && s[1] == '0' && s[2] == 'x') {
+  // special case, don't allow sign in front of the 0x
+  if ((s[0] == '-' || s[0] == '+') && s[1] == '0' &&
+      (s[2] == 'x' || s[2] == 'X')) {
     SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
     return;
   }
 
-  if (s[0] == '0' && s[1] == 'x') {
+  if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
     s = s + 2;
     i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 16));
+  } else if (s[0] == '0' && s[strspn (s, "01234567")] == '\0') {
+    i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 8));
   } else {
     i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 10));
   }
@@ -1323,7 +1328,7 @@ swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
   // we need to remove everything after x or I, since strtod parses hexadecimal
   // numbers and Infinity
   s = g_strdup (swfdec_as_value_to_string (cx, &argv[0]));
-  if ((p = strpbrk (s, "xI")) != NULL) {
+  if ((p = strpbrk (s, "xXiI")) != NULL) {
     *p = '\0';
   }
 

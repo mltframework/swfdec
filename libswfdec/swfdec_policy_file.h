@@ -28,7 +28,6 @@ G_BEGIN_DECLS
 
 typedef struct _SwfdecPolicyFile SwfdecPolicyFile;
 typedef struct _SwfdecPolicyFileClass SwfdecPolicyFileClass;
-typedef void (* SwfdecPolicyFileFunc) (SwfdecPlayer *player, gboolean allow, gpointer data);
 
 #define SWFDEC_TYPE_POLICY_FILE                    (swfdec_policy_file_get_type())
 #define SWFDEC_IS_POLICY_FILE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_POLICY_FILE))
@@ -45,6 +44,8 @@ struct _SwfdecPolicyFile {
   SwfdecURL *		url;		/* parent url we check with */
   SwfdecLoader *	stream;		/* stream we are loading or NULL if done loading */
   GSList *		allowed_hosts;	/* list of GPatternSpec of the allowed hosts */
+
+  GSList *		requests;	/* requests waiting for this file to finish loading */
 };
 
 struct _SwfdecPolicyFileClass {
@@ -58,12 +59,6 @@ SwfdecPolicyFile *swfdec_policy_file_new	(SwfdecPlayer *		player,
 gboolean	swfdec_policy_file_is_loading	(SwfdecPolicyFile *	file);
 gboolean	swfdec_policy_file_allow	(SwfdecPolicyFile *	file,
 						 const SwfdecURL *	url);
-
-void		swfdec_player_load_policy_file	(SwfdecPlayer *		player,
-						 const SwfdecURL *	url);
-void		swfdec_player_check_policy_files(SwfdecPlayer *		player,
-						 SwfdecPolicyFileFunc	func,
-						 gpointer		data);
 
 
 G_END_DECLS

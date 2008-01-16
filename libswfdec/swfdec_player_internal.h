@@ -41,6 +41,7 @@ typedef enum {
 
 typedef void (* SwfdecActionFunc) (gpointer object, gpointer data);
 typedef gboolean (* SwfdecAudioRemoveFunc) (SwfdecAudio *audio, gpointer data);
+typedef void (* SwfdecPolicyFunc) (SwfdecPlayer *player, gboolean allow, gpointer data);
 
 typedef struct _SwfdecTimeout SwfdecTimeout;
 struct _SwfdecTimeout {
@@ -133,7 +134,8 @@ struct _SwfdecPlayerPrivate
   SwfdecRingBuffer *	actions[SWFDEC_PLAYER_N_ACTION_QUEUES]; /* all actions we've queued up so far */
 
   /* security */
-  GSList *		policy_files;		/* list of SwfdecPolicyLoader objects, most recent first */
+  GList *		loading_policy_files;	/* list of loading SwfdecPlayerLoader - newest first */
+  GSList *		policy_files;		/* list of SwfdecPolicyLoader that finished loading */
 };
 
 void		swfdec_player_initialize	(SwfdecPlayer *		player,
@@ -221,6 +223,15 @@ void		swfdec_player_global_to_stage	(SwfdecPlayer *		player,
 						 double *		x,
 						 double *		y);
 void		swfdec_player_update_scale	(SwfdecPlayer *		player);
+
+/* in swfdec_policy_file.c */
+gboolean	swfdec_player_allow_now		(SwfdecPlayer *		player,
+						 const SwfdecURL *	url);
+void	      	swfdec_player_allow_or_load	(SwfdecPlayer *		player,
+						 const SwfdecURL *	url,
+						 const SwfdecURL *	load_url,
+						 SwfdecPolicyFunc	func,
+						 gpointer		data);
 /* in swfdec_as_interpret.c */
 SwfdecMovie *	swfdec_player_get_movie_from_value 
 						(SwfdecPlayer *		player,

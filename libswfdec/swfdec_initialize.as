@@ -849,97 +849,195 @@ flash.geom.Point.prototype.toString = function () {
 
 /* Rectangle */
 
-flash.geom.Rectangle = function () {
-  var o = {}; o["Implement Rectangle"] ();
+flash.geom.Rectangle = function (x, y, width, height) {
+  if (arguments.length == 0) {
+    this.setEmpty ();
+  } else {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
 };
 
 flash.geom.Rectangle.prototype.clone = function () {
-  var o = {}; o["Implement Rectangle.clone"] ();
-};
-
-flash.geom.Rectangle.prototype.setEmpty = function () {
-  var o = {}; o["Implement Rectangle.setEmpty"] ();
-};
-
-flash.geom.Rectangle.prototype.isEmpty = function () {
-  var o = {}; o["Implement Rectangle.isEmpty"] ();
-};
-
-flash.geom.Rectangle.prototype.addProperty ("left",
-    function () { var o = {}; o["Implement Rectangle.left (get)"] (); },
-    function () { var o = {}; o["Implement Rectangle.left (set)"] (); });
-
-flash.geom.Rectangle.prototype.addProperty ("right",
-    function () { var o = {}; o["Implement Rectangle.right (get)"] (); },
-    function () { var o = {}; o["Implement Rectangle.right (set)"] (); });
-
-flash.geom.Rectangle.prototype.addProperty ("top",
-    function () { var o = {}; o["Implement Rectangle.top (get)"] (); },
-    function () { var o = {}; o["Implement Rectangle.top (set)"] (); });
-
-flash.geom.Rectangle.prototype.addProperty ("bottom",
-    function () { var o = {}; o["Implement Rectangle.bottom (get)"] (); },
-    function () { var o = {}; o["Implement Rectangle.bottom (set)"] (); });
-
-flash.geom.Rectangle.prototype.addProperty ("topLeft",
-    function () { var o = {}; o["Implement Rectangle.topLeft (get)"] (); },
-    function () { var o = {}; o["Implement Rectangle.topLeft (set)"] (); });
-
-flash.geom.Rectangle.prototype.addProperty ("bottomRight",
-    function () { var o = {}; o["Implement Rectangle.bottomRight (get)"] (); },
-    function () { var o = {}; o["Implement Rectangle.bottomRight (set)"] (); });
-
-flash.geom.Rectangle.prototype.addProperty ("size",
-    function () { var o = {}; o["Implement Rectangle.size (get)"] (); },
-    function () { var o = {}; o["Implement Rectangle.size (set)"] (); });
-
-flash.geom.Rectangle.prototype.inflate = function () {
-  var o = {}; o["Implement Rectangle.inflate"] ();
-};
-
-flash.geom.Rectangle.prototype.inflatePoint = function () {
-  var o = {}; o["Implement Rectangle.inflatePoint"] ();
-};
-
-flash.geom.Rectangle.prototype.offset = function () {
-  var o = {}; o["Implement Rectangle.offset"] ();
-};
-
-flash.geom.Rectangle.prototype.offsetPoint = function () {
-  var o = {}; o["Implement Rectangle.offsetPoint"] ();
-};
-
-flash.geom.Rectangle.prototype.contains = function () {
-  var o = {}; o["Implement Rectangle.contains"] ();
-};
-
-flash.geom.Rectangle.prototype.containsPoint = function () {
-  var o = {}; o["Implement Rectangle.containsPoint"] ();
-};
-
-flash.geom.Rectangle.prototype.containsRectangle = function () {
-  var o = {}; o["Implement Rectangle.containsRectangle"] ();
-};
-
-flash.geom.Rectangle.prototype.intersection = function () {
-  var o = {}; o["Implement Rectangle.intersection"] ();
-};
-
-flash.geom.Rectangle.prototype.intersects = function () {
-  var o = {}; o["Implement Rectangle.intersects"] ();
-};
-
-flash.geom.Rectangle.prototype.union = function () {
-  var o = {}; o["Implement Rectangle.union"] ();
-};
-
-flash.geom.Rectangle.prototype.equals = function () {
-  var o = {}; o["Implement Rectangle.equals"] ();
+  return new flash.geom.Rectangle (this.x, this.y, this.width, this.height);
 };
 
 flash.geom.Rectangle.prototype.toString = function () {
-  var o = {}; o["Implement Rectangle.toString"] ();
+  return "(x=" + this.x + ", y=" + this.y + ", w=" + this.width + ", h=" + this.height + ")";
 };
+
+flash.geom.Rectangle.prototype.equals = function (rect) {
+  return (rect instanceof flash.geom.Rectangle &&
+      this.x == rect.x && this.y == rect.y &&
+      this.width == rect.width && this.height == rect.height);
+};
+
+flash.geom.Rectangle.prototype.contains = function (x, y) {
+  return (this.x <= x && this.y <= y &&
+      this.x + this.width > x && this.y + this.height > y);
+};
+
+flash.geom.Rectangle.prototype.containsPoint = function (point) {
+  return (this.x <= point.x && this.y <= point.y &&
+      this.x + this.width > point.x && this.y + this.height > point.y);
+};
+
+flash.geom.Rectangle.prototype.containsRectangle = function (rect) {
+  return (this.x <= rect.x && this.y <= rect.y &&
+      this.x + this.width >= rect.x && this.y + this.height >= rect.y &&
+      this.x <= rect.x + rect.width && this.y <= rect.y + rect.height &&
+      this.x + this.width >= rect.x + rect.width &&
+      this.y + this.height >= rect.y + rect.height);
+};
+
+flash.geom.Rectangle.prototype.isEmpty = function () {
+  return (this.width <= 0 || this.height <= 0);
+};
+
+flash.geom.Rectangle.prototype.setEmpty = function () {
+  this.x = 0;
+  this.y = 0;
+  this.width = 0;
+  this.height = 0;
+};
+
+flash.geom.Rectangle.prototype.intersection = function (rect) {
+  var ints = new flash.geom.Rectangle ();
+
+  if (this.isEmpty () || rect.isEmpty ()) {
+    ints.setEmpty ();
+    return ints;
+  }
+
+  ints.x = Math.max (this.x, rect.x);
+  ints.y = Math.max (this.y, rect.y);
+  ints.width = Math.min (this.x + this.width, rect.x + rect.width) - ints.x;
+  ints.height = Math.min (this.y + this.height, rect.y + rect.height) - ints.y;
+
+  if (ints.width <= 0 || ints.height <= 0)
+      ints.setEmpty ();
+
+  return ints;
+};
+
+flash.geom.Rectangle.prototype.intersects = function (rect) {
+  return !this.intersection (rect).isEmpty ();
+};
+
+flash.geom.Rectangle.prototype.union = function (rect) {
+  if (this.isEmpty ())
+    return rect.clone ();
+
+  if (rect.isEmpty ())
+    return this.clone ();
+
+  var union = new flash.geom.Rectangle ();
+  union.x = Math.min (this.x, rect.x);
+  union.y = Math.min (this.y, rect.y);
+  union.width = Math.max (this.x + this.width, rect.x + rect.width) - union.x;
+  union.height =
+    Math.max (this.y + this.height, rect.y + rect.height) - union.y;
+
+  return union;
+};
+
+flash.geom.Rectangle.prototype.offset = function (dx, dy) {
+  this.x += dx;
+  this.y += dy;
+};
+
+flash.geom.Rectangle.prototype.offsetPoint = function (d) {
+  this.x += d.x;
+  this.y += d.y;
+};
+
+flash.geom.Rectangle.prototype.inflate = function (dx, dy) {
+  this.x -= dx;
+  this.width += 2 * dx;
+
+  this.y -= dy;
+  this.height += 2 * dy;
+};
+
+flash.geom.Rectangle.prototype.inflatePoint = function (d) {
+  this.x -= d.x;
+  this.width += 2 * d.x;
+
+  this.y -= d.y;
+  this.height += 2 * d.y;
+};
+
+flash.geom.Rectangle.prototype.addProperty ("left",
+  function () {
+    return this.x;
+  },
+  function (left) {
+    this.width += this.x - left;
+    this.x = left;
+  }
+);
+
+flash.geom.Rectangle.prototype.addProperty ("right",
+  function () {
+    return this.x + this.width;
+  },
+  function (right) {
+    this.width = right - this.x;
+  }
+);
+
+flash.geom.Rectangle.prototype.addProperty ("top",
+  function () {
+    return this.y;
+  },
+  function (top) {
+    this.height += this.y - top;
+    this.y = top;
+  }
+);
+
+flash.geom.Rectangle.prototype.addProperty ("bottom",
+  function () {
+    return this.y + this.height;
+  },
+  function (bottom) {
+    this.height = bottom - this.y;
+  }
+);
+
+flash.geom.Rectangle.prototype.addProperty ("topLeft",
+  function () {
+    return new flash.geom.Point (this.x, this.y);
+  },
+  function (topLeft) {
+    this.width += this.x - topLeft.x;
+    this.height += this.y - topLeft.y;
+    this.x = topLeft.x;
+    this.y = topLeft.y;
+  }
+);
+
+flash.geom.Rectangle.prototype.addProperty ("bottomRight",
+  function () {
+    return new flash.geom.Point (this.x + this.width, this.y + this.height);
+  },
+  function (bottomRight) {
+    this.width = bottomRight.x - this.x;
+    this.height = bottomRight.y - this.y;
+  }
+);
+
+flash.geom.Rectangle.prototype.addProperty ("size",
+  function () {
+    return new flash.geom.Point (this.width, this.height);
+  },
+  function (size) {
+    this.width = size.x;
+    this.height = size.y;
+  }
+);
 
 /* Matrix */
 

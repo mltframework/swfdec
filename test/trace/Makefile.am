@@ -2087,6 +2087,24 @@ EXTRA_DIST = \
 	propflags-set-proto-7.swf.trace \
 	propflags-set-proto-8.swf \
 	propflags-set-proto-8.swf.trace \
+	rectangle-equals.as \
+	rectangle-equals-5.swf \
+	rectangle-equals-5.swf.trace \
+	rectangle-equals-6.swf \
+	rectangle-equals-6.swf.trace \
+	rectangle-equals-7.swf \
+	rectangle-equals-7.swf.trace \
+	rectangle-equals-8.swf \
+	rectangle-equals-8.swf.trace \
+	rectangle-properties.as \
+	rectangle-properties-5.swf \
+	rectangle-properties-5.swf.trace \
+	rectangle-properties-6.swf \
+	rectangle-properties-6.swf.trace \
+	rectangle-properties-7.swf \
+	rectangle-properties-7.swf.trace \
+	rectangle-properties-8.swf \
+	rectangle-properties-8.swf.trace \
 	register-count.swf \
 	register-count.swf.trace \
 	register-count.xml \

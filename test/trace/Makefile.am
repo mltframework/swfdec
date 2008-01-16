@@ -913,6 +913,15 @@ EXTRA_DIST = \
 	externalinterface-escape-7.swf.trace \
 	externalinterface-escape-8.swf \
 	externalinterface-escape-8.swf.trace \
+	external-interface-properties.as \
+	external-interface-properties-5.swf \
+	external-interface-properties-5.swf.trace \
+	external-interface-properties-6.swf \
+	external-interface-properties-6.swf.trace \
+	external-interface-properties-7.swf \
+	external-interface-properties-7.swf.trace \
+	external-interface-properties-8.swf \
+	external-interface-properties-8.swf.trace \
 	file-reference-constructor.as \
 	file-reference-constructor-7.swf \
 	file-reference-constructor-7.swf.trace \

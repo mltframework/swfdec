@@ -127,6 +127,7 @@ NetStream.prototype.receiveVideo = function (flag) {
 };
 
 ASSetNative (NetStream.prototype, 2101, "6close,6attachAudio,6attachVideo,6send,6setBufferTime");
+ASSetNativeAccessor (NetStream.prototype, 2101, "checkPolicyFile", 5);
 ASSetPropFlags (NetStream.prototype, null, 3);
 
 /*** LOADVARS ***/

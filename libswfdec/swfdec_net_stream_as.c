@@ -106,6 +106,24 @@ swfdec_net_stream_setBufferTime (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_net_stream_set_buffer_time (stream, d);
 }
 
+SWFDEC_AS_NATIVE (2101, 5, swfdec_net_stream_get_checkPolicyFile)
+void
+swfdec_net_stream_get_checkPolicyFile (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("NetStream.checkPolicyFile (get)");
+}
+
+SWFDEC_AS_NATIVE (2101, 6, swfdec_net_stream_set_checkPolicyFile)
+void
+swfdec_net_stream_set_checkPolicyFile (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("NetStream.checkPolicyFile (set)");
+}
+
 static void
 swfdec_net_stream_do_seek (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {

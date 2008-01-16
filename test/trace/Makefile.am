@@ -2603,6 +2603,15 @@ EXTRA_DIST = \
 	string-split-empty-6.swf.trace \
 	string-split-empty-7.swf \
 	string-split-empty-7.swf.trace \
+	string-to-number.as \
+	string-to-number-5.swf \
+	string-to-number-5.swf.trace \
+	string-to-number-6.swf \
+	string-to-number-6.swf.trace \
+	string-to-number-7.swf \
+	string-to-number-7.swf.trace \
+	string-to-number-8.swf \
+	string-to-number-8.swf.trace \
 	string-trace.as \
 	string-trace-5.swf \
 	string-trace-5.swf.trace \

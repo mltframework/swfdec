@@ -264,6 +264,14 @@ delete System.security.constructor;
 ASSetNative (System.security, 12, "allowDomain,7allowInsecureDomain,loadPolicyFile,chooseLocalSwfPath,escapeDomain");
 ASSetNativeAccessor (System.security, 12, "sandboxType", 5);
 
+/*** System.security.PolicyFileResolver */
+
+System.security.PolicyFileResolver = function () {
+  var o = {}; o["Implement System.security.PolicyFileResolver"] ();
+};
+System.security.PolicyFileResolver.prototype.resolve = ASnative (15, 0);
+AsBroadcaster.initialize (System.security.PolicyFileResolver.prototype);
+
 /*** System.Product ***/
 
 System.Product = function () {

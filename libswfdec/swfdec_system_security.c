@@ -111,3 +111,14 @@ swfdec_system_security_set_sandboxType (SwfdecAsContext *cx,
 {
   // read-only
 }
+
+// PolicyFileResolver
+
+SWFDEC_AS_NATIVE (15, 0, swfdec_system_security_policy_file_resolver_resolve)
+void
+swfdec_system_security_policy_file_resolver_resolve (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("System.security.PolicyFileResolver.resolve");
+}

@@ -789,17 +789,21 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
     x0 = x1 = y0 = y1 = 0x7FFFFFF;
   } else {
     SwfdecRect rect = movie->extents;
+    SwfdecMovie *other;
+
     if (argc > 0) {
-      SwfdecMovie *other = swfdec_player_get_movie_from_value (
-	  SWFDEC_PLAYER (cx), &argv[0]);
-      if (other) {
-	if (movie->parent)
-	  swfdec_movie_rect_local_to_global (movie->parent, &rect);
-	swfdec_movie_rect_global_to_local (other, &rect);
-      } else {
-	SWFDEC_FIXME ("what's getBounds relative to invalid?");
-      }
+      other =
+	swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx), &argv[0]);
+      if (!other)
+	return;
+    } else {
+      other = movie;
     }
+
+    if (movie->parent)
+      swfdec_movie_rect_local_to_global (movie->parent, &rect);
+    swfdec_movie_rect_global_to_local ((other != NULL ? other : movie), &rect);
+
     x0 = rect.x0;
     y0 = rect.y0;
     x1 = rect.x1;

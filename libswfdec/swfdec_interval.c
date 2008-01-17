@@ -26,9 +26,12 @@
 
 #include "swfdec_interval.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_resource.h"
 
 G_DEFINE_TYPE (SwfdecInterval, swfdec_interval, SWFDEC_TYPE_AS_OBJECT)
 
@@ -39,6 +42,7 @@ swfdec_interval_mark (SwfdecAsObject *object)
   SwfdecInterval *interval = SWFDEC_INTERVAL (object);
 
   swfdec_as_object_mark (interval->object);
+  swfdec_resource_mark (interval->resource);
   if (interval->fun_name)
     swfdec_as_string_mark (interval->fun_name);
   for (i = 0; i < interval->n_args; i++) {
@@ -59,6 +63,10 @@ swfdec_interval_dispose (GObject *object)
   if (interval->timeout.callback != NULL) {
     swfdec_player_remove_timeout (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (object)->context), &interval->timeout);
     interval->timeout.callback = NULL;
+  }
+  if (interval->resource) {
+    g_object_unref (interval->resource);
+    interval->resource = NULL;
   }
 
   G_OBJECT_CLASS (swfdec_interval_parent_class)->dispose (object);
@@ -97,8 +105,8 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
     interval->timeout.callback = NULL;
   }
   if (interval->fun_name) {
-    swfdec_as_object_call (interval->object, interval->fun_name, 
-	interval->n_args, interval->args, &ret);
+    swfdec_as_object_call_with_security (interval->object, SWFDEC_SECURITY (interval->resource),
+	interval->fun_name, interval->n_args, interval->args, &ret);
   } else {
     swfdec_as_function_call (SWFDEC_AS_FUNCTION (interval->object), NULL, 
 	interval->n_args, interval->args, &ret);
@@ -123,6 +131,7 @@ swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat,
   swfdec_as_object_add (SWFDEC_AS_OBJECT (interval), context, size);
 
   interval->id = ++player->priv->interval_id;
+  interval->resource = SWFDEC_RESOURCE (g_object_ref (context->frame->security));
   interval->msecs = msecs;
   interval->repeat = repeat;
   interval->object = object;

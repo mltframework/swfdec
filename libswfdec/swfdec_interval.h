@@ -40,6 +40,7 @@ struct _SwfdecInterval {
   SwfdecAsObject	asobject;
 
   SwfdecTimeout		timeout;
+  SwfdecResource *	resource;	/* resouce that initiated this interval */
   guint			id;		/* id this interval is identified with */
   guint			msecs;		/* interval in milliseconds */
   gboolean		repeat;		/* TRUE for calling in intervals, FALSE for single-shot */

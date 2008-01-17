@@ -462,6 +462,38 @@ swfdec_xml_parse_comment (SwfdecXml *xml, const char *p)
   return end;
 }
 
+static void
+swfdec_xml_add_id_map (SwfdecXml *xml, SwfdecXmlNode *node, const char *id)
+{
+  SwfdecAsObject *object;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_XML (xml));
+  g_return_if_fail (SWFDEC_IS_XML_NODE (xml));
+  g_return_if_fail (id != NULL && id != SWFDEC_AS_STR_EMPTY);
+
+  if (SWFDEC_AS_OBJECT (xml)->context->version >= 8) {
+    if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (xml),
+	  SWFDEC_AS_STR_idMap, &val)) {
+      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+	object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+      } else {
+	return;
+      }
+    } else {
+      object = swfdec_as_object_new_empty (SWFDEC_AS_OBJECT (xml)->context);
+      SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+      swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (xml),
+	  SWFDEC_AS_STR_idMap, &val);
+    }
+  } else {
+    object = SWFDEC_AS_OBJECT (xml);
+  }
+
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (node));
+  swfdec_as_object_set_variable (object, id, &val);
+}
+
 static const char *
 swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 {
@@ -513,6 +545,9 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
   SWFDEC_AS_VALUE_SET_STRING (&val, value);
 
   swfdec_as_object_set_variable (node->attributes, name, &val);
+
+  if (!g_ascii_strcasecmp (name, "id") && value != SWFDEC_AS_STR_EMPTY)
+    swfdec_xml_add_id_map (xml, node, value);
 
   g_return_val_if_fail (end + 1 > p, strchr (p, '\0'));
 

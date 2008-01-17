@@ -483,5 +483,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("w")
   SWFDEC_AS_CONSTANT_STRING ("x")
   SWFDEC_AS_CONSTANT_STRING ("y")
+  SWFDEC_AS_CONSTANT_STRING ("idMap")
   /* add more here */
 ;

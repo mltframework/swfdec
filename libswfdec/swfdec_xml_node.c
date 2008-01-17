@@ -53,8 +53,8 @@ swfdec_xml_node_do_mark (SwfdecAsObject *object)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (node->children));
   if (node->attributes != NULL)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (node->attributes));
-  if (node->childNodes != NULL)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (node->childNodes));
+  if (node->child_nodes != NULL)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (node->child_nodes));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_xml_node_parent_class)->mark (object);
 }
@@ -120,7 +120,7 @@ swfdec_xml_node_index_of_child (SwfdecXmlNode *node, SwfdecXmlNode *child)
 }
 
 static void
-swfdec_xml_node_update_childNodes (SwfdecXmlNode *node)
+swfdec_xml_node_update_child_nodes (SwfdecXmlNode *node)
 {
   SwfdecAsValue val;
   SwfdecAsValue *vals;
@@ -130,7 +130,7 @@ swfdec_xml_node_update_childNodes (SwfdecXmlNode *node)
 
   // remove old
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (node->childNodes),
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (node->child_nodes),
       SWFDEC_AS_STR_length, &val);
 
   // add everything
@@ -140,7 +140,7 @@ swfdec_xml_node_update_childNodes (SwfdecXmlNode *node)
     SWFDEC_AS_VALUE_SET_OBJECT (&vals[i],
 	SWFDEC_AS_OBJECT (swfdec_xml_node_get_child (node, i)));
   }
-  swfdec_as_array_append_with_flags (node->childNodes, num, vals,
+  swfdec_as_array_append_with_flags (node->child_nodes, num, vals,
       SWFDEC_AS_VARIABLE_CONSTANT);
   g_free (vals);
 }
@@ -555,7 +555,7 @@ swfdec_xml_node_get_childNodes (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret,
-      SWFDEC_AS_OBJECT (SWFDEC_XML_NODE (object)->childNodes));
+      SWFDEC_AS_OBJECT (SWFDEC_XML_NODE (object)->child_nodes));
 }
 
 SWFDEC_AS_NATIVE (253, 7, swfdec_xml_node_do_getNamespaceForPrefix)
@@ -660,7 +660,7 @@ swfdec_xml_node_clone (SwfdecAsContext *cx, SwfdecXmlNode *node, gboolean deep)
       swfdec_as_array_push (new->children, &val);
     }
 
-    swfdec_xml_node_update_childNodes (new);
+    swfdec_xml_node_update_child_nodes (new);
   }
 
   return new;
@@ -704,7 +704,7 @@ swfdec_xml_node_removeNode (SwfdecXmlNode *node)
   g_assert (i >= 0);
 
   swfdec_as_array_remove (node->parent->children, i);
-  swfdec_xml_node_update_childNodes (node->parent);
+  swfdec_xml_node_update_child_nodes (node->parent);
   node->parent = NULL;
 }
 
@@ -754,10 +754,10 @@ swfdec_xml_node_insertAt (SwfdecXmlNode *node, SwfdecXmlNode *child, gint32 ind)
   // remove the previous parent of the child
   swfdec_xml_node_removeNode (child);
 
-  // insert child to node's childNodes array
+  // insert child to node's child_nodes array
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (child));
   swfdec_as_array_insert (node->children, ind, &val);
-  swfdec_xml_node_update_childNodes (node);
+  swfdec_xml_node_update_child_nodes (node);
 
   // set node as parent of child
   child->parent = node;
@@ -891,10 +891,10 @@ swfdec_xml_node_toString (SwfdecXmlNode *node)
 
   string = g_string_new ("");
   if (SWFDEC_IS_XML (node)) {
-    if (SWFDEC_XML (node)->xmlDecl != NULL)
-      string = g_string_append (string, SWFDEC_XML (node)->xmlDecl);
-    if (SWFDEC_XML (node)->docTypeDecl != NULL)
-      string = g_string_append (string, SWFDEC_XML (node)->docTypeDecl);
+    if (SWFDEC_XML (node)->xml_decl != NULL)
+      string = g_string_append (string, SWFDEC_XML (node)->xml_decl);
+    if (SWFDEC_XML (node)->doc_type_decl != NULL)
+      string = g_string_append (string, SWFDEC_XML (node)->doc_type_decl);
   }
 
   switch (node->type) {
@@ -989,10 +989,10 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
     node->value = value;
   }
 
-  node->childNodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
+  node->child_nodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
 
   if (node->children == NULL || node->attributes == NULL ||
-      node->childNodes == NULL) {
+      node->child_nodes == NULL) {
     node->valid = FALSE;
   }
 }

@@ -71,7 +71,7 @@ struct _SwfdecXmlNode {
   // visible trough childNodes property, if modified by the user directly, the
   // changes are not visible in children and will get overwritten by next
   // internal change
-  SwfdecAsArray		*childNodes;
+  SwfdecAsArray		*child_nodes;
 };
 
 struct _SwfdecXmlNodeClass {

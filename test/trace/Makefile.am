@@ -1473,6 +1473,13 @@ EXTRA_DIST = \
 	movie-enumerate-7.swf.trace \
 	movie-enumerate-8.swf \
 	movie-enumerate-8.swf.trace \
+	movieclip-get-bounds-line.as \
+	movieclip-get-bounds-line-5.swf \
+	movieclip-get-bounds-line-5.swf.trace \
+	movieclip-get-bounds-line-6.swf \
+	movieclip-get-bounds-line-6.swf.trace \
+	movieclip-get-bounds-line-7.swf \
+	movieclip-get-bounds-line-7.swf.trace \
 	movieclip-get-swf-version.as \
 	movieclip-get-swf-version-5.swf \
 	movieclip-get-swf-version-5.swf.trace \

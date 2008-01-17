@@ -526,7 +526,8 @@ swfdec_resource_do_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
   resource->version = load->resource->version;
   SWFDEC_FLASH_SECURITY (resource)->player = player;
   resource->target = g_strdup (load->target);
-  resource->clip_loader = g_object_ref (load->loader);
+  if (load->loader)
+    resource->clip_loader = g_object_ref (load->loader);
   swfdec_player_root (player, resource, (GFunc) swfdec_resource_mark);
 
   if (!allowed) {

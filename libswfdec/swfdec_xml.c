@@ -666,7 +666,7 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 
 static const char *
 swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
-    const char *p)
+    const char *p, gboolean ignoreWhite)
 {
   SwfdecXmlNode *child;
   const char *end;
@@ -680,7 +680,7 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
   if (end == NULL)
     end = strchr (p, '\0');
 
-  if (!xml->ignoreWhite || strspn (p, " \t\r\n") < (gsize)(end - p))
+  if (!ignoreWhite || strspn (p, " \t\r\n") < (gsize)(end - p))
   {
     text = g_strndup (p, end - p);
     unescaped = swfdec_xml_unescape (SWFDEC_AS_OBJECT (xml)->context, text);
@@ -705,6 +705,7 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
   SwfdecAsObject *object;
   SwfdecXmlNode *node;
   const char *p;
+  gboolean ignoreWhite;
 
   g_return_if_fail (SWFDEC_IS_XML (xml));
   g_return_if_fail (value != NULL);
@@ -719,6 +720,9 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
   p = value;
   node = SWFDEC_XML_NODE (xml);
 
+  // special case: we only use the ignoreWhite set at the start
+  ignoreWhite = xml->ignoreWhite;
+
   while (xml->status == XML_PARSE_STATUS_OK && *p != '\0') {
     if (*p == '<') {
       if (g_ascii_strncasecmp (p + 1, "?xml", strlen ("?xml")) == 0) {
@@ -731,7 +735,7 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
 	p = swfdec_xml_parse_tag (xml, &node, p);
       }
     } else {
-      p = swfdec_xml_parse_text (xml, node, p);
+      p = swfdec_xml_parse_text (xml, node, p, ignoreWhite);
     }
     g_assert (p != NULL);
   }

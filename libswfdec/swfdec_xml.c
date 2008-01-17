@@ -546,9 +546,6 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 
   swfdec_as_object_set_variable (node->attributes, name, &val);
 
-  if (!g_ascii_strcasecmp (name, "id") && value != SWFDEC_AS_STR_EMPTY)
-    swfdec_xml_add_id_map (xml, node, value);
-
   g_return_val_if_fail (end + 1 > p, strchr (p, '\0'));
 
   return end + 1;
@@ -643,7 +640,13 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
     }
     g_free (name);
   } else {
+    const char *id;
+
     swfdec_xml_node_appendChild (*node, child);
+
+    id = swfdec_xml_node_get_attribute (child, SWFDEC_AS_STR_id);
+    if (id != NULL)
+      swfdec_xml_add_id_map (xml, child, id);
 
     if (*(end - 1) != '/')
       *node = child;

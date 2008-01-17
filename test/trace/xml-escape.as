@@ -8,9 +8,6 @@ trace (xmlEscape ("te&lt;st"));
 trace (xmlEscape ());
 trace (xmlEscape ("ma'ny", "param&eters"));
 trace (xmlEscape ("hmm&amp;hrr"));
-// FIXME: Make it work in v5 too
-#if __SWF_VERSION__ > 5
 trace (xmlEscape ("non breaking space:  "));
-#endif
 
 loadMovie ("FSCommand:quit", "");

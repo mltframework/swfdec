@@ -498,8 +498,8 @@ static const char *
 swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 {
   SwfdecAsValue val;
-  const char *end, *name, *value;
-  char *text, *unescaped;
+  const char *end, *name;
+  char *text;
 
   g_return_val_if_fail (SWFDEC_IS_XML (xml), strchr (p, '\0'));
   g_return_val_if_fail (SWFDEC_IS_XML_NODE (node), strchr (p, '\0'));
@@ -538,13 +538,18 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
     return strchr (p, '\0');
   }
 
-  unescaped = swfdec_xml_unescape_len (SWFDEC_AS_OBJECT (xml)->context, p + 1,
-      end - (p + 1), TRUE);
-  value = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
-      unescaped);
-  SWFDEC_AS_VALUE_SET_STRING (&val, value);
+  if (!swfdec_as_object_get_variable (node->attributes, name, NULL)) {
+    char *unescaped;
+    const char *value;
 
-  swfdec_as_object_set_variable (node->attributes, name, &val);
+    unescaped = swfdec_xml_unescape_len (SWFDEC_AS_OBJECT (xml)->context,
+	p + 1, end - (p + 1), TRUE);
+    value = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
+	unescaped);
+    SWFDEC_AS_VALUE_SET_STRING (&val, value);
+
+    swfdec_as_object_set_variable (node->attributes, name, &val);
+  }
 
   g_return_val_if_fail (end + 1 > p, strchr (p, '\0'));
 

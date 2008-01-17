@@ -3105,6 +3105,15 @@ EXTRA_DIST = \
 	xml-escape-7.swf.trace \
 	xml-escape-8.swf \
 	xml-escape-8.swf.trace \
+	xml-id-map.as \
+	xml-id-map-5.swf \
+	xml-id-map-5.swf.trace \
+	xml-id-map-6.swf \
+	xml-id-map-6.swf.trace \
+	xml-id-map-7.swf \
+	xml-id-map-7.swf.trace \
+	xml-id-map-8.swf \
+	xml-id-map-8.swf.trace \
 	xml-init.as \
 	xml-init-5.swf \
 	xml-init-5.swf.trace \

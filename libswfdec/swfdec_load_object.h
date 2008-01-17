@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
 
 #include <libswfdec/swfdec.h>
 #include <libswfdec/swfdec_as_object.h>
+#include <libswfdec/swfdec_resource.h>
 
 G_BEGIN_DECLS
 
@@ -43,22 +44,26 @@ typedef void (* SwfdecLoadObjectFinish) (SwfdecAsObject *target,
 #define SWFDEC_LOAD_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_LOAD_OBJECT, SwfdecLoadObjectClass))
 
 struct _SwfdecLoadObject {
-  SwfdecAsObject	object;
+  GObject			object;
+  
+  const char *			url;		/* GC'ed url to request */
+  SwfdecLoaderRequest		request;	/* type of request */
+  SwfdecBuffer *		buffer;		/* data to send */
+  SwfdecLoader *		loader;		/* loader when loading or NULL */
 
-  SwfdecLoader *	loader;		/* loader when loading or NULL */
-
-  SwfdecAsObject	*target;	/* target object */
-  SwfdecLoadObjectProgress progress;
-  SwfdecLoadObjectFinish finish;
+  SwfdecResource *		resource;	/* resource that inited the loading */
+  SwfdecAsObject *		target;		/* target object */
+  SwfdecLoadObjectProgress	progress;	/* progress callback */
+  SwfdecLoadObjectFinish	finish;		/* finish callback */
 };
 
 struct _SwfdecLoadObjectClass {
-  SwfdecAsObjectClass	object_class;
+  GObjectClass			object_class;
 };
 
 GType		swfdec_load_object_get_type	(void);
 
-SwfdecAsObject *swfdec_load_object_new		(SwfdecAsObject *		target,
+void		swfdec_load_object_create     	(SwfdecAsObject *		target,
 						 const char *			url,
 						 SwfdecLoaderRequest		request,
 						 SwfdecBuffer *			data,

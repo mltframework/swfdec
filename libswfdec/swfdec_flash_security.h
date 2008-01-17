@@ -61,7 +61,6 @@ GType			swfdec_flash_security_get_type		(void);
 
 void			swfdec_flash_security_set_url		(SwfdecFlashSecurity *	sec,
 								 const SwfdecURL *	url);
-void			swfdec_flash_security_free_pending	(SwfdecFlashSecurity *	sec);
 
 
 G_END_DECLS

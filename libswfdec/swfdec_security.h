@@ -28,8 +28,6 @@ G_BEGIN_DECLS
 typedef struct _SwfdecSecurity SwfdecSecurity;
 typedef struct _SwfdecSecurityClass SwfdecSecurityClass;
 
-typedef void (* SwfdecURLAllowFunc) (const SwfdecURL *url, int status, gpointer data);
-
 #define SWFDEC_TYPE_SECURITY                    (swfdec_security_get_type())
 #define SWFDEC_IS_SECURITY(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_SECURITY))
 #define SWFDEC_IS_SECURITY_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_SECURITY))

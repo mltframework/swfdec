@@ -43,7 +43,6 @@
 #include "swfdec_resource.h"
 #include "swfdec_system.h"
 #include "swfdec_utils.h"
-#include "swfdec_load_object.h"
 #include "swfdec_as_internal.h"
 
 /*** MOVIE ***/

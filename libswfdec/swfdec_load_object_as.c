@@ -65,30 +65,27 @@ swfdec_load_object_on_progress (SwfdecAsObject *target, glong size,
 
 SWFDEC_AS_NATIVE (301, 0, swfdec_load_object_as_load)
 void
-swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
+swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsValue val;
   const char *url;
 
-  if (argc < 1 || obj == NULL) {
-    SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
-    return;
-  }
+  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "s", &url);
 
-  url = swfdec_as_value_to_string (cx, &argv[0]);
-  swfdec_load_object_new (obj, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL,
+  swfdec_load_object_create (object, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL,
       swfdec_load_object_on_progress, swfdec_load_object_on_finish);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
-  swfdec_as_object_set_variable_and_flags (obj, SWFDEC_AS_STR__bytesLoaded,
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__bytesLoaded,
       &val, SWFDEC_AS_VARIABLE_HIDDEN);
   SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-  swfdec_as_object_set_variable_and_flags (obj, SWFDEC_AS_STR__bytesTotal,
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__bytesTotal,
       &val, SWFDEC_AS_VARIABLE_HIDDEN);
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (&val, FALSE);
-  swfdec_as_object_set_variable_and_flags (obj, SWFDEC_AS_STR_loaded, &val,
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_loaded, &val,
       SWFDEC_AS_VARIABLE_HIDDEN);
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
@@ -107,36 +104,27 @@ void
 swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  const char *url, *data;
+  const char *url, *data, *method_string;
   SwfdecAsObject *target;
   SwfdecAsValue val;
   SwfdecBuffer *buffer;
+  SwfdecLoaderRequest method;
 
-  if (object == NULL)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "sO|s", &url, &target, &method_string);
 
-  if (argc < 2)
-    return;
+  SWFDEC_FIXME ("support for contentType is missing");
 
-  url = swfdec_as_value_to_string (cx, &argv[0]);
-  target = swfdec_as_value_to_object (cx, &argv[0]);
-  if (target == NULL)
-    return;
-
-  // FIXME: support for contentType is missing
-
-  swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &val);
-  data = swfdec_as_value_to_string (cx, &val);
-  if (strlen (data) > 0) {
-    buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data) + 1),
-	strlen (data));
-    swfdec_load_object_new (target, url, SWFDEC_LOADER_REQUEST_POST, buffer,
-	swfdec_load_object_on_progress, swfdec_load_object_on_finish);
-    swfdec_buffer_unref (buffer);
+  if (method_string == NULL || g_ascii_strcasecmp (method_string, "get") == 0) {
+    method = SWFDEC_LOADER_REQUEST_GET;
   } else {
-    swfdec_load_object_new (target, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL,
-	swfdec_load_object_on_progress, swfdec_load_object_on_finish);
+    method = SWFDEC_LOADER_REQUEST_POST;
   }
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  data = swfdec_as_value_to_string (cx, &val);
+  buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data) + 1),
+      strlen (data) + 1);
+  swfdec_load_object_create (target, url, method, buffer,
+      swfdec_load_object_on_progress, swfdec_load_object_on_finish);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
   swfdec_as_object_set_variable_and_flags (target, SWFDEC_AS_STR__bytesLoaded,

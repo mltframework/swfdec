@@ -37,7 +37,6 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_movie_clip_loader.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_resource_request.h"
 #include "swfdec_script.h"
 #include "swfdec_sprite.h"
 #include "swfdec_stream_target.h"
@@ -481,44 +480,137 @@ swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character
   g_hash_table_insert (instance->export_names, g_object_ref (character), g_strdup (name));
 }
 
-static void
-swfdec_resource_do_load (SwfdecPlayer *player, SwfdecLoader *loader, gpointer resourcep)
-{
-  SwfdecResource *resource = SWFDEC_RESOURCE (resourcep);
+typedef struct _SwfdecResourceLoad SwfdecResourceLoad;
+struct _SwfdecResourceLoad {
+  SwfdecResource *		resource;
+  char *			target;
+  char *			url;
+  SwfdecLoaderRequest		request;
+  SwfdecBuffer *		buffer;
+  SwfdecMovieClipLoader *	loader;
+  gboolean			target_is_movie;
+};
 
-  if (loader == NULL) {
-    /* *** Security Sandbox Violation *** */
+static void
+swfdec_resource_load_free (gpointer loadp)
+{
+  SwfdecResourceLoad *load = loadp;
+
+  swfdec_player_unroot (SWFDEC_FLASH_SECURITY (load->resource)->player, load);
+  g_object_unref (load->resource);
+  g_free (load->url);
+  g_free (load->target);
+  if (load->buffer)
+    swfdec_buffer_unref (load->buffer);
+  g_slice_free (SwfdecResourceLoad, load);
+}
+
+static void
+swfdec_resource_load_mark (gpointer loadp, gpointer playerp)
+{
+  SwfdecResourceLoad *load = loadp;
+
+  swfdec_resource_mark (load->resource);
+  if (load->loader)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (load->loader));
+}
+
+static void
+swfdec_resource_do_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean allowed, gpointer loadp)
+{
+  SwfdecResourceLoad *load = loadp;
+  SwfdecResource *resource;
+  SwfdecLoader *loader;
+  
+  resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
+  resource->version = load->resource->version;
+  SWFDEC_FLASH_SECURITY (resource)->player = player;
+  resource->target = g_strdup (load->target);
+  resource->clip_loader = g_object_ref (load->loader);
+  swfdec_player_root (player, resource, (GFunc) swfdec_resource_mark);
+
+  if (!allowed) {
+    SWFDEC_WARNING ("SECURITY: no access to %s from %s",
+	load->url, swfdec_url_get_url (SWFDEC_FLASH_SECURITY (load->resource)->url));
+    /* FIXME: is replacing correct? */
     swfdec_resource_emit_error (resource, SWFDEC_AS_STR_IllegalRequest);
+    g_object_unref (resource);
     return;
   }
+
+  loader = swfdec_loader_load (load->resource->loader, url, load->request, load->buffer);
   swfdec_resource_set_loader (resource, loader);
   g_object_unref (loader);
 }
 
 static void
-swfdec_resource_do_unload (SwfdecPlayer *player, const char *target, gpointer resourcep)
+swfdec_resource_load_request (gpointer loadp, gpointer playerp)
 {
-  SwfdecResource *resource = SWFDEC_RESOURCE (resourcep);
-  SwfdecSpriteMovie *movie;
-  
-  movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (
-      SWFDEC_AS_CONTEXT (player), player->priv->roots->data, 
-      target, target + strlen (target));
-  if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    SWFDEC_DEBUG ("no movie, not unloading");
+  SwfdecResourceLoad *load = loadp;
+  SwfdecPlayer *player = playerp;
+  SwfdecURL *url;
+
+  /* empty URL means unload (yay!) */
+  if (load->url[0] == '\0') {
+    SwfdecSpriteMovie *movie;
+      
+    movie = (SwfdecSpriteMovie *) swfdec_action_lookup_object (
+	SWFDEC_AS_CONTEXT (player), player->priv->roots->data, 
+	load->target, load->target + strlen (load->target));
+    if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
+      SWFDEC_DEBUG ("no movie, not unloading");
+      return;
+    }
+    swfdec_resource_replace_movie (movie, load->resource);
     return;
   }
-  swfdec_resource_replace_movie (movie, resource);
+
+  /* fscommand? */
+  if (g_ascii_strncasecmp (load->url, "FSCommand:", 10) == 0) {
+    char *command = load->url + 10;
+    g_signal_emit_by_name (player, "fscommand", command, load->target);
+    return;
+  }
+
+  /* LAUNCH command (aka getURL) */
+  if (!load->target_is_movie && swfdec_player_get_level (player, load->target) < 0) {
+    swfdec_player_launch (player, load->request, load->url,load->target, load->buffer);
+    return;
+  }
+
+  url = swfdec_url_new_relative (SWFDEC_FLASH_SECURITY (player->priv->resource)->url, load->url);
+  switch (SWFDEC_FLASH_SECURITY (load->resource)->sandbox) {
+    case SWFDEC_SANDBOX_REMOTE:
+      swfdec_resource_do_load (player, url, !swfdec_url_is_local (url), load);
+      break;
+    case SWFDEC_SANDBOX_LOCAL_NETWORK:
+    case SWFDEC_SANDBOX_LOCAL_TRUSTED:
+      if (!swfdec_url_is_local (url)) {
+	SWFDEC_FIXME ("Adobe claims you need to be allowed by policy files now, "
+	    "we don't check that though");
+      }
+      swfdec_resource_do_load (player, url, TRUE, load);
+      break;
+    case SWFDEC_SANDBOX_LOCAL_FILE:
+      swfdec_resource_do_load (player, url, swfdec_url_is_local (url), load);
+      break;
+    case SWFDEC_SANDBOX_NONE:
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+  swfdec_url_free (url);
 }
 
 /* NB: must be called from a script */
+/* FIXME: 7 arguments?! */
 void
 swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url, 
-    SwfdecLoaderRequest request, SwfdecBuffer *buffer, SwfdecMovieClipLoader *loader)
+    SwfdecLoaderRequest request, SwfdecBuffer *buffer, SwfdecMovieClipLoader *loader,
+    gboolean target_is_movie)
 {
   SwfdecSpriteMovie *movie;
-  SwfdecResource *resource;
-  char *path;
+  SwfdecResourceLoad *load;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (target != NULL);
@@ -526,32 +618,30 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
   g_return_if_fail (loader == NULL || SWFDEC_IS_MOVIE_CLIP_LOADER (loader));
 
   g_assert (SWFDEC_AS_CONTEXT (player)->frame != NULL);
-  movie = (SwfdecSpriteMovie *) swfdec_player_get_movie_from_string (player, target);
-  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    path = swfdec_movie_get_path (SWFDEC_MOVIE (movie), TRUE);
-  } else if (swfdec_player_get_level (player, target) >= 0) {
-    path = g_strdup (target);
-  } else {
-    SWFDEC_WARNING ("%s does not reference a movie, not loading %s", target, url);
-    return;
-  }
-  if (url[0] == '\0') {
-    if (movie) {
-      resource = g_object_ref (SWFDEC_MOVIE (movie)->resource);
-      swfdec_player_request_unload (player, path, swfdec_resource_do_unload, resource, g_object_unref);
+  load = g_slice_new (SwfdecResourceLoad);
+
+  if (target_is_movie) {
+    movie = (SwfdecSpriteMovie *) swfdec_player_get_movie_from_string (player, target);
+    if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+      load->target = swfdec_movie_get_path (SWFDEC_MOVIE (movie), TRUE);
+    } else if (swfdec_player_get_level (player, target) >= 0) {
+      load->target = g_strdup (target);
+    } else {
+      SWFDEC_WARNING ("%s does not reference a movie, not loading %s", target, url);
+      return;
     }
-    g_free (path);
   } else {
-    resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
-    resource->version = SWFDEC_AS_CONTEXT (player)->version;
-    SWFDEC_FLASH_SECURITY (resource)->player = player;
-    resource->target = path;
-    if (loader)
-      resource->clip_loader = g_object_ref (loader);
-    swfdec_player_root (player, resource, (GFunc) swfdec_resource_mark);
-    swfdec_player_request_resource (player, SWFDEC_AS_CONTEXT (player)->frame->security, 
-	url, request, buffer, swfdec_resource_do_load, resource, g_object_unref);
+    load->target = g_strdup (target);
   }
+  load->resource = SWFDEC_RESOURCE (g_object_ref (SWFDEC_AS_CONTEXT (player)->frame->security));
+  load->url = g_strdup (url);
+  load->request = request;
+  load->buffer = buffer;
+  load->loader = loader;
+  load->target_is_movie = target_is_movie;
+
+  swfdec_player_root (player, load, swfdec_resource_load_mark);
+  swfdec_player_request_resource (player, swfdec_resource_load_request, load, swfdec_resource_load_free);
 }
 
 gboolean

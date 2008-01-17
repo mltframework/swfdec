@@ -29,7 +29,6 @@
 #include "swfdec_decoder.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
-#include "swfdec_resource_request.h"
 
 
 G_DEFINE_TYPE (SwfdecMovieClipLoader, swfdec_movie_clip_loader, SWFDEC_TYPE_AS_OBJECT)
@@ -75,7 +74,8 @@ swfdec_movie_clip_loader_loadClip (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "ss", &url, &target);
 
-  swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, loader);
+  swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
+      SWFDEC_LOADER_REQUEST_DEFAULT, NULL, loader, TRUE);
 }
 
 SWFDEC_AS_NATIVE (112, 102, swfdec_movie_clip_loader_unloadClip)
@@ -88,7 +88,8 @@ swfdec_movie_clip_loader_unloadClip (SwfdecAsContext *cx, SwfdecAsObject *object
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "s", &target);
 
-  swfdec_resource_load (SWFDEC_PLAYER (cx), target, "", SWFDEC_LOADER_REQUEST_DEFAULT, NULL, loader);
+  swfdec_resource_load (SWFDEC_PLAYER (cx), target, "", 
+      SWFDEC_LOADER_REQUEST_DEFAULT, NULL, loader, TRUE);
 }
 
 SWFDEC_AS_NATIVE (112, 101, swfdec_movie_clip_loader_getProgress)

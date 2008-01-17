@@ -147,7 +147,7 @@ swfdec_policy_file_finished_loading (SwfdecPolicyFile *file, const char *text)
     for (walk = file->requests; walk; walk = walk->next) {
       SwfdecPolicyFileRequest *request = walk->data;
       gboolean allow = swfdec_player_allow_now (file->player, request->url);
-      request->func (file->player, allow, request->data);
+      request->func (file->player, request->url, allow, request->data);
       swfdec_policy_file_request_free (request);
     }
     g_slist_free (file->requests);
@@ -251,7 +251,7 @@ swfdec_policy_file_new (SwfdecPlayer *player, const SwfdecURL *url)
     SWFDEC_FIXME ("implement xmlsocket: protocol");
   } else {
     file->stream = SWFDEC_STREAM (swfdec_loader_load (player->priv->resource->loader,
-	  url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL, 0));
+	  url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL));
     swfdec_stream_set_target (file->stream, SWFDEC_STREAM_TARGET (file));
   }
   player->priv->loading_policy_files = 
@@ -329,7 +329,7 @@ swfdec_player_allow_or_load (SwfdecPlayer *player, const SwfdecURL *url,
   g_return_if_fail (func);
 
   if (swfdec_player_allow_now (player, url)) {
-    func (player, TRUE, data);
+    func (player, url, TRUE, data);
     return;
   }
   if (load_url)
@@ -337,7 +337,7 @@ swfdec_player_allow_or_load (SwfdecPlayer *player, const SwfdecURL *url,
 
   priv = player->priv;
   if (priv->loading_policy_files == NULL) {
-    func (player, FALSE, data);
+    func (player, url, FALSE, data);
     return;
   }
   request = g_slice_new (SwfdecPolicyFileRequest);

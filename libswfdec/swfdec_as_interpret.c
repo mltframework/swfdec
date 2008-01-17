@@ -45,7 +45,6 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_resource.h"
-#include "swfdec_resource_request.h"
 #include "swfdec_text_field_movie.h" // for typeof
 
 /* Define this to get SWFDEC_WARN'd about missing properties of objects.
@@ -1149,13 +1148,9 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   }
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_ERROR ("GetURL without a SwfdecPlayer");
-  } else if (swfdec_player_request_fscommand (SWFDEC_PLAYER (cx), url, target)) {
-    /* nothing to do here */
-  } else if (swfdec_player_get_level (SWFDEC_PLAYER (cx), target) >= 0) {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
-	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL);
   } else {
-    swfdec_player_launch (SWFDEC_PLAYER (cx), SWFDEC_LOADER_REQUEST_DEFAULT, url, target, NULL);
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
+	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL, FALSE);
   }
   g_free (url);
   g_free (target);
@@ -1200,21 +1195,16 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
 
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_ERROR ("GetURL2 action requires a SwfdecPlayer");
-  } else if (swfdec_player_request_fscommand (SWFDEC_PLAYER (cx), url, target)) {
-    /* nothing to do here */
   } else if (variables) {
     SwfdecMovie *movie;
     
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
     if (movie != NULL) {
-      swfdec_load_object_new (SWFDEC_AS_OBJECT (movie), url, method, NULL, NULL,
+      swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, method, NULL, NULL,
 	  swfdec_as_interpret_load_variables_on_finish);
     }
-  } else if (internal) {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL);
   } else {
-    /* load an external file */
-    swfdec_player_launch (SWFDEC_PLAYER (cx), method, url, target, NULL);
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL, internal);
   }
 
   swfdec_as_stack_pop_n (cx, 2);

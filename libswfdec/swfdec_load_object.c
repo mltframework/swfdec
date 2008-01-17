@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -30,7 +30,6 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_stream_target.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_resource_request.h"
 
 /*** SWFDEC_STREAM_TARGET ***/
 
@@ -114,33 +113,25 @@ swfdec_load_object_stream_target_init (SwfdecStreamTargetInterface *iface)
 
 /*** SWFDEC_LOAD_OBJECT ***/
 
-G_DEFINE_TYPE_WITH_CODE (SwfdecLoadObject, swfdec_load_object, SWFDEC_TYPE_AS_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (SwfdecLoadObject, swfdec_load_object, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_load_object_stream_target_init))
-
-static void
-swfdec_load_object_reset (SwfdecLoadObject *load_object)
-{
-  if (load_object->loader) {
-    swfdec_stream_set_target (SWFDEC_STREAM (load_object->loader), NULL);
-    g_object_unref (load_object->loader);
-    load_object->loader = NULL;
-  }
-}
-
-static void
-swfdec_load_object_mark (SwfdecAsObject *object)
-{
-  swfdec_as_object_mark (SWFDEC_LOAD_OBJECT (object)->target);
-
-  SWFDEC_AS_OBJECT_CLASS (swfdec_load_object_parent_class)->mark (object);
-}
 
 static void
 swfdec_load_object_dispose (GObject *object)
 {
-  SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (object);
+  SwfdecLoadObject *load = SWFDEC_LOAD_OBJECT (object);
 
-  swfdec_load_object_reset (load_object);
+  if (load->loader) {
+    swfdec_stream_set_target (SWFDEC_STREAM (load->loader), NULL);
+    g_object_unref (load->loader);
+    load->loader = NULL;
+  }
+  if (load->buffer) {
+    swfdec_buffer_unref (load->buffer);
+    load->buffer = NULL;
+  }
+  g_object_unref (load->resource);
+  load->resource = NULL;
 
   G_OBJECT_CLASS (swfdec_load_object_parent_class)->dispose (object);
 }
@@ -149,11 +140,8 @@ static void
 swfdec_load_object_class_init (SwfdecLoadObjectClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *as_object_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_load_object_dispose;
-
-  as_object_class->mark = swfdec_load_object_mark;
 }
 
 static void
@@ -162,70 +150,99 @@ swfdec_load_object_init (SwfdecLoadObject *load_object)
 }
 
 static void
-swfdec_load_object_got_loader (SwfdecPlayer *player, SwfdecLoader *loader, gpointer obj)
+swfdec_load_object_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean allow, gpointer obj)
 {
-  SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (obj);
+  SwfdecLoadObject *load = SWFDEC_LOAD_OBJECT (obj);
 
-  if (loader == NULL) {
+  if (!allow) {
+    SWFDEC_WARNING ("SECURITY: no access to %s from %s",
+	load->url, swfdec_url_get_url (SWFDEC_FLASH_SECURITY (load->resource)->url));
+
+    /* FIXME: call finish? */
+
+    /* unroot */
+    swfdec_player_unroot (player, load);
     return;
   }
-  load_object->loader = loader;
 
-  swfdec_stream_set_target (SWFDEC_STREAM (loader),
-      SWFDEC_STREAM_TARGET (load_object));
-  swfdec_loader_set_data_type (loader, SWFDEC_LOADER_DATA_TEXT);
+  load->loader = swfdec_loader_load (load->resource->loader, url, load->request, load->buffer);
+
+  swfdec_stream_set_target (SWFDEC_STREAM (load->loader), SWFDEC_STREAM_TARGET (load));
+  swfdec_loader_set_data_type (load->loader, SWFDEC_LOADER_DATA_TEXT);
 }
 
-static gboolean
-swfdec_load_object_load (SwfdecLoadObject *load_object, const char *url, 
-    SwfdecLoaderRequest request, SwfdecBuffer *data)
+/* perform security checks */
+static void
+swfdec_load_object_request (gpointer objectp, gpointer playerp)
 {
-  SwfdecPlayer *player;
-  SwfdecSecurity *sec;
+  SwfdecLoadObject *load = SWFDEC_LOAD_OBJECT (objectp);
+  SwfdecPlayer *player = SWFDEC_PLAYER (playerp);
+  SwfdecURL *url;
 
-  g_return_val_if_fail (SWFDEC_IS_LOAD_OBJECT (load_object), FALSE);
-  g_return_val_if_fail (url != NULL, FALSE);
+  /* FIXME: or is this relative to the player? */
+  url = swfdec_url_new_relative (SWFDEC_FLASH_SECURITY (load->resource)->url, load->url);
+  switch (SWFDEC_FLASH_SECURITY (load->resource)->sandbox) {
+    case SWFDEC_SANDBOX_REMOTE:
+    case SWFDEC_SANDBOX_LOCAL_NETWORK:
+    case SWFDEC_SANDBOX_LOCAL_TRUSTED:
+      if (swfdec_url_is_local (url)) {
+	swfdec_load_object_load (player, url, swfdec_url_is_local (url), load);
+      } else {
+	SwfdecURL *load_url = swfdec_url_new_components (
+	    swfdec_url_get_protocol (url), swfdec_url_get_host (url), 
+	    swfdec_url_get_port (url), "crossdomain.xml", NULL);
+	swfdec_player_allow_or_load (player, url, load_url,
+	  swfdec_load_object_load, load);
+	swfdec_url_free (load_url);
+      }
+      break;
+    case SWFDEC_SANDBOX_LOCAL_FILE:
+      swfdec_load_object_load (player, url, swfdec_url_is_local (url), load);
+      break;
+    case SWFDEC_SANDBOX_NONE:
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (load_object)->context);
-  swfdec_load_object_reset (load_object);
-
-  /* get the current security */
-  g_assert (SWFDEC_AS_CONTEXT (player)->frame);
-  sec = SWFDEC_AS_CONTEXT (player)->frame->security;
-
-  g_object_ref (load_object);
-  swfdec_player_request_resource (player, sec, url, request, data,
-      swfdec_load_object_got_loader, load_object, g_object_unref);
-
-  return TRUE;
+  swfdec_url_free (url);
 }
 
-SwfdecAsObject *
-swfdec_load_object_new (SwfdecAsObject *target, const char *url,
+static void
+swfdec_load_object_mark (gpointer object, gpointer player)
+{
+  SwfdecLoadObject *load = object;
+
+  if (load->url)
+    swfdec_as_string_mark (load->url);
+  swfdec_as_object_mark (load->target);
+}
+
+void
+swfdec_load_object_create (SwfdecAsObject *target, const char *url,
     SwfdecLoaderRequest request, SwfdecBuffer *data,
     SwfdecLoadObjectProgress progress, SwfdecLoadObjectFinish finish)
 {
-  SwfdecLoadObject *load_object;
+  SwfdecPlayer *player;
+  SwfdecLoadObject *load;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
-  g_return_val_if_fail (finish != NULL, NULL);
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (target));
+  g_return_if_fail (url != NULL);
+  g_return_if_fail (finish != NULL);
 
-  if (!swfdec_as_context_use_mem (target->context, sizeof (SwfdecLoadObject)))
-    return NULL;
-  load_object = SWFDEC_LOAD_OBJECT (g_object_new (
-	SWFDEC_TYPE_LOAD_OBJECT, NULL));
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (load_object), target->context,
-      sizeof (SwfdecLoadObject));
+  player = SWFDEC_PLAYER (target->context);
+  load = g_object_new (SWFDEC_TYPE_LOAD_OBJECT, NULL);
+  swfdec_player_root_full (player, load, swfdec_load_object_mark, g_object_unref);
 
-  load_object->target = target;
-  load_object->progress = progress;
-  load_object->finish = finish;
-
-  if (!swfdec_load_object_load (load_object, url, request, data))
-    return NULL;
-
-  swfdec_player_root (SWFDEC_PLAYER (target->context), load_object, (GFunc) swfdec_as_object_mark);
-
-  return SWFDEC_AS_OBJECT (load_object);
+  load->target = target;
+  load->url = url;
+  load->request = request;
+  load->buffer = data;
+  load->progress = progress;
+  load->finish = finish;
+  /* get the current security */
+  g_assert (SWFDEC_AS_CONTEXT (player)->frame);
+  load->resource = g_object_ref (SWFDEC_AS_CONTEXT (player)->frame->security);
+  g_assert (SWFDEC_IS_RESOURCE (load->resource));
+  swfdec_player_request_resource (player, swfdec_load_object_request, load, NULL);
 }

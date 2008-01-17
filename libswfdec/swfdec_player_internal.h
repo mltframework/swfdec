@@ -42,7 +42,7 @@ typedef enum {
 
 typedef void (* SwfdecActionFunc) (gpointer object, gpointer data);
 typedef gboolean (* SwfdecAudioRemoveFunc) (SwfdecAudio *audio, gpointer data);
-typedef void (* SwfdecPolicyFunc) (SwfdecPlayer *player, gboolean allow, gpointer data);
+typedef void (* SwfdecPolicyFunc) (SwfdecPlayer *player, const SwfdecURL *url, gboolean allow, gpointer data);
 
 typedef struct _SwfdecTimeout SwfdecTimeout;
 struct _SwfdecTimeout {
@@ -64,7 +64,6 @@ struct _SwfdecPlayerPrivate
   guint			width;			/* width of movie */
   guint			height;			/* height of movie */
   GList *		roots;			/* all the root movies */
-  GSList *		resource_requests;	/* all external requested URIs - see swfdec_resource_request.[ch] */
   SwfdecCache *		cache;			/* player cache */
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */
@@ -87,6 +86,7 @@ struct _SwfdecPlayerPrivate
   int			offset_x;		/* x offset from top left edge after scaling */
   int			offset_y;		/* y offset from top left edge after scaling */
 
+  SwfdecFunctionList	resource_requests;	/* all external requested URIs - see swfdec_resource_request.[ch] */
   guint			unnamed_count;		/* variable used for naming unnamed movies */
   /* ActionScript */
   SwfdecFunctionList	rooted;	  		/* all the objects we keep track of */
@@ -159,8 +159,12 @@ void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 
 #define swfdec_player_root(player, data, mark_func) \
     swfdec_function_list_add (&(player)->priv->rooted, (mark_func), (data), NULL)
+#define swfdec_player_root_full(player, data, mark_func, destroy_notify) \
+    swfdec_function_list_add (&(player)->priv->rooted, (mark_func), (data), (destroy_notify))
 #define swfdec_player_unroot(player, data) \
     swfdec_function_list_remove (&(player)->priv->rooted, (data))
+#define swfdec_player_request_resource(player, request_func, data, destroy_notify) \
+    swfdec_function_list_add (&(player)->priv->resource_requests, (request_func), (data), (destroy_notify))
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
 						 const char *		name);
 void		swfdec_player_set_export_class	(SwfdecPlayer *		player,

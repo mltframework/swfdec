@@ -36,8 +36,7 @@ void			swfdec_stream_set_target	(SwfdecStream *		stream,
 SwfdecLoader *		swfdec_loader_load		(SwfdecLoader *		loader,
 							 const SwfdecURL *    	url,
 							 SwfdecLoaderRequest	request,
-							 const char *		data,
-							 gsize			data_len);
+							 SwfdecBuffer *		buffer);
 void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,
 							 SwfdecLoaderDataType	type);
 char *			swfdec_loader_get_text		(SwfdecLoader *		loader,

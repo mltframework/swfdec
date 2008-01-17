@@ -44,7 +44,6 @@
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
 #include "swfdec_resource.h"
-#include "swfdec_resource_request.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_utils.h"
@@ -873,7 +872,7 @@ swfdec_player_dispose (GObject *object)
   guint i;
 
   swfdec_player_stop_all_sounds (player);
-  swfdec_player_resource_request_finish (player);
+  swfdec_function_list_clear (&priv->resource_requests);
   g_hash_table_destroy (priv->registered_classes);
   g_hash_table_destroy (priv->scripting_callbacks);
 
@@ -887,8 +886,6 @@ swfdec_player_dispose (GObject *object)
   while (priv->roots)
     swfdec_movie_destroy (priv->roots->data);
   if (priv->resource) {
-    swfdec_flash_security_free_pending (
-	SWFDEC_FLASH_SECURITY (priv->resource));
     g_object_unref (priv->resource);
     priv->resource = NULL;
   }
@@ -1345,7 +1342,7 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
       swfdec_movie_destroy (cur);
   }
   swfdec_player_execute_on_load_init (player);
-  swfdec_player_resource_request_perform (player);
+  swfdec_function_list_execute_and_clear (&priv->resource_requests, player);
   swfdec_player_perform_actions (player);
 }
 
@@ -1735,6 +1732,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    * for keyboard shortcuts or similar.</para></listitem>
    * </itemizedlist>
    */
+  /* FIXME: document fscommand:toggle */
   signals[FSCOMMAND] = g_signal_new ("fscommand", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
@@ -1798,8 +1796,6 @@ swfdec_player_init (SwfdecPlayer *player)
   priv->iterate_timeout.callback = swfdec_player_iterate;
   priv->stage_width = -1;
   priv->stage_height = -1;
-
-  swfdec_player_resource_request_init (player);
 }
 
 void

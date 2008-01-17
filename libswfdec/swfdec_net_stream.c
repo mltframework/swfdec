@@ -28,9 +28,11 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_flv.h"
 #include "swfdec_debug.h"
+#include "swfdec_flash_security.h"
 #include "swfdec_loader_internal.h"
+#include "swfdec_player_internal.h"
+#include "swfdec_resource.h"
 #include "swfdec_stream_target.h"
-#include "swfdec_resource_request.h"
 
 /* NB: code and level must be rooted gc-strings */
 static void
@@ -468,31 +470,65 @@ swfdec_net_stream_new (SwfdecNetConnection *conn)
 }
 
 static void
-swfdec_net_stream_request_callback (SwfdecPlayer *player, SwfdecLoader *loader,
-    gpointer data)
+swfdec_net_stream_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean allowed, gpointer streamp)
 {
-  SwfdecNetStream *stream = data;
+  SwfdecNetStream *stream = streamp;
+  SwfdecLoader *loader;
 
-  if (loader) {
+  if (allowed) {
+    loader = swfdec_loader_load (player->priv->resource->loader, url, 
+	SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
     swfdec_net_stream_set_loader (stream, loader);
     g_object_unref (loader);
+  } else {
+    SWFDEC_WARNING ("SECURITY: no access to %s from NetStream",
+	swfdec_url_get_url (url));
   }
 }
 
 void
-swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url)
+swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url_string)
 {
+  SwfdecPlayer *player;
   SwfdecAsContext *cx;
+  SwfdecURL *url;
 
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
   g_return_if_fail (url != NULL);
 
-  /* FIXME: use the connection once connections are implemented */
   cx = SWFDEC_AS_OBJECT (stream)->context;
+  player = SWFDEC_PLAYER (cx);
   g_assert (cx->frame);
-  swfdec_player_request_resource_now (SWFDEC_PLAYER (cx), cx->frame->security, 
-      url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL,
-      swfdec_net_stream_request_callback, NULL, stream);
+  url = swfdec_url_new_relative (SWFDEC_FLASH_SECURITY (player->priv->resource)->url, url_string);
+  if (swfdec_url_is_local (url)) {
+    swfdec_net_stream_load (player, url, TRUE, stream);
+  } else {
+    switch (SWFDEC_FLASH_SECURITY (cx->frame->security)->sandbox) {
+      case SWFDEC_SANDBOX_REMOTE:
+	swfdec_net_stream_load (player, url, TRUE, stream);
+	break;
+      case SWFDEC_SANDBOX_LOCAL_NETWORK:
+      case SWFDEC_SANDBOX_LOCAL_TRUSTED:
+	{
+	  SwfdecURL *load_url = swfdec_url_new_components (
+	      swfdec_url_get_protocol (url), swfdec_url_get_host (url), 
+	      swfdec_url_get_port (url), "crossdomain.xml", NULL);
+	  swfdec_player_allow_or_load (player, url, load_url,
+	    swfdec_net_stream_load, stream);
+	  swfdec_url_free (load_url);
+	}
+	break;
+      case SWFDEC_SANDBOX_LOCAL_FILE:
+	swfdec_net_stream_load (player, url, FALSE, stream);
+	break;
+      case SWFDEC_SANDBOX_NONE:
+      default:
+	g_assert_not_reached ();
+	break;
+    }
+  }
+
+  swfdec_url_free (url);
 }
 
 void

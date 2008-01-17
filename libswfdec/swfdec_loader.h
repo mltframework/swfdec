@@ -72,8 +72,7 @@ struct _SwfdecLoaderClass
   void			(* load)	(SwfdecLoader *			loader, 
 					 SwfdecLoader *			parent,
 					 SwfdecLoaderRequest		request,
-					 const char *			data,
-					 gsize				data_len);
+					 SwfdecBuffer *	           	buffer);
 };
 
 GType		swfdec_loader_get_type		(void);

@@ -73,6 +73,7 @@ GType		swfdec_resource_get_type	  	(void);
 SwfdecResource *swfdec_resource_new			(SwfdecPlayer *		player,
 							 SwfdecLoader *		loader,
 							 const char *		variables);
+
 void		swfdec_resource_mark			(SwfdecResource *	resource);
 
 gboolean	swfdec_resource_emit_on_load_init	(SwfdecResource *	resource);
@@ -89,7 +90,8 @@ void		swfdec_resource_load			(SwfdecPlayer *		player,
 							 const char *		url,
 							 SwfdecLoaderRequest	request,
 							 SwfdecBuffer *		buffer,
-							 SwfdecMovieClipLoader *loader);
+							 SwfdecMovieClipLoader *loader,
+							 gboolean		target_is_movie);
 
 
 G_END_DECLS

@@ -144,16 +144,15 @@ void
 swfdec_test_image_compare (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SwfdecTestImage *image, *compare;
+  SwfdecTestImage *image, *compare, *diff;
   int w, h;
-  cairo_surface_t *diff;
   
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "O", &compare);
 
   if (!SWFDEC_IS_TEST_IMAGE (compare))
     return;
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, SWFDEC_AS_OBJECT (image));
   if (!SWFDEC_TEST_IMAGE_IS_VALID (image) ||
       !SWFDEC_TEST_IMAGE_IS_VALID (compare))
     return;
@@ -167,21 +166,21 @@ swfdec_test_image_compare (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   h = cairo_image_surface_get_height (image->surface);
   if (h != cairo_image_surface_get_height (compare->surface))
     return;
-  diff = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+  diff = SWFDEC_TEST_IMAGE (swfdec_test_image_new (cx, w, h));
+  if (!diff)
+    return;
 
   if (!buffer_diff_core (cairo_image_surface_get_data (image->surface), 
 	cairo_image_surface_get_data (compare->surface), 
-	cairo_image_surface_get_data (diff), 
+	cairo_image_surface_get_data (diff->surface), 
 	w, h, 
 	cairo_image_surface_get_stride (image->surface),
 	cairo_image_surface_get_stride (compare->surface),
-	cairo_image_surface_get_stride (diff)) != 0) {
-    cairo_surface_destroy (diff);
-    return;
+	cairo_image_surface_get_stride (diff->surface)) != 0) {
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, SWFDEC_AS_OBJECT (diff));
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (retval);
   }
-  cairo_surface_destroy (diff);
-
-  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
 SWFDEC_TEST_FUNCTION ("Image_save", swfdec_test_image_save, 0)

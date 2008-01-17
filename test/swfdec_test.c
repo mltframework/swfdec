@@ -77,8 +77,10 @@ main (int argc, char **argv)
   SwfdecScript *script;
   SwfdecAsValue val;
   int i, ret;
+  gboolean dump;
 
   GOptionEntry options[] = {
+    { "dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "dump images on failure", FALSE },
     { "script", 's', 0, G_OPTION_ARG_STRING, &script_filename, "script to execute if not ./default.sts", "FILENAME" },
     { NULL }
   };
@@ -110,6 +112,11 @@ main (int argc, char **argv)
 
   context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
   swfdec_as_context_startup (context, SWFDEC_TEST_VERSION);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&val, dump);
+  swfdec_as_object_set_variable (context->global,
+      swfdec_as_context_get_string (context, "dump"), &val);
+
   swfdec_test_function_init_context (context);
   swfdec_as_context_run_init_script (context, swfdec_test_initialize, 
       sizeof (swfdec_test_initialize), SWFDEC_TEST_VERSION);

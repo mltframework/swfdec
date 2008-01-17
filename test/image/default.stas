@@ -24,10 +24,21 @@ run_test = function (t, file) {
     t.reset (file);
     t.advance (0);
     t.advance (Math.ceil (10000 / t.rate));
-    image = t.render ();
-    compare = new Image (file + ".png");
-    if (!image.compare (compare)) {
+    var image = t.render ();
+    var compare = new Image (file + ".png");
+    if (compare == null) {
+      error ("compare image missing");
+      return false;
+    }
+    var diff = compare.compare (image);
+    if (diff != null) {
       error ("images differ");
+      if (dump) {
+	Native.print ("  SAVING: " + file + ".dump.png");
+	image.save (file + ".dump.png");
+	Native.print ("  SAVING: " + file + ".diff.png");
+	diff.save (file + ".diff.png");
+      }
       return false;
     }
   } catch (e) {

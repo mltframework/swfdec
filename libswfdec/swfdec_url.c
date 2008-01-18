@@ -469,3 +469,85 @@ swfdec_url_is_local (const SwfdecURL *url)
   /* FIXME: If we ever support gnome-vfs, this might become tricky */
   return swfdec_url_has_protocol (url, "file");
 }
+
+/**
+ * swfdec_url_equal:
+ * @a: a #SwfdecURL
+ * @b: a #SwfdecURL
+ *
+ * Compares the 2 given URLs for equality. 2 URLs are considered equal, when
+ * they point to the same resource. This function is intended to be 
+ * used together with swfdec_url_hash() in a #GHashtable.
+ *
+ * Returns: %TRUE if the 2 given urls point to the same resource, %FALSE 
+ *          otherwise.
+ **/
+gboolean
+swfdec_url_equal (gconstpointer a, gconstpointer b)
+{
+  const SwfdecURL *urla = a;
+  const SwfdecURL *urlb = b;
+
+  if (!swfdec_url_has_protocol (urla, urlb->protocol))
+    return FALSE;
+
+  if (urla->host == NULL) {
+    if (urlb->host != NULL)
+      return FALSE;
+  } else {
+    if (urlb->host == NULL || 
+	!g_str_equal (urla->host, urlb->host))
+      return FALSE;
+  }
+
+  if (urla->port != urlb->port)
+    return FALSE;
+
+  if (urla->path == NULL) {
+    if (urlb->path != NULL)
+      return FALSE;
+  } else {
+    if (urlb->path == NULL || 
+	!g_str_equal (urla->path, urlb->path))
+      return FALSE;
+  }
+
+  /* FIXME: include query strings? */
+  if (urla->query == NULL) {
+    if (urlb->query != NULL)
+      return FALSE;
+  } else {
+    if (urlb->query == NULL || 
+	!g_str_equal (urla->query, urlb->query))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * swfdec_url_hash:
+ * @url: a #SwfdecURL
+ *
+ * Creates a hash value for the given @url. This function is intended to be 
+ * used together with swfdec_url_equal() in a #GHashtable.
+ *
+ * Returns: a hash value
+ **/
+guint
+swfdec_url_hash (gconstpointer url)
+{
+  const SwfdecURL *u = url;
+  guint ret;
+
+  /* random hash function, feel free to improve it */
+  ret = g_str_hash (u->protocol);
+  if (u->host)
+    ret ^= g_str_hash (u->host);
+  ret ^= u->port;
+  if (u->path)
+    ret ^= g_str_hash (u->path);
+  /* queries aren't used often in hashed urls, so ignore them */
+  return ret;
+}
+

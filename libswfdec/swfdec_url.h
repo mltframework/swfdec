@@ -54,6 +54,10 @@ gboolean		swfdec_url_has_protocol		(const SwfdecURL *	url,
 gboolean		swfdec_url_is_parent		(const SwfdecURL *	parent,
 							 const SwfdecURL *	child);
 gboolean		swfdec_url_is_local		(const SwfdecURL *	url);
+
+gboolean		swfdec_url_equal		(gconstpointer		a,
+							 gconstpointer		b);
+guint			swfdec_url_hash			(gconstpointer		url);
 							 
 
 G_END_DECLS

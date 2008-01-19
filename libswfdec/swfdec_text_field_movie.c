@@ -1060,13 +1060,13 @@ swfdec_text_field_movie_dispose (GObject *object)
     text->asterisks_length = 0;
   }
 
-  if (text->style_sheet) {
-    if (SWFDEC_IS_STYLESHEET (text->style_sheet)) {
-      g_signal_handlers_disconnect_matched (text->style_sheet, 
-	  G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, text);
-    }
-    text->style_sheet = NULL;
+  if (SWFDEC_IS_STYLESHEET (text->style_sheet)) {
+    g_signal_handlers_disconnect_matched (text->style_sheet, 
+	G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, text);
+    g_object_remove_weak_pointer (G_OBJECT (text->style_sheet), 
+	(gpointer *) &text->style_sheet);
   }
+  text->style_sheet = NULL;
 
   for (iter = text->formats; iter != NULL; iter = iter->next) {
     g_free (text->formats->data);

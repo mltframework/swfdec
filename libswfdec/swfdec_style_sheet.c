@@ -202,7 +202,7 @@ swfdec_style_sheet_parse (SwfdecAsContext *cx, const char *css)
       p = swfdec_style_sheet_parse_selectors (cx, p, object, selectors);
     } else {
       if (*p == '}') {
-	selectors->len = 0;
+	g_ptr_array_set_size (selectors, 0);
 	p++;
 	p += strspn (p, " \t\r\n");
       } else {
@@ -219,6 +219,7 @@ swfdec_style_sheet_parse (SwfdecAsContext *cx, const char *css)
     }
   }
 
+  g_ptr_array_free (selectors, TRUE);
   if (p == NULL)
     return NULL;
 

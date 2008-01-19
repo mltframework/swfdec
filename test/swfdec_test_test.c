@@ -249,6 +249,7 @@ swfdec_test_do_reset (SwfdecTestTest *test, const char *filename)
   if (filename == NULL)
     return;
 
+  g_free (test->filename);
   test->filename = g_strdup (filename);
   test->player_quit = FALSE;
 }

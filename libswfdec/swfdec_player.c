@@ -29,7 +29,6 @@
 
 #include "swfdec_player_internal.h"
 #include "swfdec_as_frame_internal.h"
-#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_button_movie.h" /* for mouse cursor */
@@ -37,9 +36,6 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
-#include "swfdec_flash_security.h"
-#include "swfdec_initialize.h"
-#include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
@@ -477,8 +473,9 @@ swfdec_player_do_action (SwfdecPlayer *player)
     } while (action->movie == NULL); /* skip removed actions */
     if (action) {
       if (action->script) {
-	swfdec_as_object_run_with_security (SWFDEC_AS_OBJECT (action->movie), 
-	  action->script, SWFDEC_SECURITY (action->movie->resource));
+	swfdec_sandbox_use (action->movie->resource->sandbox);
+	swfdec_as_object_run (SWFDEC_AS_OBJECT (action->movie), action->script);
+	swfdec_sandbox_unuse (action->movie->resource->sandbox);
       } else {
 	swfdec_movie_execute (action->movie, action->event);
       }
@@ -917,6 +914,8 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (priv->movies == NULL);
   g_assert (priv->audio == NULL);
+  g_assert (g_hash_table_size (priv->sandboxes) == 0);
+  g_hash_table_destroy (priv->sandboxes);
   if (priv->external_timeout.callback)
     swfdec_player_remove_timeout (player, &priv->external_timeout);
   if (priv->rate) {
@@ -1796,6 +1795,8 @@ swfdec_player_init (SwfdecPlayer *player)
   priv->iterate_timeout.callback = swfdec_player_iterate;
   priv->stage_width = -1;
   priv->stage_height = -1;
+
+  priv->sandboxes = g_hash_table_new (swfdec_url_hash, swfdec_url_equal);
 }
 
 void
@@ -1986,8 +1987,7 @@ swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const c
  * the player is already initialized, this function does nothing.
  **/
 void
-swfdec_player_initialize (SwfdecPlayer *player, guint version, 
-    guint rate, guint width, guint height)
+swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint height)
 {
   SwfdecPlayerPrivate *priv;
 
@@ -1996,24 +1996,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint version,
 
   priv = player->priv;
   if (!priv->initialized) {
-    SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
-    swfdec_as_context_startup (context, version);
-    /* reset state for initialization */
-    /* FIXME: have a better way to do this */
-    if (context->state == SWFDEC_AS_CONTEXT_RUNNING) {
-      context->state = SWFDEC_AS_CONTEXT_NEW;
-      swfdec_sprite_movie_init_context (player, version);
-      swfdec_video_movie_init_context (player, version);
-      swfdec_net_stream_init_context (player, version);
-
-      swfdec_as_context_run_init_script (context, swfdec_initialize, 
-	  sizeof (swfdec_initialize), context->version);
-
-      if (context->state == SWFDEC_AS_CONTEXT_NEW) {
-	context->state = SWFDEC_AS_CONTEXT_RUNNING;
-	swfdec_as_object_set_constructor (priv->roots->data, priv->MovieClip);
-      }
-    }
     priv->initialized = TRUE;
     g_object_notify (G_OBJECT (player), "initialized");
   } else {

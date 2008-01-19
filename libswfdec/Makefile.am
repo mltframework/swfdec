@@ -77,7 +77,6 @@ libswfdec_source_files = \
 	swfdec_file_reference_list.c \
 	swfdec_filter.c \
 	swfdec_filter_as.c \
-	swfdec_flash_security.c \
 	swfdec_flv_decoder.c \
 	swfdec_font.c \
 	swfdec_function_list.c \
@@ -117,9 +116,8 @@ libswfdec_source_files = \
 	swfdec_rectangle.c \
 	swfdec_resource.c \
 	swfdec_ringbuffer.c \
+	swfdec_sandbox.c \
 	swfdec_script.c \
-	swfdec_security.c \
-	swfdec_security_allow.c \
 	swfdec_selection.c \
 	swfdec_shape.c \
 	swfdec_shape_parser.c \
@@ -239,7 +237,6 @@ noinst_HEADERS = \
 	swfdec_text_field_movie.h \
 	swfdec_event.h \
 	swfdec_filter.h \
-	swfdec_flash_security.h \
 	swfdec_flv_decoder.h \
 	swfdec_font.h \
 	swfdec_function_list.h \
@@ -267,9 +264,8 @@ noinst_HEADERS = \
 	swfdec_rect.h \
 	swfdec_resource.h \
 	swfdec_ringbuffer.h \
+	swfdec_sandbox.h \
 	swfdec_script_internal.h \
-	swfdec_security.h \
-	swfdec_security_allow.h \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \

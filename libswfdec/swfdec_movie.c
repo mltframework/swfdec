@@ -493,20 +493,20 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
       return;
   }
 
+  swfdec_sandbox_use (movie->resource->sandbox);
   if (movie->events) {
-    swfdec_event_list_execute (movie->events, thisp,
-	SWFDEC_SECURITY (movie->resource), condition, 0);
+    swfdec_event_list_execute (movie->events, thisp, condition, 0);
   }
   /* FIXME: how do we compute the version correctly here? */
   if (swfdec_movie_get_version (movie) <= 5)
     return;
   name = swfdec_event_type_get_name (condition);
   if (name != NULL) {
-    swfdec_as_object_call_with_security (SWFDEC_AS_OBJECT (movie),
-	SWFDEC_SECURITY (movie->resource), name, 0, NULL, NULL);
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
   }
   if (condition == SWFDEC_EVENT_CONSTRUCT)
     swfdec_as_object_call (thisp, SWFDEC_AS_STR_constructor, 0, NULL, NULL);
+  swfdec_sandbox_unuse (movie->resource->sandbox);
 }
 
 /**
@@ -1062,7 +1062,7 @@ swfdec_movie_mark (SwfdecAsObject *object)
     swfdec_as_object_mark (listener->object);
     swfdec_as_string_mark (listener->name);
   }
-  swfdec_resource_mark (movie->resource);
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (movie->resource));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
 }

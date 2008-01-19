@@ -28,10 +28,10 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_flv.h"
 #include "swfdec_debug.h"
-#include "swfdec_flash_security.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
+#include "swfdec_sandbox.h"
 #include "swfdec_stream_target.h"
 
 /* NB: code and level must be rooted gc-strings */
@@ -499,11 +499,11 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url_string)
   cx = SWFDEC_AS_OBJECT (stream)->context;
   player = SWFDEC_PLAYER (cx);
   g_assert (cx->frame);
-  url = swfdec_url_new_relative (SWFDEC_FLASH_SECURITY (player->priv->resource)->url, url_string);
+  url = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), url_string);
   if (swfdec_url_is_local (url)) {
     swfdec_net_stream_load (player, url, TRUE, stream);
   } else {
-    switch (SWFDEC_FLASH_SECURITY (cx->frame->security)->sandbox) {
+    switch (SWFDEC_SANDBOX (cx->global)->type) {
       case SWFDEC_SANDBOX_REMOTE:
 	swfdec_net_stream_load (player, url, TRUE, stream);
 	break;

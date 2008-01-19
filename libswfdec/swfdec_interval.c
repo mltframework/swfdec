@@ -42,7 +42,7 @@ swfdec_interval_mark (SwfdecAsObject *object)
   SwfdecInterval *interval = SWFDEC_INTERVAL (object);
 
   swfdec_as_object_mark (interval->object);
-  swfdec_resource_mark (interval->resource);
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (interval->sandbox));
   if (interval->fun_name)
     swfdec_as_string_mark (interval->fun_name);
   for (i = 0; i < interval->n_args; i++) {
@@ -63,10 +63,6 @@ swfdec_interval_dispose (GObject *object)
   if (interval->timeout.callback != NULL) {
     swfdec_player_remove_timeout (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (object)->context), &interval->timeout);
     interval->timeout.callback = NULL;
-  }
-  if (interval->resource) {
-    g_object_unref (interval->resource);
-    interval->resource = NULL;
   }
 
   G_OBJECT_CLASS (swfdec_interval_parent_class)->dispose (object);
@@ -104,14 +100,16 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
     player->priv->intervals = g_list_remove (player->priv->intervals, interval);
     interval->timeout.callback = NULL;
   }
+  swfdec_sandbox_use (interval->sandbox);
   if (interval->fun_name) {
-    swfdec_as_object_call_with_security (interval->object, SWFDEC_SECURITY (interval->resource),
+    swfdec_as_object_call (interval->object, 
 	interval->fun_name, interval->n_args, interval->args, &ret);
   } else {
     swfdec_as_function_call (SWFDEC_AS_FUNCTION (interval->object), NULL, 
 	interval->n_args, interval->args, &ret);
     swfdec_as_context_run (context);
   }
+  swfdec_sandbox_unuse (interval->sandbox);
 }
 
 static guint
@@ -131,7 +129,7 @@ swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat,
   swfdec_as_object_add (SWFDEC_AS_OBJECT (interval), context, size);
 
   interval->id = ++player->priv->interval_id;
-  interval->resource = SWFDEC_RESOURCE (g_object_ref (context->frame->security));
+  interval->sandbox = SWFDEC_SANDBOX (context->global);
   interval->msecs = msecs;
   interval->repeat = repeat;
   interval->object = object;

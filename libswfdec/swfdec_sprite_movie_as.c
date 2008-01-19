@@ -867,7 +867,7 @@ swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 void
-swfdec_sprite_movie_init_context (SwfdecPlayer *player, guint version)
+swfdec_sprite_movie_init_context (SwfdecPlayer *player)
 {
   SwfdecPlayerPrivate *priv = player->priv;
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);

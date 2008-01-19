@@ -561,7 +561,6 @@ swfdec_as_context_init (SwfdecAsContext *context)
     g_hash_table_insert (context->strings, (char *) s + 1, (char *) s);
   }
   g_assert (*s == 0);
-  context->global = swfdec_as_object_new_empty (context);
   context->rand = g_rand_new ();
   g_get_current_time (&context->start_time);
 }
@@ -779,6 +778,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   gboolean check_block; /* some opcodes avoid a scope check */
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+
   if (context->frame == NULL || context->state == SWFDEC_AS_CONTEXT_ABORTED)
     return;
 
@@ -793,6 +793,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
   context->last_frame = context->frame->next;
   original_version = context->version;
 start:
+  g_return_if_fail (context->global); /* check here because of swfdec_sandbox_(un)use() */
   if (!swfdec_as_context_check_continue (context))
     goto error;
   /* setup data */
@@ -803,12 +804,6 @@ start:
     /* we've exceeded our maximum call depth, throw an error and abort */
     swfdec_as_context_abort (context, "Stack overflow");
     goto error;
-  }
-  /* if security is NULL, the function may not be called */
-  if (frame->security == NULL) {
-    SWFDEC_WARNING ("insufficient right to call %s", frame->function_name);
-    swfdec_as_frame_return (frame, NULL);
-    goto start;
   }
   if (SWFDEC_IS_AS_NATIVE_FUNCTION (frame->function)) {
     SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
@@ -1344,7 +1339,7 @@ swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static void
-swfdec_as_context_init_global (SwfdecAsContext *context, guint version)
+swfdec_as_context_init_global (SwfdecAsContext *context)
 {
   SwfdecAsValue val;
 
@@ -1388,25 +1383,26 @@ swfdec_as_context_run_init_script (SwfdecAsContext *context, const guint8 *data,
  * functions and properties are available in the context.
  **/
 void
-swfdec_as_context_startup (SwfdecAsContext *context, guint version)
+swfdec_as_context_startup (SwfdecAsContext *context)
 {
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_NEW);
 
   if (!swfdec_as_stack_push_segment (context))
     return;
-  context->version = version;
+  if (context->global == NULL)
+    context->global = swfdec_as_object_new_empty (context);
   /* init the two internal functions */
   /* FIXME: remove them for normal contexts? */
-  swfdec_player_preinit_global (context, version);
+  swfdec_player_preinit_global (context);
   /* get the necessary objects up to define objects and functions sanely */
-  swfdec_as_function_init_context (context, version);
-  swfdec_as_object_init_context (context, version);
+  swfdec_as_function_init_context (context);
+  swfdec_as_object_init_context (context);
   /* define the global object and other important ones */
-  swfdec_as_context_init_global (context, version);
+  swfdec_as_context_init_global (context);
 
   /* run init script */
-  swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), context->version);
+  swfdec_as_context_run_init_script (context, swfdec_as_initialize, sizeof (swfdec_as_initialize), 8);
 
   if (context->state == SWFDEC_AS_CONTEXT_NEW)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;

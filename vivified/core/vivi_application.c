@@ -153,7 +153,7 @@ vivi_application_new (void)
   ViviApplication *app;
 
   app = g_object_new (VIVI_TYPE_APPLICATION, NULL);
-  swfdec_as_context_startup (SWFDEC_AS_CONTEXT (app), 8);
+  swfdec_as_context_startup (SWFDEC_AS_CONTEXT (app));
   vivi_function_init_context (app);
   return app;
 }

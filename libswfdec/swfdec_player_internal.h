@@ -27,7 +27,6 @@
 #include <libswfdec/swfdec_player_scripting.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
-#include <libswfdec/swfdec_security.h>
 #include <libswfdec/swfdec_socket.h>
 #include <libswfdec/swfdec_system.h>
 
@@ -136,12 +135,12 @@ struct _SwfdecPlayerPrivate
   SwfdecRingBuffer *	actions[SWFDEC_PLAYER_N_ACTION_QUEUES]; /* all actions we've queued up so far */
 
   /* security */
+  GHashTable *		sandboxes;		/* SwfdecURL => SwfdecSandbox mapping */
   GList *		loading_policy_files;	/* list of loading SwfdecPlayerLoader - newest first */
   GSList *		policy_files;		/* list of SwfdecPolicyLoader that finished loading */
 };
 
 void		swfdec_player_initialize	(SwfdecPlayer *		player,
-						 guint			version,
 						 guint			rate,
 						 guint			width,
 						 guint			height);

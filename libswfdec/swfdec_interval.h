@@ -23,6 +23,7 @@
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_player_internal.h>
+#include <libswfdec/swfdec_sandbox.h>
 
 G_BEGIN_DECLS
 
@@ -40,7 +41,7 @@ struct _SwfdecInterval {
   SwfdecAsObject	asobject;
 
   SwfdecTimeout		timeout;
-  SwfdecResource *	resource;	/* resouce that initiated this interval */
+  SwfdecSandbox *	sandbox;	/* sandbox we run the script in */
   guint			id;		/* id this interval is identified with */
   guint			msecs;		/* interval in milliseconds */
   gboolean		repeat;		/* TRUE for calling in intervals, FALSE for single-shot */

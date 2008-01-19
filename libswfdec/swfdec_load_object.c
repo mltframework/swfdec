@@ -130,8 +130,6 @@ swfdec_load_object_dispose (GObject *object)
     swfdec_buffer_unref (load->buffer);
     load->buffer = NULL;
   }
-  g_object_unref (load->resource);
-  load->resource = NULL;
 
   G_OBJECT_CLASS (swfdec_load_object_parent_class)->dispose (object);
 }
@@ -156,7 +154,7 @@ swfdec_load_object_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
 
   if (!allow) {
     SWFDEC_WARNING ("SECURITY: no access to %s from %s",
-	load->url, swfdec_url_get_url (SWFDEC_FLASH_SECURITY (load->resource)->url));
+	load->url, swfdec_url_get_url (load->sandbox->url));
 
     /* FIXME: call finish? */
 
@@ -165,7 +163,7 @@ swfdec_load_object_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
     return;
   }
 
-  load->loader = swfdec_loader_load (load->resource->loader, url, load->request, load->buffer);
+  load->loader = swfdec_loader_load (player->priv->resource->loader, url, load->request, load->buffer);
 
   swfdec_stream_set_target (SWFDEC_STREAM (load->loader), SWFDEC_STREAM_TARGET (load));
   swfdec_loader_set_data_type (load->loader, SWFDEC_LOADER_DATA_TEXT);
@@ -180,8 +178,8 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
   SwfdecURL *url;
 
   /* FIXME: or is this relative to the player? */
-  url = swfdec_url_new_relative (SWFDEC_FLASH_SECURITY (load->resource)->url, load->url);
-  switch (SWFDEC_FLASH_SECURITY (load->resource)->sandbox) {
+  url = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), load->url);
+  switch (load->sandbox->type) {
     case SWFDEC_SANDBOX_REMOTE:
     case SWFDEC_SANDBOX_LOCAL_NETWORK:
     case SWFDEC_SANDBOX_LOCAL_TRUSTED:
@@ -213,6 +211,7 @@ swfdec_load_object_mark (gpointer object, gpointer player)
 {
   SwfdecLoadObject *load = object;
 
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (load->sandbox));
   if (load->url)
     swfdec_as_string_mark (load->url);
   swfdec_as_object_mark (load->target);
@@ -242,7 +241,6 @@ swfdec_load_object_create (SwfdecAsObject *target, const char *url,
   load->finish = finish;
   /* get the current security */
   g_assert (SWFDEC_AS_CONTEXT (player)->frame);
-  load->resource = g_object_ref (SWFDEC_AS_CONTEXT (player)->frame->security);
-  g_assert (SWFDEC_IS_RESOURCE (load->resource));
+  load->sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
   swfdec_player_request_resource (player, swfdec_load_object_request, load, NULL);
 }

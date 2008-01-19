@@ -153,7 +153,7 @@ swfdec_net_stream_construct (SwfdecAsContext *cx, SwfdecAsObject *obj, guint arg
 }
 
 void
-swfdec_net_stream_init_context (SwfdecPlayer *player, guint version)
+swfdec_net_stream_init_context (SwfdecPlayer *player)
 {
   SwfdecAsContext *context;
   SwfdecAsObject *stream, *proto;

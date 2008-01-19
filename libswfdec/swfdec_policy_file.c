@@ -25,7 +25,6 @@
 #include <string.h>
 
 #include "swfdec_policy_file.h"
-#include "swfdec_flash_security.h"
 #include "swfdec_resource.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"

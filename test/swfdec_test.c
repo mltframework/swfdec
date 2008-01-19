@@ -111,7 +111,7 @@ main (int argc, char **argv)
     return EXIT_FAILURE;
 
   context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
-  swfdec_as_context_startup (context, SWFDEC_TEST_VERSION);
+  swfdec_as_context_startup (context);
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (&val, dump);
   swfdec_as_object_set_variable (context->global,

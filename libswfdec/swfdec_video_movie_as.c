@@ -61,7 +61,7 @@ swfdec_video_clear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 }
 
 void
-swfdec_video_movie_init_context (SwfdecPlayer *player, guint version)
+swfdec_video_movie_init_context (SwfdecPlayer *player)
 {
   SwfdecAsContext *context;
   SwfdecAsObject *video, *proto;
@@ -83,12 +83,6 @@ swfdec_video_movie_init_context (SwfdecPlayer *player, guint version)
   swfdec_as_object_set_variable_and_flags (video, SWFDEC_AS_STR_prototype, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   /* set the right properties on the Video.prototype object */
-  if (version >= 6) {
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_attachVideo,
-	SWFDEC_TYPE_VIDEO_MOVIE, swfdec_video_attach_video, 0);
-    swfdec_as_object_add_function (proto, SWFDEC_AS_STR_clear,
-	SWFDEC_TYPE_VIDEO_MOVIE, swfdec_video_clear, 0);
-  }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, video);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

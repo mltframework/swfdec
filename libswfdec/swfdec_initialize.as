@@ -602,6 +602,11 @@ ASSetNative (TextField.StyleSheet.prototype, 113, "7update,7parseCSSInternal,7pa
 ASSetPropFlags (TextField.StyleSheet.prototype, null, 1027);
 ASSetPropFlags (TextField, "StyleSheet", 1027);
 
+/* Video */
+
+ASSetNative(Video.prototype, 667, "6attachVideo,6clear", 1);
+ASSetPropFlags(Video.prototype, null, 3);
+
 /* Accessibility */
 
 Accessibility = {};

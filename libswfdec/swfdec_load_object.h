@@ -51,7 +51,7 @@ struct _SwfdecLoadObject {
   SwfdecBuffer *		buffer;		/* data to send */
   SwfdecLoader *		loader;		/* loader when loading or NULL */
 
-  SwfdecResource *		resource;	/* resource that inited the loading */
+  SwfdecSandbox *		sandbox;	/* sandbox that inited the loading */
   SwfdecAsObject *		target;		/* target object */
   SwfdecLoadObjectProgress	progress;	/* progress callback */
   SwfdecLoadObjectFinish	finish;		/* finish callback */

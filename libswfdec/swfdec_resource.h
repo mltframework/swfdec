@@ -21,7 +21,7 @@
 #define _SWFDEC_RESOURCE_H_
 
 #include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_flash_security.h>
+#include <libswfdec/swfdec_sandbox.h>
 #include <libswfdec/swfdec_sprite_movie.h>
 
 G_BEGIN_DECLS
@@ -45,9 +45,10 @@ typedef enum {
 
 struct _SwfdecResource
 {
-  SwfdecFlashSecurity	flash_security;
+  SwfdecAsObject      	object;
 
   guint			version;	/* version of this resource */
+  SwfdecSandbox *	sandbox;	/* sandbox this resource belongs to */
   SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
@@ -65,7 +66,7 @@ struct _SwfdecResource
 
 struct _SwfdecResourceClass
 {
-  SwfdecFlashSecurityClass	flash_security_class;
+  SwfdecAsObjectClass 	object_class;
 };
 
 GType		swfdec_resource_get_type	  	(void);
@@ -73,8 +74,6 @@ GType		swfdec_resource_get_type	  	(void);
 SwfdecResource *swfdec_resource_new			(SwfdecPlayer *		player,
 							 SwfdecLoader *		loader,
 							 const char *		variables);
-
-void		swfdec_resource_mark			(SwfdecResource *	resource);
 
 gboolean	swfdec_resource_emit_on_load_init	(SwfdecResource *	resource);
 void		swfdec_resource_add_export		(SwfdecResource *	instance,

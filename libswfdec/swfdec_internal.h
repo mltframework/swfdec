@@ -59,14 +59,10 @@ SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(guint			format);
 
 /* AS engine setup code */
 
-void			swfdec_player_preinit_global		(SwfdecAsContext *	context,
-								 guint			version);
-void			swfdec_net_stream_init_context		(SwfdecPlayer *		player,
-								 guint			version);
-void			swfdec_sprite_movie_init_context	(SwfdecPlayer *		player,
-								 guint			version);
-void			swfdec_video_movie_init_context		(SwfdecPlayer *		player,
-								 guint			version);
+void			swfdec_player_preinit_global		(SwfdecAsContext *	context);
+void			swfdec_net_stream_init_context		(SwfdecPlayer *		player);
+void			swfdec_sprite_movie_init_context	(SwfdecPlayer *		player);
+void			swfdec_video_movie_init_context		(SwfdecPlayer *		player);
 
 G_END_DECLS
 #endif

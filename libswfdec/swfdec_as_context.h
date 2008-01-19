@@ -45,7 +45,8 @@ struct _SwfdecAsContext {
   GObject		object;
 
   SwfdecAsContextState	state;		/* our current state */
-  SwfdecAsObject *	global;		/* the global object */
+  SwfdecAsObject *	global;		/* the global object or NULL if not initialized yet. 
+					   In SwfdecPlayer is NULL unless a sandbox is in use */
   GRand *		rand;		/* random number generator */
   GTimeVal		start_time;   	/* time this movie started (for GetTime action) */
 
@@ -96,8 +97,7 @@ struct _SwfdecAsContextClass {
 
 GType		swfdec_as_context_get_type	(void);
 
-void		swfdec_as_context_startup     	(SwfdecAsContext *	context,
-						 guint			version);
+void		swfdec_as_context_startup     	(SwfdecAsContext *	context);
 
 gboolean	swfdec_as_context_is_aborted	(SwfdecAsContext *	context);
 gboolean	swfdec_as_context_is_constructing

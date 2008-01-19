@@ -346,7 +346,7 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
 /* This is ran at the beginning of swfdec_as_context_startup.
  * Yes, this is a hack */
 void
-swfdec_player_preinit_global (SwfdecAsContext *context, guint version)
+swfdec_player_preinit_global (SwfdecAsContext *context)
 {
   /* init these two before swfdec_as_context_startup, so they won't get
    * __proto__ and constructor properties */

@@ -29,7 +29,6 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
-#include "swfdec_security_allow.h"
 
 /**
  * SECTION:SwfdecAsFrame
@@ -278,10 +277,6 @@ swfdec_as_frame_dispose (GObject *object)
 
   /* clean up */
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
-  if (frame->security) {
-    g_object_unref (frame->security);
-    frame->security = NULL;
-  }
   if (frame->constant_pool) {
     swfdec_constant_pool_free (frame->constant_pool);
     frame->constant_pool = NULL;
@@ -385,11 +380,6 @@ swfdec_as_frame_load (SwfdecAsFrame *frame)
 {
   SwfdecAsContext *context = SWFDEC_AS_OBJECT (frame)->context;
 
-  if (context->frame) {
-    frame->security = g_object_ref (context->frame->security);
-  } else {
-    frame->security = swfdec_security_allow_new ();
-  }
   frame->stack_begin = context->cur;
   context->base = frame->stack_begin;
   frame->next = context->frame;
@@ -901,24 +891,5 @@ swfdec_as_frame_get_this (SwfdecAsFrame *frame)
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
 
   return frame->thisp;
-}
-
-/**
- * swfdec_as_frame_set_security:
- * @frame: the frame to be executed
- * @guard: the security to be used in this frame
- *
- * Sets the security to be used in this frame to @guard.
- **/
-void
-swfdec_as_frame_set_security (SwfdecAsFrame *frame, SwfdecSecurity *guard)
-{
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  g_return_if_fail (SWFDEC_IS_SECURITY (guard));
-
-  if (frame->security)
-    g_object_unref (frame->security);
-
-  frame->security = g_object_ref (guard);
 }
 

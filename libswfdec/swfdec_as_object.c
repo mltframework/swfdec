@@ -34,7 +34,6 @@
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
-#include "swfdec_security_allow.h"
 
 /**
  * SECTION:SwfdecAsObject
@@ -1180,28 +1179,6 @@ swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GTyp
   return function;
 }
 
-void
-swfdec_as_object_run_with_security (SwfdecAsObject *object, SwfdecScript *script,
-    SwfdecSecurity *sec)
-{
-  SwfdecAsContext *context;
-  SwfdecAsFrame *frame;
-
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (script != NULL);
-  g_return_if_fail (SWFDEC_IS_SECURITY (sec));
-
-  context = object->context;
-  frame = swfdec_as_frame_new (context, script);
-  if (frame == NULL)
-    return;
-  swfdec_as_frame_set_security (frame, sec);
-  swfdec_as_frame_set_this (frame, object);
-  swfdec_as_frame_preload (frame);
-  swfdec_as_context_run (context);
-  swfdec_as_stack_pop (context);
-}
-
 /**
  * swfdec_as_object_run:
  * @object: a #SwfdecAsObject
@@ -1212,42 +1189,20 @@ swfdec_as_object_run_with_security (SwfdecAsObject *object, SwfdecScript *script
 void
 swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
 {
-  SwfdecSecurity *sec;
+  SwfdecAsContext *context;
+  SwfdecAsFrame *frame;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (script != NULL);
 
-  sec = swfdec_security_allow_new ();
-  swfdec_as_object_run_with_security (object, script, sec);
-  g_object_unref (sec);
-}
-
-void
-swfdec_as_object_call_with_security (SwfdecAsObject *object, SwfdecSecurity *sec,
-    const char *name, guint argc, SwfdecAsValue *argv, SwfdecAsValue *return_value) 
-{
-  static SwfdecAsValue tmp; /* ignored */
-  SwfdecAsFunction *fun;
-
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (SWFDEC_IS_SECURITY (sec));
-  g_return_if_fail (name != NULL);
-  g_return_if_fail (argc == 0 || argv != NULL);
-  g_return_if_fail (argc == 0 || argv != NULL);
-
-  if (return_value)
-    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
-  swfdec_as_object_get_variable (object, name, &tmp);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
+  context = object->context;
+  frame = swfdec_as_frame_new (context, script);
+  if (frame == NULL)
     return;
-  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&tmp);
-  if (!SWFDEC_IS_AS_FUNCTION (fun))
-    return;
-  swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
-  if (swfdec_as_context_is_aborted (object->context))
-    return;
-  swfdec_as_frame_set_security (object->context->frame, sec);
-  swfdec_as_context_run (object->context);
+  swfdec_as_frame_set_this (frame, object);
+  swfdec_as_frame_preload (frame);
+  swfdec_as_context_run (context);
+  swfdec_as_stack_pop (context);
 }
 
 /**
@@ -1269,15 +1224,25 @@ void
 swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc, 
     SwfdecAsValue *argv, SwfdecAsValue *return_value)
 {
-  SwfdecSecurity *sec;
+  SwfdecAsValue tmp;
+  SwfdecAsFunction *fun;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (name != NULL);
   g_return_if_fail (argc == 0 || argv != NULL);
 
-  sec = swfdec_security_allow_new ();
-  swfdec_as_object_call_with_security (object, sec, name, argc, argv, return_value);
-  g_object_unref (sec);
+  if (return_value)
+    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+  swfdec_as_object_get_variable (object, name, &tmp);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
+    return;
+  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&tmp);
+  if (!SWFDEC_IS_AS_FUNCTION (fun))
+    return;
+  swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
+  if (swfdec_as_context_is_aborted (object->context))
+    return;
+  swfdec_as_context_run (object->context);
 }
 
 /**
@@ -1714,7 +1679,7 @@ swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
 }
 
 void
-swfdec_as_object_init_context (SwfdecAsContext *context, guint version)
+swfdec_as_object_init_context (SwfdecAsContext *context)
 {
   SwfdecAsValue val;
   SwfdecAsObject *object, *proto;

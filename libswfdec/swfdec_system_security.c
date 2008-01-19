@@ -24,7 +24,6 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_debug.h"
 #include "swfdec_as_strings.h"
-#include "swfdec_flash_security.h"
 #include "swfdec_resource.h"
 #include "swfdec_player_internal.h"
 
@@ -80,7 +79,7 @@ swfdec_system_security_get_sandboxType (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  switch (SWFDEC_FLASH_SECURITY (SWFDEC_PLAYER (cx)->priv->resource)->sandbox) {
+  switch (SWFDEC_SANDBOX (cx->global)->type) {
     case SWFDEC_SANDBOX_REMOTE:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_remote);
       break;

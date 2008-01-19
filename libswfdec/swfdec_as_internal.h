@@ -22,7 +22,6 @@
 
 #include <libswfdec/swfdec_as_object.h>
 #include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_security.h>
 
 G_BEGIN_DECLS
 
@@ -36,10 +35,7 @@ G_BEGIN_DECLS
 #define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
 void		swfdec_as_function_set_constructor	(SwfdecAsFunction *	fun);
-void		swfdec_as_function_set_security	  	(SwfdecAsFunction *	fun,
-							 SwfdecSecurity *	sec);
-void		swfdec_as_function_init_context		(SwfdecAsContext *	context,
-							 guint			version);
+void		swfdec_as_function_init_context		(SwfdecAsContext *	context);
 SwfdecAsFrame *	swfdec_as_function_call_no_preload	(SwfdecAsFunction *	function, 
 							 SwfdecAsObject *	thisp,
 							 guint			n_args,
@@ -58,13 +54,6 @@ typedef SwfdecAsVariableForeach SwfdecAsVariableForeachRemove;
 typedef const char *(* SwfdecAsVariableForeachRename) (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
 
-void		swfdec_as_object_call_with_security
-						(SwfdecAsObject *	object,
-						 SwfdecSecurity *	sec,
-						 const char *		name,
-						 guint			argc,
-						 SwfdecAsValue *	argv,
-						 SwfdecAsValue *	return_value);
 SwfdecAsValue *	swfdec_as_object_peek_variable	(SwfdecAsObject *       object,
 						 const char *		name);
 void		swfdec_as_object_collect	(SwfdecAsObject *     	object);
@@ -75,15 +64,10 @@ void		swfdec_as_object_foreach_rename	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeachRename func,
 						 gpointer		data);
 
-void		swfdec_as_object_init_context	(SwfdecAsContext *	context,
-					      	 guint			version);
+void		swfdec_as_object_init_context	(SwfdecAsContext *	context);
 void		swfdec_as_object_decode		(SwfdecAsObject *	obj,
 						 const char *		str);
 SwfdecAsObject * swfdec_as_object_get_prototype (SwfdecAsObject *	object);
-void		swfdec_as_object_run_with_security 
-						(SwfdecAsObject *	object,
-						 SwfdecScript *		script,
-						 SwfdecSecurity *	sec);
 void		swfdec_as_object_add_native_variable (SwfdecAsObject *	object,
 						 const char *		variable,
 						 SwfdecAsNative		get,

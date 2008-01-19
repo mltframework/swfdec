@@ -22,7 +22,6 @@
 
 #include <libswfdec/swfdec_as_types.h>
 #include <libswfdec/swfdec_script_internal.h>
-#include <libswfdec/swfdec_security.h>
 
 G_BEGIN_DECLS
 
@@ -39,7 +38,6 @@ struct _SwfdecAsFrame {
   SwfdecAsValue *	return_value;	/* pointer to where to store the return value */
   guint			argc;		/* number of arguments */
   const SwfdecAsValue *	argv;		/* arguments or %NULL if taken from stack */
-  SwfdecSecurity *	security;	/* security for this frame or %NULL if not allowed to call */
   /* debugging */
   const char *		function_name;	/* name of function */
   /* script execution */
@@ -70,8 +68,6 @@ SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsContext *	context);
 void		swfdec_as_frame_return		(SwfdecAsFrame *	frame,
 						 SwfdecAsValue *	return_value);
 
-void		swfdec_as_frame_set_security	(SwfdecAsFrame *	frame,
-						 SwfdecSecurity *	guard);
 void		swfdec_as_frame_set_this	(SwfdecAsFrame *	frame,
 						 SwfdecAsObject *	thisp);
 void		swfdec_as_frame_preload		(SwfdecAsFrame *	frame);

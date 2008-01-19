@@ -130,6 +130,8 @@ swfdec_as_object_dispose (GObject *gobject)
   SwfdecAsObject *object = SWFDEC_AS_OBJECT (gobject);
 
   g_assert (object->properties == NULL);
+  g_slist_free (object->interfaces);
+  object->interfaces = NULL;
 
   G_OBJECT_CLASS (swfdec_as_object_parent_class)->dispose (gobject);
 }
@@ -167,6 +169,7 @@ swfdec_as_object_do_mark (SwfdecAsObject *object)
   g_hash_table_foreach (object->properties, swfdec_as_object_mark_property, NULL);
   if (object->watches)
     g_hash_table_foreach (object->watches, swfdec_as_object_mark_watch, NULL);
+  g_slist_foreach (object->interfaces, (GFunc) swfdec_as_object_mark, NULL); 
 }
 
 static void

@@ -606,7 +606,7 @@ char *
 swfdec_loader_get_text (SwfdecLoader *loader, guint version)
 {
   SwfdecBuffer *buffer;
-  char *raw, *text;
+  char *text;
   guint size, i, j;
 
   /* get the text from the loader */
@@ -614,12 +614,6 @@ swfdec_loader_get_text (SwfdecLoader *loader, guint version)
   if (size == 0) {
     SWFDEC_LOG ("empty loader, returning empty string");
     return g_strdup ("");
-  }
-  raw = g_try_malloc (size + 1);
-  if (!raw) {
-    SWFDEC_ERROR ("not enough memory to copy %u bytes", size);
-    swfdec_buffer_queue_clear (loader->queue);
-    return NULL;
   }
 
   buffer = swfdec_buffer_queue_peek (loader->queue, size);

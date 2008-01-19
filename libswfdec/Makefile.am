@@ -362,10 +362,10 @@ swfdec_as_strings.h: swfdec_as_strings.c
 	( cd $(srcdir) && echo "/* This is a generated file. See swfdec_as_strings.c for details. */" \
 	  && echo "#ifndef _SWFDEC_AS_STRINGS_H_" \
 	  && echo "#define _SWFDEC_AS_STRINGS_H_" \
-	  && echo -e "\nextern const char swfdec_as_strings[];\n" \
+	  && echo "extern const char swfdec_as_strings[];" \
 	  && grep "  SWFDEC_AS_CONSTANT_STRING" swfdec_as_strings.c \
 	  | sed "s/.*(\"\(.*\)\").*/\1/" \
 	  | $(AWK) '{ if ($$0 == "") name = "EMPTY"; else if ($$0 == ",") name = "COMMA"; else if ($$0 == "/") name = "SLASH"; else name = $$0; gsub("[^a-zA-Z0-9\\$$]","_",name); print "#define SWFDEC_AS_STR_" name " &swfdec_as_strings[" x + 1 "]"; x = x + length ($$0) + 2 }' \
-	  && echo -e "\n#endif" ) > xgen-sas \
+	  && echo "#endif" ) > xgen-sas \
 	&& (cmp -s xgen-sas swfdec_as_strings.h || cp xgen-sas swfdec_as_strings.h ) \
 	&& rm -f xgen-sas

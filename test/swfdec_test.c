@@ -77,7 +77,7 @@ main (int argc, char **argv)
   SwfdecScript *script;
   SwfdecAsValue val;
   int i, ret;
-  gboolean dump;
+  gboolean dump = FALSE;
 
   GOptionEntry options[] = {
     { "dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "dump images on failure", FALSE },

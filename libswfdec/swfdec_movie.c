@@ -469,6 +469,10 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
+  /* when resource is not an SWF file */
+  if (movie->resource->sandbox == NULL)
+    return;
+
   if (SWFDEC_IS_BUTTON_MOVIE (movie)) {
     /* these conditions don't exist for buttons */
     if (condition == SWFDEC_EVENT_CONSTRUCT || condition < SWFDEC_EVENT_PRESS)

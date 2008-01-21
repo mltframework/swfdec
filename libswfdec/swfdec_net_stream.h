@@ -26,6 +26,7 @@
 #include <libswfdec/swfdec_net_connection.h>
 #include <libswfdec/swfdec_flv_decoder.h>
 #include <libswfdec/swfdec_player_internal.h>
+#include <libswfdec/swfdec_sandbox.h>
 #include <libswfdec/swfdec_video_movie.h>
 
 G_BEGIN_DECLS
@@ -46,6 +47,7 @@ struct _SwfdecNetStream
 
   SwfdecNetConnection *	conn;		/* connection used for opening streams */
   SwfdecLoader *	loader;		/* input stream */
+  SwfdecSandbox *	sandbox;	/* sandbox to emit events in */
   SwfdecFlvDecoder *	flvdecoder;	/* flv decoder */
   gboolean		playing;	/* TRUE if this stream is playing */
   gboolean		buffering;	/* TRUE if we're waiting for more input data */
@@ -78,6 +80,7 @@ GType			swfdec_net_stream_get_type	(void);
 SwfdecNetStream *	swfdec_net_stream_new		(SwfdecNetConnection *	conn);
 
 void			swfdec_net_stream_set_url	(SwfdecNetStream *	stream,
+							 SwfdecSandbox *	sandbox,
 							 const char *		url);
 void			swfdec_net_stream_set_loader	(SwfdecNetStream *	stream,
 							 SwfdecLoader *		loader);

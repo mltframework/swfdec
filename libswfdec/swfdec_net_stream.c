@@ -41,9 +41,12 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   SwfdecAsValue val;
   SwfdecAsObject *object;
 
+  swfdec_sandbox_use (stream->sandbox);
   object = swfdec_as_object_new (SWFDEC_AS_OBJECT (stream)->context);
-  if (!object)
+  if (!object) {
+    swfdec_sandbox_unuse (stream->sandbox);
     return;
+  }
   SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
   SWFDEC_AS_VALUE_SET_STRING (&val, code);
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_code, &val);
@@ -52,6 +55,7 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_onStatus, 1, &val, NULL);
+  swfdec_sandbox_unuse (stream->sandbox);
 }
 
 static cairo_surface_t *
@@ -425,6 +429,8 @@ swfdec_net_stream_mark (SwfdecAsObject *object)
 
   if (stream->conn)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (stream->conn));
+  if (stream->sandbox)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (stream->sandbox));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->mark (object);
 }
@@ -483,27 +489,29 @@ swfdec_net_stream_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean all
   } else {
     SWFDEC_WARNING ("SECURITY: no access to %s from NetStream",
 	swfdec_url_get_url (url));
+    stream->sandbox = NULL;
   }
 }
 
 void
-swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url_string)
+swfdec_net_stream_set_url (SwfdecNetStream *stream, SwfdecSandbox *sandbox, const char *url_string)
 {
   SwfdecPlayer *player;
   SwfdecAsContext *cx;
   SwfdecURL *url;
 
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
+  g_return_if_fail (SWFDEC_IS_SANDBOX (sandbox));
   g_return_if_fail (url != NULL);
 
   cx = SWFDEC_AS_OBJECT (stream)->context;
   player = SWFDEC_PLAYER (cx);
-  g_assert (cx->frame);
   url = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), url_string);
+  stream->sandbox = sandbox;
   if (swfdec_url_is_local (url)) {
     swfdec_net_stream_load (player, url, TRUE, stream);
   } else {
-    switch (SWFDEC_SANDBOX (cx->global)->type) {
+    switch (sandbox->type) {
       case SWFDEC_SANDBOX_REMOTE:
 	swfdec_net_stream_load (player, url, TRUE, stream);
 	break;
@@ -535,10 +543,11 @@ void
 swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
 {
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
+  g_return_if_fail (loader == NULL || SWFDEC_IS_SANDBOX (stream->sandbox));
   g_return_if_fail (loader == NULL || SWFDEC_IS_LOADER (loader));
 
   if (stream->loader) {
-    SwfdecStream *lstream = SWFDEC_STREAM (loader);
+    SwfdecStream *lstream = SWFDEC_STREAM (stream->loader);
     swfdec_stream_close (lstream);
     swfdec_stream_set_target (lstream, NULL);
     g_object_unref (lstream);

@@ -50,6 +50,7 @@ struct _SwfdecSandbox
 
   SwfdecSandboxType	type;			/* type of this sandbox */
   SwfdecURL *		url;			/* URL this sandbox acts for */
+  guint			as_version;		/* Actionscript version */
 
   /* global cached objects from context */
   SwfdecAsObject *	Function;		/* Function */
@@ -71,6 +72,7 @@ GType			swfdec_sandbox_get_type		(void);
 
 SwfdecSandbox *		swfdec_sandbox_get_for_url	(SwfdecPlayer *	  	player,
 							 const SwfdecURL *	url,
+							 guint			flash_version,
 							 gboolean		allow_network);
 
 void			swfdec_sandbox_use		(SwfdecSandbox *	sandbox);

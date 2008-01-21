@@ -78,7 +78,7 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
     SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (instance->decoder);
 
     instance->sandbox = swfdec_sandbox_get_for_url (player,
-	swfdec_loader_get_url (instance->loader),
+	swfdec_loader_get_url (instance->loader), instance->version,
 	SWFDEC_SWF_DECODER (instance->decoder)->use_network);
     if (instance->sandbox) {
       movie->sprite = dec->main_sprite;

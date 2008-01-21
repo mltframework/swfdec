@@ -76,7 +76,7 @@ swfdec_sandbox_init (SwfdecSandbox *sandbox)
 }
 
 static void
-swfdec_sandbox_initialize (SwfdecSandbox *sandbox)
+swfdec_sandbox_initialize (SwfdecSandbox *sandbox, guint version)
 {
   SwfdecAsContext *context = SWFDEC_AS_OBJECT (sandbox)->context;
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
@@ -93,7 +93,7 @@ swfdec_sandbox_initialize (SwfdecSandbox *sandbox)
   swfdec_net_stream_init_context (player);
 
   swfdec_as_context_run_init_script (context, swfdec_initialize, 
-      sizeof (swfdec_initialize), 8);
+      sizeof (swfdec_initialize), version);
 
   sandbox->Function = context->Function;
   sandbox->Function_prototype = context->Function_prototype;
@@ -140,8 +140,6 @@ swfdec_sandbox_set_allow_network (SwfdecSandbox *sandbox, gboolean network)
     sandbox->type = SWFDEC_SANDBOX_REMOTE;
   }
 
-  swfdec_sandbox_initialize (sandbox);
-
   return TRUE;
 }
 
@@ -149,7 +147,7 @@ swfdec_sandbox_set_allow_network (SwfdecSandbox *sandbox, gboolean network)
  * swfdec_sandbox_get_for_url:
  * @player: a #SwfdecPlayer
  * @url: the URL this player refers to
- * @allow_network: %TRUE to allow network access, false for local access
+ * @flash_version: The Flash version for looking up the sandbox
  * @allow_network: %TRUE to allow network access, %FALSE to only allow local 
  *                 file access. See the documentation of the use_network flag 
  *                 of the SWF FileAttributes tag for what that means.
@@ -164,11 +162,12 @@ swfdec_sandbox_set_allow_network (SwfdecSandbox *sandbox, gboolean network)
  **/
 SwfdecSandbox *
 swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
-    gboolean allow_network)
+    guint flash_version, gboolean allow_network)
 {
   SwfdecPlayerPrivate *priv;
   SwfdecSandbox *sandbox;
   SwfdecURL *real;
+  guint as_version;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (url != NULL, NULL);
@@ -177,9 +176,14 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
   real = swfdec_url_new_components (swfdec_url_get_protocol (url),
       swfdec_url_get_host (url), swfdec_url_get_port (url), NULL, NULL);
 
+  as_version = flash_version < 7 ? 1 : 2;
+  /* FIXME: look up by as version */
   sandbox = g_hash_table_lookup (priv->sandboxes, real);
   if (sandbox) {
     swfdec_url_free (real);
+
+    if (!swfdec_sandbox_set_allow_network (sandbox, allow_network))
+      return NULL;
   } else {
     SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
     guint size = sizeof (SwfdecSandbox);
@@ -189,10 +193,14 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
     sandbox = g_object_new (SWFDEC_TYPE_SANDBOX, NULL);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (sandbox), context, size);
     sandbox->url = real;
+    sandbox->as_version = as_version;
+  
+    if (!swfdec_sandbox_set_allow_network (sandbox, allow_network))
+      return NULL;
+
+    swfdec_sandbox_initialize (sandbox, flash_version);
   }
 
-  if (!swfdec_sandbox_set_allow_network (sandbox, allow_network))
-    return NULL;
 
   return sandbox;
 }

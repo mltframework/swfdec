@@ -216,7 +216,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
     movie = swfdec_player_create_movie_at_level (player, resource, level);
   } else {
     /* FIXME: is this correct? */
-    movie = swfdec_resource_replace_movie (movie, SWFDEC_MOVIE (movie)->resource);
+    movie = swfdec_resource_replace_movie (movie, resource);
   }
   swfdec_player_unroot (player, resource);
   return TRUE;

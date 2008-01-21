@@ -423,7 +423,7 @@ swfdec_movie_set_constructor (SwfdecSpriteMovie *movie)
     }
   }
   if (constructor == NULL)
-    constructor = SWFDEC_PLAYER (context)->priv->MovieClip;
+    constructor = mov->resource->sandbox->MovieClip;
 
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
 }
@@ -498,14 +498,14 @@ swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
     swfdec_event_list_execute (movie->events, thisp, condition, 0);
   }
   /* FIXME: how do we compute the version correctly here? */
-  if (swfdec_movie_get_version (movie) <= 5)
-    return;
-  name = swfdec_event_type_get_name (condition);
-  if (name != NULL) {
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
+  if (swfdec_movie_get_version (movie) > 5) {
+    name = swfdec_event_type_get_name (condition);
+    if (name != NULL) {
+      swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
+    }
+    if (condition == SWFDEC_EVENT_CONSTRUCT)
+      swfdec_as_object_call (thisp, SWFDEC_AS_STR_constructor, 0, NULL, NULL);
   }
-  if (condition == SWFDEC_EVENT_CONSTRUCT)
-    swfdec_as_object_call (thisp, SWFDEC_AS_STR_constructor, 0, NULL, NULL);
   swfdec_sandbox_unuse (movie->resource->sandbox);
 }
 
@@ -1014,10 +1014,6 @@ swfdec_movie_dispose (GObject *object)
   g_assert (movie->list == NULL);
 
   SWFDEC_LOG ("disposing movie %s (depth %d)", movie->name, movie->depth);
-  if (movie->resource) {
-    g_object_unref (movie->resource);
-    movie->resource = NULL;
-  }
   if (movie->events) {
     swfdec_event_list_free (movie->events);
     movie->events = NULL;
@@ -1579,7 +1575,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
   g_object_ref (movie);
   /* set essential properties */
   movie->parent = parent;
-  movie->resource = g_object_ref (resource);
+  movie->resource = resource;
   if (parent) {
     parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
     SWFDEC_DEBUG ("inserting %s %s (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie->name,
@@ -1686,6 +1682,7 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
  * Creates a duplicate of @movie. The duplicate will not be initialized or
  * queued up for any events. You have to do this manually. In particular calling
  * swfdec_movie_initialize() on the returned movie must be done.
+ * This function must be called from within a script.
  *
  * Returns: a newly created movie or %NULL on error
  **/
@@ -1693,6 +1690,7 @@ SwfdecMovie *
 swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
 {
   SwfdecMovie *parent, *copy;
+  SwfdecSandbox *sandbox;
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
   g_return_val_if_fail (name != NULL, NULL);
@@ -1714,12 +1712,15 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
       &movie->original_ctrans, movie->original_ratio, movie->clip_depth, 
       movie->blend_mode, movie->events);
+  sandbox = SWFDEC_SANDBOX (SWFDEC_AS_OBJECT (movie)->context->global);
+  swfdec_sandbox_unuse (sandbox);
   if (SWFDEC_IS_SPRITE_MOVIE (copy)) {
     swfdec_movie_queue_script (copy, SWFDEC_EVENT_INITIALIZE);
     swfdec_movie_queue_script (copy, SWFDEC_EVENT_LOAD);
     swfdec_movie_execute (copy, SWFDEC_EVENT_CONSTRUCT);
   }
   swfdec_movie_initialize (copy);
+  swfdec_sandbox_use (sandbox);
   return copy;
 }
 

@@ -48,8 +48,18 @@ struct _SwfdecSandbox
 {
   SwfdecAsObject      	object;
 
-  SwfdecSandboxType	type;		/* type of this sandbox */
-  SwfdecURL *		url;		/* URL this sandbox acts for */
+  SwfdecSandboxType	type;			/* type of this sandbox */
+  SwfdecURL *		url;			/* URL this sandbox acts for */
+
+  /* global cached objects from context */
+  SwfdecAsObject *	Function;		/* Function */
+  SwfdecAsObject *	Function_prototype;	/* Function.prototype */
+  SwfdecAsObject *	Object;			/* Object */
+  SwfdecAsObject *	Object_prototype;	/* Object.prototype */
+
+  /* global player objects */
+  SwfdecAsObject *	MovieClip;		/* MovieClip object */
+  SwfdecAsObject *	Video;			/* Video object */
 };
 
 struct _SwfdecSandboxClass
@@ -60,10 +70,8 @@ struct _SwfdecSandboxClass
 GType			swfdec_sandbox_get_type		(void);
 
 SwfdecSandbox *		swfdec_sandbox_get_for_url	(SwfdecPlayer *	  	player,
-							 const SwfdecURL *	url);
-
-gboolean		swfdec_sandbox_set_allow_network(SwfdecSandbox *	sandbox,
-							 gboolean		network);
+							 const SwfdecURL *	url,
+							 gboolean		allow_network);
 
 void			swfdec_sandbox_use		(SwfdecSandbox *	sandbox);
 void			swfdec_sandbox_unuse		(SwfdecSandbox *	sandbox);

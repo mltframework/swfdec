@@ -44,58 +44,35 @@
  * it as the global object.
  */
 
-G_DEFINE_TYPE (SwfdecSandbox, swfdec_sandbox, G_TYPE_OBJECT)
+G_DEFINE_TYPE (SwfdecSandbox, swfdec_sandbox, SWFDEC_TYPE_AS_OBJECT)
+
+static void
+swfdec_sandbox_mark (SwfdecAsObject *object)
+{
+  SwfdecSandbox *sandbox = SWFDEC_SANDBOX (object);
+
+  swfdec_as_object_mark (sandbox->Function);
+  swfdec_as_object_mark (sandbox->Function_prototype);
+  swfdec_as_object_mark (sandbox->Object);
+  swfdec_as_object_mark (sandbox->Object_prototype);
+  swfdec_as_object_mark (sandbox->MovieClip);
+  swfdec_as_object_mark (sandbox->Video);
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_sandbox_parent_class)->mark (object);
+}
 
 static void
 swfdec_sandbox_class_init (SwfdecSandboxClass *klass)
 {
+  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+
+  asobject_class->mark = swfdec_sandbox_mark;
 }
 
 static void
 swfdec_sandbox_init (SwfdecSandbox *sandbox)
 {
   sandbox->type = SWFDEC_SANDBOX_NONE;
-}
-
-/**
- * swfdec_sandbox_get_for_url:
- * @player: a #SwfdecPlayer
- * @url: the URL this player refers to
- *
- * Checks if a sandbox is already in use for a given URL and if so, returns it.
- * Otherwise a new sandbox is created, initialized and returned.
- * Note that the given url must be a HTTP, HTTPS or a FILE url.
- *
- * Returns: the sandbox corresponding to the given URL.
- **/
-SwfdecSandbox *
-swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url)
-{
-  SwfdecPlayerPrivate *priv;
-  SwfdecSandbox *sandbox;
-  SwfdecURL *real;
-
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
-
-  priv = player->priv;
-  real = swfdec_url_new_components (swfdec_url_get_protocol (url),
-      swfdec_url_get_host (url), swfdec_url_get_port (url), NULL, NULL);
-
-  sandbox = g_hash_table_lookup (priv->sandboxes, real);
-  if (sandbox) {
-    swfdec_url_free (real);
-  } else {
-    SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
-    guint size = sizeof (SwfdecSandbox);
-    if (!swfdec_as_context_use_mem (context, size))
-      size = 0;
-
-    sandbox = g_object_new (SWFDEC_TYPE_SANDBOX, NULL);
-    swfdec_as_object_add (SWFDEC_AS_OBJECT (sandbox), context, size);
-    sandbox->url = real;
-  }
-  return sandbox;
 }
 
 static void
@@ -118,6 +95,11 @@ swfdec_sandbox_initialize (SwfdecSandbox *sandbox)
   swfdec_as_context_run_init_script (context, swfdec_initialize, 
       sizeof (swfdec_initialize), 8);
 
+  sandbox->Function = context->Function;
+  sandbox->Function_prototype = context->Function_prototype;
+  sandbox->Object = context->Object;
+  sandbox->Object_prototype = context->Object_prototype;
+
   if (context->state == SWFDEC_AS_CONTEXT_NEW)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;
   swfdec_sandbox_unuse (sandbox);
@@ -125,18 +107,13 @@ swfdec_sandbox_initialize (SwfdecSandbox *sandbox)
 /**
  * swfdec_sandbox_set_allow_network:
  * @sandbox: a #SwfdecSandbox
- * @network: %TRUE to allow network access, %FALSE to only allow local file 
- *           access. See the documentation of the use_network flag of the SWF
- *           FileAttributes tag for what that means.
- *
- * This function finishes initialization of the @sandbox, if it is not yet 
  * finished, by giving the sandbox network or local file access. This function
  * should be called on all return values of swfdec_sandbox_get_for_url().
  *
  * Returns: %TRUE if the sandbox initialization could be finished as requested,
  *          %FALSE if not and it shouldn't be used.
  **/
-gboolean
+static gboolean
 swfdec_sandbox_set_allow_network (SwfdecSandbox *sandbox, gboolean network)
 {
   g_return_val_if_fail (SWFDEC_IS_SANDBOX (sandbox), FALSE);
@@ -169,6 +146,58 @@ swfdec_sandbox_set_allow_network (SwfdecSandbox *sandbox, gboolean network)
 }
 
 /**
+ * swfdec_sandbox_get_for_url:
+ * @player: a #SwfdecPlayer
+ * @url: the URL this player refers to
+ * @allow_network: %TRUE to allow network access, false for local access
+ * @allow_network: %TRUE to allow network access, %FALSE to only allow local 
+ *                 file access. See the documentation of the use_network flag 
+ *                 of the SWF FileAttributes tag for what that means.
+ *
+ *
+ * Checks if a sandbox is already in use for a given URL and if so, returns it.
+ * Otherwise a new sandbox is created, initialized and returned.
+ * Note that the given url must be a HTTP, HTTPS or a FILE url.
+ *
+ * Returns: the sandbox corresponding to the given URL or %NULL if no such 
+ *          sandbox is allowed.
+ **/
+SwfdecSandbox *
+swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
+    gboolean allow_network)
+{
+  SwfdecPlayerPrivate *priv;
+  SwfdecSandbox *sandbox;
+  SwfdecURL *real;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (url != NULL, NULL);
+
+  priv = player->priv;
+  real = swfdec_url_new_components (swfdec_url_get_protocol (url),
+      swfdec_url_get_host (url), swfdec_url_get_port (url), NULL, NULL);
+
+  sandbox = g_hash_table_lookup (priv->sandboxes, real);
+  if (sandbox) {
+    swfdec_url_free (real);
+  } else {
+    SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
+    guint size = sizeof (SwfdecSandbox);
+    if (!swfdec_as_context_use_mem (context, size))
+      size = 0;
+
+    sandbox = g_object_new (SWFDEC_TYPE_SANDBOX, NULL);
+    swfdec_as_object_add (SWFDEC_AS_OBJECT (sandbox), context, size);
+    sandbox->url = real;
+  }
+
+  if (!swfdec_sandbox_set_allow_network (sandbox, allow_network))
+    return NULL;
+
+  return sandbox;
+}
+
+/**
  * swfdec_sandbox_use:
  * @sandbox: the sandbox to use when executing scripts
  *
@@ -179,11 +208,21 @@ swfdec_sandbox_set_allow_network (SwfdecSandbox *sandbox, gboolean network)
 void
 swfdec_sandbox_use (SwfdecSandbox *sandbox)
 {
+  SwfdecAsContext *context;
+  SwfdecPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_SANDBOX (sandbox));
-  g_return_if_fail (sandbox->type == SWFDEC_SANDBOX_NONE);
+  g_return_if_fail (sandbox->type != SWFDEC_SANDBOX_NONE);
   g_return_if_fail (SWFDEC_AS_OBJECT (sandbox)->context->global == NULL);
 
-  SWFDEC_AS_OBJECT (sandbox)->context->global = SWFDEC_AS_OBJECT (sandbox);
+  context = SWFDEC_AS_OBJECT (sandbox)->context;
+  priv = SWFDEC_PLAYER (context)->priv;
+  context->global = SWFDEC_AS_OBJECT (sandbox);
+
+  context->Function = sandbox->Function;
+  context->Function_prototype = sandbox->Function_prototype;
+  context->Object = sandbox->Object;
+  context->Object_prototype = sandbox->Object_prototype;
 }
 
 /**
@@ -195,10 +234,16 @@ swfdec_sandbox_use (SwfdecSandbox *sandbox)
 void
 swfdec_sandbox_unuse (SwfdecSandbox *sandbox)
 {
+  SwfdecAsContext *context;
+
   g_return_if_fail (SWFDEC_IS_SANDBOX (sandbox));
-  g_return_if_fail (sandbox->type == SWFDEC_SANDBOX_NONE);
   g_return_if_fail (SWFDEC_AS_OBJECT (sandbox)->context->global == SWFDEC_AS_OBJECT (sandbox));
 
-  SWFDEC_AS_OBJECT (sandbox)->context->global = NULL;
+  context = SWFDEC_AS_OBJECT (sandbox)->context;
+  context->global = NULL;
+  context->Function = NULL;
+  context->Function_prototype = NULL;
+  context->Object = NULL;
+  context->Object_prototype = NULL;
 }
 

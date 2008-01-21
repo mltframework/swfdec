@@ -22,12 +22,13 @@
 #endif
 
 #include "swfdec_video.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_net_stream.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_as_internal.h"
+#include "swfdec_sandbox.h"
 
 SWFDEC_AS_NATIVE (667, 1, swfdec_video_attach_video)
 void
@@ -74,7 +75,7 @@ swfdec_video_movie_init_context (SwfdecPlayer *player)
       SWFDEC_AS_STR_Video, 0, NULL, 0));
   if (video == NULL)
     return;
-  player->priv->Video = video;
+  SWFDEC_SANDBOX (context->global)->Video = video;
   proto = swfdec_as_object_new_empty (context);
   if (proto == NULL)
     return;

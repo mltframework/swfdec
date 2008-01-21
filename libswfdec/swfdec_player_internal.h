@@ -92,8 +92,6 @@ struct _SwfdecPlayerPrivate
   guint			interval_id;		/* id returned from setInterval call */
   GList *		intervals;		/* all currently running intervals */
   GHashTable *		registered_classes;	/* name => SwfdecAsObject constructor */
-  SwfdecAsObject *	MovieClip;		/* MovieClip object */
-  SwfdecAsObject *	Video;			/* Video object */
 
   /* rendering */
   SwfdecRectangle     	invalid_extents;      	/* extents of area that needs a redraw in global coordinates */

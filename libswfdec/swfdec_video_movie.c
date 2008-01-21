@@ -23,6 +23,7 @@
 
 #include "swfdec_video_movie.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_resource.h"
 
 G_DEFINE_TYPE (SwfdecVideoMovie, swfdec_video_movie, SWFDEC_TYPE_MOVIE)
 
@@ -129,9 +130,7 @@ swfdec_video_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix,
 static void
 swfdec_video_movie_init_movie (SwfdecMovie *movie)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), player->priv->Video);
+  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), movie->resource->sandbox->Video);
 }
 
 static void

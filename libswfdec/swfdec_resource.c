@@ -68,6 +68,7 @@ swfdec_resource_stream_target_get_player (SwfdecStreamTarget *target)
 static void
 swfdec_resource_stream_target_image (SwfdecResource *instance)
 {
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance)->context);
   SwfdecSpriteMovie *movie = instance->movie;
 
   if (movie->sprite != NULL)
@@ -76,15 +77,17 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
   if (SWFDEC_IS_SWF_DECODER (instance->decoder)) {
     SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (instance->decoder);
 
-    if (swfdec_sandbox_set_allow_network (instance->sandbox, 
-	  SWFDEC_SWF_DECODER (instance->decoder)->use_network)) {
+    g_assert (instance->sandbox == NULL);
+    instance->sandbox = swfdec_sandbox_get_for_url (player,
+	swfdec_loader_get_url (instance->loader),
+	SWFDEC_SWF_DECODER (instance->decoder)->use_network);
+    if (instance->sandbox) {
       movie->sprite = dec->main_sprite;
       g_assert (movie->sprite->parse_frame > 0);
       movie->n_frames = movie->sprite->n_frames;
       swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
       if (swfdec_resource_is_root (instance)) {
-	SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance)->context);
-	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), player->priv->MovieClip);
+	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), instance->sandbox->MovieClip);
 	swfdec_movie_initialize (SWFDEC_MOVIE (movie));
 	swfdec_player_perform_actions (player);
       }
@@ -371,7 +374,8 @@ swfdec_resource_mark (SwfdecAsObject *object)
 
   if (resource->clip_loader)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->clip_loader));
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->sandbox));
+  if (resource->sandbox)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->sandbox));
 }
 
 static void
@@ -540,11 +544,10 @@ swfdec_resource_do_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
 	load->url, swfdec_url_get_url (load->sandbox->url));
     /* FIXME: is replacing correct? */
     swfdec_resource_emit_error (resource, SWFDEC_AS_STR_IllegalRequest);
-    g_object_unref (resource);
     return;
   }
 
-  loader = swfdec_loader_load (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (load->sandbox))->priv->resource->loader, 
+  loader = swfdec_loader_load (player->priv->resource->loader, 
       url, load->request, load->buffer);
   swfdec_resource_set_loader (resource, loader);
   g_object_unref (loader);

@@ -460,7 +460,8 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	  return TRUE;
 	}
 	name = g_strdup_printf ("InitAction %u", id);
-	sprite->init_action = swfdec_script_new_from_bits (&bits, name, SWFDEC_AS_CONTEXT (player)->version);
+	sprite->init_action = swfdec_script_new_from_bits (&bits, name, 
+	    swfdec_movie_get_version (mov));
 	g_free (name);
 	if (sprite->init_action) {
 	  swfdec_player_add_action_script (player, mov, sprite->init_action, 0);
@@ -639,10 +640,10 @@ swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
 static void
 swfdec_sprite_movie_add (SwfdecAsObject *object)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (object->context);
+  SwfdecMovie *movie = SWFDEC_MOVIE (object);
 
-  if (player->priv->MovieClip)
-    swfdec_as_object_set_constructor (object, player->priv->MovieClip);
+  if (movie->resource->sandbox)
+    swfdec_as_object_set_constructor (object, movie->resource->sandbox->MovieClip);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->add (object);
 }

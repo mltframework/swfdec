@@ -882,10 +882,6 @@ swfdec_player_dispose (GObject *object)
 
   while (priv->roots)
     swfdec_movie_destroy (priv->roots->data);
-  if (priv->resource) {
-    g_object_unref (priv->resource);
-    priv->resource = NULL;
-  }
 
   swfdec_function_list_clear (&priv->rooted);
   /* we do this here so references to GC'd objects get freed */
@@ -1525,11 +1521,10 @@ swfdec_player_mark (SwfdecAsContext *context)
 
   g_hash_table_foreach (priv->registered_classes, swfdec_player_mark_string_object, NULL);
   g_hash_table_foreach (priv->scripting_callbacks, swfdec_player_mark_string_object, NULL);
-  swfdec_as_object_mark (priv->MovieClip);
-  swfdec_as_object_mark (priv->Video);
   g_list_foreach (priv->roots, (GFunc) swfdec_as_object_mark, NULL);
   g_list_foreach (priv->intervals, (GFunc) swfdec_as_object_mark, NULL);
   swfdec_function_list_execute (&priv->rooted, player);
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (priv->resource));
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }
@@ -2046,7 +2041,7 @@ swfdec_player_get_export_class (SwfdecPlayer *player, const char *name)
     SWFDEC_LOG ("found registered class %p for %s", ret, name);
     return ret;
   }
-  return priv->MovieClip;
+  return NULL;
 }
 
 /**

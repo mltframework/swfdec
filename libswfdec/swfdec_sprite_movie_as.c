@@ -671,10 +671,13 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
   }
 
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    SwfdecSandbox *sandbox = movie->resource->sandbox;
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_INITIALIZE);
     swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
+    swfdec_sandbox_unuse (sandbox);
     swfdec_movie_initialize (movie);
     swfdec_movie_execute (movie, SWFDEC_EVENT_CONSTRUCT);
+    swfdec_sandbox_use (sandbox);
   } else {
     swfdec_movie_initialize (movie);
   }
@@ -869,20 +872,20 @@ swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
 void
 swfdec_sprite_movie_init_context (SwfdecPlayer *player)
 {
-  SwfdecPlayerPrivate *priv = player->priv;
   SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
   SwfdecAsValue val;
-  SwfdecAsObject *proto;
+  SwfdecAsObject *proto, *movie;
 
-  priv->MovieClip = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
+  movie = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_MovieClip, 0, NULL, 0));
-  if (priv->MovieClip == NULL)
+  if (movie == NULL)
     return;
+  SWFDEC_SANDBOX (context->global)->MovieClip = movie;
   proto = swfdec_as_object_new (context);
   if (!proto)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable_and_flags (priv->MovieClip,
+  swfdec_as_object_set_variable_and_flags (movie,
       SWFDEC_AS_STR_prototype, &val, SWFDEC_AS_VARIABLE_HIDDEN |
       SWFDEC_AS_VARIABLE_PERMANENT);
 };

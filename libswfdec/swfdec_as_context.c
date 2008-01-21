@@ -362,12 +362,16 @@ swfdec_as_context_mark_roots (gpointer key, gpointer value, gpointer data)
 static void
 swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
-  swfdec_as_object_mark (context->global);
-  swfdec_as_value_mark (&context->exception_value);
-  swfdec_as_object_mark (context->Function);
-  swfdec_as_object_mark (context->Function_prototype);
-  swfdec_as_object_mark (context->Object);
-  swfdec_as_object_mark (context->Object_prototype);
+  /* This if is needed for SwfdecPlayer */
+  if (context->global) {
+    swfdec_as_object_mark (context->global);
+    swfdec_as_object_mark (context->Function);
+    swfdec_as_object_mark (context->Function_prototype);
+    swfdec_as_object_mark (context->Object);
+    swfdec_as_object_mark (context->Object_prototype);
+  }
+  if (context->exception)
+    swfdec_as_value_mark (&context->exception_value);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
 }
 
@@ -1388,7 +1392,8 @@ swfdec_as_context_startup (SwfdecAsContext *context)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (context->state == SWFDEC_AS_CONTEXT_NEW);
 
-  if (!swfdec_as_stack_push_segment (context))
+  if (context->cur == NULL &&
+      !swfdec_as_stack_push_segment (context))
     return;
   if (context->global == NULL)
     context->global = swfdec_as_object_new_empty (context);

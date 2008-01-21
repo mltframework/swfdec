@@ -1230,6 +1230,7 @@ swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc,
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (name != NULL);
   g_return_if_fail (argc == 0 || argv != NULL);
+  g_return_if_fail (object->context->global != NULL); /* for SwfdecPlayer */
 
   if (return_value)
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);

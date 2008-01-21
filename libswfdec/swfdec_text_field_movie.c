@@ -1198,11 +1198,15 @@ swfdec_text_field_movie_iterate (SwfdecMovie *movie)
   if (text->scroll_changed) {
     SwfdecAsValue argv[2];
 
+    SWFDEC_FIXME ("I'm pretty sure this is swfdec_player_add_action()'d");
     SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
     SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (movie));
+    swfdec_sandbox_use (movie->resource->sandbox);
     swfdec_as_object_call (SWFDEC_AS_OBJECT (movie),
 	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);
+    swfdec_sandbox_unuse (movie->resource->sandbox);
 
+    /* FIXME: unset this before or after emitting the event? */
     text->scroll_changed = FALSE;
   }
 }

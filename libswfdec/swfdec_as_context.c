@@ -558,6 +558,8 @@ swfdec_as_context_init (SwfdecAsContext *context)
 {
   const char *s;
 
+  context->version = G_MAXUINT;
+
   context->strings = g_hash_table_new (g_str_hash, g_str_equal);
   context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
 

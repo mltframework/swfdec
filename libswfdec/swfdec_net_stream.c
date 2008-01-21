@@ -151,6 +151,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       SWFDEC_LOG ("processing event from timestamp %u", process_events_from);
       process_events_from++; /* increase so we get the next event next time */
       swfdec_bits_init (&bits, event);
+      swfdec_sandbox_use (stream->sandbox);
       if (swfdec_amf_parse (SWFDEC_AS_OBJECT (stream)->context, &bits, 2, 
 	    SWFDEC_AMF_STRING, &name, SWFDEC_AMF_MIXED_ARRAY, &value) != 2) {
 	SWFDEC_ERROR ("could not parse data tag");
@@ -158,6 +159,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 	swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), 
 	    SWFDEC_AS_VALUE_GET_STRING (&name), 1, &value, NULL);
       }
+      swfdec_sandbox_unuse (stream->sandbox);
     }
   }
 }

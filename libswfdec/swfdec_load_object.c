@@ -36,7 +36,7 @@
 static SwfdecPlayer *
 swfdec_load_object_stream_target_get_player (SwfdecStreamTarget *target)
 {
-  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
+  return SWFDEC_PLAYER (SWFDEC_LOAD_OBJECT (target)->target->context);
 }
 
 static void
@@ -47,8 +47,10 @@ swfdec_load_object_stream_target_parse (SwfdecStreamTarget *target,
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
 
   if (load_object->progress != NULL) {
+    swfdec_sandbox_use (load_object->sandbox);
     load_object->progress (load_object->target,
 	swfdec_loader_get_loaded (loader), swfdec_loader_get_size (loader));
+    swfdec_sandbox_unuse (load_object->sandbox);
   }
 }
 
@@ -65,11 +67,13 @@ swfdec_load_object_stream_target_error (SwfdecStreamTarget *target,
   g_object_unref (loader);
 
   /* call finish */
+  swfdec_sandbox_use (load_object->sandbox);
   load_object->finish (load_object->target, NULL);
+  swfdec_sandbox_unuse (load_object->sandbox);
 
   /* unroot */
   swfdec_player_unroot (SWFDEC_PLAYER (
-	SWFDEC_AS_OBJECT (load_object)->context), load_object);
+	SWFDEC_AS_OBJECT (load_object->sandbox)->context), load_object);
 }
 
 static void
@@ -90,16 +94,18 @@ swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
   g_object_unref (loader);
 
   /* call finish */
+  swfdec_sandbox_use (load_object->sandbox);
   if (text != NULL) {
     load_object->finish (load_object->target, 
 	swfdec_as_context_give_string (load_object->target->context, text));
   } else {
     load_object->finish (load_object->target, SWFDEC_AS_STR_EMPTY);
   }
+  swfdec_sandbox_unuse (load_object->sandbox);
 
   /* unroot */
   swfdec_player_unroot (SWFDEC_PLAYER (
-	SWFDEC_AS_OBJECT (load_object)->context), load_object);
+	SWFDEC_AS_OBJECT (load_object->sandbox)->context), load_object);
 }
 
 static void

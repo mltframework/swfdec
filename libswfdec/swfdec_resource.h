@@ -62,6 +62,7 @@ struct _SwfdecResource
   SwfdecResourceState	state;		/* state we're in (for determining callbacks */
   char *		target;		/* target path we use for signalling */
   SwfdecMovieClipLoader *clip_loader;	/* loader that gets notified about load events */
+  SwfdecSandbox *	clip_loader_sandbox; /* sandbox used for events on the clip loader */
 };
 
 struct _SwfdecResourceClass

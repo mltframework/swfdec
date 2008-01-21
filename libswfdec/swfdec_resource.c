@@ -148,8 +148,11 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
   }
   if (n_args)
     memcpy (&vals[skip], args, sizeof (SwfdecAsValue) * n_args);
+  /* FIXME: what's the correct sandbox here? */
+  swfdec_sandbox_use (resource->clip_loader_sandbox);
   swfdec_as_object_call (SWFDEC_AS_OBJECT (resource->clip_loader), SWFDEC_AS_STR_broadcastMessage, 
       n_args + skip, vals, NULL);
+  swfdec_sandbox_unuse (resource->clip_loader_sandbox);
 }
 
 static void
@@ -372,10 +375,14 @@ swfdec_resource_mark (SwfdecAsObject *object)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (object);
 
-  if (resource->clip_loader)
+  if (resource->clip_loader) {
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->clip_loader));
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->clip_loader_sandbox));
+  }
   if (resource->sandbox)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->sandbox));
+
+  SWFDEC_AS_OBJECT_CLASS (swfdec_resource_parent_class)->mark (object);
 }
 
 static void
@@ -391,10 +398,6 @@ swfdec_resource_dispose (GObject *object)
   if (resource->decoder) {
     g_object_unref (resource->decoder);
     resource->decoder = NULL;
-  }
-  if (resource->clip_loader) {
-    g_object_unref (resource->clip_loader);
-    resource->clip_loader = NULL;
   }
   g_free (resource->target);
   g_free (resource->variables);
@@ -535,9 +538,10 @@ swfdec_resource_do_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
   swfdec_as_object_add (SWFDEC_AS_OBJECT (resource), SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource));
   resource->version = 8;
   resource->target = g_strdup (load->target);
-  if (load->loader)
-    resource->clip_loader = g_object_ref (load->loader);
-  swfdec_player_root (player, resource, (GFunc) swfdec_as_object_mark);
+  if (load->loader) {
+    resource->clip_loader = load->loader;
+    resource->clip_loader_sandbox = load->sandbox;
+  }
 
   if (!allowed) {
     SWFDEC_WARNING ("SECURITY: no access to %s from %s",
@@ -547,6 +551,7 @@ swfdec_resource_do_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
     return;
   }
 
+  swfdec_player_root (player, resource, (GFunc) swfdec_as_object_mark);
   loader = swfdec_loader_load (player->priv->resource->loader, 
       url, load->request, load->buffer);
   swfdec_resource_set_loader (resource, loader);
@@ -673,9 +678,7 @@ swfdec_resource_emit_on_load_init (SwfdecResource *resource)
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadInit, FALSE, NULL, 0);
   resource->state = SWFDEC_RESOURCE_DONE;
   /* free now unneeded resources */
-  if (resource->clip_loader) {
-    g_object_unref (resource->clip_loader);
-    resource->clip_loader = NULL;
-  }
+  resource->clip_loader = NULL;
+  resource->clip_loader_sandbox = NULL;
   return TRUE;
 }

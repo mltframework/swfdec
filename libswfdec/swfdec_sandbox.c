@@ -62,9 +62,22 @@ swfdec_sandbox_mark (SwfdecAsObject *object)
 }
 
 static void
+swfdec_sandbox_dispose (GObject *object)
+{
+  SwfdecSandbox *sandbox = SWFDEC_SANDBOX (object);
+
+  swfdec_url_free (sandbox->url);
+
+  G_OBJECT_CLASS (swfdec_sandbox_parent_class)->dispose (object);
+}
+
+static void
 swfdec_sandbox_class_init (SwfdecSandboxClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+
+  object_class->dispose = swfdec_sandbox_dispose;
 
   asobject_class->mark = swfdec_sandbox_mark;
 }
@@ -168,6 +181,7 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
   SwfdecSandbox *sandbox;
   SwfdecURL *real;
   guint as_version;
+  GSList *walk;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (url != NULL, NULL);
@@ -175,11 +189,16 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
   priv = player->priv;
   real = swfdec_url_new_components (swfdec_url_get_protocol (url),
       swfdec_url_get_host (url), swfdec_url_get_port (url), NULL, NULL);
-
   as_version = flash_version < 7 ? 1 : 2;
-  /* FIXME: look up by as version */
-  sandbox = g_hash_table_lookup (priv->sandboxes, real);
-  if (sandbox) {
+
+  for (walk = priv->sandboxes; walk; walk = walk->next) {
+    sandbox = walk->data;
+    if (sandbox->as_version == as_version &&
+	swfdec_url_equal (sandbox->url, real))
+      break;
+  }
+
+  if (walk) {
     swfdec_url_free (real);
 
     if (!swfdec_sandbox_set_allow_network (sandbox, allow_network))
@@ -194,6 +213,7 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
     swfdec_as_object_add (SWFDEC_AS_OBJECT (sandbox), context, size);
     sandbox->url = real;
     sandbox->as_version = as_version;
+    priv->sandboxes = g_slist_prepend (priv->sandboxes, sandbox);
   
     if (!swfdec_sandbox_set_allow_network (sandbox, allow_network))
       return NULL;

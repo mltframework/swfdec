@@ -911,8 +911,7 @@ swfdec_player_dispose (GObject *object)
   }
   g_assert (priv->movies == NULL);
   g_assert (priv->audio == NULL);
-  g_assert (g_hash_table_size (priv->sandboxes) == 0);
-  g_hash_table_destroy (priv->sandboxes);
+  g_slist_free (priv->sandboxes);
   if (priv->external_timeout.callback)
     swfdec_player_remove_timeout (player, &priv->external_timeout);
   if (priv->rate) {
@@ -1524,6 +1523,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   g_hash_table_foreach (priv->scripting_callbacks, swfdec_player_mark_string_object, NULL);
   g_list_foreach (priv->roots, (GFunc) swfdec_as_object_mark, NULL);
   g_list_foreach (priv->intervals, (GFunc) swfdec_as_object_mark, NULL);
+  g_slist_foreach (priv->sandboxes, (GFunc) swfdec_as_object_mark, NULL);
   swfdec_function_list_execute (&priv->rooted, player);
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (priv->resource));
 
@@ -1791,8 +1791,6 @@ swfdec_player_init (SwfdecPlayer *player)
   priv->iterate_timeout.callback = swfdec_player_iterate;
   priv->stage_width = -1;
   priv->stage_height = -1;
-
-  priv->sandboxes = g_hash_table_new (swfdec_url_hash, swfdec_url_equal);
 }
 
 void

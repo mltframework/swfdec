@@ -133,7 +133,7 @@ struct _SwfdecPlayerPrivate
   SwfdecRingBuffer *	actions[SWFDEC_PLAYER_N_ACTION_QUEUES]; /* all actions we've queued up so far */
 
   /* security */
-  GHashTable *		sandboxes;		/* SwfdecURL => SwfdecSandbox mapping */
+  GSList *		sandboxes;		/* all existing sandboxes */
   GList *		loading_policy_files;	/* list of loading SwfdecPlayerLoader - newest first */
   GSList *		policy_files;		/* list of SwfdecPolicyLoader that finished loading */
 };

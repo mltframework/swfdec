@@ -86,7 +86,7 @@ swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
 
   // get text
   text =
-    swfdec_loader_get_text (loader, load_object->target->context->version);
+    swfdec_loader_get_text (loader, load_object->version);
 
   /* break reference to the loader */
   swfdec_stream_set_target (stream, NULL);
@@ -248,5 +248,6 @@ swfdec_load_object_create (SwfdecAsObject *target, const char *url,
   /* get the current security */
   g_assert (SWFDEC_AS_CONTEXT (player)->frame);
   load->sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
+  load->version = SWFDEC_AS_CONTEXT (player)->version;
   swfdec_player_request_resource (player, swfdec_load_object_request, load, NULL);
 }

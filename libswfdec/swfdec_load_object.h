@@ -52,6 +52,7 @@ struct _SwfdecLoadObject {
   SwfdecLoader *		loader;		/* loader when loading or NULL */
 
   SwfdecSandbox *		sandbox;	/* sandbox that inited the loading */
+  guint				version;	/* version used when initiating the load - for parsing the data */
   SwfdecAsObject *		target;		/* target object */
   SwfdecLoadObjectProgress	progress;	/* progress callback */
   SwfdecLoadObjectFinish	finish;		/* finish callback */

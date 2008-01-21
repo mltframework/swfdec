@@ -77,7 +77,6 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
   if (SWFDEC_IS_SWF_DECODER (instance->decoder)) {
     SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (instance->decoder);
 
-    g_assert (instance->sandbox == NULL);
     instance->sandbox = swfdec_sandbox_get_for_url (player,
 	swfdec_loader_get_url (instance->loader),
 	SWFDEC_SWF_DECODER (instance->decoder)->use_network);

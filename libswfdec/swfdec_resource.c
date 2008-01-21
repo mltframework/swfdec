@@ -86,8 +86,8 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
       g_assert (movie->sprite->parse_frame > 0);
       movie->n_frames = movie->sprite->n_frames;
       swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
+      swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), instance->sandbox->MovieClip);
       if (swfdec_resource_is_root (instance)) {
-	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), instance->sandbox->MovieClip);
 	swfdec_movie_initialize (SWFDEC_MOVIE (movie));
 	swfdec_player_perform_actions (player);
       }

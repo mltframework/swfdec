@@ -284,7 +284,8 @@ noinst_HEADERS = \
 	swfdec_video.h \
 	swfdec_video_movie.h \
 	swfdec_xml_node.h \
-	swfdec_xml.h
+	swfdec_xml.h \
+	swfdec_xml_socket.h
 
 EXTRA_DIST = \
 	compiler.c \

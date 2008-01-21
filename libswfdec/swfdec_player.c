@@ -473,9 +473,10 @@ swfdec_player_do_action (SwfdecPlayer *player)
     } while (action->movie == NULL); /* skip removed actions */
     if (action) {
       if (action->script) {
-	swfdec_sandbox_use (action->movie->resource->sandbox);
+	SwfdecSandbox *sandbox = action->movie->resource->sandbox;
+	swfdec_sandbox_use (sandbox);
 	swfdec_as_object_run (SWFDEC_AS_OBJECT (action->movie), action->script);
-	swfdec_sandbox_unuse (action->movie->resource->sandbox);
+	swfdec_sandbox_unuse (sandbox);
       } else {
 	swfdec_movie_execute (action->movie, action->event);
       }

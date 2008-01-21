@@ -219,7 +219,7 @@ swfdec_xml_socket_connect (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *host;
   int port;
 
-  SWFDEC_AS_CHECK (0, NULL, "si", host, port);
+  SWFDEC_AS_CHECK (0, NULL, "si", &host, &port);
 
   if (SWFDEC_IS_MOVIE (object) || object == NULL)
     return;

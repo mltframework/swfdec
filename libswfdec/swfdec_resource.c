@@ -542,6 +542,7 @@ swfdec_resource_do_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
     resource->clip_loader = load->loader;
     resource->clip_loader_sandbox = load->sandbox;
   }
+  resource->sandbox = load->sandbox;
 
   if (!allowed) {
     SWFDEC_WARNING ("SECURITY: no access to %s from %s",

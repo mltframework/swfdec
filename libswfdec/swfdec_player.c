@@ -936,17 +936,22 @@ swfdec_player_dispose (GObject *object)
 static void
 swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const char *signal)
 {
+  GSList *walk;
   SwfdecAsValue val;
   SwfdecAsObject *obj;
 
   SWFDEC_DEBUG ("broadcasting message %s.%s", object_name, signal);
-  obj = SWFDEC_AS_CONTEXT (player)->global;
-  swfdec_as_object_get_variable (obj, object_name, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return;
-  obj = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-  SWFDEC_AS_VALUE_SET_STRING (&val, signal);
-  swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, 1, &val, NULL);
+  for (walk = player->priv->sandboxes; walk; walk = walk->next) {
+    SwfdecSandbox *sandbox = walk->data;
+    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (sandbox), object_name, &val);
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+      return;
+    obj = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+    SWFDEC_AS_VALUE_SET_STRING (&val, signal);
+    swfdec_sandbox_use (sandbox);
+    swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, 1, &val, NULL);
+    swfdec_sandbox_unuse (sandbox);
+  }
 }
 
 static void

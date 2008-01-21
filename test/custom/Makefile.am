@@ -32,6 +32,8 @@ EXTRA_DIST = \
 	button-hittest-8.swf \
 	button-hittest-8.swf.trace \
 	button-hittest.c \
+	button-hittest.stas \
+	button-hittest.sts \
 	definebutton-5.swf \
 	definebutton-5.swf.trace \
 	definebutton-6.swf \

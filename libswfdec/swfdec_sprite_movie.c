@@ -418,12 +418,14 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	count = swfdec_bits_get_u16 (&bits);
 	SWFDEC_LOG ("exporting %u assets", count);
 	for (i = 0; i < count && swfdec_bits_left (&bits); i++) {
+	  SwfdecSwfDecoder *s = SWFDEC_SWF_DECODER (resource->decoder);
 	  guint id;
 	  SwfdecCharacter *object;
 	  char *name;
+
 	  id = swfdec_bits_get_u16 (&bits);
-	  object = swfdec_swf_decoder_get_character (SWFDEC_SWF_DECODER (resource->decoder), id);
-	  name = swfdec_bits_get_string (&bits, SWFDEC_AS_CONTEXT (player)->version);
+	  object = swfdec_swf_decoder_get_character (s, id);
+	  name = swfdec_bits_get_string (&bits, s->version);
 	  if (object == NULL) {
 	    SWFDEC_ERROR ("cannot export id %u as %s, id wasn't found", id, name);
 	  } else if (name == NULL) {

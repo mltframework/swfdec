@@ -226,6 +226,32 @@ swfdec_sandbox_use (SwfdecSandbox *sandbox)
 }
 
 /**
+ * swfdec_sandbox_try_use:
+ * @sandbox: the sandbox to use
+ *
+ * Makes sure a sandbox is in use. If no sandbox is in use currently, use the
+ * given @sandbox. This function is intended for cases where code can be called
+ * from both inside scripts with a sandbox already set or outside with no 
+ * sandbox in use.
+ *
+ * Returns: %TRUE if the new sandbox will be used. You need to call 
+ *          swfdec_sandbox_unuse() afterwards. %FALSE if a sandbox is already in
+ *          use.
+ **/
+gboolean
+swfdec_sandbox_try_use (SwfdecSandbox *sandbox)
+{
+  g_return_val_if_fail (SWFDEC_IS_SANDBOX (sandbox), FALSE);
+  g_return_val_if_fail (sandbox->type != SWFDEC_SANDBOX_NONE, FALSE);
+
+  if (SWFDEC_AS_OBJECT (sandbox)->context->global)
+    return FALSE;
+
+  swfdec_sandbox_use (sandbox);
+  return TRUE;
+}
+
+/**
  * swfdec_sandbox_unuse:
  * @sandbox: a #SwfdecSandbox
  *

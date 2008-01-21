@@ -74,6 +74,7 @@ SwfdecSandbox *		swfdec_sandbox_get_for_url	(SwfdecPlayer *	  	player,
 							 gboolean		allow_network);
 
 void			swfdec_sandbox_use		(SwfdecSandbox *	sandbox);
+gboolean		swfdec_sandbox_try_use		(SwfdecSandbox *	sandbox);
 void			swfdec_sandbox_unuse		(SwfdecSandbox *	sandbox);
 
 G_END_DECLS

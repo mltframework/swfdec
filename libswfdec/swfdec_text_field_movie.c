@@ -30,10 +30,12 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_interpret.h"
-#include "swfdec_text_format.h"
-#include "swfdec_xml.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_resource.h"
+#include "swfdec_sandbox.h"
+#include "swfdec_text_format.h"
+#include "swfdec_xml.h"
 
 G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_MOVIE)
 
@@ -1118,6 +1120,9 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecAsContext *cx;
   SwfdecAsValue val;
+  gboolean needs_unuse;
+
+  needs_unuse = swfdec_sandbox_try_use (movie->resource->sandbox);
 
   cx = SWFDEC_AS_OBJECT (movie)->context;
 
@@ -1138,7 +1143,7 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   text->format_new =
     SWFDEC_TEXT_FORMAT (swfdec_text_format_new_no_properties (cx));
   if (!text->format_new)
-    return;
+    goto out;
 
   swfdec_text_format_set_defaults (text->format_new);
   text->format_new->color = text->text->color;
@@ -1171,6 +1176,10 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
     swfdec_text_field_movie_set_listen_variable (text,
 	swfdec_as_context_get_string (cx, text->text->variable));
   }
+
+out:
+  if (needs_unuse)
+    swfdec_sandbox_unuse (movie->resource->sandbox);
 }
 
 static void

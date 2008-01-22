@@ -67,6 +67,7 @@ struct _SwfdecPlayerPrivate
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */
   SwfdecResource *	resource;		/* initial resource loaded */
+  SwfdecURL *		base_url;		/* base url or NULL if no loader set yet */
   SwfdecPlayerScripting *scripting;		/* scripting object */
   GHashTable *		scripting_callbacks;	/* GC string => SwfdecAsFunction mapping of script callbacks */
   GType			socket_type;		/* type to use for creating sockets */

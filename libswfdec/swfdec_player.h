@@ -128,13 +128,19 @@ SwfdecAlignment	swfdec_player_get_alignment	(SwfdecPlayer *		player);
 void		swfdec_player_set_alignment	(SwfdecPlayer *		player,
 						 SwfdecAlignment	align);
 gulong		swfdec_player_get_maximum_runtime
-						(SwfdecPlayer *	player);
+						(SwfdecPlayer *		player);
 void		swfdec_player_set_maximum_runtime 
-						(SwfdecPlayer *	player,
-						 gulong		msecs);
+						(SwfdecPlayer *		player,
+						 gulong			msecs);
+const SwfdecURL *
+		swfdec_player_get_url		(SwfdecPlayer *		player);
+const SwfdecURL *
+		swfdec_player_get_base_url	(SwfdecPlayer *		player);
+void		swfdec_player_set_base_url    	(SwfdecPlayer *		player,
+						 const SwfdecURL *	url);
 SwfdecPlayerScripting *
-		swfdec_player_get_scripting	(SwfdecPlayer *	player);
-void		swfdec_player_set_scripting	(SwfdecPlayer *	player,
+		swfdec_player_get_scripting	(SwfdecPlayer *		player);
+void		swfdec_player_set_scripting	(SwfdecPlayer *		player,
 						 SwfdecPlayerScripting *scripting);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,

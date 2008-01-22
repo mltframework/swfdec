@@ -619,7 +619,9 @@ enum {
   PROP_SCRIPTING,
   PROP_SYSTEM,
   PROP_MAX_RUNTIME,
-  PROP_SOCKET_TYPE
+  PROP_SOCKET_TYPE,
+  PROP_BASE_URL,
+  PROP_URL
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -735,6 +737,16 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_SOCKET_TYPE:
       g_value_set_gtype (value, priv->socket_type);
+      break;
+    case PROP_URL:
+      if (priv->resource) {
+	g_value_set_boxed (value, swfdec_loader_get_url (priv->resource->loader));
+      } else {
+	g_value_set_boxed (value, NULL);
+      }
+      break;
+    case PROP_BASE_URL:
+      g_value_set_boxed (value, priv->base_url);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -930,6 +942,10 @@ swfdec_player_dispose (GObject *object)
   if (priv->runtime) {
     g_timer_destroy (priv->runtime);
     priv->runtime = NULL;
+  }
+  if (priv->base_url) {
+    swfdec_url_free (priv->base_url);
+    priv->base_url = NULL;
   }
 }
 
@@ -1615,6 +1631,12 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_SOCKET_TYPE,
       g_param_spec_gtype ("socket type", "socket type", "type to use for creating sockets",
 	  SWFDEC_TYPE_SOCKET, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_URL,
+      g_param_spec_boxed ("url", "url", "URL of resource currently played back or NULL if not set",
+	  SWFDEC_TYPE_URL, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_BASE_URL,
+      g_param_spec_boxed ("base-url", "base url", "base URL for creating new resource or NULL if not set yet",
+	  SWFDEC_TYPE_URL, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -2179,11 +2201,18 @@ swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loa
   g_return_if_fail (player->priv->resource == NULL);
   g_return_if_fail (SWFDEC_IS_LOADER (loader));
 
+  g_object_freeze_notify (G_OBJECT (player));
   priv = player->priv;
   priv->resource = swfdec_resource_new (player, loader, variables);
+  if (priv->base_url == NULL) {
+    priv->base_url = swfdec_url_new_parent (swfdec_loader_get_url (loader));
+    g_object_notify (G_OBJECT (player), "base-url");
+  }
   movie = swfdec_movie_new (player, -16384, NULL, priv->resource, NULL, SWFDEC_AS_STR__level0);
   movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);
+  g_object_notify (G_OBJECT (player), "url");
+  g_object_thaw_notify (G_OBJECT (player));
 }
 
 /**
@@ -2871,3 +2900,66 @@ swfdec_player_set_scripting (SwfdecPlayer *player, SwfdecPlayerScripting *script
   priv->scripting = g_object_ref (scripting);
   g_object_notify (G_OBJECT (player), "scripting");
 }
+
+/**
+ * swfdec_player_get_url:
+ * @player: a #SwfdecPlayer
+ *
+ * Gets the URL of the resource that is currently played back. If no URL has 
+ * been set on the @player yet, %NULL is returned.
+ *
+ * Returns: the #SwfdecURL currently played back or %NULL
+ **/
+const SwfdecURL *
+swfdec_player_get_url (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  if (player->priv->resource == NULL)
+    return NULL;
+
+  return swfdec_loader_get_url (player->priv->resource->loader);
+}
+
+/**
+ * swfdec_player_get_base_url:
+ * @player: a #SwfdecPlayer
+ *
+ * Gets the base URL that this player uses when resolving a relative URL. It is
+ * automatically set to the parent directory of the currently played back 
+ * resource, but can be changed using swfdec_player_set_base_url(). When no
+ * resource has been set on the @player yet, %NULL is returned.
+ *
+ * Returns: the base #SwfdecURL for resolving relative links or %NULL
+ **/
+const SwfdecURL *
+swfdec_player_get_base_url (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  return player->priv->base_url;
+}
+
+/**
+ * swfdec_player_set_base_url:
+ * @player: a #SwfdecPlayer
+ * @url: a #SwfdecURL
+ *
+ * Sets the URL that will be used for resolving realtive links inside the 
+ * @player.
+ **/
+void
+swfdec_player_set_base_url (SwfdecPlayer *player, const SwfdecURL *url)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (url != NULL);
+
+  priv = player->priv;
+  if (priv->base_url)
+    swfdec_url_free (priv->base_url);
+  priv->base_url = swfdec_url_copy (url);
+  g_object_notify (G_OBJECT (player), "base-url");
+}
+

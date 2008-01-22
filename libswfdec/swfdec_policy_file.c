@@ -286,7 +286,7 @@ swfdec_policy_file_allow (SwfdecPolicyFile *file, const SwfdecURL *url)
   if (hostname == NULL)
     hostname = "?";
   len = strlen (hostname);
-  emantsoh = g_utf8_strreverse (emantsoh, len);
+  emantsoh = g_utf8_strreverse (hostname, len);
   for (walk = file->allowed_hosts; walk; walk = walk->next) {
     GPatternSpec *pattern = walk->data;
     if (g_pattern_match (pattern, len, hostname, emantsoh)) {

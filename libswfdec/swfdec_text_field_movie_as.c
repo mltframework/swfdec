@@ -933,7 +933,7 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
     g_signal_handlers_disconnect_by_func (text->style_sheet,
 	 swfdec_text_field_movie_style_sheet_update, text);
     g_object_remove_weak_pointer (G_OBJECT (text->style_sheet), 
-	(gpointer *) &text->style_sheet);
+	(gpointer) &text->style_sheet);
   }
 
   text->style_sheet = value;
@@ -942,7 +942,7 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
     g_signal_connect_swapped (value, "update",
 	G_CALLBACK (swfdec_text_field_movie_style_sheet_update), text);
     g_object_add_weak_pointer (G_OBJECT (text->style_sheet), 
-	(gpointer *) &text->style_sheet);
+	(gpointer) &text->style_sheet);
 
     swfdec_text_field_movie_style_sheet_update (text);
   }

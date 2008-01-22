@@ -504,11 +504,11 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, SwfdecSandbox *sandbox, cons
 
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
   g_return_if_fail (SWFDEC_IS_SANDBOX (sandbox));
-  g_return_if_fail (url != NULL);
 
   cx = SWFDEC_AS_OBJECT (stream)->context;
   player = SWFDEC_PLAYER (cx);
   url = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), url_string);
+  g_return_if_fail (url != NULL);
   stream->sandbox = sandbox;
   if (swfdec_url_is_local (url)) {
     swfdec_net_stream_load (player, url, TRUE, stream);

@@ -1066,7 +1066,7 @@ swfdec_text_field_movie_dispose (GObject *object)
     g_signal_handlers_disconnect_matched (text->style_sheet, 
 	G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, text);
     g_object_remove_weak_pointer (G_OBJECT (text->style_sheet), 
-	(gpointer *) &text->style_sheet);
+	(gpointer) &text->style_sheet);
   }
   text->style_sheet = NULL;
 

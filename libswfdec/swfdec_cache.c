@@ -26,7 +26,7 @@
 #include "swfdec_debug.h"
 
 SwfdecCache *
-swfdec_cache_new (guint max_size)
+swfdec_cache_new (gulong max_size)
 {
   SwfdecCache *cache;
   
@@ -62,7 +62,7 @@ swfdec_cache_unref (SwfdecCache *cache)
   g_free (cache);
 }
 
-guint
+gulong
 swfdec_cache_get_usage (SwfdecCache *cache)
 {
   g_return_val_if_fail (cache != NULL, 0);
@@ -71,7 +71,7 @@ swfdec_cache_get_usage (SwfdecCache *cache)
 }
 
 void
-swfdec_cache_shrink (SwfdecCache *cache, guint max_usage)
+swfdec_cache_shrink (SwfdecCache *cache, gulong max_usage)
 {
   g_return_if_fail (cache != NULL);
 
@@ -79,10 +79,27 @@ swfdec_cache_shrink (SwfdecCache *cache, guint max_usage)
     SwfdecCacheHandle *handle = g_queue_pop_tail (cache->queue);
     g_assert (handle);
     cache->usage -= handle->size;
-    SWFDEC_LOG ("%p removing %p (%u => %u)", cache, handle, 
+    SWFDEC_LOG ("%p removing %p (%lu => %lu)", cache, handle, 
 	cache->usage + handle->size, cache->usage);
     handle->unload (handle);
   }
+}
+
+gulong
+swfdec_cache_get_size (SwfdecCache *cache)
+{
+  g_return_val_if_fail (cache != NULL, 0);
+
+  return cache->max_size;
+}
+
+void
+swfdec_cache_set_size (SwfdecCache *cache, gulong max_usage)
+{
+  g_return_if_fail (cache != NULL);
+
+  swfdec_cache_shrink (cache, max_usage);
+  cache->max_size = max_usage;
 }
 
 /**
@@ -114,7 +131,7 @@ swfdec_cache_add_handle (SwfdecCache *cache, const SwfdecCacheHandle *handle)
     swfdec_cache_shrink (cache, cache->max_size - handle->size);
     g_queue_push_head (cache->queue, (gpointer) handle);
     cache->usage += handle->size;
-    SWFDEC_LOG ("%p adding %p (%u => %u)", cache, handle, 
+    SWFDEC_LOG ("%p adding %p (%lu => %lu)", cache, handle, 
 	cache->usage - handle->size, cache->usage);
   }
 }
@@ -141,7 +158,7 @@ swfdec_cache_remove_handle (SwfdecCache *cache, const SwfdecCacheHandle *handle)
   if (list) {
     g_queue_delete_link (cache->queue, list);
     cache->usage -= handle->size;
-    SWFDEC_LOG ("%p removing %p (%u => %u)", cache, handle, 
+    SWFDEC_LOG ("%p removing %p (%lu => %lu)", cache, handle, 
 	cache->usage + handle->size, cache->usage);
   }
 }

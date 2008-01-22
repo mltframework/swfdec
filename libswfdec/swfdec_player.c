@@ -692,7 +692,7 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       g_value_set_uint (value, swfdec_player_get_background_color (player));
       break;
     case PROP_CACHE_SIZE:
-      g_value_set_uint (value, priv->cache->max_size);
+      g_value_set_ulong (value, swfdec_cache_get_size (priv->cache));
       break;
     case PROP_INITIALIZED:
       g_value_set_boolean (value, swfdec_player_is_initialized (player));
@@ -824,7 +824,7 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       swfdec_player_set_background_color (player, g_value_get_uint (value));
       break;
     case PROP_CACHE_SIZE:
-      priv->cache->max_size = g_value_get_uint (value);
+      swfdec_cache_set_size (priv->cache, g_value_get_ulong (value));
       break;
     case PROP_WIDTH:
       swfdec_player_set_size (player, g_value_get_int (value), priv->stage_height);
@@ -1586,8 +1586,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       g_param_spec_long ("next-event", "next event", "how many milliseconds until the next event or -1 when no event pending",
 	  -1, G_MAXLONG, -1, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_CACHE_SIZE,
-      g_param_spec_uint ("cache-size", "cache size", "maximum cache size in bytes",
-	  0, G_MAXUINT, 50 * 1024 * 1024, G_PARAM_READABLE));
+      g_param_spec_ulong ("cache-size", "cache size", "maximum cache size in bytes",
+	  0, G_MAXUINT, 50 * 1024 * 1024, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
       g_param_spec_uint ("background-color", "background color", "ARGB color used to draw the background",
 	  0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READWRITE));

@@ -29,26 +29,29 @@ G_BEGIN_DECLS
 //typedef struct _SwfdecCacheHandle SwfdecCacheHandle;
 
 struct _SwfdecCache {
-  guint	refcount;		/* reference count */
-  guint	max_size;		/* max size of cache */
-  guint	usage;			/* current size of cache */
+  guint		refcount;		/* reference count */
+  gulong	max_size;		/* max size of cache */
+  gulong	usage;			/* current size of cache */
 
   GQueue *	queue;			/* queue of loaded SwfdecCacheHandle, sorted by most recently used */
 };
 
 struct _SwfdecCacheHandle {
-  guint		size;	      	/* size of this item */
+  gulong	size;	          	/* size of this item */
 
   GDestroyNotify	unload;		/* function called when unloading this handle */
 };
 
-SwfdecCache *	swfdec_cache_new		(guint		max_size);
+SwfdecCache *	swfdec_cache_new		(gulong			max_size);
 void		swfdec_cache_ref		(SwfdecCache *		cache);
 void		swfdec_cache_unref		(SwfdecCache *		cache);
 
-guint	swfdec_cache_get_usage	  	(SwfdecCache *		cache);
+gulong		swfdec_cache_get_size		(SwfdecCache *		cache);
+void		swfdec_cache_set_size		(SwfdecCache *		cache,
+						 gulong			max_usage);
+gulong		swfdec_cache_get_usage	  	(SwfdecCache *		cache);
 void		swfdec_cache_shrink		(SwfdecCache *		cache,
-						 guint		max_usage);
+						 gulong			max_usage);
 void		swfdec_cache_add_handle		(SwfdecCache *	  	cache,
 						 const SwfdecCacheHandle *handle);
 void		swfdec_cache_remove_handle    	(SwfdecCache *	  	cache,

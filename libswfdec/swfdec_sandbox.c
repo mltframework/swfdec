@@ -213,7 +213,7 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
     swfdec_as_object_add (SWFDEC_AS_OBJECT (sandbox), context, size);
     sandbox->url = real;
     sandbox->as_version = as_version;
-    priv->sandboxes = g_slist_prepend (priv->sandboxes, sandbox);
+    priv->sandboxes = g_slist_append (priv->sandboxes, sandbox);
   
     if (!swfdec_sandbox_set_allow_network (sandbox, allow_network))
       return NULL;

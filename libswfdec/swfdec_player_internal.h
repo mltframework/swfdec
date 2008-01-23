@@ -163,6 +163,12 @@ void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
     swfdec_function_list_remove (&(player)->priv->rooted, (data))
 #define swfdec_player_request_resource(player, request_func, data, destroy_notify) \
     swfdec_function_list_add (&(player)->priv->resource_requests, (request_func), (data), (destroy_notify))
+SwfdecURL *	swfdec_player_create_url	(SwfdecPlayer *		player,
+						 const char *		string);
+SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *		player,
+						 const SwfdecURL *	url,
+						 SwfdecLoaderRequest	request,
+						 SwfdecBuffer *		buffer);
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
 						 const char *		name);
 void		swfdec_player_set_export_class	(SwfdecPlayer *		player,

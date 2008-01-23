@@ -152,45 +152,87 @@ SwfdecURL *
 swfdec_url_new_components (const char *protocol, const char *hostname, 
     guint port, const char *path, const char *query)
 {
-  GString *url;
-  SwfdecURL *result;
+  GString *str;
+  SwfdecURL *url;
 
   g_return_val_if_fail (protocol != NULL, NULL);
   g_return_val_if_fail (hostname != NULL || port == 0, NULL);
   g_return_val_if_fail (port < 65536, NULL);
 
-  url = g_string_new (protocol);
-  g_string_append (url, "://");
+  url = g_slice_new0 (SwfdecURL);
+  str = g_string_new ("");
+  
+  /* protocol */
+  url->protocol = g_ascii_strdown (protocol, -1);
+  g_string_append (str, url->protocol);
+  g_string_append (str, "://");
+
+  /* hostname + port */
   if (hostname) {
-    g_string_append (url, hostname);
+    url->host = g_ascii_strdown (hostname, -1);
+    url->port = port;
+    g_string_append (str, url->host);
     if (port) {
-      g_string_append_printf (url, ":%u", port);
+      g_string_append_printf (str, ":%u", port);
     }
   }
-  g_string_append (url, "/");
-  if (path)
-    g_string_append (url, path);
-  if (query) {
-    g_string_append (url, "?");
-    g_string_append (url, query);
+  g_string_append (str, "/");
+
+  /* path */
+  if (path) {
+    url->path = g_strdup (path);
+    g_string_append (str, path);
   }
-  result = swfdec_url_new (url->str);
-  g_string_free (url, TRUE);
-  return result;
+
+  /* query string */
+  if (query) {
+    url->query = g_strdup (query);
+    g_string_append (str, "?");
+    g_string_append (str, query);
+  }
+
+  url->url = g_string_free (str, FALSE);
+  return url;
+}
+
+static gboolean
+swfdec_url_path_to_parent_path (char *path)
+{
+  char *last = strrchr (path, '/');
+  
+  if (last == NULL)
+    return FALSE;
+
+  if (last[1] == '\0') {
+    last[0] = '\0';
+    return swfdec_url_path_to_parent_path (path);
+  }
+
+  *last = '\0';
+  return TRUE;
 }
 
 /**
  * swfdec_url_new_parent:
  * @url: a #SwfdecURL
  *
- * Creates a new url that is the parent of @url.
+ * Creates a new url that is the parent of @url. If the given @url has no 
+ * parent, a copy of itself is returned.
  *
- * Returns: a new url pointing to the parent of @url.
+ * Returns: a new url pointing to the parent of @url or %NULL on failure.
  **/
 SwfdecURL *
 swfdec_url_new_parent (const SwfdecURL *url)
 {
-  return swfdec_url_new_relative (url, "");
+  char *path;
+  SwfdecURL *ret;
+  
+  path = g_strdup (url->path);
+  swfdec_url_path_to_parent_path (path);
+  ret = swfdec_url_new_components (url->protocol, url->host, url->port,
+      path, NULL);
+  g_free (path);
+  return ret;
 }
 
 /**
@@ -199,7 +241,8 @@ swfdec_url_new_parent (const SwfdecURL *url)
  * @string: a relative or absolute URL path
  *
  * Parses @string into a new URL. If the given @string is a relative URL, it 
- * uses @url to resolve it to an absolute url.
+ * uses @url to resolve it to an absolute url; @url must already contain a
+ * directory path.
  *
  * Returns: a new #SwfdecURL or %NULL if an error was detected.
  **/
@@ -207,40 +250,55 @@ SwfdecURL *
 swfdec_url_new_relative (const SwfdecURL *url, const char *string)
 {
   SwfdecURL *ret;
-  GString *str;
+  char *path, *query;
 
   g_return_val_if_fail (url != NULL, NULL);
   g_return_val_if_fail (string != NULL, NULL);
 
-  if (strstr (string, "://")) {
-    /* full-qualified URL */
+  /* check for full-qualified URL */
+  if (strstr (string, "://"))
     return swfdec_url_new (string);
-  }
-  str = g_string_new (url->protocol);
-  g_string_append (str, "://");
-  if (url->host)
-    g_string_append (str, url->host);
-  if (string[0] == '/' && !swfdec_url_has_protocol (url, "file")) {
+
+  if (string[0] == '/') {
     /* absolute URL */
-    g_string_append (str, string);
+    string++;
+    query = strchr (string, '?');
+    if (query == NULL) {
+      path = *string ? g_strdup (string) : NULL;
+    } else {
+      path = g_strndup (string, query - string);
+      query = g_strdup (query + 1);
+    }
   } else {
     /* relative URL */
-    g_string_append (str, "/");
-    if (url->path == NULL) {
-      g_string_append (str, string);
-    } else {
-      char *slash;
-      slash = strrchr (url->path, '/');
-      if (slash == NULL) {
-	g_string_append (str, string);
-      } else {
-	g_string_append_len (str, url->path, slash - url->path + 1); /* append '/', too */
-	g_string_append (str, string);
+    char *cur = g_strdup (url->path);
+    while (g_str_has_prefix (string, "../")) {
+      if (!swfdec_url_path_to_parent_path (cur)) {
+	g_free (cur);
+	return NULL;
       }
+      string += 3;
     }
+    if (strstr (string, "/../")) {
+      g_free (cur);
+      return NULL;
+    }
+    path = g_strconcat (cur, "/", string, NULL);
+    g_free (cur);
+    cur = path;
+    query = strchr (cur, '?');
+    if (query == NULL) {
+      path = *string ? g_strdup (cur) : NULL;
+    } else {
+      path = g_strndup (cur, query - cur);
+      query = g_strdup (query + 1);
+    }
+    g_free (cur);
   }
-  ret = swfdec_url_new (str->str);
-  g_string_free (str, TRUE);
+  ret = swfdec_url_new_components (url->protocol, url->host, url->port,
+      path, query);
+  g_free (path);
+  g_free (query);
   return ret;
 }
 

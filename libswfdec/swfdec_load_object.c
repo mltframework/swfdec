@@ -162,8 +162,6 @@ swfdec_load_object_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
     SWFDEC_WARNING ("SECURITY: no access to %s from %s",
 	load->url, swfdec_url_get_url (load->sandbox->url));
 
-    /* FIXME: call finish? */
-
     /* unroot */
     swfdec_player_unroot (player, load);
     return;
@@ -184,7 +182,11 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
   SwfdecURL *url;
 
   /* FIXME: or is this relative to the player? */
-  url = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), load->url);
+  url = swfdec_player_create_url (player, load->url);
+  if (url == NULL) {
+    swfdec_load_object_load (player, NULL, FALSE, load);
+    return;
+  }
   switch (load->sandbox->type) {
     case SWFDEC_SANDBOX_REMOTE:
     case SWFDEC_SANDBOX_LOCAL_NETWORK:

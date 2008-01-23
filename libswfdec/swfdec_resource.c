@@ -593,7 +593,11 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
     return;
   }
 
-  url = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), load->url);
+  url = swfdec_player_create_url (player, load->url);
+  if (url == NULL) {
+    swfdec_resource_do_load (player, NULL, FALSE, load);
+    return;
+  }
   switch (load->sandbox->type) {
     case SWFDEC_SANDBOX_REMOTE:
       swfdec_resource_do_load (player, url, !swfdec_url_is_local (url), load);

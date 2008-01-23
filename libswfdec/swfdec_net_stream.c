@@ -490,7 +490,7 @@ swfdec_net_stream_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean all
     g_object_unref (loader);
   } else {
     SWFDEC_WARNING ("SECURITY: no access to %s from NetStream",
-	swfdec_url_get_url (url));
+	url ? swfdec_url_get_url (url) : "invalid URL");
     stream->sandbox = NULL;
   }
 }
@@ -507,8 +507,12 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, SwfdecSandbox *sandbox, cons
 
   cx = SWFDEC_AS_OBJECT (stream)->context;
   player = SWFDEC_PLAYER (cx);
-  url = swfdec_url_new_relative (swfdec_loader_get_url (player->priv->resource->loader), url_string);
-  g_return_if_fail (url != NULL);
+  url = swfdec_player_create_url (player, url_string);
+  if (url == NULL) {
+    swfdec_net_stream_load (player, NULL, FALSE, stream);
+    return;
+  }
+
   stream->sandbox = sandbox;
   if (swfdec_url_is_local (url)) {
     swfdec_net_stream_load (player, url, TRUE, stream);

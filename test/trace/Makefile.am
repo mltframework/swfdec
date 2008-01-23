@@ -227,6 +227,8 @@ EXTRA_DIST = \
 	assetnative-7.swf.trace \
 	assetnative-8.swf \
 	assetnative-8.swf.trace \
+	assetnative-9.swf \
+	assetnative-9.swf.trace \
 	ASSetPropFlags-extended.as \
 	ASSetPropFlags-extended-5.swf \
 	ASSetPropFlags-extended-5.swf.trace \

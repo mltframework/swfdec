@@ -10,6 +10,7 @@ _global.Accessibility = Accessibility;
 _global.Array = Array;
 _global.AsBroadcaster = AsBroadcaster;
 _global.AsSetupError = AsSetupError;
+_global.AssetCache = AssetCache;
 _global.Boolean = Boolean;
 _global.Button = Button;
 _global.Camera = Camera;
@@ -199,7 +200,7 @@ function trace_properties_recurse (o, prefix, identifier, level)
     var prop = all[i];
 
     if (typeof (o[prop]) == "undefined") {
-      ASSetPropFlags (o, prop, 0, 5248);
+      ASSetPropFlags (o, prop, 0, 13440);
       if (typeof (o[prop]) != "undefined") {
 	set_info (info, prop, "newer", true);
 	// don't set the flags back
@@ -385,7 +386,7 @@ function generate_names (o, prefix, identifier, output)
       var newer = false;
 
       if (typeof (o[prop]) == "undefined") {
-	ASSetPropFlags (o, prop, 0, 5248);
+	ASSetPropFlags (o, prop, 0, 13440);
 	if (typeof (o[prop]) != "undefined")
 	  newer = true;
       }
@@ -395,12 +396,12 @@ function generate_names (o, prefix, identifier, output)
 	    identifier, prop, output);
 
       if (newer == true)
-	ASSetPropFlags (o, prop, 5248);
+	ASSetPropFlags (o, prop, 13440);
     }
   }
 }
 
-#if GENERATE_NAMES
+#ifdef GENERATE_NAMES
 
 ASSetPropFlags (_global, "flash", 0, 4096);
 
@@ -445,13 +446,15 @@ ASSetPropFlags (_global, "flash", 4096);
 #include "trace_properties_names_7.as"
 #elif __SWF_VERSION__ == 8
 #include "trace_properties_names_8.as"
+#elif __SWF_VERSION__ >= 9
+#include "trace_properties_names_9.as"
 #endif
 
 ASSetPropFlags (_global, "flash", 0, 4096);
 
 for (var i = 0; i < mySecretIds.length; i++) {
   if (mySecretIds[i][2] == true)
-    ASSetPropFlags (eval (mySecretIds[i][0]), mySecretIds[i][1], 0, 5248);
+    ASSetPropFlags (eval (mySecretIds[i][0]), mySecretIds[i][1], 0, 13440);
 }
 
 _global["mySecretId"] = "_global";
@@ -463,7 +466,7 @@ for (var i = 0; i < mySecretIds.length; i++) {
 
 for (var i = 0; i < mySecretIds.length; i++) {
   if (mySecretIds[i][2] == true)
-    ASSetPropFlags (eval (mySecretIds[i][0]), mySecretIds[i][1], 5248);
+    ASSetPropFlags (eval (mySecretIds[i][0]), mySecretIds[i][1], 13440);
 }
 
 ASSetPropFlags (_global, "flash", 4096);

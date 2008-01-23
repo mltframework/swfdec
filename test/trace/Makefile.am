@@ -2949,6 +2949,7 @@ EXTRA_DIST = \
 	trace_properties_names_6.as \
 	trace_properties_names_7.as \
 	trace_properties_names_8.as \
+	trace_properties_names_9.as \
 	transform.swf \
 	transform.swf.trace \
 	transform-properties.as \

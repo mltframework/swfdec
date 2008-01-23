@@ -77,6 +77,8 @@
  *                                   and above.
  * @SWFDEC_AS_VARIABLE_VERSION_8_UP: This symbol is only visible in version 8 
  *                                   and above.
+ * @SWFDEC_AS_VARIABLE_VERSION_9_UP: This symbol is only visible in version 9 
+ *                                   and above.
  *
  * These flags are used to describe various properties of a variable inside
  * Swfdec. You can manually set them with swfdec_as_object_set_variable_flags().
@@ -227,6 +229,8 @@ swfdec_as_object_variable_enabled_in_version (SwfdecAsVariable *var,
     return FALSE;
   if (var->flags & SWFDEC_AS_VARIABLE_VERSION_8_UP && version < 8)
     return FALSE;
+  if (var->flags & SWFDEC_AS_VARIABLE_VERSION_9_UP && version < 9)
+    return FALSE;
 
   return TRUE;
 }
@@ -327,6 +331,9 @@ swfdec_as_object_get_prototype_internal (SwfdecAsObject *object)
   // don't check 8_UP for version 6 or 7
   if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP &&
       version < 6)
+    return NULL;
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_9_UP &&
+      version < 9)
     return NULL;
   // check that it exists, if version < 7
   if (version < 7 &&
@@ -445,11 +452,12 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
       // version 6, so let's forget SWFDEC_AS_VARIABLE_VERSION_7_UP flag, oops!
       // we will still set the value though, even if that flag is set
       var->flags &= ~(SWFDEC_AS_VARIABLE_VERSION_6_UP |
-	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_8_UP);
+	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_8_UP |
+	  SWFDEC_AS_VARIABLE_VERSION_8_UP);
     } else {
       var->flags &= ~(SWFDEC_AS_VARIABLE_VERSION_6_UP |
 	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_7_UP |
-	  SWFDEC_AS_VARIABLE_VERSION_8_UP);
+	  SWFDEC_AS_VARIABLE_VERSION_8_UP | SWFDEC_AS_VARIABLE_VERSION_9_UP);
     }
   }
   if (object->watches) {

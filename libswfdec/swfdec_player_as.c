@@ -272,6 +272,9 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
     } else if (s[0] == '8') {
       flags |= SWFDEC_AS_VARIABLE_VERSION_8_UP;
       s++;
+    } else if (s[0] == '9') {
+      flags |= SWFDEC_AS_VARIABLE_VERSION_9_UP;
+      s++;
     }
     function = swfdec_get_asnative (cx, x, y);
     if (function == NULL)
@@ -310,6 +313,9 @@ ASSetNativeAccessor (SwfdecAsContext *cx, SwfdecAsObject *object,
       s++;
     } else if (s[0] == '8') {
       flags |= SWFDEC_AS_VARIABLE_VERSION_8_UP;
+      s++;
+    } else if (s[0] == '9') {
+      flags |= SWFDEC_AS_VARIABLE_VERSION_9_UP;
       s++;
     }
     get = swfdec_get_asnative (cx, x, y++);

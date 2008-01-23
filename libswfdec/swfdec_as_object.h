@@ -35,6 +35,7 @@ typedef enum {
   SWFDEC_AS_VARIABLE_VERSION_NOT_6 = (1 << 8),
   SWFDEC_AS_VARIABLE_VERSION_7_UP = (1 << 10),
   SWFDEC_AS_VARIABLE_VERSION_8_UP = (1 << 12),
+  SWFDEC_AS_VARIABLE_VERSION_9_UP = (1 << 13),
 } SwfdecAsVariableFlag;
 
 typedef enum {

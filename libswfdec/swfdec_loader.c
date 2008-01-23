@@ -105,7 +105,13 @@ G_DEFINE_ABSTRACT_TYPE (SwfdecLoader, swfdec_loader, SWFDEC_TYPE_STREAM)
 static const char *
 swfdec_loader_describe (SwfdecStream *stream)
 {
-  return swfdec_url_get_url (SWFDEC_LOADER (stream)->url);
+  const SwfdecURL *url = SWFDEC_LOADER (stream)->url;
+  
+  if (url) {
+    return swfdec_url_get_url (url);
+  } else {
+    return "unknown url";
+  }
 }
 
 static void
@@ -143,13 +149,6 @@ swfdec_loader_set_property (GObject *object, guint param_id, const GValue *value
     case PROP_SIZE:
       if (loader->size == -1 && g_value_get_long (value) >= 0)
 	swfdec_loader_set_size (loader, g_value_get_long (value));
-      break;
-    case PROP_URL:
-      loader->url = g_value_dup_boxed (value);
-      if (loader->url == NULL) {
-	g_warning ("must set a valid URL");
-	loader->url = swfdec_url_new ("");
-      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -191,7 +190,7 @@ swfdec_loader_class_init (SwfdecLoaderClass *klass)
 	  0, G_MAXULONG, 0, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_URL,
       g_param_spec_boxed ("url", "url", "URL for this file",
-	  SWFDEC_TYPE_URL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+	  SWFDEC_TYPE_URL, G_PARAM_READABLE));
 
   stream_class->describe = swfdec_loader_describe;
 }
@@ -207,7 +206,7 @@ swfdec_loader_init (SwfdecLoader *loader)
 /*** INTERNAL API ***/
 
 SwfdecLoader *
-swfdec_loader_load (SwfdecLoader *loader, const SwfdecURL *url,
+swfdec_loader_load (SwfdecLoader *loader, const char *url,
     SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
   SwfdecLoader *ret;
@@ -218,8 +217,9 @@ swfdec_loader_load (SwfdecLoader *loader, const SwfdecURL *url,
 
   klass = SWFDEC_LOADER_GET_CLASS (loader);
   g_return_val_if_fail (klass->load != NULL, NULL);
-  ret = g_object_new (G_OBJECT_CLASS_TYPE (klass), "url", url, NULL);
-  klass->load (ret, loader, request, buffer);
+  ret = g_object_new (G_OBJECT_CLASS_TYPE (klass), NULL);
+  klass->load (ret, loader, url, request, buffer);
+  g_return_val_if_fail (loader->url != NULL, ret);
   return ret;
 }
 
@@ -281,17 +281,21 @@ swfdec_loader_get_filename (SwfdecLoader *loader)
  * Updates the url of the given @loader to point to the new @url. This is useful
  * whe encountering HTTP redirects, as the loader is supposed to reference the
  * final URL after all rdirections.
- * This function may not be called after calling swfdec_loader_open().
+ * This function may only be called once and must have been called before 
+ * calling swfdec_stream_open() on @loader.
  **/
 void
 swfdec_loader_set_url (SwfdecLoader *loader, const char *url)
 {
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-  g_return_if_fail (url != NULL);
-  /* g_return_if_fail (LOADER_IS_NOT_OPEN_YET) */
+  SwfdecURL *real;
 
-  swfdec_url_free (loader->url);
-  loader->url = swfdec_url_new (url);
+  g_return_if_fail (SWFDEC_IS_LOADER (loader));
+  g_return_if_fail (loader->url == NULL);
+  g_return_if_fail (url != NULL);
+
+  real = swfdec_url_new (url);
+  g_return_if_fail (real != NULL);
+  loader->url = real;
 }
 
 /**
@@ -301,7 +305,8 @@ swfdec_loader_set_url (SwfdecLoader *loader, const char *url)
  * Gets the url this loader is handling. This is mostly useful for writing 
  * subclasses of #SwfdecLoader.
  *
- * Returns: a #SwfdecURL describing @loader.
+ * Returns: a #SwfdecURL describing @loader or %NULL if the @url is not known 
+ *          yet.
  **/
 const SwfdecURL *
 swfdec_loader_get_url (SwfdecLoader *loader)

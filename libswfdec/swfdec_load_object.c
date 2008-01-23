@@ -154,7 +154,7 @@ swfdec_load_object_init (SwfdecLoadObject *load_object)
 }
 
 static void
-swfdec_load_object_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean allow, gpointer obj)
+swfdec_load_object_load (SwfdecPlayer *player, gboolean allow, gpointer obj)
 {
   SwfdecLoadObject *load = SWFDEC_LOAD_OBJECT (obj);
 
@@ -167,7 +167,7 @@ swfdec_load_object_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
     return;
   }
 
-  load->loader = swfdec_loader_load (player->priv->resource->loader, url, load->request, load->buffer);
+  load->loader = swfdec_player_load (player, load->url, load->request, load->buffer);
 
   swfdec_stream_set_target (SWFDEC_STREAM (load->loader), SWFDEC_STREAM_TARGET (load));
   swfdec_loader_set_data_type (load->loader, SWFDEC_LOADER_DATA_TEXT);
@@ -181,10 +181,14 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
   SwfdecPlayer *player = SWFDEC_PLAYER (playerp);
   SwfdecURL *url;
 
+  if (swfdec_url_path_is_relative (load->url)) {
+    swfdec_load_object_load (player, TRUE, load);
+    return;
+  }
   /* FIXME: or is this relative to the player? */
   url = swfdec_player_create_url (player, load->url);
   if (url == NULL) {
-    swfdec_load_object_load (player, NULL, FALSE, load);
+    swfdec_load_object_load (player, FALSE, load);
     return;
   }
   switch (load->sandbox->type) {
@@ -192,7 +196,7 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
     case SWFDEC_SANDBOX_LOCAL_NETWORK:
     case SWFDEC_SANDBOX_LOCAL_TRUSTED:
       if (swfdec_url_is_local (url)) {
-	swfdec_load_object_load (player, url, swfdec_url_is_local (url), load);
+	swfdec_load_object_load (player, swfdec_url_is_local (url), load);
       } else {
 	SwfdecURL *load_url = swfdec_url_new_components (
 	    swfdec_url_get_protocol (url), swfdec_url_get_host (url), 
@@ -203,7 +207,7 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
       }
       break;
     case SWFDEC_SANDBOX_LOCAL_FILE:
-      swfdec_load_object_load (player, url, swfdec_url_is_local (url), load);
+      swfdec_load_object_load (player, swfdec_url_is_local (url), load);
       break;
     case SWFDEC_SANDBOX_NONE:
     default:

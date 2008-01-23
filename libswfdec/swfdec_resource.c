@@ -525,7 +525,7 @@ swfdec_resource_load_mark (gpointer loadp, gpointer playerp)
 }
 
 static void
-swfdec_resource_do_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean allowed, gpointer loadp)
+swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
 {
   SwfdecResourceLoad *load = loadp;
   SwfdecResource *resource;
@@ -552,8 +552,7 @@ swfdec_resource_do_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean al
   }
 
   swfdec_player_root (player, resource, (GFunc) swfdec_as_object_mark);
-  loader = swfdec_loader_load (player->priv->resource->loader, 
-      url, load->request, load->buffer);
+  loader = swfdec_player_load (player, load-> url, load->request, load->buffer);
   swfdec_resource_set_loader (resource, loader);
   g_object_unref (loader);
 }
@@ -593,14 +592,18 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
     return;
   }
 
+  if (swfdec_url_path_is_relative (load->url)) {
+    swfdec_resource_do_load (player, TRUE, load);
+    return;
+  }
   url = swfdec_player_create_url (player, load->url);
   if (url == NULL) {
-    swfdec_resource_do_load (player, NULL, FALSE, load);
+    swfdec_resource_do_load (player, FALSE, load);
     return;
   }
   switch (load->sandbox->type) {
     case SWFDEC_SANDBOX_REMOTE:
-      swfdec_resource_do_load (player, url, !swfdec_url_is_local (url), load);
+      swfdec_resource_do_load (player, !swfdec_url_is_local (url), load);
       break;
     case SWFDEC_SANDBOX_LOCAL_NETWORK:
     case SWFDEC_SANDBOX_LOCAL_TRUSTED:
@@ -608,10 +611,10 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
 	SWFDEC_FIXME ("Adobe claims you need to be allowed by policy files now, "
 	    "we don't check that though");
       }
-      swfdec_resource_do_load (player, url, TRUE, load);
+      swfdec_resource_do_load (player, TRUE, load);
       break;
     case SWFDEC_SANDBOX_LOCAL_FILE:
-      swfdec_resource_do_load (player, url, swfdec_url_is_local (url), load);
+      swfdec_resource_do_load (player, swfdec_url_is_local (url), load);
       break;
     case SWFDEC_SANDBOX_NONE:
     default:

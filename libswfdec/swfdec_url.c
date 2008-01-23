@@ -609,3 +609,18 @@ swfdec_url_hash (gconstpointer url)
   return ret;
 }
 
+/**
+ * swfdec_url_path_is_relative:
+ * @path: a string used to specify a url
+ *
+ * Checks if the given URL is relative or absolute.
+ *
+ * Returns: %TRUE if the path is a relative path, %FALSE if it is absolute
+ **/
+gboolean
+swfdec_url_path_is_relative (const char *path)
+{
+  g_return_val_if_fail (path != NULL, FALSE);
+
+  return strstr (path, "://") == NULL;
+}

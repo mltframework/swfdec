@@ -46,6 +46,7 @@ struct _SwfdecNetStream
   SwfdecAsObject	object;
 
   SwfdecNetConnection *	conn;		/* connection used for opening streams */
+  char *		requested_url;	/* URL we have requested that isn't loaded yet */
   SwfdecLoader *	loader;		/* input stream */
   SwfdecSandbox *	sandbox;	/* sandbox to emit events in */
   SwfdecFlvDecoder *	flvdecoder;	/* flv decoder */

@@ -2141,12 +2141,11 @@ swfdec_player_create_url (SwfdecPlayer *player, const char *string)
 }
 
 SwfdecLoader *
-swfdec_player_load (SwfdecPlayer *player, const SwfdecURL *url,
+swfdec_player_load (SwfdecPlayer *player, const char *url,
     SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (url != NULL, NULL);
-  g_return_val_if_fail (buffer != NULL, NULL);
 
   return swfdec_loader_load (player->priv->resource->loader, url, request, buffer);
 }

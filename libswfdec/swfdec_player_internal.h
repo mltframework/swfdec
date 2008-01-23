@@ -41,7 +41,7 @@ typedef enum {
 
 typedef void (* SwfdecActionFunc) (gpointer object, gpointer data);
 typedef gboolean (* SwfdecAudioRemoveFunc) (SwfdecAudio *audio, gpointer data);
-typedef void (* SwfdecPolicyFunc) (SwfdecPlayer *player, const SwfdecURL *url, gboolean allow, gpointer data);
+typedef void (* SwfdecPolicyFunc) (SwfdecPlayer *player, gboolean allow, gpointer data);
 
 typedef struct _SwfdecTimeout SwfdecTimeout;
 struct _SwfdecTimeout {
@@ -166,7 +166,7 @@ void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 SwfdecURL *	swfdec_player_create_url	(SwfdecPlayer *		player,
 						 const char *		string);
 SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *		player,
-						 const SwfdecURL *	url,
+						 const char *		url,
 						 SwfdecLoaderRequest	request,
 						 SwfdecBuffer *		buffer);
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,

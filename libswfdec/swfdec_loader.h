@@ -58,7 +58,7 @@ struct _SwfdecLoader
 {
   SwfdecStream		stream;
 
-  /*< private >*/
+  /*< protected >*/
   SwfdecURL *		url;		/* the URL for this loader in UTF-8 - must be set on creation */
   glong			size;		/* number of bytes in stream or -1 if unknown */
   SwfdecLoaderDataType	data_type;	/* type this stream is in (identified by swfdec) */
@@ -68,9 +68,9 @@ struct _SwfdecLoaderClass
 {
   SwfdecStreamClass	stream_class;
 
-  /* initialize the loader. The URL will be set already. */
   void			(* load)	(SwfdecLoader *			loader, 
 					 SwfdecLoader *			parent,
+					 const char *			url,
 					 SwfdecLoaderRequest		request,
 					 SwfdecBuffer *	           	buffer);
 };

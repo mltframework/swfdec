@@ -372,6 +372,8 @@ swfdec_net_stream_dispose (GObject *object)
   }
   swfdec_net_stream_set_loader (stream, NULL);
   g_assert (stream->movies == NULL);
+  g_free (stream->requested_url);
+  stream->requested_url = NULL;
 
   G_OBJECT_CLASS (swfdec_net_stream_parent_class)->dispose (object);
 }
@@ -478,21 +480,23 @@ swfdec_net_stream_new (SwfdecNetConnection *conn)
 }
 
 static void
-swfdec_net_stream_load (SwfdecPlayer *player, const SwfdecURL *url, gboolean allowed, gpointer streamp)
+swfdec_net_stream_load (SwfdecPlayer *player, gboolean allowed, gpointer streamp)
 {
   SwfdecNetStream *stream = streamp;
   SwfdecLoader *loader;
 
   if (allowed) {
-    loader = swfdec_loader_load (player->priv->resource->loader, url, 
+    loader = swfdec_player_load (player, stream->requested_url, 
 	SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
     swfdec_net_stream_set_loader (stream, loader);
     g_object_unref (loader);
   } else {
     SWFDEC_WARNING ("SECURITY: no access to %s from NetStream",
-	url ? swfdec_url_get_url (url) : "invalid URL");
+	stream->requested_url);
     stream->sandbox = NULL;
   }
+  g_free (stream->requested_url);
+  stream->requested_url = NULL;
 }
 
 void
@@ -507,19 +511,29 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, SwfdecSandbox *sandbox, cons
 
   cx = SWFDEC_AS_OBJECT (stream)->context;
   player = SWFDEC_PLAYER (cx);
-  url = swfdec_player_create_url (player, url_string);
-  if (url == NULL) {
-    swfdec_net_stream_load (player, NULL, FALSE, stream);
+
+  if (stream->requested_url != NULL) {
+    SWFDEC_FIXME ("can't load %s - already loading %s, what now?", 
+	url_string, stream->requested_url);
     return;
   }
-
+  stream->requested_url = g_strdup (url_string);
   stream->sandbox = sandbox;
+  if (swfdec_url_path_is_relative (url_string)) {
+    swfdec_net_stream_load (player, TRUE, stream);
+    return;
+  }
+  url = swfdec_player_create_url (player, url_string);
+  if (url == NULL) {
+    swfdec_net_stream_load (player, FALSE, stream);
+    return;
+  }
   if (swfdec_url_is_local (url)) {
-    swfdec_net_stream_load (player, url, TRUE, stream);
+    swfdec_net_stream_load (player, TRUE, stream);
   } else {
     switch (sandbox->type) {
       case SWFDEC_SANDBOX_REMOTE:
-	swfdec_net_stream_load (player, url, TRUE, stream);
+	swfdec_net_stream_load (player, TRUE, stream);
 	break;
       case SWFDEC_SANDBOX_LOCAL_NETWORK:
       case SWFDEC_SANDBOX_LOCAL_TRUSTED:
@@ -533,7 +547,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, SwfdecSandbox *sandbox, cons
 	}
 	break;
       case SWFDEC_SANDBOX_LOCAL_FILE:
-	swfdec_net_stream_load (player, url, FALSE, stream);
+	swfdec_net_stream_load (player, FALSE, stream);
 	break;
       case SWFDEC_SANDBOX_NONE:
       default:

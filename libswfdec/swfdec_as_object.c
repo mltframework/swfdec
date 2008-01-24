@@ -357,13 +357,13 @@ swfdec_as_object_get_prototype (SwfdecAsObject *object)
 
   if (prototype == NULL)
     return NULL;
-  // check 9_UP flag
-  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_9_UP &&
-      version < 9)
-    return NULL;
   // check 8_UP for version 7, still not for version 6
   if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP &&
       version == 7)
+    return NULL;
+  // check 9_UP flag for version 8, still not for version 7 or 6
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_9_UP &&
+      version == 8)
     return NULL;
   // require it to exist even on version >= 7
   if (version >= 7 &&

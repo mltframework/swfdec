@@ -299,6 +299,10 @@ System.Product.prototype.installedVersion = function () {
   var o = {}; o["Implement System.Product.installedVersion"] ();
 };
 
+System.Product.prototype.validate = function () {
+  var o = {}; o["Implement System.Product.validate"] ();
+};
+
 ASSetPropFlags (System.Product.prototype, null, 3);
 
 /*** System.IME ***/

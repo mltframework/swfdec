@@ -2701,6 +2701,15 @@ EXTRA_DIST = \
 	string-lastIndexOf-7.swf.trace \
 	string-lastIndexOf-8.swf \
 	string-lastIndexOf-8.swf.trace \
+	string-old-upperlowercase.as \
+	string-old-upperlowercase-5.swf \
+	string-old-upperlowercase-5.swf.trace \
+	string-old-upperlowercase-6.swf \
+	string-old-upperlowercase-6.swf.trace \
+	string-old-upperlowercase-7.swf \
+	string-old-upperlowercase-7.swf.trace \
+	string-old-upperlowercase-8.swf \
+	string-old-upperlowercase-8.swf.trace \
 	string-properties.as \
 	string-properties-5.swf \
 	string-properties-5.swf.trace \

@@ -68,22 +68,6 @@ struct _SwfdecGtkLoaderClass {
 G_DEFINE_TYPE (SwfdecGtkLoader, swfdec_gtk_loader, SWFDEC_TYPE_FILE_LOADER)
 
 static void
-swfdec_gtk_loader_set_size (SwfdecGtkLoader *gtk)
-{
-  const char *s = soup_message_get_header (gtk->message->response_headers, "Content-Length");
-  unsigned long l;
-  char *end;
-
-  if (s == NULL)
-    return;
-
-  errno = 0;
-  l = strtoul (s, &end, 10);
-  if (errno == 0 && *end == 0 && l <= G_MAXLONG)
-    swfdec_loader_set_size (SWFDEC_LOADER (gtk), l);
-}
-
-static void
 swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
 {
   char *real_uri;
@@ -92,25 +76,39 @@ swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
     return;
 
   real_uri = soup_uri_to_string (soup_message_get_uri (gtk->message), FALSE);
-  swfdec_gtk_loader_set_size (gtk);
   swfdec_loader_set_url (SWFDEC_LOADER (gtk), real_uri);
+  g_free (real_uri);
+  if (soup_message_headers_get_encoding (gtk->message->response_headers) == SOUP_ENCODING_CONTENT_LENGTH) {
+    swfdec_loader_set_size (SWFDEC_LOADER (gtk), 
+	soup_message_headers_get_content_length (gtk->message->response_headers));
+  }
   swfdec_stream_open (SWFDEC_STREAM (gtk));
   gtk->opened = TRUE;
-  g_free (real_uri);
 }
 
 static void
-swfdec_gtk_loader_push (SoupMessage *msg, gpointer loader)
+swfdec_gtk_loader_free_soup_buffer (unsigned char *data, gpointer chunk)
+{
+  soup_buffer_free (chunk);
+}
+
+static void
+swfdec_gtk_loader_push (SoupMessage *msg, SoupBuffer *chunk, gpointer loader)
 {
   SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
   SwfdecBuffer *buffer;
 
+  chunk = soup_buffer_copy (chunk);
+
   swfdec_gtk_loader_ensure_open (gtk);
-  buffer = swfdec_buffer_new_and_alloc (msg->response.length);
-  memcpy (buffer->data, msg->response.body, msg->response.length);
+  buffer = swfdec_buffer_new ();
+  buffer->data = (unsigned char *) chunk->data;
+  buffer->length = chunk->length;
+  buffer->priv = chunk;
+  buffer->free = swfdec_gtk_loader_free_soup_buffer;
   swfdec_stream_push (loader, buffer);
 }
-
+  
 static void
 swfdec_gtk_loader_finished (SoupMessage *msg, gpointer loader)
 {
@@ -167,8 +165,8 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
     g_signal_connect (gtk->message, "got-chunk", G_CALLBACK (swfdec_gtk_loader_push), gtk);
     g_signal_connect (gtk->message, "finished", G_CALLBACK (swfdec_gtk_loader_finished), gtk);
     if (buffer)
-      soup_message_set_request (gtk->message, "appliation/x-www-urlencoded",
-	  SOUP_BUFFER_USER_OWNED, (char *) buffer->data, buffer->length);
+      soup_message_set_request (gtk->message, "appliation/x-www-form-urlencoded",
+	  SOUP_MEMORY_COPY, (char *) buffer->data, buffer->length);
     g_object_ref (gtk->message);
     soup_session_queue_message (klass->session, gtk->message, NULL, NULL);
   }
@@ -187,7 +185,7 @@ swfdec_gtk_loader_close (SwfdecStream *stream)
     if (!eof) {
       SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
 
-      soup_session_cancel_message (klass->session, gtk->message);
+      soup_session_cancel_message (klass->session, gtk->message, SOUP_STATUS_CANCELLED);
       g_object_unref (gtk->message);
       gtk->message = NULL;
     }

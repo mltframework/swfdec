@@ -70,12 +70,12 @@ swfdec_gtk_socket_close (SwfdecStream *stream)
 }
 
 static void
-swfdec_gtk_socket_do_connect (SoupSocket *sock, int status, SwfdecGtkSocket *gtk)
+swfdec_gtk_socket_do_connect (SoupSocket *sock, guint status, gpointer gtk)
 {
   if (SOUP_STATUS_IS_SUCCESSFUL (status))
-    swfdec_stream_open (SWFDEC_STREAM (gtk));
+    swfdec_stream_open (gtk);
   else
-    swfdec_stream_error (SWFDEC_STREAM (gtk), "error connecting");
+    swfdec_stream_error (gtk, "error connecting");
 
 }
 
@@ -92,10 +92,12 @@ swfdec_gtk_socket_do_read (SoupSocket *sock, SwfdecGtkSocket *gtk)
   SwfdecBuffer *buffer;
   SoupSocketIOStatus status;
   gsize len;
+  GError *error = NULL;
 
   do {
     buffer = swfdec_buffer_new_and_alloc (SWFDEC_GTK_SOCKET_BLOCK_SIZE);
-    status = soup_socket_read (sock, buffer, SWFDEC_GTK_SOCKET_BLOCK_SIZE, &len);
+    status = soup_socket_read (sock, buffer, SWFDEC_GTK_SOCKET_BLOCK_SIZE, 
+	&len, NULL, &error);
     buffer->length = len;
     switch (status) {
       case SOUP_SOCKET_OK:
@@ -107,7 +109,8 @@ swfdec_gtk_socket_do_read (SoupSocket *sock, SwfdecGtkSocket *gtk)
 	break;
       case SOUP_SOCKET_ERROR:
 	swfdec_buffer_unref (buffer);
-	swfdec_stream_error (SWFDEC_STREAM (gtk), "error reading data");
+	swfdec_stream_error (SWFDEC_STREAM (gtk), "%s", error->message);
+	g_error_free (error);
 	break;
       default:
 	g_warning ("unhandled status code %u from soup_socket_read()", (guint) status);
@@ -121,11 +124,13 @@ swfdec_gtk_socket_do_write (SoupSocket *sock, SwfdecGtkSocket *gtk)
 {
   SwfdecBuffer *buffer;
   SoupSocketIOStatus status;
+  GError *error = NULL;
   gsize len;
 
   gtk->sock_writable = TRUE;
   while ((buffer = swfdec_buffer_queue_peek_buffer (gtk->queue))) {
-    status = soup_socket_write (sock, buffer->data, buffer->length, &len);
+    status = soup_socket_write (sock, buffer->data, buffer->length, 
+	&len, NULL, &error);
     swfdec_buffer_unref (buffer);
     switch (status) {
       case SOUP_SOCKET_OK:
@@ -137,8 +142,9 @@ swfdec_gtk_socket_do_write (SoupSocket *sock, SwfdecGtkSocket *gtk)
 	gtk->sock_writable = FALSE;
 	break;
       case SOUP_SOCKET_ERROR:
-	swfdec_stream_error (SWFDEC_STREAM (gtk), "error writing data");
-	break;
+	swfdec_stream_error (SWFDEC_STREAM (gtk), "%s", error->message);
+	g_error_free (error);
+	return;
       default:
 	g_warning ("unhandled status code %u from soup_socket_read()", (guint) status);
 	break;
@@ -156,17 +162,14 @@ swfdec_gtk_socket_connect (SwfdecSocket *sock_, SwfdecPlayer *player,
   addr = soup_address_new (hostname, port);
   sock->sock = soup_socket_new (
       SOUP_SOCKET_FLAG_NONBLOCKING, TRUE,
-      /* FIXME: we should set nodelay, no? */
-      SOUP_SOCKET_FLAG_NODELAY, TRUE, NULL);
-  g_signal_connect (sock->sock, "connect-result", 
-      G_CALLBACK (swfdec_gtk_socket_do_connect), socket);
+      SOUP_SOCKET_REMOTE_ADDRESS, addr, NULL);
   g_signal_connect (sock->sock, "disconnect", 
       G_CALLBACK (swfdec_gtk_socket_do_disconnect), socket);
   g_signal_connect (sock->sock, "readable", 
       G_CALLBACK (swfdec_gtk_socket_do_read), socket);
   g_signal_connect (sock->sock, "writable", 
       G_CALLBACK (swfdec_gtk_socket_do_write), socket);
-  soup_socket_connect (sock->sock, addr);
+  soup_socket_connect_async (sock->sock, NULL, swfdec_gtk_socket_do_connect, sock);
 }
 
 static void

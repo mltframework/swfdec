@@ -107,7 +107,7 @@ dnl
 GTK_VER=2.8.0
 AC_SUBST(GTK_VER)
 if test "$enable_gtk" = "yes"; then
-	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER libsoup-2.2 >= 2.2.0, HAVE_GTK=yes)
+	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER libsoup-2.4, HAVE_GTK=yes)
 	AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
 else
 	AC_MSG_NOTICE([Gtk support was not enabled.])

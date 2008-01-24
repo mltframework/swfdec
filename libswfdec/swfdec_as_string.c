@@ -617,8 +617,7 @@ swfdec_as_string_toLowerCase (SwfdecAsContext *cx, SwfdecAsObject *object,
   char *s;
 
   s = g_utf8_strdown (string, -1);
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
-  g_free (s);
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
 }
 
 SWFDEC_AS_NATIVE (251, 3, swfdec_as_string_toUpperCase)
@@ -630,8 +629,33 @@ swfdec_as_string_toUpperCase (SwfdecAsContext *cx, SwfdecAsObject *object,
   char *s;
 
   s = g_utf8_strup (string, -1);
-  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
-  g_free (s);
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
+}
+
+// only available as ASnative
+SWFDEC_AS_NATIVE (102, 1, swfdec_as_string_old_toLowerCase)
+void
+swfdec_as_string_old_toLowerCase (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  const char *string = swfdec_as_string_object_to_string (cx, object);
+  char *s;
+
+  s = g_ascii_strdown (string, -1);
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
+}
+
+// only available as ASnative
+SWFDEC_AS_NATIVE (102, 0, swfdec_as_string_old_toUpperCase)
+void
+swfdec_as_string_old_toUpperCase (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  const char *string = swfdec_as_string_object_to_string (cx, object);
+  char *s;
+
+  s = g_ascii_strup (string, -1);
+  SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
 }
 
 /* escape and unescape are implemented here so the mad string functions share the same place */

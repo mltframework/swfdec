@@ -202,9 +202,10 @@ render_all_streams (SwfdecPlayer *player, guint msecs, guint n_samples, TestData
 static gboolean
 run_test (const char *filename)
 {
-  SwfdecLoader *loader;
+  SwfdecURL *url;
   SwfdecPlayer *player = NULL;
-  guint i, msecs;
+  guint i;
+  long msecs;
   GError *error = NULL;
   char *dirname, *basename;
   const char *name;
@@ -232,24 +233,20 @@ run_test (const char *filename)
   g_free (dirname);
   g_free (basename);
 
-  loader = swfdec_file_loader_new (filename);
-  g_object_get (loader, "error", &basename, NULL);
-  if (basename) {
-    g_print ("  ERROR: %s\n", basename);
-    g_object_unref (loader);
-    g_free (basename);
-    goto error;
-  }
   player = swfdec_player_new (NULL);
+  url = swfdec_url_new_from_input (filename);
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), &data);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), &data);
   g_signal_connect (player, "advance", G_CALLBACK (render_all_streams), &data);
-  swfdec_player_set_loader (player, loader);
+  swfdec_player_set_url (player, url);
+  swfdec_url_free (url);
 
   for (i = 0; i < 10; i++) {
     data.current_frame++;
     data.current_frame_audio = 0;
     msecs = swfdec_player_get_next_event (player);
+    if (msecs < 0)
+      goto error;
     swfdec_player_advance (player, msecs);
   }
   g_object_unref (player);

@@ -138,33 +138,29 @@ swfdec_gtk_loader_dispose (GObject *object)
 }
 
 static void
-swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, 
+swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecPlayer *player, 
     const char *url_string, SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
   SwfdecURL *url;
   
-  if (parent) {
-    SwfdecURL *parent_url = swfdec_url_new_parent (swfdec_loader_get_url (parent));
-    url = swfdec_url_new_relative (parent_url, url_string);
-    swfdec_url_free (parent_url);
+  if (swfdec_url_path_is_relative (url_string)) {
+    url = swfdec_url_new_relative (swfdec_player_get_base_url (player), url_string);
   } else {
     url = swfdec_url_new (url_string);
   }
 
   if (url == NULL) {
-    //swfdec_stream_error (loader, "invalid URL %s", url_string);
-    swfdec_stream_error (SWFDEC_STREAM (loader), "invalid URL");
+    swfdec_stream_error (SWFDEC_STREAM (loader), "invalid URL %s", url_string);
     return;
   };
   if (!swfdec_url_has_protocol (url, "http") &&
       !swfdec_url_has_protocol (url, "https")) {
-    SWFDEC_LOADER_CLASS (swfdec_gtk_loader_parent_class)->load (loader, 
-	parent, url_string, request, buffer);
+    SWFDEC_LOADER_CLASS (swfdec_gtk_loader_parent_class)->load (loader, player,
+	url_string, request, buffer);
   } else {
     SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
     SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
 
-    swfdec_loader_set_url (loader, swfdec_url_get_url (url));
     gtk->message = soup_message_new (request == SWFDEC_LOADER_REQUEST_POST ? "POST" : "GET",
 	swfdec_url_get_url (url));
     soup_message_set_flags (gtk->message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
@@ -219,27 +215,3 @@ swfdec_gtk_loader_init (SwfdecGtkLoader *gtk_loader)
 {
 }
 
-/**
- * swfdec_gtk_loader_new:
- * @uri: The location of the file to open
- *
- * Creates a new loader for the given URI. The uri must be a valid UTF-8-encoded
- * URL. 
- *
- * Returns: a new #SwfdecGtkLoader
- **/
-SwfdecLoader *
-swfdec_gtk_loader_new (const char *uri)
-{
-  SwfdecLoader *loader;
-  SwfdecURL *url;
-
-  g_return_val_if_fail (uri != NULL, NULL);
-
-  url = swfdec_url_new (uri);
-  loader = g_object_new (SWFDEC_TYPE_GTK_LOADER, NULL);
-  swfdec_gtk_loader_load (loader, NULL, swfdec_url_get_url (url), SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
-  /* END HACK */
-  swfdec_url_free (url);
-  return loader;
-}

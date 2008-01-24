@@ -250,6 +250,7 @@ main (int argc, char *argv[])
   int ret = 0;
   SwfdecPlayer *player;
   glong id;
+  SwfdecURL *url;
 
   swfdec_init ();
 
@@ -258,7 +259,10 @@ main (int argc, char *argv[])
     return 0;
   }
 
-  player = swfdec_player_new_from_file (argv[1]);
+  player = swfdec_player_new (NULL);
+  url = swfdec_url_new_from_input (argv[1]);
+  swfdec_player_set_url (player, url);
+  swfdec_url_free (url);
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
   if (!SWFDEC_IS_SPRITE_MOVIE (player->priv->roots->data)) {

@@ -226,13 +226,18 @@ swfdec_test_test_fscommand (SwfdecPlayer *player, const char *command,
 static gboolean
 swfdec_test_test_ensure_player (SwfdecTestTest *test)
 {
+  SwfdecURL *url;
+
   if (test->filename == NULL)
     return FALSE;
   if (test->player)
     return TRUE;
 
   g_assert (test->player_quit == FALSE);
-  test->player = swfdec_player_new_from_file (test->filename);
+  test->player = swfdec_player_new (NULL);
+  url = swfdec_url_new_from_input (test->filename);
+  swfdec_player_set_url (test->player, url);
+  swfdec_url_free (url);
   g_signal_connect (test->player, "fscommand", G_CALLBACK (swfdec_test_test_fscommand), test);
   g_signal_connect (test->player, "trace", G_CALLBACK (swfdec_test_test_trace_cb), test);
   return TRUE;

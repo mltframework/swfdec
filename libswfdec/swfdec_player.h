@@ -24,7 +24,7 @@
 #include <cairo.h>
 #include <libswfdec/swfdec_as_context.h>
 #include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_loader.h>
+#include <libswfdec/swfdec_url.h>
 
 G_BEGIN_DECLS
 
@@ -96,13 +96,6 @@ void		swfdec_init			(void);
 GType		swfdec_player_get_type		(void);
 
 SwfdecPlayer *	swfdec_player_new		(SwfdecAsDebugger *	debugger);
-SwfdecPlayer *	swfdec_player_new_from_file	(const char *	filename);
-void		swfdec_player_set_loader	(SwfdecPlayer *	player,
-						 SwfdecLoader *	loader);
-void		swfdec_player_set_loader_with_variables 
-						(SwfdecPlayer *	player,
-						 SwfdecLoader *	loader,
-						 const char *	variables);
 
 gboolean	swfdec_player_is_initialized	(SwfdecPlayer *	player);
 glong		swfdec_player_get_next_event  	(SwfdecPlayer *	player);
@@ -134,10 +127,15 @@ void		swfdec_player_set_maximum_runtime
 						 gulong			msecs);
 const SwfdecURL *
 		swfdec_player_get_url		(SwfdecPlayer *		player);
-const SwfdecURL *
-		swfdec_player_get_base_url	(SwfdecPlayer *		player);
-void		swfdec_player_set_base_url    	(SwfdecPlayer *		player,
+void		swfdec_player_set_url    	(SwfdecPlayer *		player,
 						 const SwfdecURL *	url);
+const SwfdecURL *
+		swfdec_player_get_base_url    	(SwfdecPlayer *		player);
+void		swfdec_player_set_base_url	(SwfdecPlayer *		player,
+						 const SwfdecURL *	url);
+const char*   	swfdec_player_get_variables   	(SwfdecPlayer *		player);
+void		swfdec_player_set_variables    	(SwfdecPlayer *		player,
+						 const char *		variables);
 SwfdecPlayerScripting *
 		swfdec_player_get_scripting	(SwfdecPlayer *		player);
 void		swfdec_player_set_scripting	(SwfdecPlayer *		player,

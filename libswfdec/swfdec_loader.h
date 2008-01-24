@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <libswfdec/swfdec_buffer.h>
+#include <libswfdec/swfdec_player.h>
 #include <libswfdec/swfdec_stream.h>
 #include <libswfdec/swfdec_url.h>
 
@@ -69,7 +70,7 @@ struct _SwfdecLoaderClass
   SwfdecStreamClass	stream_class;
 
   void			(* load)	(SwfdecLoader *			loader, 
-					 SwfdecLoader *			parent,
+					 SwfdecPlayer *			player,
 					 const char *			url,
 					 SwfdecLoaderRequest		request,
 					 SwfdecBuffer *	           	buffer);
@@ -85,7 +86,6 @@ void		swfdec_loader_set_size		(SwfdecLoader *		loader,
 						 gulong			size);
 glong		swfdec_loader_get_size		(SwfdecLoader *		loader);
 gulong		swfdec_loader_get_loaded	(SwfdecLoader *		loader);
-char *  	swfdec_loader_get_filename	(SwfdecLoader *		loader);
 SwfdecLoaderDataType
 		swfdec_loader_get_data_type	(SwfdecLoader *		loader);
 

@@ -30,7 +30,7 @@ main (int argc, char **argv)
   GOptionContext *context;
   GError *err;
   SwfdecPlayer *player;
-  SwfdecLoader *loader;
+  SwfdecURL *url;
   guint i;
   cairo_surface_t *surface;
   cairo_t *cr;
@@ -93,26 +93,16 @@ main (int argc, char **argv)
   for (i = 0; i < g_strv_length (filenames); i++)
   {
     glong played, advance, elapsed;
-    char *error;
 
     g_print ("Running: %s\n", filenames[i]);
 
     // start timer
     timer = g_timer_new ();
 
-    // create player
-    loader = swfdec_file_loader_new (filenames[i]);
     player = swfdec_player_new (NULL);
-
-    g_object_get (loader, "error", &error, NULL);
-    if (error) {
-      g_printerr ("Error loading %s: %s\n", filenames[i], error);
-      g_object_unref (loader);
-      g_free (error);
-      continue;
-    }
-
-    swfdec_player_set_loader (player, loader);
+    url = swfdec_url_new_from_input (argv[1]);
+    swfdec_player_set_url (player, url);
+    swfdec_url_free (url);
 
     // loop until we have played what we wanted, or timelimit is hit
     played = 0;

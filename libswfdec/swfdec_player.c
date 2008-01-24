@@ -619,9 +619,11 @@ enum {
   PROP_SCRIPTING,
   PROP_SYSTEM,
   PROP_MAX_RUNTIME,
+  PROP_LOADER_TYPE,
   PROP_SOCKET_TYPE,
   PROP_BASE_URL,
-  PROP_URL
+  PROP_URL,
+  PROP_VARIABLES
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -735,18 +737,20 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_MAX_RUNTIME:
       g_value_set_ulong (value, priv->max_runtime);
       break;
+    case PROP_LOADER_TYPE:
+      g_value_set_gtype (value, priv->loader_type);
+      break;
     case PROP_SOCKET_TYPE:
       g_value_set_gtype (value, priv->socket_type);
       break;
     case PROP_URL:
-      if (priv->resource) {
-	g_value_set_boxed (value, swfdec_loader_get_url (priv->resource->loader));
-      } else {
-	g_value_set_boxed (value, NULL);
-      }
+      g_value_set_boxed (value, priv->url);
       break;
     case PROP_BASE_URL:
       g_value_set_boxed (value, priv->base_url);
+      break;
+    case PROP_VARIABLES:
+      g_value_set_string (value, priv->variables);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -865,8 +869,21 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
     case PROP_MAX_RUNTIME:
       swfdec_player_set_maximum_runtime (player, g_value_get_ulong (value));
       break;
+    case PROP_LOADER_TYPE:
+      g_return_if_fail (G_TYPE_IS_INSTANTIATABLE (g_value_get_gtype (value)));
+      priv->loader_type = g_value_get_gtype (value);
+      break;
     case PROP_SOCKET_TYPE:
       priv->socket_type = g_value_get_gtype (value);
+      break;
+    case PROP_URL:
+      swfdec_player_set_url (player, g_value_get_boxed (value));
+      break;
+    case PROP_BASE_URL:
+      swfdec_player_set_base_url (player, g_value_get_boxed (value));
+      break;
+    case PROP_VARIABLES:
+      swfdec_player_set_variables (player, g_value_get_boxed (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -947,6 +964,12 @@ swfdec_player_dispose (GObject *object)
     swfdec_url_free (priv->base_url);
     priv->base_url = NULL;
   }
+  if (priv->url) {
+    swfdec_url_free (priv->url);
+    priv->url = NULL;
+  }
+  g_free (priv->variables);
+  priv->variables = NULL;
 }
 
 static void
@@ -1628,15 +1651,21 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_MAX_RUNTIME,
       g_param_spec_ulong ("max-runtime", "maximum runtime", "maximum time in msecs scripts may run in the player before aborting",
 	  0, G_MAXULONG, 10 * 1000, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_LOADER_TYPE,
+      g_param_spec_gtype ("loader-type", "loader type", "type to use for creating loaders",
+	  SWFDEC_TYPE_LOADER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property (object_class, PROP_SOCKET_TYPE,
-      g_param_spec_gtype ("socket type", "socket type", "type to use for creating sockets",
-	  SWFDEC_TYPE_SOCKET, G_PARAM_READWRITE));
+      g_param_spec_gtype ("socket-type", "socket type", "type to use for creating sockets",
+	  SWFDEC_TYPE_SOCKET, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property (object_class, PROP_URL,
       g_param_spec_boxed ("url", "url", "URL of resource currently played back or NULL if not set",
 	  SWFDEC_TYPE_URL, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_BASE_URL,
       g_param_spec_boxed ("base-url", "base url", "base URL for creating new resource or NULL if not set yet",
 	  SWFDEC_TYPE_URL, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_VARIABLES,
+      g_param_spec_string ("variables", "variables", "variables to use when setting the URL",
+	  NULL, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -2118,8 +2147,10 @@ swfdec_player_create_socket (SwfdecPlayer *player, const char *hostname, guint p
   g_return_val_if_fail (hostname != NULL, NULL);
   g_return_val_if_fail (port > 0, NULL);
 
-  if (player->priv->socket_type == 0)
+  if (!G_TYPE_IS_INSTANTIATABLE (player->priv->socket_type)) {
+    SWFDEC_INFO ("can't create socket, no socket type set.");
     return NULL;
+  }
   klass = g_type_class_ref (player->priv->socket_type);
   sock = klass->create (hostname, port);
   g_type_class_unref (klass);
@@ -2144,10 +2175,18 @@ SwfdecLoader *
 swfdec_player_load (SwfdecPlayer *player, const char *url,
     SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
+  SwfdecLoader *loader;
+  SwfdecLoaderClass *klass;
+
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
-  return swfdec_loader_load (player->priv->resource->loader, url, request, buffer);
+  loader = g_object_new (player->priv->loader_type, NULL);
+  klass = SWFDEC_LOADER_GET_CLASS (loader);
+  g_return_val_if_fail (klass->load != NULL, NULL);
+  klass->load (loader, player, url, request, buffer);
+
+  return loader;
 }
 
 /** PUBLIC API ***/
@@ -2173,93 +2212,11 @@ swfdec_player_new (SwfdecAsDebugger *debugger)
 
   swfdec_init ();
   player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
+      "loader-type", SWFDEC_TYPE_FILE_LOADER, "socket-type", SWFDEC_TYPE_SOCKET,
       "max-runtime", 0, 
       "debugger", debugger, NULL);
   /* FIXME: make this a property or something and don't set it here */
   SWFDEC_AS_CONTEXT (player)->start_time = the_beginning;
-
-  return player;
-}
-
-/**
- * swfdec_player_set_loader:
- * @player: a #SwfdecPlayer
- * @loader: the loader to use for this player. Takes ownership of the given loader.
- *
- * Sets the loader for the main data. This function only works if no loader has 
- * been set on @player yet.
- * For details, see swfdec_player_set_loader_with_variables().
- **/
-void
-swfdec_player_set_loader (SwfdecPlayer *player, SwfdecLoader *loader)
-{
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (player->priv->roots == NULL);
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-
-  swfdec_player_set_loader_with_variables (player, loader, NULL);
-}
-
-/**
- * swfdec_player_set_loader_with_variables:
- * @player: a #SwfdecPlayer
- * @loader: the loader to use for this player. Takes ownership of the given loader.
- * @variables: a string that is checked to be in 'application/x-www-form-urlencoded'
- *             syntax describing the arguments to set on the new player or NULL for
- *             none.
- *
- * Sets the loader for the main data. This function only works if no loader has 
- * been set on @player yet.
- * If the @variables are set and validate, they will be set as properties on the 
- * root movie. 
- **/
-void
-swfdec_player_set_loader_with_variables (SwfdecPlayer *player, SwfdecLoader *loader,
-    const char *variables)
-{
-  SwfdecPlayerPrivate *priv;
-  SwfdecMovie *movie;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (player->priv->resource == NULL);
-  g_return_if_fail (SWFDEC_IS_LOADER (loader));
-
-  g_object_freeze_notify (G_OBJECT (player));
-  priv = player->priv;
-  priv->resource = swfdec_resource_new (player, loader, variables);
-  if (priv->base_url == NULL) {
-    priv->base_url = swfdec_url_new_parent (swfdec_loader_get_url (loader));
-    g_object_notify (G_OBJECT (player), "base-url");
-  }
-  movie = swfdec_movie_new (player, -16384, NULL, priv->resource, NULL, SWFDEC_AS_STR__level0);
-  movie->name = SWFDEC_AS_STR_EMPTY;
-  g_object_unref (loader);
-  g_object_notify (G_OBJECT (player), "url");
-  g_object_thaw_notify (G_OBJECT (player));
-}
-
-/**
- * swfdec_player_new_from_file:
- * @filename: name of the file to play
- *
- * Creates a player to play back the given file. If the file does not
- * exist or another error occurs, the player will be in an error state and not
- * be initialized.
- * This function calls swfdec_init () for you if it wasn't called before.
- *
- * Returns: a new player
- **/
-SwfdecPlayer *
-swfdec_player_new_from_file (const char *filename)
-{
-  SwfdecLoader *loader;
-  SwfdecPlayer *player;
-
-  g_return_val_if_fail (filename != NULL, NULL);
-
-  loader = swfdec_file_loader_new (filename);
-  player = swfdec_player_new (NULL);
-  swfdec_player_set_loader (player, loader);
 
   return player;
 }
@@ -2925,26 +2882,6 @@ swfdec_player_set_scripting (SwfdecPlayer *player, SwfdecPlayerScripting *script
 }
 
 /**
- * swfdec_player_get_url:
- * @player: a #SwfdecPlayer
- *
- * Gets the URL of the resource that is currently played back. If no URL has 
- * been set on the @player yet, %NULL is returned.
- *
- * Returns: the #SwfdecURL currently played back or %NULL
- **/
-const SwfdecURL *
-swfdec_player_get_url (SwfdecPlayer *player)
-{
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-
-  if (player->priv->resource == NULL)
-    return NULL;
-
-  return swfdec_loader_get_url (player->priv->resource->loader);
-}
-
-/**
  * swfdec_player_get_base_url:
  * @player: a #SwfdecPlayer
  *
@@ -2966,7 +2903,7 @@ swfdec_player_get_base_url (SwfdecPlayer *player)
 /**
  * swfdec_player_set_base_url:
  * @player: a #SwfdecPlayer
- * @url: a #SwfdecURL
+ * @url: a #SwfdecURL or %NULL to reset to defaults
  *
  * Sets the URL that will be used for resolving realtive links inside the 
  * @player.
@@ -2977,12 +2914,117 @@ swfdec_player_set_base_url (SwfdecPlayer *player, const SwfdecURL *url)
   SwfdecPlayerPrivate *priv;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (url != NULL);
 
   priv = player->priv;
   if (priv->base_url)
     swfdec_url_free (priv->base_url);
-  priv->base_url = swfdec_url_copy (url);
+  if (url == NULL) {
+    if (priv->url) {
+      priv->base_url = swfdec_url_new_parent (priv->url);
+    } else {
+      priv->base_url = NULL;
+    }
+  } else {
+    priv->base_url = swfdec_url_copy (url);
+  }
   g_object_notify (G_OBJECT (player), "base-url");
+}
+
+/**
+ * swfdec_player_get_url:
+ * @player: a #SwfdecPlayer
+ *
+ * Gets the URL of the resource that is currently played back. If no URL has 
+ * been set on the @player yet, %NULL is returned.
+ *
+ * Returns: the #SwfdecURL currently played back or %NULL
+ **/
+const SwfdecURL *
+swfdec_player_get_url (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  if (player->priv->resource == NULL)
+    return NULL;
+
+  return swfdec_loader_get_url (player->priv->resource->loader);
+}
+
+/**
+ * swfdec_player_set_url:
+ * @player: a #SwfdecPlayer
+ * @url: the url for the initial reference in this player
+ *
+ * Sets the @url for the main data. This function may only be called once.
+ **/
+void
+swfdec_player_set_url (SwfdecPlayer *player, const SwfdecURL *url)
+{
+  SwfdecPlayerPrivate *priv;
+  SwfdecLoader *loader;
+  SwfdecMovie *movie;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (player->priv->url == NULL);
+  g_return_if_fail (url != NULL);
+
+  g_object_freeze_notify (G_OBJECT (player));
+  priv = player->priv;
+  priv->url = swfdec_url_copy (url);
+  loader = swfdec_player_load (player, swfdec_url_get_url (url), 
+      SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+  priv->resource = swfdec_resource_new (player, loader, priv->variables);
+  if (priv->base_url == NULL) {
+    priv->base_url = swfdec_url_new_parent (swfdec_loader_get_url (loader));
+    g_object_notify (G_OBJECT (player), "base-url");
+  }
+  movie = swfdec_movie_new (player, -16384, NULL, priv->resource, NULL, SWFDEC_AS_STR__level0);
+  movie->name = SWFDEC_AS_STR_EMPTY;
+  g_object_unref (loader);
+  g_object_notify (G_OBJECT (player), "url");
+  g_object_thaw_notify (G_OBJECT (player));
+}
+
+/**
+ * swfdec_player_get_variables:
+ * @player: a #SwfdecPlayer
+ *
+ * Gets the initial variables for this player. See swfdec_player_set_variables()
+ * for details about variables.
+ *
+ * Returns: a string represetation of the current variables or %NULL if none are
+ *          set on the @player.
+ **/
+const char *
+swfdec_player_get_variables (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  return player->priv->variables;
+}
+
+/**
+ * swfdec_player_set_variables:
+ * @player: a #SwfdecPlayer
+ * @variables: a string that is checked to be in 'application/x-www-form-urlencoded'
+ *             syntax describing the arguments to set on the new player or NULL for
+ *             none.
+ *
+ * Sets the loader for the main data. This function may only be called if 
+ * swfdec_player_set_url() has not been called yet.
+ * If the @variables are set and validate, they will be set as properties on the 
+ * root movie. 
+ **/
+void
+swfdec_player_set_variables (SwfdecPlayer *player, const char *variables)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (player->priv->url == NULL);
+
+  g_free (priv->variables);
+  priv->variables = g_strdup (variables);
+  g_object_notify (G_OBJECT (player), "variables");
 }
 

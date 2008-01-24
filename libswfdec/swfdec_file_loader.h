@@ -46,7 +46,6 @@ struct _SwfdecFileLoaderClass
 
 GType		swfdec_file_loader_get_type	(void);
 
-SwfdecLoader *	swfdec_file_loader_new		(const char *	filename);
 
 G_END_DECLS
 

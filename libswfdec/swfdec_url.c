@@ -624,3 +624,86 @@ swfdec_url_path_is_relative (const char *path)
 
   return strstr (path, "://") == NULL;
 }
+
+/**
+ * swfdec_url_new_from_input:
+ * @input: the input povided
+ *
+ * Tries to guess the right URL from the given @input. This function is meant 
+ * as a utility function helping to convert user input (like command line 
+ * arguments) to a URL without requiring the full URL.
+ *
+ * Returns: a new url best matching the given @input.
+ **/
+SwfdecURL *
+swfdec_url_new_from_input (const char *input)
+{
+  SwfdecURL *url;
+  char *url_string;
+
+  g_return_val_if_fail (input != NULL, NULL);
+
+  /* if it's a full URL, return it */
+  if (!swfdec_url_path_is_relative (input) &&
+      (url = swfdec_url_new (input)))
+    return url;
+
+  if (g_path_is_absolute (input)) {
+    url_string = g_strconcat ("file://", input, NULL);
+  } else {
+    char *absolute, *cur;
+    cur = g_get_current_dir ();
+    absolute = g_build_filename (cur, input, NULL);
+    g_free (cur);
+    url_string = g_strconcat ("file://", absolute, NULL);
+    g_free (absolute);
+  }
+
+  url = swfdec_url_new (url_string);
+  g_free (url_string);
+  g_return_val_if_fail (url != NULL, NULL);
+  return url;
+}
+
+/**
+ * swfdec_url_format_for_display:
+ * @url: the url to display
+ *
+ * Creates a string suitable to display the given @url. An example for using
+ * this function is to identify a currently playing Flash URL. Use 
+ * swfdec_player_get_url() to query the player's URL and then use this function
+ * to get a displayable string.
+ *
+ * Returns: A new string containig a short description for this URL. g_free()
+ *          after use.
+ **/
+char *
+swfdec_url_format_for_display (const SwfdecURL *url)
+{
+  GString *str;
+
+  g_return_val_if_fail (url != NULL, NULL);
+
+  if (swfdec_url_is_local (url)) {
+    const char *slash;
+    
+    if (url->path == NULL)
+      return g_strdup ("/");
+    slash = strrchr (url->path, '/');
+    if (slash && slash[1] != '\0') {
+      return g_strdup (slash + 1);
+    } else {
+      return g_strdup (url->path);
+    }
+  }
+  str = g_string_new (url->protocol);
+  g_string_append (str, "://");
+  if (url->host)
+    g_string_append (str, url->host);
+  g_string_append (str, "/");
+  if (url->path)
+    g_string_append (str, url->path);
+
+  return g_string_free (str, FALSE);
+}
+

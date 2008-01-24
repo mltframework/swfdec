@@ -38,7 +38,7 @@
 G_DEFINE_TYPE (SwfdecFileLoader, swfdec_file_loader, SWFDEC_TYPE_LOADER)
 
 static void
-swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent, 
+swfdec_file_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
     const char *url_string, SwfdecLoaderRequest request, SwfdecBuffer *buffer)
 {
   SwfdecStream *stream = SWFDEC_STREAM (loader);
@@ -46,10 +46,8 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
   char *real;
   SwfdecURL *url;
 
-  if (parent) {
-    SwfdecURL *parent_url = swfdec_url_new_parent (swfdec_loader_get_url (parent));
-    url = swfdec_url_new_relative (parent_url, url_string);
-    swfdec_url_free (parent_url);
+  if (swfdec_url_path_is_relative (url_string)) {
+    url = swfdec_url_new_relative (swfdec_player_get_base_url (player), url_string);
   } else {
     url = swfdec_url_new (url_string);
   }
@@ -96,53 +94,5 @@ swfdec_file_loader_class_init (SwfdecFileLoaderClass *klass)
 static void
 swfdec_file_loader_init (SwfdecFileLoader *loader)
 {
-}
-
-/**
- * swfdec_file_loader_new:
- * @filename: name of the file to load
- *
- * Creates a new loader for local files. If an error occurred, the loader will
- * be in error.
- *
- * Returns: a new loader
- **/
-SwfdecLoader *
-swfdec_file_loader_new (const char *filename)
-{
-  SwfdecBuffer *buf;
-  SwfdecLoader *loader;
-  SwfdecStream *stream;
-  GError *error = NULL;
-  char *url_string;
-
-  g_return_val_if_fail (filename != NULL, NULL);
-
-  buf = swfdec_buffer_new_from_file (filename, &error);
-
-  if (g_path_is_absolute (filename)) {
-    url_string = g_strconcat ("file://", filename, NULL);
-  } else {
-    char *abs, *cur;
-    cur = g_get_current_dir ();
-    abs = g_build_filename (cur, filename, NULL);
-    g_free (cur);
-    url_string = g_strconcat ("file://", abs, NULL);
-    g_free (abs);
-  }
-
-  loader = g_object_new (SWFDEC_TYPE_FILE_LOADER, NULL);
-  swfdec_loader_set_url (loader, url_string);
-  stream = SWFDEC_STREAM (loader);
-  if (buf == NULL) {
-    swfdec_stream_error (stream, "%s", error->message);
-    g_error_free (error);
-  } else {
-    swfdec_loader_set_size (loader, buf->length);
-    swfdec_stream_open (stream);
-    swfdec_stream_push (stream, buf);
-    swfdec_stream_eof (stream);
-  }
-  return loader;
 }
 

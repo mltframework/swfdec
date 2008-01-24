@@ -302,11 +302,13 @@ vivi_application_check (ViviApplication *app)
       app->playback_state = VIVI_APPLICATION_STOPPED;
       vivi_application_check (app);
     } else {
-      SwfdecLoader *loader;
+      SwfdecURL *url;
 
       app->player_inited = TRUE;
-      loader = swfdec_file_loader_new (app->filename);
-      swfdec_player_set_loader_with_variables (app->player, loader, app->variables);
+      swfdec_player_set_variables (app->player, app->variables);
+      url = swfdec_url_new_from_input (app->filename);
+      swfdec_player_set_url (app->player, url);
+      swfdec_url_free (url);
     }
   }
 }

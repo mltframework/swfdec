@@ -203,75 +203,7 @@ swfdec_loader_init (SwfdecLoader *loader)
   loader->size = -1;
 }
 
-/*** INTERNAL API ***/
-
-SwfdecLoader *
-swfdec_loader_load (SwfdecLoader *loader, const char *url,
-    SwfdecLoaderRequest request, SwfdecBuffer *buffer)
-{
-  SwfdecLoader *ret;
-  SwfdecLoaderClass *klass;
-
-  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
-  g_return_val_if_fail (url != NULL, NULL);
-
-  klass = SWFDEC_LOADER_GET_CLASS (loader);
-  g_return_val_if_fail (klass->load != NULL, NULL);
-  ret = g_object_new (G_OBJECT_CLASS_TYPE (klass), NULL);
-  klass->load (ret, loader, url, request, buffer);
-  g_return_val_if_fail (loader->url != NULL, ret);
-  return ret;
-}
-
 /** PUBLIC API ***/
-
-/**
- * swfdec_loader_get_filename:
- * @loader: a #SwfdecLoader
- *
- * Gets the suggested filename to use for this loader. This may be of interest
- * when displaying information about the file that is played back.
- *
- * Returns: A string in the glib filename encoding that contains the filename
- *          for this loader. g_free() after use.
- **/
-char *
-swfdec_loader_get_filename (SwfdecLoader *loader)
-{
-  const SwfdecURL *url;
-  const char *path, *ext;
-  char *ret = NULL;
-
-  g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
-
-  url = swfdec_loader_get_url (loader);
-  path = swfdec_url_get_path (url);
-  if (path) {
-    char *s = strrchr (path, '/');
-    if (s)
-      path = s + 1;
-    if (path[0] == 0)
-      path = NULL;
-  }
-  if (path)
-    ret = g_filename_from_utf8 (path, -1, NULL, NULL, NULL);
-  if (ret == NULL)
-    ret = g_strdup ("unknown");
-
-  ext = swfdec_loader_data_type_get_extension (loader->data_type);
-  if (*ext) {
-    char *dot = strrchr (ret, '.');
-    char *real;
-    guint len = dot ? strlen (dot) : G_MAXUINT;
-    if (len <= 5)
-      *dot = '\0';
-    real = g_strdup_printf ("%s.%s", ret, ext);
-    g_free (ret);
-    ret = real;
-  }
-
-  return ret;
-}
 
 /**
  * swfdec_loader_set_url:

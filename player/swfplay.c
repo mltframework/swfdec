@@ -29,12 +29,10 @@
 static GMainLoop *loop = NULL;
 
 static void
-set_title (GtkWindow *window, const char *filename)
+set_title (GtkWindow *window, const SwfdecURL *url)
 {
-  char *name = g_filename_display_basename (filename);
-  char *title = g_strdup_printf ("%s : Swfplay", name);
+  char *title = swfdec_url_format_for_display (url);
 
-  g_free (name);
   gtk_window_set_title (window, title);
   g_free (title);
 }
@@ -75,41 +73,19 @@ print_trace (SwfdecPlayer *player, const char *message, gpointer unused)
   g_print ("%s\n", message);
 }
 
-static char *
-sanitize_url (const char *s)
-{
-  SwfdecURL *url;
-
-  url = swfdec_url_new (s);
-  if (g_str_equal (swfdec_url_get_protocol (url), "error")) {
-    char *dir, *full;
-    swfdec_url_free (url);
-    if (g_path_is_absolute (s))
-      return g_strconcat ("file://", s, NULL);
-    dir = g_get_current_dir ();
-    full = g_strconcat ("file://", dir, G_DIR_SEPARATOR_S, s, NULL);
-    g_free (dir);
-    return full;
-  } else {
-    swfdec_url_free (url);
-    return g_strdup (s);
-  }
-}
-
 int 
 main (int argc, char *argv[])
 {
   int speed = 100;
   int max_runtime = 0;
-  SwfdecLoader *loader;
   SwfdecPlayer *player;
   GError *error = NULL;
   gboolean use_image = FALSE, no_sound = FALSE;
   gboolean trace = FALSE, no_scripts = FALSE;
   gboolean redraws = FALSE, gc = FALSE;
   char *variables = NULL;
-  char *s;
   GtkWidget *window;
+  SwfdecURL *url;
 
   GOptionEntry options[] = {
     { "always-gc", 'g', 0, G_OPTION_ARG_NONE, &gc, "run the garbage collector as often as possible", NULL },
@@ -144,16 +120,6 @@ main (int argc, char *argv[])
     return 1;
   }
   
-  s = sanitize_url (argv[1]);
-  loader = swfdec_gtk_loader_new (s);
-  g_free (s);
-  g_object_get (loader, "error", &s, NULL);
-  if (s) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], s);
-    g_object_unref (loader);
-    g_free (s);
-    return 1;
-  }
   loop = g_main_loop_new (NULL, TRUE);
   player = swfdec_gtk_player_new (NULL);
   /* this allows the player to continue fine when running in gdb */
@@ -169,14 +135,18 @@ main (int argc, char *argv[])
     swfdec_gtk_player_set_audio_enabled (SWFDEC_GTK_PLAYER (player), FALSE);
 
   window = view_swf (player, use_image);
-  set_title (GTK_WINDOW (window), argv[1]);
   if (redraws)
     gdk_window_set_debug_updates (TRUE);
 
   if (!no_scripts)
     g_signal_connect (player, "fscommand", G_CALLBACK (do_fscommand), window);
   
-  swfdec_player_set_loader_with_variables (player, loader, variables);
+  if (variables != NULL)
+    swfdec_player_set_variables (player, variables);
+  url = swfdec_url_new_from_input (argv[1]);
+  swfdec_player_set_url (player, url);
+  set_title (GTK_WINDOW (window), url);
+  swfdec_url_free (url);
 
   swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
 

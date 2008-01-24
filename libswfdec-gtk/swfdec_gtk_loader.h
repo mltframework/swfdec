@@ -37,8 +37,6 @@ typedef struct _SwfdecGtkLoaderClass SwfdecGtkLoaderClass;
 
 GType		swfdec_gtk_loader_get_type   	(void);
 
-SwfdecLoader *	swfdec_gtk_loader_new	  	(const char *	uri);
-					 
 
 G_END_DECLS
 #endif

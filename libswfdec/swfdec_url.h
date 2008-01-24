@@ -38,6 +38,7 @@ SwfdecURL *		swfdec_url_new_components	(const char *		protocol,
 SwfdecURL *		swfdec_url_new_parent	      	(const SwfdecURL *	url);
 SwfdecURL *		swfdec_url_new_relative	      	(const SwfdecURL *	url,
 							 const char *		string);
+SwfdecURL *		swfdec_url_new_from_input	(const char *		input);
 SwfdecURL *		swfdec_url_copy			(const SwfdecURL *      url);
 void			swfdec_url_free			(SwfdecURL *		url);
 
@@ -47,6 +48,7 @@ const char *		swfdec_url_get_host		(const SwfdecURL *      url);
 guint			swfdec_url_get_port		(const SwfdecURL *	url);
 const char *		swfdec_url_get_path		(const SwfdecURL *      url);
 const char *		swfdec_url_get_query		(const SwfdecURL *      url);
+char *			swfdec_url_format_for_display	(const SwfdecURL *	url);
 
 gboolean		swfdec_url_has_protocol		(const SwfdecURL *	url,
 							 const char *		protocol);

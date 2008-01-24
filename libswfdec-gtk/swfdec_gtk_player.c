@@ -174,36 +174,8 @@ swfdec_gtk_player_new (SwfdecAsDebugger *debugger)
 
   swfdec_init ();
   player = g_object_new (SWFDEC_TYPE_GTK_PLAYER, 
-      "socket-type", SWFDEC_TYPE_GTK_SOCKET,
+      "loader-type", SWFDEC_TYPE_GTK_LOADER, "socket-type", SWFDEC_TYPE_GTK_SOCKET,
       "debugger", debugger, NULL);
-
-  return player;
-}
-
-/**
- * swfdec_gtk_player_new_from_uri:
- * @uri: URI to play
- *
- * Create a player to play back the given URI. If compiled with gnome-vfs
- * support, it will use gnome-vfs to resolve the given URI. Note that there
- * is no way to figure out if the referenced URI really references a file that
- * Swfdec can play back. If you need this, you should use #SwfdecGtkLoader
- * directly and use its error property.
- * This function calls swfdec_init () for you if it wasn't called before.
- *
- * Returns: a new player.
- **/
-SwfdecPlayer *
-swfdec_gtk_player_new_from_uri (const char *uri)
-{
-  SwfdecLoader *loader;
-  SwfdecPlayer *player;
-
-  g_return_val_if_fail (uri != NULL, NULL);
-
-  player = swfdec_gtk_player_new (NULL);
-  loader = swfdec_gtk_loader_new (uri);
-  swfdec_player_set_loader (player, loader);
 
   return player;
 }

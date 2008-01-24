@@ -24,6 +24,7 @@
 #include <libswfdec/swfdec_audio.h>
 #include <libswfdec/swfdec_event.h>
 #include <libswfdec/swfdec_function_list.h>
+#include <libswfdec/swfdec_loader.h>
 #include <libswfdec/swfdec_player_scripting.h>
 #include <libswfdec/swfdec_rect.h>
 #include <libswfdec/swfdec_ringbuffer.h>
@@ -67,9 +68,12 @@ struct _SwfdecPlayerPrivate
   gboolean		bgcolor_set;		/* TRUE if the background color has been set */
   SwfdecColor		bgcolor;		/* background color */
   SwfdecResource *	resource;		/* initial resource loaded */
-  SwfdecURL *		base_url;		/* base url or NULL if no loader set yet */
+  char *		variables;		/* variables to set on the player */
+  SwfdecURL *		url;			/* url or NULL if not set yet */
+  SwfdecURL *		base_url;	      	/* base url or NULL if not set yet */
   SwfdecPlayerScripting *scripting;		/* scripting object */
   GHashTable *		scripting_callbacks;	/* GC string => SwfdecAsFunction mapping of script callbacks */
+  GType			loader_type;		/* type to use for creating sockets */
   GType			socket_type;		/* type to use for creating sockets */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */

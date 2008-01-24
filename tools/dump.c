@@ -386,6 +386,7 @@ main (int argc, char *argv[])
   };
   GOptionContext *ctx;
   GList *list = NULL;
+  SwfdecURL *url;
 
   ctx = g_option_context_new ("");
   g_option_context_add_main_entries (ctx, options, "options");
@@ -404,7 +405,10 @@ main (int argc, char *argv[])
     return 0;
   }
 
-  player = swfdec_player_new_from_file (argv[1]);
+  player = swfdec_player_new (NULL);
+  url = swfdec_url_new_from_input (argv[1]);
+  swfdec_player_set_url (player, url);
+  swfdec_url_free (url);
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
   if (!swfdec_player_is_initialized (player)) {

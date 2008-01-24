@@ -46,7 +46,7 @@ ASSetPropFlags(Number.prototype, null, 3);
 Number.NaN = NaN;
 Number.POSITIVE_INFINITY = Infinity;
 Number.NEGATIVE_INFINITY = -Infinity;
-Number.MIN_VALUE = 0;
+Number.MIN_VALUE = 4.94065645841247e-324;
 Number.MAX_VALUE = 1.79769313486231e+308;
 ASSetPropFlags(Number, null, 7);
 

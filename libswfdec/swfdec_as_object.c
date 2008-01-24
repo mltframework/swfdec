@@ -453,7 +453,7 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
       // we will still set the value though, even if that flag is set
       var->flags &= ~(SWFDEC_AS_VARIABLE_VERSION_6_UP |
 	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_8_UP |
-	  SWFDEC_AS_VARIABLE_VERSION_8_UP);
+	  SWFDEC_AS_VARIABLE_VERSION_9_UP);
     } else {
       var->flags &= ~(SWFDEC_AS_VARIABLE_VERSION_6_UP |
 	  SWFDEC_AS_VARIABLE_VERSION_NOT_6 | SWFDEC_AS_VARIABLE_VERSION_7_UP |

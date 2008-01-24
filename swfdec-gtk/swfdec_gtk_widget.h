@@ -21,7 +21,7 @@
 #define _SWFDEC_GTK_WIDGET_H_
 
 #include <gtk/gtk.h>
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
 

@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_AS_INTERPRET_H_
 #define _SWFDEC_AS_INTERPRET_H_
 
-#include <libswfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_as_types.h>
 
 G_BEGIN_DECLS
 

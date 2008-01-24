@@ -24,10 +24,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 /* FIXME: no internal headers please */
-#include <libswfdec/swfdec_as_array.h>
-#include <libswfdec/swfdec_as_internal.h>
+#include <swfdec/swfdec_as_array.h>
+#include <swfdec/swfdec_as_internal.h>
 
 #include "swfdec_test_function.h"
 #include "swfdec_test_initialize.h"

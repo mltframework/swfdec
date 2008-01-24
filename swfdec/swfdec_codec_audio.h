@@ -21,8 +21,8 @@
 #define _SWFDEC_CODEC_H_
 
 #include <glib.h>
-#include <libswfdec/swfdec_audio_internal.h>
-#include <libswfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_audio_internal.h>
+#include <swfdec/swfdec_buffer.h>
 
 typedef struct _SwfdecAudioDecoder SwfdecAudioDecoder;
 

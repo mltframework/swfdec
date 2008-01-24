@@ -20,9 +20,9 @@
 #ifndef _SWFDEC_SPRITE_MOVIE_H_
 #define _SWFDEC_SPRITE_MOVIE_H_
 
-#include <libswfdec/swfdec_movie.h>
-#include <libswfdec/swfdec_audio.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_audio.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_XML_SOCKET_H_
 #define _SWFDEC_XML_SOCKET_H_
 
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_as_object.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_as_object.h>
 
 G_BEGIN_DECLS
 

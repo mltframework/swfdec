@@ -18,7 +18,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting the functions and macros.
 # e.g. DOC_SOURCE_DIR=../../../gtk
-DOC_SOURCE_DIR=../libswfdec
+DOC_SOURCE_DIR=../swfdec
 
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
 SCANGOBJ_OPTIONS=--type-init-func="swfdec_init();"
@@ -29,7 +29,7 @@ SCAN_OPTIONS=
 
 # Extra options to supply to gtkdoc-mkdb.
 # e.g. MKDB_OPTIONS=--sgml-mode --output-format=xml
-MKDB_OPTIONS=--sgml-mode --output-format=xml --source-dir=../libswfdec-gtk
+MKDB_OPTIONS=--sgml-mode --output-format=xml --source-dir=../swfdec-gtk
 
 # Extra options to supply to gtkdoc-mktmpl
 # e.g. MKTMPL_OPTIONS=--only-section-tmpl
@@ -42,8 +42,8 @@ FIXXREF_OPTIONS=
 # Used for dependencies. The docs will be rebuilt if any of these change.
 # e.g. HFILE_GLOB=$(top_srcdir)/gtk/*.h
 # e.g. CFILE_GLOB=$(top_srcdir)/gtk/*.c
-HFILE_GLOB=$(top_srcdir)/libswfdec/*.h $(top_srcdir)/libswfdec-gtk/*.h
-CFILE_GLOB=$(top_srcdir)/libswfdec/*.c $(top_srcdir)/libswfdec-gtk/*.c
+HFILE_GLOB=$(top_srcdir)/swfdec/*.h $(top_srcdir)/swfdec-gtk/*.h
+CFILE_GLOB=$(top_srcdir)/swfdec/*.c $(top_srcdir)/swfdec-gtk/*.c
 
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
@@ -146,10 +146,10 @@ IGNORE_HFILES= \
 
 if WITH_GTK
 EXTRA_HFILES = \
-	../libswfdec-gtk/swfdec_gtk_keys.h \
-	../libswfdec-gtk/swfdec_gtk_loader.h \
-	../libswfdec-gtk/swfdec_gtk_player.h \
-	../libswfdec-gtk/swfdec_gtk_widget.h
+	../swfdec-gtk/swfdec_gtk_keys.h \
+	../swfdec-gtk/swfdec_gtk_loader.h \
+	../swfdec-gtk/swfdec_gtk_player.h \
+	../swfdec-gtk/swfdec_gtk_widget.h
 else
 EXTRA_HFILES =
 endif

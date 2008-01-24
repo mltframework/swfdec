@@ -20,7 +20,7 @@
 #ifndef __SWFEDIT_FILE_H__
 #define __SWFEDIT_FILE_H__
 
-#include <libswfdec/swfdec_rect.h>
+#include <swfdec/swfdec_rect.h>
 #include "swfedit_token.h"
 
 G_BEGIN_DECLS

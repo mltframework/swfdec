@@ -22,8 +22,8 @@
 #endif
 
 #include <gtk/gtk.h>
-#include <libswfdec/swfdec_movie.h>
-#include <libswfdec/swfdec_player_internal.h>
+#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_player_internal.h>
 #include "vivi_movie_list.h"
 
 /*** GTK_TREE_MODEL ***/

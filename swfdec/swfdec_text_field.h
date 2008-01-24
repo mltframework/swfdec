@@ -22,11 +22,11 @@
 #define _SWFDEC_TEXT_FIELD_H_
 
 #include <pango/pango.h>
-#include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_color.h>
-#include <libswfdec/swfdec_graphic.h>
-#include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_text_format.h>
+#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_color.h>
+#include <swfdec/swfdec_graphic.h>
+#include <swfdec/swfdec_player.h>
+#include <swfdec/swfdec_text_format.h>
 
 G_BEGIN_DECLS
 

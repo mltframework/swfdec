@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <libswfdec-gtk/swfdec-gtk.h>
+#include <swfdec-gtk/swfdec-gtk.h>
 #include "vivi_application.h"
 #include "vivi_debugger.h"
 #include "vivi_function.h"

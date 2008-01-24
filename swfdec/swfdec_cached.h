@@ -21,8 +21,8 @@
 #define _SWFDEC_CACHED_H_
 
 #include <cairo.h>
-#include <libswfdec/swfdec_cache.h>
-#include <libswfdec/swfdec_character.h>
+#include <swfdec/swfdec_cache.h>
+#include <swfdec/swfdec_character.h>
 
 G_BEGIN_DECLS
 

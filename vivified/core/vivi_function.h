@@ -17,7 +17,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 #include <vivified/core/vivi_application.h>
 
 #ifndef _VIVI_FUNCTION_H_

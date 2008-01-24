@@ -21,7 +21,7 @@
 #define _SWFDEC_DEBUG_SCRIPT_H_
 
 #include <gtk/gtk.h>
-#include <libswfdec/swfdec_debugger.h>
+#include <swfdec/swfdec_debugger.h>
 
 G_BEGIN_DECLS
 

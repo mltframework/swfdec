@@ -23,8 +23,8 @@
 #define _SWFDEC_FONT_H_
 
 #include <pango/pangocairo.h>
-#include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_character.h>
+#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_character.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecFont SwfdecFont;

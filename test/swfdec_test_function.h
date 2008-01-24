@@ -17,7 +17,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 #ifndef _SWFDEC_TEST_FUNCTION_H_
 #define _SWFDEC_TEST_FUNCTION_H_

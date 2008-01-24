@@ -20,10 +20,10 @@
 #ifndef _SWFDEC_FILTER_H_
 #define _SWFDEC_FILTER_H_
 
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_as_object.h>
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

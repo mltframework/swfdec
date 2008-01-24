@@ -22,9 +22,9 @@
 
 #include <glib-object.h>
 #include <cairo.h>
-#include <libswfdec/swfdec_as_context.h>
-#include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_url.h>
+#include <swfdec/swfdec_as_context.h>
+#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_url.h>
 
 G_BEGIN_DECLS
 

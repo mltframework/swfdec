@@ -97,7 +97,7 @@ AC_SUBST(PANGO_CFLAGS)
 
 AC_ARG_ENABLE(gtk,
 	AS_HELP_STRING([--enable-gtk],
-			[enable build of libswfdec-gtk (default=yes)])],
+			[enable build of swfdec-gtk (default=yes)])],
 	enable_gtk=$enableval,
 	enable_gtk="yes")
 
@@ -287,12 +287,12 @@ AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_CFLAGS)
 
 SWFDEC_CFLAGS="-I\$(top_srcdir) $GLIB_CFLAGS $CAIRO_CFLAGS"
-SWFDEC_LIBS="\$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS $CAIRO_LIBS -lz"
+SWFDEC_LIBS="\$(top_builddir)/swfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS $CAIRO_LIBS -lz"
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
 
 SWFDEC_GTK_CFLAGS="$SWFDEC_CFLAGS $GTK_CFLAGS"
-SWFDEC_GTK_LIBS="\$(top_builddir)/libswfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS $GTK_LIBS"
+SWFDEC_GTK_LIBS="\$(top_builddir)/swfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS $GTK_LIBS"
 AC_SUBST(SWFDEC_GTK_LIBS)
 AC_SUBST(SWFDEC_GTK_CFLAGS)
 
@@ -325,9 +325,9 @@ data/icons/scalable/Makefile
 data/swfdec.pc
 data/swfdec-gtk.pc
 doc/Makefile
-libswfdec/Makefile
-libswfdec/jpeg/Makefile
-libswfdec-gtk/Makefile
+swfdec/Makefile
+swfdec/jpeg/Makefile
+swfdec-gtk/Makefile
 player/Makefile
 test/Makefile
 test/custom/Makefile

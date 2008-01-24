@@ -23,8 +23,8 @@
 #define _SWFDEC_IMAGE_H_
 
 #include <cairo.h>
-#include <libswfdec/swfdec_cached.h>
-#include <libswfdec/swfdec_decoder.h>
+#include <swfdec/swfdec_cached.h>
+#include <swfdec/swfdec_decoder.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecImage SwfdecImage;

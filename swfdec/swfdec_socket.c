@@ -34,7 +34,7 @@
  * SwfdecSockets are used to implement TCP streams. These are for example used 
  * to implement RTMP support or the XMLSocket script class. Backends are 
  * supposed to provide an implementation for this, as by default this class is
- * unimplemented. However, libswfdec-gtk or other convenience libraries provide
+ * unimplemented. However, swfdec-gtk or other convenience libraries provide
  * a socket implementation by default. 
  *
  * The socket implementation used by a #SwfdecPlayer can be set with the 

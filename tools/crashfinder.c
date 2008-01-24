@@ -22,7 +22,7 @@
 #include "config.h"
 #endif
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 int
 main (int argc, char **argv)

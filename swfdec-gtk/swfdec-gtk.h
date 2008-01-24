@@ -20,10 +20,10 @@
 #ifndef __SWFDEC_GTK_H__
 #define __SWFDEC_GTK_H__
 
-#include <libswfdec-gtk/swfdec_gtk_keys.h>
-#include <libswfdec-gtk/swfdec_gtk_loader.h>
-#include <libswfdec-gtk/swfdec_gtk_player.h>
-#include <libswfdec-gtk/swfdec_gtk_socket.h>
-#include <libswfdec-gtk/swfdec_gtk_widget.h>
+#include <swfdec-gtk/swfdec_gtk_keys.h>
+#include <swfdec-gtk/swfdec_gtk_loader.h>
+#include <swfdec-gtk/swfdec_gtk_player.h>
+#include <swfdec-gtk/swfdec_gtk_socket.h>
+#include <swfdec-gtk/swfdec_gtk_widget.h>
 
 #endif

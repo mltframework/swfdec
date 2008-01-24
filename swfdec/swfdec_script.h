@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_SCRIPT_H_
 #define _SWFDEC_SCRIPT_H_
 
-#include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_buffer.h>
 
 G_BEGIN_DECLS
 

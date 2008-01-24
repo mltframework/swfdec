@@ -22,8 +22,8 @@
 
 #include <glib-object.h>
 #include <cairo.h>
-#include <libswfdec/swfdec_swf_decoder.h>
-#include <libswfdec/swfdec_color.h>
+#include <swfdec/swfdec_swf_decoder.h>
+#include <swfdec/swfdec_color.h>
 
 G_BEGIN_DECLS
 

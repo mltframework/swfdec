@@ -21,8 +21,8 @@
 #define _SWFDEC_GRAPHIC_MOVIE_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_movie.h>
-#include <libswfdec/swfdec_graphic.h>
+#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_graphic.h>
 
 G_BEGIN_DECLS
 

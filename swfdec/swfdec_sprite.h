@@ -22,10 +22,10 @@
 #ifndef _SWFDEC_SPRITE_H_
 #define _SWFDEC_SPRITE_H_
 
-#include <libswfdec/swfdec_color.h>
-#include <libswfdec/swfdec_event.h>
-#include <libswfdec/swfdec_graphic.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_color.h>
+#include <swfdec/swfdec_event.h>
+#include <swfdec/swfdec_graphic.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

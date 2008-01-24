@@ -22,10 +22,10 @@
 
 #include <glib.h>
 
-#include <libswfdec/swfdec_decoder.h>
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_rect.h>
+#include <swfdec/swfdec_decoder.h>
+#include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_rect.h>
 
 G_BEGIN_DECLS
 

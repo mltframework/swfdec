@@ -23,9 +23,9 @@
 #define _SWFDEC_GRAPHIC_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_character.h>
-#include <libswfdec/swfdec_rect.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_character.h>
+#include <swfdec/swfdec_rect.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

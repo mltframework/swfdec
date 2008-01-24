@@ -21,7 +21,7 @@
 #define _SWFDEC_STREAM_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_buffer.h>
 
 G_BEGIN_DECLS
 

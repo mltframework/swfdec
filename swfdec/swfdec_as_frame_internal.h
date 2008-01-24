@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_AS_FRAME_INTERNAL_H_
 #define _SWFDEC_AS_FRAME_INTERNAL_H_
 
-#include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_script_internal.h>
+#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_script_internal.h>
 
 G_BEGIN_DECLS
 

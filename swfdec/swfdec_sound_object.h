@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_SOUND_OBJECT_H_
 #define _SWFDEC_SOUND_OBJECT_H_
 
-#include <libswfdec/swfdec_movie.h>
+#include <swfdec/swfdec_movie.h>
 
 G_BEGIN_DECLS
 

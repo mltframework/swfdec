@@ -24,7 +24,7 @@
 #include "vivi_wrap.h"
 #include "vivi_application.h"
 #include "vivi_function.h"
-#include <libswfdec-gtk/swfdec-gtk.h>
+#include <swfdec-gtk/swfdec-gtk.h>
 
 VIVI_FUNCTION ("player_frame_get", vivi_player_as_frame_get)
 void

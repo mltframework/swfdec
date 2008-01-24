@@ -21,12 +21,12 @@
 #define _SWFDEC_MOVIE_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_as_object.h>
-#include <libswfdec/swfdec_color.h>
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_event.h>
-#include <libswfdec/swfdec_rect.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_color.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_event.h>
+#include <swfdec/swfdec_rect.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

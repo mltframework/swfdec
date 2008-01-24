@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_TEST_IMAGE_H_
 #define _SWFDEC_TEST_IMAGE_H_
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
 

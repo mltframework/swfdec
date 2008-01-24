@@ -22,8 +22,8 @@
 #ifndef _SWFDEC_AUDIO_EVENT_H_
 #define _SWFDEC_AUDIO_EVENT_H_
 
-#include <libswfdec/swfdec_audio_internal.h>
-#include <libswfdec/swfdec_sound.h>
+#include <swfdec/swfdec_audio_internal.h>
+#include <swfdec/swfdec_sound.h>
 
 G_BEGIN_DECLS
 

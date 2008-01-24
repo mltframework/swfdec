@@ -21,10 +21,10 @@
 #define _SWFDEC_DECODER_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_buffer.h>
-#include <libswfdec/swfdec_loader.h>
-#include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_loader.h>
+#include <swfdec/swfdec_player.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

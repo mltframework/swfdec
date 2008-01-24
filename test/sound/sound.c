@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 /**
  * audio_diff:

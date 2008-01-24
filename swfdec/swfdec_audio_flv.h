@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_AUDIO_FLV_H_
 #define _SWFDEC_AUDIO_FLV_H_
 
-#include <libswfdec/swfdec_audio_internal.h>
-#include <libswfdec/swfdec_flv_decoder.h>
+#include <swfdec/swfdec_audio_internal.h>
+#include <swfdec/swfdec_flv_decoder.h>
 
 G_BEGIN_DECLS
 

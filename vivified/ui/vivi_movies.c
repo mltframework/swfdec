@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <libswfdec-gtk/swfdec-gtk.h>
+#include <swfdec-gtk/swfdec-gtk.h>
 #include "vivi_vivi_docklet.h"
 #include "vivi_movie_list.h"
 

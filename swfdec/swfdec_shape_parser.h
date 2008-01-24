@@ -22,8 +22,8 @@
 #ifndef _SWFDEC_SHAPE_PARSER_H_
 #define _SWFDEC_SHAPE_PARSER_H_
 
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_draw.h>
+#include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_draw.h>
 
 G_BEGIN_DECLS
 

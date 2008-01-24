@@ -23,8 +23,8 @@
 #define __SWFDEC_BITS_H__
 
 #include <cairo.h>
-#include <libswfdec/swfdec_color.h>
-#include <libswfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_color.h>
+#include <swfdec/swfdec_buffer.h>
 
 typedef struct _SwfdecBits SwfdecBits;
 

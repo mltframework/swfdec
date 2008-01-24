@@ -21,10 +21,10 @@
 #ifndef _SWFDEC_XML_H_
 #define _SWFDEC_XML_H_
 
-#include <libswfdec/swfdec_as_object.h>
-#include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_script.h>
-#include <libswfdec/swfdec_xml_node.h>
+#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_script.h>
+#include <swfdec/swfdec_xml_node.h>
 
 G_BEGIN_DECLS
 

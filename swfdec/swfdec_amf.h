@@ -20,8 +20,8 @@
 #ifndef __SWFDEC_AMF_H__
 #define __SWFDEC_AMF_H__
 
-#include <libswfdec/swfdec_as_context.h>
-#include <libswfdec/swfdec_bits.h>
+#include <swfdec/swfdec_as_context.h>
+#include <swfdec/swfdec_bits.h>
 
 typedef enum {
   SWFDEC_AMF_NUMBER = 0,

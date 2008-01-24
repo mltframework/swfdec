@@ -22,7 +22,7 @@
 #endif
 #include <libsoup/soup.h>
 #include <libsoup/soup-address.h>
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 #include <glib/gprintf.h>
 
 static void

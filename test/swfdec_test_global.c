@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 #include "swfdec_test_function.h"
 #include "swfdec_test_initialize.h"

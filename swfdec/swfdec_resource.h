@@ -20,9 +20,9 @@
 #ifndef _SWFDEC_RESOURCE_H_
 #define _SWFDEC_RESOURCE_H_
 
-#include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_sandbox.h>
-#include <libswfdec/swfdec_sprite_movie.h>
+#include <swfdec/swfdec_player.h>
+#include <swfdec/swfdec_sandbox.h>
+#include <swfdec/swfdec_sprite_movie.h>
 
 G_BEGIN_DECLS
 

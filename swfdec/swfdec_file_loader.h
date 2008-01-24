@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_FILE_LOADER_H_
 #define _SWFDEC_FILE_LOADER_H_
 
-#include <libswfdec/swfdec_loader.h>
+#include <swfdec/swfdec_loader.h>
 
 G_BEGIN_DECLS
 

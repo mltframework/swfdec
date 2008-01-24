@@ -23,8 +23,8 @@
 #define _SWFDEC_CHARACTER_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_rect.h>
+#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_rect.h>
 
 G_BEGIN_DECLS
 //typedef struct _SwfdecCharacter SwfdecCharacter;

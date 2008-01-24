@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_AS_STACK_H_
 #define _SWFDEC_AS_STACK_H_
 
-#include <libswfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_as_types.h>
 
 G_BEGIN_DECLS
 
@@ -36,7 +36,7 @@ void		swfdec_as_stack_pop_segment   	(SwfdecAsContext *	context);
 
 //#define SWFDEC_MAD_CHECKS
 #ifdef SWFDEC_MAD_CHECKS
-#include <libswfdec/swfdec_as_context.h>
+#include <swfdec/swfdec_as_context.h>
 static inline SwfdecAsValue *
 swfdec_as_stack_peek (SwfdecAsContext *cx, guint n)
 {

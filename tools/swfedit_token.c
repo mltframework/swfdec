@@ -24,9 +24,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
-#include <libswfdec/swfdec_buffer.h>
-#include <libswfdec/swfdec_color.h>
-#include <libswfdec/swfdec_script_internal.h>
+#include <swfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_color.h>
+#include <swfdec/swfdec_script_internal.h>
 #include "swfedit_token.h"
 
 /*** CONVERTERS ***/

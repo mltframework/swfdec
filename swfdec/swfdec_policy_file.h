@@ -21,8 +21,8 @@
 #ifndef _SWFDEC_FLASH_SECURITY_POLICY_H_
 #define _SWFDEC_FLASH_SECURITY_POLICY_H_
 
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_player.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_player.h>
 
 G_BEGIN_DECLS
 

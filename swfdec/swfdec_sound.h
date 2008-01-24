@@ -22,10 +22,10 @@
 #ifndef _SWFDEC_SOUND_H_
 #define _SWFDEC_SOUND_H_
 
-#include <libswfdec/swfdec_cached.h>
-#include <libswfdec/swfdec_codec_audio.h>
-#include <libswfdec/swfdec_swf_decoder.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_cached.h>
+#include <swfdec/swfdec_codec_audio.h>
+#include <swfdec/swfdec_swf_decoder.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

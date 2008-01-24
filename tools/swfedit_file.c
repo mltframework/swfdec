@@ -23,10 +23,10 @@
 
 #include <zlib.h>
 
-#include "libswfdec/swfdec_bits.h"
-#include "libswfdec/swfdec_buffer.h"
-#include "libswfdec/swfdec_debug.h"
-#include "libswfdec/swfdec_swf_decoder.h"
+#include "swfdec/swfdec_bits.h"
+#include "swfdec/swfdec_buffer.h"
+#include "swfdec/swfdec_debug.h"
+#include "swfdec/swfdec_swf_decoder.h"
 #include "swfdec_out.h"
 #include "swfedit_file.h"
 #include "swfedit_tag.h"

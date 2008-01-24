@@ -22,9 +22,9 @@
 #endif
 #include <gtk/gtk.h>
 #include <math.h>
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
-#include <libswfdec-gtk/swfdec-gtk.h>
+#include <swfdec-gtk/swfdec-gtk.h>
 
 static GMainLoop *loop = NULL;
 

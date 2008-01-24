@@ -22,13 +22,13 @@
 #ifndef _SWFDEC_SHAPE_H_
 #define _SWFDEC_SHAPE_H_
 
-#include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_color.h>
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_graphic.h>
-#include <libswfdec/swfdec_pattern.h>
-#include <libswfdec/swfdec_stroke.h>
-#include <libswfdec/swfdec_swf_decoder.h>
+#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_color.h>
+#include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_graphic.h>
+#include <swfdec/swfdec_pattern.h>
+#include <swfdec/swfdec_stroke.h>
+#include <swfdec/swfdec_swf_decoder.h>
 
 G_BEGIN_DECLS
 

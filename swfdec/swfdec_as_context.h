@@ -21,7 +21,7 @@
 #define _SWFDEC_AS_CONTEXT_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_as_types.h>
 
 G_BEGIN_DECLS
 

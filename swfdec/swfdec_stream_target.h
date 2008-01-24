@@ -20,7 +20,7 @@
 #ifndef __SWFDEC_STREAM_TARGET_H__
 #define __SWFDEC_STREAM_TARGET_H__
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
 

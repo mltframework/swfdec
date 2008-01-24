@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_GTK_PLAYER_H_
 #define _SWFDEC_GTK_PLAYER_H_
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
 

@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <cairo.h>
-#include <libswfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_buffer.h>
 
 #define SWFDEC_VIDEO_CODEC_UNDEFINED 0
 #define SWFDEC_VIDEO_CODEC_H263 2

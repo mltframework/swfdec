@@ -20,10 +20,10 @@
 #ifndef _SWFDEC_INTERVAL_H_
 #define _SWFDEC_INTERVAL_H_
 
-#include <libswfdec/swfdec_as_object.h>
-#include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_player_internal.h>
-#include <libswfdec/swfdec_sandbox.h>
+#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_player_internal.h>
+#include <swfdec/swfdec_sandbox.h>
 
 G_BEGIN_DECLS
 

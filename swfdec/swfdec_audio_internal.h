@@ -22,10 +22,10 @@
 #ifndef _SWFDEC_AUDIO_INTERNAL_H_
 #define _SWFDEC_AUDIO_INTERNAL_H_
 
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_audio.h>
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_audio.h>
+#include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

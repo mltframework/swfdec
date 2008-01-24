@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_GRADIENT_PATTERN_H_
 #define _SWFDEC_GRADIENT_PATTERN_H_
 
-#include <libswfdec/swfdec_pattern.h>
+#include <swfdec/swfdec_pattern.h>
 
 G_BEGIN_DECLS
 

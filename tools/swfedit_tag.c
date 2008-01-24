@@ -24,10 +24,10 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
 
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_debug.h>
-#include <libswfdec/swfdec_script_internal.h>
-#include <libswfdec/swfdec_tag.h>
+#include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_debug.h>
+#include <swfdec/swfdec_script_internal.h>
+#include <swfdec/swfdec_tag.h>
 #include "swfedit_tag.h"
 #include "swfdec_out.h"
 #include "swfedit_file.h"

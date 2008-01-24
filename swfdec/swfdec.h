@@ -22,27 +22,27 @@
 #ifndef __SWFDEC_H__
 #define __SWFDEC_H__
 
-#include <libswfdec/swfdec_as_context.h>
-#include <libswfdec/swfdec_as_debugger.h>
-#include <libswfdec/swfdec_as_frame.h>
-#include <libswfdec/swfdec_as_function.h>
-#include <libswfdec/swfdec_as_native_function.h>
-#include <libswfdec/swfdec_as_object.h>
-#include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_script.h>
+#include <swfdec/swfdec_as_context.h>
+#include <swfdec/swfdec_as_debugger.h>
+#include <swfdec/swfdec_as_frame.h>
+#include <swfdec/swfdec_as_function.h>
+#include <swfdec/swfdec_as_native_function.h>
+#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_script.h>
 
-#include <libswfdec/swfdec_audio.h>
-#include <libswfdec/swfdec_buffer.h>
-#include <libswfdec/swfdec_enums.h>
-#include <libswfdec/swfdec_file_loader.h>
-#include <libswfdec/swfdec_keys.h>
-#include <libswfdec/swfdec_loader.h>
-#include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_player_scripting.h>
-#include <libswfdec/swfdec_rectangle.h>
-#include <libswfdec/swfdec_socket.h>
-#include <libswfdec/swfdec_stream.h>
-#include <libswfdec/swfdec_system.h>
-#include <libswfdec/swfdec_url.h>
+#include <swfdec/swfdec_audio.h>
+#include <swfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_enums.h>
+#include <swfdec/swfdec_file_loader.h>
+#include <swfdec/swfdec_keys.h>
+#include <swfdec/swfdec_loader.h>
+#include <swfdec/swfdec_player.h>
+#include <swfdec/swfdec_player_scripting.h>
+#include <swfdec/swfdec_rectangle.h>
+#include <swfdec/swfdec_socket.h>
+#include <swfdec/swfdec_stream.h>
+#include <swfdec/swfdec_system.h>
+#include <swfdec/swfdec_url.h>
 
 #endif

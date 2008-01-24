@@ -21,7 +21,7 @@
 #define _SWFDEC_SOCKET_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_stream.h>
+#include <swfdec/swfdec_stream.h>
 
 G_BEGIN_DECLS
 

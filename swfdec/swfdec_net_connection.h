@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_NET_CONNECTION_H_
 #define _SWFDEC_NET_CONNECTION_H_
 
-#include <libswfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_object.h>
 
 G_BEGIN_DECLS
 

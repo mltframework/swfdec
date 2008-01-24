@@ -20,9 +20,9 @@
 #ifndef __SWFDEC_FLV_DECODER_H__
 #define __SWFDEC_FLV_DECODER_H__
 
-#include <libswfdec/swfdec_codec_audio.h>
-#include <libswfdec/swfdec_codec_video.h>
-#include <libswfdec/swfdec_decoder.h>
+#include <swfdec/swfdec_codec_audio.h>
+#include <swfdec/swfdec_codec_video.h>
+#include <swfdec/swfdec_decoder.h>
 
 G_BEGIN_DECLS
 

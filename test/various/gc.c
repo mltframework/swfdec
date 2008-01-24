@@ -21,9 +21,9 @@
 #include "config.h"
 #endif
 
-#include "libswfdec/swfdec_as_context.h"
-#include "libswfdec/swfdec_as_object.h"
-#include "libswfdec/swfdec_as_strings.h"
+#include "swfdec/swfdec_as_context.h"
+#include "swfdec/swfdec_as_object.h"
+#include "swfdec/swfdec_as_strings.h"
 
 #define ERROR(...) G_STMT_START { \
   g_printerr ("ERROR (line %u): ", __LINE__); \

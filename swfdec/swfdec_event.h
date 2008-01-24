@@ -17,10 +17,10 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_as_types.h>
-#include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_player.h>
+#include <swfdec/swfdec_types.h>
 
 #ifndef _SWFDEC_EVENT_H_
 #define _SWFDEC_EVENT_H_

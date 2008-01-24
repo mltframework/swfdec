@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 #include "swfdec_debug_stack.h"
 
 G_DEFINE_TYPE (SwfdecDebugStack, swfdec_debug_stack, GTK_TYPE_TREE_VIEW)

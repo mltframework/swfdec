@@ -22,8 +22,8 @@
 #ifndef __SWFDEC_RECT_H__
 #define __SWFDEC_RECT_H__
 
-#include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_rectangle.h>
+#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_rectangle.h>
 
 struct _SwfdecRect
 {

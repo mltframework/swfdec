@@ -20,14 +20,14 @@
 #ifndef _SWFDEC_NET_STREAM_H_
 #define _SWFDEC_NET_STREAM_H_
 
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_as_object.h>
-#include <libswfdec/swfdec_codec_video.h>
-#include <libswfdec/swfdec_net_connection.h>
-#include <libswfdec/swfdec_flv_decoder.h>
-#include <libswfdec/swfdec_player_internal.h>
-#include <libswfdec/swfdec_sandbox.h>
-#include <libswfdec/swfdec_video_movie.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_codec_video.h>
+#include <swfdec/swfdec_net_connection.h>
+#include <swfdec/swfdec_flv_decoder.h>
+#include <swfdec/swfdec_player_internal.h>
+#include <swfdec/swfdec_sandbox.h>
+#include <swfdec/swfdec_video_movie.h>
 
 G_BEGIN_DECLS
 

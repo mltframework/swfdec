@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_VIDEO_H_
 #define _SWFDEC_VIDEO_H_
 
-#include <libswfdec/swfdec_graphic.h>
-#include <libswfdec/swfdec_codec_video.h>
+#include <swfdec/swfdec_graphic.h>
+#include <swfdec/swfdec_codec_video.h>
 
 G_BEGIN_DECLS
 

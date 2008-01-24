@@ -20,16 +20,16 @@
 #ifndef _SWFDEC_PLAYER_INTERNAL_H_
 #define _SWFDEC_PLAYER_INTERNAL_H_
 
-#include <libswfdec/swfdec_player.h>
-#include <libswfdec/swfdec_audio.h>
-#include <libswfdec/swfdec_event.h>
-#include <libswfdec/swfdec_function_list.h>
-#include <libswfdec/swfdec_loader.h>
-#include <libswfdec/swfdec_player_scripting.h>
-#include <libswfdec/swfdec_rect.h>
-#include <libswfdec/swfdec_ringbuffer.h>
-#include <libswfdec/swfdec_socket.h>
-#include <libswfdec/swfdec_system.h>
+#include <swfdec/swfdec_player.h>
+#include <swfdec/swfdec_audio.h>
+#include <swfdec/swfdec_event.h>
+#include <swfdec/swfdec_function_list.h>
+#include <swfdec/swfdec_loader.h>
+#include <swfdec/swfdec_player_scripting.h>
+#include <swfdec/swfdec_rect.h>
+#include <swfdec/swfdec_ringbuffer.h>
+#include <swfdec/swfdec_socket.h>
+#include <swfdec/swfdec_system.h>
 
 G_BEGIN_DECLS
 

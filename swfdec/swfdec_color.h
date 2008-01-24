@@ -22,7 +22,7 @@
 #ifndef __SWFDEC_COLOR_H__
 #define __SWFDEC_COLOR_H__
 
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_types.h>
 
 struct _SwfdecColorTransform {
   gboolean mask;			/* TRUE if this is a mask - masks are always black */

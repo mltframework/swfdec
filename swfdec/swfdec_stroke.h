@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_STROKE_H_
 #define _SWFDEC_STROKE_H_
 
-#include <libswfdec/swfdec_pattern.h>
+#include <swfdec/swfdec_pattern.h>
 
 G_BEGIN_DECLS
 

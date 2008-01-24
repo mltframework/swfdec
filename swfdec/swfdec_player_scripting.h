@@ -21,7 +21,7 @@
 #define _SWFDEC_PLAYER_SCRIPTING_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_player.h>
+#include <swfdec/swfdec_player.h>
 
 G_BEGIN_DECLS
 

@@ -23,11 +23,11 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <libswfdec/swfdec_debugger.h>
-#include <libswfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_debugger.h>
+#include <swfdec/swfdec_as_object.h>
 #include "swfdec_player_manager.h"
-#include <libswfdec/swfdec_script_internal.h>
-#include <libswfdec-gtk/swfdec_source.h>
+#include <swfdec/swfdec_script_internal.h>
+#include <swfdec-gtk/swfdec_source.h>
 
 enum {
   PROP_0,

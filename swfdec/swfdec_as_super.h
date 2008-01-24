@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_AS_SUPER_H_
 #define _SWFDEC_AS_SUPER_H_
 
-#include <libswfdec/swfdec_as_function.h>
-#include <libswfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_as_function.h>
+#include <swfdec/swfdec_as_types.h>
 
 G_BEGIN_DECLS
 

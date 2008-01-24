@@ -1,5 +1,5 @@
-#include <libswfdec/swfdec.h>
-#include <libswfdec-gtk/swfdec-gtk.h>
+#include <swfdec/swfdec.h>
+#include <swfdec-gtk/swfdec-gtk.h>
 
 swfdec_as_context_get_type
 swfdec_as_object_get_type

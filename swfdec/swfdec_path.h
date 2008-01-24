@@ -21,7 +21,7 @@
 #define _SWFDEC_PATH_H_
 
 #include <cairo.h>
-#include <libswfdec/swfdec_rect.h>
+#include <swfdec/swfdec_rect.h>
 
 G_BEGIN_DECLS
 

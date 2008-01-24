@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_MORPH_SHAPE_H_
 #define _SWFDEC_MORPH_SHAPE_H_
 
-#include <libswfdec/swfdec_shape.h>
+#include <swfdec/swfdec_shape.h>
 
 G_BEGIN_DECLS
 

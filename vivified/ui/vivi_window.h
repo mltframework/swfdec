@@ -23,7 +23,7 @@
 #include <vivified/dock/vivified-dock.h>
 #include <vivified/core/vivified-core.h>
 /* FIXME */
-#include <libswfdec/swfdec_movie.h>
+#include <swfdec/swfdec_movie.h>
 
 G_BEGIN_DECLS
 

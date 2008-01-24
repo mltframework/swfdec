@@ -22,9 +22,9 @@
 #ifndef _SWFDEC_INTERNAL_H_
 #define _SWFDEC_INTERNAL_H_
 
-#include <libswfdec/swfdec_types.h>
-#include <libswfdec/swfdec_codec_audio.h>
-#include <libswfdec/swfdec_codec_video.h>
+#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_codec_audio.h>
+#include <swfdec/swfdec_codec_video.h>
 
 G_BEGIN_DECLS
 

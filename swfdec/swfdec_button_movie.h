@@ -21,8 +21,8 @@
 #define _SWFDEC_BUTTON_MOVIE_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_movie.h>
-#include <libswfdec/swfdec_button.h>
+#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_button.h>
 
 G_BEGIN_DECLS
 

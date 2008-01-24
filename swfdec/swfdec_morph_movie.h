@@ -21,8 +21,8 @@
 #define _SWFDEC_MORPH_MOVIE_H_
 
 #include <glib-object.h>
-#include <libswfdec/swfdec_movie.h>
-#include <libswfdec/swfdec_morphshape.h>
+#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_morphshape.h>
 
 G_BEGIN_DECLS
 

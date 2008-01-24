@@ -199,7 +199,8 @@ public_headers = \
 	swfdec_url.h
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la 
-libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/libswfdec
+
+libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/swfdec
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \

@@ -21,7 +21,7 @@
 #ifndef _SWFDEC_CACHE_H_
 #define _SWFDEC_CACHE_H_
 
-#include <libswfdec/swfdec_types.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 

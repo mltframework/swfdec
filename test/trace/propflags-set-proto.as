@@ -2,35 +2,39 @@
 
 trace ("See how property with version propflags in __proto__ is handled");
 
-var a = {};
-var b = {};
-var c = {};
+for (var i = 0; i <= 13; i++) {
+  trace ("Using " + (1 << i));
 
-b.x = 2;
-c.x = 3;
+  var a = {};
+  var b = {};
+  var c = {};
 
-a.__proto__ = b;
-b.__proto__ = c;
+  b.x = 2;
+  c.x = 3;
 
-ASSetPropFlags (b, "x", 1 << 12);
+  a.__proto__ = b;
+  b.__proto__ = c;
 
-trace (a.x);
-trace (b.x);
-trace (c.x);
+  ASSetPropFlags (b, "x", 1 << i);
 
-a.x = 1;
+  trace (a.x);
+  trace (b.x);
+  trace (c.x);
 
-trace (a.x);
-trace (b.x);
-trace (c.x);
+  a.x = 1;
 
-delete b.__proto__;
-delete a.__proto__;
+  trace (a.x);
+  trace (b.x);
+  trace (c.x);
 
-ASSetPropFlags (b, "x", 0, 1 << 12);
+  delete b.__proto__;
+  delete a.__proto__;
 
-trace (a.x);
-trace (b.x);
-trace (c.x);
+  ASSetPropFlags (b, "x", 0, 1 << i);
+
+  trace (a.x);
+  trace (b.x);
+  trace (c.x);
+}
 
 loadMovie ("FSCommand:quit", "");

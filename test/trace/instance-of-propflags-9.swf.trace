@@ -1,0 +1,52 @@
+o.__proto__: 2
+true
+o.__proto__: 4
+true
+o.__proto__: 8
+true
+o.__proto__: 16
+true
+o.__proto__: 32
+true
+o.__proto__: 64
+true
+o.__proto__: 128
+true
+o.__proto__: 256
+true
+o.__proto__: 512
+true
+o.__proto__: 1024
+true
+o.__proto__: 2048
+true
+o.__proto__: 4096
+true
+o.__proto__: 8192
+true
+f.prototype: 2
+true
+f.prototype: 4
+true
+f.prototype: 8
+true
+f.prototype: 16
+true
+f.prototype: 32
+true
+f.prototype: 64
+true
+f.prototype: 128
+true
+f.prototype: 256
+true
+f.prototype: 512
+true
+f.prototype: 1024
+true
+f.prototype: 2048
+true
+f.prototype: 4096
+true
+f.prototype: 8192
+true

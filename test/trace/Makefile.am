@@ -936,6 +936,28 @@ EXTRA_DIST = \
 	file-reference-list-properties-7.swf.trace \
 	file-reference-list-properties-8.swf \
 	file-reference-list-properties-8.swf.trace \
+	foreach-propflags.as \
+	foreach-propflags-5.swf \
+	foreach-propflags-5.swf.trace \
+	foreach-propflags-6.swf \
+	foreach-propflags-6.swf.trace \
+	foreach-propflags-7.swf \
+	foreach-propflags-7.swf.trace \
+	foreach-propflags-8.swf \
+	foreach-propflags-8.swf.trace \
+	foreach-propflags-9.swf \
+	foreach-propflags-9.swf.trace \
+	foreach-propflags-prototype.as \
+	foreach-propflags-prototype-5.swf \
+	foreach-propflags-prototype-5.swf.trace \
+	foreach-propflags-prototype-6.swf \
+	foreach-propflags-prototype-6.swf.trace \
+	foreach-propflags-prototype-7.swf \
+	foreach-propflags-prototype-7.swf.trace \
+	foreach-propflags-prototype-8.swf \
+	foreach-propflags-prototype-8.swf.trace \
+	foreach-propflags-prototype-9.swf \
+	foreach-propflags-prototype-9.swf.trace \
 	foreach-proto-simple.as \
 	foreach-proto-simple-5.swf \
 	foreach-proto-simple-5.swf.trace \
@@ -1235,6 +1257,17 @@ EXTRA_DIST = \
 	instance-of-7.swf.trace \
 	instance-of-8.swf \
 	instance-of-8.swf.trace \
+	instance-of-propflags.as \
+	instance-of-propflags-5.swf \
+	instance-of-propflags-5.swf.trace \
+	instance-of-propflags-6.swf \
+	instance-of-propflags-6.swf.trace \
+	instance-of-propflags-7.swf \
+	instance-of-propflags-7.swf.trace \
+	instance-of-propflags-8.swf \
+	instance-of-propflags-8.swf.trace \
+	instance-of-propflags-9.swf \
+	instance-of-propflags-9.swf.trace \
 	implements.as \
 	implements-5.swf \
 	implements-5.swf.trace \
@@ -1662,6 +1695,10 @@ EXTRA_DIST = \
 	object-hasownproperty-6.swf.trace \
 	object-hasownproperty-7.swf \
 	object-hasownproperty-7.swf.trace \
+	object-hasownproperty-8.swf \
+	object-hasownproperty-8.swf.trace \
+	object-hasownproperty-9.swf \
+	object-hasownproperty-9.swf.trace \
 	object-ispropertyenumerable.as \
 	object-ispropertyenumerable-5.swf \
 	object-ispropertyenumerable-5.swf.trace \
@@ -1680,6 +1717,17 @@ EXTRA_DIST = \
 	object-isprototypeof-6.swf.trace \
 	object-isprototypeof-7.swf \
 	object-isprototypeof-7.swf.trace \
+	object-isprototypeof-propflags.as \
+	object-isprototypeof-propflags-5.swf \
+	object-isprototypeof-propflags-5.swf.trace \
+	object-isprototypeof-propflags-6.swf \
+	object-isprototypeof-propflags-6.swf.trace \
+	object-isprototypeof-propflags-7.swf \
+	object-isprototypeof-propflags-7.swf.trace \
+	object-isprototypeof-propflags-8.swf \
+	object-isprototypeof-propflags-8.swf.trace \
+	object-isprototypeof-propflags-9.swf \
+	object-isprototypeof-propflags-9.swf.trace \
 	object-math-5.swf \
 	object-math-5.swf.trace \
 	object-math-6.swf \
@@ -2017,15 +2065,6 @@ EXTRA_DIST = \
 	prototype-addProperty-7.swf.trace \
 	prototype-addProperty-8.swf \
 	prototype-addProperty-8.swf.trace \
-	prototype-handling.as \
-	prototype-handling-5.swf \
-	prototype-handling-5.swf.trace \
-	prototype-handling-6.swf \
-	prototype-handling-6.swf.trace \
-	prototype-handling-7.swf \
-	prototype-handling-7.swf.trace \
-	prototype-handling-8.swf \
-	prototype-handling-8.swf.trace \
 	prototype-movie.as \
 	prototype-movie-5.swf \
 	prototype-movie-5.swf.trace \
@@ -2035,15 +2074,6 @@ EXTRA_DIST = \
 	prototype-movie-7.swf.trace \
 	prototype-movie-8.swf \
 	prototype-movie-8.swf.trace \
-	prototype-propflags.as \
-	prototype-propflags-5.swf \
-	prototype-propflags-5.swf.trace \
-	prototype-propflags-6.swf \
-	prototype-propflags-6.swf.trace \
-	prototype-propflags-7.swf \
-	prototype-propflags-7.swf.trace \
-	prototype-propflags-8.swf \
-	prototype-propflags-8.swf.trace \
 	prototype-recursion-addProperty.as \
 	prototype-recursion-addProperty-5.swf \
 	prototype-recursion-addProperty-5.swf.trace \
@@ -2073,6 +2103,52 @@ EXTRA_DIST = \
 	propflags-7.swf.trace \
 	propflags-8.swf \
 	propflags-8.swf.trace \
+	propflags-9.swf \
+	propflags-9.swf.trace \
+	propflags-call.as \
+	propflags-call-5.swf \
+	propflags-call-5.swf.trace \
+	propflags-call-6.swf \
+	propflags-call-6.swf.trace \
+	propflags-call-7.swf \
+	propflags-call-7.swf.trace \
+	propflags-call-8.swf \
+	propflags-call-8.swf.trace \
+	propflags-call-9.swf \
+	propflags-call-9.swf.trace \
+	propflags-call-prototype.as \
+	propflags-call-prototype-5.swf \
+	propflags-call-prototype-5.swf.trace \
+	propflags-call-prototype-6.swf \
+	propflags-call-prototype-6.swf.trace \
+	propflags-call-prototype-7.swf \
+	propflags-call-prototype-7.swf.trace \
+	propflags-call-prototype-8.swf \
+	propflags-call-prototype-8.swf.trace \
+	propflags-call-prototype-9.swf \
+	propflags-call-prototype-9.swf.trace \
+	propflags-get.as \
+	propflags-get-5.swf \
+	propflags-get-5.swf.trace \
+	propflags-get-6.swf \
+	propflags-get-6.swf.trace \
+	propflags-get-7.swf \
+	propflags-get-7.swf.trace \
+	propflags-get-8.swf \
+	propflags-get-8.swf.trace \
+	propflags-get-9.swf \
+	propflags-get-9.swf.trace \
+	propflags-get-prototype.as \
+	propflags-get-prototype-5.swf \
+	propflags-get-prototype-5.swf.trace \
+	propflags-get-prototype-6.swf \
+	propflags-get-prototype-6.swf.trace \
+	propflags-get-prototype-7.swf \
+	propflags-get-prototype-7.swf.trace \
+	propflags-get-prototype-8.swf \
+	propflags-get-prototype-8.swf.trace \
+	propflags-get-prototype-9.swf \
+	propflags-get-prototype-9.swf.trace \
 	propflags-set.as \
 	propflags-set-5.swf \
 	propflags-set-5.swf.trace \
@@ -2082,6 +2158,8 @@ EXTRA_DIST = \
 	propflags-set-7.swf.trace \
 	propflags-set-8.swf \
 	propflags-set-8.swf.trace \
+	propflags-set-9.swf \
+	propflags-set-9.swf.trace \
 	propflags-set-native.as \
 	propflags-set-native-5.swf \
 	propflags-set-native-5.swf.trace \
@@ -2100,6 +2178,19 @@ EXTRA_DIST = \
 	propflags-set-proto-7.swf.trace \
 	propflags-set-proto-8.swf \
 	propflags-set-proto-8.swf.trace \
+	propflags-set-proto-9.swf \
+	propflags-set-proto-9.swf.trace \
+	propflags-set-prototype.as \
+	propflags-set-prototype-5.swf \
+	propflags-set-prototype-5.swf.trace \
+	propflags-set-prototype-6.swf \
+	propflags-set-prototype-6.swf.trace \
+	propflags-set-prototype-7.swf \
+	propflags-set-prototype-7.swf.trace \
+	propflags-set-prototype-8.swf \
+	propflags-set-prototype-8.swf.trace \
+	propflags-set-prototype-9.swf \
+	propflags-set-prototype-9.swf.trace \
 	rectangle-construct.as \
 	rectangle-construct-5.swf \
 	rectangle-construct-5.swf.trace \

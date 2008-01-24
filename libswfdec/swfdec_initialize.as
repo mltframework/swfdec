@@ -99,6 +99,7 @@ ASSetPropFlags(Mouse, null, 7);
 Stage = { };
 AsBroadcaster.initialize (Stage);
 ASSetNativeAccessor (Stage, 666, "scaleMode,align,width,height,showMenu,displayState", 1);
+ASSetNativeAccessor (Stage, 666, "9fullScreenSourceRect,9fullScreenHeight,9fullScreenWidth", 100);
 
 /*** NetConnection ***/
 

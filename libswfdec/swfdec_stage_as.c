@@ -196,3 +196,51 @@ swfdec_stage_set_displayState (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SWFDEC_STUB ("Stage.displayState (set)");
 }
+
+SWFDEC_AS_NATIVE (666, 100, swfdec_stage_get_fullScreenSourceRect)
+void
+swfdec_stage_get_fullScreenSourceRect (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.fullScreenSourceRect (get)");
+}
+
+SWFDEC_AS_NATIVE (666, 101, swfdec_stage_set_fullScreenSourceRect)
+void
+swfdec_stage_set_fullScreenSourceRect (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.fullScreenSourceRect (set)");
+}
+
+SWFDEC_AS_NATIVE (666, 102, swfdec_stage_get_fullScreenHeight)
+void
+swfdec_stage_get_fullScreenHeight (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.fullScreenHeight (get)");
+}
+
+SWFDEC_AS_NATIVE (666, 103, swfdec_stage_set_fullScreenHeight)
+void
+swfdec_stage_set_fullScreenHeight (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.fullScreenHeight (set)");
+}
+
+SWFDEC_AS_NATIVE (666, 104, swfdec_stage_get_fullScreenWidth)
+void
+swfdec_stage_get_fullScreenWidth (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.fullScreenWidth (get)");
+}
+
+SWFDEC_AS_NATIVE (666, 105, swfdec_stage_set_fullScreenWidth)
+void
+swfdec_stage_set_fullScreenWidth (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("Stage.fullScreenWidth (set)");
+}

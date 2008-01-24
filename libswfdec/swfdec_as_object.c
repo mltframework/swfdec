@@ -328,12 +328,8 @@ swfdec_as_object_get_prototype_internal (SwfdecAsObject *object)
   // don't check for NOT_6 flag
   if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_7_UP && version < 7)
     return NULL;
-  // don't check 8_UP for version 6 or 7
-  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP &&
-      version < 6)
-    return NULL;
-  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_9_UP &&
-      version < 9)
+  // don't check 8_UP or 9_UP for version 6, 7 or 8
+  if (object->prototype_flags & (SWFDEC_AS_VARIABLE_VERSION_8_UP | SWFDEC_AS_VARIABLE_VERSION_9_UP) && version < 6)
     return NULL;
   // check that it exists, if version < 7
   if (version < 7 &&
@@ -360,6 +356,10 @@ swfdec_as_object_get_prototype (SwfdecAsObject *object)
   prototype = swfdec_as_object_get_prototype_internal (object);
 
   if (prototype == NULL)
+    return NULL;
+  // check 9_UP flag
+  if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_9_UP &&
+      version < 9)
     return NULL;
   // check 8_UP for version 7, still not for version 6
   if (object->prototype_flags & SWFDEC_AS_VARIABLE_VERSION_8_UP &&

@@ -238,6 +238,8 @@ EXTRA_DIST = \
 	ASSetPropFlags-extended-7.swf.trace \
 	ASSetPropFlags-extended-8.swf \
 	ASSetPropFlags-extended-8.swf.trace \
+	ASSetPropFlags-extended-9.swf \
+	ASSetPropFlags-extended-9.swf.trace \
 	ASSetPropFlags-ignore.as \
 	ASSetPropFlags-ignore-5.swf \
 	ASSetPropFlags-ignore-5.swf.trace \
@@ -247,6 +249,8 @@ EXTRA_DIST = \
 	ASSetPropFlags-ignore-7.swf.trace \
 	ASSetPropFlags-ignore-8.swf \
 	ASSetPropFlags-ignore-8.swf.trace \
+	ASSetPropFlags-ignore-9.swf \
+	ASSetPropFlags-ignore-9.swf.trace \
 	assetuperror.as \
 	assetuperror-5.swf \
 	assetuperror-5.swf.trace \

@@ -61,13 +61,11 @@ void		swfdec_stream_push		(SwfdecStream *		stream,
 						 SwfdecBuffer *		buffer);
 void		swfdec_stream_eof		(SwfdecStream *		stream);
 void		swfdec_stream_error		(SwfdecStream *		stream,
-						 const char *		error);
-#if 0
+						 const char *		error,
 						 ...) G_GNUC_PRINTF (2, 3);
 void		swfdec_stream_errorv		(SwfdecStream *		stream,
 						 const char *		error,
 						 va_list		args);
-#endif
 
 G_END_DECLS
 #endif

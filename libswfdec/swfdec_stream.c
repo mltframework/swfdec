@@ -311,29 +311,57 @@ swfdec_stream_describe (SwfdecStream *stream)
 /**
  * swfdec_stream_error:
  * @stream: a #SwfdecStream
- * @error: a string describing the error
+ * @error: a printf-style string describing the error
+ * @...: arguments for the @error string
  *
  * Moves the stream in the error state if it wasn't before. A stream that is in
  * the error state will not process any more data. Also, internal error 
  * handling scripts may be executed.
  **/
 void
-swfdec_stream_error (SwfdecStream *stream, const char *error)
+swfdec_stream_error (SwfdecStream *stream, const char *error, ...)
 {
-  SwfdecStreamPrivate *priv;
+  va_list args;
 
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
   g_return_if_fail (error != NULL);
 
+  va_start (args, error);
+  swfdec_stream_errorv (stream, error, args);
+  va_end (args);
+}
+
+/**
+ * swfdec_stream_errorv:
+ * @stream: a #SwfdecStream
+ * @error: a printf-style error string
+ * @args: arguments for @error
+ *
+ * This function is the va_list alternative to swfdec_stream_error(). See that
+ * function for details.
+ **/
+void
+swfdec_stream_errorv (SwfdecStream *stream, const char *error, va_list args)
+{
+  SwfdecStreamPrivate *priv;
+  char *real_error;
+
+  g_return_if_fail (SWFDEC_IS_STREAM (stream));
+  g_return_if_fail (error != NULL);
+
+  real_error = g_strdup_vprintf (error, args);
   priv = stream->priv;
   if (priv->error) {
-    SWFDEC_ERROR ("another error in stream for %s: %s", swfdec_stream_describe (stream), error);
+    SWFDEC_ERROR ("another error in stream for %s: %s", 
+	swfdec_stream_describe (stream), real_error);
+    g_free (real_error);
     return;
   }
 
-  SWFDEC_ERROR ("error in stream for %s: %s", swfdec_stream_describe (stream), error);
+  SWFDEC_ERROR ("error in stream for %s: %s", 
+      swfdec_stream_describe (stream), real_error);
   priv->state = SWFDEC_STREAM_STATE_ERROR;
-  priv->error = g_strdup (error);
+  priv->error = real_error;
   swfdec_stream_queue_processing (stream);
 }
 

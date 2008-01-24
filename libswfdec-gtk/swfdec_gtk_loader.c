@@ -118,9 +118,7 @@ swfdec_gtk_loader_finished (SoupMessage *msg, gpointer loader)
     swfdec_gtk_loader_ensure_open (loader);
     swfdec_stream_eof (loader);
   } else {
-    char *s = g_strdup_printf ("%u %s", msg->status_code, msg->reason_phrase);
-    swfdec_stream_error (loader, s);
-    g_free (s);
+    swfdec_stream_error (loader, "%u %s", msg->status_code, msg->reason_phrase);
   }
 }
 

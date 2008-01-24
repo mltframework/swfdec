@@ -54,8 +54,8 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
     url = swfdec_url_new (url_string);
   }
   if (url == NULL) {
-    //swfdec_stream_error (stream, "%s is an invalid URL", url_string);
-    swfdec_stream_error (stream, "invalid URL");
+    swfdec_stream_error (stream, "%s is an invalid URL", url_string);
+    return;
   }
   swfdec_loader_set_url (loader, swfdec_url_get_url (url));
   if (!g_str_equal (swfdec_url_get_protocol (url), "file")) {
@@ -74,7 +74,7 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecLoader *parent,
   buffer = swfdec_buffer_new_from_file (real, &error);
   g_free (real);
   if (buffer == NULL) {
-    swfdec_stream_error (stream, error->message);
+    swfdec_stream_error (stream, "%s", error->message);
     g_error_free (error);
   } else {
     swfdec_loader_set_size (loader, buffer->length);
@@ -135,7 +135,7 @@ swfdec_file_loader_new (const char *filename)
   swfdec_loader_set_url (loader, url_string);
   stream = SWFDEC_STREAM (loader);
   if (buf == NULL) {
-    swfdec_stream_error (stream, error->message);
+    swfdec_stream_error (stream, "%s", error->message);
     g_error_free (error);
   } else {
     swfdec_loader_set_size (loader, buf->length);

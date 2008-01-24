@@ -1669,6 +1669,10 @@ EXTRA_DIST = \
 	object-ispropertyenumerable-6.swf.trace \
 	object-ispropertyenumerable-7.swf \
 	object-ispropertyenumerable-7.swf.trace \
+	object-ispropertyenumerable-8.swf \
+	object-ispropertyenumerable-8.swf.trace \
+	object-ispropertyenumerable-9.swf \
+	object-ispropertyenumerable-9.swf.trace \
 	object-isprototypeof.as \
 	object-isprototypeof-5.swf \
 	object-isprototypeof-5.swf.trace \

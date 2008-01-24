@@ -1421,6 +1421,8 @@ EXTRA_DIST = \
 	localToGlobal-propflags-7.swf.trace \
 	localToGlobal-propflags-8.swf \
 	localToGlobal-propflags-8.swf.trace \
+	localToGlobal-propflags-9.swf \
+	localToGlobal-propflags-9.swf.trace \
 	localToGlobal-various.as \
 	localToGlobal-various-5.swf \
 	localToGlobal-various-5.swf.trace \

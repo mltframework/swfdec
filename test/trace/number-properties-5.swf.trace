@@ -1,6 +1,6 @@
 _global.Number = function
   MAX_VALUE (hpc) = number : 1.79769313486231e+308
-  MIN_VALUE (hpc) = number : 0
+  MIN_VALUE (hpc) = number : 4.94065645841247e-324
   NEGATIVE_INFINITY (hpc) = number : -Infinity
   NaN (hpc) = number : NaN
   POSITIVE_INFINITY (hpc) = number : Infinity

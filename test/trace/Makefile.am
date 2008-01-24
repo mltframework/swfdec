@@ -2601,6 +2601,8 @@ EXTRA_DIST = \
 	sound-properties-7.swf.trace \
 	sound-properties-8.swf \
 	sound-properties-8.swf.trace \
+	sound-properties-9.swf \
+	sound-properties-9.swf.trace \
 	stack-overflow.as \
 	stack-overflow-5.swf \
 	stack-overflow-5.swf.trace \

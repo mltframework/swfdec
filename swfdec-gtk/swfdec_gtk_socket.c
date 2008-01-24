@@ -146,14 +146,16 @@ swfdec_gtk_socket_do_write (SoupSocket *sock, SwfdecGtkSocket *gtk)
   };
 }
 
-static SwfdecSocket *
-swfdec_gtk_socket_create (const char *hostname, guint port)
+static void
+swfdec_gtk_socket_connect (SwfdecSocket *sock_, SwfdecPlayer *player, 
+    const char *hostname, guint port)
 {
-  SwfdecGtkSocket *sock = g_object_new (SWFDEC_TYPE_GTK_SOCKET, NULL);
+  SwfdecGtkSocket *sock = SWFDEC_GTK_SOCKET (sock_);
   SoupAddress *addr;
 
   addr = soup_address_new (hostname, port);
-  sock->sock = soup_socket_new (SOUP_SOCKET_FLAG_NONBLOCKING, TRUE,
+  sock->sock = soup_socket_new (
+      SOUP_SOCKET_FLAG_NONBLOCKING, TRUE,
       /* FIXME: we should set nodelay, no? */
       SOUP_SOCKET_FLAG_NODELAY, TRUE, NULL);
   g_signal_connect (sock->sock, "connect-result", 
@@ -164,8 +166,7 @@ swfdec_gtk_socket_create (const char *hostname, guint port)
       G_CALLBACK (swfdec_gtk_socket_do_read), socket);
   g_signal_connect (sock->sock, "writable", 
       G_CALLBACK (swfdec_gtk_socket_do_write), socket);
-
-  return SWFDEC_SOCKET (sock);
+  soup_socket_connect (sock->sock, addr);
 }
 
 static void
@@ -207,7 +208,7 @@ swfdec_gtk_socket_class_init (SwfdecGtkSocketClass *klass)
 
   stream_class->close = swfdec_gtk_socket_close;
 
-  socket_class->create = swfdec_gtk_socket_create;
+  socket_class->connect = swfdec_gtk_socket_connect;
   socket_class->send = swfdec_gtk_socket_send;
 }
 

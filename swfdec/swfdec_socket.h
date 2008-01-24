@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <swfdec/swfdec_stream.h>
+#include <swfdec/swfdec_player.h>
 
 G_BEGIN_DECLS
 
@@ -44,7 +45,9 @@ struct _SwfdecSocketClass
 {
   SwfdecStreamClass   	stream_class;
 
-  SwfdecSocket *	(* create)		(const char *	hostname,
+  void			(* connect)		(SwfdecSocket *	socket,
+						 SwfdecPlayer *	player,
+						 const char *	hostname,
 						 guint		port);
 
   void			(* send)		(SwfdecSocket *	socket,

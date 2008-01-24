@@ -51,10 +51,9 @@
 
 /**
  * SwfdecSocketClass:
- * @create: Create a new socket for the given hostname and port. This function 
- *          must return a new socket, returning %NULL is not allowed. If you
- *          encounter an error, create a new socket and call 
- *          swfdec_stream_error() on it.
+ * @connect: Connect the given newly created socket to the given hostname and 
+ *           port. If you encounter an error, call swfdec_stream_error(), but 
+ *           still make sure the socket object does not break.
  * @send: Called to send data down the given socket. This function will only be
  *        called when the socket is open. You get passed a reference to the 
  *        buffer, so it is your responsibility to call swfdec_buffer_unref() on

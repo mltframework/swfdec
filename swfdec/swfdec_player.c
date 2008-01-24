@@ -2151,9 +2151,9 @@ swfdec_player_create_socket (SwfdecPlayer *player, const char *hostname, guint p
     SWFDEC_INFO ("can't create socket, no socket type set.");
     return NULL;
   }
-  klass = g_type_class_ref (player->priv->socket_type);
-  sock = klass->create (hostname, port);
-  g_type_class_unref (klass);
+  sock = g_object_new (player->priv->socket_type, NULL);
+  klass = SWFDEC_SOCKET_GET_CLASS (sock);
+  klass->connect (sock, player, hostname, port);
 
   return sock;
 }

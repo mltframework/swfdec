@@ -93,3 +93,11 @@ swfdec_as_boolean_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, b->boolean);
 }
 
+// only available as ASnative
+SWFDEC_AS_NATIVE (3, 2, swfdec_as_boolean_old_constructor)
+void
+swfdec_as_boolean_old_constructor (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("old 'Boolean' function (only available as ASnative)");
+}

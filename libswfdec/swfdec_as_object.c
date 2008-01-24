@@ -1644,6 +1644,15 @@ swfdec_as_object_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
+// only available as ASnative
+SWFDEC_AS_NATIVE (3, 3, swfdec_as_object_old_constructor)
+void
+swfdec_as_object_old_constructor (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("old 'Object' function (only available as ASnative)");
+}
+
 void
 swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
 {

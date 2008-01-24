@@ -903,3 +903,12 @@ swfdec_as_string_unescape_internal (SwfdecAsContext *cx, SwfdecAsObject *object,
     SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
 }
+
+// only available as ASnative
+SWFDEC_AS_NATIVE (3, 0, swfdec_as_string_old_constructor)
+void
+swfdec_as_string_old_constructor (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("old 'String' function (only available as ASnative)");
+}

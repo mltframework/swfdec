@@ -102,3 +102,20 @@ swfdec_as_number_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_NUMBER (ret, num->number);
 }
 
+// only available as ASnative
+SWFDEC_AS_NATIVE (3, 1, swfdec_as_number_old_constructor)
+void
+swfdec_as_number_old_constructor (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("old 'Number' function (only available as ASnative)");
+}
+
+// only available as ASnative
+SWFDEC_AS_NATIVE (3, 4, swfdec_as_number_old_toString)
+void
+swfdec_as_number_old_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SWFDEC_STUB ("old 'Number.prototype.toString' function (only available as ASnative)");
+}

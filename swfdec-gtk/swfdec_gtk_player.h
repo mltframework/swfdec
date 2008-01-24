@@ -25,6 +25,7 @@
 G_BEGIN_DECLS
 
 typedef struct _SwfdecGtkPlayer SwfdecGtkPlayer;
+typedef struct _SwfdecGtkPlayerPrivate SwfdecGtkPlayerPrivate;
 typedef struct _SwfdecGtkPlayerClass SwfdecGtkPlayerClass;
 
 #define SWFDEC_TYPE_GTK_PLAYER                    (swfdec_gtk_player_get_type())
@@ -33,6 +34,18 @@ typedef struct _SwfdecGtkPlayerClass SwfdecGtkPlayerClass;
 #define SWFDEC_GTK_PLAYER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_GTK_PLAYER, SwfdecGtkPlayer))
 #define SWFDEC_GTK_PLAYER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_GTK_PLAYER, SwfdecGtkPlayerClass))
 #define SWFDEC_GTK_PLAYER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_GTK_PLAYER, SwfdecGtkPlayerClass))
+
+struct _SwfdecGtkPlayer
+{
+  SwfdecPlayer	  		player;
+
+  SwfdecGtkPlayerPrivate *	priv;
+};
+
+struct _SwfdecGtkPlayerClass
+{
+  SwfdecPlayerClass     	player_class;
+};
 
 GType 		swfdec_gtk_player_get_type    	(void);
 

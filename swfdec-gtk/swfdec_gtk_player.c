@@ -27,19 +27,12 @@
 #include "swfdec-gtk/swfdec_playback.h"
 #include "swfdec-gtk/swfdec_source.h"
 
-struct _SwfdecGtkPlayer
+struct _SwfdecGtkPlayerPrivate
 {
-  SwfdecPlayer		player;
-
   GSource *		source;		/* source if playing, NULL otherwise */
   SwfdecPlayback *	playback;	/* audio playback object */
   gboolean		audio_enabled;	/* TRUE if audio should be played */
   double		speed;		/* desired playback speed */
-};
-
-struct _SwfdecGtkPlayerClass
-{
-  SwfdecPlayerClass   	player_class;
 };
 
 enum {
@@ -78,17 +71,17 @@ static void
 swfdec_gtk_player_get_property (GObject *object, guint param_id, GValue *value, 
     GParamSpec * pspec)
 {
-  SwfdecGtkPlayer *player = SWFDEC_GTK_PLAYER (object);
+  SwfdecGtkPlayerPrivate *priv = SWFDEC_GTK_PLAYER (object)->priv;
   
   switch (param_id) {
     case PROP_PLAYING:
-      g_value_set_boolean (value, player->source != NULL);
+      g_value_set_boolean (value, priv->source != NULL);
       break;
     case PROP_AUDIO:
-      g_value_set_boolean (value, player->audio_enabled);
+      g_value_set_boolean (value, priv->audio_enabled);
       break;
     case PROP_SPEED:
-      g_value_set_double (value, player->speed);
+      g_value_set_double (value, priv->speed);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -124,7 +117,7 @@ swfdec_gtk_player_dispose (GObject *object)
   SwfdecGtkPlayer *player = SWFDEC_GTK_PLAYER (object);
 
   swfdec_gtk_player_set_playing (player, FALSE);
-  g_assert (player->playback == NULL);
+  g_assert (player->priv->playback == NULL);
 
   G_OBJECT_CLASS (swfdec_gtk_player_parent_class)->dispose (object);
 }
@@ -133,6 +126,8 @@ static void
 swfdec_gtk_player_class_init (SwfdecGtkPlayerClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+
+  g_type_class_add_private (g_class, sizeof (SwfdecGtkPlayerPrivate));
 
   object_class->dispose = swfdec_gtk_player_dispose;
   object_class->get_property = swfdec_gtk_player_get_property;
@@ -152,8 +147,12 @@ swfdec_gtk_player_class_init (SwfdecGtkPlayerClass * g_class)
 static void
 swfdec_gtk_player_init (SwfdecGtkPlayer * player)
 {
-  player->speed = 1.0;
-  player->audio_enabled = TRUE;
+  SwfdecGtkPlayerPrivate *priv;
+
+  player->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (player, SWFDEC_TYPE_PLAYER, SwfdecGtkPlayerPrivate);
+
+  priv->speed = 1.0;
+  priv->audio_enabled = TRUE;
 }
 
 /*** PUBLIC API ***/
@@ -183,17 +182,18 @@ swfdec_gtk_player_new (SwfdecAsDebugger *debugger)
 static void
 swfdec_gtk_player_update_audio (SwfdecGtkPlayer *player)
 {
-  gboolean should_play = player->audio_enabled;
+  SwfdecGtkPlayerPrivate *priv = player->priv;
+  gboolean should_play = priv->audio_enabled;
   
-  should_play &= (player->source != NULL);
-  should_play &= (player->speed == 1.0);
+  should_play &= (priv->source != NULL);
+  should_play &= (priv->speed == 1.0);
 
-  if (should_play && player->playback == NULL) {
-    player->playback = swfdec_playback_open (SWFDEC_PLAYER (player),
+  if (should_play && priv->playback == NULL) {
+    priv->playback = swfdec_playback_open (SWFDEC_PLAYER (player),
 	g_main_context_default ());
-  } else if (!should_play && player->playback != NULL) {
-    swfdec_playback_close (player->playback);
-    player->playback = NULL;
+  } else if (!should_play && priv->playback != NULL) {
+    swfdec_playback_close (priv->playback);
+    priv->playback = NULL;
   }
 }
 
@@ -209,15 +209,18 @@ swfdec_gtk_player_update_audio (SwfdecGtkPlayer *player)
 void
 swfdec_gtk_player_set_playing (SwfdecGtkPlayer *player, gboolean playing)
 {
+  SwfdecGtkPlayerPrivate *priv;
+
   g_return_if_fail (SWFDEC_IS_GTK_PLAYER (player));
 
-  if (playing && player->source == NULL) {
-    player->source = swfdec_iterate_source_new (SWFDEC_PLAYER (player), player->speed);
-    g_source_attach (player->source, NULL);
-  } else if (!playing && player->source != NULL) {
-    g_source_destroy (player->source);
-    g_source_unref (player->source);
-    player->source = NULL;
+  priv = player->priv;
+  if (playing && priv->source == NULL) {
+    priv->source = swfdec_iterate_source_new (SWFDEC_PLAYER (player), priv->speed);
+    g_source_attach (priv->source, NULL);
+  } else if (!playing && priv->source != NULL) {
+    g_source_destroy (priv->source);
+    g_source_unref (priv->source);
+    priv->source = NULL;
   }
   swfdec_gtk_player_update_audio (player);
   g_object_notify (G_OBJECT (player), "playing");
@@ -236,7 +239,7 @@ swfdec_gtk_player_get_playing (SwfdecGtkPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_GTK_PLAYER (player), FALSE);
 
-  return player->source != NULL;
+  return player->priv->source != NULL;
 }
 
 /**
@@ -251,9 +254,9 @@ swfdec_gtk_player_set_audio_enabled (SwfdecGtkPlayer *player, gboolean enabled)
 {
   g_return_if_fail (SWFDEC_IS_GTK_PLAYER (player));
 
-  if (player->audio_enabled == enabled)
+  if (player->priv->audio_enabled == enabled)
     return;
-  player->audio_enabled = enabled;
+  player->priv->audio_enabled = enabled;
   swfdec_gtk_player_update_audio (player);
   g_object_notify (G_OBJECT (player), "audio-enabled");
 }
@@ -271,7 +274,7 @@ swfdec_gtk_player_get_audio_enabled (SwfdecGtkPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_GTK_PLAYER (player), FALSE);
 
-  return player->audio_enabled;
+  return player->priv->audio_enabled;
 }
 
 /**
@@ -290,10 +293,10 @@ swfdec_gtk_player_set_speed (SwfdecGtkPlayer *player, double speed)
   g_return_if_fail (SWFDEC_IS_GTK_PLAYER (player));
   g_return_if_fail (speed > 0.0);
 
-  player->speed = speed;
+  player->priv->speed = speed;
   swfdec_gtk_player_update_audio (player);
-  if (player->source)
-    swfdec_iterate_source_set_speed (player->source, player->speed);
+  if (player->priv->source)
+    swfdec_iterate_source_set_speed (player->priv->source, player->priv->speed);
   g_object_notify (G_OBJECT (player), "speed");
 }
 
@@ -311,5 +314,5 @@ swfdec_gtk_player_get_speed (SwfdecGtkPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_GTK_PLAYER (player), FALSE);
 
-  return player->speed;
+  return player->priv->speed;
 }

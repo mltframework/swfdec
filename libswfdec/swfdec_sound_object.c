@@ -211,13 +211,13 @@ swfdec_sound_object_set_checkPolicyFile (SwfdecAsContext *cx,
   SWFDEC_STUB ("Sound.checkPolicyFile (set)");
 }
 
-SWFDEC_AS_NATIVE (500, 16, swfdec_sound_object_9areSoundsInaccessible)
+SWFDEC_AS_NATIVE (500, 16, swfdec_sound_object_areSoundsInaccessible)
 void
-swfdec_sound_object_9areSoundsInaccessible (SwfdecAsContext *cx,
+swfdec_sound_object_areSoundsInaccessible (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Sound.9areSoundsInaccessible");
+  SWFDEC_STUB ("Sound.areSoundsInaccessible");
 }
 
 SWFDEC_AS_NATIVE (500, 7, swfdec_sound_object_attachSound)

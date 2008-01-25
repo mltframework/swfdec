@@ -2971,13 +2971,15 @@ swfdec_player_set_url (SwfdecPlayer *player, const SwfdecURL *url)
   g_object_freeze_notify (G_OBJECT (player));
   priv = player->priv;
   priv->url = swfdec_url_copy (url);
+  if (priv->base_url == NULL) {
+    priv->base_url = swfdec_url_new_parent (url);
+    g_object_notify (G_OBJECT (player), "base-url");
+  }
+  /* we initialize url and base_url before requesting the loader, so the loader
+   * can query them */
   loader = swfdec_player_load (player, swfdec_url_get_url (url), 
       SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
   priv->resource = swfdec_resource_new (player, loader, priv->variables);
-  if (priv->base_url == NULL) {
-    priv->base_url = swfdec_url_new_parent (swfdec_loader_get_url (loader));
-    g_object_notify (G_OBJECT (player), "base-url");
-  }
   movie = swfdec_movie_new (player, -16384, NULL, priv->resource, NULL, SWFDEC_AS_STR__level0);
   movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);

@@ -149,7 +149,7 @@ swfdec_gtk_player_init (SwfdecGtkPlayer * player)
 {
   SwfdecGtkPlayerPrivate *priv;
 
-  player->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (player, SWFDEC_TYPE_PLAYER, SwfdecGtkPlayerPrivate);
+  player->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (player, SWFDEC_TYPE_GTK_PLAYER, SwfdecGtkPlayerPrivate);
 
   priv->speed = 1.0;
   priv->audio_enabled = TRUE;

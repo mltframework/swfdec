@@ -526,6 +526,11 @@ swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
 
   if (!SWFDEC_IS_SPRITE_MOVIE (movie) && !SWFDEC_IS_BUTTON_MOVIE (movie))
     return;
+  /* can happen for mouse/keyboard events on the initial movie */
+  if (movie->resource->sandbox == NULL) {
+    SWFDEC_INFO ("movie %s not yet initialized, skipping event", movie->name);
+    return;
+  }
 
   switch (condition) {
     case SWFDEC_EVENT_INITIALIZE:

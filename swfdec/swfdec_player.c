@@ -3025,6 +3025,7 @@ swfdec_player_set_variables (SwfdecPlayer *player, const char *variables)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (player->priv->url == NULL);
 
+  priv = player->priv;
   g_free (priv->variables);
   priv->variables = g_strdup (variables);
   g_object_notify (G_OBJECT (player), "variables");

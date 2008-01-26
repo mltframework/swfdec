@@ -233,40 +233,32 @@ swfdec_script_skip_actions (SwfdecAsContext *cx, guint jump)
   cx->frame->pc = pc;
 }
 
-#if 0
 static void
 swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  jsval val;
+  SwfdecSpriteMovie *movie;
+  guint jump;
+  int frame, loaded;
 
-  if (len != 1) {
+  if (len < 1) {
     SWFDEC_ERROR ("WaitForFrame2 needs a 1-byte data");
-    return JS_FALSE;
+    return;
   }
-  val = cx->fp->sp[-1];
-  cx->fp->sp--;
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
-    SwfdecMovie *movie = SWFDEC_MOVIE (cx->frame->target);
-    int frame = swfdec_value_to_frame (cx, movie, val);
-    guint jump = data[2];
-    guint loaded;
-    if (frame < 0)
-      return JS_TRUE;
-    if (SWFDEC_IS_ROOT_MOVIE (movie)) {
-      SwfdecDecoder *dec = SWFDEC_ROOT_MOVIE (movie)->decoder;
-      loaded = dec->frames_loaded;
-      g_assert (loaded <= movie->n_frames);
-    } else {
-      loaded = movie->n_frames;
-    }
-    if (loaded <= (guint) frame)
-      swfdec_script_skip_actions (cx, jump);
-  } else {
-    SWFDEC_ERROR ("no movie to WaitForFrame2 on");
+  if (!SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
+    SWFDEC_ERROR ("no movie for WaitForFrame");
+    return;
   }
-  return JS_TRUE;
+
+  movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
+  frame = swfdec_value_to_frame (cx, movie, swfdec_as_stack_pop (cx));
+  if (frame == 0) {
+    SWFDEC_FIXME ("wait for invalid frames or not?");
+  }
+  loaded = swfdec_sprite_movie_get_frames_loaded (movie);
+  if (loaded < (int) movie->n_frames &&
+      loaded <= frame)
+    swfdec_script_skip_actions (cx, jump);
 }
-#endif
 
 static void
 swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
@@ -3066,17 +3058,15 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
   return g_string_free (string, FALSE);
 }
 
-#if 0
 static char *
 swfdec_action_print_wait_for_frame2 (guint action, const guint8 *data, guint len)
 {
-  if (len != 1) {
+  if (len < 1) {
     SWFDEC_ERROR ("WaitForFrame2 needs a 1-byte data");
     return NULL;
   }
   return g_strdup_printf ("WaitForFrame2 %u", (guint) *data);
 }
-#endif
 
 static char *
 swfdec_action_print_goto_frame2 (guint action, const guint8 *data, guint len)
@@ -3245,10 +3235,8 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_SET_TARGET] = { "SetTarget", swfdec_action_print_set_target, 0, 0, swfdec_action_set_target, 1 },
   /* version 3 */
   [SWFDEC_AS_ACTION_GOTO_LABEL] = { "GotoLabel", swfdec_action_print_goto_label, 0, 0, swfdec_action_goto_label, 3 },
-#if 0
   /* version 4 */
-  [0x8d] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, { NULL, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2, swfdec_action_wait_for_frame2 } },
-#endif
+  [SWFDEC_AS_ACTION_WAIT_FOR_FRAME2] = { "WaitForFrame2", swfdec_action_print_wait_for_frame2, 1, 0, swfdec_action_wait_for_frame2, 4 },
   /* version 7 */
   [SWFDEC_AS_ACTION_DEFINE_FUNCTION2] = { "DefineFunction2", swfdec_action_print_define_function, 0, -1, swfdec_action_define_function, 7 },
   [SWFDEC_AS_ACTION_TRY] = { "Try", NULL, 0, 0, swfdec_action_try, 7 },

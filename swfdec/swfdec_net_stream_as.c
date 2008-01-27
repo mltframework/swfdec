@@ -23,12 +23,13 @@
 
 #include "swfdec_net_stream.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
-#include "swfdec_as_internal.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_sandbox.h"
 
 SWFDEC_AS_NATIVE (2101, 0, swfdec_net_stream_close)
 void
@@ -128,10 +129,15 @@ static void
 swfdec_net_stream_do_seek (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
+  SwfdecSandbox *cur;
   double d;
 
   d = swfdec_as_value_to_number (cx, &argv[0]);
+  cur = SWFDEC_SANDBOX (cx->global);
+  swfdec_sandbox_unuse (cur);
+  /* FIXME: perform security check if seeking is allowed here? */
   swfdec_net_stream_seek (stream, d);
+  swfdec_sandbox_use (cur);
 }
 
 static void

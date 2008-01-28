@@ -319,6 +319,16 @@ swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *s
 }
 
 static void
+swfdec_resource_abort_if_not_initialized (SwfdecResource *resource)
+{
+  if (resource->sandbox)
+    return;
+
+  swfdec_as_context_abort (SWFDEC_AS_OBJECT (resource)->context,
+      "This is not a Flash file");
+}
+
+static void
 swfdec_resource_stream_target_close (SwfdecStreamTarget *target, SwfdecStream *stream)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (target);
@@ -334,6 +344,7 @@ swfdec_resource_stream_target_close (SwfdecStreamTarget *target, SwfdecStream *s
   SWFDEC_AS_VALUE_SET_INT (&val, 0); /* FIXME */
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
   resource->state = SWFDEC_RESOURCE_COMPLETE;
+  swfdec_resource_abort_if_not_initialized (resource);
 }
 
 static void
@@ -358,6 +369,7 @@ swfdec_resource_stream_target_error (SwfdecStreamTarget *target, SwfdecStream *s
       break;
   }
   swfdec_resource_emit_error (resource, message);
+  swfdec_resource_abort_if_not_initialized (resource);
 }
 
 static void

@@ -100,7 +100,7 @@ main (int argc, char **argv)
     timer = g_timer_new ();
 
     player = swfdec_player_new (NULL);
-    url = swfdec_url_new_from_input (argv[1]);
+    url = swfdec_url_new_from_input (filenames[i]);
     swfdec_player_set_url (player, url);
     swfdec_url_free (url);
 
@@ -128,10 +128,8 @@ main (int argc, char **argv)
 
     if (elapsed >= max_per_file ||
 	swfdec_as_context_is_aborted (SWFDEC_AS_CONTEXT (player))) {
-      g_print ("Aborted: %s\n", filenames[i]);
+      g_print ("*** Aborted ***\n");
       aborts = TRUE;
-    } else {
-      g_print ("Finished: %s\n", filenames[i]);
     }
 
     // clean up

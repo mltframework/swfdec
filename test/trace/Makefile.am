@@ -632,6 +632,15 @@ EXTRA_DIST = \
 	crash-0.5.5-stylesheet-update-7.swf.trace \
 	crash-0.5.5-stylesheet-update-8.swf \
 	crash-0.5.5-stylesheet-update-8.swf.trace \
+	crash-0.5.5-cvs-_global.as \
+	crash-0.5.5-cvs-_global-5.swf \
+	crash-0.5.5-cvs-_global-5.swf.trace \
+	crash-0.5.5-cvs-_global-6.swf \
+	crash-0.5.5-cvs-_global-6.swf.trace \
+	crash-0.5.5-cvs-_global-7.swf \
+	crash-0.5.5-cvs-_global-7.swf.trace \
+	crash-0.5.5-cvs-_global-8.swf \
+	crash-0.5.5-cvs-_global-8.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \

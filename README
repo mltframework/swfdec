@@ -60,7 +60,7 @@ Limitations:
 Dependencies:
 
   cairo (>= 1.2.0 - >= 1.4.0 recommended) with png support enabled
-  glib (>= 2.10.0)
+  glib (>= 2.14.0)
   liboil (>= 0.3.6)
   Pangocairo (>= 1.16.0) - this is provided by Pango
   zlib (>= 1.1.4)
@@ -70,6 +70,7 @@ Dependencies:
   MAD (>= 0.15.1b - optional, required for MP3 audio format support)
 
   GTK+ (>= 2.8.0 - used by swfdec-gtk)
+  libsoup (>= 2.4.0 - used by swfdec-gtk)
   ALSA (>= 1.0 - optional, required for sound output by swfdec-gtk)
 
 

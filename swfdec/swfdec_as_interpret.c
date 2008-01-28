@@ -237,7 +237,6 @@ static void
 swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecSpriteMovie *movie;
-  guint jump;
   int frame, loaded;
 
   if (len < 1) {
@@ -257,7 +256,7 @@ swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *
   loaded = swfdec_sprite_movie_get_frames_loaded (movie);
   if (loaded < (int) movie->n_frames &&
       loaded <= frame)
-    swfdec_script_skip_actions (cx, jump);
+    swfdec_script_skip_actions (cx, data[0]);
 }
 
 static void

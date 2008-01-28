@@ -1,4 +1,20 @@
 
+ 0.5.90 ("rutube")
+
+This is a preparation for the upcoming 0.6 release to go in time with the Gnome 
+2.22 release.
+- rename "libswfdec(-gtk)" dir to "swfdec(-gtk)"
+- update libsoup requirement to 2.4
+- rework input API - now has SwfdecStream, SwfdecLoader and SwfdecSocket classes
+- new and improved testsuite
+- completely overhaul security subsystem, invalid access denies should be a 
+  thing of the past
+- implement flash.geom.Point and flash.geom.Rectangle
+- implement internal parts of ExternalInterface object
+- plug various memory leaks
+- fix lots of internal bugs
+- various portability fixes for embedded and OpenBSD
+
  0.5.5 ("cps")
 
 In time for Gnome's 2.21.4 release, here's a new Swfdec release. Features:

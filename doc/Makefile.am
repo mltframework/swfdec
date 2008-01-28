@@ -149,6 +149,7 @@ EXTRA_HFILES = \
 	../swfdec-gtk/swfdec_gtk_keys.h \
 	../swfdec-gtk/swfdec_gtk_loader.h \
 	../swfdec-gtk/swfdec_gtk_player.h \
+	../swfdec-gtk/swfdec_gtk_socket.h \
 	../swfdec-gtk/swfdec_gtk_widget.h
 else
 EXTRA_HFILES =

@@ -43,8 +43,10 @@ struct _SwfdecPlayerScripting
 
 struct _SwfdecPlayerScriptingClass
 {
+  /*< private >*/
   GObjectClass		object_class;
 
+  /*< public >*/
   char *		(* js_get_id)	(SwfdecPlayerScripting *scripting,
 					 SwfdecPlayer *		player);
   char *		(* js_call)	(SwfdecPlayerScripting *scripting,

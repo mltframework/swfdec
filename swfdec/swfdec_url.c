@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -69,26 +70,13 @@ swfdec_url_get_type (void)
   return type;
 }
 
-static void *
-swfdec_memrchr (const void *s, int c, size_t n)
-{
-  void *cur, *next;
-
-  cur = memchr (s, c, n);
-  if (cur == NULL)
-    return NULL;
-  while ((next = memchr (cur, c, n)))
-    cur = next;
-  return cur;
-}
-
 /**
  * swfdec_url_new:
- * @string: a full-qualified URL encoded in UTF-8
+ * @string: a valid utf-8 string possibly containing an URL
  *
  * Parses the given string into a URL for use in swfdec.
  *
- * Returns: a new #SwfdecURL
+ * Returns: a new #SwfdecURL or %NULL if the URL was invalid
  **/
 SwfdecURL *
 swfdec_url_new (const char *string)
@@ -105,23 +93,26 @@ swfdec_url_new (const char *string)
   s = strstr (string, "://");
   if (s == NULL) {
     SWFDEC_INFO ("URL %s has no protocol", string);
-    return url;
+    goto error;
   }
   url->protocol = g_utf8_strdown (string, s - string);
   string = s + 3;
   s = strchr (string, '/');
-  if (s == NULL) {
-    url->host = g_ascii_strdown (string, -1);
-    return url;
-  }
   if (s != string) {
-    char *colon = swfdec_memrchr (string, ':', s - string);
+    char *colon;
+    url->host = g_ascii_strdown (string, s ? s - string : -1);
+    colon = strrchr (url->host, ':');
     if (colon) {
+      *colon = 0;
+      errno = 0;
       url->port = strtoul (colon + 1, &colon, 10);
-      url->host = g_ascii_strdown (string, colon - string);
-    } else {
-      url->host = g_ascii_strdown (string, s - string);
+      if (errno || *colon != 0) {
+	SWFDEC_INFO ("%s: invalid port number", string);
+	goto error;
+      }
     }
+    if (s == NULL)
+      return url;
   }
   string = s + 1;
   s = strchr (string, '?');
@@ -134,6 +125,10 @@ swfdec_url_new (const char *string)
   if (*s)
     url->query = g_strdup (s);
   return url;
+
+error:
+  swfdec_url_free (url);
+  return NULL;
 }
 
 /**
@@ -639,7 +634,6 @@ SwfdecURL *
 swfdec_url_new_from_input (const char *input)
 {
   SwfdecURL *url;
-  char *url_string;
 
   g_return_val_if_fail (input != NULL, NULL);
 
@@ -648,19 +642,20 @@ swfdec_url_new_from_input (const char *input)
       (url = swfdec_url_new (input)))
     return url;
 
+  /* FIXME: split at '?' for query? */
   if (g_path_is_absolute (input)) {
-    url_string = g_strconcat ("file://", input, NULL);
+    url = swfdec_url_new_components ("file", NULL, 0,
+	input, NULL);
   } else {
     char *absolute, *cur;
     cur = g_get_current_dir ();
     absolute = g_build_filename (cur, input, NULL);
     g_free (cur);
-    url_string = g_strconcat ("file://", absolute, NULL);
+    url = swfdec_url_new_components ("file", NULL, 0,
+	input, NULL);
     g_free (absolute);
   }
 
-  url = swfdec_url_new (url_string);
-  g_free (url_string);
   g_return_val_if_fail (url != NULL, NULL);
   return url;
 }

@@ -30,23 +30,23 @@
 /*** GTK-DOC ***/
 
 /**
- * SECTION:SwfdecGtkLoader
- * @title: SwfdecGtkLoader
- * @short_description: advanced loader able to load network ressources
- * @see_also: #SwfdecLoader
+ * SECTION:GtkExtensions
+ * @title: Gtk extensions
+ * @short_description: extension objects for @SwfdecGtkPlayer
  *
- * #SwfdecGtkLoader is a #SwfdecLoader that is intended as an easy way to be 
- * access ressources that are not stored in files, such as HTTP. It can 
- * however be compiled with varying support for different protocols, so don't
- * rely on support for a particular protocol being available. If you need this,
- * code your own SwfdecLoader subclass.
+ * Swfdec-Gtk provides some objects that implement the various extensions
+ * provided by the @SwfdecPlayer object. They are used by default in the 
+ * #SwfdecGtkPlayer object, but you can use them outside of it, too. 
+ * However, they require certain Gtk functionality, such as a running glib
+ * main loop.
  */
 
 /**
  * SwfdecGtkLoader:
  *
- * This is the object used to represent a loader. Since it may use varying 
- * backends, it is completely private.
+ * #SwfdecGtkLoader is a #SwfdecLoader that is intended as an easy way to be 
+ * access ressources that are not stored in files, such as HTTP. It is a 
+ * private object.
  */
 
 struct _SwfdecGtkLoader

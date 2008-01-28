@@ -97,6 +97,7 @@ SWFDEC_TYPE_PLAYER_SCRIPTING
 swfdec_player_scripting_get_type
 </SECTION>
 
+<SECTION>
 <FILE>SwfdecURL</FILE>
 <TITLE>SwfdecURL</TITLE>
 SwfdecURL

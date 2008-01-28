@@ -58,7 +58,10 @@ swfdec_policy_file_parse (SwfdecPolicyFile *file, const char *text)
   g_return_if_fail (SWFDEC_IS_POLICY_FILE (file));
   g_return_if_fail (text != NULL);
 
+  /* FIXME: the sandboxes are a HACK */
+  swfdec_sandbox_use (SWFDEC_MOVIE (file->player->priv->roots->data)->resource->sandbox);
   xml = swfdec_xml_new_no_properties (SWFDEC_AS_CONTEXT (file->player), text, TRUE);
+  swfdec_sandbox_unuse (SWFDEC_MOVIE (file->player->priv->roots->data)->resource->sandbox);
 
   if (xml == NULL) {
     SWFDEC_ERROR ("failed to create an XML object for crossdomain policy");
@@ -170,8 +173,6 @@ swfdec_policy_file_target_close (SwfdecStreamTarget *target,
   SwfdecPolicyFile *file = SWFDEC_POLICY_FILE (target);
   char *text;
 
-  swfdec_stream_set_target (stream, NULL);
-  file->stream = NULL;
   if (SWFDEC_IS_LOADER (stream)) {
     text = swfdec_loader_get_text (SWFDEC_LOADER (stream), 8);
   } else {

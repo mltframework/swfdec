@@ -87,9 +87,9 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
       swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
       swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), instance->sandbox->MovieClip);
       if (swfdec_resource_is_root (instance)) {
+	swfdec_player_start_ticking (player);
 	swfdec_movie_initialize (SWFDEC_MOVIE (movie));
 	swfdec_player_perform_actions (player);
-	swfdec_player_start_ticking (player);
       }
     } else {
       SWFDEC_FIXME ("cannot continue loading %s, invalid rights", 

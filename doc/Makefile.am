@@ -90,7 +90,7 @@ IGNORE_HFILES= \
 	swfdec_event.h \
 	swfdec_filter.h \
 	swfdec_flv_decoder.h \
-	swfdec_flash_security.h \
+	swfdec_function_list.h \
 	swfdec_font.h \
 	swfdec_gradient_pattern.h \
 	swfdec_graphic.h \
@@ -103,7 +103,7 @@ IGNORE_HFILES= \
 	swfdec_listener.h \
 	swfdec_load_object.h \
 	swfdec_loader_internal.h \
-	swfdec_loadertarget.h \
+	swfdec_stream_target.h \
 	swfdec_marshal.h \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
@@ -114,17 +114,16 @@ IGNORE_HFILES= \
 	swfdec_path.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
-	swfdec_policy_loader.h \
+	swfdec_policy_file.h \
 	swfdec_rect.h \
 	swfdec_resource.h \
 	swfdec_resource_request.h \
 	swfdec_ringbuffer.h \
 	swfdec_root_movie.h \
 	swfdec_root_sprite.h \
+	swfdec_sandbox.h \
 	swfdec_script.h \
 	swfdec_script_internal.h \
-	swfdec_security.h \
-	swfdec_security_allow.h \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \
@@ -142,7 +141,8 @@ IGNORE_HFILES= \
 	swfdec_video.h \
 	swfdec_video_movie.h \
 	swfdec_xml.h \
-	swfdec_xml_node.h
+	swfdec_xml_node.h \
+	swfdec_xml_socket.h
 
 if WITH_GTK
 EXTRA_HFILES = \

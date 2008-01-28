@@ -652,7 +652,7 @@ swfdec_url_new_from_input (const char *input)
     absolute = g_build_filename (cur, input, NULL);
     g_free (cur);
     url = swfdec_url_new_components ("file", NULL, 0,
-	input, NULL);
+	absolute, NULL);
     g_free (absolute);
   }
 

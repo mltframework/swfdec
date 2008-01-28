@@ -2069,7 +2069,17 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
   priv->broadcasted_width = priv->internal_width = priv->stage_width >= 0 ? (guint) priv->stage_width : priv->width;
   priv->broadcasted_height = priv->internal_height = priv->stage_height >= 0 ? (guint) priv->stage_height : priv->height;
   swfdec_player_update_scale (player);
+}
 
+void
+swfdec_player_start_ticking (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (player->priv->initialized);
+
+  priv = player->priv;
   priv->iterate_timeout.timestamp = priv->time + SWFDEC_TICKS_PER_SECOND * 256 / priv->rate / 10;
   swfdec_player_add_timeout (player, &priv->iterate_timeout);
   SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",

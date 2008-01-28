@@ -147,6 +147,7 @@ void		swfdec_player_initialize	(SwfdecPlayer *		player,
 						 guint			rate,
 						 guint			width,
 						 guint			height);
+void		swfdec_player_start_ticking	(SwfdecPlayer *		player);
 void		swfdec_player_add_movie		(SwfdecPlayer *		player,
 						 guint			depth,
 						 const char *		url);

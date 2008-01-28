@@ -3180,6 +3180,11 @@ EXTRA_DIST = \
 	video-properties-7.swf.trace \
 	video-properties-8.swf \
 	video-properties-8.swf.trace \
+	waitforframe1-4.swf \
+	waitforframe1-4.swf.trace \
+	waitforframe2-4.swf \
+	waitforframe2-4.swf.trace \
+	waitforframe.c \
 	waitforframe-huge.as \
 	waitforframe-huge-4.swf \
 	waitforframe-huge-4.swf.trace \

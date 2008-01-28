@@ -250,12 +250,9 @@ swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *
 
   movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
   frame = swfdec_value_to_frame (cx, movie, swfdec_as_stack_pop (cx));
-  if (frame == 0) {
-    SWFDEC_FIXME ("wait for invalid frames or not?");
-  }
   loaded = swfdec_sprite_movie_get_frames_loaded (movie);
   if (loaded < (int) movie->n_frames &&
-      loaded <= frame)
+      loaded < frame - 1)
     swfdec_script_skip_actions (cx, data[0]);
 }
 
@@ -276,11 +273,11 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
   }
 
   movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
-  frame = data[0] || (data[1] << 8);
+  frame = data[0] | (data[1] << 8);
   jump = data[2];
   loaded = swfdec_sprite_movie_get_frames_loaded (movie);
   if (loaded < (int) movie->n_frames &&
-      loaded <= frame)
+      loaded < frame)
     swfdec_script_skip_actions (cx, jump);
 }
 

@@ -1382,11 +1382,9 @@ swfdec_as_context_run_init_script (SwfdecAsContext *context, const guint8 *data,
 /**
  * swfdec_as_context_startup:
  * @context: a #SwfdecAsContext
- * @version: Flash version to use
  *
  * Starts up the context. This function must be called before any Actionscript
- * is called on @context. The version is responsible for deciding which native
- * functions and properties are available in the context.
+ * is called on @context.
  **/
 void
 swfdec_as_context_startup (SwfdecAsContext *context)

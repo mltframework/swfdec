@@ -168,23 +168,16 @@ static void
 swfdec_net_stream_timeout (SwfdecTimeout *timeout)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM ((void *) ((guchar *) timeout - G_STRUCT_OFFSET (SwfdecNetStream, timeout)));
+  SwfdecTick timestamp;
 
   SWFDEC_LOG ("timeout fired");
-  stream->timeout.callback = NULL;
   swfdec_net_stream_video_goto (stream, stream->next_time);
-  if (stream->next_time > stream->current_time) {
+  timestamp = stream->timeout.timestamp;
+  if (stream->timeout.timestamp == timestamp &&
+      stream->timeout.callback) {
     SWFDEC_LOG ("readding timeout");
     stream->timeout.timestamp += SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
-    stream->timeout.callback = swfdec_net_stream_timeout;
     swfdec_player_add_timeout (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), &stream->timeout);
-  } else {
-    if (stream->audio) {
-      /* FIXME: just unref and let it take care of removing itself? */
-      SWFDEC_LOG ("stopping audio due to EOS");
-      swfdec_audio_remove (stream->audio);
-      g_object_unref (stream->audio);
-      stream->audio = NULL;
-    }
   }
 }
 
@@ -218,7 +211,9 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
       g_object_unref (stream->audio);
       stream->audio = NULL;
     }
-    swfdec_player_remove_timeout (player, &stream->timeout);
+    /* we'll have the timeout still set, but not readded, in the timeout handler */
+    if (stream->timeout.timestamp > player->priv->time)
+      swfdec_player_remove_timeout (player, &stream->timeout);
     stream->timeout.callback = NULL;
     SWFDEC_DEBUG ("stopping playback");
   }

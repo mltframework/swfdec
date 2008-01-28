@@ -1137,7 +1137,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 
   /* FIXME: check that this is correct */
   if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {
-    SWFDEC_AS_VALUE_SET_OBJECT (val, object->context->global);
+    SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie->resource->sandbox));
     *flags = 0;
     return TRUE;
   }

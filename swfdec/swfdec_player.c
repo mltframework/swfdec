@@ -892,6 +892,20 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
 }
 
 static void
+swfdec_player_stop_ticking (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+  if (priv->iterate_timeout.callback == NULL)
+    return;
+  swfdec_player_remove_timeout (player, &priv->iterate_timeout);
+  priv->iterate_timeout.callback = NULL;
+}
+
+static void
 swfdec_player_dispose (GObject *object)
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (object);
@@ -943,9 +957,7 @@ swfdec_player_dispose (GObject *object)
   g_slist_free (priv->sandboxes);
   if (priv->external_timeout.callback)
     swfdec_player_remove_timeout (player, &priv->external_timeout);
-  if (priv->rate) {
-    swfdec_player_remove_timeout (player, &priv->iterate_timeout);
-  }
+  swfdec_player_stop_ticking (player);
   g_assert (priv->timeouts == NULL);
   g_list_free (priv->intervals);
   priv->intervals = NULL;
@@ -1844,7 +1856,6 @@ swfdec_player_init (SwfdecPlayer *player)
   priv->invalidations = g_array_new (FALSE, FALSE, sizeof (SwfdecRectangle));
   priv->mouse_visible = TRUE;
   priv->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
-  priv->iterate_timeout.callback = swfdec_player_iterate;
   priv->stage_width = -1;
   priv->stage_height = -1;
 }
@@ -2025,6 +2036,23 @@ swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const c
   g_signal_emit (player, signals[LAUNCH], 0, (int) request, url, target, data);
 }
 
+void
+swfdec_player_start_ticking (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (player->priv->initialized);
+  g_return_if_fail (player->priv->iterate_timeout.callback == NULL);
+
+  priv = player->priv;
+  priv->iterate_timeout.callback = swfdec_player_iterate;
+  priv->iterate_timeout.timestamp = priv->time + SWFDEC_TICKS_PER_SECOND * 256 / priv->rate / 10;
+  swfdec_player_add_timeout (player, &priv->iterate_timeout);
+  SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
+      &priv->iterate_timeout, priv->iterate_timeout.timestamp, priv->time);
+}
+
 /**
  * swfdec_player_initialize:
  * @player: a #SwfdecPlayer
@@ -2050,7 +2078,7 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
     g_object_notify (G_OBJECT (player), "initialized");
   } else {
     /* FIXME: need to kick all other movies out here */
-    swfdec_player_remove_timeout (player, &priv->iterate_timeout);
+    swfdec_player_stop_ticking (player);
   }
 
   SWFDEC_INFO ("initializing player to size %ux%u and rate %u/256", width, height, rate);
@@ -2069,21 +2097,6 @@ swfdec_player_initialize (SwfdecPlayer *player, guint rate, guint width, guint h
   priv->broadcasted_width = priv->internal_width = priv->stage_width >= 0 ? (guint) priv->stage_width : priv->width;
   priv->broadcasted_height = priv->internal_height = priv->stage_height >= 0 ? (guint) priv->stage_height : priv->height;
   swfdec_player_update_scale (player);
-}
-
-void
-swfdec_player_start_ticking (SwfdecPlayer *player)
-{
-  SwfdecPlayerPrivate *priv;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (player->priv->initialized);
-
-  priv = player->priv;
-  priv->iterate_timeout.timestamp = priv->time + SWFDEC_TICKS_PER_SECOND * 256 / priv->rate / 10;
-  swfdec_player_add_timeout (player, &priv->iterate_timeout);
-  SWFDEC_LOG ("initialized iterate timeout %p to %"G_GUINT64_FORMAT" (now %"G_GUINT64_FORMAT")",
-      &priv->iterate_timeout, priv->iterate_timeout.timestamp, priv->time);
 }
 
 /**

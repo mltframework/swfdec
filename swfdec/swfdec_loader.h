@@ -67,8 +67,10 @@ struct _SwfdecLoader
 
 struct _SwfdecLoaderClass
 {
+  /*< private >*/
   SwfdecStreamClass	stream_class;
 
+  /*< public >*/
   void			(* load)	(SwfdecLoader *			loader, 
 					 SwfdecPlayer *			player,
 					 const char *			url,

@@ -43,8 +43,10 @@ struct _SwfdecSocket
 
 struct _SwfdecSocketClass
 {
+  /*< private >*/
   SwfdecStreamClass   	stream_class;
 
+  /*< public >*/
   void			(* connect)		(SwfdecSocket *	socket,
 						 SwfdecPlayer *	player,
 						 const char *	hostname,

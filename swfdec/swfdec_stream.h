@@ -46,8 +46,10 @@ struct _SwfdecStream
 
 struct _SwfdecStreamClass
 {
+  /*< private >*/
   GObjectClass		object_class;
 
+  /*< public >*/
   /* get a nice description string */
   const char *		(* describe)		(SwfdecStream *		stream);
   /* close the stream. */

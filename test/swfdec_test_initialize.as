@@ -22,6 +22,10 @@ Image.prototype = {};
 Image.prototype.compare = Native.Image_compare;
 Image.prototype.save = Native.Image_save;
 
+Socket = Native.Socket;
+Socket.prototype = {};
+Socket.prototype.process = Native.Socket_process;
+
 Test = Native.Test;
 Test.prototype = {};
 Test.prototype.advance = Native.Test_advance;

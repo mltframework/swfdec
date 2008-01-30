@@ -26,6 +26,7 @@
 
 /* needed by the function list */
 #include "swfdec_test_image.h"
+#include "swfdec_test_socket.h"
 #include "swfdec_test_test.h"
 
 

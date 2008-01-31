@@ -27,25 +27,7 @@
 #include "swfdec_test_test.h"
 #include "swfdec_test_function.h"
 #include "swfdec_test_image.h"
-
-static void
-swfdec_test_throw (SwfdecAsContext *cx, const char *message, ...)
-{
-  SwfdecAsValue val;
-
-  if (!swfdec_as_context_catch (cx, &val)) {
-    va_list varargs;
-    char *s;
-
-    va_start (varargs, message);
-    s = g_strdup_vprintf (message, varargs);
-    va_end (varargs);
-
-    /* FIXME: Throw a real object here? */
-    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (cx, s));
-  }
-  swfdec_as_context_throw (cx, &val);
-}
+#include "swfdec_test_utils.h"
 
 /*** trace capturing ***/
 

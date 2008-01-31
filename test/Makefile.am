@@ -9,7 +9,8 @@ swfdec_test_sources = \
 	swfdec_test_image.c \
 	swfdec_test_plugin.c \
 	swfdec_test_socket.c \
-	swfdec_test_test.c
+	swfdec_test_test.c \
+	swfdec_test_utils.c
 
 BUILT_SOURCES = \
 	swfdec_test_function_list.h
@@ -31,7 +32,8 @@ noinst_HEADERS = \
 	swfdec_test_initialize.h \
 	swfdec_test_plugin.h \
 	swfdec_test_socket.h \
-	swfdec_test_test.h
+	swfdec_test_test.h \
+	swfdec_test_utils.h
 	
 test_CFLAGS = $(GLOBAL_CFLAGS) $(GTK_CFLAGS) $(SWFDEC_CFLAGS) $(CAIRO_CFLAGS)
 test_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS) $(CAIRO_LIBS)

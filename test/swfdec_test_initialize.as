@@ -22,6 +22,16 @@ Image.prototype = {};
 Image.prototype.compare = Native.Image_compare;
 Image.prototype.save = Native.Image_save;
 
+HTTPServer = Native.HTTPServer;
+HTTPServer.prototype = {};
+HTTPServer.prototype.getRequest = Native.HTTPServer_getRequest;
+
+HTTPRequest = new Object ();
+HTTPRequest.prototype = {};
+HTTPRequest.prototype.addProperty ("url", Native.HTTPRequest_get_url, NULL);
+HTTPRequest.prototype.push = Native.HTTPRequest_push;
+HTTPRequest.prototype.close = Native.HTTPRequest_close;
+
 Test = Native.Test;
 Test.prototype = {};
 Test.prototype.advance = Native.Test_advance;

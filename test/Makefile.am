@@ -7,6 +7,7 @@ swfdec_test_sources = \
 	swfdec_test_function.c \
 	swfdec_test_global.c \
 	swfdec_test_image.c \
+	swfdec_test_plugin.c \
 	swfdec_test_socket.c \
 	swfdec_test_test.c
 
@@ -28,6 +29,7 @@ noinst_HEADERS = \
 	swfdec_test_function_list.h \
 	swfdec_test_image.h \
 	swfdec_test_initialize.h \
+	swfdec_test_plugin.h \
 	swfdec_test_socket.h \
 	swfdec_test_test.h
 	

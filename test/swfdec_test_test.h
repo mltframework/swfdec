@@ -20,6 +20,7 @@
 #ifndef _SWFDEC_TEST_TEST_H_
 #define _SWFDEC_TEST_TEST_H_
 
+#include "swfdec_test_plugin.h"
 #include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
@@ -58,6 +59,7 @@ struct _SwfdecTestTestClass
 
 GType		swfdec_test_test_get_type	(void);
 
+void		swfdec_test_plugin_swfdec_new	(SwfdecTestPlugin *	plugin);
 
 G_END_DECLS
 #endif

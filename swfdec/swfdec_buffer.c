@@ -639,3 +639,74 @@ swfdec_buffer_queue_unref (SwfdecBufferQueue * queue)
   }
 }
 
+typedef struct {
+  const char		*name;
+  guint			length;
+  guchar		data[4];
+} ByteOrderMark;
+
+static ByteOrderMark boms[] = {
+  { "UTF-8", 3, {0xEF, 0xBB, 0xBF, 0} },
+  { "UTF-16BE", 2, {0xFE, 0xFF, 0, 0} },
+  { "UTF-16LE", 2, {0xFF, 0xFE, 0, 0} },
+  { "UTF-8", 0, {0, 0, 0, 0} }
+};
+
+char *
+swfdec_buffer_queue_pull_text (SwfdecBufferQueue *queue, guint version)
+{
+  SwfdecBuffer *buffer;
+  char *text;
+  guint size, i, j;
+
+  size = swfdec_buffer_queue_get_depth (queue);
+  if (size == 0) {
+    SWFDEC_LOG ("empty loader, returning empty string");
+    return g_strdup ("");
+  }
+
+  buffer = swfdec_buffer_queue_pull (queue, size);
+  g_assert (buffer);
+
+  if (version > 5) {
+    for (i = 0; boms[i].length > 0; i++) {
+      // FIXME: test what happens if we have BOM and nothing else
+      if (size < boms[i].length)
+	continue;
+
+      for (j = 0; j < boms[i].length; j++) {
+	if (buffer->data[j] != boms[i].data[j])
+	  break;
+      }
+      if (j == boms[i].length)
+	break;
+    }
+
+    if (!strcmp (boms[i].name, "UTF-8")) {
+      if (!g_utf8_validate ((char *)buffer->data + boms[i].length,
+	    size - boms[i].length, NULL)) {
+	SWFDEC_ERROR ("downloaded data is not valid UTF-8");
+	text = NULL;
+      } else {
+	text =
+	  g_strndup ((char *)buffer->data + boms[i].length,
+	      size - boms[i].length);
+      }
+    } else {
+      text = g_convert ((char *)buffer->data + boms[i].length,
+	  size - boms[i].length, "UTF-8", boms[i].name, NULL, NULL, NULL);
+      if (text == NULL)
+	SWFDEC_ERROR ("downloaded data is not valid %s", boms[i].name);
+    }
+  } else {
+    text = g_convert ((char *)buffer->data, size, "UTF-8", "LATIN1", NULL,
+	NULL, NULL);
+    if (text == NULL)
+      SWFDEC_ERROR ("downloaded data is not valid LATIN1");
+  }
+
+  swfdec_buffer_unref (buffer);
+
+  return text;
+}
+

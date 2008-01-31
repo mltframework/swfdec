@@ -77,6 +77,7 @@ void swfdec_buffer_queue_push (SwfdecBufferQueue * queue,
     SwfdecBuffer * buffer);
 SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length);
 SwfdecBuffer *swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue);
+char *swfdec_buffer_queue_pull_text (SwfdecBufferQueue *queue, guint version);
 SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, guint length);
 SwfdecBuffer *swfdec_buffer_queue_peek_buffer (SwfdecBufferQueue * queue);
 SwfdecBufferQueue *swfdec_buffer_queue_ref (SwfdecBufferQueue * queue);

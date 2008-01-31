@@ -28,7 +28,10 @@ HTTPServer.prototype.getRequest = Native.HTTPServer_getRequest;
 
 HTTPRequest = new Object ();
 HTTPRequest.prototype = {};
+HTTPRequest.prototype.addProperty ("server", Native.HTTPRequest_get_server, NULL);
 HTTPRequest.prototype.addProperty ("url", Native.HTTPRequest_get_url, NULL);
+HTTPRequest.prototype.addProperty ("path", Native.HTTPRequest_get_path, NULL);
+HTTPRequest.prototype.toString = Native.HTTPRequest_toString;
 HTTPRequest.prototype.push = Native.HTTPRequest_push;
 HTTPRequest.prototype.close = Native.HTTPRequest_close;
 

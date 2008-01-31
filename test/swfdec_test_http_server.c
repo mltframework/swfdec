@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *               2008 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,18 +26,30 @@
 #include <libsoup/soup.h>
 
 #include "swfdec_test_http_server.h"
+#include "swfdec_test_http_request.h"
 #include "swfdec_test_function.h"
 
 #define SWFDEC_TEST_HTTP_SERVER_IS_VALID(server) ((server)->server)
 
 static void
-swfdec_test_http_server_callback (SoupServer *soup_server, SoupMessage *msg,
-    const char *path, GHashTable *query, SoupClientContext *client,
-    gpointer userdata)
+swfdec_test_http_server_callback (SoupServer *soup_server,
+    SoupMessage *message, const char *path, GHashTable *query,
+    SoupClientContext *client, gpointer userdata)
 {
   SwfdecTestHTTPServer *server = userdata;
 
   g_return_if_fail (server->server == soup_server);
+
+  soup_message_headers_set_encoding (message->response_headers,
+      SOUP_ENCODING_CHUNKED);
+
+  g_queue_push_head (server->messages, g_object_ref (message));
+}
+
+void
+swfdec_test_http_server_run (SwfdecTestHTTPServer *server)
+{
+  while (g_main_context_iteration (server->context, FALSE));
 }
 
 static gboolean
@@ -105,6 +118,7 @@ swfdec_test_http_server_dispose (GObject *object)
 
   if (server->server) {
     soup_server_quit (server->server);
+    g_object_unref (server->server);
     server->server = NULL;
   }
 
@@ -112,6 +126,8 @@ swfdec_test_http_server_dispose (GObject *object)
     g_main_context_unref (server->context);
     server->context = NULL;
   }
+
+  g_queue_free (server->messages);
 
   G_OBJECT_CLASS (swfdec_test_http_server_parent_class)->dispose (object);
 }
@@ -125,8 +141,9 @@ swfdec_test_http_server_class_init (SwfdecTestHTTPServerClass *klass)
 }
 
 static void
-swfdec_test_http_server_init (SwfdecTestHTTPServer *this)
+swfdec_test_http_server_init (SwfdecTestHTTPServer *server)
 {
+  server->messages = g_queue_new ();
 }
 
 /*** AS CODE ***/
@@ -146,9 +163,21 @@ swfdec_test_http_server_get_request (SwfdecAsContext *cx,
   if (!SWFDEC_TEST_HTTP_SERVER_IS_VALID (server))
     return;
 
-  g_main_context_iteration (server->context, FALSE);
+  if (g_queue_is_empty (server->messages)) {
+    g_print ("waiting\n");
+    usleep (1000000);
+    g_print ("checking\n");
+    swfdec_test_http_server_run (server);
+  }
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
+  if (!g_queue_is_empty (server->messages)) {
+    SwfdecAsObject *request;
+
+    request = swfdec_test_http_request_new (cx, server,
+	g_queue_pop_tail (server->messages));
+
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, request);
+  }
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPServer", swfdec_test_http_server_create, swfdec_test_http_server_get_type)

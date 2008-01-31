@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ *               2008 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -44,7 +45,7 @@ struct _SwfdecTestHTTPServer
   SoupServer *		server;
   guint			port;
 
-  SoupMessage *		message;
+  GQueue *		messages;	// SoupMessage **
 };
 
 struct _SwfdecTestHTTPServerClass
@@ -56,6 +57,7 @@ GType		swfdec_test_http_server_get_type	(void);
 
 SwfdecAsObject *swfdec_test_http_server_new		(SwfdecAsContext *	context,
 							 guint			port);
+void		swfdec_test_http_server_run		(SwfdecTestHTTPServer *	server);
 
 G_END_DECLS
 #endif

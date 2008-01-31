@@ -6,6 +6,7 @@ swfdec_test_sources = \
 	swfdec_test.c \
 	swfdec_test_function.c \
 	swfdec_test_global.c \
+	swfdec_test_http_request.c \
 	swfdec_test_http_server.c \
 	swfdec_test_image.c \
 	swfdec_test_test.c
@@ -26,6 +27,7 @@ EXTRA_DIST = \
 noinst_HEADERS = \
 	swfdec_test_function.h \
 	swfdec_test_function_list.h \
+	swfdec_test_http_request.h \
 	swfdec_test_http_server.h \
 	swfdec_test_image.h \
 	swfdec_test_initialize.h \

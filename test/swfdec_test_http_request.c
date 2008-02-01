@@ -55,11 +55,11 @@ swfdec_test_http_request_new (SwfdecAsContext *context,
   soup_message_headers_set_encoding (message->response_headers,
       SOUP_ENCODING_CHUNKED);
   soup_message_set_flags (message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
+  soup_message_set_status (request->message,
+      SOUP_STATUS_INTERNAL_SERVER_ERROR);
 
   SWFDEC_TEST_HTTP_REQUEST (ret)->server = server;
   SWFDEC_TEST_HTTP_REQUEST (ret)->message = message;
-  SWFDEC_TEST_HTTP_REQUEST (ret)->state =
-    SWFDEC_TEST_HTTP_REQUEST_STATE_WAITING;
 
   return ret;
 }
@@ -253,6 +253,52 @@ swfdec_test_http_request_set_contentType (SwfdecAsContext *cx,
   } else {
     soup_message_headers_replace (request->message->response_headers,
 	"Content-Type", swfdec_as_value_to_string (cx, &val));
+  }
+}
+
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_statusCode", swfdec_test_http_request_get_statusCode, 0)
+void
+swfdec_test_http_request_get_statusCode (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *retval)
+{
+  SwfdecTestHTTPRequest *request;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "");
+
+  if (request->status_set) {
+    SWFDEC_AS_VALUE_SET_INT (retval, request->message->status_code);
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (retval);
+  }
+}
+
+SWFDEC_TEST_FUNCTION ("HTTPRequest_set_statusCode", swfdec_test_http_request_set_statusCode, 0)
+void
+swfdec_test_http_request_set_statusCode (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *retval)
+{
+  SwfdecTestHTTPRequest *request;
+  SwfdecAsValue val;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "v", &val);
+
+  if (request->state > SWFDEC_TEST_HTTP_REQUEST_STATE_WAITING) {
+    swfdec_test_throw (cx, "Headers have already been sent");
+    return;
+  }
+
+  if (SWFDEC_AS_VALUE_IS_NULL (&val) || SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
+    soup_message_set_status (request->message,
+	SOUP_STATUS_INTERNAL_SERVER_ERROR);
+    request->status_set = FALSE;
+  } else {
+    int status_code = swfdec_as_value_to_integer (cx, &val);
+    if (status_code < 0)
+      return;
+    soup_message_set_status (request->message, status_code);
+    request->status_set = TRUE;
   }
 }
 

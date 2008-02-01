@@ -17,38 +17,18 @@
  * Boston, MA  02110-1301  USA
  */
 
-run_test = function (t, file) {
-  var e;
-  print ("Testing " + file);
-  try {
-    t.reset (file);
-    var trace = Buffer.load (file + ".trace");
-    t.advance (0);
-    t.advance (Math.ceil (10000 / t.rate));
-    trace = t.trace.diff (trace);
-    if (trace) {
-      error ("different trace output");
-      Native.print (trace);
-      return false;
-    }
-  } catch (e) {
-    if (e) {
-      error (e);
-      return false;
-    }
-  };
-  Native.print ("  OK\n");
-  return true;
-};
+#ifndef _SWFDEC_TEST_UTILS_H_
+#define _SWFDEC_TEST_UTILS_H_
 
-filenames.sort ();
-t = new Test ();
-fail = [];
-for (var i = 0; i < filenames.length; i++) {
-  if (!run_test (t, filenames[i]))
-    fail.push (filenames[i]);
-};
-if (fail.length > 0) {
-  error (fail.join ("\n       "));
-  throw (fail.length + " failures");
-}
+#include <swfdec/swfdec.h>
+
+G_BEGIN_DECLS
+
+
+void		swfdec_test_throw	(SwfdecAsContext *	cx,
+					 const char *		message,
+					 ...);
+
+
+G_END_DECLS
+#endif

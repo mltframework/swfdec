@@ -17,6 +17,11 @@
  * Boston, MA  02110-1301  USA
  */
 
+Buffer = Native.Buffer;
+Buffer.load = Native.Buffer_load;
+Buffer.prototype = {};
+Buffer.prototype.diff = Native.Buffer_diff;
+
 Image = Native.Image;
 Image.prototype = {};
 Image.prototype.compare = Native.Image_compare;
@@ -36,6 +41,10 @@ HTTPRequest.prototype.toString = Native.HTTPRequest_toString;
 HTTPRequest.prototype.push = Native.HTTPRequest_push;
 HTTPRequest.prototype.close = Native.HTTPRequest_close;
 
+Socket = Native.Socket;
+Socket.prototype = {};
+Socket.prototype.process = Native.Socket_process;
+
 Test = Native.Test;
 Test.prototype = {};
 Test.prototype.advance = Native.Test_advance;
@@ -44,8 +53,8 @@ Test.prototype.mouse_press = Native.Test_mouse_press;
 Test.prototype.mouse_release = Native.Test_mouse_release;
 Test.prototype.render = Native.Test_render;
 Test.prototype.reset = Native.Test_reset;
-Test.prototype.trace = Native.Test_trace;
 Test.prototype.addProperty ("rate", Native.Test_get_rate, null);
+Test.prototype.addProperty ("trace", Native.Test_get_trace, null);
 
 print = function (s) {
   if (s)

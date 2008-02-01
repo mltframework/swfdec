@@ -20,6 +20,7 @@
 #ifndef _SWFDEC_TEST_TEST_H_
 #define _SWFDEC_TEST_TEST_H_
 
+#include "swfdec_test_plugin.h"
 #include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
@@ -42,13 +43,7 @@ struct _SwfdecTestTest
   char *		filename;	/* file the player should be loaded from */
   SwfdecPlayer *	player;		/* the player or %NULL if none */
   gboolean		player_quit;	/* the player has called fscommand:quit */
-
-  /* trace stuff */
-  char *		trace_filename;	/* file we're parsing */
-  SwfdecBuffer *	trace_buffer;	/* buffer containing the file */
-  guchar *		trace_offset;	/* how far we've parsed the trace data */
-  gboolean		trace_failed;	/* TRUE if the tacing failed */
-  GSList *		trace_captured;	/* captured trace strings (newest first) */
+  SwfdecBufferQueue *	trace;		/* all captured trace output */
 };
 
 struct _SwfdecTestTestClass
@@ -58,6 +53,7 @@ struct _SwfdecTestTestClass
 
 GType		swfdec_test_test_get_type	(void);
 
+void		swfdec_test_plugin_swfdec_new	(SwfdecTestPlugin *	plugin);
 
 G_END_DECLS
 #endif

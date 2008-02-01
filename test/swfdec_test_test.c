@@ -25,158 +25,10 @@
 #include <unistd.h>
 
 #include "swfdec_test_test.h"
+#include "swfdec_test_buffer.h"
 #include "swfdec_test_function.h"
 #include "swfdec_test_image.h"
-
-static void
-swfdec_test_throw (SwfdecAsContext *cx, const char *message, ...)
-{
-  SwfdecAsValue val;
-
-  if (!swfdec_as_context_catch (cx, &val)) {
-    va_list varargs;
-    char *s;
-
-    va_start (varargs, message);
-    s = g_strdup_vprintf (message, varargs);
-    va_end (varargs);
-
-    /* FIXME: Throw a real object here? */
-    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (cx, s));
-  }
-  swfdec_as_context_throw (cx, &val);
-}
-
-/*** trace capturing ***/
-
-static char *
-swfdec_test_test_trace_diff (SwfdecTestTest *test)
-{
-  const char *command[] = { "diff", "-u", test->trace_filename, NULL, NULL };
-  char *tmp, *diff;
-  int fd;
-  GSList *walk;
-
-  fd = g_file_open_tmp (NULL, &tmp, NULL);
-  if (fd < 0)
-    return FALSE;
-
-  test->trace_captured = g_slist_reverse (test->trace_captured);
-  for (walk = test->trace_captured; walk; walk = walk->next) {
-    const char *s = walk->data;
-    ssize_t len = strlen (s);
-    if (write (fd, s, len) != len ||
-        write (fd, "\n", 1) != 1) {
-      close (fd);
-      unlink (tmp);
-      g_free (tmp);
-      return NULL;
-    }
-  }
-  close (fd);
-  command[3] = tmp;
-  if (!g_spawn_sync (NULL, (char **) command, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
-	&diff, NULL, NULL, NULL)) {
-    unlink (tmp);
-    g_free (tmp);
-    return NULL;
-  }
-  unlink (tmp);
-  g_free (tmp);
-  return diff;
-}
-
-static void
-swfdec_test_test_trace_stop (SwfdecTestTest *test)
-{
-  if (test->trace_filename == NULL)
-    return;
-
-  if (test->trace_buffer &&
-      test->trace_offset != test->trace_buffer->data + test->trace_buffer->length)
-    test->trace_failed = TRUE;
-
-  if (test->trace_failed) {
-    char *diff = swfdec_test_test_trace_diff (test);
-    /* FIXME: produce a diff here */
-    swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "invalid trace output:\n%s", diff);
-    g_free (diff);
-  }
-
-  if (test->trace_buffer) {
-    swfdec_buffer_unref (test->trace_buffer);
-    test->trace_buffer = NULL;
-  }
-  g_free (test->trace_filename);
-  test->trace_filename = NULL;
-  g_slist_foreach (test->trace_captured, (GFunc) g_free, NULL);
-  g_slist_free (test->trace_captured);
-  test->trace_captured = NULL;
-}
-
-static void
-swfdec_test_test_trace_start (SwfdecTestTest *test, const char *filename)
-{
-  GError *error = NULL;
-
-  g_assert (test->trace_filename == NULL);
-  g_assert (test->trace_captured == NULL);
-
-  test->trace_filename = g_strdup (filename);
-  test->trace_failed = FALSE;
-  test->trace_buffer = swfdec_buffer_new_from_file (filename, &error);
-  if (test->trace_buffer == NULL) {
-    swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "Could not start trace: %s", error->message);
-    g_error_free (error);
-    return;
-  }
-  test->trace_offset = test->trace_buffer->data;
-}
-
-static void
-swfdec_test_test_trace_cb (SwfdecPlayer *player, const char *message, SwfdecTestTest *test)
-{
-  gsize len;
-
-  if (test->trace_buffer == NULL)
-    return;
-  
-  test->trace_captured = g_slist_prepend (test->trace_captured, g_strdup (message));
-  if (test->trace_failed)
-    return;
-
-  len = strlen (message);
-  if (len + 1 > test->trace_buffer->length - (test->trace_offset -test->trace_buffer->data)) {
-    test->trace_failed = TRUE;
-    return;
-  }
-  if (memcmp (message, test->trace_offset, len) != 0) {
-    test->trace_failed = TRUE;
-    return;
-  }
-  test->trace_offset += len;
-  if (test->trace_offset[0] != '\n') {
-    test->trace_failed = TRUE;
-    return;
-  }
-  test->trace_offset++;
-}
-
-SWFDEC_TEST_FUNCTION ("Test_trace", swfdec_test_test_trace, 0)
-void
-swfdec_test_test_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
-    SwfdecAsValue *argv, SwfdecAsValue *retval)
-{
-  SwfdecTestTest *test;
-  const char *filename;
-
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
-
-  swfdec_test_test_trace_stop (test);
-  if (filename[0] == '\0')
-    return;
-  swfdec_test_test_trace_start (test, filename);
-}
+#include "swfdec_test_utils.h"
 
 /*** SWFDEC_TEST_TEST ***/
 
@@ -187,8 +39,10 @@ swfdec_test_test_dispose (GObject *object)
 {
   SwfdecTestTest *test = SWFDEC_TEST_TEST (object);
 
-  /* FIXME: this can throw, is that ok? */
-  swfdec_test_test_trace_stop (test);
+  if (test->trace) {
+    swfdec_buffer_queue_unref (test->trace);
+    test->trace = NULL;
+  }
 
   g_free (test->filename);
   test->filename = NULL;
@@ -210,8 +64,9 @@ swfdec_test_test_class_init (SwfdecTestTestClass *klass)
 }
 
 static void
-swfdec_test_test_init (SwfdecTestTest *this)
+swfdec_test_test_init (SwfdecTestTest *test)
 {
+  test->trace = swfdec_buffer_queue_new ();
 }
 
 static void
@@ -221,6 +76,18 @@ swfdec_test_test_fscommand (SwfdecPlayer *player, const char *command,
   if (g_ascii_strcasecmp (command, "quit") == 0) {
     test->player_quit = TRUE;
   }
+}
+
+static void
+swfdec_test_test_trace_cb (SwfdecPlayer *player, const char *message, SwfdecTestTest *test)
+{
+  gsize len = strlen (message);
+  SwfdecBuffer *buffer;
+
+  buffer = swfdec_buffer_new_and_alloc (len + 1);
+  memcpy (buffer->data, message, len);
+  buffer->data[len] = '\n';
+  swfdec_buffer_queue_push (test->trace, buffer);
 }
 
 static gboolean
@@ -251,6 +118,7 @@ swfdec_test_do_reset (SwfdecTestTest *test, const char *filename)
     g_object_unref (test->player);
     test->player = NULL;
   }
+  swfdec_buffer_queue_clear (test->trace);
   if (filename == NULL)
     return;
 
@@ -394,6 +262,26 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
 
   swfdec_test_do_reset (test, filename[0] ? filename : NULL);
+}
+
+SWFDEC_TEST_FUNCTION ("Test_get_trace", swfdec_test_test_get_trace, 0)
+void
+swfdec_test_test_get_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+  SwfdecAsObject *o;
+  SwfdecBuffer *buffer;
+  gsize len;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "");
+
+  len = swfdec_buffer_queue_get_depth (test->trace);
+  buffer = swfdec_buffer_queue_peek (test->trace, len);
+  o = swfdec_test_buffer_new (cx, buffer);
+  if (o == NULL)
+    return;
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
 }
 
 SWFDEC_TEST_FUNCTION ("Test_get_rate", swfdec_test_test_get_rate, 0)

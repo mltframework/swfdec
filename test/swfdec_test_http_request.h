@@ -32,6 +32,12 @@ G_BEGIN_DECLS
 typedef struct _SwfdecTestHTTPRequest SwfdecTestHTTPRequest;
 typedef struct _SwfdecTestHTTPRequestClass SwfdecTestHTTPRequestClass;
 
+typedef enum {
+  SWFDEC_TEST_HTTP_REQUEST_STATE_WAITING,
+  SWFDEC_TEST_HTTP_REQUEST_STATE_SENDING,
+  SWFDEC_TEST_HTTP_REQUEST_STATE_SENT
+} SwfdecTestHTTPRequestState;
+
 #define SWFDEC_TYPE_TEST_HTTP_REQUEST                    (swfdec_test_http_request_get_type())
 #define SWFDEC_IS_TEST_HTTP_REQUEST(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TEST_HTTP_REQUEST))
 #define SWFDEC_IS_TEST_HTTP_REQUEST_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_TEST_HTTP_REQUEST))
@@ -46,6 +52,7 @@ struct _SwfdecTestHTTPRequest
   SwfdecTestHTTPServer *	server;
   SoupMessage *			message;
   gboolean			status_set;
+  SwfdecTestHTTPRequestState	state;
 };
 
 struct _SwfdecTestHTTPRequestClass

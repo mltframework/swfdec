@@ -50,8 +50,10 @@ swfdec_test_http_request_new (SwfdecAsContext *context,
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
     swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
 
-  SWFDEC_TEST_HTTP_REQUEST (ret)->message = message;
   SWFDEC_TEST_HTTP_REQUEST (ret)->server = server;
+  SWFDEC_TEST_HTTP_REQUEST (ret)->message = message;
+  SWFDEC_TEST_HTTP_REQUEST (ret)->state =
+    SWFDEC_TEST_HTTP_REQUEST_STATE_WAITING;
 
   return ret;
 }
@@ -64,9 +66,6 @@ static void
 swfdec_test_http_request_dispose (GObject *object)
 {
   SwfdecTestHTTPRequest *request = SWFDEC_TEST_HTTP_REQUEST (object);
-
-  soup_message_set_status (request->message, SOUP_STATUS_INTERNAL_SERVER_ERROR);
-  soup_server_unpause_message (request->server->server, request->message);
 
   g_object_unref (request->message);
   request->message = NULL;
@@ -183,6 +182,9 @@ swfdec_test_http_request_push (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "s", &data);
 
+  if (request->state > SWFDEC_TEST_HTTP_REQUEST_STATE_SENDING)
+    return;
+
   if (!request->status_set) {
     soup_message_set_status (request->message, SOUP_STATUS_OK);
     request->status_set = TRUE;
@@ -193,6 +195,8 @@ swfdec_test_http_request_push (SwfdecAsContext *cx, SwfdecAsObject *object,
   soup_server_unpause_message (request->server->server, request->message);
 
   swfdec_test_http_server_run (request->server);
+
+  request->state = SWFDEC_TEST_HTTP_REQUEST_STATE_SENDING;
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPRequest_close", swfdec_test_http_request_close, 0)
@@ -204,6 +208,9 @@ swfdec_test_http_request_close (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "");
 
+  if (request->state == SWFDEC_TEST_HTTP_REQUEST_STATE_SENT)
+    return;
+
   if (!request->status_set) {
     soup_message_set_status (request->message, SOUP_STATUS_OK);
     request->status_set = TRUE;
@@ -213,4 +220,6 @@ swfdec_test_http_request_close (SwfdecAsContext *cx, SwfdecAsObject *object,
   soup_server_unpause_message (request->server->server, request->message);
 
   swfdec_test_http_server_run (request->server);
+
+  request->state = SWFDEC_TEST_HTTP_REQUEST_STATE_SENT;
 }

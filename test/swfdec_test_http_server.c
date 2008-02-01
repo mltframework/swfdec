@@ -153,6 +153,18 @@ swfdec_test_http_server_init (SwfdecTestHTTPServer *server)
 
 /*** AS CODE ***/
 
+SWFDEC_TEST_FUNCTION ("HTTPServer_get_port", swfdec_test_http_server_get_port, 0)
+void
+swfdec_test_http_server_get_port (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestHTTPServer *server;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &server, "");
+
+  SWFDEC_AS_VALUE_SET_INT (retval, server->port);
+}
+
 SWFDEC_TEST_FUNCTION ("HTTPServer_getRequest", swfdec_test_http_server_get_request, 0)
 void
 swfdec_test_http_server_get_request (SwfdecAsContext *cx,

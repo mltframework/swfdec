@@ -30,6 +30,7 @@ Image.prototype.save = Native.Image_save;
 HTTPServer = Native.HTTPServer;
 HTTPServer.prototype = {};
 HTTPServer.prototype.getRequest = Native.HTTPServer_getRequest;
+HTTPServer.prototype.addProperty ("port", Native.HTTPServer_get_port, null);
 
 HTTPRequest = new Object ();
 HTTPRequest.prototype = {};

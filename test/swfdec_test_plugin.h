@@ -49,6 +49,9 @@ struct _SwfdecTestPlugin {
   void		(* error)	(SwfdecTestPlugin *	plugin,
 				 const char *		description);
   /* initialized by the plugin during swfdec_test_plugin_new() */
+  unsigned int	width;
+  unsigned int	height;
+  unsigned int	rate; /* in 256th of a second */
   void		(* advance)	(SwfdecTestPlugin *	plugin,
 				 unsigned int		msecs);
   void		(* finish)	(SwfdecTestPlugin *	plugin);

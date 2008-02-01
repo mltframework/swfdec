@@ -43,13 +43,7 @@ struct _SwfdecTestTest
   char *		filename;	/* file the player should be loaded from */
   SwfdecPlayer *	player;		/* the player or %NULL if none */
   gboolean		player_quit;	/* the player has called fscommand:quit */
-
-  /* trace stuff */
-  char *		trace_filename;	/* file we're parsing */
-  SwfdecBuffer *	trace_buffer;	/* buffer containing the file */
-  guchar *		trace_offset;	/* how far we've parsed the trace data */
-  gboolean		trace_failed;	/* TRUE if the tacing failed */
-  GSList *		trace_captured;	/* captured trace strings (newest first) */
+  SwfdecBufferQueue *	trace;		/* all captured trace output */
 };
 
 struct _SwfdecTestTestClass

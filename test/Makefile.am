@@ -4,6 +4,7 @@ noinst_PROGRAMS = test
 
 swfdec_test_sources = \
 	swfdec_test.c \
+	swfdec_test_buffer.c \
 	swfdec_test_function.c \
 	swfdec_test_global.c \
 	swfdec_test_image.c \
@@ -26,6 +27,7 @@ EXTRA_DIST = \
 	swfdec_test_initialize.as
 
 noinst_HEADERS = \
+	swfdec_test_buffer.h \
 	swfdec_test_function.h \
 	swfdec_test_function_list.h \
 	swfdec_test_image.h \

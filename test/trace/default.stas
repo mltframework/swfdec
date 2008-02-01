@@ -22,10 +22,15 @@ run_test = function (t, file) {
   print ("Testing " + file);
   try {
     t.reset (file);
-    t.trace (file + ".trace");
+    var trace = Buffer.load (file + ".trace");
     t.advance (0);
     t.advance (Math.ceil (10000 / t.rate));
-    t.trace ();
+    trace = t.trace.diff (trace);
+    if (trace) {
+      error ("different trace output");
+      Native.print (trace);
+      return false;
+    }
   } catch (e) {
     if (e) {
       error (e);

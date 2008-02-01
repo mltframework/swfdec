@@ -23,6 +23,7 @@
 
 #include "swfdec_test_image.h"
 #include "swfdec_test_function.h"
+#include "swfdec_test_utils.h"
 
 #define SWFDEC_TEST_IMAGE_IS_VALID(image) ((image)->surface && \
     cairo_surface_status ((image)->surface) == CAIRO_STATUS_SUCCESS)
@@ -190,6 +191,7 @@ swfdec_test_image_save (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 {
   SwfdecTestImage *image;
   const char *filename;
+  cairo_status_t status;
   
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "s", &filename);
 
@@ -197,8 +199,10 @@ swfdec_test_image_save (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   if (!SWFDEC_TEST_IMAGE_IS_VALID (image))
     return;
 
-  if (cairo_surface_write_to_png (image->surface, filename) != CAIRO_STATUS_SUCCESS)
-    return;
+  status = cairo_surface_write_to_png (image->surface, filename);
+  if (status != CAIRO_STATUS_SUCCESS) {
+    swfdec_test_throw (cx, "Couldn't save to %s: %s", filename, cairo_status_to_string (status));
+  }
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }

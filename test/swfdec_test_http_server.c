@@ -191,10 +191,10 @@ swfdec_test_http_server_create (SwfdecAsContext *cx, SwfdecAsObject *object, gui
   SwfdecTestHTTPServer *server;
   int port;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_SERVER, &server, "|i", &port);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_SERVER, &server, "i", &port);
 
   if (port <= 0)
-    port = 12345;
+    return;
 
   server->port = port;
 

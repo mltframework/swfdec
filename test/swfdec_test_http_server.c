@@ -22,7 +22,6 @@
 #include "config.h"
 #endif
 
-#include <unistd.h>
 #include <libsoup/soup.h>
 
 #include "swfdec_test_http_server.h"
@@ -39,8 +38,7 @@ swfdec_test_http_server_callback (SoupServer *soup_server,
 
   g_return_if_fail (server->server == soup_server);
 
-  soup_message_headers_set_encoding (message->response_headers,
-      SOUP_ENCODING_CHUNKED);
+  soup_server_pause_message (server->server, message);
 
   g_queue_push_head (server->messages, g_object_ref (message));
 }

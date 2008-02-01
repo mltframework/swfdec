@@ -51,6 +51,10 @@ swfdec_test_http_request_new (SwfdecAsContext *context,
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
     swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
 
+  soup_message_headers_set_encoding (message->response_headers,
+      SOUP_ENCODING_CHUNKED);
+  soup_message_set_flags (message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
+
   SWFDEC_TEST_HTTP_REQUEST (ret)->server = server;
   SWFDEC_TEST_HTTP_REQUEST (ret)->message = message;
   SWFDEC_TEST_HTTP_REQUEST (ret)->state =
@@ -202,6 +206,53 @@ swfdec_test_http_request_get_headers (SwfdecAsContext *cx,
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (retval, request->headers);
+}
+
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_contentType", swfdec_test_http_request_get_contentType, 0)
+void
+swfdec_test_http_request_get_contentType (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *retval)
+{
+  SwfdecTestHTTPRequest *request;
+  const char *value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "");
+
+  value = soup_message_headers_get (request->message->response_headers,
+      "Content-Type");
+
+  if (value != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (retval,
+	swfdec_as_context_get_string (cx, value));
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (retval);
+  }
+}
+
+SWFDEC_TEST_FUNCTION ("HTTPRequest_set_contentType", swfdec_test_http_request_set_contentType, 0)
+void
+swfdec_test_http_request_set_contentType (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *retval)
+{
+  SwfdecTestHTTPRequest *request;
+  SwfdecAsValue val;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "v", &val);
+
+  if (request->state > SWFDEC_TEST_HTTP_REQUEST_STATE_WAITING) {
+    swfdec_test_throw (cx, "Headers have already been sent");
+    return;
+  }
+
+  if (SWFDEC_AS_VALUE_IS_NULL (&val) || SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
+    soup_message_headers_remove (request->message->response_headers,
+	"Content-Type");
+  } else {
+    soup_message_headers_replace (request->message->response_headers,
+	"Content-Type", swfdec_as_value_to_string (cx, &val));
+  }
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPRequest_push", swfdec_test_http_request_push, 0)

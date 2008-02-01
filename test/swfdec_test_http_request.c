@@ -79,6 +79,7 @@ swfdec_test_http_request_mark (SwfdecAsObject *object)
   SwfdecTestHTTPRequest *request = SWFDEC_TEST_HTTP_REQUEST (object);
 
   swfdec_as_object_mark (SWFDEC_AS_OBJECT (request->server));
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (request->headers));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_test_http_request_parent_class)->mark (object);
 }
@@ -119,8 +120,6 @@ swfdec_test_http_request_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_VALUE_SET_STRING (retval,
       swfdec_as_context_give_string (cx, g_string_free (string, FALSE)));
-
-  soup_uri_free (uri);
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPRequest_get_server", swfdec_test_http_request_get_server, 0)
@@ -150,8 +149,6 @@ swfdec_test_http_request_get_url (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_VALUE_SET_STRING (retval,
       swfdec_as_context_give_string (cx, soup_uri_to_string (uri, FALSE)));
-
-  soup_uri_free (uri);
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPRequest_get_path", swfdec_test_http_request_get_path, 0)
@@ -168,8 +165,42 @@ swfdec_test_http_request_get_path (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_VALUE_SET_STRING (retval,
       swfdec_as_context_give_string (cx, soup_uri_to_string (uri, TRUE)));
+}
 
-  soup_uri_free (uri);
+static void
+swfdec_test_http_request_foreach_set_headers (const char *name,
+    const char *value, gpointer user_data)
+{
+  SwfdecTestHTTPRequest *request = user_data;
+  SwfdecAsContext *cx;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (request->headers));
+
+  cx = request->headers->context;
+
+  SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, value));
+  swfdec_as_object_set_variable (request->headers,
+      swfdec_as_context_get_string (cx, name), &val);
+}
+
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_headers", swfdec_test_http_request_get_headers, 0)
+void
+swfdec_test_http_request_get_headers (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *retval)
+{
+  SwfdecTestHTTPRequest *request;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "");
+
+  if (!request->headers) {
+    request->headers = swfdec_as_object_new_empty (cx);
+    soup_message_headers_foreach (request->message->request_headers,
+	swfdec_test_http_request_foreach_set_headers, request);
+  }
+
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, request->headers);
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPRequest_push", swfdec_test_http_request_push, 0)

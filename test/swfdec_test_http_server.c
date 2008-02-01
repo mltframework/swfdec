@@ -28,8 +28,7 @@
 #include "swfdec_test_http_server.h"
 #include "swfdec_test_http_request.h"
 #include "swfdec_test_function.h"
-
-#define SWFDEC_TEST_HTTP_SERVER_IS_VALID(server) ((server)->server)
+#include "swfdec_test_utils.h"
 
 static void
 swfdec_test_http_server_callback (SoupServer *soup_server,
@@ -69,7 +68,7 @@ swfdec_test_http_server_start (SwfdecTestHTTPServer *server)
   server->server = soup_server_new (SOUP_SERVER_PORT, server->port,
       SOUP_SERVER_INTERFACE, address, SOUP_SERVER_ASYNC_CONTEXT,
       server->context, NULL);
-  if (!server) {
+  if (!server->server) {
     g_main_context_unref (server->context);
     server->context = NULL;
     return FALSE;
@@ -102,7 +101,11 @@ swfdec_test_http_server_new (SwfdecAsContext *context, guint port)
 
   SWFDEC_TEST_HTTP_SERVER (ret)->port = port;
 
-  swfdec_test_http_server_start (SWFDEC_TEST_HTTP_SERVER (ret));
+  if (!swfdec_test_http_server_start (SWFDEC_TEST_HTTP_SERVER (ret))) {
+    swfdec_test_throw (context, "Failed to start web server for port %i",
+	port);
+    return NULL;
+  }
 
   return ret;
 }
@@ -162,19 +165,17 @@ swfdec_test_http_server_get_request (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_SERVER, &server, "");
 
-  SWFDEC_AS_VALUE_SET_NULL (retval);
-
-  if (!SWFDEC_TEST_HTTP_SERVER_IS_VALID (server))
+  if (!server->server) {
+    swfdec_test_throw (cx, "Webserver not running");
     return;
-
-  if (g_queue_is_empty (server->messages)) {
-    g_print ("waiting\n");
-    usleep (1000000);
-    g_print ("checking\n");
-    swfdec_test_http_server_run (server);
   }
 
-  if (!g_queue_is_empty (server->messages)) {
+  if (g_queue_is_empty (server->messages))
+    swfdec_test_http_server_run (server);
+
+  if (g_queue_is_empty (server->messages)) {
+    SWFDEC_AS_VALUE_SET_NULL (retval);
+  } else {
     SwfdecAsObject *request;
 
     request = swfdec_test_http_request_new (cx, server,
@@ -199,5 +200,6 @@ swfdec_test_http_server_create (SwfdecAsContext *cx, SwfdecAsObject *object, gui
 
   server->port = port;
 
-  swfdec_test_http_server_start (server);
+  if (!swfdec_test_http_server_start (server))
+    swfdec_test_throw (cx, "Failed to start web server for port %i", port);
 }

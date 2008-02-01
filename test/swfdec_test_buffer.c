@@ -87,6 +87,11 @@ swfdec_test_diff_buffers (SwfdecBuffer *buf1, SwfdecBuffer *buf2, GError **error
   char *file1, *file2, *diff;
   int fd;
 
+  /* shortcut the (hopefully) common case of equality */
+  if (buf1->length == buf2->length && 
+      memcmp (buf1->data, buf2->data, buf1->length) == 0)
+    return NULL;
+
   /* write the first buffer to a temporary file */
   fd = g_file_open_tmp (NULL, &file1, error);
   if (fd < 0)

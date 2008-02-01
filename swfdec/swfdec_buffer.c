@@ -495,19 +495,24 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, gsize length)
 
   SWFDEC_LOG ("peeking %zu, %zu available", length, queue->depth);
 
+  /* need to special case here, because the queue may be empty */
+  if (length == 0)
+    return swfdec_buffer_new ();
+
   g = queue->first_buffer;
   buffer = g->data;
   if (buffer->length >= length) {
     newbuffer = swfdec_buffer_new_subbuffer (buffer, 0, length);
   } else {
-    gsize offset;
+    gsize amount, offset;
     newbuffer = swfdec_buffer_new_and_alloc (length);
-    for (offset = 0; offset < length; offset += buffer->length) {
-      gsize amount = MIN (length - offset, buffer->length);
+    offset = 0;
+    while (offset < length) {
+      buffer = g->data;
+      amount = MIN (length - offset, buffer->length);
       oil_copy_u8 (newbuffer->data + offset, buffer->data, amount);
       offset += amount;
       g = g->next;
-      buffer = g->data;
     }
   }
 

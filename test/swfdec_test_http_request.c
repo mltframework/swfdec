@@ -55,8 +55,7 @@ swfdec_test_http_request_new (SwfdecAsContext *context,
   soup_message_headers_set_encoding (message->response_headers,
       SOUP_ENCODING_CHUNKED);
   soup_message_set_flags (message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
-  soup_message_set_status (request->message,
-      SOUP_STATUS_INTERNAL_SERVER_ERROR);
+  soup_message_set_status (message, SOUP_STATUS_OK);
 
   SWFDEC_TEST_HTTP_REQUEST (ret)->server = server;
   SWFDEC_TEST_HTTP_REQUEST (ret)->message = message;
@@ -266,11 +265,7 @@ swfdec_test_http_request_get_statusCode (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "");
 
-  if (request->status_set) {
-    SWFDEC_AS_VALUE_SET_INT (retval, request->message->status_code);
-  } else {
-    SWFDEC_AS_VALUE_SET_NULL (retval);
-  }
+  SWFDEC_AS_VALUE_SET_INT (retval, request->message->status_code);
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPRequest_set_statusCode", swfdec_test_http_request_set_statusCode, 0)
@@ -280,26 +275,19 @@ swfdec_test_http_request_set_statusCode (SwfdecAsContext *cx,
     SwfdecAsValue *retval)
 {
   SwfdecTestHTTPRequest *request;
-  SwfdecAsValue val;
+  int status_code;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "v", &val);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "i", &status_code);
+
+  if (status_code < 0)
+    return;
 
   if (request->state > SWFDEC_TEST_HTTP_REQUEST_STATE_WAITING) {
     swfdec_test_throw (cx, "Headers have already been sent");
     return;
   }
 
-  if (SWFDEC_AS_VALUE_IS_NULL (&val) || SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
-    soup_message_set_status (request->message,
-	SOUP_STATUS_INTERNAL_SERVER_ERROR);
-    request->status_set = FALSE;
-  } else {
-    int status_code = swfdec_as_value_to_integer (cx, &val);
-    if (status_code < 0)
-      return;
-    soup_message_set_status (request->message, status_code);
-    request->status_set = TRUE;
-  }
+  soup_message_set_status (request->message, status_code);
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPRequest_send", swfdec_test_http_request_send, 0)
@@ -315,11 +303,6 @@ swfdec_test_http_request_send (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (request->state > SWFDEC_TEST_HTTP_REQUEST_STATE_SENDING) {
     swfdec_test_throw (cx, "Reply has already been sent");
     return;
-  }
-
-  if (!request->status_set) {
-    soup_message_set_status (request->message, SOUP_STATUS_OK);
-    request->status_set = TRUE;
   }
 
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val) &&
@@ -353,11 +336,6 @@ swfdec_test_http_request_close (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (request->state == SWFDEC_TEST_HTTP_REQUEST_STATE_SENT) {
     swfdec_test_throw (cx, "Reply has already been sent");
     return;
-  }
-
-  if (!request->status_set) {
-    soup_message_set_status (request->message, SOUP_STATUS_OK);
-    request->status_set = TRUE;
   }
 
   soup_message_body_complete (request->message->response_body);

@@ -51,9 +51,8 @@ struct _SwfdecTestHTTPRequest
 
   SwfdecTestHTTPServer *	server;
   SoupMessage *			message;
-  gboolean			status_set;
-  SwfdecTestHTTPRequestState	state;
 
+  SwfdecTestHTTPRequestState	state;
   SwfdecAsObject *		headers;
 };
 

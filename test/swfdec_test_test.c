@@ -30,6 +30,94 @@
 #include "swfdec_test_image.h"
 #include "swfdec_test_utils.h"
 
+/*** PLUGIN HANDLING ***/
+
+#define SWFDEC_TEST_TEST_FROM_PLUGIN(x) \
+  SWFDEC_TEST_TEST ((gpointer) ((guint8 *) (x) - G_STRUCT_OFFSET (SwfdecTestTest, plugin)))
+
+char *swfdec_test_plugin_name = NULL;
+
+static void
+swfdec_test_test_quit (SwfdecTestPlugin *plugin)
+{
+  SwfdecTestTest *test = SWFDEC_TEST_TEST_FROM_PLUGIN (plugin);
+
+  test->plugin_quit = TRUE;
+}
+
+static void
+swfdec_test_test_error (SwfdecTestPlugin *plugin, const char *description)
+{
+  SwfdecTestTest *test = SWFDEC_TEST_TEST_FROM_PLUGIN (plugin);
+
+  if (test->plugin_error)
+    return;
+  test->plugin_error = TRUE;
+  swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, description);
+}
+
+static void
+swfdec_test_test_trace (SwfdecTestPlugin *plugin, const char *message)
+{
+  SwfdecTestTest *test = SWFDEC_TEST_TEST_FROM_PLUGIN (plugin);
+  gsize len = strlen (message);
+  SwfdecBuffer *buffer;
+
+  buffer = swfdec_buffer_new_and_alloc (len + 1);
+  memcpy (buffer->data, message, len);
+  buffer->data[len] = '\n';
+  swfdec_buffer_queue_push (test->trace, buffer);
+}
+
+static void
+swfdec_test_test_load_plugin (SwfdecTestTest *test, const char *filename)
+{
+  memset (&test->plugin, 0, sizeof (SwfdecTestPlugin));
+  /* initialize test->plugin */
+  test->plugin.filename = g_strdup (filename);
+  test->plugin.trace = swfdec_test_test_trace;
+  test->plugin.quit = swfdec_test_test_quit;
+  test->plugin.error = swfdec_test_test_error;
+
+  /* load the right values */
+  if (swfdec_test_plugin_name) {
+    void (*init) (SwfdecTestPlugin *plugin);
+    char *dir = g_build_filename (g_get_home_dir (), ".swfdec-test", NULL);
+    char *name = g_module_build_path (dir, swfdec_test_plugin_name);
+    g_free (dir);
+    test->module = g_module_open (name, G_MODULE_BIND_LOCAL);
+    if (test->module == NULL) {
+      swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "could not find player \"%s\"",
+	  swfdec_test_plugin_name);
+      return;
+    }
+    if (!g_module_symbol (test->module, "swfdec_test_plugin_init", (gpointer) &init)) {
+      g_module_close (test->module);
+      test->module = NULL;
+    }
+    init (&test->plugin);
+  } else {
+    swfdec_test_plugin_swfdec_new (&test->plugin);
+  }
+  test->plugin_loaded = TRUE;
+}
+
+static void
+swfdec_test_test_unload_plugin (SwfdecTestTest *test)
+{
+  if (!test->plugin_loaded)
+    return;
+  test->plugin.finish (&test->plugin);
+  g_free (test->plugin.filename);
+  if (test->module) {
+    g_module_close (test->module);
+    test->module = NULL;
+  }
+  test->plugin_quit = FALSE;
+  test->plugin_error = FALSE;
+  test->plugin_loaded = FALSE;
+}
+
 /*** SWFDEC_TEST_TEST ***/
 
 G_DEFINE_TYPE (SwfdecTestTest, swfdec_test_test, SWFDEC_TYPE_AS_OBJECT)
@@ -46,11 +134,7 @@ swfdec_test_test_dispose (GObject *object)
 
   g_free (test->filename);
   test->filename = NULL;
-  if (test->player) {
-    g_signal_handlers_disconnect_matched (test, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, test);
-    g_object_unref (test->player);
-    test->player = NULL;
-  }
+  swfdec_test_test_unload_plugin (test);
 
   G_OBJECT_CLASS (swfdec_test_test_parent_class)->dispose (object);
 }
@@ -70,61 +154,14 @@ swfdec_test_test_init (SwfdecTestTest *test)
 }
 
 static void
-swfdec_test_test_fscommand (SwfdecPlayer *player, const char *command, 
-    const char *para, SwfdecTestTest *test)
-{
-  if (g_ascii_strcasecmp (command, "quit") == 0) {
-    test->player_quit = TRUE;
-  }
-}
-
-static void
-swfdec_test_test_trace_cb (SwfdecPlayer *player, const char *message, SwfdecTestTest *test)
-{
-  gsize len = strlen (message);
-  SwfdecBuffer *buffer;
-
-  buffer = swfdec_buffer_new_and_alloc (len + 1);
-  memcpy (buffer->data, message, len);
-  buffer->data[len] = '\n';
-  swfdec_buffer_queue_push (test->trace, buffer);
-}
-
-static gboolean
-swfdec_test_test_ensure_player (SwfdecTestTest *test)
-{
-  SwfdecURL *url;
-
-  if (test->filename == NULL)
-    return FALSE;
-  if (test->player)
-    return TRUE;
-
-  g_assert (test->player_quit == FALSE);
-  test->player = swfdec_player_new (NULL);
-  url = swfdec_url_new_from_input (test->filename);
-  swfdec_player_set_url (test->player, url);
-  swfdec_url_free (url);
-  g_signal_connect (test->player, "fscommand", G_CALLBACK (swfdec_test_test_fscommand), test);
-  g_signal_connect (test->player, "trace", G_CALLBACK (swfdec_test_test_trace_cb), test);
-  return TRUE;
-}
-
-static void
 swfdec_test_do_reset (SwfdecTestTest *test, const char *filename)
 {
-  if (test->player) {
-    g_signal_handlers_disconnect_matched (test, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, test);
-    g_object_unref (test->player);
-    test->player = NULL;
-  }
+  swfdec_test_test_unload_plugin (test);
   swfdec_buffer_queue_clear (test->trace);
   if (filename == NULL)
     return;
 
-  g_free (test->filename);
-  test->filename = g_strdup (filename);
-  test->player_quit = FALSE;
+  swfdec_test_test_load_plugin (test, filename);
 }
 
 SWFDEC_TEST_FUNCTION ("Test_advance", swfdec_test_test_advance, 0)
@@ -137,23 +174,10 @@ swfdec_test_test_advance (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "i", &msecs);
 
-  if (msecs < 0 || test->player_quit)
+  if (msecs < 0 || !test->plugin_loaded || test->plugin_error || test->plugin_quit)
     return;
-  if (!swfdec_test_test_ensure_player (test))
-    return;
-  if (msecs == 0) {
-    if (!test->player_quit)
-      swfdec_player_advance (test->player, 0);
-  } else {
-    while (msecs > 0 && !test->player_quit) {
-      int next_event = swfdec_player_get_next_event (test->player);
-      if (next_event < 0)
-	break;
-      next_event = MIN (next_event, msecs);
-      swfdec_player_advance (test->player, next_event);
-      msecs -= next_event;
-    }
-  }
+
+  test->plugin.advance (&test->plugin, msecs);
 }
 
 SWFDEC_TEST_FUNCTION ("Test_reset", swfdec_test_test_reset, 0)
@@ -179,10 +203,14 @@ swfdec_test_test_mouse_move (SwfdecAsContext *cx, SwfdecAsObject *object, guint 
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn", &x, &y);
 
+#if 0
   if (!swfdec_test_test_ensure_player (test))
     return;
 
   swfdec_player_mouse_move (test->player, x, y);
+#else
+  swfdec_test_throw (cx, "implement");
+#endif
 }
 
 SWFDEC_TEST_FUNCTION ("Test_mouse_press", swfdec_test_test_mouse_press, 0)
@@ -196,11 +224,15 @@ swfdec_test_test_mouse_press (SwfdecAsContext *cx, SwfdecAsObject *object, guint
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn|i", &x, &y, &button);
 
+#if 0
   if (!swfdec_test_test_ensure_player (test))
     return;
 
   button = CLAMP (button, 1, 32);
   swfdec_player_mouse_press (test->player, x, y, button);
+#else
+  swfdec_test_throw (cx, "implement");
+#endif
 }
 
 SWFDEC_TEST_FUNCTION ("Test_mouse_release", swfdec_test_test_mouse_release, 0)
@@ -214,11 +246,15 @@ swfdec_test_test_mouse_release (SwfdecAsContext *cx, SwfdecAsObject *object, gui
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn|i", &x, &y, &button);
 
+#if 0
   if (!swfdec_test_test_ensure_player (test))
     return;
 
   button = CLAMP (button, 1, 32);
   swfdec_player_mouse_release (test->player, x, y, button);
+#else
+  swfdec_test_throw (cx, "implement");
+#endif
 }
 
 SWFDEC_TEST_FUNCTION ("Test_render", swfdec_test_test_render, 0)
@@ -226,10 +262,9 @@ void
 swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+#if 0
   SwfdecTestTest *test;
   SwfdecAsObject *image;
-  int x, y, w, h;
-  cairo_t *cr;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|iiii", &x, &y, &w, &h);
 
@@ -249,6 +284,9 @@ swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   swfdec_player_render (test->player, cr, x, y, w, h);
   cairo_destroy (cr);
   SWFDEC_AS_VALUE_SET_OBJECT (retval, image);
+#else
+  swfdec_test_throw (cx, "implement");
+#endif
 }
 
 SWFDEC_TEST_FUNCTION ("Test", swfdec_test_test_new, swfdec_test_test_get_type)
@@ -293,6 +331,9 @@ swfdec_test_test_get_rate (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (retval, test->player ? swfdec_player_get_rate (test->player) : 0);
+  if (!test->plugin_loaded)
+    return;
+  
+  SWFDEC_AS_VALUE_SET_NUMBER (retval, test->plugin.rate / 256.0);
 }
 

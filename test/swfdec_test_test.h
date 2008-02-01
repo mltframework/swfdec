@@ -21,6 +21,7 @@
 #define _SWFDEC_TEST_TEST_H_
 
 #include "swfdec_test_plugin.h"
+#include <gmodule.h>
 #include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
@@ -40,9 +41,13 @@ struct _SwfdecTestTest
 {
   SwfdecAsObject	as_object;
 
+  SwfdecTestPlugin	plugin;		/* the plugin we use */
+  GModule *		module;		/* module we loaded the plugin from or NULL */
+  gboolean		plugin_loaded;	/* the plugin is loaded and ready to rumble */
+  gboolean		plugin_quit;	/* the plugin has called quit */
+  gboolean		plugin_error;	/* the plugin has called error */
+
   char *		filename;	/* file the player should be loaded from */
-  SwfdecPlayer *	player;		/* the player or %NULL if none */
-  gboolean		player_quit;	/* the player has called fscommand:quit */
   SwfdecBufferQueue *	trace;		/* all captured trace output */
 };
 
@@ -50,6 +55,8 @@ struct _SwfdecTestTestClass
 {
   SwfdecAsObjectClass	as_object_class;
 };
+
+extern char *swfdec_test_plugin_name;
 
 GType		swfdec_test_test_get_type	(void);
 

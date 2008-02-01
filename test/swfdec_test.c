@@ -31,6 +31,7 @@
 
 #include "swfdec_test_function.h"
 #include "swfdec_test_initialize.h"
+#include "swfdec_test_test.h"
 
 
 /* Start of script file */
@@ -81,6 +82,7 @@ main (int argc, char **argv)
 
   GOptionEntry options[] = {
     { "dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "dump images on failure", FALSE },
+    { "player", 'p', 0, G_OPTION_ARG_STRING, &swfdec_test_plugin_name, "player to test", "NAME" },
     { "script", 's', 0, G_OPTION_ARG_STRING, &script_filename, "script to execute if not ./default.sts", "FILENAME" },
     { NULL }
   };

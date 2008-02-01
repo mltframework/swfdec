@@ -532,7 +532,7 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, gsize length)
  * Returns: a new #SwfdecBuffer or %NULL
  **/
 SwfdecBuffer *
-swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length)
+swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, gsize length)
 {
   SwfdecBuffer *ret;
 

@@ -80,18 +80,16 @@ static void
 swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
     SwfdecStream *stream)
 {
-  SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
   char *text;
 
   // get text
-  text =
-    swfdec_loader_get_text (loader, load_object->version);
+  text = swfdec_buffer_queue_pull_text (swfdec_stream_get_queue (stream), load_object->version);
 
   /* break reference to the loader */
   swfdec_stream_set_target (stream, NULL);
   load_object->loader = NULL;
-  g_object_unref (loader);
+  g_object_unref (stream);
 
   /* call finish */
   swfdec_sandbox_use (load_object->sandbox);

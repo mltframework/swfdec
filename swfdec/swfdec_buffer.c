@@ -189,15 +189,17 @@ swfdec_buffer_free_subbuffer (unsigned char *data, gpointer priv)
  * Returns: a new #SwfdecBuffer managing the indicated region.
  **/
 SwfdecBuffer *
-swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, gsize offset, gsize length)
+swfdec_buffer_new_subbuffer (SwfdecBuffer *buffer, gsize offset, gsize length)
 {
   SwfdecBuffer *subbuffer;
   
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (offset + length <= buffer->length, NULL);
 
-  subbuffer = swfdec_buffer_new ();
+  if (offset == 0 && length == buffer->length)
+    return swfdec_buffer_ref (buffer);
 
+  subbuffer = swfdec_buffer_new ();
   subbuffer->priv = swfdec_buffer_ref (swfdec_buffer_get_super (buffer));
   subbuffer->data = buffer->data + offset;
   subbuffer->length = length;
@@ -360,7 +362,7 @@ swfdec_buffer_queue_new (void)
  *
  * Returns: amount of bytes in @queue.
  **/
-guint
+gsize
 swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue)
 {
   g_return_val_if_fail (queue != NULL, 0);
@@ -377,12 +379,47 @@ swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue)
  *
  * Returns: Number of bytes that were already pulled from this queue.
  **/
-guint
+gsize
 swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue)
 {
   g_return_val_if_fail (queue != NULL, 0);
 
   return queue->offset;
+}
+
+/**
+ * swfdec_buffer_queue_flush:
+ * @queue: a #SwfdecBufferQueue
+ * @n_bytes: amount of bytes to flush from the queue
+ *
+ * Removes the first @n_bytes bytes from the queue.
+ */
+void
+swfdec_buffer_queue_flush (SwfdecBufferQueue *queue, gsize n_bytes)
+{
+  g_return_if_fail (queue != NULL);
+  g_return_if_fail (n_bytes <= queue->depth);
+
+  queue->depth -= n_bytes;
+  queue->offset += n_bytes;
+
+  SWFDEC_LOG ("flushing %zu bytes (%zu left)", n_bytes, queue->depth);
+
+  while (n_bytes > 0) {
+    SwfdecBuffer *buffer = queue->first_buffer->data;
+
+    if (buffer->length <= n_bytes) {
+      n_bytes -= buffer->length;
+      queue->first_buffer = g_slist_remove (queue->first_buffer, buffer);
+    } else {
+      queue->first_buffer->data = swfdec_buffer_new_subbuffer (buffer, 
+	  n_bytes, buffer->length - n_bytes);
+      n_bytes = 0;
+    }
+    swfdec_buffer_unref (buffer);
+  }
+  if (queue->first_buffer == NULL)
+    queue->last_buffer = NULL;
 }
 
 /**
@@ -397,9 +434,12 @@ swfdec_buffer_queue_clear (SwfdecBufferQueue *queue)
 {
   g_return_if_fail (queue != NULL);
 
-  g_list_foreach (queue->buffers, (GFunc) swfdec_buffer_unref, NULL);
-  g_list_free (queue->buffers);
-  memset (queue, 0, sizeof (SwfdecBufferQueue));
+  g_slist_foreach (queue->first_buffer, (GFunc) swfdec_buffer_unref, NULL);
+  g_slist_free (queue->first_buffer);
+  queue->first_buffer = NULL;
+  queue->last_buffer = NULL;
+  queue->depth = 0;
+  queue->offset = 0;
 }
 
 /**
@@ -421,32 +461,62 @@ swfdec_buffer_queue_push (SwfdecBufferQueue * queue, SwfdecBuffer * buffer)
     swfdec_buffer_unref (buffer);
     return;
   }
-  queue->buffers = g_list_append (queue->buffers, buffer);
+  queue->last_buffer = g_slist_append (queue->last_buffer, buffer);
+  if (queue->first_buffer == NULL) {
+    queue->first_buffer = queue->last_buffer;
+  } else {
+    queue->last_buffer = queue->last_buffer->next;
+  }
   queue->depth += buffer->length;
 }
 
 /**
- * swfdec_buffer_queue_pull_buffer:
- * @queue: a #SwfdecBufferQueue
+ * swfdec_buffer_queue_peek:
+ * @queue: a #SwfdecBufferQueue to read from
+ * @length: amount of bytes to peek
  *
- * Pulls the first buffer out of @queue and returns it. This function is 
- * equivalent to calling swfdec_buffer_queue_pull() with the size of the
- * first buffer in it.
+ * Creates a new buffer with the first @length bytes from @queue, but unlike 
+ * swfdec_buffer_queue_pull(), does not remove them from @queue.
  *
- * Returns: The first buffer in @queue or %NULL if @queue is empty.
+ * Returns: NULL if the requested amount of data wasn't available or a new 
+ *          readonly #SwfdecBuffer. Use swfdec_buffer_unref() after use.
  **/
 SwfdecBuffer *
-swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
+swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, gsize length)
 {
+  GSList *g;
+  SwfdecBuffer *newbuffer;
   SwfdecBuffer *buffer;
 
   g_return_val_if_fail (queue != NULL, NULL);
-  if (queue->buffers == NULL)
+
+  if (queue->depth < length)
     return NULL;
 
-  buffer = queue->buffers->data;
+  SWFDEC_LOG ("peeking %zu, %zu available", length, queue->depth);
 
-  return swfdec_buffer_queue_pull (queue, buffer->length);
+  /* need to special case here, because the queue may be empty */
+  if (length == 0)
+    return swfdec_buffer_new ();
+
+  g = queue->first_buffer;
+  buffer = g->data;
+  if (buffer->length >= length) {
+    newbuffer = swfdec_buffer_new_subbuffer (buffer, 0, length);
+  } else {
+    gsize amount, offset;
+    newbuffer = swfdec_buffer_new_and_alloc (length);
+    offset = 0;
+    while (offset < length) {
+      buffer = g->data;
+      amount = MIN (length - offset, buffer->length);
+      oil_copy_u8 (newbuffer->data + offset, buffer->data, amount);
+      offset += amount;
+      g = g->next;
+    }
+  }
+
+  return newbuffer;
 }
 
 /**
@@ -464,64 +534,16 @@ swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue)
 SwfdecBuffer *
 swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length)
 {
-  GList *g;
-  SwfdecBuffer *newbuffer;
-  SwfdecBuffer *buffer;
-  SwfdecBuffer *subbuffer;
+  SwfdecBuffer *ret;
 
   g_return_val_if_fail (queue != NULL, NULL);
-  g_return_val_if_fail (length > 0, NULL);
 
-  if (queue->depth < length) 
+  ret = swfdec_buffer_queue_peek (queue, length);
+  if (ret == NULL)
     return NULL;
 
-  /* FIXME: This function should share code with swfdec_buffer_queue_peek */
-  SWFDEC_LOG ("pulling %d, %d available", length, queue->depth);
-
-  g = g_list_first (queue->buffers);
-  buffer = g->data;
-
-  if (buffer->length > length) {
-    newbuffer = swfdec_buffer_new_subbuffer (buffer, 0, length);
-
-    subbuffer = swfdec_buffer_new_subbuffer (buffer, length,
-        buffer->length - length);
-    g->data = subbuffer;
-    swfdec_buffer_unref (buffer);
-  } else if (buffer->length == length) {
-    queue->buffers = g_list_remove (queue->buffers, buffer);
-    newbuffer = buffer;
-  } else {
-    guint offset = 0;
-
-    newbuffer = swfdec_buffer_new_and_alloc (length);
-
-    while (offset < length) {
-      g = g_list_first (queue->buffers);
-      buffer = g->data;
-
-      if (buffer->length > length - offset) {
-        guint n = length - offset;
-
-        oil_copy_u8 (newbuffer->data + offset, buffer->data, n);
-        subbuffer = swfdec_buffer_new_subbuffer (buffer, n, buffer->length - n);
-        g->data = subbuffer;
-        swfdec_buffer_unref (buffer);
-        offset += n;
-      } else {
-        oil_copy_u8 (newbuffer->data + offset, buffer->data, buffer->length);
-
-        queue->buffers = g_list_delete_link (queue->buffers, g);
-        offset += buffer->length;
-	swfdec_buffer_unref (buffer);
-      }
-    }
-  }
-
-  queue->depth -= length;
-  queue->offset += length;
-
-  return newbuffer;
+  swfdec_buffer_queue_flush (queue, length);
+  return ret;
 }
 
 /**
@@ -541,63 +563,38 @@ swfdec_buffer_queue_peek_buffer (SwfdecBufferQueue * queue)
   SwfdecBuffer *buffer;
 
   g_return_val_if_fail (queue != NULL, NULL);
-  if (queue->buffers == NULL)
+
+  if (queue->first_buffer == NULL)
     return NULL;
 
-  buffer = queue->buffers->data;
+  buffer = queue->first_buffer->data;
+  SWFDEC_LOG ("peeking one buffer: %zu bytes, %zu available", buffer->length, queue->depth);
 
-  return swfdec_buffer_queue_peek (queue, buffer->length);
+  return swfdec_buffer_ref (buffer);
 }
 
 /**
- * swfdec_buffer_queue_peek:
- * @queue: a #SwfdecBufferQueue to read from
- * @length: amount of bytes to peek
+ * swfdec_buffer_queue_pull_buffer:
+ * @queue: a #SwfdecBufferQueue
  *
- * Creates a new buffer with the first @length bytes from @queue, but unlike 
- * swfdec_buffer_queue_pull(), does not remove them from @queue.
+ * Pulls the first buffer out of @queue and returns it. This function is 
+ * equivalent to calling swfdec_buffer_queue_pull() with the size of the
+ * first buffer in it.
  *
- * Returns: NULL if the requested amount of data wasn't available or a new 
- *          readonly #SwfdecBuffer. Use swfdec_buffer_unref() after use.
+ * Returns: The first buffer in @queue or %NULL if @queue is empty.
  **/
 SwfdecBuffer *
-swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, guint length)
+swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue *queue)
 {
-  GList *g;
-  SwfdecBuffer *newbuffer;
   SwfdecBuffer *buffer;
-  guint offset = 0;
 
-  g_return_val_if_fail (length > 0, NULL);
+  g_return_val_if_fail (queue != NULL, NULL);
 
-  if (queue->depth < length)
-    return NULL;
+  buffer = swfdec_buffer_queue_peek_buffer (queue);
+  if (buffer)
+    swfdec_buffer_queue_flush (queue, buffer->length);
 
-  SWFDEC_LOG ("peeking %d, %d available", length, queue->depth);
-
-  g = g_list_first (queue->buffers);
-  buffer = g->data;
-  if (buffer->length > length) {
-    newbuffer = swfdec_buffer_new_subbuffer (buffer, 0, length);
-  } else {
-    newbuffer = swfdec_buffer_new_and_alloc (length);
-    while (offset < length) {
-      buffer = g->data;
-
-      if (buffer->length > length - offset) {
-        int n = length - offset;
-
-        oil_copy_u8 (newbuffer->data + offset, buffer->data, n);
-        offset += n;
-      } else {
-        oil_copy_u8 (newbuffer->data + offset, buffer->data, buffer->length);
-        offset += buffer->length;
-      }
-      g = g_list_next (g);
-    }
-  }
-
-  return newbuffer;
+  return buffer;
 }
 
 /**
@@ -637,5 +634,76 @@ swfdec_buffer_queue_unref (SwfdecBufferQueue * queue)
     swfdec_buffer_queue_clear (queue);
     g_free (queue);
   }
+}
+
+typedef struct {
+  const char		*name;
+  guint			length;
+  guchar		data[4];
+} ByteOrderMark;
+
+static ByteOrderMark boms[] = {
+  { "UTF-8", 3, {0xEF, 0xBB, 0xBF, 0} },
+  { "UTF-16BE", 2, {0xFE, 0xFF, 0, 0} },
+  { "UTF-16LE", 2, {0xFF, 0xFE, 0, 0} },
+  { "UTF-8", 0, {0, 0, 0, 0} }
+};
+
+char *
+swfdec_buffer_queue_pull_text (SwfdecBufferQueue *queue, guint version)
+{
+  SwfdecBuffer *buffer;
+  char *text;
+  guint size, i, j;
+
+  size = swfdec_buffer_queue_get_depth (queue);
+  if (size == 0) {
+    SWFDEC_LOG ("empty loader, returning empty string");
+    return g_strdup ("");
+  }
+
+  buffer = swfdec_buffer_queue_pull (queue, size);
+  g_assert (buffer);
+
+  if (version > 5) {
+    for (i = 0; boms[i].length > 0; i++) {
+      // FIXME: test what happens if we have BOM and nothing else
+      if (size < boms[i].length)
+	continue;
+
+      for (j = 0; j < boms[i].length; j++) {
+	if (buffer->data[j] != boms[i].data[j])
+	  break;
+      }
+      if (j == boms[i].length)
+	break;
+    }
+
+    if (!strcmp (boms[i].name, "UTF-8")) {
+      if (!g_utf8_validate ((char *)buffer->data + boms[i].length,
+	    size - boms[i].length, NULL)) {
+	SWFDEC_ERROR ("downloaded data is not valid UTF-8");
+	text = NULL;
+      } else {
+	text =
+	  g_strndup ((char *)buffer->data + boms[i].length,
+	      size - boms[i].length);
+      }
+    } else {
+      text = g_convert ((char *)buffer->data + boms[i].length,
+	  size - boms[i].length, "UTF-8", boms[i].name, NULL, NULL, NULL);
+      if (text == NULL)
+	SWFDEC_ERROR ("downloaded data is not valid %s", boms[i].name);
+    }
+  } else {
+    text = g_convert ((char *)buffer->data, size, "UTF-8", "LATIN1", NULL,
+	NULL, NULL);
+    if (text == NULL)
+      SWFDEC_ERROR ("downloaded data is not valid LATIN1");
+  }
+
+  swfdec_buffer_unref (buffer);
+
+  return text;
 }
 

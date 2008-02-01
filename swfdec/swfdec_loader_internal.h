@@ -35,8 +35,6 @@ void			swfdec_stream_set_target	(SwfdecStream *		stream,
 /* swfdec_loader.c */
 void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,
 							 SwfdecLoaderDataType	type);
-char *			swfdec_loader_get_text		(SwfdecLoader *		loader,
-							 guint			version);
 
 /* swfdec_socket.c */
 void			swfdec_socket_send		(SwfdecSocket *		sock,

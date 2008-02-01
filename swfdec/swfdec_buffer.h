@@ -48,11 +48,12 @@ GType swfdec_buffer_get_type  (void);
 struct _SwfdecBufferQueue
 {
   /*< private >*/
-  GList *buffers;
-  guint depth;
-  guint offset;
+  GSList *	first_buffer;		/* pointer to first buffer */
+  GSList *	last_buffer;		/* pointer to last buffer (for fast appending) */
+  gsize		depth;			/* amount of bytes in the queue */
+  gsize		offset;			/* amount of data already flushed out of the queue */
   
-  int ref_count;
+  int		ref_count;
 };
 
 #define SWFDEC_TYPE_BUFFER_QUEUE swfdec_buffer_queue_get_type()
@@ -70,14 +71,16 @@ SwfdecBuffer *swfdec_buffer_get_super (SwfdecBuffer *buffer);
 void swfdec_buffer_unref (SwfdecBuffer * buffer);
 
 SwfdecBufferQueue *swfdec_buffer_queue_new (void);
+void swfdec_buffer_queue_flush (SwfdecBufferQueue *queue, gsize n_bytes);
 void swfdec_buffer_queue_clear (SwfdecBufferQueue *queue);
-guint swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue);
-guint swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue);
+gsize swfdec_buffer_queue_get_depth (SwfdecBufferQueue * queue);
+gsize swfdec_buffer_queue_get_offset (SwfdecBufferQueue * queue);
 void swfdec_buffer_queue_push (SwfdecBufferQueue * queue,
     SwfdecBuffer * buffer);
-SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, guint length);
+SwfdecBuffer *swfdec_buffer_queue_pull (SwfdecBufferQueue * queue, gsize length);
 SwfdecBuffer *swfdec_buffer_queue_pull_buffer (SwfdecBufferQueue * queue);
-SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, guint length);
+char *swfdec_buffer_queue_pull_text (SwfdecBufferQueue *queue, guint version);
+SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, gsize length);
 SwfdecBuffer *swfdec_buffer_queue_peek_buffer (SwfdecBufferQueue * queue);
 SwfdecBufferQueue *swfdec_buffer_queue_ref (SwfdecBufferQueue * queue);
 void swfdec_buffer_queue_unref (SwfdecBufferQueue * queue);

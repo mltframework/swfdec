@@ -43,6 +43,22 @@ swfdec_test_plugin_swfdec_advance (SwfdecTestPlugin *plugin, unsigned int msecs)
 }
 
 static void
+swfdec_test_plugin_swfdec_screenshot (SwfdecTestPlugin *plugin, unsigned char *data,
+    guint x, guint y, guint width, guint height)
+{
+  cairo_surface_t *surface;
+  cairo_t *cr;
+
+  surface = cairo_image_surface_create_for_data (data, CAIRO_FORMAT_ARGB32, 
+      width, height, width * 4);
+  cr = cairo_create (surface);
+  cairo_translate (cr, -x, -y);
+  swfdec_player_render (plugin->data, cr, x, y, width, height);
+  cairo_destroy (cr);
+  cairo_surface_destroy (surface);
+}
+
+static void
 swfdec_test_plugin_swfdec_mouse_move (SwfdecTestPlugin *plugin, double x, double y)
 {
   swfdec_player_mouse_move (plugin->data, x, y);
@@ -104,10 +120,11 @@ swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
   SwfdecURL *url;
 
   plugin->advance = swfdec_test_plugin_swfdec_advance;
-  plugin->finish = swfdec_test_plugin_swfdec_finish;
+  plugin->screenshot = swfdec_test_plugin_swfdec_screenshot;
   plugin->mouse_move = swfdec_test_plugin_swfdec_mouse_move;
   plugin->mouse_press = swfdec_test_plugin_swfdec_mouse_press;
   plugin->mouse_release = swfdec_test_plugin_swfdec_mouse_release;
+  plugin->finish = swfdec_test_plugin_swfdec_finish;
   plugin->data = player = swfdec_player_new (NULL);
 
   g_signal_connect (player, "fscommand", G_CALLBACK (swfdec_test_plugin_swfdec_fscommand), plugin);

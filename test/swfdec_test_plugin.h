@@ -54,6 +54,14 @@ struct _SwfdecTestPlugin {
   unsigned int	rate; /* in 256th of a second */
   void		(* advance)	(SwfdecTestPlugin *	plugin,
 				 unsigned int		msecs);
+  /* data nulled is ARGB for (provided) width * height with rowstride = width * 4 */
+  /* size is guaranteed to fit into 0,0 x width,height */
+  void		(* screenshot)	(SwfdecTestPlugin *	plugin,
+				 unsigned char *	data,
+				 unsigned int		x,
+				 unsigned int		y,
+				 unsigned int		width,
+				 unsigned int		height);
   void		(* mouse_move)	(SwfdecTestPlugin *     plugin,
 				 double			x,
 				 double			y);

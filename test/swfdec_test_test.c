@@ -266,31 +266,31 @@ void
 swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-#if 0
   SwfdecTestTest *test;
   SwfdecAsObject *image;
+  int x, y, w, h;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|iiii", &x, &y, &w, &h);
 
-  if (!swfdec_test_test_ensure_player (test))
+  if (!test->plugin_loaded || test->plugin_error || test->plugin_quit)
     return;
 
   if (argc == 0) {
-    swfdec_player_get_size (test->player, &w, &h);
-    if (w < 0 || h < 0)
-      swfdec_player_get_default_size (test->player, (guint *) &w, (guint *) &h);
+    w = test->plugin.width;
+    h = test->plugin.height;
   }
   image = swfdec_test_image_new (cx, w, h);
   if (image == NULL)
     return;
-  cr = cairo_create (SWFDEC_TEST_IMAGE (image)->surface);
-  cairo_translate (cr, -x, -y);
-  swfdec_player_render (test->player, cr, x, y, w, h);
-  cairo_destroy (cr);
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, image);
-#else
-  swfdec_test_throw (cx, "implement");
-#endif
+
+  if (test->plugin.screenshot) {
+    test->plugin.screenshot (&test->plugin, 
+	cairo_image_surface_get_data (SWFDEC_TEST_IMAGE (image)->surface),
+	x, y, w, h);
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, image);
+  } else {
+    swfdec_test_throw (cx, "plugin doesn't implement mouse_press");
+  }
 }
 
 SWFDEC_TEST_FUNCTION ("Test", swfdec_test_test_new, swfdec_test_test_get_type)

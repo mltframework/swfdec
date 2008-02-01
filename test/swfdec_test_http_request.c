@@ -256,9 +256,9 @@ swfdec_test_http_request_set_contentType (SwfdecAsContext *cx,
   }
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_push", swfdec_test_http_request_push, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_send", swfdec_test_http_request_send, 0)
 void
-swfdec_test_http_request_push (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_test_http_request_send (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestHTTPRequest *request;

@@ -39,7 +39,7 @@ HTTPRequest.prototype.addProperty ("path", Native.HTTPRequest_get_path, null);
 HTTPRequest.prototype.addProperty ("headers", Native.HTTPRequest_get_headers, null);
 HTTPRequest.prototype.addProperty ("contentType", Native.HTTPRequest_get_contentType, Native.HTTPRequest_set_contentType);
 HTTPRequest.prototype.toString = Native.HTTPRequest_toString;
-HTTPRequest.prototype.push = Native.HTTPRequest_push;
+HTTPRequest.prototype.send = Native.HTTPRequest_send;
 HTTPRequest.prototype.close = Native.HTTPRequest_close;
 
 Socket = Native.Socket;

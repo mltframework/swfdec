@@ -26,6 +26,7 @@
 
 #include "swfdec_test_http_request.h"
 #include "swfdec_test_http_server.h"
+#include "swfdec_test_buffer.h"
 #include "swfdec_test_function.h"
 #include "swfdec_test_utils.h"
 
@@ -261,9 +262,9 @@ swfdec_test_http_request_push (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestHTTPRequest *request;
-  const char *data;
+  SwfdecAsValue val;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "s", &data);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "v", &val);
 
   if (request->state > SWFDEC_TEST_HTTP_REQUEST_STATE_SENDING) {
     swfdec_test_throw (cx, "Reply has already been sent");
@@ -275,8 +276,18 @@ swfdec_test_http_request_push (SwfdecAsContext *cx, SwfdecAsObject *object,
     request->status_set = TRUE;
   }
 
-  soup_message_body_append (request->message->response_body, SOUP_MEMORY_COPY,
-      data, strlen (data));
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val) &&
+      SWFDEC_IS_TEST_BUFFER (SWFDEC_AS_VALUE_GET_OBJECT (&val))) {
+    SwfdecTestBuffer *buffer =
+      SWFDEC_TEST_BUFFER (SWFDEC_AS_VALUE_GET_OBJECT (&val));
+    soup_message_body_append (request->message->response_body,
+	SOUP_MEMORY_COPY, buffer->buffer->data, buffer->buffer->length);
+  } else {
+    const char *data = swfdec_as_value_to_string (cx, &val);
+    soup_message_body_append (request->message->response_body,
+	SOUP_MEMORY_COPY, data, strlen (data));
+  }
+
   soup_server_unpause_message (request->server->server, request->message);
 
   swfdec_test_http_server_run (request->server);

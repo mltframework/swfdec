@@ -28,13 +28,27 @@
 static void
 swfdec_test_plugin_swfdec_advance (SwfdecTestPlugin *plugin, unsigned int msecs)
 {
-  swfdec_player_advance (plugin->data, msecs);
+  if (msecs == 0) {
+    swfdec_player_advance (plugin->data, 0);
+  } else {
+    while (msecs > 0 && plugin->data) {
+      long next_event = swfdec_player_get_next_event (plugin->data);
+      if (next_event < 0)
+	break;
+      next_event = MIN (next_event, (long) msecs);
+      swfdec_player_advance (plugin->data, next_event);
+      msecs -= next_event;
+    }
+  }
 }
 
 static void
 swfdec_test_plugin_swfdec_finish (SwfdecTestPlugin *plugin)
 {
-  g_object_unref (plugin->data);
+  if (plugin->data) {
+    g_object_unref (plugin->data);
+    plugin->data = NULL;
+  }
 }
 
 static void
@@ -50,6 +64,18 @@ swfdec_test_plugin_swfdec_fscommand (SwfdecPlayer *player, const char *command,
 {
   if (g_ascii_strcasecmp (command, "quit") == 0) {
     plugin->quit (plugin);
+    swfdec_test_plugin_swfdec_finish (plugin);
+  }
+}
+
+static void
+swfdec_test_plugin_swfdec_notify (SwfdecPlayer *player, GParamSpec *pspec, SwfdecTestPlugin *plugin)
+{
+  if (g_str_equal (pspec->name, "default-width") ||
+      g_str_equal (pspec->name, "default-height")) {
+    swfdec_player_get_default_size (player, &plugin->width, &plugin->height);
+  } else if (g_str_equal (pspec->name, "rate")) {
+    plugin->rate = swfdec_player_get_rate (player) * 256;
   }
 }
 
@@ -65,6 +91,7 @@ swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
 
   g_signal_connect (player, "fscommand", G_CALLBACK (swfdec_test_plugin_swfdec_fscommand), plugin);
   g_signal_connect (player, "trace", G_CALLBACK (swfdec_test_plugin_swfdec_trace), plugin);
+  g_signal_connect (player, "notify", G_CALLBACK (swfdec_test_plugin_swfdec_notify), plugin);
   url = swfdec_url_new_from_input (plugin->filename);
   swfdec_player_set_url (player, url);
   swfdec_url_free (url);

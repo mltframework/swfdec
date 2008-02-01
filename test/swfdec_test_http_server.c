@@ -116,6 +116,12 @@ swfdec_test_http_server_dispose (GObject *object)
 {
   SwfdecTestHTTPServer *server = SWFDEC_TEST_HTTP_SERVER (object);
 
+  while (!g_queue_is_empty (server->messages)) {
+    g_object_unref (g_queue_pop_tail (server->messages));
+  }
+  g_queue_free (server->messages);
+  server->messages = NULL;
+
   if (server->server) {
     soup_server_quit (server->server);
     g_object_unref (server->server);
@@ -126,8 +132,6 @@ swfdec_test_http_server_dispose (GObject *object)
     g_main_context_unref (server->context);
     server->context = NULL;
   }
-
-  g_queue_free (server->messages);
 
   G_OBJECT_CLASS (swfdec_test_http_server_parent_class)->dispose (object);
 }

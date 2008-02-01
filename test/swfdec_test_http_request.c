@@ -27,6 +27,7 @@
 #include "swfdec_test_http_request.h"
 #include "swfdec_test_http_server.h"
 #include "swfdec_test_function.h"
+#include "swfdec_test_utils.h"
 
 SwfdecAsObject *
 swfdec_test_http_request_new (SwfdecAsContext *context,
@@ -213,8 +214,10 @@ swfdec_test_http_request_push (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "s", &data);
 
-  if (request->state > SWFDEC_TEST_HTTP_REQUEST_STATE_SENDING)
+  if (request->state > SWFDEC_TEST_HTTP_REQUEST_STATE_SENDING) {
+    swfdec_test_throw (cx, "Reply has already been sent");
     return;
+  }
 
   if (!request->status_set) {
     soup_message_set_status (request->message, SOUP_STATUS_OK);
@@ -239,8 +242,10 @@ swfdec_test_http_request_close (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "");
 
-  if (request->state == SWFDEC_TEST_HTTP_REQUEST_STATE_SENT)
+  if (request->state == SWFDEC_TEST_HTTP_REQUEST_STATE_SENT) {
+    swfdec_test_throw (cx, "Reply has already been sent");
     return;
+  }
 
   if (!request->status_set) {
     soup_message_set_status (request->message, SOUP_STATUS_OK);

@@ -43,6 +43,24 @@ swfdec_test_plugin_swfdec_advance (SwfdecTestPlugin *plugin, unsigned int msecs)
 }
 
 static void
+swfdec_test_plugin_swfdec_mouse_move (SwfdecTestPlugin *plugin, double x, double y)
+{
+  swfdec_player_mouse_move (plugin->data, x, y);
+}
+
+static void
+swfdec_test_plugin_swfdec_mouse_press (SwfdecTestPlugin *plugin, double x, double y, guint button)
+{
+  swfdec_player_mouse_press (plugin->data, x, y, button);
+}
+
+static void
+swfdec_test_plugin_swfdec_mouse_release (SwfdecTestPlugin *plugin, double x, double y, guint button)
+{
+  swfdec_player_mouse_release (plugin->data, x, y, button);
+}
+
+static void
 swfdec_test_plugin_swfdec_finish (SwfdecTestPlugin *plugin)
 {
   if (plugin->data) {
@@ -87,6 +105,9 @@ swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
 
   plugin->advance = swfdec_test_plugin_swfdec_advance;
   plugin->finish = swfdec_test_plugin_swfdec_finish;
+  plugin->mouse_move = swfdec_test_plugin_swfdec_mouse_move;
+  plugin->mouse_press = swfdec_test_plugin_swfdec_mouse_press;
+  plugin->mouse_release = swfdec_test_plugin_swfdec_mouse_release;
   plugin->data = player = swfdec_player_new (NULL);
 
   g_signal_connect (player, "fscommand", G_CALLBACK (swfdec_test_plugin_swfdec_fscommand), plugin);

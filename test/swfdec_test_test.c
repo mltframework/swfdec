@@ -177,7 +177,11 @@ swfdec_test_test_advance (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
   if (msecs < 0 || !test->plugin_loaded || test->plugin_error || test->plugin_quit)
     return;
 
-  test->plugin.advance (&test->plugin, msecs);
+  if (test->plugin.advance) {
+    test->plugin.advance (&test->plugin, msecs);
+  } else {
+    swfdec_test_throw (cx, "plugin doesn't implement advance");
+  }
 }
 
 SWFDEC_TEST_FUNCTION ("Test_reset", swfdec_test_test_reset, 0)
@@ -203,14 +207,14 @@ swfdec_test_test_mouse_move (SwfdecAsContext *cx, SwfdecAsObject *object, guint 
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn", &x, &y);
 
-#if 0
-  if (!swfdec_test_test_ensure_player (test))
+  if (!test->plugin_loaded || test->plugin_error || test->plugin_quit)
     return;
 
-  swfdec_player_mouse_move (test->player, x, y);
-#else
-  swfdec_test_throw (cx, "implement");
-#endif
+  if (test->plugin.advance) {
+    test->plugin.mouse_move (&test->plugin, x, y);
+  } else {
+    swfdec_test_throw (cx, "plugin doesn't implement mouse_move");
+  }
 }
 
 SWFDEC_TEST_FUNCTION ("Test_mouse_press", swfdec_test_test_mouse_press, 0)
@@ -224,15 +228,15 @@ swfdec_test_test_mouse_press (SwfdecAsContext *cx, SwfdecAsObject *object, guint
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn|i", &x, &y, &button);
 
-#if 0
-  if (!swfdec_test_test_ensure_player (test))
+  if (!test->plugin_loaded || test->plugin_error || test->plugin_quit)
     return;
 
   button = CLAMP (button, 1, 32);
-  swfdec_player_mouse_press (test->player, x, y, button);
-#else
-  swfdec_test_throw (cx, "implement");
-#endif
+  if (test->plugin.advance) {
+    test->plugin.mouse_press (&test->plugin, x, y, button);
+  } else {
+    swfdec_test_throw (cx, "plugin doesn't implement mouse_press");
+  }
 }
 
 SWFDEC_TEST_FUNCTION ("Test_mouse_release", swfdec_test_test_mouse_release, 0)
@@ -246,15 +250,15 @@ swfdec_test_test_mouse_release (SwfdecAsContext *cx, SwfdecAsObject *object, gui
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn|i", &x, &y, &button);
 
-#if 0
-  if (!swfdec_test_test_ensure_player (test))
+  if (!test->plugin_loaded || test->plugin_error || test->plugin_quit)
     return;
 
   button = CLAMP (button, 1, 32);
-  swfdec_player_mouse_release (test->player, x, y, button);
-#else
-  swfdec_test_throw (cx, "implement");
-#endif
+  if (test->plugin.advance) {
+    test->plugin.mouse_release (&test->plugin, x, y, button);
+  } else {
+    swfdec_test_throw (cx, "plugin doesn't implement mouse_press");
+  }
 }
 
 SWFDEC_TEST_FUNCTION ("Test_render", swfdec_test_test_render, 0)

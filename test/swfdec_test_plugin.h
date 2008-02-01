@@ -54,6 +54,17 @@ struct _SwfdecTestPlugin {
   unsigned int	rate; /* in 256th of a second */
   void		(* advance)	(SwfdecTestPlugin *	plugin,
 				 unsigned int		msecs);
+  void		(* mouse_move)	(SwfdecTestPlugin *     plugin,
+				 double			x,
+				 double			y);
+  void		(* mouse_press)	(SwfdecTestPlugin *	plugin,
+				 double			x,
+				 double			y,
+				 unsigned int		button); /* 1 - 32 */
+  void		(* mouse_release) (SwfdecTestPlugin *   plugin,
+				 double			x,
+				 double			y,
+				 unsigned int		button); /* 1 - 32 */
   void		(* finish)	(SwfdecTestPlugin *	plugin);
   void *	data;
 };

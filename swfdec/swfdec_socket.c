@@ -65,11 +65,26 @@
 
 /*** SWFDEC_SOCKET ***/
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecSocket, swfdec_socket, SWFDEC_TYPE_STREAM)
+G_DEFINE_TYPE (SwfdecSocket, swfdec_socket, SWFDEC_TYPE_STREAM)
+
+static void
+swfdec_socket_do_connect (SwfdecSocket *socket, SwfdecPlayer *player,
+    const char *hostname, guint port)
+{
+  swfdec_stream_error (SWFDEC_STREAM (socket), "no socket implementation exists");
+}
+
+static void
+swfdec_socket_do_send (SwfdecSocket *socket, SwfdecBuffer *buffer)
+{
+  swfdec_buffer_unref (buffer);
+}
 
 static void
 swfdec_socket_class_init (SwfdecSocketClass *klass)
 {
+  klass->connect = swfdec_socket_do_connect;
+  klass->send = swfdec_socket_do_send;
 }
 
 static void

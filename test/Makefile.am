@@ -7,6 +7,8 @@ swfdec_test_sources = \
 	swfdec_test_buffer.c \
 	swfdec_test_function.c \
 	swfdec_test_global.c \
+	swfdec_test_http_request.c \
+	swfdec_test_http_server.c \
 	swfdec_test_image.c \
 	swfdec_test_plugin.c \
 	swfdec_test_socket.c \
@@ -30,6 +32,8 @@ noinst_HEADERS = \
 	swfdec_test_buffer.h \
 	swfdec_test_function.h \
 	swfdec_test_function_list.h \
+	swfdec_test_http_request.h \
+	swfdec_test_http_server.h \
 	swfdec_test_image.h \
 	swfdec_test_initialize.h \
 	swfdec_test_plugin.h \

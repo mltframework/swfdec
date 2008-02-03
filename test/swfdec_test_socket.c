@@ -89,7 +89,7 @@ swfdec_test_socket_process (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
 {
   SwfdecTestSocket *sock;
   
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &socket, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "");
 
   while (g_main_context_iteration (sock->context, FALSE));
 }

@@ -127,6 +127,9 @@ swfdec_test_test_dispose (GObject *object)
 {
   SwfdecTestTest *test = SWFDEC_TEST_TEST (object);
 
+  test->plugin_error = TRUE; /* set to avoid callbacks into the engine */
+  swfdec_test_test_unload_plugin (test);
+
   if (test->trace) {
     swfdec_buffer_queue_unref (test->trace);
     test->trace = NULL;
@@ -134,7 +137,6 @@ swfdec_test_test_dispose (GObject *object)
 
   g_free (test->filename);
   test->filename = NULL;
-  swfdec_test_test_unload_plugin (test);
 
   G_OBJECT_CLASS (swfdec_test_test_parent_class)->dispose (object);
 }

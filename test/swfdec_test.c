@@ -107,6 +107,10 @@ main (int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  /* allow env vars instead of options - eases running make check with different settings */
+  if (swfdec_test_plugin_name == NULL)
+    swfdec_test_plugin_name = g_strdup (g_getenv ("SWFDEC_TEST_PLAYER"));
+
   script = load_script (script_filename);
   g_free (script_filename);
   if (script == NULL)

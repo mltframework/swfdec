@@ -74,7 +74,14 @@ swfdec_test_test_load_plugin (SwfdecTestTest *test, const char *filename)
 {
   memset (&test->plugin, 0, sizeof (SwfdecTestPlugin));
   /* initialize test->plugin */
-  test->plugin.filename = g_strdup (filename);
+  /* FIXME: This assumes filenames - do we wanna allow http? */
+  if (g_path_is_absolute (filename)) {
+    test->plugin.filename = g_strdup (filename);
+  } else {
+    char *cur = g_get_current_dir ();
+    test->plugin.filename = g_build_filename (cur, filename, NULL);
+    g_free (cur);
+  }
   test->plugin.trace = swfdec_test_test_trace;
   test->plugin.quit = swfdec_test_test_quit;
   test->plugin.error = swfdec_test_test_error;

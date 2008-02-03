@@ -195,16 +195,12 @@ swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   SWFDEC_AS_VALUE_SET_OBJECT (retval, buffer);
 }
 
-SWFDEC_TEST_FUNCTION ("Buffer", swfdec_test_buffer_create, swfdec_test_buffer_get_type)
-void
-swfdec_test_buffer_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
-    SwfdecAsValue *argv, SwfdecAsValue *retval)
+SwfdecBuffer *
+swfdec_test_buffer_from_args (SwfdecAsContext *cx, guint argc, SwfdecAsValue *argv)
 {
   SwfdecBufferQueue *queue;
-  SwfdecTestBuffer *buffer;
+  SwfdecBuffer *buffer;
   guint i;
-
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "");
 
   queue = swfdec_buffer_queue_new ();
   for (i = 0; i < argc; i++) {
@@ -228,10 +224,28 @@ swfdec_test_buffer_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   }
   i = swfdec_buffer_queue_get_depth (queue);
   if (i) {
-    buffer->buffer = swfdec_buffer_queue_pull (queue, i);
+    buffer = swfdec_buffer_queue_pull (queue, i);
   } else {
-    buffer->buffer = swfdec_buffer_new ();
+    buffer = swfdec_buffer_new ();
   }
   swfdec_buffer_queue_unref (queue);
+
+  return buffer;
 }
+
+SWFDEC_TEST_FUNCTION ("Buffer", swfdec_test_buffer_create, swfdec_test_buffer_get_type)
+void
+swfdec_test_buffer_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestBuffer *buffer;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "");
+
+  if (!swfdec_as_context_is_constructing (cx))
+    return;
+
+  buffer->buffer = swfdec_test_buffer_from_args (cx, argc, argv);
+}
+
 

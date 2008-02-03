@@ -52,5 +52,9 @@ GType		swfdec_test_buffer_get_type	(void);
 SwfdecAsObject *swfdec_test_buffer_new		(SwfdecAsContext *	context,
 						 SwfdecBuffer *		buffer);
 
+SwfdecBuffer *	swfdec_test_buffer_from_args	(SwfdecAsContext *	cx,
+						 guint			argc,
+						 SwfdecAsValue *	argv);
+
 G_END_DECLS
 #endif

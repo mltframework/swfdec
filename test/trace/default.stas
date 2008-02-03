@@ -25,7 +25,7 @@ run_test = function (t, file) {
     var trace = Buffer.load (file + ".trace");
     t.advance (0);
     t.advance (Math.ceil (10000 / t.rate));
-    trace = t.trace.diff (trace);
+    trace = trace.diff (t.trace);
     if (trace) {
       error ("different trace output");
       Native.print (trace);

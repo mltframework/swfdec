@@ -158,6 +158,17 @@ swfdec_policy_file_finished_loading (SwfdecPolicyFile *file, const char *text)
 }
 
 static void
+swfdec_policy_file_target_open (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
+{
+  if (SWFDEC_IS_SOCKET (stream)) {
+    SwfdecBuffer *buffer = swfdec_buffer_new_for_data (
+	(guchar *) g_strdup ("<policy-file-request/>"), 23);
+    swfdec_socket_send (SWFDEC_SOCKET (stream), buffer);
+  }
+}
+
+static void
 swfdec_policy_file_target_error (SwfdecStreamTarget *target,
     SwfdecStream *stream)
 {
@@ -187,6 +198,7 @@ static void
 swfdec_policy_file_stream_target_init (SwfdecStreamTargetInterface *iface)
 {
   iface->get_player = swfdec_policy_file_target_get_player;
+  iface->open = swfdec_policy_file_target_open;
   iface->close = swfdec_policy_file_target_close;
   iface->error = swfdec_policy_file_target_error;
 }
@@ -243,12 +255,13 @@ swfdec_policy_file_new (SwfdecPlayer *player, const SwfdecURL *url)
   file->load_url = swfdec_url_copy (url);
   file->url = swfdec_url_new_parent (url);
   if (swfdec_url_has_protocol (url, "xmlsocket")) {
-    SWFDEC_FIXME ("implement xmlsocket: protocol");
+    file->stream = SWFDEC_STREAM (swfdec_player_create_socket (player, 
+	swfdec_url_get_host (url), swfdec_url_get_port (url)));
   } else {
     file->stream = SWFDEC_STREAM (swfdec_player_load (player,
 	  swfdec_url_get_url (url), SWFDEC_LOADER_REQUEST_DEFAULT, NULL));
-    swfdec_stream_set_target (file->stream, SWFDEC_STREAM_TARGET (file));
   }
+  swfdec_stream_set_target (file->stream, SWFDEC_STREAM_TARGET (file));
   player->priv->loading_policy_files = 
     g_list_prepend (player->priv->loading_policy_files, file);
 

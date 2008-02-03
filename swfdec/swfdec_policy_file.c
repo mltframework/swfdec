@@ -173,12 +173,7 @@ swfdec_policy_file_target_close (SwfdecStreamTarget *target,
   SwfdecPolicyFile *file = SWFDEC_POLICY_FILE (target);
   char *text;
 
-  if (SWFDEC_IS_LOADER (stream)) {
-    text = swfdec_buffer_queue_pull_text (swfdec_stream_get_queue (stream), 8);
-  } else {
-    SWFDEC_FIXME ("rewrite swfdec_loader_get_text() to swfdec_buffer_queue_get_text()");
-    text = NULL;
-  }
+  text = swfdec_buffer_queue_pull_text (swfdec_stream_get_queue (stream), 8);
 
   if (text == NULL) {
     SWFDEC_ERROR ("couldn't get text from crossdomain policy file %s", 

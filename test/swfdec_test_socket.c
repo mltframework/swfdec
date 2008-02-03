@@ -24,6 +24,7 @@
 #include <libsoup/soup-address.h>
 
 #include "swfdec_test_socket.h"
+#include "swfdec_test_buffer.h"
 #include "swfdec_test_function.h"
 
 static void
@@ -62,6 +63,9 @@ swfdec_test_socket_dispose (GObject *object)
     g_main_context_unref (sock->context);
     sock->context = NULL;
   }
+  g_slist_foreach (sock->connections, (GFunc) g_object_unref, NULL);
+  g_slist_free (sock->connections);
+  sock->connections = NULL;
 
   G_OBJECT_CLASS (swfdec_test_socket_parent_class)->dispose (object);
 }
@@ -82,43 +86,15 @@ swfdec_test_socket_init (SwfdecTestSocket *sock)
 
 /*** AS CODE ***/
 
-SWFDEC_TEST_FUNCTION ("Socket_process", swfdec_test_socket_process, 0)
-void
-swfdec_test_socket_process (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
-    SwfdecAsValue *argv, SwfdecAsValue *retval)
-{
-  SwfdecTestSocket *sock;
-  
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "");
-
-  while (g_main_context_iteration (sock->context, FALSE));
-}
-
-static void swfdec_test_socket_attach (SwfdecTestSocket *sock, SoupSocket *ssock);
+#define swfdec_test_socket_process(sock) do { \
+  g_usleep (1000); \
+} while (g_main_context_iteration ((sock)->context, FALSE))
 
 static void
 swfdec_test_socket_new_connection (SoupSocket *server, SoupSocket *conn, SwfdecTestSocket *sock)
 {
-  SwfdecAsContext *context = SWFDEC_AS_OBJECT (sock)->context;
-  SwfdecAsValue val;
-  SwfdecAsObject *new;
-
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecTestSocket)))
-    return;
-
-  new = g_object_new (SWFDEC_TYPE_TEST_SOCKET, NULL);
-  swfdec_as_object_add (new, context, sizeof (SwfdecTestSocket));
-  swfdec_as_object_get_variable (context->global, 
-      swfdec_as_context_get_string (context, "Socket"), &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    swfdec_as_object_set_constructor (new, SWFDEC_AS_VALUE_GET_OBJECT (&val));
-
   g_object_ref (conn);
-  swfdec_test_socket_attach (SWFDEC_TEST_SOCKET (new), conn);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, new);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (sock), 
-      swfdec_as_context_get_string (context, "onNewConnection"),
-      1, &val, NULL);
+  sock->connections = g_slist_append (sock->connections, conn);
 }
 
 static void
@@ -131,17 +107,148 @@ swfdec_test_socket_attach (SwfdecTestSocket *sock, SoupSocket *ssock)
       G_CALLBACK (swfdec_test_socket_new_connection), sock);
 }
 
+SWFDEC_TEST_FUNCTION ("Socket_getConnection", swfdec_test_socket_getConnection, 0)
+void
+swfdec_test_socket_getConnection (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestSocket *sock;
+  SwfdecAsObject *new;
+  SwfdecAsValue val;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "");
+
+  if (!sock->listening) {
+    swfdec_test_throw (cx, "only server sockets may call getConnection");
+    return;
+  }
+  swfdec_test_socket_process (sock);
+  if (sock->connections == NULL) {
+    SWFDEC_AS_VALUE_SET_NULL (retval);
+    return;
+  }
+
+  if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecTestSocket)))
+    return;
+
+  new = g_object_new (SWFDEC_TYPE_TEST_SOCKET, NULL);
+  swfdec_as_object_add (new, cx, sizeof (SwfdecTestSocket));
+  swfdec_as_object_get_variable (cx->global, 
+      swfdec_as_context_get_string (cx, "Socket"), &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    swfdec_as_object_set_constructor (new, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+
+  swfdec_test_socket_attach (SWFDEC_TEST_SOCKET (new), sock->connections->data);
+  sock->connections = g_slist_remove (sock->connections, sock->connections->data);
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, new);
+}
+
+SWFDEC_TEST_FUNCTION ("Socket_send", swfdec_test_socket_send, 0)
+void
+swfdec_test_socket_send (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestSocket *sock;
+  SwfdecBuffer *buffer;
+  GError *error = NULL;
+  gsize written;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "");
+
+  if (sock->listening) {
+    swfdec_test_throw (cx, "server sockets may not call send");
+    return;
+  }
+  swfdec_test_socket_process (sock);
+  buffer = swfdec_test_buffer_from_args (cx, argc, argv);
+  if (soup_socket_write (sock->socket, buffer->data, buffer->length, &written,
+	NULL, &error) != SOUP_SOCKET_OK) {
+    swfdec_test_throw (cx, "%s", error->message);
+    g_error_free (error);
+  } else if (buffer->length != written) {
+    swfdec_test_throw (cx, "only wrote %u bytes of %u", written, buffer->length);
+  }
+  swfdec_buffer_unref (buffer);
+  swfdec_test_socket_process (sock);
+}
+
+SWFDEC_TEST_FUNCTION ("Socket_receive", swfdec_test_socket_receive, 0)
+void
+swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestSocket *sock;
+  SwfdecBuffer *buffer;
+  GError *error = NULL;
+  gsize written;
+  guint len;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "|i", &len);
+
+  if (sock->listening) {
+    swfdec_test_throw (cx, "server sockets may not call receive");
+    return;
+  }
+  swfdec_test_socket_process (sock);
+  if (len > 0) {
+    buffer = swfdec_buffer_new_and_alloc (len);
+    if (soup_socket_read (sock->socket, buffer->data, buffer->length, &len,
+	  NULL, &error) != SOUP_SOCKET_OK) {
+      swfdec_test_throw (cx, "%s", error->message);
+      g_error_free (error);
+      swfdec_buffer_unref (buffer);
+      return;
+    } else if (buffer->length != len) {
+      swfdec_test_throw (cx, "only read %u bytes of %u", written, buffer->length);
+      swfdec_buffer_unref (buffer);
+      return;
+    }
+  } else {
+    SwfdecBufferQueue *queue = swfdec_buffer_queue_new ();
+    SoupSocketIOStatus status = SOUP_SOCKET_OK;
+    while (status == SOUP_SOCKET_OK) {
+      buffer = swfdec_buffer_new_and_alloc (128);
+      status = soup_socket_read (sock->socket, buffer->data, 128, &
+	  buffer->length, NULL, &error);
+      if (status != SOUP_SOCKET_OK && status != SOUP_SOCKET_WOULD_BLOCK) {
+	swfdec_test_throw (cx, "%s", error->message);
+	g_error_free (error);
+	swfdec_buffer_unref (buffer);
+	swfdec_buffer_queue_unref (queue);
+	return;
+      }
+      swfdec_buffer_queue_push (queue, buffer);
+    }
+    buffer = swfdec_buffer_queue_pull (queue, swfdec_buffer_queue_get_depth (queue));
+    swfdec_buffer_queue_unref (queue);
+  }
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_test_buffer_new (cx, buffer));
+}
+
+SWFDEC_TEST_FUNCTION ("Socket_close", swfdec_test_socket_close, 0)
+void
+swfdec_test_socket_close (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  swfdec_test_throw (cx, "implement");
+}
+
 SWFDEC_TEST_FUNCTION ("Socket", swfdec_test_socket_create, swfdec_test_socket_get_type)
 void
 swfdec_test_socket_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestSocket *sock;
+  SoupSocket *ssock;
   int port;
   SoupAddress *addr;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "i", &port);
 
+  if (!swfdec_as_context_is_constructing (cx))
+    return;
+
+  sock->listening = TRUE;
   /* FIXME: throw here? */
   if (port < 1024 || port >= 65535) {
     swfdec_test_throw (cx, "invalid port %d", port);
@@ -149,13 +256,14 @@ swfdec_test_socket_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   }
 
   addr = soup_address_new_any (SOUP_ADDRESS_FAMILY_IPV4, port);
-  sock->socket = soup_socket_new (
+  ssock = soup_socket_new (
       SOUP_SOCKET_FLAG_NONBLOCKING, TRUE, 
       SOUP_SOCKET_ASYNC_CONTEXT, sock->context,
       SOUP_SOCKET_LOCAL_ADDRESS, addr,
       NULL);
   g_object_unref (addr);
-  if (!soup_socket_listen (sock->socket)) {
+  swfdec_test_socket_attach (sock, ssock);
+  if (!soup_socket_listen (ssock)) {
     swfdec_test_throw (cx, "failed to listen");
     return;
   }

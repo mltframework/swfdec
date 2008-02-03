@@ -42,6 +42,11 @@ struct _SwfdecTestSocket
 
   GMainContext *	context;	/* the main context we're running in */
   SoupSocket *		socket;		/* the socket we're servicing */
+  gboolean		listening;	/* TRUE if it's a listening socket */
+  gboolean		connected;	/* TRUE if the connection is still alive (valid for both types) */
+
+  /* for listening sockets */
+  GSList *		connections;	/* connections that still need to be given out */
 };
 
 struct _SwfdecTestSocketClass

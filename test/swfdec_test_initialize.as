@@ -46,7 +46,10 @@ HTTPRequest.prototype.close = Native.HTTPRequest_close;
 
 Socket = Native.Socket;
 Socket.prototype = {};
-Socket.prototype.process = Native.Socket_process;
+Socket.prototype.getConnection = Native.Socket_getConnection;
+Socket.prototype.receive = Native.Socket_receive;
+Socket.prototype.send = Native.Socket_send;
+Socket.prototype.close = Native.Socket_close;
 
 Test = Native.Test;
 Test.prototype = {};

@@ -2157,9 +2157,8 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
  *
  * Creates a new socket connecting to the given hostname and port.
  *
- * Returns: a new socket or %NULL if no socket implementation exists
+ * Returns: a new socket
  **/
-/* FIXME: always return a socket? */
 SwfdecSocket *
 swfdec_player_create_socket (SwfdecPlayer *player, const char *hostname, guint port)
 {
@@ -2170,10 +2169,6 @@ swfdec_player_create_socket (SwfdecPlayer *player, const char *hostname, guint p
   g_return_val_if_fail (hostname != NULL, NULL);
   g_return_val_if_fail (port > 0, NULL);
 
-  if (!G_TYPE_IS_INSTANTIATABLE (player->priv->socket_type)) {
-    SWFDEC_INFO ("can't create socket, no socket type set.");
-    return NULL;
-  }
   sock = g_object_new (player->priv->socket_type, NULL);
   klass = SWFDEC_SOCKET_GET_CLASS (sock);
   klass->connect (sock, player, hostname, port);

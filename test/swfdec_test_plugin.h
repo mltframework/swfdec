@@ -43,37 +43,37 @@ typedef struct _SwfdecTestPlugin SwfdecTestPlugin;
 struct _SwfdecTestPlugin {
   /* initialized by the player before calling swfdec_test_plugin_new() */
   char *	filename;
-  void		(* trace)	(SwfdecTestPlugin *	plugin,
-				 const char *		string);
-  void		(* quit)	(SwfdecTestPlugin *	plugin);	  
-  void		(* error)	(SwfdecTestPlugin *	plugin,
-				 const char *		description);
+  void		(* trace)		(SwfdecTestPlugin *	plugin,
+					 const char *		string);
+  void		(* quit)		(SwfdecTestPlugin *	plugin);	  
+  void		(* error)		(SwfdecTestPlugin *	plugin,
+					 const char *		description);
   /* initialized by the plugin during swfdec_test_plugin_new() */
   unsigned int	width;
   unsigned int	height;
   unsigned int	rate; /* in 256th of a second */
-  void		(* advance)	(SwfdecTestPlugin *	plugin,
-				 unsigned int		msecs);
+  void		(* advance)		(SwfdecTestPlugin *	plugin,
+					 unsigned int		msecs);
   /* data nulled is ARGB for (provided) width * height with rowstride = width * 4 */
   /* size is guaranteed to fit into 0,0 x width,height */
-  void		(* screenshot)	(SwfdecTestPlugin *	plugin,
-				 unsigned char *	data,
-				 unsigned int		x,
-				 unsigned int		y,
-				 unsigned int		width,
-				 unsigned int		height);
-  void		(* mouse_move)	(SwfdecTestPlugin *     plugin,
-				 double			x,
-				 double			y);
-  void		(* mouse_press)	(SwfdecTestPlugin *	plugin,
-				 double			x,
-				 double			y,
-				 unsigned int		button); /* 1 - 32 */
-  void		(* mouse_release) (SwfdecTestPlugin *   plugin,
-				 double			x,
-				 double			y,
-				 unsigned int		button); /* 1 - 32 */
-  void		(* finish)	(SwfdecTestPlugin *	plugin);
+  void		(* screenshot)	  	(SwfdecTestPlugin *	plugin,
+					 unsigned char *	data,
+					 unsigned int		x,
+					 unsigned int		y,
+					 unsigned int		width,
+					 unsigned int		height);
+  void		(* mouse_move)	  	(SwfdecTestPlugin *     plugin,
+					 double			x,
+					 double			y);
+  void		(* mouse_press)		(SwfdecTestPlugin *	plugin,
+					 double			x,
+					 double			y,
+					 unsigned int		button); /* 1 - 32 */
+  void		(* mouse_release)	(SwfdecTestPlugin *   plugin,
+					 double			x,
+					 double			y,
+					 unsigned int		button); /* 1 - 32 */
+  void		(* finish)	  	(SwfdecTestPlugin *	plugin);
   void *	data;
 };
 
@@ -87,6 +87,6 @@ struct _SwfdecTestPlugin {
  *
  * Returns: a new SwfdecTestPlugin instance
  **/
-void swfdec_test_plugin_init (SwfdecTestPlugin *plugin);
+void		swfdec_test_plugin_init	(SwfdecTestPlugin *	plugin);
 
 #endif

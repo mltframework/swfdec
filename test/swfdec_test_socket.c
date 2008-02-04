@@ -180,8 +180,7 @@ swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SwfdecTestSocket *sock;
   SwfdecBuffer *buffer;
   GError *error = NULL;
-  gsize written;
-  guint len;
+  gsize len;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "|i", &len);
 
@@ -199,7 +198,7 @@ swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
       swfdec_buffer_unref (buffer);
       return;
     } else if (buffer->length != len) {
-      swfdec_test_throw (cx, "only read %u bytes of %u", written, buffer->length);
+      swfdec_test_throw (cx, "only read %u bytes of %u", len, buffer->length);
       swfdec_buffer_unref (buffer);
       return;
     }

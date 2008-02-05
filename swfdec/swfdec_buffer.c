@@ -159,9 +159,6 @@ swfdec_buffer_new_full (unsigned char *data, gsize size,
 {
   SwfdecBuffer *buffer;
   
-  g_return_val_if_fail (data != NULL, NULL);
-  g_return_val_if_fail (size > 0, NULL);
-
   buffer = g_new0 (SwfdecBuffer, 1);
   buffer->ref_count = 1;
   buffer->data = data;

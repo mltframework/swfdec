@@ -63,7 +63,7 @@ swfdec_test_test_trace (SwfdecTestPlugin *plugin, const char *message)
   gsize len = strlen (message);
   SwfdecBuffer *buffer;
 
-  buffer = swfdec_buffer_new_and_alloc (len + 1);
+  buffer = swfdec_buffer_new (len + 1);
   memcpy (buffer->data, message, len);
   buffer->data[len] = '\n';
   swfdec_buffer_queue_push (test->trace, buffer);

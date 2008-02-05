@@ -190,7 +190,7 @@ swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   }
   swfdec_test_socket_process (sock);
   if (len > 0) {
-    buffer = swfdec_buffer_new_and_alloc (len);
+    buffer = swfdec_buffer_new (len);
     if (soup_socket_read (sock->socket, buffer->data, buffer->length, &len,
 	  NULL, &error) != SOUP_SOCKET_OK) {
       swfdec_test_throw (cx, "%s", error->message);
@@ -206,7 +206,7 @@ swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
     SwfdecBufferQueue *queue = swfdec_buffer_queue_new ();
     SoupSocketIOStatus status = SOUP_SOCKET_OK;
     while (status == SOUP_SOCKET_OK) {
-      buffer = swfdec_buffer_new_and_alloc (128);
+      buffer = swfdec_buffer_new (128);
       status = soup_socket_read (sock->socket, buffer->data, 128, &
 	  buffer->length, NULL, &error);
       if (status != SOUP_SOCKET_OK && status != SOUP_SOCKET_WOULD_BLOCK) {

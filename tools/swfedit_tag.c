@@ -63,7 +63,7 @@ swfedit_binary_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   SwfdecBuffer *buffer = swfdec_bits_get_buffer (bits, -1);
   if (buffer == NULL)
-    buffer = swfdec_buffer_new ();
+    buffer = swfdec_buffer_new (0);
   return buffer;
 }
 

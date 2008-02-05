@@ -101,7 +101,7 @@ vivi_ming_compile (const char *code, char **error)
       *error = vivi_ming_get_error ();
     script = NULL;
   } else {
-    buffer = swfdec_buffer_new_and_alloc (len);
+    buffer = swfdec_buffer_new (len);
     memcpy (buffer->data, data, len);
     script = swfdec_script_new (buffer, "compiled script", 8);
   }

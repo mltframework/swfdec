@@ -57,9 +57,7 @@ swfdec_out_close (SwfdecOut *out)
 
   swfdec_out_syncbits (out);
 
-  buffer = swfdec_buffer_new ();
-  buffer->data = out->data;
-  buffer->length = out->ptr - out->data;
+  buffer = swfdec_buffer_new_for_data (out->data, out->ptr - out->data);
 
   g_free (out);
 

@@ -61,7 +61,7 @@ swfedit_parse_hex (const char *s, guint *result)
 static gpointer
 swfedit_binary_new (void)
 {
-  return swfdec_buffer_new ();
+  return swfdec_buffer_new (0);
 }
 
 static gboolean
@@ -81,9 +81,7 @@ swfedit_binary_from_string (const char *s, gpointer* result)
     while (g_ascii_isspace (*s)) s++;
   } while (*s != '\0');
   if (*s == '\0') {
-    SwfdecBuffer *buffer = swfdec_buffer_new ();
-    buffer->length = array->len;
-    buffer->data = array->data;
+    SwfdecBuffer *buffer = swfdec_buffer_new_for_data (array->data, array->len);
     g_byte_array_free (array, FALSE);
     *result = buffer;
     return TRUE;

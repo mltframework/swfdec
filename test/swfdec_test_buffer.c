@@ -210,24 +210,20 @@ swfdec_test_buffer_from_args (SwfdecAsContext *cx, guint argc, SwfdecAsValue *ar
       if (SWFDEC_IS_TEST_BUFFER (o))
 	b = swfdec_buffer_ref (SWFDEC_TEST_BUFFER (o)->buffer);
     } else if (SWFDEC_AS_VALUE_IS_NUMBER (&argv[i])) {
-      b = swfdec_buffer_new_and_alloc (1);
+      b = swfdec_buffer_new (1);
       b->data[0] = swfdec_as_value_to_integer (cx, &argv[i]);
     }
     if (b == NULL) {
       const char *s = swfdec_as_value_to_string (cx, &argv[i]);
       gsize len = strlen (s);
       /* no terminating 0 byte on purpose here - use new Buffer (string, 0); to get that */
-      b = swfdec_buffer_new_and_alloc (len);
+      b = swfdec_buffer_new (len);
       memcpy (b->data, s, len);
     }
     swfdec_buffer_queue_push (queue, b);
   }
   i = swfdec_buffer_queue_get_depth (queue);
-  if (i) {
-    buffer = swfdec_buffer_queue_pull (queue, i);
-  } else {
-    buffer = swfdec_buffer_new ();
-  }
+  buffer = swfdec_buffer_queue_pull (queue, i);
   swfdec_buffer_queue_unref (queue);
 
   return buffer;

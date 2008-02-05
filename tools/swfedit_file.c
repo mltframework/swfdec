@@ -65,7 +65,7 @@ swfenc_file_inflate (SwfdecBits *bits, guint size)
   encoded = swfdec_bits_get_buffer (bits, -1);
   if (encoded == NULL)
     return NULL;
-  decoded = swfdec_buffer_new_and_alloc (size);
+  decoded = swfdec_buffer_new (size);
   z.zalloc = zalloc;
   z.zfree = zfree;
   z.opaque = NULL;
@@ -155,7 +155,7 @@ swfedit_file_parse (SwfeditFile *file, SwfdecBits *bits, GError **error)
     if (tag_len > 0)
       buffer = swfdec_bits_get_buffer (bits, tag_len);
     else
-      buffer = swfdec_buffer_new ();
+      buffer = swfdec_buffer_new (0);
     if (buffer == NULL) {
       g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_FAILED,
 	  "Invalid contents in file");
@@ -245,7 +245,7 @@ swfedit_file_write (SwfeditFile *file)
     swfdec_buffer_queue_push (queue, buffer);
   }
   /* write closing tag */
-  buffer = swfdec_buffer_new_and_alloc0 (2);
+  buffer = swfdec_buffer_new0 (2);
   swfdec_buffer_queue_push (queue, buffer);
 
   /* FIXME: implement compression */

@@ -46,7 +46,7 @@
 static SwfdecBuffer *
 encode_wav (SwfdecBuffer *buffer, SwfdecAudioFormat format)
 {
-  SwfdecBuffer *wav = swfdec_buffer_new_and_alloc (buffer->length + 44);
+  SwfdecBuffer *wav = swfdec_buffer_new (buffer->length + 44);
   unsigned char *data;
   guint i;
 
@@ -124,9 +124,7 @@ export_sprite_sound (SwfdecSprite *sprite, const char *filename)
   i = 4096;
   queue = swfdec_buffer_queue_new ();
   while (i > 0) {
-    buffer = swfdec_buffer_new ();
-    buffer->data = g_malloc0 (i * 4);
-    buffer->length = i * 4;
+    buffer = swfdec_buffer_new0 (i * 4);
 #if 0
     if (i > 1234) {
       swfdec_audio_render (audio, (gint16 *) buffer->data, 0, 1234);

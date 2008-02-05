@@ -223,7 +223,8 @@ swfdec_url_new_parent (const SwfdecURL *url)
   SwfdecURL *ret;
   
   path = g_strdup (url->path);
-  swfdec_url_path_to_parent_path (path);
+  if (path)
+    swfdec_url_path_to_parent_path (path);
   ret = swfdec_url_new_components (url->protocol, url->host, url->port,
       path, NULL);
   g_free (path);

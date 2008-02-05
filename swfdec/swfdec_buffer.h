@@ -62,10 +62,14 @@ GType swfdec_buffer_queue_get_type  (void);
 SwfdecBuffer *swfdec_buffer_new (void);
 SwfdecBuffer *swfdec_buffer_new_and_alloc (gsize size);
 SwfdecBuffer *swfdec_buffer_new_and_alloc0 (gsize size);
-SwfdecBuffer *swfdec_buffer_new_for_data (unsigned char *data, gsize size);
 SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, gsize offset,
     gsize length);
 SwfdecBuffer *swfdec_buffer_new_from_file (const char *filename, GError **error);
+SwfdecBuffer *swfdec_buffer_new_full (unsigned char *data, gsize size, SwfdecBufferFreeFunc free_func, gpointer priv);
+#define swfdec_buffer_new_for_data(data, size) \
+    swfdec_buffer_new_full (data, size, (SwfdecBufferFreeFunc) g_free, NULL)
+#define swfdec_buffer_new_static(data, size) \
+    swfdec_buffer_new_full (data, size, NULL, NULL)
 SwfdecBuffer *swfdec_buffer_ref (SwfdecBuffer * buffer);
 SwfdecBuffer *swfdec_buffer_get_super (SwfdecBuffer *buffer);
 void swfdec_buffer_unref (SwfdecBuffer * buffer);

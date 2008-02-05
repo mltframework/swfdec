@@ -101,11 +101,8 @@ swfdec_gtk_loader_push (SoupMessage *msg, SoupBuffer *chunk, gpointer loader)
   chunk = soup_buffer_copy (chunk);
 
   swfdec_gtk_loader_ensure_open (gtk);
-  buffer = swfdec_buffer_new ();
-  buffer->data = (unsigned char *) chunk->data;
-  buffer->length = chunk->length;
-  buffer->priv = chunk;
-  buffer->free = swfdec_gtk_loader_free_soup_buffer;
+  buffer = swfdec_buffer_new_full ((unsigned char *) chunk->data, chunk->length,
+      swfdec_gtk_loader_free_soup_buffer, chunk);
   swfdec_stream_push (loader, buffer);
 }
   

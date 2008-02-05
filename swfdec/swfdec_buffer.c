@@ -155,8 +155,31 @@ swfdec_buffer_new_and_alloc0 (gsize size)
  *
  * Returns: a new #SwfdecBuffer pointing to @data
  **/
+/**
+ * swfdec_buffer_new_static:
+ * @data: static data
+ * @size: size of @data in bytes
+ *
+ * Creates a buffer for static data.
+ *
+ * Returns: a new #SwfdecBuffer pointing to @data
+ **/
+/**
+ * swfdec_buffer_new_full:
+ * @data: memory region to reference
+ * @size: size of the provided memory region
+ * @free_func: function to call for freeing the @data
+ * @priv: private data to bass to @free_func
+ *
+ * Creates a new #SwfdecBuffer for managing @data. The provided @free_func
+ * will be called when the returned buffer is not referenced anymore, the 
+ * provided data needs to stay valid until that point.
+ *
+ * Returns: a new #SwfdecBuffer pointing to @data
+ **/
 SwfdecBuffer *
-swfdec_buffer_new_for_data (unsigned char *data, gsize size)
+swfdec_buffer_new_full (unsigned char *data, gsize size, 
+    SwfdecBufferFreeFunc free_func, gpointer priv)
 {
   SwfdecBuffer *buffer;
   
@@ -166,7 +189,8 @@ swfdec_buffer_new_for_data (unsigned char *data, gsize size)
   buffer = swfdec_buffer_new ();
   buffer->data = data;
   buffer->length = size;
-  buffer->free = (SwfdecBufferFreeFunc) g_free;
+  buffer->free = free_func;
+  buffer->priv = priv;
 
   return buffer;
 }

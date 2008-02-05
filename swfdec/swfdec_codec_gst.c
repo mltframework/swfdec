@@ -36,21 +36,9 @@ swfdec_gst_buffer_free (unsigned char *data, gpointer priv)
   gst_buffer_unref (priv);
 }
 
-static SwfdecBuffer *
-swfdec_buffer_new_from_gst (GstBuffer *buffer)
-{
-  SwfdecBuffer *ret;
-
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-
-  ret = swfdec_buffer_new ();
-  ret->data = GST_BUFFER_DATA (buffer);
-  ret->length = GST_BUFFER_SIZE (buffer);
-  ret->free = swfdec_gst_buffer_free;
-  ret->priv = buffer;
-
-  return ret;
-}
+#define swfdec_buffer_new_from_gst(buffer) \
+  swfdec_buffer_new_full (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), \
+      swfdec_gst_buffer_free, (buffer))
 
 static GstBuffer *
 swfdec_gst_buffer_new (SwfdecBuffer *buffer)

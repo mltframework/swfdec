@@ -26,6 +26,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_resource.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_policy_file.h"
 
 // properties
 SWFDEC_AS_NATIVE (12, 0, swfdec_system_security_allowDomain)
@@ -46,13 +47,28 @@ swfdec_system_security_allowInsecureDomain (SwfdecAsContext *cx,
   SWFDEC_STUB ("System.security.allowInsecureDomain (static)");
 }
 
+static void
+swfdec_system_security_do_loadPolicyFile (gpointer url, gpointer player)
+{
+  swfdec_policy_file_new (player, url);
+}
+
 SWFDEC_AS_NATIVE (12, 2, swfdec_system_security_loadPolicyFile)
 void
 swfdec_system_security_loadPolicyFile (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("System.security.loadPolicyFile (static)");
+  SwfdecPlayer *player;
+  const char *url_string;
+  SwfdecURL *url;
+
+  SWFDEC_AS_CHECK (0, NULL, "s", &url_string);
+
+  player = SWFDEC_PLAYER (cx);
+  url = swfdec_player_create_url (player, url_string);
+  swfdec_player_request_resource (player, swfdec_system_security_do_loadPolicyFile, 
+      url, (GDestroyNotify) swfdec_url_free);
 }
 
 SWFDEC_AS_NATIVE (12, 3, swfdec_system_security_chooseLocalSwfPath)

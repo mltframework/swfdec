@@ -20,6 +20,8 @@
 #ifndef _SWFDEC_TEST_SOCKET_H_
 #define _SWFDEC_TEST_SOCKET_H_
 
+#include "swfdec_test_plugin.h"
+#include "swfdec_test_test.h"
 #include <swfdec/swfdec.h>
 #include <libsoup/soup.h>
 
@@ -38,15 +40,11 @@ typedef struct _SwfdecTestSocketClass SwfdecTestSocketClass;
 
 struct _SwfdecTestSocket
 {
-  SwfdecAsObject	as_object;
+  SwfdecAsObject		as_object;
 
-  GMainContext *	context;	/* the main context we're running in */
-  SoupSocket *		socket;		/* the socket we're servicing */
-  gboolean		listening;	/* TRUE if it's a listening socket */
-  gboolean		connected;	/* TRUE if the connection is still alive (valid for both types) */
-
-  /* for listening sockets */
-  GSList *		connections;	/* connections that still need to be given out */
+  SwfdecTestPluginSocket *	plugin;		/* the socket we manage or NULL if closed */
+  SwfdecTestTest *		test;		/* the test that spawned us */
+  SwfdecBufferQueue *		receive_queue;	/* queue with received data */
 };
 
 struct _SwfdecTestSocketClass
@@ -56,6 +54,9 @@ struct _SwfdecTestSocketClass
 
 GType		swfdec_test_socket_get_type	(void);
 
+SwfdecAsObject *swfdec_test_socket_new		(SwfdecTestTest *		test,
+						 SwfdecTestPluginSocket *	sock);
+void		swfdec_test_socket_close	(SwfdecTestSocket *		sock);
 
 G_END_DECLS
 #endif

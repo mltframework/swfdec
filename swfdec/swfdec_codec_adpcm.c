@@ -78,7 +78,7 @@ swfdec_audio_decoder_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint c
   }
   len = swfdec_bits_left (bits) / channels / n_bits;
   len = MIN (len, 4095);
-  ret = swfdec_buffer_new_and_alloc ((len + 1) * sizeof (gint16) * channels);
+  ret = swfdec_buffer_new ((len + 1) * sizeof (gint16) * channels);
   out = (gint16 *) (void *) ret->data;
   /* output initial value */
   SWFDEC_LOG ("decoding %u samples", len + 1);

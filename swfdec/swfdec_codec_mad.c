@@ -70,7 +70,7 @@ convert_synth_to_buffer (MadData *mdata)
       return NULL;
   }
 
-  buffer = swfdec_buffer_new_and_alloc (n_samples * 2 * 2);
+  buffer = swfdec_buffer_new (n_samples * 2 * 2);
   data = (gint16 *) buffer->data;
 
   if (mdata->synth.pcm.samplerate == 11025) {
@@ -148,11 +148,8 @@ swfdec_audio_decoder_mad_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
   SwfdecBuffer *out, *empty = NULL;
   guint amount = 0, size;
 
-  if (buffer == NULL) {
-    buffer = empty = swfdec_buffer_new ();
-    empty->data = g_malloc0 (MAD_BUFFER_GUARD * 3);
-    empty->length = MAD_BUFFER_GUARD * 3;
-  }
+  if (buffer == NULL)
+    buffer = empty = swfdec_buffer_new0 (MAD_BUFFER_GUARD * 3);
 
   //write (1, buffer->data, buffer->length);
   //g_print ("buffer %p gave us %u bytes\n", buffer, buffer->length);

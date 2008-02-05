@@ -647,7 +647,7 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
   if (bits->buffer) {
     buffer = swfdec_buffer_new_subbuffer (bits->buffer, bits->ptr - bits->buffer->data, len);
   } else {
-    buffer = swfdec_buffer_new_and_alloc (len);
+    buffer = swfdec_buffer_new (len);
     memcpy (buffer->data, bits->ptr, len);
   }
   bits->ptr += len;
@@ -713,7 +713,7 @@ swfdec_bits_decompress (SwfdecBits *bits, int compressed, int decompressed)
     SWFDEC_ERROR ("Error initialising zlib: %d %s", result, z.msg ? z.msg : "");
     goto fail;
   }
-  buffer = swfdec_buffer_new_and_alloc (decompressed > 0 ? decompressed : compressed * 2);
+  buffer = swfdec_buffer_new (decompressed > 0 ? decompressed : compressed * 2);
   z.next_out = buffer->data;
   z.avail_out = buffer->length;
   while (TRUE) {

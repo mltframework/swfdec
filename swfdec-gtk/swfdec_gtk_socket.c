@@ -95,7 +95,7 @@ swfdec_gtk_socket_do_read (SoupSocket *sock, SwfdecGtkSocket *gtk)
   GError *error = NULL;
 
   do {
-    buffer = swfdec_buffer_new_and_alloc (SWFDEC_GTK_SOCKET_BLOCK_SIZE);
+    buffer = swfdec_buffer_new (SWFDEC_GTK_SOCKET_BLOCK_SIZE);
     status = soup_socket_read (sock, buffer, SWFDEC_GTK_SOCKET_BLOCK_SIZE, 
 	&len, NULL, &error);
     buffer->length = len;

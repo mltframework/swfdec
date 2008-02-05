@@ -95,7 +95,7 @@ swfdec_buffer_merge (const SwfdecBuffer *front, const SwfdecBuffer *end)
   g_return_val_if_fail (front != NULL, NULL);
   g_return_val_if_fail (end != NULL, NULL);
 
-  new = swfdec_buffer_new_and_alloc (front->length + end->length);
+  new = swfdec_buffer_new (front->length + end->length);
   if (front->length)
     memcpy (new->data, front->data, front->length);
   if (end->length)

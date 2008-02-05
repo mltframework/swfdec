@@ -28,7 +28,7 @@
 typedef struct _SwfdecBuffer SwfdecBuffer;
 typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
 
-typedef void (* SwfdecBufferFreeFunc) (unsigned char *data, gpointer priv);
+typedef void (* SwfdecBufferFreeFunc) (gpointer *priv, unsigned char *data);
 
 struct _SwfdecBuffer
 {
@@ -59,15 +59,13 @@ struct _SwfdecBufferQueue
 #define SWFDEC_TYPE_BUFFER_QUEUE swfdec_buffer_queue_get_type()
 GType swfdec_buffer_queue_get_type  (void);
 
-SwfdecBuffer *swfdec_buffer_new (void);
-SwfdecBuffer *swfdec_buffer_new_and_alloc (gsize size);
-SwfdecBuffer *swfdec_buffer_new_and_alloc0 (gsize size);
+SwfdecBuffer *swfdec_buffer_new (gsize size);
+SwfdecBuffer *swfdec_buffer_new0 (gsize size);
+SwfdecBuffer *swfdec_buffer_new_full (unsigned char *data, gsize size, SwfdecBufferFreeFunc free_func, gpointer priv);
 SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, gsize offset,
     gsize length);
 SwfdecBuffer *swfdec_buffer_new_from_file (const char *filename, GError **error);
-SwfdecBuffer *swfdec_buffer_new_full (unsigned char *data, gsize size, SwfdecBufferFreeFunc free_func, gpointer priv);
-#define swfdec_buffer_new_for_data(data, size) \
-    swfdec_buffer_new_full (data, size, (SwfdecBufferFreeFunc) g_free, NULL)
+SwfdecBuffer *swfdec_buffer_new_for_data (unsigned char *data, gsize size);
 #define swfdec_buffer_new_static(data, size) \
     swfdec_buffer_new_full (data, size, NULL, NULL)
 SwfdecBuffer *swfdec_buffer_ref (SwfdecBuffer * buffer);

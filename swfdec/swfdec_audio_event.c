@@ -173,7 +173,7 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
   if (event->decoded == NULL) {
     SWFDEC_INFO ("Could not decode audio. Will assume %u samples of silence instead.",
 	event->sound->n_samples);
-    event->decoded = swfdec_buffer_new_and_alloc0 (event->sound->n_samples / 4);
+    event->decoded = swfdec_buffer_new0 (event->sound->n_samples / 4);
     event->decoded_format = swfdec_audio_format_new (5512, 1, FALSE);
   } else {
     swfdec_buffer_ref (event->decoded);
@@ -191,7 +191,7 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
       SWFDEC_WARNING ("start sample %u > total number of samples %"G_GSIZE_FORMAT,
 	  event->start_sample / granule, event->decoded->length / bytes_per_sample);
       swfdec_buffer_unref (event->decoded);
-      event->decoded = swfdec_buffer_new ();
+      event->decoded = swfdec_buffer_new (0);
     } else {
       SwfdecBuffer *sub = swfdec_buffer_new_subbuffer (event->decoded,
 	  skip, event->decoded->length - skip);

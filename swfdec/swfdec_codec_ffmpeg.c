@@ -77,7 +77,7 @@ swfdec_codec_ffmpeg_convert (AVCodecContext *ctx, SwfdecBuffer *buffer)
 
   /* do the common case fast */
   if (ctx->channels == 2 && ctx->sample_rate == 44100) {
-    ret = swfdec_buffer_new_and_alloc (buffer->length);
+    ret = swfdec_buffer_new (buffer->length);
     memcpy (ret->data, buffer->data, buffer->length);
     return ret;
   }
@@ -98,7 +98,7 @@ swfdec_codec_ffmpeg_convert (AVCodecContext *ctx, SwfdecBuffer *buffer)
   }
   if (ctx->channels == 1)
     rate *= 2;
-  ret = swfdec_buffer_new_and_alloc (buffer->length * rate);
+  ret = swfdec_buffer_new (buffer->length * rate);
   out = (gint16 *) ret->data;
   in = (gint16 *) buffer->data;
   count = buffer->length / 2;
@@ -123,7 +123,7 @@ swfdec_audio_decoder_ffmpeg_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
 
   if (buffer == NULL)
     return;
-  outbuf = swfdec_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  outbuf = swfdec_buffer_new (AVCODEC_MAX_AUDIO_FRAME_SIZE);
   for (amount = 0; amount < buffer->length; amount += len) {
     
     out_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;

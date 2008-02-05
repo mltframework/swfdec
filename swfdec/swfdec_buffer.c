@@ -61,8 +61,8 @@
 
 /**
  * SwfdecBufferFreeFunc:
- * @data: The data to free
  * @priv: The private data registered for passing to this function
+ * @data: The data to free
  *
  * This is the function prototype for the function that is called for freeing
  * the memory pointed to by a buffer. See swfdec_buffer_new() for an example.
@@ -84,28 +84,6 @@ swfdec_buffer_get_type (void)
 
 /**
  * swfdec_buffer_new:
- *
- * Creates a new #SwfdecBuffer to be filled by the user. Use like this:
- * <informalexample><programlisting>SwfdecBuffer *buffer = swfdec_buffer_new ();
- * buffer->data = mydata;
- * buffer->length = mydata_length;
- * buffer->free = mydata_freefunc;
- * buffer->priv = mydata_private;</programlisting></informalexample>
- *
- * Returns: a new #SwfdecBuffer referencing nothing.
- **/
-SwfdecBuffer *
-swfdec_buffer_new (void)
-{
-  SwfdecBuffer *buffer;
-
-  buffer = g_new0 (SwfdecBuffer, 1);
-  buffer->ref_count = 1;
-  return buffer;
-}
-
-/**
- * swfdec_buffer_new_and_alloc:
  * @size: amount of bytes to allocate
  *
  * Creates a new buffer and allocates new memory of @size bytes to be used with 
@@ -114,36 +92,26 @@ swfdec_buffer_new (void)
  * Returns: a new #SwfdecBuffer with buffer->data pointing to new data
  **/
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc (gsize size)
+swfdec_buffer_new (gsize size)
 {
-  SwfdecBuffer *buffer = swfdec_buffer_new ();
-
-  buffer->data = g_malloc (size);
-  buffer->length = size;
-  buffer->free = (SwfdecBufferFreeFunc) g_free;
-
-  return buffer;
+  unsigned char *data = g_malloc (size);
+  return swfdec_buffer_new_full (data, size, (SwfdecBufferFreeFunc) g_free, data);
 }
 
 /**
- * swfdec_buffer_new_and_alloc0:
+ * swfdec_buffer_new0:
  * @size: amount of bytes to allocate
  *
- * Createsa new buffer just like swfdec_buffer_new_and_alloc(), but ensures 
+ * Createsa new buffer just like swfdec_buffer_new(), but ensures 
  * that the returned data gets initialized to be 0.
  *
  * Returns: a new #SwfdecBuffer with buffer->data pointing to new data
  **/
 SwfdecBuffer *
-swfdec_buffer_new_and_alloc0 (gsize size)
+swfdec_buffer_new0 (gsize size)
 {
-  SwfdecBuffer *buffer = swfdec_buffer_new ();
-
-  buffer->data = g_malloc0 (size);
-  buffer->length = size;
-  buffer->free = (SwfdecBufferFreeFunc) g_free;
-
-  return buffer;
+  unsigned char *data = g_malloc0 (size);
+  return swfdec_buffer_new_full (data, size, (SwfdecBufferFreeFunc) g_free, data);
 }
 
 /**
@@ -155,6 +123,14 @@ swfdec_buffer_new_and_alloc0 (gsize size)
  *
  * Returns: a new #SwfdecBuffer pointing to @data
  **/
+SwfdecBuffer *
+swfdec_buffer_new_for_data (guchar *data, gsize size)
+{
+  /* This is not a macro because a macro would evaluate the data pointer twice
+   * and people like doing swfdec_buffer_new_for_data (g_malloc (10), 10);
+   */
+  return swfdec_buffer_new_full (data, size, (SwfdecBufferFreeFunc) g_free, data);
+}
 /**
  * swfdec_buffer_new_static:
  * @data: static data
@@ -186,19 +162,14 @@ swfdec_buffer_new_full (unsigned char *data, gsize size,
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (size > 0, NULL);
 
-  buffer = swfdec_buffer_new ();
+  buffer = g_new0 (SwfdecBuffer, 1);
+  buffer->ref_count = 1;
   buffer->data = data;
   buffer->length = size;
   buffer->free = free_func;
   buffer->priv = priv;
 
   return buffer;
-}
-
-static void
-swfdec_buffer_free_subbuffer (unsigned char *data, gpointer priv)
-{
-  swfdec_buffer_unref (priv);
 }
 
 /**
@@ -223,11 +194,9 @@ swfdec_buffer_new_subbuffer (SwfdecBuffer *buffer, gsize offset, gsize length)
   if (offset == 0 && length == buffer->length)
     return swfdec_buffer_ref (buffer);
 
-  subbuffer = swfdec_buffer_new ();
-  subbuffer->priv = swfdec_buffer_ref (swfdec_buffer_get_super (buffer));
-  subbuffer->data = buffer->data + offset;
-  subbuffer->length = length;
-  subbuffer->free = swfdec_buffer_free_subbuffer;
+  subbuffer = swfdec_buffer_new_full (buffer->data + offset, length,
+      (SwfdecBufferFreeFunc) swfdec_buffer_unref, 
+      swfdec_buffer_ref (swfdec_buffer_get_super (buffer)));
 
   return subbuffer;
 }
@@ -248,17 +217,10 @@ swfdec_buffer_get_super (SwfdecBuffer *buffer)
 {
   g_return_val_if_fail (buffer != NULL, NULL);
 
-  if (buffer->free == swfdec_buffer_free_subbuffer)
+  if (buffer->free == (SwfdecBufferFreeFunc) swfdec_buffer_unref)
     buffer = buffer->priv;
 
-  g_assert (buffer->free != swfdec_buffer_free_subbuffer);
   return buffer;
-}
-
-static void
-swfdec_buffer_free_mapped (unsigned char *data, gpointer priv)
-{
-  g_mapped_file_free (priv);
 }
 
 /**
@@ -283,12 +245,9 @@ swfdec_buffer_new_from_file (const char *filename, GError **error)
 
   file = g_mapped_file_new (filename, FALSE, NULL);
   if (file != NULL) {
-    SwfdecBuffer *buffer = swfdec_buffer_new ();
-    buffer->data = (unsigned char *) g_mapped_file_get_contents (file), 
-    buffer->length = g_mapped_file_get_length (file);
-    buffer->free = swfdec_buffer_free_mapped;
-    buffer->priv = file;
-    return buffer;
+    return swfdec_buffer_new_full ((guchar *) g_mapped_file_get_contents (file),
+	g_mapped_file_get_length (file),
+	(SwfdecBufferFreeFunc) g_mapped_file_free, file);
   }
 
   if (!g_file_get_contents (filename, &data, &length, error))
@@ -331,7 +290,7 @@ swfdec_buffer_unref (SwfdecBuffer * buffer)
   buffer->ref_count--;
   if (buffer->ref_count == 0) {
     if (buffer->free)
-      buffer->free (buffer->data, buffer->priv);
+      buffer->free (buffer->priv, buffer->data);
     g_free (buffer);
   }
 }
@@ -521,7 +480,7 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, gsize length)
 
   /* need to special case here, because the queue may be empty */
   if (length == 0)
-    return swfdec_buffer_new ();
+    return swfdec_buffer_new (0);
 
   g = queue->first_buffer;
   buffer = g->data;
@@ -529,7 +488,7 @@ swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, gsize length)
     newbuffer = swfdec_buffer_new_subbuffer (buffer, 0, length);
   } else {
     gsize amount, offset;
-    newbuffer = swfdec_buffer_new_and_alloc (length);
+    newbuffer = swfdec_buffer_new (length);
     offset = 0;
     while (offset < length) {
       buffer = g->data;

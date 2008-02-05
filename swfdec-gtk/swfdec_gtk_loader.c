@@ -87,12 +87,6 @@ swfdec_gtk_loader_ensure_open (SwfdecGtkLoader *gtk)
 }
 
 static void
-swfdec_gtk_loader_free_soup_buffer (unsigned char *data, gpointer chunk)
-{
-  soup_buffer_free (chunk);
-}
-
-static void
 swfdec_gtk_loader_push (SoupMessage *msg, SoupBuffer *chunk, gpointer loader)
 {
   SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
@@ -102,7 +96,7 @@ swfdec_gtk_loader_push (SoupMessage *msg, SoupBuffer *chunk, gpointer loader)
 
   swfdec_gtk_loader_ensure_open (gtk);
   buffer = swfdec_buffer_new_full ((unsigned char *) chunk->data, chunk->length,
-      swfdec_gtk_loader_free_soup_buffer, chunk);
+      (SwfdecBufferFreeFunc) soup_buffer_free, chunk);
   swfdec_stream_push (loader, buffer);
 }
   

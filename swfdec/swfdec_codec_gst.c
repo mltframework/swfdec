@@ -30,15 +30,10 @@
 
 /*** BUFFER ***/
 
-static void
-swfdec_gst_buffer_free (unsigned char *data, gpointer priv)
-{
-  gst_buffer_unref (priv);
-}
-
+/* NB: references argument more than once */
 #define swfdec_buffer_new_from_gst(buffer) \
   swfdec_buffer_new_full (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), \
-      swfdec_gst_buffer_free, (buffer))
+      (SwfdecBufferFreeFunc) gst_mini_object_unref, (buffer))
 
 static GstBuffer *
 swfdec_gst_buffer_new (SwfdecBuffer *buffer)

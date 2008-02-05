@@ -243,7 +243,7 @@ swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
   }
   len -= swfdec_bits_left (bits) / 8;
   if (len == 0) {
-    buffer = swfdec_buffer_new ();
+    buffer = swfdec_buffer_new (0);
   } else {
     buffer = swfdec_bits_get_buffer (&org, len);
   }

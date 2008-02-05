@@ -159,7 +159,7 @@ swfdec_buffer_new_full (unsigned char *data, gsize size,
 {
   SwfdecBuffer *buffer;
   
-  buffer = g_new0 (SwfdecBuffer, 1);
+  buffer = g_slice_new (SwfdecBuffer);
   buffer->ref_count = 1;
   buffer->data = data;
   buffer->length = size;
@@ -288,7 +288,7 @@ swfdec_buffer_unref (SwfdecBuffer * buffer)
   if (buffer->ref_count == 0) {
     if (buffer->free)
       buffer->free (buffer->priv, buffer->data);
-    g_free (buffer);
+    g_slice_free (SwfdecBuffer, buffer);
   }
 }
 

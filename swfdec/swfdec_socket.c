@@ -80,9 +80,20 @@ swfdec_socket_do_send (SwfdecSocket *socket, SwfdecBuffer *buffer)
   swfdec_buffer_unref (buffer);
 }
 
+static const char *
+swfdec_socket_describe (SwfdecStream *stream)
+{
+  /* FIXME: add host/port */
+  return G_OBJECT_TYPE_NAME (stream);
+}
+
 static void
 swfdec_socket_class_init (SwfdecSocketClass *klass)
 {
+  SwfdecStreamClass *stream_class = SWFDEC_STREAM_CLASS (klass);
+
+  stream_class->describe = swfdec_socket_describe;
+
   klass->connect = swfdec_socket_do_connect;
   klass->send = swfdec_socket_do_send;
 }

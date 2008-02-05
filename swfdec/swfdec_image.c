@@ -465,11 +465,12 @@ swfdec_image_lossless_load (SwfdecImage *image)
 	p++;
       }
     }
-    /* FIXME: this can fail if the returned buffer does not contain malloc'd 
-     * data at some point in the future */
-    buffer->data = NULL;
-    buffer->length = 0;
-    swfdec_buffer_unref (buffer);
+    image->surface = cairo_image_surface_create_for_data (data, 
+	have_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
+	image->width, image->height, image->width * 4);
+    cairo_surface_set_user_data (image->surface, &key, buffer, 
+	(cairo_destroy_func_t) swfdec_buffer_unref);
+    return;
   } else {
     SWFDEC_ERROR ("unknown lossless image format %u", format);
     return;

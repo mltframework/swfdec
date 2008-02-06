@@ -145,6 +145,10 @@ swfdec_test_test_dispose (GObject *object)
 {
   SwfdecTestTest *test = SWFDEC_TEST_TEST (object);
 
+  while (test->sockets)
+    swfdec_test_socket_close (test->sockets->data);
+  test->pending_sockets = NULL;
+
   test->plugin_error = TRUE; /* set to avoid callbacks into the engine */
   swfdec_test_test_unload_plugin (test);
 

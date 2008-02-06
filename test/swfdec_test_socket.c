@@ -59,8 +59,10 @@ swfdec_test_socket_do_close (SwfdecTestSocket *sock, gboolean success)
   sock->plugin->finish (sock->plugin, success ? 0 : 1);
   sock->plugin = NULL;
 
-  if (sock->test->pending_sockets->data == sock)
+  if (sock->test->pending_sockets &&
+      sock->test->pending_sockets->data == sock) {
     sock->test->pending_sockets = sock->test->pending_sockets->prev;
+  }
   sock->test->sockets = g_list_remove (sock->test->sockets, sock);
   sock->test = NULL;
 }
@@ -191,6 +193,9 @@ swfdec_test_socket_new (SwfdecTestTest *test, SwfdecTestPluginSocket *plugin)
   g_return_val_if_fail (plugin != NULL, NULL);
 
   cx = SWFDEC_AS_OBJECT (test)->context;
+
+  if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecTestSocket)))
+    return NULL;
   new = g_object_new (SWFDEC_TYPE_TEST_SOCKET, NULL);
   swfdec_as_object_add (new, cx, sizeof (SwfdecTestSocket));
   swfdec_as_object_get_variable (cx->global, 

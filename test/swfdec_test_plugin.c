@@ -24,6 +24,7 @@
 #include "swfdec_test_plugin.h"
 #include <swfdec/swfdec.h>
 #include "swfdec_test_test.h"
+#include "swfdec_test_swfdec_socket.h"
 
 static void
 swfdec_test_plugin_swfdec_advance (SwfdecTestPlugin *plugin, unsigned int msecs)
@@ -125,8 +126,12 @@ swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
   plugin->mouse_press = swfdec_test_plugin_swfdec_mouse_press;
   plugin->mouse_release = swfdec_test_plugin_swfdec_mouse_release;
   plugin->finish = swfdec_test_plugin_swfdec_finish;
-  plugin->data = player = swfdec_player_new (NULL);
+  plugin->data = player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
+      "loader-type", SWFDEC_TYPE_FILE_LOADER, "socket-type", SWFDEC_TYPE_TEST_SWFDEC_SOCKET,
+      "max-runtime", 0, 
+      NULL);
 
+  g_object_set_data (G_OBJECT (player), "plugin", plugin);
   g_signal_connect (player, "fscommand", G_CALLBACK (swfdec_test_plugin_swfdec_fscommand), plugin);
   g_signal_connect (player, "trace", G_CALLBACK (swfdec_test_plugin_swfdec_trace), plugin);
   g_signal_connect (player, "notify", G_CALLBACK (swfdec_test_plugin_swfdec_notify), plugin);

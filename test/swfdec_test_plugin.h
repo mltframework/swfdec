@@ -74,7 +74,7 @@ struct _SwfdecTestPlugin {
   void		(* error)		(SwfdecTestPlugin *	plugin,
 					 const char *		description);
   void		(* request_socket)	(SwfdecTestPlugin *	plugin,
-					 SwfdecTestPluginSocket *http);
+					 SwfdecTestPluginSocket *socket);
   /* initialized by the plugin during swfdec_test_plugin_new() */
   unsigned int	width;
   unsigned int	height;

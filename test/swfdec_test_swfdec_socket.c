@@ -51,6 +51,8 @@ swfdec_test_swfdec_socket_connect (SwfdecSocket *sock_, SwfdecPlayer *player,
   sock->plugin.host = g_strdup (hostname);
   sock->plugin.port = port;
   plugin->request_socket (plugin, &sock->plugin);
+  /* FIXME: allow testing this, too? */
+  swfdec_stream_open (SWFDEC_STREAM (sock));
 }
 
 static void

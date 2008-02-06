@@ -93,6 +93,14 @@ swfdec_test_plugin_swfdec_trace (SwfdecPlayer *player, const char *message,
 }
 
 static void
+swfdec_test_plugin_swfdec_launch (SwfdecPlayer *player,
+  SwfdecLoaderRequest request, const char *url, const char *target,
+  SwfdecBuffer *data, SwfdecTestPlugin *plugin)
+{
+  plugin->launch (plugin, url);
+}
+
+static void
 swfdec_test_plugin_swfdec_fscommand (SwfdecPlayer *player, const char *command, 
     const char *para, SwfdecTestPlugin *plugin)
 {
@@ -129,6 +137,7 @@ swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
 
   g_signal_connect (player, "fscommand", G_CALLBACK (swfdec_test_plugin_swfdec_fscommand), plugin);
   g_signal_connect (player, "trace", G_CALLBACK (swfdec_test_plugin_swfdec_trace), plugin);
+  g_signal_connect (player, "launch", G_CALLBACK (swfdec_test_plugin_swfdec_launch), plugin);
   g_signal_connect (player, "notify", G_CALLBACK (swfdec_test_plugin_swfdec_notify), plugin);
   url = swfdec_url_new_from_input (plugin->filename);
   swfdec_player_set_url (player, url);

@@ -70,6 +70,19 @@ swfdec_test_test_trace (SwfdecTestPlugin *plugin, const char *message)
 }
 
 static void
+swfdec_test_test_launch (SwfdecTestPlugin *plugin, const char *url)
+{
+  SwfdecTestTest *test = SWFDEC_TEST_TEST_FROM_PLUGIN (plugin);
+  gsize len = strlen (url);
+  SwfdecBuffer *buffer;
+
+  buffer = swfdec_buffer_new (len + 1);
+  memcpy (buffer->data, url, len);
+  buffer->data[len] = '\n';
+  swfdec_buffer_queue_push (test->launched, buffer);
+}
+
+static void
 swfdec_test_test_load_plugin (SwfdecTestTest *test, const char *filename)
 {
   memset (&test->plugin, 0, sizeof (SwfdecTestPlugin));
@@ -83,6 +96,7 @@ swfdec_test_test_load_plugin (SwfdecTestTest *test, const char *filename)
     g_free (cur);
   }
   test->plugin.trace = swfdec_test_test_trace;
+  test->plugin.launch = swfdec_test_test_launch;
   test->plugin.quit = swfdec_test_test_quit;
   test->plugin.error = swfdec_test_test_error;
 
@@ -160,6 +174,7 @@ static void
 swfdec_test_test_init (SwfdecTestTest *test)
 {
   test->trace = swfdec_buffer_queue_new ();
+  test->launched = swfdec_buffer_queue_new ();
 }
 
 static void
@@ -313,6 +328,26 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
 
   swfdec_test_do_reset (test, filename[0] ? filename : NULL);
+}
+
+SWFDEC_TEST_FUNCTION ("Test_get_launched", swfdec_test_test_get_launched, 0)
+void
+swfdec_test_test_get_launched (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+  SwfdecAsObject *o;
+  SwfdecBuffer *buffer;
+  gsize len;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "");
+
+  len = swfdec_buffer_queue_get_depth (test->launched);
+  buffer = swfdec_buffer_queue_peek (test->launched, len);
+  o = swfdec_test_buffer_new (cx, buffer);
+  if (o == NULL)
+    return;
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
 }
 
 SWFDEC_TEST_FUNCTION ("Test_get_trace", swfdec_test_test_get_trace, 0)

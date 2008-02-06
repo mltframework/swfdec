@@ -49,6 +49,7 @@ struct _SwfdecTestTest
 
   char *		filename;	/* file the player should be loaded from */
   SwfdecBufferQueue *	trace;		/* all captured trace output */
+  SwfdecBufferQueue *	launched;	/* all launched urls */
 };
 
 struct _SwfdecTestTestClass

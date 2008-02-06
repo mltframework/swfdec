@@ -45,6 +45,8 @@ struct _SwfdecTestPlugin {
   char *	filename;
   void		(* trace)		(SwfdecTestPlugin *	plugin,
 					 const char *		string);
+  void		(* launch)		(SwfdecTestPlugin *	plugin,
+					 const char *		url);
   void		(* quit)		(SwfdecTestPlugin *	plugin);	  
   void		(* error)		(SwfdecTestPlugin *	plugin,
 					 const char *		description);

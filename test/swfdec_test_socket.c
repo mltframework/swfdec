@@ -73,6 +73,8 @@ swfdec_test_socket_dispose (GObject *object)
   SwfdecTestSocket *sock = SWFDEC_TEST_SOCKET (object);
 
   swfdec_test_socket_do_close (sock, FALSE);
+  swfdec_buffer_queue_unref (sock->receive_queue);
+  sock->receive_queue = NULL;
 
   G_OBJECT_CLASS (swfdec_test_socket_parent_class)->dispose (object);
 }
@@ -88,6 +90,7 @@ swfdec_test_socket_class_init (SwfdecTestSocketClass *klass)
 static void
 swfdec_test_socket_init (SwfdecTestSocket *sock)
 {
+  sock->receive_queue = swfdec_buffer_queue_new ();
 }
 
 /*** AS CODE ***/

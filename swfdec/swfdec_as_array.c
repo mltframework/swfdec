@@ -970,6 +970,7 @@ typedef struct {
   const char **		fields;
   SortOption *		options;
   SwfdecAsFunction *	custom_function;
+  gboolean		equal_found;
 } SortCompareData;
 
 static int
@@ -978,10 +979,8 @@ swfdec_as_array_sort_compare (gconstpointer a_ptr, gconstpointer b_ptr,
 {
   const SwfdecAsValue *a = &((SortEntry *)a_ptr)->value;
   const SwfdecAsValue *b = &((SortEntry *)b_ptr)->value;
-  const SortCompareData *data = user_data;
-  int i, retval;
-  SwfdecAsValue a_comp, b_comp;
-  SwfdecAsObject *object;
+  SortCompareData *data = user_data;
+  int retval;
 
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (a), 0);
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (b), 0);
@@ -991,30 +990,38 @@ swfdec_as_array_sort_compare (gconstpointer a_ptr, gconstpointer b_ptr,
       SWFDEC_IS_AS_FUNCTION (data->custom_function), 0);
   g_return_val_if_fail (data->fields == NULL || data->fields[0] != NULL, 0);
 
-  if (data->fields == NULL)
-    return swfdec_as_array_sort_compare_values (data->context, a, b,
+  if (data->fields == NULL) {
+    retval = swfdec_as_array_sort_compare_values (data->context, a, b,
 	data->options[0], data->custom_function);
+  } else {
+    SwfdecAsValue a_comp, b_comp;
+    SwfdecAsObject *object;
+    int i;
 
-  i = 0;
-  do {
-    object = swfdec_as_value_to_object (data->context, a);
-    if (object) {
-      swfdec_as_object_get_variable (object, data->fields[i], &a_comp);
-    } else {
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&a_comp);
-    }
+    i = 0;
+    do {
+      object = swfdec_as_value_to_object (data->context, a);
+      if (object) {
+	swfdec_as_object_get_variable (object, data->fields[i], &a_comp);
+      } else {
+	SWFDEC_AS_VALUE_SET_UNDEFINED (&a_comp);
+      }
 
-    object = swfdec_as_value_to_object (data->context, b);
-    if (object) {
-      swfdec_as_object_get_variable (object, data->fields[i], &b_comp);
-    } else {
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&b_comp);
-    }
+      object = swfdec_as_value_to_object (data->context, b);
+      if (object) {
+	swfdec_as_object_get_variable (object, data->fields[i], &b_comp);
+      } else {
+	SWFDEC_AS_VALUE_SET_UNDEFINED (&b_comp);
+      }
 
-    retval =
-      swfdec_as_array_sort_compare_values (data->context, &a_comp, &b_comp,
-	  data->options[i], data->custom_function);
-  } while (retval == 0 && data->fields[++i] != NULL);
+      retval =
+	swfdec_as_array_sort_compare_values (data->context, &a_comp, &b_comp,
+	    data->options[i], data->custom_function);
+    } while (retval == 0 && data->fields[++i] != NULL);
+  }
+
+  if (retval == 0)
+    data->equal_found = TRUE;
 
   return retval;
 }
@@ -1079,6 +1086,13 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   if ((gint32)array->len < length) {
     SortEntry entry;
 
+    // if doing unique sort and there is more than one missing value we fail
+    if ((options[0] & SORT_OPTION_UNIQUESORT) &&
+	(gint32)array->len < length - 1) {
+      SWFDEC_AS_VALUE_SET_INT (ret, 0);
+      return;
+    }
+
     entry.index_ = -1;
     SWFDEC_AS_VALUE_SET_UNDEFINED (&entry.value);
 
@@ -1090,8 +1104,15 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   compare_data.fields = fields;
   compare_data.options = (SortOption *)options;
   compare_data.custom_function = custom_function;
+  compare_data.equal_found = FALSE;
 
   g_array_sort_with_data (array, swfdec_as_array_sort_compare, &compare_data);
+
+  // check unique sort
+  if ((options[0] & SORT_OPTION_UNIQUESORT) && compare_data.equal_found) {
+    SWFDEC_AS_VALUE_SET_INT (ret, 0);
+    return;
+  }
 
   // set the values that have new indexes
   offset = 0;

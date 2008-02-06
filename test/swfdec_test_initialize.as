@@ -62,6 +62,7 @@ Test.prototype.mouse_release = Native.Test_mouse_release;
 Test.prototype.render = Native.Test_render;
 Test.prototype.reset = Native.Test_reset;
 Test.prototype.addProperty ("rate", Native.Test_get_rate, null);
+Test.prototype.addProperty ("quit", Native.Test_get_quit, null);
 Test.prototype.addProperty ("trace", Native.Test_get_trace, null);
 
 print = function (s) {

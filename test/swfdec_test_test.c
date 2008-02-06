@@ -376,6 +376,19 @@ swfdec_test_test_get_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
 }
 
+SWFDEC_TEST_FUNCTION ("Test_get_quit", swfdec_test_test_get_quit, 0)
+void
+swfdec_test_test_get_quit (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "");
+
+  /* FIXME: or not quit on error? */
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, !test->plugin_loaded || test->plugin_error || test->plugin_quit);
+}
+
 SWFDEC_TEST_FUNCTION ("Test_get_rate", swfdec_test_test_get_rate, 0)
 void
 swfdec_test_test_get_rate (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,

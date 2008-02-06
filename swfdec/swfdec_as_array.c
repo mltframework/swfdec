@@ -1156,6 +1156,60 @@ void
 swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  const char **fields;
+  SortOption options;
+
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
+    return;
+
+  if (argc < 1)
+    return;
+
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
+    gint32 length, i;
+    SwfdecAsValue val;
+    SwfdecAsObject *array;
+
+    array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+    if (!SWFDEC_IS_AS_ARRAY (array)) {
+      SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+      return;
+    }
+
+    length = swfdec_as_array_get_length (SWFDEC_AS_ARRAY (array));
+    if (length <= 0) {
+      SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+      return;
+    }
+
+    fields = g_malloc (sizeof (const char *) * (length + 1));
+    for (i = 0; i < length; i++) {
+      swfdec_as_array_get_value (SWFDEC_AS_ARRAY (array), i, &val);
+      if (SWFDEC_AS_VALUE_IS_OBJECT (&val) &&
+	  SWFDEC_IS_AS_STRING (SWFDEC_AS_VALUE_GET_OBJECT (&val))) {
+	fields[i] =
+	  SWFDEC_AS_STRING (SWFDEC_AS_VALUE_GET_OBJECT (&val))->string;
+      } else {
+	fields[i] = swfdec_as_value_to_string (cx, &val);
+      }
+    }
+
+    fields[i] = NULL;
+  } else {
+    fields = g_malloc (sizeof (const char *) * 2);
+    fields[0] = swfdec_as_value_to_string (cx, &argv[0]);
+    fields[1] = NULL;
+  }
+
+  if (argc > 1) {
+    options = swfdec_as_value_to_integer (cx, &argv[1]) & MASK_SORT_OPTION;
+  } else {
+    options = 0;
+  }
+
+  swfdec_as_array_do_sort (cx, object, &options, NULL, fields, ret);
+
+  g_free (fields);
 }
 
 // Constructor

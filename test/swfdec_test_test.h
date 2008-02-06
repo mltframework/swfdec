@@ -50,6 +50,9 @@ struct _SwfdecTestTest
   char *		filename;	/* file the player should be loaded from */
   SwfdecBufferQueue *	trace;		/* all captured trace output */
   SwfdecBufferQueue *	launched;	/* all launched urls */
+
+  GList *		sockets;	/* list of all sockets */
+  GList *		pending_sockets;/* last socket handed out or NULL if none given out */
 };
 
 struct _SwfdecTestTestClass

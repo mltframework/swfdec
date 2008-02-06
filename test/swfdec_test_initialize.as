@@ -44,16 +44,18 @@ HTTPRequest.prototype.toString = Native.HTTPRequest_toString;
 HTTPRequest.prototype.send = Native.HTTPRequest_send;
 HTTPRequest.prototype.close = Native.HTTPRequest_close;
 
-Socket = Native.Socket;
+Socket = function () {};
 Socket.prototype = {};
 Socket.prototype.getConnection = Native.Socket_getConnection;
 Socket.prototype.receive = Native.Socket_receive;
 Socket.prototype.send = Native.Socket_send;
 Socket.prototype.close = Native.Socket_close;
+Socket.prototype.error = Native.Socket_error;
 
 Test = Native.Test;
 Test.prototype = {};
 Test.prototype.advance = Native.Test_advance;
+Test.prototype.getSocket = Native.Test_getSocket;
 Test.prototype.mouse_move = Native.Test_mouse_move;
 Test.prototype.mouse_press = Native.Test_mouse_press;
 Test.prototype.mouse_release = Native.Test_mouse_release;

@@ -20,6 +20,30 @@
 #ifndef _SWFDEC_TEST_PLUGIN_H_
 #define _SWFDEC_TEST_PLUGIN_H_
 
+/**
+ * SwfdecTestPluginSocket:
+ *
+ * This object represents a socket connection, like those used by RTMP, the
+ * XMLSocket class or the xmlsocket:// policy file protocol.
+ **/
+typedef struct _SwfdecTestPluginSocket SwfdecTestPluginSocket;
+struct _SwfdecTestPluginSocket {
+  /* initialized by player while call to request_socket() */
+  void *	data;
+  void		(* send)		(SwfdecTestPluginSocket *	sock,
+					 unsigned char *		data,
+					 unsigned long			length);
+  void		(* close)		(SwfdecTestPluginSocket *	sock);
+  /* initialized by plugin before call to request_socket() */
+  char *	host;
+  unsigned int	port;
+  void		(* receive)		(SwfdecTestPluginSocket *	sock,
+					 unsigned char *		data,
+					 unsigned long			length);
+  void		(* finish)		(SwfdecTestPluginSocket *	sock,
+                                         int				error); /* 0 if ok, 1 for error */
+};
+
 /*
  * SwfdecTestPlugin:
  * @filename: The absolute filename to run
@@ -29,6 +53,7 @@
  * @error: Function to call whenever the plugin encounters an error. This will
  *         cause the plugin to not call any other function but @finish anymore
  *         and raise an exception containing the provided description.
+ * @request_socket: Create a socket with the given parameters
  * @advance: Used to advance the player by the provided number of milliseconds
  * @finish: Clean up any leftover data as the plugin is aout to be discarded
  *
@@ -50,6 +75,8 @@ struct _SwfdecTestPlugin {
   void		(* quit)		(SwfdecTestPlugin *	plugin);	  
   void		(* error)		(SwfdecTestPlugin *	plugin,
 					 const char *		description);
+  void		(* request_socket)	(SwfdecTestPlugin *	plugin,
+					 SwfdecTestPluginSocket *socket);
   /* initialized by the plugin during swfdec_test_plugin_new() */
   unsigned int	width;
   unsigned int	height;

@@ -28,6 +28,7 @@
 #include "swfdec_test_buffer.h"
 #include "swfdec_test_function.h"
 #include "swfdec_test_image.h"
+#include "swfdec_test_socket.h"
 #include "swfdec_test_utils.h"
 
 /*** PLUGIN HANDLING ***/
@@ -83,6 +84,15 @@ swfdec_test_test_launch (SwfdecTestPlugin *plugin, const char *url)
 }
 
 static void
+swfdec_test_test_request_socket (SwfdecTestPlugin *plugin,
+    SwfdecTestPluginSocket *psock)
+{
+  SwfdecTestTest *test = SWFDEC_TEST_TEST_FROM_PLUGIN (plugin);
+
+  swfdec_test_socket_new (test, psock);
+}
+
+static void
 swfdec_test_test_load_plugin (SwfdecTestTest *test, const char *filename)
 {
   memset (&test->plugin, 0, sizeof (SwfdecTestPlugin));
@@ -99,6 +109,7 @@ swfdec_test_test_load_plugin (SwfdecTestTest *test, const char *filename)
   test->plugin.launch = swfdec_test_test_launch;
   test->plugin.quit = swfdec_test_test_quit;
   test->plugin.error = swfdec_test_test_error;
+  test->plugin.request_socket = swfdec_test_test_request_socket;
 
   /* load the right values */
   if (swfdec_test_plugin_name) {
@@ -147,6 +158,10 @@ static void
 swfdec_test_test_dispose (GObject *object)
 {
   SwfdecTestTest *test = SWFDEC_TEST_TEST (object);
+
+  while (test->sockets)
+    swfdec_test_socket_close (test->sockets->data);
+  test->pending_sockets = NULL;
 
   test->plugin_error = TRUE; /* set to avoid callbacks into the engine */
   swfdec_test_test_unload_plugin (test);
@@ -348,6 +363,32 @@ swfdec_test_test_get_launched (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (o == NULL)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
+}
+
+SWFDEC_TEST_FUNCTION ("Socket_getSocket", swfdec_test_test_getSocket, 0)
+void
+swfdec_test_test_getSocket (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestTest *test;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "");
+
+  if (test->pending_sockets == NULL) {
+    if (test->sockets == NULL) {
+      SWFDEC_AS_VALUE_SET_NULL (retval);
+    } else {
+      test->pending_sockets = test->sockets;
+      SWFDEC_AS_VALUE_SET_OBJECT (retval, test->pending_sockets->data);
+    }
+  } else {
+    if (test->pending_sockets->next == NULL) {
+      SWFDEC_AS_VALUE_SET_NULL (retval);
+    } else {
+      test->pending_sockets = test->pending_sockets->next;
+      SWFDEC_AS_VALUE_SET_OBJECT (retval, test->pending_sockets->data);
+    }
+  }
 }
 
 SWFDEC_TEST_FUNCTION ("Test_get_trace", swfdec_test_test_get_trace, 0)

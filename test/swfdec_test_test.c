@@ -330,7 +330,7 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   swfdec_test_do_reset (test, filename[0] ? filename : NULL);
 }
 
-SWFDEC_TEST_FUNCTION ("Socket_getSocket", swfdec_test_test_getSocket, 0)
+SWFDEC_TEST_FUNCTION ("Test_getSocket", swfdec_test_test_getSocket, 0)
 void
 swfdec_test_test_getSocket (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)

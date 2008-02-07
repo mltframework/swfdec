@@ -1255,6 +1255,8 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   SortCompareData compare_data;
   gint32 i, offset, length;
   const char *var;
+  SwfdecAsObject *target;
+  SwfdecAsValue val;
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
@@ -1305,30 +1307,50 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
+  if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
+    target = swfdec_as_array_new (cx);
+    if (!target)
+      return;
+  } else {
+    target = object;
+  }
+
   offset = 0;
   for (i = 0; i < (gint32)array->len; i++) {
     SortEntry *entry = &g_array_index (array, SortEntry, i);
 
-    // set the values that have new indexes
-    if (entry->index_ == i + offset)
+    // set only the values that have new indexes
+    if (!(options[0] & SORT_OPTION_RETURNINDEXEDARRAY) &&
+	entry->index_ == i + offset)
       continue;
 
     var = swfdec_as_integer_to_string (cx, i + offset);
-    swfdec_as_object_set_variable (object, var, &entry->value);
+    if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
+      SWFDEC_AS_VALUE_SET_INT (&val, entry->index_);
+      swfdec_as_object_set_variable (target, var, &val);
+    } else {
+      swfdec_as_object_set_variable (target, var, &entry->value);
+    }
 
     // special element for missing properties, add all missing properties here
     if (entry->index_ == -1) {
       g_assert (offset == 0);
       for (offset = 0; offset < length - (gint32)array->len; offset++) {
 	var = swfdec_as_integer_to_string (cx, i + offset + 1);
-	swfdec_as_object_set_variable (object, var, &entry->value);
+	if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
+	  SWFDEC_FIXME ("Array.sort with RETURNINDEXEDARRAY and missing elements not implemented");
+	  SWFDEC_AS_VALUE_SET_INT (&val, -1);
+	  swfdec_as_object_set_variable (target, var, &val);
+	} else {
+	  swfdec_as_object_set_variable (object, var, &entry->value);
+	}
       }
     }
   }
 
   g_array_free (array, TRUE);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, target);
 }
 
 SWFDEC_AS_NATIVE (252, 10, swfdec_as_array_sort)

@@ -1054,6 +1054,197 @@ swfdec_as_array_foreach_sort_collect (SwfdecAsObject *object,
   return TRUE;
 }
 
+static int
+compare (GArray *array, GCompareDataFunc func, guint a, guint b,
+    gpointer user_data)
+{
+  g_return_val_if_fail (array != NULL, 0);
+  g_return_val_if_fail (func != NULL, 0);
+  g_return_val_if_fail (a < array->len, 0);
+  g_return_val_if_fail (b < array->len, 0);
+
+  return func (&g_array_index (array, SortEntry, a),
+      &g_array_index (array, SortEntry, b), user_data);
+}
+
+static void
+swap (GArray *array, guint a, guint b)
+{
+  SortEntry tmp;
+
+  g_return_if_fail (array != NULL);
+  g_return_if_fail (a < array->len);
+  g_return_if_fail (b < array->len);
+
+  tmp = g_array_index (array, SortEntry, a);
+  g_array_index (array, SortEntry, a) = g_array_index (array, SortEntry, b);
+  g_array_index (array, SortEntry, b) = tmp;
+}
+
+typedef struct { guint lo, hi; } StackFrame;
+
+// non-recursive qsort algorithm from Tamarin, ArrayClass.cpp
+// imported Tue Feb 05 22:55:24 2008 +1100, 5272194dd87c
+static void
+my_g_array_sort_with_data (GArray *array, GCompareDataFunc func,
+    gpointer user_data)
+{
+  // This is an iterative implementation of the recursive quick sort.
+  // Recursive implementations are basically storing nested (lo,hi) pairs
+  // in the stack frame, so we can avoid the recursion by storing them
+  // in an array.
+  //
+  // Once partitioned, we sub-partition the smaller half first. This means
+  // the greatest stack depth happens with equal partitions, all the way down,
+  // which would be 1 + log2(size), which could never exceed 33.
+
+  guint lo, hi;
+  guint size;
+  StackFrame stk[33];
+  int stkptr = 0;
+
+  g_return_if_fail (array != NULL);
+  g_return_if_fail (func != NULL);
+
+  lo = 0;
+  hi = array->len - 1;
+
+  // leave without doing anything if the array is empty (lo > hi) or only one element (lo == hi)
+  if (lo >= hi)
+    return;
+
+  // code below branches to this label instead of recursively calling qsort()
+recurse:
+
+  size = (hi - lo) + 1; // number of elements in the partition
+
+  if (size < 4) {
+
+    // It is standard to use another sort for smaller partitions,
+    // for instance c library source uses insertion sort for 8 or less.
+    //
+    // However, as our swap() is essentially free, the relative cost of
+    // compare() is high, and with profiling, I found quicksort()-ing
+    // down to four had better performance.
+    //
+    // Although verbose, handling the remaining cases explicitly is faster,
+    // so I do so here.
+
+    if (size == 3) {
+      if (compare (array, func, lo, lo + 1, user_data) > 0) {
+	swap (array, lo, lo + 1);
+	if (compare (array, func, lo + 1, lo + 2, user_data) > 0) {
+	  swap (array, lo + 1, lo + 2);
+	  if (compare (array, func, lo, lo + 1, user_data) > 0) {
+	    swap (array, lo, lo + 1);
+	  }
+	}
+      } else {
+	if (compare (array, func, lo + 1, lo + 2, user_data) > 0) {
+	  swap (array, lo + 1, lo + 2);
+	  if (compare (array, func, lo, lo + 1, user_data) > 0) {
+	    swap (array, lo, lo + 1);
+	  }
+	}
+      }
+    } else if (size == 2) {
+      if (compare (array, func, lo, lo + 1, user_data) > 0)
+	swap (array, lo, lo + 1);
+    } else {
+      // size is one, zero or negative, so there isn't any sorting to be done
+    }
+  } else {
+    // qsort()-ing a near or already sorted list goes much better if
+    // you use the midpoint as the pivot, but the algorithm is simpler
+    // if the pivot is at the start of the list, so move the middle
+    // element to the front!
+    guint pivot = lo + (size / 2);
+    guint left = lo;
+    guint right = hi + 1;
+
+    swap (array, pivot, lo);
+
+    for (;;) {
+      // Move the left right until it's at an element greater than the pivot.
+      // Move the right left until it's at an element less than the pivot.
+      // If left and right cross, we can terminate, otherwise swap and continue.
+      //
+      // As each pass of the outer loop increments left at least once,
+      // and decrements right at least once, this loop has to terminate.
+
+      do  {
+	left++;
+      } while ((left <= hi) && (compare (array, func, left, lo, user_data) <= 0));
+
+      do  {
+	right--;
+      } while ((right > lo) && (compare (array, func, right, lo, user_data) >= 0));
+
+      if (right < left)
+	break;
+
+      swap (array, left, right);
+    }
+
+    // move the pivot after the lower partition
+    swap (array, lo, right);
+
+    // The array is now in three partions:
+    //	1. left partition	: i in [lo, right), elements less than or equal to pivot
+    //	2. center partition	: i in [right, left], elements equal to pivot
+    //	3. right partition	: i in (left, hi], elements greater than pivot
+    // NOTE : [ means the range includes the lower bounds, ( means it excludes it, with the same for ] and ).
+
+    // Many quick sorts recurse into the left partition, and then the right.
+    // The worst case of this can lead to a stack depth of size -- for instance,
+    // the left is empty, the center is just the pivot, and the right is everything else.
+    //
+    // If you recurse into the smaller partition first, then the worst case is an
+    // equal partitioning, which leads to a depth of log2(size).
+    if ((right - 1 - lo) >= (hi - left)) 
+    {
+      if ((lo + 1) < right) 
+      {
+	stk[stkptr].lo = lo;
+	stk[stkptr].hi = right - 1;
+	++stkptr;
+      }
+
+      if (left < hi)
+      {
+	lo = left;
+	goto recurse;
+      }
+    }
+    else
+    {
+      if (left < hi)
+      {
+	stk[stkptr].lo = left;
+	stk[stkptr].hi = hi;
+	++stkptr;
+      }
+
+      if ((lo + 1) < right)
+      {
+	hi = right - 1;
+	goto recurse;           /* do small recursion */
+      }
+    }
+  }
+
+  // we reached the bottom of the well, pop the nested stack frame
+  if (--stkptr >= 0)
+  {
+    lo = stk[stkptr].lo;
+    hi = stk[stkptr].hi;
+    goto recurse;
+  }
+
+  // we've returned to the top, so we are done!
+  return;
+}
+
 static void
 swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     SortOption *options, SwfdecAsFunction *custom_function, const char **fields,
@@ -1106,7 +1297,7 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   compare_data.custom_function = custom_function;
   compare_data.equal_found = FALSE;
 
-  g_array_sort_with_data (array, swfdec_as_array_sort_compare, &compare_data);
+  my_g_array_sort_with_data (array, swfdec_as_array_sort_compare, &compare_data);
 
   // check unique sort
   if ((options[0] & SORT_OPTION_UNIQUESORT) && compare_data.equal_found) {
@@ -1114,11 +1305,11 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  // set the values that have new indexes
   offset = 0;
   for (i = 0; i < (gint32)array->len; i++) {
     SortEntry *entry = &g_array_index (array, SortEntry, i);
 
+    // set the values that have new indexes
     if (entry->index_ == i + offset)
       continue;
 

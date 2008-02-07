@@ -36,6 +36,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
+#include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
@@ -597,6 +598,7 @@ enum {
   AUDIO_REMOVED,
   LAUNCH,
   FSCOMMAND,
+  MISSING_PLUGINS,
   LAST_SIGNAL
 };
 
@@ -1268,6 +1270,22 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
     audio->added = TRUE;
   }
+
+  /* emit missing-plugin signal for newly discovered plugins */
+  if (priv->missing_plugins) {
+    GSList *swalk;
+    guint i = 0;
+    char **details = g_new (char *, g_slist_length (priv->missing_plugins) + 1);
+
+    for (swalk = priv->missing_plugins; swalk; swalk = swalk->next) {
+      details[i++] = swalk->data;
+    }
+    details[i] = NULL;
+    g_slist_free (priv->missing_plugins);
+    priv->missing_plugins = NULL;
+    g_signal_emit (player, signals[MISSING_PLUGINS], 0, details);
+    g_strfreev (details);
+  }
 }
 
 static gboolean
@@ -1819,6 +1837,15 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__ENUM_STRING_STRING_BOXED,
       G_TYPE_NONE, 4, SWFDEC_TYPE_LOADER_REQUEST, G_TYPE_STRING, G_TYPE_STRING, 
       SWFDEC_TYPE_BUFFER);
+  /**
+   * SwfdecPlayer::missing-plugins:
+   * @player: the #SwfdecPlayer missing plugins
+   * @details: the details strigs for all missing plugins
+   *
+   */
+  signals[MISSING_PLUGINS] = g_signal_new ("missing-plugins", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__BOXED,
+      G_TYPE_NONE, 1, G_TYPE_STRV);
 
   context_class->mark = swfdec_player_mark;
   context_class->get_time = swfdec_player_get_time;
@@ -2205,6 +2232,49 @@ swfdec_player_load (SwfdecPlayer *player, const char *url,
   klass->load (loader, player, url, request, buffer);
 
   return loader;
+}
+
+void
+swfdec_player_use_audio_codec (SwfdecPlayer *player, guint codec, 
+    SwfdecAudioFormat format)
+{
+  SwfdecPlayerPrivate *priv;
+  char *detail;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  detail = swfdec_audio_decoder_gst_missing (codec, format);
+  if (detail == NULL)
+    return;
+
+  priv = player->priv;
+  if (g_slist_find_custom (priv->missing_plugins, detail, (GCompareFunc) strcmp)) {
+    g_free (detail);
+    return;
+  }
+
+  priv->missing_plugins = g_slist_prepend (priv->missing_plugins, detail);
+}
+
+void
+swfdec_player_use_video_codec (SwfdecPlayer *player, guint codec)
+{
+  SwfdecPlayerPrivate *priv;
+  char *detail;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  detail = swfdec_video_decoder_gst_missing (codec);
+  if (detail == NULL)
+    return;
+
+  priv = player->priv;
+  if (g_slist_find_custom (priv->missing_plugins, detail, (GCompareFunc) strcmp)) {
+    g_free (detail);
+    return;
+  }
+
+  priv->missing_plugins = g_slist_prepend (priv->missing_plugins, detail);
 }
 
 /** PUBLIC API ***/

@@ -22,11 +22,61 @@
 #endif
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/pbutils/pbutils.h>
 
 #include "swfdec_codec_audio.h"
 #include "swfdec_codec_video.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
+
+/*** CAPS MATCHING ***/
+
+static GstCaps *
+swfdec_audio_decoder_get_caps (guint codec, SwfdecAudioFormat format)
+{
+  GstCaps *caps;
+  char *s;
+
+  switch (codec) {
+    case SWFDEC_AUDIO_CODEC_MP3:
+      s = g_strdup ("audio/mpeg, mpegversion=(int)1, layer=(int)3");
+      break;
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ:
+      s = g_strdup ("audio/x-nellymoser, rate=8000, channels=1");
+      break;
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER:
+      s = g_strdup_printf ("audio/x-nellymoser, rate=%d, channels=%d",
+	  swfdec_audio_format_get_rate (format), 
+	  swfdec_audio_format_get_channels (format));
+      break;
+    default:
+      return NULL;
+  }
+
+  caps = gst_caps_from_string (s);
+  g_assert (caps);
+  g_free (s);
+  return caps;
+}
+
+static GstCaps *
+swfdec_video_decoder_get_caps (guint codec)
+{
+  GstCaps *caps;
+
+  switch (codec) {
+    case SWFDEC_VIDEO_CODEC_H263:
+      caps = gst_caps_from_string ("video/x-flash-video");
+      break;
+    case SWFDEC_VIDEO_CODEC_VP6:
+      caps = gst_caps_from_string ("video/x-vp6-flash");
+      break;
+    default:
+      return NULL;
+  }
+  g_assert (caps);
+  return caps;
+}
 
 /*** BUFFER ***/
 
@@ -110,10 +160,10 @@ swfdec_gst_compare_features (gconstpointer a_, gconstpointer b_)
   return strcmp (gst_plugin_feature_get_name (a), gst_plugin_feature_get_name (b));
 }
 
-static GstElement *
-swfdec_gst_get_element (GstCaps *caps)
+static GstElementFactory *
+swfdec_gst_get_element_factory (GstCaps *caps)
 {
-  GstElement *element;
+  GstElementFactory *ret;
   GList *list;
 
   list = gst_registry_feature_filter (gst_registry_get_default (), 
@@ -122,9 +172,9 @@ swfdec_gst_get_element (GstCaps *caps)
     return NULL;
 
   list = g_list_sort (list, swfdec_gst_compare_features);
-  element = gst_element_factory_create (list->data, "decoder");
+  ret = list->data;
   gst_plugin_feature_list_free (list);
-  return element;
+  return ret;
 }
 
 /*** PADS ***/
@@ -208,7 +258,8 @@ swfdec_gst_decoder_init (SwfdecGstDecoder *dec, const char *name, GstCaps *srcca
   if (name) {
     dec->decoder = gst_element_factory_make (name, "decoder");
   } else {
-    dec->decoder = swfdec_gst_get_element (srccaps);
+    GstElementFactory *factory = swfdec_gst_get_element_factory (srccaps);
+    dec->decoder = gst_element_factory_create (factory, "decoder");
   }
   if (dec->decoder == NULL) {
     SWFDEC_ERROR ("failed to create decoder");
@@ -396,15 +447,11 @@ swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
 
   if (!gst_init_check (NULL, NULL, NULL))
     return NULL;
+  gst_pb_utils_init ();
 
-  switch (type) {
-    case SWFDEC_AUDIO_CODEC_MP3:
-      srccaps = gst_caps_from_string ("audio/mpeg, mpegversion=(int)1, layer=(int)3");
-      break;
-    default:
-      return NULL;
-  }
-  g_assert (srccaps);
+  srccaps = swfdec_audio_decoder_get_caps (type, format);
+  if (srccaps == NULL)
+    return NULL;
 
   player = g_slice_new0 (SwfdecGstAudio);
   player->decoder.format = SWFDEC_AUDIO_FORMAT_INVALID;
@@ -566,18 +613,11 @@ swfdec_video_decoder_gst_new (guint codec)
 
   if (!gst_init_check (NULL, NULL, NULL))
     return NULL;
+  gst_pb_utils_init ();
 
-  switch (codec) {
-    case SWFDEC_VIDEO_CODEC_H263:
-      srccaps = gst_caps_from_string ("video/x-flash-video");
-      break;
-    case SWFDEC_VIDEO_CODEC_VP6:
-      srccaps = gst_caps_from_string ("video/x-vp6-flash");
-      break;
-    default:
-      return NULL;
-  }
-  g_assert (srccaps);
+  srccaps = swfdec_video_decoder_get_caps (codec);
+  if (srccaps == NULL)
+    return NULL;
   sinkcaps = swfdec_video_decoder_get_sink_caps (codec);
 
   player = g_slice_new0 (SwfdecGstVideo);
@@ -594,5 +634,57 @@ swfdec_video_decoder_gst_new (guint codec)
   gst_caps_unref (srccaps);
   gst_caps_unref (sinkcaps);
   return &player->decoder;
+}
+
+/*** MISSING PLUGIN SUPPORT ***/
+  
+char *
+swfdec_audio_decoder_gst_missing (guint codec, SwfdecAudioFormat format)
+{
+  GstElementFactory *factory;
+  GstCaps *caps;
+  char *ret;
+
+  /* Check if we can handle the format at all. If not, no plugin will help us. */
+  caps = swfdec_audio_decoder_get_caps (codec, format);
+  if (caps == NULL)
+    return NULL;
+
+  /* If we can already handle it, woohoo! */
+  factory = swfdec_gst_get_element_factory (caps);
+  if (factory != NULL)
+    return NULL;
+
+  /* need to install plugins... */
+  ret = gst_missing_decoder_installer_detail_new (caps);
+  gst_caps_unref (caps);
+  return ret;
+}
+
+char *
+swfdec_video_decoder_gst_missing (guint	codec)
+{
+  GstElementFactory *factory;
+  GstCaps *caps;
+  char *ret;
+
+  /* This is necessary because the VP6 alpha decoder uses 2 VP6 decoders */
+  if (codec == SWFDEC_VIDEO_CODEC_VP6_ALPHA)
+    codec = SWFDEC_VIDEO_CODEC_VP6;
+
+  /* Check if we can handle the format at all. If not, no plugin will help us. */
+  caps = swfdec_video_decoder_get_caps (codec);
+  if (caps == NULL)
+    return NULL;
+
+  /* If we can already handle it, woohoo! */
+  factory = swfdec_gst_get_element_factory (caps);
+  if (factory != NULL)
+    return NULL;
+
+  /* need to install plugins... */
+  ret = gst_missing_decoder_installer_detail_new (caps);
+  gst_caps_unref (caps);
+  return ret;
 }
 

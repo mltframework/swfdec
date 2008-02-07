@@ -44,6 +44,10 @@ SwfdecAudioDecoder *	swfdec_audio_decoder_ffmpeg_new		(guint			type,
 #ifdef HAVE_GST
 SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(guint			type, 
 								 SwfdecAudioFormat	format);
+char *			swfdec_audio_decoder_gst_missing      	(guint			codec,
+								 SwfdecAudioFormat	format);
+#else
+#define swfdec_audio_decoder_gst_missing(codec) NULL
 #endif
 
 /* video codecs */
@@ -55,6 +59,9 @@ SwfdecVideoDecoder *	swfdec_video_decoder_ffmpeg_new		(guint			format);
 #endif
 #ifdef HAVE_GST
 SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(guint			format);
+char *			swfdec_video_decoder_gst_missing      	(guint			codec);
+#else
+#define swfdec_video_decoder_gst_missing(codec) NULL
 #endif
 
 /* AS engine setup code */

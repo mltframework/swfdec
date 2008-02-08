@@ -171,10 +171,9 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
   event->decoded = swfdec_sound_get_decoded (event->sound,
       &event->decoded_format);
   if (event->decoded == NULL) {
-    SWFDEC_INFO ("Could not decode audio. Will assume %u samples of silence instead.",
-	event->sound->n_samples);
-    event->decoded = swfdec_buffer_new0 (event->sound->n_samples / 4);
-    event->decoded_format = swfdec_audio_format_new (5512, 1, FALSE);
+    SWFDEC_INFO ("Could not decode audio.");
+    event->n_samples = 0;
+    return;
   } else {
     swfdec_buffer_ref (event->decoded);
   }

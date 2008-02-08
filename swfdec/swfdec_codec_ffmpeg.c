@@ -287,6 +287,14 @@ swfdec_video_decoder_ffmpeg_free (SwfdecVideoDecoder *dec)
   g_free (codec);
 }
 
+gboolean
+swfdec_video_decoder_ffmpeg_prepare (guint codec, char **detail)
+{
+  return codec == SWFDEC_VIDEO_CODEC_H263 ||
+    codec == SWFDEC_VIDEO_CODEC_SCREEN ||
+    codec == SWFDEC_VIDEO_CODEC_VP6;
+}
+
 SwfdecVideoDecoder *
 swfdec_video_decoder_ffmpeg_new (guint type)
 {

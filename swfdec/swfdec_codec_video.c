@@ -27,6 +27,12 @@
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 
+static gboolean
+swfdec_video_decoder_builtin_prepare (guint codec, char **detail)
+{
+  return codec == SWFDEC_VIDEO_CODEC_SCREEN;
+}
+
 static SwfdecVideoDecoder *
 swfdec_video_decoder_builtin_new (guint codec)
 {
@@ -39,19 +45,46 @@ swfdec_video_decoder_builtin_new (guint codec)
   return ret;
 }
 
-struct {
+static const struct {
   const char *		name;
   SwfdecVideoDecoder *	(* func) (guint);
+  gboolean		(* prepare) (guint, char **);
 } video_codecs[] = {
-  { "builtin",	swfdec_video_decoder_builtin_new },
+    { "builtin",	swfdec_video_decoder_builtin_new,	swfdec_video_decoder_builtin_prepare }
 #ifdef HAVE_GST
-  { "gst",	swfdec_video_decoder_gst_new },
+  , { "gst",		swfdec_video_decoder_gst_new,		swfdec_video_decoder_gst_prepare }
 #endif
 #ifdef HAVE_FFMPEG
-  { "ffmpeg",	swfdec_video_decoder_ffmpeg_new },
+  , { "ffmpeg",		swfdec_video_decoder_ffmpeg_new,	swfdec_video_decoder_ffmpeg_prepare }
 #endif
-  { NULL, }
 };
+
+char *
+swfdec_video_decoder_prepare (guint codec)
+{
+  char *detail = NULL, *s = NULL;
+  guint i;
+  
+  /* the builtin codec is implemented as a wrapper around VP6 */
+  if (codec == SWFDEC_VIDEO_CODEC_VP6_ALPHA)
+    codec = SWFDEC_VIDEO_CODEC_VP6;
+
+  for (i = 0; i < G_N_ELEMENTS (video_codecs); i++) {
+    if (video_codecs[i].prepare (codec, &s)) {
+      g_free (detail);
+      g_free (s);
+      return NULL;
+    }
+    if (s) {
+      if (detail == NULL)
+	detail = s;
+      else
+	g_free (s);
+      s = NULL;
+    }
+  }
+  return detail;
+}
 
 /**
  * swfdec_video_decoder_new:
@@ -65,35 +98,13 @@ struct {
 SwfdecVideoDecoder *
 swfdec_video_decoder_new (guint codec)
 {
-  SwfdecVideoDecoder *ret;
-  const char *list;
+  SwfdecVideoDecoder *ret = NULL;
+  guint i;
 
-  list = g_getenv ("SWFDEC_CODEC_VIDEO");
-  if (list == NULL)
-    list = g_getenv ("SWFDEC_CODEC");
-  if (list == NULL) {
-    guint i;
-    ret = NULL;
-    for (i = 0; video_codecs[i].name != NULL; i++) {
-      ret = video_codecs[i].func (codec);
-      if (ret)
-	break;
-    }
-  } else {
-    char **split = g_strsplit (list, ",", -1);
-    guint i, j;
-    ret = NULL;
-    SWFDEC_LOG ("codecs limited to \"%s\"", list);
-    for (i = 0; split[i] != NULL && ret == NULL; i++) {
-      for (j = 0; video_codecs[j].name != NULL; j++) {
-	if (g_ascii_strcasecmp (video_codecs[j].name, split[i]) != 0)
-	  continue;
-	ret = video_codecs[j].func (codec);
-	if (ret)
-	  break;
-      }
-    }
-    g_strfreev (split);
+  for (i = 0; i < G_N_ELEMENTS (video_codecs); i++) {
+    ret = video_codecs[i].func (codec);
+    if (ret)
+      break;
   }
 
   if (ret != NULL) {

@@ -61,12 +61,13 @@ SwfdecVideoDecoder *	swfdec_video_decoder_screen_new		(guint			format);
 SwfdecVideoDecoder *	swfdec_video_decoder_vp6_alpha_new    	(guint			format);
 #ifdef HAVE_FFMPEG
 SwfdecVideoDecoder *	swfdec_video_decoder_ffmpeg_new		(guint			format);
+gboolean		swfdec_video_decoder_ffmpeg_prepare	(guint			codec,
+								 char **		detail);
 #endif
 #ifdef HAVE_GST
 SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(guint			format);
-char *			swfdec_video_decoder_gst_missing      	(guint			codec);
-#else
-#define swfdec_video_decoder_gst_missing(codec) NULL
+gboolean		swfdec_video_decoder_gst_prepare	(guint			codec,
+								 char **		detail);
 #endif
 
 /* AS engine setup code */

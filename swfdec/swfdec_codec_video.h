@@ -64,6 +64,7 @@ struct _SwfdecVideoDecoder {
 
 SwfdecVideoFormat     	swfdec_video_codec_get_format	(guint			codec);
 
+char *			swfdec_video_decoder_prepare	(guint			codec);
 SwfdecVideoDecoder *	swfdec_video_decoder_new      	(guint			codec);
 void			swfdec_video_decoder_free	(SwfdecVideoDecoder *   decoder);
 

@@ -2262,7 +2262,7 @@ swfdec_player_use_video_codec (SwfdecPlayer *player, guint codec)
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  detail = swfdec_video_decoder_gst_missing (codec);
+  detail = swfdec_video_decoder_prepare (codec);
   if (detail == NULL)
     return;
 

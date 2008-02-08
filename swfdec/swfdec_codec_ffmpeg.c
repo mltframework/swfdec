@@ -169,6 +169,12 @@ swfdec_audio_decoder_ffmpeg_free (SwfdecAudioDecoder *dec)
   g_slice_free (SwfdecAudioDecoderFFMpeg, ffmpeg);
 }
 
+gboolean
+swfdec_audio_decoder_ffmpeg_prepare (guint type, SwfdecAudioFormat format, char **details)
+{
+  return type == SWFDEC_AUDIO_CODEC_MP3 || type == SWFDEC_AUDIO_CODEC_ADPCM;
+}
+
 SwfdecAudioDecoder *
 swfdec_audio_decoder_ffmpeg_new (guint type, SwfdecAudioFormat format)
 {
@@ -279,6 +285,14 @@ swfdec_video_decoder_ffmpeg_free (SwfdecVideoDecoder *dec)
   av_free (codec->ctx);
   av_free (codec->frame);
   g_free (codec);
+}
+
+gboolean
+swfdec_video_decoder_ffmpeg_prepare (guint codec, char **detail)
+{
+  return codec == SWFDEC_VIDEO_CODEC_H263 ||
+    codec == SWFDEC_VIDEO_CODEC_SCREEN ||
+    codec == SWFDEC_VIDEO_CODEC_VP6;
 }
 
 SwfdecVideoDecoder *

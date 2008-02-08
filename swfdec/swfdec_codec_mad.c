@@ -208,6 +208,12 @@ swfdec_audio_decoder_mad_pull (SwfdecAudioDecoder *dec)
   return swfdec_buffer_queue_pull_buffer (((MadData *) dec)->queue);
 }
 
+gboolean
+swfdec_audio_decoder_mad_prepare (guint type, SwfdecAudioFormat format, char **details)
+{
+  return type == SWFDEC_AUDIO_CODEC_MP3;
+}
+
 SwfdecAudioDecoder *
 swfdec_audio_decoder_mad_new (guint type, SwfdecAudioFormat format)
 {

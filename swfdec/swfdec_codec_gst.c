@@ -634,57 +634,51 @@ swfdec_video_decoder_gst_new (guint codec)
 
 /*** MISSING PLUGIN SUPPORT ***/
   
-char *
-swfdec_audio_decoder_gst_missing (guint codec, SwfdecAudioFormat format)
+gboolean
+swfdec_audio_decoder_gst_prepare (guint codec, SwfdecAudioFormat format, char **detail)
 {
   GstElementFactory *factory;
   GstCaps *caps;
-  char *ret;
 
   /* Check if we can handle the format at all. If not, no plugin will help us. */
   caps = swfdec_audio_decoder_get_caps (codec, format);
   if (caps == NULL)
-    return NULL;
+    return FALSE;
 
   /* If we can already handle it, woohoo! */
   factory = swfdec_gst_get_element_factory (caps);
   if (factory != NULL) {
     gst_object_unref (factory);
-    return NULL;
+    return TRUE;
   }
 
   /* need to install plugins... */
-  ret = gst_missing_decoder_installer_detail_new (caps);
+  *detail = gst_missing_decoder_installer_detail_new (caps);
   gst_caps_unref (caps);
-  return ret;
+  return FALSE;
 }
 
-char *
-swfdec_video_decoder_gst_missing (guint	codec)
+gboolean
+swfdec_video_decoder_gst_prepare (guint codec, char **detail)
 {
   GstElementFactory *factory;
   GstCaps *caps;
-  char *ret;
-
-  /* This is necessary because the VP6 alpha decoder uses 2 VP6 decoders */
-  if (codec == SWFDEC_VIDEO_CODEC_VP6_ALPHA)
-    codec = SWFDEC_VIDEO_CODEC_VP6;
 
   /* Check if we can handle the format at all. If not, no plugin will help us. */
   caps = swfdec_video_decoder_get_caps (codec);
   if (caps == NULL)
-    return NULL;
+    return FALSE;
 
   /* If we can already handle it, woohoo! */
   factory = swfdec_gst_get_element_factory (caps);
   if (factory != NULL) {
     gst_object_unref (factory);
-    return NULL;
+    return TRUE;
   }
 
   /* need to install plugins... */
-  ret = gst_missing_decoder_installer_detail_new (caps);
+  *detail = gst_missing_decoder_installer_detail_new (caps);
   gst_caps_unref (caps);
-  return ret;
+  return FALSE;
 }
 

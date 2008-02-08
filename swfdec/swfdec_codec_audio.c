@@ -121,22 +121,57 @@ swfdec_audio_decoder_builtin_new (guint codec, SwfdecAudioFormat format)
   return ret;
 }
 
-struct {
+static gboolean
+swfdec_audio_decoder_builtin_prepare (guint codec, SwfdecAudioFormat format, char **detail)
+{
+  return codec == SWFDEC_AUDIO_CODEC_UNCOMPRESSED ||
+    codec == SWFDEC_AUDIO_CODEC_UNDEFINED ||
+    codec == SWFDEC_AUDIO_CODEC_ADPCM;
+}
+
+static const struct {
   const char *		name;
   SwfdecAudioDecoder *	(* func) (guint, SwfdecAudioFormat);
+  gboolean		(* prepare) (guint, SwfdecAudioFormat, char **);
 } audio_codecs[] = {
-  { "builtin",	swfdec_audio_decoder_builtin_new },
+  { "builtin",	swfdec_audio_decoder_builtin_new, swfdec_audio_decoder_builtin_prepare },
 #ifdef HAVE_GST
-  { "gst",	swfdec_audio_decoder_gst_new },
+  { "gst",	swfdec_audio_decoder_gst_new, swfdec_audio_decoder_gst_prepare },
 #endif
 #ifdef HAVE_MAD
-  { "mad",	swfdec_audio_decoder_mad_new },
+  { "mad",	swfdec_audio_decoder_mad_new, swfdec_audio_decoder_mad_prepare },
 #endif
 #ifdef HAVE_FFMPEG
-  { "ffmpeg",	swfdec_audio_decoder_ffmpeg_new },
+  { "ffmpeg",	swfdec_audio_decoder_ffmpeg_new, swfdec_audio_decoder_ffmpeg_prepare }
 #endif
-  { NULL, }
 };
+
+gboolean
+swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **missing)
+{
+  char *detail = NULL, *s = NULL;
+  guint i;
+  
+  for (i = 0; i < G_N_ELEMENTS (audio_codecs); i++) {
+    if (audio_codecs[i].prepare (codec, format, &s)) {
+      g_free (detail);
+      g_free (s);
+      if (missing)
+	*missing = NULL;
+      return TRUE;
+    }
+    if (s) {
+      if (detail == NULL)
+	detail = s;
+      else
+	g_free (s);
+      s = NULL;
+    }
+  }
+  if (missing)
+    *missing = detail;
+  return FALSE;
+}
 
 /**
  * swfdec_audio_decoder_new:
@@ -150,37 +185,16 @@ struct {
 SwfdecAudioDecoder *
 swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format)
 {
-  SwfdecAudioDecoder *ret;
-  const char *list;
+  SwfdecAudioDecoder *ret = NULL;
+  guint i;
 
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), NULL);
 
-  list = g_getenv ("SWFDEC_CODEC_AUDIO");
-  if (list == NULL)
-    list = g_getenv ("SWFDEC_CODEC");
-  if (list == NULL) {
-    guint i;
-    ret = NULL;
-    for (i = 0; audio_codecs[i].name != NULL; i++) {
-      ret = audio_codecs[i].func (codec, format);
-      if (ret)
-	break;
-    }
-  } else {
-    char **split = g_strsplit (list, ",", -1);
-    guint i, j;
-    ret = NULL;
-    SWFDEC_LOG ("codecs limited to \"%s\"", list);
-    for (i = 0; split[i] != NULL && ret == NULL; i++) {
-      for (j = 0; audio_codecs[j].name != NULL; j++) {
-	if (g_ascii_strcasecmp (audio_codecs[j].name, split[i]) != 0)
-	  continue;
-	ret = audio_codecs[j].func (codec, format);
-	if (ret)
-	  break;
-      }
-    }
-    g_strfreev (split);
+  g_print ("new decoder for format %u\n", codec);
+  for (i = 0; i < G_N_ELEMENTS (audio_codecs); i++) {
+    ret = audio_codecs[i].func (codec, format);
+    if (ret)
+      break;
   }
 
   if (ret) {

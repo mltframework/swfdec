@@ -198,8 +198,9 @@ SwfdecBuffer
 SwfdecBufferQueue
 SwfdecBufferFreeFunc
 swfdec_buffer_new
-swfdec_buffer_new_and_alloc
-swfdec_buffer_new_and_alloc0
+swfdec_buffer_new0
+swfdec_buffer_new_full
+swfdec_buffer_new_static
 swfdec_buffer_new_for_data
 swfdec_buffer_new_subbuffer
 swfdec_buffer_new_from_file
@@ -217,6 +218,7 @@ swfdec_buffer_queue_pull
 swfdec_buffer_queue_pull_buffer
 swfdec_buffer_queue_peek
 swfdec_buffer_queue_peek_buffer
+swfdec_buffer_queue_flush
 <SUBSECTION Standard>
 SWFDEC_TYPE_BUFFER
 swfdec_buffer_get_type
@@ -265,6 +267,8 @@ swfdec_gtk_player_get_speed
 swfdec_gtk_player_set_speed
 swfdec_gtk_player_get_audio_enabled
 swfdec_gtk_player_set_audio_enabled
+swfdec_gtk_player_get_missing_plugins_window
+swfdec_gtk_player_set_missing_plugins_window
 <SUBSECTION Standard>
 SwfdecGtkPlayerPrivate
 SwfdecGtkPlayerClass

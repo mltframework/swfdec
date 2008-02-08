@@ -29,16 +29,15 @@
 static void
 swfdec_test_plugin_swfdec_advance (SwfdecTestPlugin *plugin, unsigned int msecs)
 {
-  if (msecs == 0) {
+  while (plugin->data && msecs > 0) {
+    long next_event = swfdec_player_get_next_event (plugin->data);
+    if (next_event < 0)
+      break;
+    next_event = MIN (next_event, (long) msecs);
+    msecs -= swfdec_player_advance (plugin->data, next_event);
+  }
+  while (plugin->data && swfdec_player_get_next_event (plugin->data) == 0) {
     swfdec_player_advance (plugin->data, 0);
-  } else {
-    while (msecs > 0 && plugin->data) {
-      long next_event = swfdec_player_get_next_event (plugin->data);
-      if (next_event < 0)
-	break;
-      next_event = MIN (next_event, (long) msecs);
-      msecs -= swfdec_player_advance (plugin->data, next_event);
-    }
   }
 }
 

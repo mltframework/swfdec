@@ -1026,68 +1026,35 @@ swfdec_as_array_sort_compare (gconstpointer a_ptr, gconstpointer b_ptr,
   return retval;
 }
 
-typedef struct {
-  GArray *		array;
-  gint32		length;
-} SortCollectData;
-
-static gboolean
-swfdec_as_array_foreach_sort_collect (SwfdecAsObject *object,
-    const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
-{
-  SortCollectData *collect_data = data;
-  SortEntry entry;
-  gint32 index_;
-
-  index_ = swfdec_as_array_to_index (variable);
-  if (index_ == -1 || index_ >= collect_data->length)
-    return TRUE;
-
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
-    return TRUE;
-
-  entry.index_ = index_;
-  entry.value = *value;
-
-  g_array_append_val (collect_data->array, entry);
-
-  return TRUE;
-}
-
 static int
-compare (GArray *array, GCompareDataFunc func, guint a, guint b,
+compare (SortEntry *array, GCompareDataFunc func, gint32 a, gint32 b,
     gpointer user_data)
 {
   g_return_val_if_fail (array != NULL, 0);
   g_return_val_if_fail (func != NULL, 0);
-  g_return_val_if_fail (a < array->len, 0);
-  g_return_val_if_fail (b < array->len, 0);
 
-  return func (&g_array_index (array, SortEntry, a),
-      &g_array_index (array, SortEntry, b), user_data);
+  return func (&array[a], &array[b], user_data);
 }
 
 static void
-swap (GArray *array, guint a, guint b)
+swap (SortEntry *array, gint32 a, gint32 b)
 {
   SortEntry tmp;
 
   g_return_if_fail (array != NULL);
-  g_return_if_fail (a < array->len);
-  g_return_if_fail (b < array->len);
 
-  tmp = g_array_index (array, SortEntry, a);
-  g_array_index (array, SortEntry, a) = g_array_index (array, SortEntry, b);
-  g_array_index (array, SortEntry, b) = tmp;
+  tmp = array[a];
+  array[a] = array[b];
+  array[b] = tmp;
 }
 
-typedef struct { guint lo, hi; } StackFrame;
+typedef struct { gint32 lo, hi; } StackFrame;
 
 // non-recursive qsort algorithm from Tamarin, ArrayClass.cpp
 // imported Tue Feb 05 22:55:24 2008 +1100, 5272194dd87c
 static void
-my_g_array_sort_with_data (GArray *array, GCompareDataFunc func,
-    gpointer user_data)
+my_g_array_sort_with_data (SortEntry *array, gint32 length,
+    GCompareDataFunc func, gpointer user_data)
 {
   // This is an iterative implementation of the recursive quick sort.
   // Recursive implementations are basically storing nested (lo,hi) pairs
@@ -1098,8 +1065,8 @@ my_g_array_sort_with_data (GArray *array, GCompareDataFunc func,
   // the greatest stack depth happens with equal partitions, all the way down,
   // which would be 1 + log2(size), which could never exceed 33.
 
-  guint lo, hi;
-  guint size;
+  gint32 lo, hi;
+  gint32 size;
   StackFrame stk[33];
   int stkptr = 0;
 
@@ -1107,7 +1074,7 @@ my_g_array_sort_with_data (GArray *array, GCompareDataFunc func,
   g_return_if_fail (func != NULL);
 
   lo = 0;
-  hi = array->len - 1;
+  hi = length - 1;
 
   // leave without doing anything if the array is empty (lo > hi) or only one element (lo == hi)
   if (lo >= hi)
@@ -1158,9 +1125,9 @@ recurse:
     // you use the midpoint as the pivot, but the algorithm is simpler
     // if the pivot is at the start of the list, so move the middle
     // element to the front!
-    guint pivot = lo + (size / 2);
-    guint left = lo;
-    guint right = hi + 1;
+    gint32 pivot = lo + (size / 2);
+    gint32 left = lo;
+    gint32 right = hi + 1;
 
     swap (array, pivot, lo);
 
@@ -1245,15 +1212,39 @@ recurse:
   return;
 }
 
+typedef struct {
+  SortEntry *		array;
+  gint32		length;
+} SortCollectData;
+
+static gboolean
+swfdec_as_array_foreach_sort_collect (SwfdecAsObject *object,
+    const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
+{
+  SortCollectData *collect_data = data;
+  gint32 index_;
+
+  index_ = swfdec_as_array_to_index (variable);
+  if (index_ == -1 || index_ >= collect_data->length)
+    return TRUE;
+
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (value))
+    return TRUE;
+
+  collect_data->array[index_].value = *value;
+
+  return TRUE;
+}
+
 static void
 swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     SortOption *options, SwfdecAsFunction *custom_function, const char **fields,
     SwfdecAsValue *ret)
 {
-  GArray *array;
+  SortEntry *array;
   SortCollectData collect_data;
   SortCompareData compare_data;
-  gint32 i, offset, length;
+  gint32 i, length;
   const char *var;
   SwfdecAsObject *target;
   SwfdecAsValue val;
@@ -1266,7 +1257,22 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   g_return_if_fail (fields == NULL || fields[0] != NULL);
 
   length = swfdec_as_array_length (object);
-  array = g_array_new (TRUE, TRUE, sizeof (SortEntry));
+  if (length == 0) {
+    // special case for empty array, because g_try_new0 would return NULL
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+    return;
+  }
+
+  array = g_try_new0 (SortEntry, length);
+  if (!array) {
+    SWFDEC_WARNING ("Not sorting array, it's too big");
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+    return;
+  }
+
+  for (i = 0; i < length; i++) {
+    array[i].index_ = i;
+  }
 
   // collect values and indexes to the array
   collect_data.length = length;
@@ -1275,23 +1281,6 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_foreach (object, swfdec_as_array_foreach_sort_collect,
 	&collect_data);
 
-  // if there are missing properties, add one to the array with special index
-  if ((gint32)array->len < length) {
-    SortEntry entry;
-
-    // if doing unique sort and there is more than one missing value we fail
-    if ((options[0] & SORT_OPTION_UNIQUESORT) &&
-	(gint32)array->len < length - 1) {
-      SWFDEC_AS_VALUE_SET_INT (ret, 0);
-      return;
-    }
-
-    entry.index_ = -1;
-    SWFDEC_AS_VALUE_SET_UNDEFINED (&entry.value);
-
-    g_array_append_val (array, entry);
-  }
-
   // sort the array
   compare_data.context = cx;
   compare_data.fields = fields;
@@ -1299,7 +1288,7 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   compare_data.custom_function = custom_function;
   compare_data.equal_found = FALSE;
 
-  my_g_array_sort_with_data (array, swfdec_as_array_sort_compare, &compare_data);
+  my_g_array_sort_with_data (array, length, swfdec_as_array_sort_compare, &compare_data);
 
   // check unique sort
   if ((options[0] & SORT_OPTION_UNIQUESORT) && compare_data.equal_found) {
@@ -1315,40 +1304,24 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     target = object;
   }
 
-  offset = 0;
-  for (i = 0; i < (gint32)array->len; i++) {
-    SortEntry *entry = &g_array_index (array, SortEntry, i);
+  for (i = 0; i < length; i++) {
+    SortEntry *entry = &array[i];
 
     // set only the values that have new indexes
     if (!(options[0] & SORT_OPTION_RETURNINDEXEDARRAY) &&
-	entry->index_ == i + offset)
+	entry->index_ == i)
       continue;
 
-    var = swfdec_as_integer_to_string (cx, i + offset);
+    var = swfdec_as_integer_to_string (cx, i);
     if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
       SWFDEC_AS_VALUE_SET_INT (&val, entry->index_);
       swfdec_as_object_set_variable (target, var, &val);
     } else {
       swfdec_as_object_set_variable (target, var, &entry->value);
     }
-
-    // special element for missing properties, add all missing properties here
-    if (entry->index_ == -1) {
-      g_assert (offset == 0);
-      for (offset = 0; offset < length - (gint32)array->len; offset++) {
-	var = swfdec_as_integer_to_string (cx, i + offset + 1);
-	if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
-	  SWFDEC_FIXME ("Array.sort with RETURNINDEXEDARRAY and missing elements not implemented");
-	  SWFDEC_AS_VALUE_SET_INT (&val, -1);
-	  swfdec_as_object_set_variable (target, var, &val);
-	} else {
-	  swfdec_as_object_set_variable (object, var, &entry->value);
-	}
-      }
-    }
   }
 
-  g_array_free (array, TRUE);
+  g_free (array);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, target);
 }

@@ -21,6 +21,7 @@
 #define _SWFDEC_GTK_PLAYER_H_
 
 #include <swfdec/swfdec.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -62,6 +63,11 @@ gboolean	swfdec_gtk_player_get_audio_enabled
 void		swfdec_gtk_player_set_speed	(SwfdecGtkPlayer *	player,
 						 double			speed);
 double		swfdec_gtk_player_get_speed 	(SwfdecGtkPlayer *	player);
+void		swfdec_gtk_player_set_missing_plugins_window
+						(SwfdecGtkPlayer *	player,
+						 GdkWindow *		window);
+GdkWindow *	swfdec_gtk_player_get_missing_plugins_window
+						(SwfdecGtkPlayer *	player);
 
 
 

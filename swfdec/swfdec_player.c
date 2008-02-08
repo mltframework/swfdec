@@ -22,6 +22,8 @@
 #endif
 
 #include <errno.h>
+#include <gst/gst.h>
+#include <gst/pbutils/pbutils.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -36,6 +38,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
+#include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
@@ -240,7 +243,12 @@ swfdec_player_get_next_event_time (SwfdecPlayer *player)
   SwfdecPlayerPrivate *priv = player->priv;
 
   if (priv->timeouts) {
-    return ((SwfdecTimeout *) priv->timeouts->data)->timestamp - priv->time;
+    SwfdecTick next = ((SwfdecTimeout *) priv->timeouts->data)->timestamp;
+    /* This can happen because advancing only uses millisecond granularity */
+    if (next < priv->time)
+      return 0;
+    else
+      return next - priv->time;
   } else {
     return G_MAXUINT64;
   }
@@ -597,6 +605,7 @@ enum {
   AUDIO_REMOVED,
   LAUNCH,
   FSCOMMAND,
+  MISSING_PLUGINS,
   LAST_SIGNAL
 };
 
@@ -1268,6 +1277,22 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
     audio->added = TRUE;
   }
+
+  /* emit missing-plugin signal for newly discovered plugins */
+  if (priv->missing_plugins) {
+    GSList *swalk;
+    guint i = 0;
+    char **details = g_new (char *, g_slist_length (priv->missing_plugins) + 1);
+
+    for (swalk = priv->missing_plugins; swalk; swalk = swalk->next) {
+      details[i++] = swalk->data;
+    }
+    details[i] = NULL;
+    g_slist_free (priv->missing_plugins);
+    priv->missing_plugins = NULL;
+    g_signal_emit (player, signals[MISSING_PLUGINS], 0, details);
+    g_strfreev (details);
+  }
 }
 
 static gboolean
@@ -1423,36 +1448,26 @@ swfdec_player_do_advance (SwfdecPlayer *player, gulong msecs, guint audio_sample
   SwfdecPlayerPrivate *priv = player->priv;
   SwfdecTimeout *timeout;
   SwfdecTick target_time;
-  guint frames_now;
   
   if (!swfdec_player_lock (player))
     return;
 
+  g_assert (priv->timeouts != NULL);
+
   target_time = priv->time + SWFDEC_MSECS_TO_TICKS (msecs);
   SWFDEC_DEBUG ("advancing %lu msecs (%u audio frames)", msecs, audio_samples);
 
-  for (timeout = priv->timeouts ? priv->timeouts->data : NULL;
-       timeout && timeout->timestamp <= target_time; 
-       timeout = priv->timeouts ? priv->timeouts->data : NULL) {
+  timeout = priv->timeouts->data;
+  swfdec_player_advance_audio (player, audio_samples);
+  if (timeout->timestamp <= target_time) {
     priv->timeouts = g_list_remove (priv->timeouts, timeout);
-    frames_now = SWFDEC_TICKS_TO_SAMPLES (timeout->timestamp) -
-      SWFDEC_TICKS_TO_SAMPLES (priv->time);
     priv->time = timeout->timestamp;
-    swfdec_player_advance_audio (player, frames_now);
-    audio_samples -= frames_now;
-    SWFDEC_LOG ("activating timeout %p now (timeout is %"G_GUINT64_FORMAT", target time is %"G_GUINT64_FORMAT,
-	timeout, timeout->timestamp, target_time);
+    SWFDEC_LOG ("activating timeout %p now (timeout is %"G_GUINT64_FORMAT,
+	timeout, timeout->timestamp);
     timeout->callback (timeout);
     swfdec_player_perform_actions (player);
   }
-  if (target_time > priv->time) {
-    frames_now = SWFDEC_TICKS_TO_SAMPLES (target_time) -
-      SWFDEC_TICKS_TO_SAMPLES (priv->time);
-    priv->time = target_time;
-    swfdec_player_advance_audio (player, frames_now);
-    audio_samples -= frames_now;
-  }
-  g_assert (audio_samples == 0);
+  priv->time = target_time;
   
   g_object_notify (G_OBJECT (player), "next-event");
   swfdec_player_unlock (player);
@@ -1819,6 +1834,16 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__ENUM_STRING_STRING_BOXED,
       G_TYPE_NONE, 4, SWFDEC_TYPE_LOADER_REQUEST, G_TYPE_STRING, G_TYPE_STRING, 
       SWFDEC_TYPE_BUFFER);
+  /**
+   * SwfdecPlayer::missing-plugins:
+   * @player: the #SwfdecPlayer missing plugins
+   * @details: the details strigs for all missing plugins
+   *
+   */
+  signals[MISSING_PLUGINS] = g_signal_new ("missing-plugins", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, missing_plugins),
+      NULL, NULL, g_cclosure_marshal_VOID__BOXED,
+      G_TYPE_NONE, 1, G_TYPE_STRV);
 
   context_class->mark = swfdec_player_mark;
   context_class->get_time = swfdec_player_get_time;
@@ -2207,6 +2232,49 @@ swfdec_player_load (SwfdecPlayer *player, const char *url,
   return loader;
 }
 
+void
+swfdec_player_use_audio_codec (SwfdecPlayer *player, guint codec, 
+    SwfdecAudioFormat format)
+{
+  SwfdecPlayerPrivate *priv;
+  char *detail;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  detail = swfdec_audio_decoder_gst_missing (codec, format);
+  if (detail == NULL)
+    return;
+
+  priv = player->priv;
+  if (g_slist_find_custom (priv->missing_plugins, detail, (GCompareFunc) strcmp)) {
+    g_free (detail);
+    return;
+  }
+
+  priv->missing_plugins = g_slist_prepend (priv->missing_plugins, detail);
+}
+
+void
+swfdec_player_use_video_codec (SwfdecPlayer *player, guint codec)
+{
+  SwfdecPlayerPrivate *priv;
+  char *detail;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  detail = swfdec_video_decoder_gst_missing (codec);
+  if (detail == NULL)
+    return;
+
+  priv = player->priv;
+  if (g_slist_find_custom (priv->missing_plugins, detail, (GCompareFunc) strcmp)) {
+    g_free (detail);
+    return;
+  }
+
+  priv->missing_plugins = g_slist_prepend (priv->missing_plugins, detail);
+}
+
 /** PUBLIC API ***/
 
 /**
@@ -2259,6 +2327,10 @@ swfdec_init (void)
     g_thread_init (NULL);
   g_type_init ();
   oil_init ();
+#ifdef HAVE_GST
+  gst_init (NULL, NULL);
+  gst_pb_utils_init ();
+#endif
 
   s = g_getenv ("SWFDEC_DEBUG");
   if (s && s[0]) {
@@ -2471,23 +2543,36 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
 /**
  * swfdec_player_advance:
  * @player: the #SwfdecPlayer to advance
- * @msecs: number of milliseconds to advance
+ * @msecs: number of milliseconds to advance at maximum
  *
- * Advances @player by @msecs. You should make sure to call this function as
- * often as the SwfdecPlayer::next-event property indicates.
+ * Advances @player by @msecs or at most one event, whatever happens first in
+ * the player's timeline. You should make sure to call this function as often 
+ * as swfdec_player_get_next_event() indicates or your player will not appear 
+ * smooth.
+ *
+ * Returns: actual number of milliseconds advanced.
  **/
-void
+gulong
 swfdec_player_advance (SwfdecPlayer *player, gulong msecs)
 {
   SwfdecPlayerPrivate *priv;
   guint frames;
+  glong max;
 
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
 
+  /* find the max time to advance */
+  max = swfdec_player_get_next_event (player);
+  if (max < 0)
+    msecs = 0;
+  else
+    msecs = MIN ((gulong) max, msecs);
   priv = player->priv;
   frames = SWFDEC_TICKS_TO_SAMPLES (priv->time + SWFDEC_MSECS_TO_TICKS (msecs))
     - SWFDEC_TICKS_TO_SAMPLES (priv->time);
   g_signal_emit (player, signals[ADVANCE], 0, msecs, frames);
+
+  return msecs;
 }
 
 /**

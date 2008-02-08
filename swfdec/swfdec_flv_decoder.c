@@ -25,6 +25,7 @@
 #include "swfdec_audio_internal.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
+#include "swfdec_player_internal.h"
 
 enum {
   SWFDEC_STATE_HEADER,			/* need to parse header */
@@ -252,6 +253,7 @@ swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   }
   if (flv->video->len == 0) {
     g_array_append_val (flv->video, tag);
+    swfdec_player_use_video_codec (SWFDEC_DECODER (flv)->player, tag.format);
   } else if (g_array_index (flv->video, SwfdecFlvVideoTag, 
 	flv->video->len - 1).timestamp < tag.timestamp) {
     g_array_append_val (flv->video, tag);
@@ -266,7 +268,7 @@ swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   return SWFDEC_STATUS_IMAGE;
 }
 
-static void
+static SwfdecStatus
 swfdec_flv_decoder_parse_audio_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, guint timestamp)
 {
   SwfdecFlvAudioTag tag;
@@ -274,7 +276,7 @@ swfdec_flv_decoder_parse_audio_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   if (flv->audio == NULL) {
     SWFDEC_INFO ("audio tags even though header didn't decalre them. Initializing...");
     flv->audio = g_array_new (FALSE, FALSE, sizeof (SwfdecFlvAudioTag));
-    return;
+    return SWFDEC_STATUS_OK;
   }
 
   tag.timestamp = timestamp;
@@ -285,10 +287,11 @@ swfdec_flv_decoder_parse_audio_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   SWFDEC_LOG ("  format: %s", swfdec_audio_format_to_string (tag.original_format));
   if (tag.buffer == NULL) {
     SWFDEC_WARNING ("no buffer, ignoring");
-    return;
+    return SWFDEC_STATUS_OK;
   }
   if (flv->audio->len == 0) {
     g_array_append_val (flv->audio, tag);
+    swfdec_player_use_audio_codec (SWFDEC_DECODER (flv)->player, tag.format, tag.original_format);
   } else if (g_array_index (flv->audio, SwfdecFlvAudioTag, 
 	flv->audio->len - 1).timestamp < tag.timestamp) {
     g_array_append_val (flv->audio, tag);
@@ -300,6 +303,7 @@ swfdec_flv_decoder_parse_audio_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
     idx = swfdec_flv_decoder_find_audio (flv, tag.timestamp);
     g_array_insert_val (flv->audio, idx, tag);
   }
+  return SWFDEC_STATUS_OK;
 }
 
 static void
@@ -364,7 +368,7 @@ swfdec_flv_decoder_parse_tag (SwfdecFlvDecoder *flv)
   SWFDEC_LOG ("  timestamp %u", timestamp);
   switch (type) {
     case 8:
-      swfdec_flv_decoder_parse_audio_tag (flv, &bits, timestamp);
+      ret = swfdec_flv_decoder_parse_audio_tag (flv, &bits, timestamp);
       break;
     case 9:
       ret = swfdec_flv_decoder_parse_video_tag (flv, &bits, timestamp);

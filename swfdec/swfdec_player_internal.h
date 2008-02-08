@@ -22,6 +22,7 @@
 
 #include <swfdec/swfdec_player.h>
 #include <swfdec/swfdec_audio.h>
+#include <swfdec/swfdec_audio_internal.h>
 #include <swfdec/swfdec_event.h>
 #include <swfdec/swfdec_function_list.h>
 #include <swfdec/swfdec_loader.h>
@@ -123,6 +124,7 @@ struct _SwfdecPlayerPrivate
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
+  GSList *		missing_plugins;	/* list of GStreamer detail strings for missing plugins */
 
   /* events and advancing */
   SwfdecTick		time;			/* current time */
@@ -243,6 +245,11 @@ void		swfdec_player_global_to_stage	(SwfdecPlayer *		player,
 						 double *		y);
 void		swfdec_player_update_scale	(SwfdecPlayer *		player);
 
+void		swfdec_player_use_audio_codec	(SwfdecPlayer *		player,
+						 guint			codec, 
+						 SwfdecAudioFormat	format);
+void		swfdec_player_use_video_codec	(SwfdecPlayer *		player,
+						 guint			codec);
 /* in swfdec_policy_file.c */
 gboolean	swfdec_player_allow_now		(SwfdecPlayer *		player,
 						 const SwfdecURL *	url);

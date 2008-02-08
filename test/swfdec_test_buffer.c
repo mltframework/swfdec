@@ -155,7 +155,7 @@ swfdec_test_buffer_diff (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
     return;
   }
 
-  ret = swfdec_test_diff_buffers (buffer->buffer, compare->buffer, &error);
+  ret = swfdec_test_diff_buffers (compare->buffer, buffer->buffer, &error);
   if (ret) {
     SWFDEC_AS_VALUE_SET_STRING (retval, 
 	swfdec_as_context_give_string (cx, ret));

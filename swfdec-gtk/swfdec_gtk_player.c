@@ -45,7 +45,9 @@ struct _SwfdecGtkPlayerPrivate
 
   /* missing plugins */
   GdkWindow *		missing_plugins_window; /* window used for displaying missing plugins info */
+#ifdef HAVE_GST
   GstInstallPluginsContext *missing_plugins_context; /* context used during install */
+#endif
   gboolean		needs_resume;	/* restart playback after plugin install is done? */
 };
 
@@ -80,6 +82,7 @@ enum {
 
 /*** MISSING PLUGINS ***/
 
+#ifdef HAVE_GST
 static void
 swfdec_gtk_player_missing_plugins_done (GstInstallPluginsReturn result, gpointer data)
 {
@@ -90,6 +93,7 @@ swfdec_gtk_player_missing_plugins_done (GstInstallPluginsReturn result, gpointer
   if (priv->needs_resume)
     swfdec_gtk_player_set_playing (player, TRUE);
 }
+#endif
 
 static void
 swfdec_gtk_player_missing_plugins (SwfdecPlayer *player, const char **details)
@@ -97,8 +101,10 @@ swfdec_gtk_player_missing_plugins (SwfdecPlayer *player, const char **details)
   SwfdecGtkPlayerPrivate *priv = SWFDEC_GTK_PLAYER (player)->priv;
 
   /* That should only happen if users don't listen and then we don't listen either */
+#ifdef HAVE_GST
   if (priv->missing_plugins_context)
     return;
+#endif
   /* no automatic install desired */
   if (priv->missing_plugins_window == NULL)
     return;

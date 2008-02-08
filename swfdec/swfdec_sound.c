@@ -29,6 +29,7 @@
 #include "swfdec_buffer.h"
 #include "swfdec_button.h"
 #include "swfdec_debug.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
 
@@ -160,6 +161,8 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
   }
   sound->n_samples *= swfdec_audio_format_get_granularity (sound->format);
 
+  swfdec_player_use_audio_codec (SWFDEC_DECODER (s)->player, sound->codec, sound->format);
+
   return SWFDEC_STATUS_OK;
 }
 
@@ -285,6 +288,8 @@ tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
       SWFDEC_WARNING ("unknown codec %d", sound->codec);
       sound->codec = SWFDEC_AUDIO_CODEC_UNDEFINED;
   }
+
+  swfdec_player_use_audio_codec (SWFDEC_DECODER (s)->player, sound->codec, sound->format);
 
   return SWFDEC_STATUS_OK;
 }

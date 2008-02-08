@@ -173,6 +173,11 @@ swfdec_test_test_dispose (GObject *object)
     test->trace = NULL;
   }
 
+  if (test->launched) {
+    swfdec_buffer_queue_unref (test->launched);
+    test->launched = NULL;
+  }
+
   g_free (test->filename);
   test->filename = NULL;
 

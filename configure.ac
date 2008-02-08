@@ -255,7 +255,7 @@ if test "$enable_gstreamer" = "yes"; then
 	if test "x$HAVE_GST" = xyes; then
 	  AC_DEFINE(HAVE_GST, 1, [Define if GStreamer is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find GStreamer $GST_REQUIRED.])
+	  AC_MSG_ERROR([Couldn't find GStreamer $GST_REQUIRED and gstreamer-pbutils $GST_PB_REQUIRED.])
 	fi
 else
 	AC_MSG_NOTICE([GStreamer support was not enabled.])

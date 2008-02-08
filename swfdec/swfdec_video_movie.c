@@ -109,7 +109,7 @@ swfdec_video_movie_set_ratio (SwfdecMovie *movie)
 {
   SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (movie);
 
-  if (video->input->set_ratio) {
+  if (video->input && video->input->set_ratio) {
     video->needs_update = TRUE;
     swfdec_movie_invalidate_last (movie);
   }

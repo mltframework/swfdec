@@ -1335,6 +1335,9 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SortOption options;
   SwfdecAsFunction *custom_function;
 
+  if (object == NULL || SWFDEC_IS_MOVIE (object))
+    return;
+
   pos = 0;
 
   if (argc > pos && !SWFDEC_AS_VALUE_IS_NUMBER (&argv[pos])) {

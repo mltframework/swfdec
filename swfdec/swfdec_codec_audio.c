@@ -146,8 +146,8 @@ static const struct {
 #endif
 };
 
-char *
-swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format)
+gboolean
+swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **missing)
 {
   char *detail = NULL, *s = NULL;
   guint i;
@@ -156,7 +156,9 @@ swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format)
     if (audio_codecs[i].prepare (codec, format, &s)) {
       g_free (detail);
       g_free (s);
-      return NULL;
+      if (missing)
+	*missing = NULL;
+      return TRUE;
     }
     if (s) {
       if (detail == NULL)
@@ -166,7 +168,9 @@ swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format)
       s = NULL;
     }
   }
-  return detail;
+  if (missing)
+    *missing = detail;
+  return FALSE;
 }
 
 /**

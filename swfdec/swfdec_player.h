@@ -89,6 +89,8 @@ struct _SwfdecPlayerClass
 						 double			x,
 						 double			y,
 						 int			button);
+  void			(* missing_plugins)	(SwfdecPlayer *		player,
+						 const char **		details);
 };
 
 void		swfdec_init			(void);

@@ -173,6 +173,7 @@ swfdec_gst_get_element_factory (GstCaps *caps)
 
   list = g_list_sort (list, swfdec_gst_compare_features);
   ret = list->data;
+  gst_object_ref (ret);
   gst_plugin_feature_list_free (list);
   return ret;
 }
@@ -259,7 +260,10 @@ swfdec_gst_decoder_init (SwfdecGstDecoder *dec, const char *name, GstCaps *srcca
     dec->decoder = gst_element_factory_make (name, "decoder");
   } else {
     GstElementFactory *factory = swfdec_gst_get_element_factory (srccaps);
-    dec->decoder = gst_element_factory_create (factory, "decoder");
+    if (factory) {
+      dec->decoder = gst_element_factory_create (factory, "decoder");
+      gst_object_unref (factory);
+    }
   }
   if (dec->decoder == NULL) {
     SWFDEC_ERROR ("failed to create decoder");
@@ -445,10 +449,6 @@ swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
   SwfdecGstAudio *player;
   GstCaps *srccaps, *sinkcaps;
 
-  if (!gst_init_check (NULL, NULL, NULL))
-    return NULL;
-  gst_pb_utils_init ();
-
   srccaps = swfdec_audio_decoder_get_caps (type, format);
   if (srccaps == NULL)
     return NULL;
@@ -611,10 +611,6 @@ swfdec_video_decoder_gst_new (guint codec)
   SwfdecGstVideo *player;
   GstCaps *srccaps, *sinkcaps;
 
-  if (!gst_init_check (NULL, NULL, NULL))
-    return NULL;
-  gst_pb_utils_init ();
-
   srccaps = swfdec_video_decoder_get_caps (codec);
   if (srccaps == NULL)
     return NULL;
@@ -652,8 +648,10 @@ swfdec_audio_decoder_gst_missing (guint codec, SwfdecAudioFormat format)
 
   /* If we can already handle it, woohoo! */
   factory = swfdec_gst_get_element_factory (caps);
-  if (factory != NULL)
+  if (factory != NULL) {
+    gst_object_unref (factory);
     return NULL;
+  }
 
   /* need to install plugins... */
   ret = gst_missing_decoder_installer_detail_new (caps);
@@ -679,8 +677,10 @@ swfdec_video_decoder_gst_missing (guint	codec)
 
   /* If we can already handle it, woohoo! */
   factory = swfdec_gst_get_element_factory (caps);
-  if (factory != NULL)
+  if (factory != NULL) {
+    gst_object_unref (factory);
     return NULL;
+  }
 
   /* need to install plugins... */
   ret = gst_missing_decoder_installer_detail_new (caps);

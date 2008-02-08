@@ -22,6 +22,8 @@
 #endif
 
 #include <errno.h>
+#include <gst/gst.h>
+#include <gst/pbutils/pbutils.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -1844,7 +1846,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    *
    */
   signals[MISSING_PLUGINS] = g_signal_new ("missing-plugins", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__BOXED,
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, missing_plugins),
+      NULL, NULL, g_cclosure_marshal_VOID__BOXED,
       G_TYPE_NONE, 1, G_TYPE_STRV);
 
   context_class->mark = swfdec_player_mark;
@@ -2329,6 +2332,10 @@ swfdec_init (void)
     g_thread_init (NULL);
   g_type_init ();
   oil_init ();
+#ifdef HAVE_GST
+  gst_init (NULL, NULL);
+  gst_pb_utils_init ();
+#endif
 
   s = g_getenv ("SWFDEC_DEBUG");
   if (s && s[0]) {

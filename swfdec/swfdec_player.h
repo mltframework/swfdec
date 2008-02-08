@@ -149,7 +149,7 @@ void		swfdec_player_render		(SwfdecPlayer *	player,
 						 double		y,
 						 double		width,
 						 double		height);
-void		swfdec_player_advance		(SwfdecPlayer *	player,
+gulong		swfdec_player_advance		(SwfdecPlayer *	player,
 						 gulong		msecs);
 gboolean	swfdec_player_mouse_move	(SwfdecPlayer *	player, 
 						 double		x,

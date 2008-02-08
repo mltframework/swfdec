@@ -37,8 +37,7 @@ swfdec_test_plugin_swfdec_advance (SwfdecTestPlugin *plugin, unsigned int msecs)
       if (next_event < 0)
 	break;
       next_event = MIN (next_event, (long) msecs);
-      swfdec_player_advance (plugin->data, next_event);
-      msecs -= next_event;
+      msecs -= swfdec_player_advance (plugin->data, next_event);
     }
   }
 }

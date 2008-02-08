@@ -86,6 +86,7 @@ swfdec_gtk_player_missing_plugins_done (GstInstallPluginsReturn result, gpointer
   SwfdecGtkPlayer *player = data;
   SwfdecGtkPlayerPrivate *priv = player->priv;
 
+  gst_update_registry ();
   if (priv->needs_resume)
     swfdec_gtk_player_set_playing (player, TRUE);
 }

@@ -190,7 +190,6 @@ swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format)
 
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), NULL);
 
-  g_print ("new decoder for format %u\n", codec);
   for (i = 0; i < G_N_ELEMENTS (audio_codecs); i++) {
     ret = audio_codecs[i].func (codec, format);
     if (ret)

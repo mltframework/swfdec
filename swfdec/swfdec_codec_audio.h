@@ -44,6 +44,8 @@ struct _SwfdecAudioDecoder {
   void		  	(* free)	(SwfdecAudioDecoder *	decoder);
 };
 
+char *			swfdec_audio_decoder_prepare	(guint			codec,
+							 SwfdecAudioFormat	format);
 SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(guint			codec,
 							 SwfdecAudioFormat	format);
 void			swfdec_audio_decoder_free      	(SwfdecAudioDecoder *	decoder);

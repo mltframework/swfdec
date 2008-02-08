@@ -169,6 +169,12 @@ swfdec_audio_decoder_ffmpeg_free (SwfdecAudioDecoder *dec)
   g_slice_free (SwfdecAudioDecoderFFMpeg, ffmpeg);
 }
 
+gboolean
+swfdec_audio_decoder_ffmpeg_prepare (guint type, SwfdecAudioFormat format, char **details)
+{
+  return type == SWFDEC_AUDIO_CODEC_MP3 || type == SWFDEC_AUDIO_CODEC_ADPCM;
+}
+
 SwfdecAudioDecoder *
 swfdec_audio_decoder_ffmpeg_new (guint type, SwfdecAudioFormat format)
 {

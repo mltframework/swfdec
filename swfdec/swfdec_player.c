@@ -2241,7 +2241,7 @@ swfdec_player_use_audio_codec (SwfdecPlayer *player, guint codec,
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  detail = swfdec_audio_decoder_gst_missing (codec, format);
+  detail = swfdec_audio_decoder_prepare (codec, format);
   if (detail == NULL)
     return;
 

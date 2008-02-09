@@ -1368,7 +1368,10 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   const char **fields;
-  SortOption options;
+  SortOption *options;
+  gint32 i, num_fields;
+  SwfdecAsObject *array;
+  SwfdecAsValue val;
 
   if (object == NULL || SWFDEC_IS_MOVIE (object))
     return;
@@ -1377,9 +1380,6 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
-    gint32 length, i;
-    SwfdecAsValue val;
-    SwfdecAsObject *array;
 
     array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
     if (!SWFDEC_IS_AS_ARRAY (array)) {
@@ -1387,14 +1387,14 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
       return;
     }
 
-    length = swfdec_as_array_get_length (SWFDEC_AS_ARRAY (array));
-    if (length <= 0) {
+    num_fields = swfdec_as_array_get_length (SWFDEC_AS_ARRAY (array));
+    if (num_fields <= 0) {
       SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
       return;
     }
 
-    fields = g_malloc (sizeof (const char *) * (length + 1));
-    for (i = 0; i < length; i++) {
+    fields = g_new (const char *, num_fields + 1);
+    for (i = 0; i < num_fields; i++) {
       swfdec_as_array_get_value (SWFDEC_AS_ARRAY (array), i, &val);
       if (SWFDEC_AS_VALUE_IS_OBJECT (&val) &&
 	  SWFDEC_IS_AS_STRING (SWFDEC_AS_VALUE_GET_OBJECT (&val))) {
@@ -1407,20 +1407,39 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     fields[i] = NULL;
   } else {
-    fields = g_malloc (sizeof (const char *) * 2);
+    num_fields = 1;
+    fields = g_new (const char *, num_fields + 1);
     fields[0] = swfdec_as_value_to_string (cx, &argv[0]);
     fields[1] = NULL;
   }
 
+  options = g_new0 (SortOption, num_fields);
+
   if (argc > 1) {
-    options = swfdec_as_value_to_integer (cx, &argv[1]) & MASK_SORT_OPTION;
-  } else {
-    options = 0;
+    if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
+      array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]);
+
+      if (SWFDEC_IS_AS_ARRAY (array) &&
+	swfdec_as_array_get_length (SWFDEC_AS_ARRAY (array)) == num_fields) {
+	for (i = 0; i < num_fields; i++) {
+	  swfdec_as_array_get_value (SWFDEC_AS_ARRAY (array), i, &val);
+	  options[i] =
+	    swfdec_as_value_to_integer (cx, &val) & MASK_SORT_OPTION;
+	}
+      }
+    } else {
+      options[0] =
+	swfdec_as_value_to_integer (cx, &argv[1]) & MASK_SORT_OPTION;
+      for (i = 1; i < num_fields; i++) {
+	options[i] = options[0];
+      }
+    }
   }
 
-  swfdec_as_array_do_sort (cx, object, &options, NULL, fields, ret);
+  swfdec_as_array_do_sort (cx, object, options, NULL, fields, ret);
 
   g_free (fields);
+  g_free (options);
 }
 
 // Constructor

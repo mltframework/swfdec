@@ -928,8 +928,9 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
     SwfdecAsValue argv[2] = { *a, *b };
     SwfdecAsValue ret;
     swfdec_as_function_call (custom_function, NULL, 2, argv, &ret);
-    swfdec_as_context_run (custom_function->object.context);
-    retval = swfdec_as_value_to_integer (cx, &ret);
+    swfdec_as_context_run (SWFDEC_AS_OBJECT (custom_function)->context);
+    retval = swfdec_as_value_to_integer (
+	SWFDEC_AS_OBJECT (custom_function)->context, &ret);
   }
   else if (options & SORT_OPTION_NUMERIC &&
       (SWFDEC_AS_VALUE_IS_NUMBER (a) ||

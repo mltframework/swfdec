@@ -164,6 +164,15 @@ EXTRA_DIST = \
 	array-sort-on-7.swf.trace \
 	array-sort-on-8.swf \
 	array-sort-on-8.swf.trace \
+	array-sort-on-options.as \
+	array-sort-on-options-5.swf \
+	array-sort-on-options-5.swf.trace \
+	array-sort-on-options-6.swf \
+	array-sort-on-options-6.swf.trace \
+	array-sort-on-options-7.swf \
+	array-sort-on-options-7.swf.trace \
+	array-sort-on-options-8.swf \
+	array-sort-on-options-8.swf.trace \
 	array-sort-unique-abort.as \
 	array-sort-unique-abort-5.swf \
 	array-sort-unique-abort-5.swf.trace \

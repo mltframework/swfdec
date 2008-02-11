@@ -146,6 +146,8 @@ main (int argc, char *argv[])
   url = swfdec_url_new_from_input (argv[1]);
   swfdec_player_set_url (player, url);
   set_title (GTK_WINDOW (window), url);
+  swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player),
+      window->window);
   swfdec_url_free (url);
 
   swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);

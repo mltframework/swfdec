@@ -1283,8 +1283,8 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
   /* emit missing-plugin signal for newly discovered plugins */
   if (priv->missing_plugins) {
     GSList *swalk;
-    guint i = 0;
-    char **details = g_new (char *, g_slist_length (priv->missing_plugins) + 1);
+    guint i = 0, n_plugins = g_slist_length (priv->missing_plugins);
+    char **details = g_new (char *, n_plugins + 1);
 
     for (swalk = priv->missing_plugins; swalk; swalk = swalk->next) {
       details[i++] = swalk->data;
@@ -1292,6 +1292,7 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
     details[i] = NULL;
     g_slist_free (priv->missing_plugins);
     priv->missing_plugins = NULL;
+    SWFDEC_INFO ("emitting missing plugins signal for %u plugins", n_plugins);
     g_signal_emit (player, signals[MISSING_PLUGINS], 0, details);
     g_strfreev (details);
   }
@@ -2253,6 +2254,7 @@ swfdec_player_use_audio_codec (SwfdecPlayer *player, guint codec,
     return;
   }
 
+  SWFDEC_INFO ("missing audio plugin: %s\n", detail);
   priv->missing_plugins = g_slist_prepend (priv->missing_plugins, detail);
 }
 
@@ -2274,6 +2276,7 @@ swfdec_player_use_video_codec (SwfdecPlayer *player, guint codec)
     return;
   }
 
+  SWFDEC_INFO ("missing video plugin: %s\n", detail);
   priv->missing_plugins = g_slist_prepend (priv->missing_plugins, detail);
 }
 

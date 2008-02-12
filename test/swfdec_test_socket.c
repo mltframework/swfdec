@@ -168,6 +168,18 @@ swfdec_test_socket_close_as (SwfdecAsContext *cx, SwfdecAsObject *object, guint 
   swfdec_test_socket_do_close (sock, TRUE);
 }
 
+SWFDEC_TEST_FUNCTION ("Socket_get_closed", swfdec_test_socket_get_closed, 0)
+void
+swfdec_test_socket_get_closed (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecTestSocket *sock;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "");
+  
+  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, sock->plugin == NULL);
+}
+
 static void 
 swfdec_test_socket_plugin_send (SwfdecTestPluginSocket *plugin, unsigned char *data,
     unsigned long length)

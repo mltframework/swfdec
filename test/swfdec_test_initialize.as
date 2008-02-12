@@ -51,6 +51,7 @@ Socket.prototype.receive = Native.Socket_receive;
 Socket.prototype.send = Native.Socket_send;
 Socket.prototype.close = Native.Socket_close;
 Socket.prototype.error = Native.Socket_error;
+Socket.prototype.addProperty ("closed", Native.Socket_get_closed, null);
 
 Test = Native.Test;
 Test.prototype = {};

@@ -39,7 +39,7 @@ swfdec_load_object_stream_target_get_player (SwfdecStreamTarget *target)
   return SWFDEC_PLAYER (SWFDEC_LOAD_OBJECT (target)->target->context);
 }
 
-static void
+static gboolean
 swfdec_load_object_stream_target_parse (SwfdecStreamTarget *target,
     SwfdecStream *stream)
 {
@@ -52,6 +52,7 @@ swfdec_load_object_stream_target_parse (SwfdecStreamTarget *target,
 	swfdec_loader_get_loaded (loader), swfdec_loader_get_size (loader));
     swfdec_sandbox_unuse (load_object->sandbox);
   }
+  return FALSE;
 }
 
 static void

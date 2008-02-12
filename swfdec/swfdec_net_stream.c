@@ -258,7 +258,7 @@ swfdec_net_stream_stream_target_recheck (SwfdecNetStream *stream)
   swfdec_net_stream_update_playing (stream);
 }
 
-static void
+static gboolean
 swfdec_net_stream_stream_target_parse (SwfdecStreamTarget *target, 
     SwfdecStream *stream)
 {
@@ -283,10 +283,14 @@ swfdec_net_stream_stream_target_parse (SwfdecStreamTarget *target,
       break;
     status &= ~SWFDEC_STATUS_NEEDBITS;
     status |= swfdec_decoder_parse (SWFDEC_DECODER (ns->flvdecoder), buffer);
-  } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_EOF)) == 0);
+  } while ((status & (SWFDEC_STATUS_ERROR | SWFDEC_STATUS_EOF | SWFDEC_STATUS_INIT)) == 0);
+
+  if (status & SWFDEC_STATUS_INIT)
+    return TRUE;
 
   if (status & SWFDEC_STATUS_IMAGE)
     swfdec_net_stream_stream_target_recheck (ns);
+  return FALSE;
 }
 
 static void

@@ -89,19 +89,24 @@ swfdec_stream_target_open (SwfdecStreamTarget *target, SwfdecStream *stream)
     iface->open (target, stream);
 }
 
-void
+gboolean
 swfdec_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *stream)
 {
   SwfdecStreamTargetInterface *iface;
+  gboolean call_again;
   
-  g_return_if_fail (SWFDEC_IS_STREAM_TARGET (target));
-  g_return_if_fail (SWFDEC_IS_STREAM (stream));
+  g_return_val_if_fail (SWFDEC_IS_STREAM_TARGET (target), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_STREAM (stream), FALSE);
 
   SWFDEC_LOG ("parsing %s", swfdec_stream_describe (stream));
 
   iface = SWFDEC_STREAM_TARGET_GET_INTERFACE (target);
   if (iface->parse)
-    iface->parse (target, stream);
+    call_again = iface->parse (target, stream);
+  else
+    call_again = FALSE;
+
+  return call_again;
 }
 
 void

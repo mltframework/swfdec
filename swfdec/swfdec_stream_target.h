@@ -41,7 +41,7 @@ struct _SwfdecStreamTargetInterface {
   /* optional vfuncs */
   void			(* open)		(SwfdecStreamTarget *   target,
 						 SwfdecStream *		stream);
-  void			(* parse)		(SwfdecStreamTarget *   target,
+  gboolean		(* parse)		(SwfdecStreamTarget *   target,
 						 SwfdecStream *		stream);
   void			(* close)		(SwfdecStreamTarget *   target,
 						 SwfdecStream *		stream);
@@ -54,7 +54,7 @@ GType		swfdec_stream_target_get_type		(void) G_GNUC_CONST;
 SwfdecPlayer *	swfdec_stream_target_get_player		(SwfdecStreamTarget *	target);
 void		swfdec_stream_target_open		(SwfdecStreamTarget *	target,
 							 SwfdecStream *		stream);
-void		swfdec_stream_target_parse		(SwfdecStreamTarget *	target,
+gboolean	swfdec_stream_target_parse		(SwfdecStreamTarget *	target,
 							 SwfdecStream *		stream);
 void		swfdec_stream_target_close		(SwfdecStreamTarget *	target,
 							 SwfdecStream *		stream);

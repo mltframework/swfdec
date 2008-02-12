@@ -247,7 +247,7 @@ swfdec_resource_stream_target_open (SwfdecStreamTarget *target, SwfdecStream *st
   instance->state = SWFDEC_RESOURCE_OPENED;
 }
 
-static void
+static gboolean
 swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *stream)
 {
   SwfdecLoader *loader = SWFDEC_LOADER (stream);
@@ -261,7 +261,7 @@ swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *s
   queue = swfdec_stream_get_queue (stream);
   if (dec == NULL && swfdec_buffer_queue_get_offset (queue) == 0) {
     if (swfdec_buffer_queue_get_depth (queue) < SWFDEC_DECODER_DETECT_LENGTH)
-      return;
+      return FALSE;
     buffer = swfdec_buffer_queue_peek (queue, 4);
     dec =
       swfdec_decoder_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource)->context), buffer);
@@ -300,7 +300,7 @@ swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *s
     if (status & SWFDEC_STATUS_ERROR) {
       SWFDEC_ERROR ("parsing error");
       swfdec_stream_set_target (SWFDEC_STREAM (loader), NULL);
-      return;
+      return FALSE;
     }
     if ((status & SWFDEC_STATUS_INIT)) {
       if (SWFDEC_IS_SWF_DECODER (dec))
@@ -314,8 +314,9 @@ swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *s
       swfdec_resource_stream_target_image (resource);
     swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadProgress, TRUE, NULL, 0);
     if (status & SWFDEC_STATUS_EOF)
-      return;
+      return FALSE;
   }
+  return FALSE;
 }
 
 static void

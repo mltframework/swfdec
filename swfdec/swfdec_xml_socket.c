@@ -80,7 +80,7 @@ swfdec_xml_socket_stream_target_error (SwfdecStreamTarget *target,
   swfdec_xml_socket_ensure_closed (xml);
 }
 
-static void
+static gboolean
 swfdec_xml_socket_stream_target_parse (SwfdecStreamTarget *target,
     SwfdecStream *stream)
 {
@@ -114,6 +114,7 @@ swfdec_xml_socket_stream_target_parse (SwfdecStreamTarget *target,
       }
     }
   }
+  return FALSE;
 }
 
 static void

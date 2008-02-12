@@ -188,6 +188,8 @@ swfdec_stream_get_queue (SwfdecStream *stream)
   return stream->priv->queue;
 }
 
+static void swfdec_stream_queue_processing (SwfdecStream *stream);
+
 static void
 swfdec_stream_process (gpointer streamp, gpointer unused)
 {
@@ -210,15 +212,24 @@ swfdec_stream_process (gpointer streamp, gpointer unused)
 	priv->processed_state = SWFDEC_STREAM_STATE_OPEN;
 	swfdec_stream_target_open (priv->target, stream);
       } else if (priv->processed_state == SWFDEC_STREAM_STATE_OPEN) {
-	swfdec_stream_target_parse (priv->target, stream);
-	priv->processed_state = SWFDEC_STREAM_STATE_CLOSED;
-	swfdec_stream_target_close (priv->target, stream);
+	if (swfdec_stream_target_parse (priv->target, stream)) {
+	  g_print ("requeue!\n");
+	  swfdec_stream_queue_processing (stream);
+	  goto out;
+	} else {
+	  priv->processed_state = SWFDEC_STREAM_STATE_CLOSED;
+	  swfdec_stream_target_close (priv->target, stream);
+	}
       }
     }
     if (priv->processed_state == SWFDEC_STREAM_STATE_OPEN) {
-      swfdec_stream_target_parse (priv->target, stream);
+      if (swfdec_stream_target_parse (priv->target, stream)) {
+	g_print ("requeue!\n");
+	swfdec_stream_queue_processing (stream);
+      }
     }
   }
+out:
   g_object_unref (stream);
 }
 

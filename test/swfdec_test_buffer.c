@@ -195,6 +195,31 @@ swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   SWFDEC_AS_VALUE_SET_OBJECT (retval, buffer);
 }
 
+SWFDEC_TEST_FUNCTION ("Buffer_toString", swfdec_test_buffer_toString, 0)
+void
+swfdec_test_buffer_toString (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecBuffer *b;
+  SwfdecTestBuffer *buffer;
+  const char *end;
+  char *s;
+  
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "");
+
+  b = buffer->buffer;
+  if (g_utf8_validate ((const char *) b->data, b->length, &end)) {
+    s = g_strndup ((const char *) b->data, b->length);
+  } else if ((size_t) (end - (char *) b->data) == b->length - 1) {
+    s = g_strdup ((const char *) b->data);
+  } else {
+    s = NULL;
+  }
+  if (s == NULL)
+    s = g_strdup ("[binary Buffer]");
+  SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_give_string (cx, s));
+}
+
 SwfdecBuffer *
 swfdec_test_buffer_from_args (SwfdecAsContext *cx, guint argc, SwfdecAsValue *argv)
 {

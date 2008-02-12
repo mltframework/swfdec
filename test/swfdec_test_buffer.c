@@ -170,6 +170,24 @@ swfdec_test_buffer_diff (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   }
 }
 
+SWFDEC_TEST_FUNCTION ("Buffer_find", swfdec_test_buffer_find, 0)
+void
+swfdec_test_buffer_find (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  int c;
+  SwfdecTestBuffer *buffer;
+  guchar *found;
+  
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "i", &c);
+
+  SWFDEC_AS_VALUE_SET_INT (retval, -1);
+
+  found = memchr (buffer->buffer->data, c, buffer->buffer->length);
+  if (found)
+    SWFDEC_AS_VALUE_SET_INT (retval, found - buffer->buffer->data);
+}
+
 SWFDEC_TEST_FUNCTION ("Buffer_load", swfdec_test_buffer_load, 0)
 void
 swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
@@ -193,6 +211,32 @@ swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   if (buffer == NULL)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (retval, buffer);
+}
+
+SWFDEC_TEST_FUNCTION ("Buffer_sub", swfdec_test_buffer_sub, 0)
+void
+swfdec_test_buffer_sub (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *retval)
+{
+  SwfdecBuffer *b;
+  SwfdecTestBuffer *buffer;
+  SwfdecAsObject *o;
+  guint offset, length;
+  
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "i|i", &offset, &length);
+
+  SWFDEC_AS_VALUE_SET_NULL (retval);
+  if (offset >= buffer->buffer->length)
+    return;
+
+  if (length == 0)
+    length = buffer->buffer->length - offset;
+
+  b = swfdec_buffer_new_subbuffer (buffer->buffer, offset, length);
+  o = swfdec_test_buffer_new (cx, b);
+  if (o == NULL)
+    return;
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
 }
 
 SWFDEC_TEST_FUNCTION ("Buffer_toString", swfdec_test_buffer_toString, 0)

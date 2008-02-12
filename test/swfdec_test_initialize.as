@@ -21,6 +21,9 @@ Buffer = Native.Buffer;
 Buffer.load = Native.Buffer_load;
 Buffer.prototype = {};
 Buffer.prototype.diff = Native.Buffer_diff;
+Buffer.prototype.find = Native.Buffer_find;
+Buffer.prototype.sub = Native.Buffer_sub;
+Buffer.prototype.toString = Native.Buffer_toString;
 
 Image = Native.Image;
 Image.prototype = {};
@@ -50,7 +53,6 @@ Socket.prototype.close = Native.Socket_close;
 Socket.prototype.error = Native.Socket_error;
 Socket.prototype.receive = Native.Socket_receive;
 Socket.prototype.send = Native.Socket_send;
-Socket.prototype.toString = Native.Socket_toString;
 Socket.prototype.addProperty ("closed", Native.Socket_get_closed, null);
 
 Test = Native.Test;

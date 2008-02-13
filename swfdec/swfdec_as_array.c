@@ -959,17 +959,16 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
 	swfdec_as_value_to_string (cx, b));
   }
 
-  if (options & SORT_OPTION_DESCENDING) {
-    return -retval;
-  } else {
-    return retval;
-  }
+  if (options & SORT_OPTION_DESCENDING)
+    retval = -retval;
+
+  return retval;
 }
 
 typedef struct {
   SwfdecAsContext *	context;
   const char **		fields;
-  SortOption *		options;
+  const SortOption *	options;
   SwfdecAsFunction *	custom_function;
   gboolean		equal_found;
 } SortCompareData;
@@ -1104,8 +1103,8 @@ swfdec_as_array_foreach_sort_collect (SwfdecAsObject *object,
 
 static void
 swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
-    SortOption *options, SwfdecAsFunction *custom_function, const char **fields,
-    SwfdecAsValue *ret)
+    const SortOption *options, SwfdecAsFunction *custom_function,
+    const char **fields, SwfdecAsValue *ret)
 {
   SortEntry *array;
   SortCollectData collect_data;
@@ -1114,6 +1113,8 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *var;
   SwfdecAsObject *target;
   SwfdecAsValue val;
+  SortOption options_;
+  gboolean descending;
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
@@ -1158,7 +1159,15 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   // sort the array
   compare_data.context = cx;
   compare_data.fields = fields;
-  compare_data.options = (SortOption *)options;
+  compare_data.options = options;
+  // if no fields, then we'll do descending here after the sort
+  if (fields == NULL && options[0] & SORT_OPTION_DESCENDING) {
+    descending = TRUE;
+    options_ = options[0] & ~SORT_OPTION_DESCENDING;
+    compare_data.options = &options_;
+  } else {
+    descending = FALSE;
+  }
   compare_data.custom_function = custom_function;
   compare_data.equal_found = FALSE;
 
@@ -1184,10 +1193,10 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     // set only the values that have new indexes
     if (!(options[0] & SORT_OPTION_RETURNINDEXEDARRAY) &&
-	entry->index_ == i)
+	entry->index_ == (descending ? length - i - 1 : i))
       continue;
 
-    var = swfdec_as_integer_to_string (cx, i);
+    var = swfdec_as_integer_to_string (cx, (descending ? length - i - 1 : i));
     if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
       SWFDEC_AS_VALUE_SET_INT (&val, entry->index_);
       swfdec_as_object_set_variable (target, var, &val);

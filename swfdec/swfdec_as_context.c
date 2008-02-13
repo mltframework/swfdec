@@ -178,19 +178,18 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 /*** MEMORY MANAGEMENT ***/
 
 /**
- * swfdec_as_context_use_mem:
+ * swfdec_as_context_try_use_mem:
  * @context: a #SwfdecAsContext
  * @bytes: number of bytes to use
  *
- * Registers @bytes additional bytes as in use by the @context. This function
- * keeps track of the memory that script code consumes. If too many memory is 
- * in use, this function may decide to stop the script engine with an out of 
- * memory error.
+ * Tries to register @bytes additional bytes as in use by the @context. This
+ * function keeps track of the memory that script code consumes. The scripting
+ * engine won't be stopped, even if there wasn't enough memory left.
  *
  * Returns: %TRUE if the memory could be allocated. %FALSE on OOM.
  **/
 gboolean
-swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
+swfdec_as_context_try_use_mem (SwfdecAsContext *context, gsize bytes)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
   g_return_val_if_fail (bytes > 0, FALSE);
@@ -202,8 +201,30 @@ swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
   context->memory_since_gc += bytes;
   SWFDEC_LOG ("+%4"G_GSIZE_FORMAT" bytes, total %7"G_GSIZE_FORMAT" (%7"G_GSIZE_FORMAT" since GC)",
       bytes, context->memory, context->memory_since_gc);
-  /* FIXME: Don't foget to abort on OOM */
+
   return TRUE;
+}
+
+/**
+ * swfdec_as_context_use_mem:
+ * @context: a #SwfdecAsContext
+ * @bytes: number of bytes to use
+ *
+ * Registers @bytes additional bytes as in use by the @context. This function
+ * keeps track of the memory that script code consumes. If too much memory is
+ * in use, this function may decide to stop the script engine with an out of
+ * memory error.
+ *
+ * Returns: %TRUE if the memory could be allocated. %FALSE on OOM.
+ **/
+gboolean
+swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
+{
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (bytes > 0, FALSE);
+
+  /* FIXME: Don't forget to abort on OOM */
+  return swfdec_as_context_try_use_mem (context, bytes);
 }
 
 /**

@@ -118,7 +118,9 @@ void		swfdec_as_context_throw		(SwfdecAsContext *	context,
 gboolean	swfdec_as_context_catch		(SwfdecAsContext *	context,
 						 SwfdecAsValue *	value);
 
-gboolean	swfdec_as_context_use_mem     	(SwfdecAsContext *	context, 
+gboolean	swfdec_as_context_try_use_mem	(SwfdecAsContext *	context,
+						 gsize			bytes);
+gboolean	swfdec_as_context_use_mem	(SwfdecAsContext *	context,
 						 gsize			bytes);
 void		swfdec_as_context_unuse_mem   	(SwfdecAsContext *	context,
 						 gsize			bytes);

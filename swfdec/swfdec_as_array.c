@@ -1129,11 +1129,19 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  array = g_try_new0 (SortEntry, length);
-  if (!array) {
-    SWFDEC_WARNING ("Not sorting array, it's too big");
+  if (!swfdec_as_context_try_use_mem (cx, sizeof (SortEntry) * length)) {
+    SWFDEC_WARNING ("Array not sorted, too big (%i elements)", length);
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
     return;
+  }
+
+  // FIXME: this should be different, but context's memory management is not
+  // done properly yet
+  array = g_try_new0 (SortEntry, length);
+  if (!array) {
+    SWFDEC_WARNING ("Array not sorted, too big (%i elements)", length);
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+    goto done;
   }
 
   for (i = 0; i < length; i++) {
@@ -1160,13 +1168,13 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   // check unique sort
   if ((options[0] & SORT_OPTION_UNIQUESORT) && compare_data.equal_found) {
     SWFDEC_AS_VALUE_SET_INT (ret, 0);
-    return;
+    goto done;
   }
 
   if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
     target = swfdec_as_array_new (cx);
     if (!target)
-      return;
+      goto done;
   } else {
     target = object;
   }
@@ -1188,9 +1196,11 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  g_free (array);
-
   SWFDEC_AS_VALUE_SET_OBJECT (ret, target);
+
+done:
+  g_free (array);
+  swfdec_as_context_unuse_mem (cx, sizeof (SortEntry) * length);
 }
 
 SWFDEC_AS_NATIVE (252, 10, swfdec_as_array_sort)

@@ -602,7 +602,6 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   length = swfdec_as_array_length (object);
   if (length > 0) {
-    /* FIXME: implement this with the StringBuilder class */
     GString *string;
     swfdec_as_object_get_variable (object, SWFDEC_AS_STR_0, &val);
     str = swfdec_as_value_to_string (cx, &val);
@@ -948,15 +947,18 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
       retval = (an < bn ? -1 : (an > bn ? 1 : 0));
     }
   }
-  else if (options & SORT_OPTION_CASEINSENSITIVE)
-  {
-    retval = g_strcasecmp (swfdec_as_value_to_string (cx, a),
-	swfdec_as_value_to_string (cx, b));
-  }
   else
   {
-    retval = strcmp (swfdec_as_value_to_string (cx, a),
-	swfdec_as_value_to_string (cx, b));
+    // can't pass swfdec_as_value_to_string calls directly to compare
+    // functions, since the order of these is important
+    const char *a_str = swfdec_as_value_to_string (cx, a);
+    const char *b_str = swfdec_as_value_to_string (cx, b);
+
+    if (options & SORT_OPTION_CASEINSENSITIVE) {
+      retval = g_strcasecmp (a_str, b_str);
+    } else {
+      retval = strcmp (a_str, b_str);
+    }
   }
 
   if (options & SORT_OPTION_DESCENDING)

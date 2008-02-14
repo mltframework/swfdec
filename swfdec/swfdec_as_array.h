@@ -38,6 +38,10 @@ typedef struct _SwfdecAsArrayClass SwfdecAsArrayClass;
 struct _SwfdecAsArray {
   /*< private >*/
   SwfdecAsObject	object;
+
+  // whether to remove elements if length property is changed
+  // disabled internally sometimes to not create extra valueOf calls
+  gboolean		check_length;
 };
 
 struct _SwfdecAsArrayClass {

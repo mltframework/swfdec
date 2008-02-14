@@ -123,9 +123,15 @@ swfdec_as_array_set_length_object (SwfdecAsObject *object, gint32 length)
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
 
+  if (SWFDEC_IS_AS_ARRAY (object))
+    SWFDEC_AS_ARRAY (object)->check_length = FALSE;
+
   SWFDEC_AS_VALUE_SET_INT (&val, length);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_length, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
+  if (SWFDEC_IS_AS_ARRAY (object))
+    SWFDEC_AS_ARRAY (object)->check_length = TRUE;
 }
 
 /**
@@ -139,10 +145,15 @@ swfdec_as_array_set_length_object (SwfdecAsObject *object, gint32 length)
 void
 swfdec_as_array_set_length (SwfdecAsArray *array, gint32 length)
 {
+  SwfdecAsValue val;
+
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
   g_return_if_fail (length >= 0);
 
-  swfdec_as_array_set_length_object (SWFDEC_AS_OBJECT (array), length);
+  SWFDEC_AS_VALUE_SET_INT (&val, length);
+  swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (array),
+      SWFDEC_AS_STR_length, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 
 typedef struct {
@@ -480,8 +491,6 @@ swfdec_as_array_append_array_range (SwfdecAsArray *array_to,
   fdata.start_index = start_index;
   fdata.num = num;
 
-  g_return_if_fail (start_index + num <= fdata.offset);
-
   swfdec_as_array_set_length_object (fdata.object_to,
       fdata.offset + fdata.num);
   swfdec_as_object_foreach (object_from,
@@ -508,8 +517,10 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
 
   // if we changed to smaller length, destroy all values that are outside it
   //
-  if (!swfdec_strcmp (object->context->version, variable,
-	SWFDEC_AS_STR_length)) {
+  if (SWFDEC_AS_ARRAY (object)->check_length &&
+      !swfdec_strcmp (object->context->version, variable,
+	SWFDEC_AS_STR_length))
+  {
     gint32 length_old = swfdec_as_array_length (object);
     gint32 length_new = swfdec_as_value_to_integer (object->context, val);
     length_new = MAX (0, length_new);
@@ -523,10 +534,8 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
       val, flags);
 
   // if we added new value outside the current length, set a bigger length
-  if (l != -1) {
-    if (++l > swfdec_as_array_length_as_integer (object))
-      swfdec_as_array_set_length_object (object, l);
-  }
+  if (l != -1 && ++l > swfdec_as_array_length_as_integer (object))
+    swfdec_as_array_set_length_object (object, l);
 }
 
 static void
@@ -540,6 +549,7 @@ swfdec_as_array_class_init (SwfdecAsArrayClass *klass)
 static void
 swfdec_as_array_init (SwfdecAsArray *array)
 {
+  array->check_length = TRUE;
 }
 
 /*
@@ -666,13 +676,12 @@ swfdec_as_array_do_pop (SwfdecAsContext *cx, SwfdecAsObject *object,
   var = swfdec_as_integer_to_string (object->context, length - 1);
   swfdec_as_object_get_variable (object, var, ret);
 
-  // if Array, the length is reduced by one (which destroys the variable also)
+  swfdec_as_object_delete_variable (object, var);
+
+  // if Array, the length is reduced by one
   // else the length is not reduced at all, but the variable is still deleted
-  if (SWFDEC_IS_AS_ARRAY (object)) {
+  if (SWFDEC_IS_AS_ARRAY (object))
     swfdec_as_array_set_length_object (object, length - 1);
-  } else {
-    swfdec_as_object_delete_variable (object, var);
-  }
 }
 
 SWFDEC_AS_NATIVE (252, 5, swfdec_as_array_do_unshift)

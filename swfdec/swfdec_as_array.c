@@ -504,12 +504,7 @@ static void
 swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
     const SwfdecAsValue *val, guint flags)
 {
-  char *end;
-  gboolean indexvar = TRUE;
-  gint32 l = strtoul (variable, &end, 10);
-
-  if (*end != 0 || l > G_MAXINT32)
-    indexvar = FALSE;
+  gint32 l = swfdec_as_array_to_index (variable);
 
   // if we changed to smaller length, destroy all values that are outside it
   //
@@ -528,7 +523,7 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
       val, flags);
 
   // if we added new value outside the current length, set a bigger length
-  if (indexvar) {
+  if (l != -1) {
     if (++l > swfdec_as_array_length_as_integer (object))
       swfdec_as_array_set_length_object (object, l);
   }

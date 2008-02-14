@@ -34,6 +34,7 @@
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_movie.h"
+#include "swfdec_utils.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsArray, swfdec_as_array, SWFDEC_TYPE_AS_OBJECT)
@@ -511,10 +512,12 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
     indexvar = FALSE;
 
   // if we changed to smaller length, destroy all values that are outside it
-  if (!strcmp (variable, SWFDEC_AS_STR_length)) {
+  //
+  if (!swfdec_strcmp (object->context->version, variable,
+	SWFDEC_AS_STR_length)) {
     gint32 length_old = swfdec_as_array_length (object);
-    gint32 length_new = MAX (0,
-	swfdec_as_value_to_integer (object->context, val));
+    gint32 length_new = swfdec_as_value_to_integer (object->context, val);
+    length_new = MAX (0, length_new);
     if (length_old > length_new) {
       swfdec_as_array_remove_range (SWFDEC_AS_ARRAY (object), length_new,
 	  length_old - length_new);
@@ -585,7 +588,7 @@ void
 swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  int i, length;
+  int i;
   const char *var, *str, *sep;
   SwfdecAsValue val;
 
@@ -598,13 +601,13 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     sep = SWFDEC_AS_STR_COMMA;
   }
 
-  length = swfdec_as_array_length (object);
-  if (length > 0) {
+  // note: we don't cache length
+  if (swfdec_as_array_length (object) > 0) {
     GString *string;
     swfdec_as_object_get_variable (object, SWFDEC_AS_STR_0, &val);
     str = swfdec_as_value_to_string (cx, &val);
     string = g_string_new (str);
-    for (i = 1; i < length; i++) {
+    for (i = 1; i < swfdec_as_array_length (object); i++) {
       var = swfdec_as_integer_to_string (cx, i);
       swfdec_as_object_get_variable (object, var, &val);
       var = swfdec_as_value_to_string (cx, &val);

@@ -175,7 +175,6 @@ swfdec_as_array_remove_range (SwfdecAsArray *array, gint32 start_index,
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
   g_return_if_fail (start_index >= 0);
   g_return_if_fail (num >= 0);
-  g_return_if_fail (start_index + num <= swfdec_as_array_length (object));
 
   if (num == 0)
     return;
@@ -227,7 +226,6 @@ swfdec_as_array_move_range (SwfdecAsObject *object, gint32 from_index,
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (from_index >= 0);
   g_return_if_fail (num >= 0);
-  g_return_if_fail (from_index + num <= swfdec_as_array_length (object));
   g_return_if_fail (to_index >= 0);
 
   if (num == 0 || from_index == to_index)
@@ -472,8 +470,6 @@ swfdec_as_array_append_array_range (SwfdecAsArray *array_to,
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array_to));
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object_from));
   g_return_if_fail (start_index >= 0);
-  g_return_if_fail (
-      start_index + num <= swfdec_as_array_length (object_from));
 
   if (num == 0)
     return;
@@ -482,6 +478,8 @@ swfdec_as_array_append_array_range (SwfdecAsArray *array_to,
   fdata.offset = swfdec_as_array_length (SWFDEC_AS_OBJECT (array_to));
   fdata.start_index = start_index;
   fdata.num = num;
+
+  g_return_if_fail (start_index + num <= fdata.offset);
 
   swfdec_as_array_set_length_object (fdata.object_to,
       fdata.offset + fdata.num);

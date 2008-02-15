@@ -622,10 +622,9 @@ swfdec_bits_get_rect (SwfdecBits * bits, SwfdecRect *rect)
  * @len: length of buffer or -1 for maximum
  *
  * Gets the contents of the next @len bytes of @bits and buts them in a new
- * subbuffer. If @len is 0 (or @len is -1 and no more data is available), this
- * is considered a reading error and %NULL is returned.
+ * subbuffer.
  *
- * Returns: the new #SwfdecBuffer or NULL if the requested amount of data 
+ * Returns: the new #SwfdecBuffer or %NULL if the requested amount of data 
  *          isn't available
  **/
 SwfdecBuffer *
@@ -635,7 +634,7 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
 
   g_return_val_if_fail (len >= -1, NULL);
 
-  if (len > 0) {
+  if (len >= 0) {
     SWFDEC_BYTES_CHECK (bits, (guint) len);
   } else {
     g_assert (bits->idx == 0);
@@ -643,7 +642,7 @@ swfdec_bits_get_buffer (SwfdecBits *bits, int len)
     g_assert (len >= 0);
   }
   if (len == 0)
-    return NULL;
+    return swfdec_buffer_new (0);
   if (bits->buffer) {
     buffer = swfdec_buffer_new_subbuffer (bits->buffer, bits->ptr - bits->buffer->data, len);
   } else {

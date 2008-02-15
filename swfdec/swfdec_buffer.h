@@ -67,7 +67,7 @@ SwfdecBuffer *swfdec_buffer_new_subbuffer (SwfdecBuffer * buffer, gsize offset,
 SwfdecBuffer *swfdec_buffer_new_from_file (const char *filename, GError **error);
 SwfdecBuffer *swfdec_buffer_new_for_data (unsigned char *data, gsize size);
 #define swfdec_buffer_new_static(data, size) \
-    swfdec_buffer_new_full (data, size, NULL, NULL)
+    swfdec_buffer_new_full ((unsigned char *) data, size, NULL, NULL)
 SwfdecBuffer *swfdec_buffer_ref (SwfdecBuffer * buffer);
 SwfdecBuffer *swfdec_buffer_get_super (SwfdecBuffer *buffer);
 void swfdec_buffer_unref (SwfdecBuffer * buffer);

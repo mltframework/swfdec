@@ -102,10 +102,7 @@ tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag)
     return SWFDEC_STATUS_OK;
   } else {
     chunk = swfdec_bits_get_buffer (&s->b, -1);
-    if (chunk == NULL) {
-      SWFDEC_ERROR ("empty sound chunk");
-      return SWFDEC_STATUS_OK;
-    }
+    g_assert (chunk != NULL);
     SWFDEC_LOG ("got a buffer with %u samples, %d skip and %"G_GSIZE_FORMAT" bytes mp3 data", n_samples, skip,
 	chunk->length);
     /* use this to write out the stream data to stdout - nice way to get an mp3 file :) */

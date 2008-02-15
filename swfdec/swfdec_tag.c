@@ -492,6 +492,10 @@ tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
   SwfdecBits bits;
   char *name;
 
+  if (swfdec_bits_left (&s->b) == 0) {
+    SWFDEC_WARNING ("empty script, ignoring");
+    return SWFDEC_STATUS_OK;
+  }
   name = g_strdup_printf ("Sprite%u_Frame%u", SWFDEC_CHARACTER (s->parse_sprite)->id,
       s->parse_sprite->parse_frame);
   bits = s->b;

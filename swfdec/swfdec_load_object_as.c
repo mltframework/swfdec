@@ -121,8 +121,9 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   data = swfdec_as_value_to_string (cx, &val);
-  buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data) + 1),
-      strlen (data) + 1);
+  // don't send the nul-byte
+  buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data)),
+      strlen (data));
   swfdec_load_object_create (target, url, method, buffer,
       swfdec_load_object_on_progress, swfdec_load_object_on_finish);
 

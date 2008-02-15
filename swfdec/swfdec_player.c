@@ -237,6 +237,27 @@
  * keyboard.
  */
 
+/*** timeval type mapping ***/
+
+static gpointer
+swfdec_time_val_copy (gpointer boxed)
+{
+  return g_memdup (boxed, sizeof (GTimeVal));
+}
+
+GType
+swfdec_time_val_get_type (void)
+{
+  static GType type = 0;
+
+  if (!type) {
+    type = g_boxed_type_register_static ("SwfdecTimeVal", 
+       swfdec_time_val_copy, g_free);
+  }
+
+  return type;
+}
+
 /*** Timeouts ***/
 
 static SwfdecTick
@@ -634,7 +655,8 @@ enum {
   PROP_SOCKET_TYPE,
   PROP_BASE_URL,
   PROP_URL,
-  PROP_VARIABLES
+  PROP_VARIABLES,
+  PROP_START_TIME
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -895,6 +917,13 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_VARIABLES:
       swfdec_player_set_variables (player, g_value_get_boxed (value));
+      break;
+    case PROP_START_TIME:
+      {
+	static const GTimeVal the_beginning = { 1035840244, 0 };
+	const GTimeVal *set = g_value_get_boxed (value);
+	SWFDEC_AS_CONTEXT (player)->start_time = set ? *set : the_beginning;
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -1697,6 +1726,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_VARIABLES,
       g_param_spec_string ("variables", "variables", "variables to use when setting the URL",
 	  NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_START_TIME,
+      g_param_spec_boxed ("start-time", "start-time", "time to use as the beginning time for this player",
+	  SWFDEC_TYPE_TIME_VAL, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -2297,7 +2329,6 @@ swfdec_player_use_video_codec (SwfdecPlayer *player, guint codec)
 SwfdecPlayer *
 swfdec_player_new (SwfdecAsDebugger *debugger)
 {
-  static const GTimeVal the_beginning = { 1035840244, 0 };
   SwfdecPlayer *player;
 
   g_return_val_if_fail (debugger == NULL || SWFDEC_IS_AS_DEBUGGER (debugger), NULL);
@@ -2307,8 +2338,6 @@ swfdec_player_new (SwfdecAsDebugger *debugger)
       "loader-type", SWFDEC_TYPE_FILE_LOADER, "socket-type", SWFDEC_TYPE_SOCKET,
       "max-runtime", 0, 
       "debugger", debugger, NULL);
-  /* FIXME: make this a property or something and don't set it here */
-  SWFDEC_AS_CONTEXT (player)->start_time = the_beginning;
 
   return player;
 }

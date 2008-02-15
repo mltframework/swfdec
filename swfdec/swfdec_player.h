@@ -54,6 +54,9 @@ typedef enum {
   SWFDEC_SCALE_NONE
 } SwfdecScaleMode;
 
+#define SWFDEC_TYPE_TIME_VAL swfdec_time_val_get_type()
+GType swfdec_time_val_get_type  (void);
+
 /* forward declarations */
 typedef struct _SwfdecPlayerScripting SwfdecPlayerScripting;
 

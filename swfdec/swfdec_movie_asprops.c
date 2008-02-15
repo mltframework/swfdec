@@ -430,7 +430,7 @@ struct {
   { 0, SWFDEC_AS_STR__root,	mc_root,	    NULL },
 };
 
-static inline int
+static int
 swfdec_movie_get_asprop_index (SwfdecMovie *movie, const char *name)
 {
   guint i;

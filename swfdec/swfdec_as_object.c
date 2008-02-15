@@ -190,7 +190,7 @@ swfdec_as_variable_name_is_valid (const char *name)
   return name != SWFDEC_AS_STR_EMPTY;
 }
 
-static inline SwfdecAsVariable *
+static SwfdecAsVariable *
 swfdec_as_object_hash_lookup (SwfdecAsObject *object, const char *variable)
 {
   SwfdecAsVariable *var = g_hash_table_lookup (object->properties, variable);
@@ -201,7 +201,7 @@ swfdec_as_object_hash_lookup (SwfdecAsObject *object, const char *variable)
   return var;
 }
 
-static inline SwfdecAsVariable *
+static SwfdecAsVariable *
 swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable, guint flags)
 {
   SwfdecAsVariable *var;
@@ -276,7 +276,7 @@ swfdec_as_watch_new (SwfdecAsFunction *function)
   return watch;
 }
 
-static inline gboolean
+static gboolean
 swfdec_as_watch_can_recurse (SwfdecAsWatch *watch)
 {
   guint version;
@@ -289,13 +289,13 @@ swfdec_as_watch_can_recurse (SwfdecAsWatch *watch)
   }
 }
 
-static inline void
+static void
 swfdec_as_watch_ref (SwfdecAsWatch *watch)
 {
   watch->refcount++;
 }
 
-static inline void
+static void
 swfdec_as_watch_unref (SwfdecAsWatch *watch)
 {
   watch->refcount--;

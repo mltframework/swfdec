@@ -70,7 +70,7 @@ swfdec_movie_color_getRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
   SWFDEC_AS_VALUE_SET_INT (ret, result);
 }
 
-static inline void
+static void
 add_variable (SwfdecAsObject *obj, const char *name, double value)
 {
   SwfdecAsValue val;
@@ -134,7 +134,7 @@ swfdec_movie_color_setRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
   swfdec_movie_invalidate_last (movie);
 }
 
-static inline void
+static void
 parse_property (SwfdecAsObject *obj, const char *name, int *target, gboolean scale)
 {
   SwfdecAsValue val;

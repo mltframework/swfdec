@@ -149,7 +149,7 @@ swfdec_shape_parser_new (SwfdecParseDrawFunc parse_fill,
   return list;
 }
 
-static inline void
+static void
 swfdec_shape_parser_clear_one (GArray *array)
 {
   guint i;

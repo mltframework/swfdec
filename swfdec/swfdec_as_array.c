@@ -59,7 +59,7 @@ G_DEFINE_TYPE (SwfdecAsArray, swfdec_as_array, SWFDEC_TYPE_AS_OBJECT)
  */
 
 /* NB: type is important for overflow */
-static inline gint32
+static gint32
 swfdec_as_array_to_index (const char *str)
 {
   char *end;

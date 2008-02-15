@@ -98,7 +98,7 @@ swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_sprite_movie_end_fill (movie, draw);
 }
 
-static inline guint
+static guint
 swfdec_sprite_movie_gradient_fill_get_length (SwfdecAsObject *o)
 {
   int length;

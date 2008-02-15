@@ -87,7 +87,7 @@ swfdec_as_string_object_to_string (SwfdecAsContext *context,
   return swfdec_as_value_to_string (context, &val);
 }
 
-static inline const char *
+static const char *
 swfdec_as_str_nth_char (const char *s, guint n)
 {
   while (*s && n--)

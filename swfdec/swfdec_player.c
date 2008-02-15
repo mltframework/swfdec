@@ -920,9 +920,10 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_START_TIME:
       {
-	static const GTimeVal the_beginning = { 1035840244, 0 };
 	const GTimeVal *set = g_value_get_boxed (value);
-	SWFDEC_AS_CONTEXT (player)->start_time = set ? *set : the_beginning;
+	if (set)
+	  SWFDEC_AS_CONTEXT (player)->start_time = set;
+	/* else use default time from context */
       }
       break;
     default:

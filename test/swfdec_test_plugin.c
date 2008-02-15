@@ -123,6 +123,7 @@ swfdec_test_plugin_swfdec_notify (SwfdecPlayer *player, GParamSpec *pspec, Swfde
 void
 swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
 {
+  static const GTimeVal the_beginning = { 1035840244, 0 };
   SwfdecPlayer *player;
   SwfdecURL *url;
 
@@ -134,7 +135,7 @@ swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
   plugin->finish = swfdec_test_plugin_swfdec_finish;
   plugin->data = player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
       "loader-type", SWFDEC_TYPE_FILE_LOADER, "socket-type", SWFDEC_TYPE_TEST_SWFDEC_SOCKET,
-      "max-runtime", 0, 
+      "max-runtime", 0, "start-time", &the_beginning,
       NULL);
 
   g_object_set_data (G_OBJECT (player), "plugin", plugin);

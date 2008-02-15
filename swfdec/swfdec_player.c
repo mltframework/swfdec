@@ -922,7 +922,7 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       {
 	const GTimeVal *set = g_value_get_boxed (value);
 	if (set)
-	  SWFDEC_AS_CONTEXT (player)->start_time = set;
+	  SWFDEC_AS_CONTEXT (player)->start_time = *set;
 	/* else use default time from context */
       }
       break;

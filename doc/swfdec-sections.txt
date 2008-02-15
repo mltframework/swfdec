@@ -22,6 +22,7 @@ SWFDEC_AUDIO_GET_CLASS
 SwfdecStream
 SwfdecStreamClass
 swfdec_stream_open
+swfdec_stream_is_open
 swfdec_stream_push
 swfdec_stream_eof
 swfdec_stream_error

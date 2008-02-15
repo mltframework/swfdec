@@ -116,6 +116,7 @@ swfdec_socket_send (SwfdecSocket *sock, SwfdecBuffer *buffer)
   SwfdecSocketClass *klass;
 
   g_return_if_fail (SWFDEC_IS_SOCKET (sock));
+  g_return_if_fail (swfdec_stream_is_open (SWFDEC_STREAM (sock)));
   g_return_if_fail (buffer != NULL);
 
   klass = SWFDEC_SOCKET_GET_CLASS (sock);

@@ -59,6 +59,7 @@ struct _SwfdecStreamClass
 GType		swfdec_stream_get_type		(void);
 
 void		swfdec_stream_open		(SwfdecStream *		stream);
+gboolean	swfdec_stream_is_open		(SwfdecStream *		stream);
 void		swfdec_stream_push		(SwfdecStream *		stream,
 						 SwfdecBuffer *		buffer);
 void		swfdec_stream_eof		(SwfdecStream *		stream);

@@ -396,6 +396,23 @@ swfdec_stream_open (SwfdecStream *stream)
 }
 
 /**
+ * swfdec_stream_is_open:
+ * @stream: a #SwfdecStream
+ *
+ * Checks if the given @stream is currrently open. Some functions, for example
+ * swfdec_socket_send(), require an open stream.
+ *
+ * Returns: %TRUE if the stream is open, %FALSE otherwise.
+ **/
+gboolean
+swfdec_stream_is_open (SwfdecStream *stream)
+{
+  g_return_val_if_fail (SWFDEC_IS_STREAM (stream), FALSE);
+
+  return stream->priv->state == SWFDEC_STREAM_STATE_OPEN;
+}
+
+/**
  * swfdec_stream_push:
  * @stream: a #SwfdecStream
  * @buffer: new data to make available. The stream takes the reference

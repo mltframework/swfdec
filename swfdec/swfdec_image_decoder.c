@@ -54,7 +54,7 @@ swfdec_image_decoder_parse (SwfdecDecoder *dec, SwfdecBuffer *buffer)
     image->queue = swfdec_buffer_queue_new ();
   swfdec_buffer_queue_push (image->queue, buffer);
   dec->bytes_loaded += buffer->length;
-  if (dec->bytes_loaded < dec->bytes_total)
+  if (dec->bytes_loaded > dec->bytes_total)
     dec->bytes_total = dec->bytes_loaded;
   return 0;
 }

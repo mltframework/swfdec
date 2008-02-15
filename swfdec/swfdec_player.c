@@ -938,9 +938,10 @@ swfdec_player_dispose (GObject *object)
   while (priv->roots)
     swfdec_movie_destroy (priv->roots->data);
 
-  swfdec_function_list_clear (&priv->rooted);
   /* we do this here so references to GC'd objects get freed */
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
+  /* must happen after disposing context, some objects unroot themselves */
+  swfdec_function_list_clear (&priv->rooted);
 
   swfdec_player_remove_all_external_actions (player, player);
 #ifndef G_DISABLE_ASSERT

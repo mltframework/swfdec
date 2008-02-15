@@ -128,7 +128,7 @@ swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   depth = swfdec_buffer_queue_get_depth (sock->receive_queue);
   if (len > 0) {
     if (depth < len) {
-      swfdec_test_throw (cx, "nly %zu bytes available", depth);
+      swfdec_test_throw (cx, "only %zu bytes available", depth);
       return;
     } else {
       buffer = swfdec_buffer_queue_pull (sock->receive_queue, len);

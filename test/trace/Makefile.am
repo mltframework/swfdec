@@ -701,6 +701,9 @@ EXTRA_DIST = \
 	crash-0.5.5-cvs-truncated2.swf \
 	crash-0.5.5-cvs-truncated2.swf.trace \
 	crash-0.5.5-cvs-truncated2.xml \
+	crash-0.5.90-empty-action.swf \
+	crash-0.5.90-empty-action.swf.trace \
+	crash-0.5.90-empty-action.xml \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \

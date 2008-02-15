@@ -61,11 +61,26 @@ swfdec_xml_socket_stream_target_get_player (SwfdecStreamTarget *target)
 }
 
 static void
+swfdec_xml_socket_stream_target_open (SwfdecStreamTarget *target, 
+    SwfdecStream *stream)
+{
+  SwfdecXmlSocket *xml = SWFDEC_XML_SOCKET (target);
+  SwfdecAsValue value;
+
+  xml->open = TRUE;
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&value, TRUE);
+  swfdec_sandbox_use (xml->sandbox);
+  swfdec_as_object_call (xml->target, SWFDEC_AS_STR_onConnect, 1, &value, NULL);
+  swfdec_sandbox_unuse (xml->sandbox);
+}
+
+static void
 swfdec_xml_socket_stream_target_error (SwfdecStreamTarget *target,
     SwfdecStream *stream)
 {
   SwfdecXmlSocket *xml = SWFDEC_XML_SOCKET (target);
 
+  swfdec_sandbox_use (xml->sandbox);
   if (xml->open) {
     SWFDEC_FIXME ("is onClose emitted on error?");
     swfdec_as_object_call (xml->target, SWFDEC_AS_STR_onClose, 0, NULL, NULL);
@@ -75,6 +90,7 @@ swfdec_xml_socket_stream_target_error (SwfdecStreamTarget *target,
     SWFDEC_AS_VALUE_SET_BOOLEAN (&value, FALSE);
     swfdec_as_object_call (xml->target, SWFDEC_AS_STR_onConnect, 1, &value, NULL);
   }
+  swfdec_sandbox_unuse (xml->sandbox);
 
   swfdec_xml_socket_ensure_closed (xml);
 }
@@ -109,7 +125,9 @@ swfdec_xml_socket_stream_target_parse (SwfdecStreamTarget *target,
 
 	SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (
 	      SWFDEC_AS_OBJECT (xml)->context, (char *) buffer->data));
+	swfdec_sandbox_use (xml->sandbox);
 	swfdec_as_object_call (xml->target, SWFDEC_AS_STR_onData, 1, &val, NULL);
+	swfdec_sandbox_unuse (xml->sandbox);
       }
     }
   }
@@ -126,7 +144,9 @@ swfdec_xml_socket_stream_target_close (SwfdecStreamTarget *target,
     SWFDEC_FIXME ("data left in socket, what now?");
   }
 
+  swfdec_sandbox_use (xml->sandbox);
   swfdec_as_object_call (xml->target, SWFDEC_AS_STR_onClose, 0, NULL, NULL);
+  swfdec_sandbox_unuse (xml->sandbox);
 
   swfdec_xml_socket_ensure_closed (xml);
 }
@@ -135,6 +155,7 @@ static void
 swfdec_xml_socket_stream_target_init (SwfdecStreamTargetInterface *iface)
 {
   iface->get_player = swfdec_xml_socket_stream_target_get_player;
+  iface->open = swfdec_xml_socket_stream_target_open;
   iface->parse = swfdec_xml_socket_stream_target_parse;
   iface->close = swfdec_xml_socket_stream_target_close;
   iface->error = swfdec_xml_socket_stream_target_error;
@@ -149,6 +170,7 @@ static void
 swfdec_xml_socket_mark (SwfdecAsObject *object)
 {
   swfdec_as_object_mark (SWFDEC_XML_SOCKET (object)->target);
+  swfdec_as_object_mark (SWFDEC_AS_OBJECT (SWFDEC_XML_SOCKET (object)->sandbox));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_xml_socket_parent_class)->mark (object);
 }
@@ -193,7 +215,7 @@ swfdec_xml_socket_target_gone (gpointer xmlp)
 }
 
 static SwfdecXmlSocket *
-swfdec_xml_socket_create (SwfdecAsObject *target, const char *hostname, guint port)
+swfdec_xml_socket_create (SwfdecAsObject *target, SwfdecSandbox *sandbox, const char *hostname, guint port)
 {
   SwfdecAsContext *cx = target->context;
   SwfdecXmlSocket *xml;
@@ -213,15 +235,38 @@ swfdec_xml_socket_create (SwfdecAsObject *target, const char *hostname, guint po
 
   if (xml_socket_quark == 0)
     xml_socket_quark = g_quark_from_static_string ("swfdec-xml-socket");
-  g_object_set_qdata (G_OBJECT (target), xml_socket_quark, swfdec_xml_socket_target_gone);
+  g_object_set_qdata_full (G_OBJECT (target), xml_socket_quark, xml, swfdec_xml_socket_target_gone);
   xml->target = target;
   xml->target_owner = TRUE;
   xml->socket = sock;
+  xml->sandbox = sandbox;
+  swfdec_stream_set_target (SWFDEC_STREAM (sock), SWFDEC_STREAM_TARGET (xml));
 
   return xml;
 }
 
 /*** AS CODE ***/
+
+static SwfdecXmlSocket *
+swfdec_xml_socket_get (SwfdecAsObject *object)
+{
+  SwfdecXmlSocket *xml;
+
+  if (object == NULL ||
+      xml_socket_quark == 0) {
+    SWFDEC_WARNING ("no xml socket on object");
+    return NULL;
+  }
+  
+  xml = g_object_get_qdata (G_OBJECT (object), xml_socket_quark);
+  if (xml->socket == NULL) {
+    SWFDEC_WARNING ("xml socket not open");
+    return NULL;
+  }
+
+  return xml;
+}
+
 
 SWFDEC_AS_NATIVE (400, 0, swfdec_xml_socket_connect)
 void
@@ -236,8 +281,7 @@ swfdec_xml_socket_connect (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (SWFDEC_IS_MOVIE (object) || object == NULL)
     return;
 
-  swfdec_xml_socket_create (object, host, port);
-  SWFDEC_STUB ("XMLSocket.connect");
+  swfdec_xml_socket_create (object, SWFDEC_SANDBOX (cx->global), host, port);
 }
 
 SWFDEC_AS_NATIVE (400, 1, swfdec_xml_socket_send)
@@ -245,7 +289,28 @@ void
 swfdec_xml_socket_send (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("XMLSocket.send");
+  SwfdecXmlSocket *xml;
+  SwfdecBuffer *buf;
+  const char *send;
+  gsize len;
+
+  if (argc < 1)
+    return;
+
+  xml = swfdec_xml_socket_get (object);
+  if (xml == NULL)
+    return;
+  if (!swfdec_stream_is_open (SWFDEC_STREAM (xml->socket))) {
+    SWFDEC_WARNING ("sending data down a closed stream");
+    return;
+  }
+
+  send = swfdec_as_value_to_string (cx, &argv[0]);
+  len = strlen (send) + 1;
+  buf = swfdec_buffer_new (len);
+  memcpy (buf->data, send, len);
+
+  swfdec_socket_send (xml->socket, buf);
 }
 
 SWFDEC_AS_NATIVE (400, 2, swfdec_xml_socket_close)
@@ -253,5 +318,10 @@ void
 swfdec_xml_socket_close (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("XMLSocket.close");
+  SwfdecXmlSocket *xml;
+
+  xml = swfdec_xml_socket_get (object);
+  if (xml == NULL)
+    return;
+  swfdec_stream_close (SWFDEC_STREAM (xml->socket));
 }

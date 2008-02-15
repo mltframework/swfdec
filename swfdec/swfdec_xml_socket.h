@@ -22,6 +22,7 @@
 
 #include <swfdec/swfdec.h>
 #include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_sandbox.h>
 
 G_BEGIN_DECLS
 
@@ -40,6 +41,7 @@ struct _SwfdecXmlSocket {
   SwfdecAsObject	object;
 
   SwfdecSocket *	socket;		/* the socket in use */
+  SwfdecSandbox *	sandbox;	/* the sandbox we run in */
   gboolean		open;		/* the socket has been opened already */
   SwfdecBufferQueue *	queue;		/* everything that belongs to the same string */
   SwfdecAsObject *	target;		/* target object we call out to */

@@ -158,8 +158,10 @@ swfdec_jpeg_decode_argb (unsigned char *data1, int length1,
     ret = jpeg_decode_argb (tmpdata, tmplength, outdata, width, height);
 
     g_free (tmpdata);
-  } else {
+  } else if (data1) {
     ret = jpeg_decode_argb (data1, length1, outdata, width, height);
+  } else {
+    ret = FALSE;
   }
 
   return ret;

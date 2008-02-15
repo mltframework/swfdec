@@ -213,7 +213,6 @@ swfdec_stream_process (gpointer streamp, gpointer unused)
 	swfdec_stream_target_open (priv->target, stream);
       } else if (priv->processed_state == SWFDEC_STREAM_STATE_OPEN) {
 	if (swfdec_stream_target_parse (priv->target, stream)) {
-	  g_print ("requeue!\n");
 	  swfdec_stream_queue_processing (stream);
 	  goto out;
 	} else {
@@ -224,7 +223,6 @@ swfdec_stream_process (gpointer streamp, gpointer unused)
     }
     if (priv->processed_state == SWFDEC_STREAM_STATE_OPEN) {
       if (swfdec_stream_target_parse (priv->target, stream)) {
-	g_print ("requeue!\n");
 	swfdec_stream_queue_processing (stream);
       }
     }

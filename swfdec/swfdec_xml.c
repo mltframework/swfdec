@@ -667,6 +667,40 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 }
 
 static const char *
+swfdec_xml_parse_cdata (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
+{
+  SwfdecXmlNode *child;
+  const char *end;
+  char *text;
+
+  g_assert (p != NULL);
+  g_return_val_if_fail (strncmp (p, "<![CDATA[", strlen ("<![CDATA[")) == 0,
+      strchr (p, '\0'));
+  g_return_val_if_fail (SWFDEC_IS_XML (xml), strchr (p, '\0'));
+
+  p += strlen ("<![CDATA[");
+
+  end = strstr (p, "]]>");
+
+  if (end == NULL) {
+    xml->status = XML_PARSE_STATUS_CDATA_NOT_TERMINATED;
+    return strchr (p, '\0');
+  }
+
+  text = g_strndup (p, end - p);
+
+  child = swfdec_xml_node_new_no_properties (
+      SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT,
+      swfdec_as_context_give_string (SWFDEC_AS_OBJECT (xml)->context, text));
+
+  end += strlen("]]>");
+
+  g_return_val_if_fail (end > p, strchr (p, '\0'));
+
+  return end;
+}
+
+static const char *
 swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
     const char *p, gboolean ignore_white)
 {
@@ -733,6 +767,8 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
 	p = swfdec_xml_parse_docTypeDecl (xml, node, p);
       } else if (strncmp (p + 1, "!--", strlen ("!--")) == 0) {
 	p = swfdec_xml_parse_comment (xml, p);
+      } else if (g_ascii_strncasecmp (p + 1, "![CDATA", strlen ("![CDATA")) == 0) {
+	p = swfdec_xml_parse_cdata (xml, node, p);
       } else {
 	p = swfdec_xml_parse_tag (xml, &node, p);
       }

@@ -162,8 +162,8 @@ swfdec_policy_file_target_open (SwfdecStreamTarget *target,
     SwfdecStream *stream)
 {
   if (SWFDEC_IS_SOCKET (stream)) {
-    SwfdecBuffer *buffer = swfdec_buffer_new_for_data (
-	(guchar *) g_strdup ("<policy-file-request/>"), 23);
+    SwfdecBuffer *buffer = swfdec_buffer_new_static (
+	"<policy-file-request/>", 23);
     swfdec_socket_send (SWFDEC_SOCKET (stream), buffer);
   }
 }

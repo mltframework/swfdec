@@ -1744,6 +1744,9 @@ EXTRA_DIST = \
 	netstream-onstatus-notfound.as \
 	netstream-onstatus-notfound.swf \
 	netstream-onstatus-notfound.swf.trace \
+	netstream-onmetadata.c \
+	netstream-onmetadata.swf \
+	netstream-onmetadata.swf.trace \
 	newobject-paths.as \
 	newobject-paths-5.swf \
 	newobject-paths-5.swf.trace \

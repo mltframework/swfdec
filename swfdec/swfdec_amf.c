@@ -23,6 +23,7 @@
 
 #include "swfdec_amf.h"
 #include "swfdec_as_array.h"
+#include "swfdec_as_date.h"
 #include "swfdec_debug.h"
 
 typedef gboolean (* SwfdecAmfParseFunc) (SwfdecAsContext *cx, SwfdecBits *bits, SwfdecAsValue *val);
@@ -152,6 +153,21 @@ fail:
   return FALSE;
 }
 
+// FIXME: untested
+static gboolean
+swfdec_amf_parse_date (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
+{
+  double milliseconds = swfdec_bits_get_bdouble (bits);
+  int utc_offset = swfdec_bits_get_bu16 (bits);
+
+  if (utc_offset > 12 * 60)
+    utc_offset -= 12 * 60;
+
+  SWFDEC_AS_VALUE_SET_OBJECT (val,
+      swfdec_as_date_new (context, milliseconds, utc_offset));
+  return TRUE;
+}
+
 const SwfdecAmfParseFunc parse_funcs[SWFDEC_AMF_N_TYPES] = {
   [SWFDEC_AMF_NUMBER] = swfdec_amf_parse_number,
   [SWFDEC_AMF_BOOLEAN] = swfdec_amf_parse_boolean,
@@ -159,14 +175,13 @@ const SwfdecAmfParseFunc parse_funcs[SWFDEC_AMF_N_TYPES] = {
   [SWFDEC_AMF_OBJECT] = swfdec_amf_parse_object,
   [SWFDEC_AMF_MIXED_ARRAY] = swfdec_amf_parse_mixed_array,
   [SWFDEC_AMF_ARRAY] = swfdec_amf_parse_array,
+  [SWFDEC_AMF_DATE] = swfdec_amf_parse_date,
 #if 0
   SWFDEC_AMF_MOVIECLIP = 4,
   SWFDEC_AMF_NULL = 5,
   SWFDEC_AMF_UNDEFINED = 6,
   SWFDEC_AMF_REFERENCE = 7,
   SWFDEC_AMF_END_OBJECT = 9,
-  SWFDEC_AMF_ARRAY = 10,
-  SWFDEC_AMF_DATE = 11,
   SWFDEC_AMF_BIG_STRING = 12,
   SWFDEC_AMF_RECORDSET = 14,
   SWFDEC_AMF_XML = 15,

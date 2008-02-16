@@ -53,7 +53,9 @@ struct _SwfdecAsDateClass {
 
 GType		swfdec_as_date_get_type	(void);
 
-SwfdecAsObject *swfdec_as_date_new		(SwfdecAsContext *	context);
+SwfdecAsObject *swfdec_as_date_new		(SwfdecAsContext *	context,
+						 double			milliseconds,
+						 int			utc_offset);
 
 
 G_END_DECLS

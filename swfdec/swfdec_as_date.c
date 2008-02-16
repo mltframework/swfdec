@@ -1160,3 +1160,27 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
+
+SwfdecAsObject *
+swfdec_as_date_new (SwfdecAsContext *context, double milliseconds,
+    int utc_offset)
+{
+  SwfdecAsObject *ret;
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+
+  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsDate)))
+    return NULL;
+
+  ret = g_object_new (SWFDEC_TYPE_AS_DATE, NULL);
+  swfdec_as_object_add (ret, context, sizeof (SwfdecAsDate));
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Date, &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+
+  SWFDEC_AS_DATE (ret)->milliseconds = milliseconds;
+  SWFDEC_AS_DATE (ret)->utc_offset = utc_offset;
+
+  return ret;
+}

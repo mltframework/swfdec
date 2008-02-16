@@ -350,25 +350,24 @@ swfdec_bits_get_double (SwfdecBits * b)
 double
 swfdec_bits_get_bdouble (SwfdecBits * b)
 {
-  double d;
+  guint8 x[8];
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  guint64 tmp;
-  gpointer p;
+  guint8 c;
 #endif
 
   SWFDEC_BYTES_CHECK (b, 8);
 
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-  memcpy (&d, b->ptr, 8);
-#elif G_BYTE_ORDER == G_LITTLE_ENDIAN
-  memcpy (&tmp, b->ptr, 8);
-  tmp = GUINT64_FROM_BE (tmp);
-  p = &tmp;
-  d = *((double *) p);
-#endif
+  memcpy (&x, b->ptr, 8);
   b->ptr += 8;
 
-  return d;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  c=x[0]; x[0]=x[7]; x[7]=c;
+  c=x[1]; x[1]=x[6]; x[6]=c;
+  c=x[2]; x[2]=x[5]; x[5]=c;
+  c=x[3]; x[3]=x[4]; x[4]=c;
+#endif
+
+  return *(double *)&x;
 }
 
 void

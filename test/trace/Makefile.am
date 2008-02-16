@@ -1770,6 +1770,15 @@ EXTRA_DIST = \
 	number-properties-7.swf.trace \
 	number-properties-8.swf \
 	number-properties-8.swf.trace \
+	number-tostring-radix.as \
+	number-tostring-radix-5.swf \
+	number-tostring-radix-5.swf.trace \
+	number-tostring-radix-6.swf \
+	number-tostring-radix-6.swf.trace \
+	number-tostring-radix-7.swf \
+	number-tostring-radix-7.swf.trace \
+	number-tostring-radix-8.swf \
+	number-tostring-radix-8.swf.trace \
 	object-hasownproperty.as \
 	object-hasownproperty-5.swf \
 	object-hasownproperty-5.swf.trace \

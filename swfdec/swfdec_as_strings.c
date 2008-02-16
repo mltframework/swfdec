@@ -487,5 +487,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("id")
   SWFDEC_AS_CONSTANT_STRING ("onClose")
   SWFDEC_AS_CONSTANT_STRING ("onConnect")
+  SWFDEC_AS_CONSTANT_STRING ("width")
+  SWFDEC_AS_CONSTANT_STRING ("height")
+  SWFDEC_AS_CONSTANT_STRING ("deblocking")
+  SWFDEC_AS_CONSTANT_STRING ("smoothing")
   /* add more here */
 ;

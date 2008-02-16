@@ -1724,6 +1724,9 @@ EXTRA_DIST = \
 	native-run-8.swf.trace \
 	netconnection.swf \
 	netconnection.swf.trace \
+	netstream-dimensions.c \
+	netstream-dimensions.swf \
+	netstream-dimensions.swf.trace \
 	netstream-fscommand.as \
 	netstream-fscommand-6.swf \
 	netstream-fscommand-6.swf.trace \

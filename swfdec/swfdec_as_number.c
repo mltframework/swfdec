@@ -67,6 +67,50 @@ swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
+// code adapted from Tamarin's convertDoubleToStringRadix in MathUtils.cpp
+// 2008-02-16
+static const char *
+swfdec_as_number_toStringRadix (SwfdecAsContext *context, double value,
+    int radix)
+{
+  gboolean negative;
+  GString *str;
+  double left = floor (value);
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), SWFDEC_AS_STR_NaN);
+  g_return_val_if_fail (radix >= 2 && radix <= 36, SWFDEC_AS_STR_NaN);
+  g_return_val_if_fail (!isinf (value) && !isnan (value), SWFDEC_AS_STR_NaN);
+
+  if (value < 0) {
+    negative = TRUE;
+    value = -value;
+  } else {
+    negative = FALSE;
+  }
+
+  if (value < 1)
+    return SWFDEC_AS_STR_0;
+
+  str = g_string_new ("");
+
+  left = floor (value);
+
+  while (left != 0)
+  {
+    double val = left;
+    left = floor (left / radix);
+    val -= (left * radix);
+
+    g_string_prepend_c (str,
+	(val < 10 ? ((int)val + '0') : ((int)val + ('a' - 10))));
+  }
+
+  if (negative)
+    g_string_prepend_c (str, '-');
+
+  return swfdec_as_context_give_string (context, g_string_free (str, FALSE));
+}
+
 SWFDEC_AS_NATIVE (106, 1, swfdec_as_number_toString)
 void
 swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
@@ -75,16 +119,17 @@ swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsNumber *num;
   SwfdecAsValue val;
   const char *s;
-  
-  if (!SWFDEC_IS_AS_NUMBER (object))
-    return;
+  int radix;
 
-  num = SWFDEC_AS_NUMBER (object);
-  if (argc > 0) {
-    SWFDEC_FIXME ("radix is not yet implemented");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_NUMBER, &num, "|i", &radix);
+
+  if (radix == 10 || radix < 2 || radix > 36 || isinf (num->number) ||
+      isnan (num->number)) {
+    SWFDEC_AS_VALUE_SET_NUMBER (&val, num->number);
+    s = swfdec_as_value_to_string (cx, &val);
+  } else {
+    s = swfdec_as_number_toStringRadix (cx, num->number, radix);
   }
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, num->number);
-  s = swfdec_as_value_to_string (object->context, &val);
   SWFDEC_AS_VALUE_SET_STRING (ret, s);
 }
 

@@ -211,9 +211,9 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
       g_object_unref (stream->audio);
       stream->audio = NULL;
     }
-    /* we'll have the timeout still set, but not readded, in the timeout handler */
-    if (stream->timeout.timestamp > player->priv->time)
-      swfdec_player_remove_timeout (player, &stream->timeout);
+    /* FIXME: timeout might or might not be be added here if
+     * timestamp == player->priv->time, but we'll just remove to be sure */
+    swfdec_player_remove_timeout (player, &stream->timeout);
     stream->timeout.callback = NULL;
     SWFDEC_DEBUG ("stopping playback");
   }

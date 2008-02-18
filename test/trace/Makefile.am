@@ -3299,6 +3299,15 @@ EXTRA_DIST = \
 	with-prototypes-6.swf.trace \
 	with-prototypes-7.swf \
 	with-prototypes-7.swf.trace \
+	xml-cdata.as \
+	xml-cdata-5.swf \
+	xml-cdata-5.swf.trace \
+	xml-cdata-6.swf \
+	xml-cdata-6.swf.trace \
+	xml-cdata-7.swf \
+	xml-cdata-7.swf.trace \
+	xml-cdata-8.swf \
+	xml-cdata-8.swf.trace \
 	xml-errors.as \
 	xml-errors-5.swf \
 	xml-errors-5.swf.trace \

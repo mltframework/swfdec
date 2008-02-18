@@ -1706,7 +1706,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_SCRIPTING,
       g_param_spec_object ("scripting", "scripting", "external scripting implementation",
 	  SWFDEC_TYPE_PLAYER_SCRIPTING, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_SCALE,
+  g_object_class_install_property (object_class, PROP_SYSTEM,
       g_param_spec_object ("system", "system", "object holding system information",
 	  SWFDEC_TYPE_SYSTEM, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_MAX_RUNTIME,

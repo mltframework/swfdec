@@ -692,6 +692,9 @@ swfdec_xml_parse_cdata (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
   child = swfdec_xml_node_new_no_properties (
       SWFDEC_AS_OBJECT (node)->context, SWFDEC_XML_NODE_TEXT,
       swfdec_as_context_give_string (SWFDEC_AS_OBJECT (xml)->context, text));
+  if (child == NULL)
+    return strchr (p, '\0');
+  swfdec_xml_node_appendChild (node, child);
 
   end += strlen("]]>");
 

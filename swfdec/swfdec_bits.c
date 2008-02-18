@@ -337,10 +337,6 @@ swfdec_bits_get_double (SwfdecBits * b)
 #else
   conv.i[0] = (b->ptr[3] << 24) | (b->ptr[2] << 16) | (b->ptr[1] << 8) | b->ptr[0];
   conv.i[1] = (b->ptr[7] << 24) | (b->ptr[6] << 16) | (b->ptr[5] << 8) | b->ptr[4];
-#if 0
-  conv.i[0] = (b->ptr[0] << 24) | (b->ptr[1] << 16) | (b->ptr[2] << 8) | b->ptr[3];
-  conv.i[1] = (b->ptr[4] << 24) | (b->ptr[5] << 16) | (b->ptr[6] << 8) | b->ptr[7];
-#endif
 #endif
   b->ptr += 8;
 

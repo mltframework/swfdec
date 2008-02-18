@@ -33,6 +33,7 @@
 #include "swfdec-gtk/swfdec_gtk_loader.h"
 #include "swfdec-gtk/swfdec_gtk_player.h"
 #include "swfdec-gtk/swfdec_gtk_socket.h"
+#include "swfdec-gtk/swfdec_gtk_system.h"
 #include "swfdec-gtk/swfdec_playback.h"
 #include "swfdec-gtk/swfdec_source.h"
 
@@ -253,11 +254,15 @@ SwfdecPlayer *
 swfdec_gtk_player_new (SwfdecAsDebugger *debugger)
 {
   SwfdecPlayer *player;
-
+  SwfdecSystem *sys;
+  
   swfdec_init ();
+
+  sys = swfdec_gtk_system_new (NULL);
   player = g_object_new (SWFDEC_TYPE_GTK_PLAYER, 
       "loader-type", SWFDEC_TYPE_GTK_LOADER, "socket-type", SWFDEC_TYPE_GTK_SOCKET,
-      "debugger", debugger, NULL);
+      "system", sys, "debugger", debugger, NULL);
+  g_object_unref (sys);
 
   return player;
 }

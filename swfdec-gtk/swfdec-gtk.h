@@ -24,6 +24,7 @@
 #include <swfdec-gtk/swfdec_gtk_loader.h>
 #include <swfdec-gtk/swfdec_gtk_player.h>
 #include <swfdec-gtk/swfdec_gtk_socket.h>
+#include <swfdec-gtk/swfdec_gtk_system.h>
 #include <swfdec-gtk/swfdec_gtk_widget.h>
 
 #endif

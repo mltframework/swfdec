@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 #include "swfdec_as_interpret.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_date.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_internal.h"
@@ -960,6 +961,25 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 }
 
 static void
+swfdec_action_add2_to_primitive (SwfdecAsValue *value)
+{
+  SwfdecAsObject *object;
+  const char *name;
+
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (value))
+    return;
+  object = SWFDEC_AS_VALUE_GET_OBJECT (value);
+  if (SWFDEC_IS_MOVIE (object))
+    return;
+
+  if (SWFDEC_IS_AS_DATE (object) && object->context->version > 5)
+    name = SWFDEC_AS_STR_toString;
+  else
+    name = SWFDEC_AS_STR_valueOf;
+  swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), name, 0, NULL, value);
+}
+
+static void
 swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *rval, *lval, rtmp, ltmp;
@@ -968,10 +988,10 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   lval = swfdec_as_stack_peek (cx, 2);
   rtmp = *rval;
   ltmp = *lval;
-  swfdec_as_value_to_primitive (&rtmp);
+  swfdec_action_add2_to_primitive (&rtmp);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&rtmp) || SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&rtmp)))
     rval = &rtmp;
-  swfdec_as_value_to_primitive (&ltmp);
+  swfdec_action_add2_to_primitive (&ltmp);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&ltmp) || SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&ltmp)))
     lval = &ltmp;
 

@@ -30,6 +30,15 @@ EXTRA_DIST = \
 	add2-7.swf.trace \
 	add2-8.swf \
 	add2-8.swf.trace \
+	add2-different-objects-5.swf \
+	add2-different-objects-5.swf.trace \
+	add2-different-objects-6.swf \
+	add2-different-objects-6.swf.trace \
+	add2-different-objects-7.swf \
+	add2-different-objects-7.swf.trace \
+	add2-different-objects-8.swf \
+	add2-different-objects-8.swf.trace \
+	add2-different-objects.as \
 	addProperty.as \
 	addProperty-5.swf \
 	addProperty-5.swf.trace \

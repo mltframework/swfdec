@@ -778,9 +778,6 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   val = swfdec_as_stack_peek (cx, 1);
   if (val->type == SWFDEC_AS_TYPE_UNDEFINED) {
     s = SWFDEC_AS_STR_undefined;
-  } else if (val->type == SWFDEC_AS_TYPE_OBJECT &&
-      SWFDEC_IS_AS_STRING (swfdec_as_value_to_object (cx, val))) {
-    s = SWFDEC_AS_STRING (swfdec_as_value_to_object (cx, val))->string;
   } else {
     s = swfdec_as_value_to_string (cx, val);
   }

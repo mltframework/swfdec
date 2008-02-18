@@ -192,6 +192,7 @@ swfdec_gtk_player_dispose (GObject *object)
   SwfdecGtkPlayer *player = SWFDEC_GTK_PLAYER (object);
 
   swfdec_gtk_player_set_playing (player, FALSE);
+  swfdec_gtk_player_set_missing_plugins_window (player, NULL);
   g_assert (player->priv->playback == NULL);
 
   G_OBJECT_CLASS (swfdec_gtk_player_parent_class)->dispose (object);
@@ -430,7 +431,7 @@ swfdec_gtk_player_set_missing_plugins_window (SwfdecGtkPlayer *player,
   SwfdecGtkPlayerPrivate *priv;
 
   g_return_if_fail (SWFDEC_IS_GTK_PLAYER (player));
-  g_return_if_fail (GDK_IS_WINDOW (window));
+  g_return_if_fail (window == NULL || GDK_IS_WINDOW (window));
 
   priv = player->priv;
   if (priv->missing_plugins_window)

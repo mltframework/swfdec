@@ -337,10 +337,6 @@ swfdec_bits_get_double (SwfdecBits * b)
 #else
   conv.i[0] = (b->ptr[3] << 24) | (b->ptr[2] << 16) | (b->ptr[1] << 8) | b->ptr[0];
   conv.i[1] = (b->ptr[7] << 24) | (b->ptr[6] << 16) | (b->ptr[5] << 8) | b->ptr[4];
-#if 0
-  conv.i[0] = (b->ptr[0] << 24) | (b->ptr[1] << 16) | (b->ptr[2] << 8) | b->ptr[3];
-  conv.i[1] = (b->ptr[4] << 24) | (b->ptr[5] << 16) | (b->ptr[6] << 8) | b->ptr[7];
-#endif
 #endif
   b->ptr += 8;
 
@@ -350,24 +346,19 @@ swfdec_bits_get_double (SwfdecBits * b)
 double
 swfdec_bits_get_bdouble (SwfdecBits * b)
 {
-  guint8 x[8];
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  guint8 c;
-#endif
+  union {
+    double d;
+    guint64 u64;
+  } u;
 
   SWFDEC_BYTES_CHECK (b, 8);
 
-  memcpy (&x, b->ptr, 8);
+  memcpy (&u.u64, b->ptr, 8);
   b->ptr += 8;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  c=x[0]; x[0]=x[7]; x[7]=c;
-  c=x[1]; x[1]=x[6]; x[6]=c;
-  c=x[2]; x[2]=x[5]; x[5]=c;
-  c=x[3]; x[3]=x[4]; x[4]=c;
-#endif
+  u.u64 = GUINT64_FROM_BE (u.u64);
 
-  return *(double *)&x;
+  return u.d;
 }
 
 void

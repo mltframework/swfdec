@@ -646,7 +646,7 @@ swfdec_url_new_from_input (const char *input)
   /* FIXME: split at '?' for query? */
   if (g_path_is_absolute (input)) {
     url = swfdec_url_new_components ("file", NULL, 0,
-	input, NULL);
+	input[0] == '/' ? &input[1] : &input[0], NULL);
   } else {
     char *absolute, *cur;
     cur = g_get_current_dir ();

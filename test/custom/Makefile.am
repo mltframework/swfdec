@@ -1,6 +1,6 @@
 check-local:
 	for file in $(srcdir)/*.sts; do \
-	  ../swfdec-test --script $$file $(srcdir)/`basename $$file .sts`*.swf; \
+	  ../swfdec-test --script $$file $(srcdir)/`basename $$file .sts`*.swf || exit $?; \
 	done
 
 EXTRA_DIST = \
@@ -34,6 +34,11 @@ EXTRA_DIST = \
 	button-hittest.c \
 	button-hittest.stas \
 	button-hittest.sts \
+	crash-0.5.90-up-to-date.as \
+	crash-0.5.90-up-to-date.stas \
+	crash-0.5.90-up-to-date.sts \
+  	crash-0.5.90-up-to-date.swf \
+	crash-0.5.90-up-to-date.swf.trace  
 	definebutton-5.swf \
 	definebutton-5.swf.trace \
 	definebutton-6.swf \

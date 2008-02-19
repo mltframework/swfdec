@@ -30,6 +30,15 @@ EXTRA_DIST = \
 	add2-7.swf.trace \
 	add2-8.swf \
 	add2-8.swf.trace \
+	add2-different-objects-5.swf \
+	add2-different-objects-5.swf.trace \
+	add2-different-objects-6.swf \
+	add2-different-objects-6.swf.trace \
+	add2-different-objects-7.swf \
+	add2-different-objects-7.swf.trace \
+	add2-different-objects-8.swf \
+	add2-different-objects-8.swf.trace \
+	add2-different-objects.as \
 	addProperty.as \
 	addProperty-5.swf \
 	addProperty-5.swf.trace \
@@ -1750,6 +1759,15 @@ EXTRA_DIST = \
 	netstream-onmetadata.c \
 	netstream-onmetadata.swf \
 	netstream-onmetadata.swf.trace \
+	newmethod-undefined-5.swf \
+	newmethod-undefined-5.swf.trace \
+	newmethod-undefined-6.swf \
+	newmethod-undefined-6.swf.trace \
+	newmethod-undefined-7.swf \
+	newmethod-undefined-7.swf.trace \
+	newmethod-undefined-8.swf \
+	newmethod-undefined-8.swf.trace \
+	newmethod-undefined.as \
 	newobject-paths.as \
 	newobject-paths-5.swf \
 	newobject-paths-5.swf.trace \

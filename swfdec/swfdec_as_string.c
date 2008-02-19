@@ -342,15 +342,6 @@ swfdec_as_string_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STRING (object)->string);
 }
 
-#if 0
-charAt(index:Number) : String
-charCodeAt(index:Number) : Number
-concat(value:Object) : String
-indexOf(value:String, [startIndex:Number]) : Number
-slice(start:Number, end:Number) : String
-split(delimiter:String, [limit:Number]) : Array
-#endif
-
 static void
 swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)

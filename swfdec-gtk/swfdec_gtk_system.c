@@ -149,6 +149,8 @@ swfdec_gtk_system_new (GdkScreen *screen)
       "language", lang, "utc-offset", swfdec_gtk_system_get_utc_offset (),
       "dpi", dpi, "screen-height", gdk_screen_get_height (screen), 
       "screen-width", gdk_screen_get_width (screen), 
+      "pixel-aspect-ratio", (double) gdk_screen_get_width (screen) * gdk_screen_get_height_mm (screen)
+	  / (gdk_screen_get_width_mm (screen) * gdk_screen_get_height (screen)),
       NULL);
   SWFDEC_GTK_SYSTEM (system)->priv->screen = g_object_ref (screen);
 

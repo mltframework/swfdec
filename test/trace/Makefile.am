@@ -1759,6 +1759,15 @@ EXTRA_DIST = \
 	netstream-onmetadata.c \
 	netstream-onmetadata.swf \
 	netstream-onmetadata.swf.trace \
+	newmethod-undefined-5.swf \
+	newmethod-undefined-5.swf.trace \
+	newmethod-undefined-6.swf \
+	newmethod-undefined-6.swf.trace \
+	newmethod-undefined-7.swf \
+	newmethod-undefined-7.swf.trace \
+	newmethod-undefined-8.swf \
+	newmethod-undefined-8.swf.trace \
+	newmethod-undefined.as \
 	newobject-paths.as \
 	newobject-paths-5.swf \
 	newobject-paths-5.swf.trace \

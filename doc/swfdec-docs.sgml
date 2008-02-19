@@ -10,18 +10,24 @@
     <title>Swfdec Gtk library</title>
     <xi:include href="xml/SwfdecGtkPlayer.xml"/>
     <xi:include href="xml/SwfdecGtkWidget.xml"/>
-    <xi:include href="xml/SwfdecGtkLoader.xml"/>
+    <xi:include href="xml/GtkExtensions.xml"/>
   </chapter>
   <chapter>
     <title>Swfdec library</title>
     <xi:include href="xml/Enumerations.xml"/>
     <xi:include href="xml/SwfdecRectangle.xml"/>
+    <xi:include href="xml/SwfdecBuffer.xml"/>
+    <xi:include href="xml/SwfdecURL.xml"/>
     <xi:include href="xml/SwfdecPlayer.xml"/>
     <xi:include href="xml/SwfdecSystem.xml"/>
     <xi:include href="xml/SwfdecAudio.xml"/>
-    <xi:include href="xml/SwfdecBuffer.xml"/>
+  </chapter>
+  <chapter>
+    <title>extending SwfdecPlayer</title>
+    <xi:include href="xml/SwfdecPlayerScripting.xml"/>
+    <xi:include href="xml/SwfdecStream.xml"/>
     <xi:include href="xml/SwfdecLoader.xml"/>
-    <xi:include href="xml/SwfdecURL.xml"/>
+    <xi:include href="xml/SwfdecSocket.xml"/>
   </chapter>
   <chapter>
     <title>Actionscript interpreter</title>

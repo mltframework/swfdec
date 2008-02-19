@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 /**
  * audio_diff:
@@ -43,7 +43,7 @@ audio_diff (SwfdecBuffer *compare, SwfdecBuffer *original, const char *filename)
   /* must hold since we are rendering it */
   g_assert (compare->length % 4 == 0);
   if (original->length % 4 != 0) {
-    g_print ("  ERROR: %s: filesize (%u bytes) not multiple of 4\n", filename,
+    g_print ("  ERROR: %s: filesize (%"G_GSIZE_FORMAT" bytes) not multiple of 4\n", filename,
 	original->length);
     return FALSE;
   }
@@ -193,7 +193,7 @@ render_all_streams (SwfdecPlayer *player, guint msecs, guint n_samples, TestData
   
   for (walk = data->streams; walk; walk = walk->next) {
     TestStream *stream = walk->data;
-    SwfdecBuffer *buffer = swfdec_buffer_new_and_alloc0 (n_samples * 4);
+    SwfdecBuffer *buffer = swfdec_buffer_new0 (n_samples * 4);
     swfdec_audio_render (stream->audio, (gint16 *) buffer->data, 0, n_samples);
     swfdec_buffer_queue_push (stream->queue, buffer);
   }
@@ -202,9 +202,10 @@ render_all_streams (SwfdecPlayer *player, guint msecs, guint n_samples, TestData
 static gboolean
 run_test (const char *filename)
 {
-  SwfdecLoader *loader;
+  SwfdecURL *url;
   SwfdecPlayer *player = NULL;
-  guint i, msecs;
+  guint i;
+  long msecs;
   GError *error = NULL;
   char *dirname, *basename;
   const char *name;
@@ -232,22 +233,20 @@ run_test (const char *filename)
   g_free (dirname);
   g_free (basename);
 
-  loader = swfdec_file_loader_new (filename);
-  if (loader->error) {
-    g_print ("  ERROR: %s\n", loader->error);
-    g_object_unref (loader);
-    goto error;
-  }
   player = swfdec_player_new (NULL);
+  url = swfdec_url_new_from_input (filename);
   g_signal_connect (player, "audio-added", G_CALLBACK (audio_added), &data);
   g_signal_connect (player, "audio-removed", G_CALLBACK (audio_removed), &data);
   g_signal_connect (player, "advance", G_CALLBACK (render_all_streams), &data);
-  swfdec_player_set_loader (player, loader);
+  swfdec_player_set_url (player, url);
+  swfdec_url_free (url);
 
   for (i = 0; i < 10; i++) {
     data.current_frame++;
     data.current_frame_audio = 0;
     msecs = swfdec_player_get_next_event (player);
+    if (msecs < 0)
+      goto error;
     swfdec_player_advance (player, msecs);
   }
   g_object_unref (player);

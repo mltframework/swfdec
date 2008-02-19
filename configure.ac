@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.5.5.1)
+AC_INIT(swfdec,0.5.90.1)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -33,7 +33,7 @@ else
 fi
 AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="5:0:0"
+SWFDEC_LIBVERSION="90:0:0"
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
@@ -97,7 +97,7 @@ AC_SUBST(PANGO_CFLAGS)
 
 AC_ARG_ENABLE(gtk,
 	AS_HELP_STRING([--enable-gtk],
-			[enable Gtk integration (default=yes)])],
+			[enable build of swfdec-gtk (default=yes)])],
 	enable_gtk=$enableval,
 	enable_gtk="yes")
 
@@ -107,12 +107,8 @@ dnl
 GTK_VER=2.8.0
 AC_SUBST(GTK_VER)
 if test "$enable_gtk" = "yes"; then
-	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER, HAVE_GTK=yes, HAVE_GTK=no)
-	if test "x$HAVE_GTK" = xyes; then
-	  AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
-	else
-	  AC_MSG_ERROR([Couldn't find a suitable Gtk version. You need at least version $GTK_VER])
-	fi
+	PKG_CHECK_MODULES(GTK, gtk+-2.0 >= $GTK_VER libsoup-2.4, HAVE_GTK=yes)
+	AC_DEFINE(HAVE_GTK, 1, [Define if Gtk is enabled])
 else
 	AC_MSG_NOTICE([Gtk support was not enabled.])
 fi
@@ -254,35 +250,18 @@ AC_ARG_ENABLE(gstreamer,
 
 if test "$enable_gstreamer" = "yes"; then
 	GST_REQUIRED=0.10.11
-	PKG_CHECK_MODULES(GST, gstreamer-0.10 >= $GST_REQUIRED, HAVE_GST=yes, HAVE_GST=no)
+	GST_PB_REQUIRED=0.10.15
+	PKG_CHECK_MODULES(GST, gstreamer-0.10 >= $GST_REQUIRED gstreamer-pbutils-0.10 >= $GST_PB_REQUIRED, HAVE_GST=yes, HAVE_GST=no)
 	if test "x$HAVE_GST" = xyes; then
 	  AC_DEFINE(HAVE_GST, 1, [Define if GStreamer is enabled])
 	else
-	  AC_MSG_ERROR([Couldn't find GStreamer $GST_REQUIRED.])
+	  AC_MSG_ERROR([Couldn't find GStreamer $GST_REQUIRED and gstreamer-pbutils $GST_PB_REQUIRED.])
 	fi
 else
 	AC_MSG_NOTICE([GStreamer support was not enabled.])
 fi
 AM_CONDITIONAL(HAVE_GST, [test "x$HAVE_GST" = xyes])
 
-
-AC_ARG_ENABLE(soup,
-	AS_HELP_STRING([--enable-soup],
-			[enable libsoup HTTP support for swfdec-gtk (default=yes)])],
-	enable_libsoup=$enableval,
-	enable_libsoup="yes")
-
-if test "$enable_libsoup" = "yes"; then
-	PKG_CHECK_MODULES(HTTP, libsoup-2.2 >= 2.2.0, HAVE_HTTP=yes, HAVE_HTTP=no)
-	if test "x$HAVE_HTTP" = xyes; then
-	  AC_DEFINE(HAVE_HTTP, 1, [Define if libsoup is enabled])
-	else
-	  AC_MSG_ERROR([Couldn't find libsoup-2.2.])
-	fi
-else
-	AC_MSG_NOTICE([libsoup HTTP support was not enabled.])
-fi
-AM_CONDITIONAL(HAVE_HTTP, [test "x$HAVE_HTTP" = xyes])
 
 AC_ARG_ENABLE(vivified,
 	AS_HELP_STRING([--enable-vivified],
@@ -309,12 +288,12 @@ AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_CFLAGS)
 
 SWFDEC_CFLAGS="-I\$(top_srcdir) $GLIB_CFLAGS $CAIRO_CFLAGS"
-SWFDEC_LIBS="\$(top_builddir)/libswfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS $CAIRO_LIBS -lz"
+SWFDEC_LIBS="\$(top_builddir)/swfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS $CAIRO_LIBS -lz"
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
 
 SWFDEC_GTK_CFLAGS="$SWFDEC_CFLAGS $GTK_CFLAGS"
-SWFDEC_GTK_LIBS="\$(top_builddir)/libswfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS $GTK_LIBS"
+SWFDEC_GTK_LIBS="\$(top_builddir)/swfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la $SWFDEC_LIBS $GTK_LIBS"
 AC_SUBST(SWFDEC_GTK_LIBS)
 AC_SUBST(SWFDEC_GTK_CFLAGS)
 
@@ -347,9 +326,9 @@ data/icons/scalable/Makefile
 data/swfdec.pc
 data/swfdec-gtk.pc
 doc/Makefile
-libswfdec/Makefile
-libswfdec/jpeg/Makefile
-libswfdec-gtk/Makefile
+swfdec/Makefile
+swfdec/jpeg/Makefile
+swfdec-gtk/Makefile
 player/Makefile
 test/Makefile
 test/custom/Makefile

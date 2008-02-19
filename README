@@ -3,7 +3,7 @@ Swfdec is a decoder/renderer for Macromedia Flash animations. The decoding and
 rendering engine is provided in a library that can be used by other 
 applications.  
 
-An additional library named libswfdec-gtk is provided for easy integration of
+An additional library named swfdec-gtk is provided for easy integration of
 Swfdec into Gtk applications. This library is what developers most likely want 
 to target their applications at. Building this library can be disabled.
 
@@ -14,8 +14,8 @@ it crashes. If you encounter such a crash however, make sure to file a bug
 immediately.
 
 Swfdec contains some applications for testing and debugging the library. These 
-are available in the player/ and test/ directory. They are not installed. Most 
-of them require the libswfdec-gtk library.
+are available in the player/, test/ and tools/ directories. They are not 
+installed. Most of them require the swfdec-gtk library.
 
 The test/ directory contains subdirectories that run automated tests with the 
 provided SWF files in the directory. See the README files in those directories
@@ -60,7 +60,7 @@ Limitations:
 Dependencies:
 
   cairo (>= 1.2.0 - >= 1.4.0 recommended) with png support enabled
-  glib (>= 2.10.0)
+  glib (>= 2.14.0)
   liboil (>= 0.3.6)
   Pangocairo (>= 1.16.0) - this is provided by Pango
   zlib (>= 1.1.4)
@@ -69,7 +69,8 @@ Dependencies:
   GStreamer (>= 0.10.11 - optional, required for various audio and video formats)
   MAD (>= 0.15.1b - optional, required for MP3 audio format support)
 
-  GTK+ (>= 2.8.0 - used by libswfdec-gtk)
-  ALSA (>= 1.0 - used by libswfdec-gtk)
+  GTK+ (>= 2.8.0 - used by swfdec-gtk)
+  libsoup (>= 2.4.0 - used by swfdec-gtk)
+  ALSA (>= 1.0 - optional, required for sound output by swfdec-gtk)
 
 

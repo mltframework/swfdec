@@ -24,13 +24,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 /* FIXME: no internal headers please */
-#include <libswfdec/swfdec_as_array.h>
-#include <libswfdec/swfdec_as_internal.h>
+#include <swfdec/swfdec_as_array.h>
+#include <swfdec/swfdec_as_internal.h>
 
 #include "swfdec_test_function.h"
 #include "swfdec_test_initialize.h"
+#include "swfdec_test_test.h"
 
 
 /* Start of script file */
@@ -77,8 +78,11 @@ main (int argc, char **argv)
   SwfdecScript *script;
   SwfdecAsValue val;
   int i, ret;
+  gboolean dump = FALSE;
 
   GOptionEntry options[] = {
+    { "dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "dump images on failure", FALSE },
+    { "player", 'p', 0, G_OPTION_ARG_STRING, &swfdec_test_plugin_name, "player to test", "NAME" },
     { "script", 's', 0, G_OPTION_ARG_STRING, &script_filename, "script to execute if not ./default.sts", "FILENAME" },
     { NULL }
   };
@@ -103,13 +107,22 @@ main (int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  /* allow env vars instead of options - eases running make check with different settings */
+  if (swfdec_test_plugin_name == NULL)
+    swfdec_test_plugin_name = g_strdup (g_getenv ("SWFDEC_TEST_PLAYER"));
+
   script = load_script (script_filename);
   g_free (script_filename);
   if (script == NULL)
     return EXIT_FAILURE;
 
   context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
-  swfdec_as_context_startup (context, SWFDEC_TEST_VERSION);
+  swfdec_as_context_startup (context);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&val, dump);
+  swfdec_as_object_set_variable (context->global,
+      swfdec_as_context_get_string (context, "dump"), &val);
+
   swfdec_test_function_init_context (context);
   swfdec_as_context_run_init_script (context, swfdec_test_initialize, 
       sizeof (swfdec_test_initialize), SWFDEC_TEST_VERSION);

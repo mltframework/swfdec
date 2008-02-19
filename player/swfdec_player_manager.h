@@ -21,8 +21,8 @@
 #define _SWFDEC_PLAYER_MANAGER_H_
 
 #include <gtk/gtk.h>
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_debugger.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_debugger.h>
 
 G_BEGIN_DECLS
 

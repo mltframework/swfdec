@@ -20,7 +20,9 @@
 #ifndef _SWFDEC_TEST_TEST_H_
 #define _SWFDEC_TEST_TEST_H_
 
-#include <libswfdec/swfdec.h>
+#include "swfdec_test_plugin.h"
+#include <gmodule.h>
+#include <swfdec/swfdec.h>
 
 G_BEGIN_DECLS
 
@@ -39,16 +41,18 @@ struct _SwfdecTestTest
 {
   SwfdecAsObject	as_object;
 
-  char *		filename;	/* file the player should be loaded from */
-  SwfdecPlayer *	player;		/* the player or %NULL if none */
-  gboolean		player_quit;	/* the player has called fscommand:quit */
+  SwfdecTestPlugin	plugin;		/* the plugin we use */
+  GModule *		module;		/* module we loaded the plugin from or NULL */
+  gboolean		plugin_loaded;	/* the plugin is loaded and ready to rumble */
+  gboolean		plugin_quit;	/* the plugin has called quit */
+  gboolean		plugin_error;	/* the plugin has called error */
 
-  /* trace stuff */
-  char *		trace_filename;	/* file we're parsing */
-  SwfdecBuffer *	trace_buffer;	/* buffer containing the file */
-  guchar *		trace_offset;	/* how far we've parsed the trace data */
-  gboolean		trace_failed;	/* TRUE if the tacing failed */
-  GSList *		trace_captured;	/* captured trace strings (newest first) */
+  char *		filename;	/* file the player should be loaded from */
+  SwfdecBufferQueue *	trace;		/* all captured trace output */
+  SwfdecBufferQueue *	launched;	/* all launched urls */
+
+  GList *		sockets;	/* list of all sockets */
+  GList *		pending_sockets;/* last socket handed out or NULL if none given out */
 };
 
 struct _SwfdecTestTestClass
@@ -56,8 +60,11 @@ struct _SwfdecTestTestClass
   SwfdecAsObjectClass	as_object_class;
 };
 
+extern char *swfdec_test_plugin_name;
+
 GType		swfdec_test_test_get_type	(void);
 
+void		swfdec_test_plugin_swfdec_new	(SwfdecTestPlugin *	plugin);
 
 G_END_DECLS
 #endif

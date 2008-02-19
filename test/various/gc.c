@@ -21,9 +21,9 @@
 #include "config.h"
 #endif
 
-#include "libswfdec/swfdec_as_context.h"
-#include "libswfdec/swfdec_as_object.h"
-#include "libswfdec/swfdec_as_strings.h"
+#include "swfdec/swfdec_as_context.h"
+#include "swfdec/swfdec_as_object.h"
+#include "swfdec/swfdec_as_strings.h"
 
 #define ERROR(...) G_STMT_START { \
   g_printerr ("ERROR (line %u): ", __LINE__); \
@@ -40,7 +40,7 @@ check_strings (void)
   SwfdecAsContext *context;
   
   context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
-  swfdec_as_context_startup (context, 7);
+  swfdec_as_context_startup (context);
 
   s = swfdec_as_context_get_string (context, "hi mom");
   if (!g_str_equal (s, "hi mom")) {
@@ -61,7 +61,7 @@ check_objects (void)
   gpointer check = GUINT_TO_POINTER (-1); /* NOT NULL */
   
   context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
-  swfdec_as_context_startup (context, 7);
+  swfdec_as_context_startup (context);
   g_assert (check != NULL);
 
   object = swfdec_as_object_new (context);
@@ -96,7 +96,7 @@ check_object_variables (void)
   SwfdecAsValue v1, v2;
   
   context = g_object_new (SWFDEC_TYPE_AS_CONTEXT, NULL);
-  swfdec_as_context_startup (context, 7);
+  swfdec_as_context_startup (context);
   g_assert (check != NULL);
 
   o = swfdec_as_object_new (context);

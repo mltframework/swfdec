@@ -17,7 +17,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 #include <ming.h>
 
 #ifndef _VIVI_MING_H_

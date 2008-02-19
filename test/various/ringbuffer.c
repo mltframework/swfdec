@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "libswfdec/swfdec_ringbuffer.h"
+#include "swfdec/swfdec_ringbuffer.h"
 
 #define SIZE 5
 

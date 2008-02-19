@@ -29,20 +29,20 @@
 #include <sys/stat.h>
 #include <glib.h>
 #include <glib-object.h>
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_button.h>
-#include <libswfdec/swfdec_text_field.h>
-#include <libswfdec/swfdec_font.h>
-#include <libswfdec/swfdec_image.h>
-#include <libswfdec/swfdec_movie.h>
-#include <libswfdec/swfdec_player_internal.h>
-#include <libswfdec/swfdec_sprite.h>
-#include <libswfdec/swfdec_shape.h>
-#include <libswfdec/swfdec_sound.h>
-#include <libswfdec/swfdec_swf_decoder.h>
-#include <libswfdec/swfdec_resource.h>
-#include <libswfdec/swfdec_tag.h>
-#include <libswfdec/swfdec_text.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_button.h>
+#include <swfdec/swfdec_text_field.h>
+#include <swfdec/swfdec_font.h>
+#include <swfdec/swfdec_image.h>
+#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_player_internal.h>
+#include <swfdec/swfdec_sprite.h>
+#include <swfdec/swfdec_shape.h>
+#include <swfdec/swfdec_sound.h>
+#include <swfdec/swfdec_swf_decoder.h>
+#include <swfdec/swfdec_resource.h>
+#include <swfdec/swfdec_tag.h>
+#include <swfdec/swfdec_text.h>
 
 static gboolean verbose = FALSE;
 
@@ -386,6 +386,7 @@ main (int argc, char *argv[])
   };
   GOptionContext *ctx;
   GList *list = NULL;
+  SwfdecURL *url;
 
   ctx = g_option_context_new ("");
   g_option_context_add_main_entries (ctx, options, "options");
@@ -404,12 +405,10 @@ main (int argc, char *argv[])
     return 0;
   }
 
-  player = swfdec_player_new_from_file (argv[1]);
-  if (player->priv->resource->loader->error) {
-    g_printerr ("Couldn't open file \"%s\": %s\n", argv[1], player->priv->resource->loader->error);
-    g_object_unref (player);
-    return 1;
-  }
+  player = swfdec_player_new (NULL);
+  url = swfdec_url_new_from_input (argv[1]);
+  swfdec_player_set_url (player, url);
+  swfdec_url_free (url);
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
   if (!swfdec_player_is_initialized (player)) {

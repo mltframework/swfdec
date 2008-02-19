@@ -33,13 +33,9 @@ EXTRA_DIST = \
 	adpcm-5.swf \
 	adpcm-5.swf.1.0.raw \
 	adpcm-5-2.swf \
-	adpcm-5-2.swf.1.0.raw
+	adpcm-5-2.swf.1.0.raw \
 	crash-0.5.3-no-samples.c \
 	crash-0.5.3-no-samples.swf \
-	crash-0.5.3-no-samples.swf.1.0.raw \
-	crash-0.5.3-no-samples.swf.3.0.raw \
-	crash-0.5.3-no-samples.swf.5.0.raw \
-	crash-0.5.3-no-samples.swf.7.0.raw \
-	crash-0.5.3-no-samples.swf.9.0.raw
+	crash-0.5.3-no-samples.swf.1.0.raw
 
 CLEANFILES = tmp

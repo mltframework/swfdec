@@ -20,7 +20,7 @@
 #ifndef _VIVI_WRAP_H_
 #define _VIVI_WRAP_H_
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 #include <vivified/core/vivi_application.h>
 
 G_BEGIN_DECLS

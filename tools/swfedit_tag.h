@@ -20,8 +20,8 @@
 #ifndef __SWFEDIT_TAG_H__
 #define __SWFEDIT_TAG_H__
 
-#include <libswfdec/swfdec_buffer.h>
-#include <libswfdec/swfdec_bits.h>
+#include <swfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_bits.h>
 #include "swfdec_out.h"
 #include "swfedit_token.h"
 

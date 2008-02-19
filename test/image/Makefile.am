@@ -1,5 +1,5 @@
 check-local:
-	../test --script $(srcdir)/default.sts $(srcdir)/*.swf
+	../swfdec-test --script $(srcdir)/default.sts $(srcdir)/*.swf
 
 EXTRA_DIST = \
 	README \
@@ -44,6 +44,8 @@ EXTRA_DIST = \
 	color-transform-add80.swf.png \
 	color-transform-add80-alpha.swf \
 	color-transform-add80-alpha.swf.png \
+	default.stas \
+	default.sts \
 	duplicate-depth.c \
 	duplicate-depth-5.swf \
 	duplicate-depth-5.swf.png \

@@ -22,7 +22,7 @@
 #endif
 
 #include <gtk/gtk.h>
-#include <libswfdec-gtk/swfdec-gtk.h>
+#include <swfdec-gtk/swfdec-gtk.h>
 #include "vivified/core/vivified-core.h"
 #include "vivified/dock/vivified-dock.h"
 #include "vivi_window.h"

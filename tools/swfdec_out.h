@@ -20,9 +20,9 @@
 #ifndef __SWFDEC_OUT_H__
 #define __SWFDEC_OUT_H__
 
-#include <libswfdec/swfdec_buffer.h>
-#include <libswfdec/swfdec_color.h>
-#include <libswfdec/swfdec_rect.h>
+#include <swfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_color.h>
+#include <swfdec/swfdec_rect.h>
 
 G_BEGIN_DECLS
 

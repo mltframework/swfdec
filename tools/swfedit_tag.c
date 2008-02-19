@@ -24,10 +24,10 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
 
-#include <libswfdec/swfdec_bits.h>
-#include <libswfdec/swfdec_debug.h>
-#include <libswfdec/swfdec_script_internal.h>
-#include <libswfdec/swfdec_tag.h>
+#include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_debug.h>
+#include <swfdec/swfdec_script_internal.h>
+#include <swfdec/swfdec_tag.h>
 #include "swfedit_tag.h"
 #include "swfdec_out.h"
 #include "swfedit_file.h"
@@ -63,7 +63,7 @@ swfedit_binary_read (SwfeditToken *token, SwfdecBits *bits, gconstpointer hint)
 {
   SwfdecBuffer *buffer = swfdec_bits_get_buffer (bits, -1);
   if (buffer == NULL)
-    buffer = swfdec_buffer_new ();
+    buffer = swfdec_buffer_new (0);
   return buffer;
 }
 

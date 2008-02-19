@@ -18,7 +18,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting the functions and macros.
 # e.g. DOC_SOURCE_DIR=../../../gtk
-DOC_SOURCE_DIR=../libswfdec
+DOC_SOURCE_DIR=../swfdec
 
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
 SCANGOBJ_OPTIONS=--type-init-func="swfdec_init();"
@@ -29,7 +29,7 @@ SCAN_OPTIONS=
 
 # Extra options to supply to gtkdoc-mkdb.
 # e.g. MKDB_OPTIONS=--sgml-mode --output-format=xml
-MKDB_OPTIONS=--sgml-mode --output-format=xml --source-dir=../libswfdec-gtk
+MKDB_OPTIONS=--sgml-mode --output-format=xml --source-dir=../swfdec-gtk
 
 # Extra options to supply to gtkdoc-mktmpl
 # e.g. MKTMPL_OPTIONS=--only-section-tmpl
@@ -42,8 +42,8 @@ FIXXREF_OPTIONS=
 # Used for dependencies. The docs will be rebuilt if any of these change.
 # e.g. HFILE_GLOB=$(top_srcdir)/gtk/*.h
 # e.g. CFILE_GLOB=$(top_srcdir)/gtk/*.c
-HFILE_GLOB=$(top_srcdir)/libswfdec/*.h $(top_srcdir)/libswfdec-gtk/*.h
-CFILE_GLOB=$(top_srcdir)/libswfdec/*.c $(top_srcdir)/libswfdec-gtk/*.c
+HFILE_GLOB=$(top_srcdir)/swfdec/*.h $(top_srcdir)/swfdec-gtk/*.h
+CFILE_GLOB=$(top_srcdir)/swfdec/*.c $(top_srcdir)/swfdec-gtk/*.c
 
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
@@ -90,7 +90,7 @@ IGNORE_HFILES= \
 	swfdec_event.h \
 	swfdec_filter.h \
 	swfdec_flv_decoder.h \
-	swfdec_flash_security.h \
+	swfdec_function_list.h \
 	swfdec_font.h \
 	swfdec_gradient_pattern.h \
 	swfdec_graphic.h \
@@ -103,7 +103,7 @@ IGNORE_HFILES= \
 	swfdec_listener.h \
 	swfdec_load_object.h \
 	swfdec_loader_internal.h \
-	swfdec_loadertarget.h \
+	swfdec_stream_target.h \
 	swfdec_marshal.h \
 	swfdec_morph_movie.h \
 	swfdec_morphshape.h \
@@ -114,17 +114,16 @@ IGNORE_HFILES= \
 	swfdec_path.h \
 	swfdec_pattern.h \
 	swfdec_player_internal.h \
-	swfdec_policy_loader.h \
+	swfdec_policy_file.h \
 	swfdec_rect.h \
 	swfdec_resource.h \
 	swfdec_resource_request.h \
 	swfdec_ringbuffer.h \
 	swfdec_root_movie.h \
 	swfdec_root_sprite.h \
+	swfdec_sandbox.h \
 	swfdec_script.h \
 	swfdec_script_internal.h \
-	swfdec_security.h \
-	swfdec_security_allow.h \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \
@@ -142,14 +141,16 @@ IGNORE_HFILES= \
 	swfdec_video.h \
 	swfdec_video_movie.h \
 	swfdec_xml.h \
-	swfdec_xml_node.h
+	swfdec_xml_node.h \
+	swfdec_xml_socket.h
 
 if WITH_GTK
 EXTRA_HFILES = \
-	../libswfdec-gtk/swfdec_gtk_keys.h \
-	../libswfdec-gtk/swfdec_gtk_loader.h \
-	../libswfdec-gtk/swfdec_gtk_player.h \
-	../libswfdec-gtk/swfdec_gtk_widget.h
+	../swfdec-gtk/swfdec_gtk_keys.h \
+	../swfdec-gtk/swfdec_gtk_loader.h \
+	../swfdec-gtk/swfdec_gtk_player.h \
+	../swfdec-gtk/swfdec_gtk_socket.h \
+	../swfdec-gtk/swfdec_gtk_widget.h
 else
 EXTRA_HFILES =
 endif

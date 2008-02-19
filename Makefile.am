@@ -1,6 +1,6 @@
 if WITH_GTK
 GTK_SUBDIRS = \
-	libswfdec-gtk \
+	swfdec-gtk \
 	doc \
 	player
 else
@@ -14,7 +14,7 @@ VIVI_SUBDIRS =
 endif
 
 SUBDIRS= \
-	libswfdec \
+	swfdec \
 	$(GTK_SUBDIRS) \
 	$(VIVI_SUBDIRS) \
 	data \

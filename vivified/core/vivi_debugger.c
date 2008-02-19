@@ -25,7 +25,7 @@
 #include "vivi_application.h"
 #include "vivi_marshal.h"
 /* FIXME: oops */
-#include "libswfdec/swfdec_player_internal.h"
+#include "swfdec/swfdec_player_internal.h"
 
 enum {
   ADD,

@@ -31,22 +31,22 @@
 #ifdef CAIRO_HAS_PDF_SURFACE
 #  include <cairo-pdf.h>
 #endif
-#include <libswfdec/swfdec.h>
-#include <libswfdec/swfdec_audio_stream.h>
-#include <libswfdec/swfdec_button.h>
-#include <libswfdec/swfdec_graphic.h>
-#include <libswfdec/swfdec_image.h>
-#include <libswfdec/swfdec_player_internal.h>
-#include <libswfdec/swfdec_sound.h>
-#include <libswfdec/swfdec_sprite.h>
-#include <libswfdec/swfdec_sprite_movie.h>
-#include <libswfdec/swfdec_swf_decoder.h>
-#include <libswfdec/swfdec_resource.h>
+#include <swfdec/swfdec.h>
+#include <swfdec/swfdec_audio_stream.h>
+#include <swfdec/swfdec_button.h>
+#include <swfdec/swfdec_graphic.h>
+#include <swfdec/swfdec_image.h>
+#include <swfdec/swfdec_player_internal.h>
+#include <swfdec/swfdec_sound.h>
+#include <swfdec/swfdec_sprite.h>
+#include <swfdec/swfdec_sprite_movie.h>
+#include <swfdec/swfdec_swf_decoder.h>
+#include <swfdec/swfdec_resource.h>
 
 static SwfdecBuffer *
 encode_wav (SwfdecBuffer *buffer, SwfdecAudioFormat format)
 {
-  SwfdecBuffer *wav = swfdec_buffer_new_and_alloc (buffer->length + 44);
+  SwfdecBuffer *wav = swfdec_buffer_new (buffer->length + 44);
   unsigned char *data;
   guint i;
 
@@ -124,9 +124,7 @@ export_sprite_sound (SwfdecSprite *sprite, const char *filename)
   i = 4096;
   queue = swfdec_buffer_queue_new ();
   while (i > 0) {
-    buffer = swfdec_buffer_new ();
-    buffer->data = g_malloc0 (i * 4);
-    buffer->length = i * 4;
+    buffer = swfdec_buffer_new0 (i * 4);
 #if 0
     if (i > 1234) {
       swfdec_audio_render (audio, (gint16 *) buffer->data, 0, 1234);
@@ -250,6 +248,7 @@ main (int argc, char *argv[])
   int ret = 0;
   SwfdecPlayer *player;
   glong id;
+  SwfdecURL *url;
 
   swfdec_init ();
 
@@ -258,7 +257,10 @@ main (int argc, char *argv[])
     return 0;
   }
 
-  player = swfdec_player_new_from_file (argv[1]);
+  player = swfdec_player_new (NULL);
+  url = swfdec_url_new_from_input (argv[1]);
+  swfdec_player_set_url (player, url);
+  swfdec_url_free (url);
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
   if (!SWFDEC_IS_SPRITE_MOVIE (player->priv->roots->data)) {

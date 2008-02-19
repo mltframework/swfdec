@@ -22,7 +22,7 @@
 #include "config.h"
 #endif
 
-#include <libswfdec/swfdec.h>
+#include <swfdec/swfdec.h>
 
 int
 main (int argc, char **argv)
@@ -30,7 +30,7 @@ main (int argc, char **argv)
   GOptionContext *context;
   GError *err;
   SwfdecPlayer *player;
-  SwfdecLoader *loader;
+  SwfdecURL *url;
   guint i;
   cairo_surface_t *surface;
   cairo_t *cr;
@@ -99,17 +99,10 @@ main (int argc, char **argv)
     // start timer
     timer = g_timer_new ();
 
-    // create player
-    loader = swfdec_file_loader_new (filenames[i]);
     player = swfdec_player_new (NULL);
-
-    if (loader->error) {
-      g_printerr ("Error loading %s: %s\n", filenames[i], loader->error);
-      g_object_unref (loader);
-      continue;
-    }
-
-    swfdec_player_set_loader (player, loader);
+    url = swfdec_url_new_from_input (filenames[i]);
+    swfdec_player_set_url (player, url);
+    swfdec_url_free (url);
 
     // loop until we have played what we wanted, or timelimit is hit
     played = 0;
@@ -126,19 +119,15 @@ main (int argc, char **argv)
       advance = swfdec_player_get_next_event (player);
       if (advance == -1)
 	break;
-      swfdec_player_advance (player, advance);
+      played += swfdec_player_advance (player, advance);
 
       swfdec_player_render (player, cr, 0, 0, 0, 0);
-
-      played += advance;
     }
 
     if (elapsed >= max_per_file ||
 	swfdec_as_context_is_aborted (SWFDEC_AS_CONTEXT (player))) {
-      g_print ("Aborted: %s\n", filenames[i]);
+      g_print ("*** Aborted ***\n");
       aborts = TRUE;
-    } else {
-      g_print ("Finished: %s\n", filenames[i]);
     }
 
     // clean up

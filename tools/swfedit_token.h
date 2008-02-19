@@ -21,7 +21,7 @@
 #define __SWFEDIT_TOKEN_H__
 
 #include <gtk/gtk.h>
-#include <libswfdec/swfdec_rect.h>
+#include <swfdec/swfdec_rect.h>
 
 G_BEGIN_DECLS
 

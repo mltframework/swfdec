@@ -1,3 +1,5 @@
+<INCLUDE>swfdec/swfdec.h</INCLUDE>
+
 <SECTION>
 <FILE>SwfdecAudio</FILE>
 <TITLE>SwfdecAudio</TITLE>
@@ -15,23 +17,40 @@ SWFDEC_AUDIO_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>SwfdecStream</FILE>
+<TITLE>SwfdecStream</TITLE>
+SwfdecStream
+SwfdecStreamClass
+swfdec_stream_open
+swfdec_stream_is_open
+swfdec_stream_push
+swfdec_stream_eof
+swfdec_stream_error
+swfdec_stream_errorv
+<SUBSECTION Standard>
+SwfdecStreamPrivate
+SWFDEC_STREAM
+SWFDEC_IS_STREAM
+SWFDEC_TYPE_STREAM
+swfdec_stream_get_type
+SWFDEC_STREAM_CLASS
+SWFDEC_IS_STREAM_CLASS
+SWFDEC_STREAM_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecLoader</FILE>
 <TITLE>SwfdecLoader</TITLE>
 SwfdecLoader
 SwfdecFileLoader
-swfdec_file_loader_new
-swfdec_loader_open
-swfdec_loader_push
-swfdec_loader_eof
-swfdec_loader_error
+SwfdecLoaderClass
+swfdec_loader_set_url
 swfdec_loader_get_url
 swfdec_loader_set_size
 swfdec_loader_get_size
 swfdec_loader_get_loaded
-swfdec_loader_get_filename
 swfdec_loader_get_data_type
 <SUBSECTION Standard>
-SwfdecLoaderClass
 SWFDEC_LOADER
 SWFDEC_IS_LOADER
 SWFDEC_TYPE_LOADER
@@ -50,20 +69,59 @@ swfdec_file_loader_get_type
 </SECTION>
 
 <SECTION>
+<FILE>SwfdecSocket</FILE>
+<TITLE>SwfdecSocket</TITLE>
+SwfdecSocket
+SwfdecSocketClass
+<SUBSECTION Standard>
+SWFDEC_SOCKET
+SWFDEC_IS_SOCKET
+SWFDEC_TYPE_SOCKET
+swfdec_socket_get_type
+SWFDEC_SOCKET_CLASS
+SWFDEC_IS_SOCKET_CLASS
+SWFDEC_SOCKET_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>SwfdecPlayerScripting</FILE>
+<TITLE>SwfdecPlayerScripting</TITLE>
+SwfdecPlayerScripting
+SwfdecPlayerScriptingClass
+<SUBSECTION Standard>
+SWFDEC_IS_PLAYER_SCRIPTING
+SWFDEC_IS_PLAYER_SCRIPTING_CLASS
+SWFDEC_PLAYER_SCRIPTING
+SWFDEC_PLAYER_SCRIPTING_CLASS
+SWFDEC_PLAYER_SCRIPTING_GET_CLASS
+SWFDEC_TYPE_PLAYER_SCRIPTING
+swfdec_player_scripting_get_type
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecURL</FILE>
 <TITLE>SwfdecURL</TITLE>
 SwfdecURL
+swfdec_url_new
+swfdec_url_new_from_input
+swfdec_url_new_components
+swfdec_url_new_relative
+swfdec_url_new_parent
 swfdec_url_copy
 swfdec_url_free
-swfdec_url_get_host
-swfdec_url_get_path
 swfdec_url_get_protocol
 swfdec_url_has_protocol
+swfdec_url_get_host
+swfdec_url_get_port
+swfdec_url_get_path
 swfdec_url_get_query
 swfdec_url_get_url
 swfdec_url_is_local
-swfdec_url_new
-swfdec_url_new_relative
+swfdec_url_is_parent
+swfdec_url_format_for_display
+swfdec_url_equal
+swfdec_url_hash
+swfdec_url_path_is_relative
 <SUBSECTION Standard>
 SWFDEC_TYPE_URL
 swfdec_url_get_type
@@ -75,10 +133,13 @@ swfdec_url_get_type
 SwfdecPlayer
 swfdec_init
 swfdec_player_new
-swfdec_player_new_from_file
-swfdec_player_set_loader
-swfdec_player_set_loader_with_variables
 swfdec_player_is_initialized
+swfdec_player_get_url
+swfdec_player_set_url
+swfdec_player_get_base_url
+swfdec_player_set_base_url
+swfdec_player_get_variables
+swfdec_player_set_variables
 swfdec_player_get_rate
 swfdec_player_get_default_size
 swfdec_player_get_size
@@ -90,6 +151,8 @@ swfdec_player_get_scale_mode
 swfdec_player_set_scale_mode
 swfdec_player_get_alignment
 swfdec_player_set_alignment
+swfdec_player_get_scripting
+swfdec_player_set_scripting
 swfdec_player_render
 swfdec_player_advance
 swfdec_player_mouse_move
@@ -136,8 +199,9 @@ SwfdecBuffer
 SwfdecBufferQueue
 SwfdecBufferFreeFunc
 swfdec_buffer_new
-swfdec_buffer_new_and_alloc
-swfdec_buffer_new_and_alloc0
+swfdec_buffer_new0
+swfdec_buffer_new_full
+swfdec_buffer_new_static
 swfdec_buffer_new_for_data
 swfdec_buffer_new_subbuffer
 swfdec_buffer_new_from_file
@@ -155,6 +219,7 @@ swfdec_buffer_queue_pull
 swfdec_buffer_queue_pull_buffer
 swfdec_buffer_queue_peek
 swfdec_buffer_queue_peek_buffer
+swfdec_buffer_queue_flush
 <SUBSECTION Standard>
 SWFDEC_TYPE_BUFFER
 swfdec_buffer_get_type
@@ -194,16 +259,19 @@ swfdec_rectangle_get_type
 <SECTION>
 <FILE>SwfdecGtkPlayer</FILE>
 <TITLE>SwfdecGtkPlayer</TITLE>
+<INCLUDE>swfdec/swfdec-gtk.h</INCLUDE>
 SwfdecGtkPlayer
 swfdec_gtk_player_new
-swfdec_gtk_player_new_from_uri
 swfdec_gtk_player_get_playing
 swfdec_gtk_player_set_playing
 swfdec_gtk_player_get_speed
 swfdec_gtk_player_set_speed
 swfdec_gtk_player_get_audio_enabled
 swfdec_gtk_player_set_audio_enabled
+swfdec_gtk_player_get_missing_plugins_window
+swfdec_gtk_player_set_missing_plugins_window
 <SUBSECTION Standard>
+SwfdecGtkPlayerPrivate
 SwfdecGtkPlayerClass
 swfdec_gtk_player_get_type
 SWFDEC_GTK_PLAYER
@@ -217,6 +285,7 @@ SWFDEC_TYPE_GTK_PLAYER
 <SECTION>
 <FILE>SwfdecGtkWidget</FILE>
 <TITLE>SwfdecGtkWidget</TITLE>
+<INCLUDE>swfdec/swfdec-gtk.h</INCLUDE>
 SwfdecGtkWidget
 swfdec_gtk_widget_new
 swfdec_gtk_widget_get_player
@@ -240,10 +309,11 @@ SWFDEC_TYPE_GTK_WIDGET
 </SECTION>
 
 <SECTION>
-<FILE>SwfdecGtkLoader</FILE>
-<TITLE>SwfdecGtkLoader</TITLE>
+<FILE>GtkExtensions</FILE>
+<TITLE>Gtk extension objects</TITLE>
+<INCLUDE>swfdec/swfdec-gtk.h</INCLUDE>
 SwfdecGtkLoader
-swfdec_gtk_loader_new
+SwfdecGtkSocket
 <SUBSECTION Standard>
 swfdec_gtk_loader_get_type
 SwfdecGtkLoaderClass
@@ -253,6 +323,14 @@ SWFDEC_GTK_LOADER_GET_CLASS
 SWFDEC_IS_GTK_LOADER
 SWFDEC_IS_GTK_LOADER_CLASS
 SWFDEC_TYPE_GTK_LOADER
+SwfdecGtkSocketClass
+swfdec_gtk_socket_get_type
+SWFDEC_GTK_SOCKET
+SWFDEC_GTK_SOCKET_CLASS
+SWFDEC_GTK_SOCKET_GET_CLASS
+SWFDEC_IS_GTK_SOCKET
+SWFDEC_IS_GTK_SOCKET_CLASS
+SWFDEC_TYPE_GTK_SOCKET
 </SECTION>
 
 <SECTION>
@@ -286,6 +364,7 @@ swfdec_as_value_to_object
 SWFDEC_AS_VALUE_SET_OBJECT
 swfdec_as_value_to_primitive
 swfdec_as_value_to_debug
+swfdec_as_double_to_integer
 swfdec_as_double_to_string
 swfdec_as_integer_to_string
 swfdec_as_str_concat
@@ -353,7 +432,6 @@ swfdec_as_object_delete_variable
 swfdec_as_object_delete_all_variables
 SwfdecAsVariableForeach
 swfdec_as_object_foreach
-swfdec_as_object_has_function
 swfdec_as_object_run
 swfdec_as_object_call
 swfdec_as_object_add_function

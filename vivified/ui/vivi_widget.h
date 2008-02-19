@@ -20,7 +20,7 @@
 #ifndef _VIVI_WIDGET_H_
 #define _VIVI_WIDGET_H_
 
-#include <libswfdec-gtk/swfdec-gtk.h>
+#include <swfdec-gtk/swfdec-gtk.h>
 #include <vivified/core/vivified-core.h>
 
 G_BEGIN_DECLS

@@ -38,7 +38,7 @@ EXTRA_DIST = \
 	crash-0.5.90-up-to-date.stas \
 	crash-0.5.90-up-to-date.sts \
   	crash-0.5.90-up-to-date.swf \
-	crash-0.5.90-up-to-date.swf.trace  
+	crash-0.5.90-up-to-date.swf.trace \
 	definebutton-5.swf \
 	definebutton-5.swf.trace \
 	definebutton-6.swf \

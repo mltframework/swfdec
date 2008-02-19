@@ -1070,40 +1070,6 @@ swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
   }
 }
 
-static void
-swfdec_player_update_drag_movie (SwfdecPlayer *player)
-{
-  SwfdecPlayerPrivate *priv = player->priv;
-  double x, y;
-  SwfdecMovie *movie;
-
-  if (priv->mouse_drag == NULL)
-    return;
-
-  movie = priv->mouse_drag;
-  g_assert (movie->cache_state == SWFDEC_MOVIE_UP_TO_DATE);
-  x = priv->mouse_x;
-  y = priv->mouse_y;
-  swfdec_player_stage_to_global (player, &x, &y);
-  if (movie->parent)
-    swfdec_movie_global_to_local (movie->parent, &x, &y);
-  if (priv->mouse_drag_center) {
-    x -= (movie->extents.x1 - movie->extents.x0) / 2;
-    y -= (movie->extents.y1 - movie->extents.y0) / 2;
-  } else {
-    x -= priv->mouse_drag_x;
-    y -= priv->mouse_drag_y;
-  }
-  x = CLAMP (x, priv->mouse_drag_rect.x0, priv->mouse_drag_rect.x1);
-  y = CLAMP (y, priv->mouse_drag_rect.y0, priv->mouse_drag_rect.y1);
-  SWFDEC_LOG ("mouse is at %g %g, originally (%g %g)", x, y, priv->mouse_x, priv->mouse_y);
-  if (x != movie->matrix.x0 || y != movie->matrix.y0) {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
-    movie->matrix.x0 = x;
-    movie->matrix.y0 = y;
-  }
-}
-
 /**
  * swfdec_player_set_drag_movie:
  * @player: a #SwfdecPlayer
@@ -1148,12 +1114,8 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
   SWFDEC_DEBUG ("starting drag in %g %g  %g %g", 
       priv->mouse_drag_rect.x0, priv->mouse_drag_rect.y0,
       priv->mouse_drag_rect.x1, priv->mouse_drag_rect.y1);
-  /* FIXME: need a way to make sure we get updated */
-  if (drag) {
-    swfdec_movie_update (drag);
+  if (drag)
     drag->modified = TRUE;
-    swfdec_player_update_drag_movie (player);
-  }
 }
 
 static void
@@ -1227,7 +1189,6 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove);
   }
   swfdec_player_grab_mouse_movie (player);
-  swfdec_player_update_drag_movie (player);
 
   /* FIXME: allow events to pass through */
   return TRUE;
@@ -1544,6 +1505,40 @@ swfdec_player_lock (SwfdecPlayer *player)
   return TRUE;
 }
 
+static void
+swfdec_player_update_drag_movie (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv = player->priv;
+  double x, y;
+  SwfdecMovie *movie;
+
+  if (priv->mouse_drag == NULL)
+    return;
+
+  movie = priv->mouse_drag;
+  swfdec_movie_update (movie);
+  x = priv->mouse_x;
+  y = priv->mouse_y;
+  swfdec_player_stage_to_global (player, &x, &y);
+  if (movie->parent)
+    swfdec_movie_global_to_local (movie->parent, &x, &y);
+  if (priv->mouse_drag_center) {
+    x -= (movie->extents.x1 - movie->extents.x0) / 2;
+    y -= (movie->extents.y1 - movie->extents.y0) / 2;
+  } else {
+    x -= priv->mouse_drag_x;
+    y -= priv->mouse_drag_y;
+  }
+  x = CLAMP (x, priv->mouse_drag_rect.x0, priv->mouse_drag_rect.x1);
+  y = CLAMP (y, priv->mouse_drag_rect.y0, priv->mouse_drag_rect.y1);
+  SWFDEC_LOG ("mouse is at %g %g, originally (%g %g)", x, y, priv->mouse_x, priv->mouse_y);
+  if (x != movie->matrix.x0 || y != movie->matrix.y0) {
+    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    movie->matrix.x0 = x;
+    movie->matrix.y0 = y;
+  }
+}
+
 /* runs queued invalidations for all movies and resets the movies */
 static void
 swfdec_player_update_movies (SwfdecPlayer *player)
@@ -1551,6 +1546,7 @@ swfdec_player_update_movies (SwfdecPlayer *player)
   SwfdecMovie *movie;
   GList *walk;
 
+  swfdec_player_update_drag_movie (player);
   /* FIXME: This g_list_last could be slow */
   for (walk = g_list_last (player->priv->movies); walk; walk = walk->prev) {
     movie = walk->data;

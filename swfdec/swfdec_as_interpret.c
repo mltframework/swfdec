@@ -1715,12 +1715,15 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
   const char *name;
 
   swfdec_as_stack_ensure_size (cx, 3);
-  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
 
   constructor = swfdec_as_stack_peek (cx, 2);
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 3));
   n_args = MIN (swfdec_as_stack_get_size (cx) - 3, n_args);
-  if (name != SWFDEC_AS_STR_EMPTY) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx, 1))) {
+    /* FIXME: anyone got a better idea for a name? */
+    name = SWFDEC_AS_STR_EMPTY;
+  } else {
+    name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
     if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor)) {
       SWFDEC_WARNING ("NewMethod called without an object to get variable %s from", name);
       goto fail;

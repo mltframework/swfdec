@@ -81,7 +81,7 @@ main (int argc, char **argv)
       return 1;
     }
     action = newSWFAction (contents);
-    if (SWFAction_compile (action, 8, &len) != 0) {
+    if (SWFAction_compile (action, 6, &len) != 0) {
       g_printerr ("Error: Couldn't compile\n");
       return -1;
     }

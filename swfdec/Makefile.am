@@ -367,7 +367,7 @@ swfdec_as_strings.h: swfdec_as_strings.c
 	  && echo "extern const char swfdec_as_strings[];" \
 	  && grep "  SWFDEC_AS_CONSTANT_STRING" swfdec_as_strings.c \
 	  | sed "s/.*(\"\(.*\)\").*/\1/" \
-	  | $(AWK) '{ if ($$0 == "") name = "EMPTY"; else if ($$0 == ",") name = "COMMA"; else if ($$0 == "/") name = "SLASH"; else name = $$0; gsub("[^a-zA-Z0-9\\$$]","_",name); print "#define SWFDEC_AS_STR_" name " &swfdec_as_strings[" x + 1 "]"; x = x + length ($$0) + 2 }' \
+	  | LC_ALL="C" $(AWK) '{ if ($$0 == "") name = "EMPTY"; else if ($$0 == ",") name = "COMMA"; else if ($$0 == "/") name = "SLASH"; else name = $$0; gsub("[^a-zA-Z0-9\\$$]","_",name); print "#define SWFDEC_AS_STR_" name " &swfdec_as_strings[" x + 1 "]"; x = x + length ($$0) + 2 }' \
 	  && echo "#endif" ) > xgen-sas \
 	&& (cmp -s xgen-sas swfdec_as_strings.h || cp xgen-sas swfdec_as_strings.h ) \
 	&& rm -f xgen-sas

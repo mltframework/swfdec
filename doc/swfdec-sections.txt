@@ -229,7 +229,8 @@ swfdec_buffer_queue_get_type
 
 <SECTION>
 <FILE>Enumerations</FILE>
-<TITLE>Enumerations</TITLE>
+<TITLE>Enumerations and Types</TITLE>
+SWFDEC_TYPE_TIME_VAL
 SwfdecAsContextState
 SwfdecAsDeleteReturn
 SwfdecLoaderDataType
@@ -239,6 +240,8 @@ SwfdecAlignment
 SwfdecKey
 SwfdecMouseCursor
 SwfdecScaleMode
+<SUBSECTION Standard>
+swfdec_time_val_get_type
 </SECTION>
 
 <SECTION>
@@ -388,12 +391,13 @@ swfdec_as_context_is_aborted
 swfdec_as_context_get_string
 swfdec_as_context_give_string
 swfdec_as_context_use_mem
+swfdec_as_context_try_use_mem
+swfdec_as_context_unuse_mem
 swfdec_as_context_gc
 swfdec_as_context_maybe_gc
 swfdec_as_context_run
 swfdec_as_context_throw
 swfdec_as_context_catch
-swfdec_as_context_unuse_mem
 swfdec_as_context_eval
 swfdec_as_context_eval_set
 swfdec_as_context_get_time

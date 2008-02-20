@@ -239,6 +239,11 @@
 
 /*** timeval type mapping ***/
 
+/**
+ * SWFDEC_TYPE_TIME_VAL:
+ * This type wraps a @GTimeVal object as a boxed type and makes it available 
+ * for use in object properties.
+ */
 static gpointer
 swfdec_time_val_copy (gpointer boxed)
 {
@@ -345,7 +350,8 @@ swfdec_player_remove_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (timeout != NULL);
-  g_return_if_fail (timeout->timestamp >= player->priv->time);
+  /* FIXME: can't use that due to rounding issues */
+  //g_return_if_fail (timeout->timestamp >= player->priv->time);
   g_return_if_fail (timeout->callback != NULL);
 
   SWFDEC_LOG ("removing timeout %p", timeout);

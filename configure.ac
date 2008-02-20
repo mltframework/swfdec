@@ -1,5 +1,5 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.5.90.1)
+AC_INIT(swfdec,0.6.0)
 
 [nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
 if test x"$nano" = x1 ; then
@@ -12,7 +12,7 @@ AM_INIT_AUTOMAKE(1.6)
 dnl AC_CANONICAL_TARGET([])
 AM_MAINTAINER_MODE
 
-SWFDEC_MAJORMINOR=0.5
+SWFDEC_MAJORMINOR=0.6
 AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)

@@ -684,10 +684,8 @@ swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
   SwfdecSpriteFrame *current;
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
 
-  if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov)) {
-    g_assert (movie->sound_stream == NULL);
+  if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov))
     return FALSE;
-  }
   
   if (movie->sprite == NULL)
     return TRUE;

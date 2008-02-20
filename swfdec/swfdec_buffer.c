@@ -24,10 +24,11 @@
 #endif
 
 #include <swfdec_buffer.h>
+#include <liboil/liboil.h>
 #include <glib.h>
 #include <string.h>
 #include <swfdec_debug.h>
-#include <liboil/liboil.h>
+#include <swfdec_internal.h> /* for buffer_queue_pull_text */
 
 /*** gtk-doc ***/
 

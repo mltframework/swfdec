@@ -28,6 +28,7 @@
 #include "swfdec_resource.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_xml.h"

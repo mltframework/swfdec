@@ -77,5 +77,11 @@ void			swfdec_net_stream_init_context		(SwfdecPlayer *		player);
 void			swfdec_sprite_movie_init_context	(SwfdecPlayer *		player);
 void			swfdec_video_movie_init_context		(SwfdecPlayer *		player);
 
+/* functions that shouldn't go into public headers */
+
+char *			swfdec_buffer_queue_pull_text		(SwfdecBufferQueue *	queue,
+								 guint			version);
+
+
 G_END_DECLS
 #endif

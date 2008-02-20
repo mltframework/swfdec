@@ -1,8 +1,8 @@
 AC_PREREQ([2.58])
 AC_INIT(swfdec,0.6.1)
 
-[nano=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9]\.[0-9][0-9]*\.*//')]
-if test x"$nano" = x1 ; then
+[is_dev=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9][0-9]*\.[0-9]*[13579]/1/')]
+if test x"$is_dev" = x1 ; then
   SWFDEC_CVS="yes"
 else
   SWFDEC_CVS="no"

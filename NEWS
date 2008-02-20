@@ -1,4 +1,14 @@
 
+ 0.6.0 ("Fedora TV")
+
+Here is the first API/ABI-stable release of Swfdec. Enjoy!
+- support missing plugin installation. GStreamer requirement bumped to 0.10.17
+- lots of improvements to testsuite. It uses plugins now so multiple Flash 
+  players can be tested.
+- XMLSocket now works
+- rework buffer API
+- lots of bug- and conformance fixes
+
  0.5.90 ("rutube")
 
 This is a preparation for the upcoming 0.6 release to go in time with the Gnome 

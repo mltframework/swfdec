@@ -1195,6 +1195,13 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove);
   }
   swfdec_player_grab_mouse_movie (player);
+  if (priv->mouse_grab) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+    swfdec_player_stage_to_global (player, &x, &y);
+    swfdec_movie_global_to_local (priv->mouse_grab, &x, &y);
+    if (klass->mouse_move)
+      klass->mouse_move (priv->mouse_grab, x, y);
+  }
 
   /* FIXME: allow events to pass through */
   return TRUE;

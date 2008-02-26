@@ -2417,6 +2417,15 @@ EXTRA_DIST = \
 	rewind-remove-7.swf.trace \
 	rewind-remove-8.swf \
 	rewind-remove-8.swf.trace \
+	root-onload.as \
+	root-onload-5.swf \
+	root-onload-5.swf.trace \
+	root-onload-6.swf \
+	root-onload-6.swf.trace \
+	root-onload-7.swf \
+	root-onload-7.swf.trace \
+	root-onload-8.swf \
+	root-onload-8.swf.trace \
 	rotation-5.swf \
 	rotation-5.swf.trace \
 	rotation2.as \

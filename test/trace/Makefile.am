@@ -713,6 +713,11 @@ EXTRA_DIST = \
 	crash-0.5.90-empty-action.swf \
 	crash-0.5.90-empty-action.swf.trace \
 	crash-0.5.90-empty-action.xml \
+	crash-0.6.0-moviecliploader.as \
+	crash-0.6.0-moviecliploader-7.swf \
+	crash-0.6.0-moviecliploader-7.swf.trace \
+	crash-0.6.0-moviecliploader-8.swf \
+	crash-0.6.0-moviecliploader-8.swf.trace \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \

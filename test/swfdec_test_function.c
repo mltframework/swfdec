@@ -25,8 +25,10 @@
 #include "swfdec_test_function_list.h"
 
 /* needed by the function list */
+#ifdef HAVE_GTK
 #include "swfdec_test_http_request.h"
 #include "swfdec_test_http_server.h"
+#endif
 #include "swfdec_test_buffer.h"
 #include "swfdec_test_image.h"
 #include "swfdec_test_socket.h"

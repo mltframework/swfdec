@@ -1,4 +1,4 @@
-check-local:
+check-hook: ../swfdec-test
 	for file in $(srcdir)/*.sts; do \
 	  ../swfdec-test --script $$file $(srcdir)/`basename $$file .sts`*.swf || exit $?; \
 	done

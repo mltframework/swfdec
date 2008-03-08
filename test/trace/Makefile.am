@@ -1,4 +1,4 @@
-check-local:
+check-hook: ../swfdec-test
 	../swfdec-test --script $(srcdir)/default.sts $(srcdir)/*.swf
 
 EXTRA_DIST = \

@@ -23,7 +23,6 @@
 #include "swfdec_test_plugin.h"
 #include "swfdec_test_test.h"
 #include <swfdec/swfdec.h>
-#include <libsoup/soup.h>
 
 G_BEGIN_DECLS
 

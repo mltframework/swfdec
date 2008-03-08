@@ -22,8 +22,6 @@
 #endif
 
 #include "swfdec_test_swfdec_socket.h"
-#include <libsoup/soup.h>
-#include <libsoup/soup-address.h>
 
 /*** SwfdecTestSwfdecSocket ***/
 

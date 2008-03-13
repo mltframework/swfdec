@@ -349,9 +349,9 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
     }
     swfdec_font_parse_kerning_table (s, font, wide_codes);
   } else {
-    font->ascent = swfdec_bits_get_u16 (bits);
-    font->descent = swfdec_bits_get_u16 (bits);
-    font->leading = swfdec_bits_get_u16 (bits);
+    font->ascent = font->scale_factor;
+    font->descent = 0;
+    font->leading = 0;
     for (i = 0; i < n_glyphs && swfdec_bits_left (bits); i++) {
       SwfdecFontEntry *entry = &g_array_index (font->glyphs, SwfdecFontEntry, i);
       entry->advance = font->scale_factor;

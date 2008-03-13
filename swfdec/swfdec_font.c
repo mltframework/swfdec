@@ -290,9 +290,6 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
   SWFDEC_LOG (" wide offsets = %d", wide_offsets);
   wide_codes = swfdec_bits_getbit (bits);
   SWFDEC_LOG (" wide codes = %d", wide_codes);
-  if (wide_codes == 0) {
-    SWFDEC_ERROR (" wide codes should be set in DefineFont3");
-  }
   font->italic = swfdec_bits_getbit (bits);
   SWFDEC_LOG (" italic = %d", font->italic);
   font->bold = swfdec_bits_getbit (bits);

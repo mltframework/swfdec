@@ -2,13 +2,19 @@ SUBDIRS = custom image sound trace various
 
 noinst_PROGRAMS = swfdec-test
 
+if WITH_GTK
+swfdec_gtk_test_sources = \
+	swfdec_test_http_request.c \
+	swfdec_test_http_server.c
+else
+swfdec_gtk_test_sources =
+endif
+
 swfdec_test_sources = \
 	swfdec_test.c \
 	swfdec_test_buffer.c \
 	swfdec_test_function.c \
 	swfdec_test_global.c \
-	swfdec_test_http_request.c \
-	swfdec_test_http_server.c \
 	swfdec_test_image.c \
 	swfdec_test_plugin.c \
 	swfdec_test_socket.c \

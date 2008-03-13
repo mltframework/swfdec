@@ -342,10 +342,16 @@ swfdec_resource_stream_target_close (SwfdecStreamTarget *target, SwfdecStream *s
     if (dec->data_type != SWFDEC_LOADER_DATA_UNKNOWN)
       swfdec_loader_set_data_type (SWFDEC_LOADER (stream), dec->data_type);
   }
+
   SWFDEC_AS_VALUE_SET_INT (&val, 0); /* FIXME */
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
   resource->state = SWFDEC_RESOURCE_COMPLETE;
   swfdec_resource_abort_if_not_initialized (resource);
+
+  if (resource->movie != NULL) {
+    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource)->context),
+	  SWFDEC_MOVIE (resource->movie), SWFDEC_EVENT_LOAD, 0);
+  }
 }
 
 static void

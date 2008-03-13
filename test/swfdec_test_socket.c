@@ -21,8 +21,6 @@
 #include "config.h"
 #endif
 
-#include <libsoup/soup-address.h>
-
 #include "swfdec_test_socket.h"
 #include "swfdec_test_buffer.h"
 #include "swfdec_test_function.h"

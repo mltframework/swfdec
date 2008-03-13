@@ -51,6 +51,8 @@ typedef enum {
 struct _SwfdecFontEntry {
   SwfdecDraw *		draw;		/* drawing operation to do or %NULL if none (ie space character) */
   gunichar		value;		/* UCS2 value of glyph */
+  guint			advance;	/* advance when rendering character */
+  SwfdecRect		extents;	/* bounding box of the font relative to the scale mode */
 };
 
 struct _SwfdecFont
@@ -64,6 +66,10 @@ struct _SwfdecFont
   gboolean		small;		/* font is rendered at small sizes */
   GArray *		glyphs;		/* SwfdecFontEntry */
   guint			scale_factor;	/* size of a font in glyph entry */
+  /* used when rendering TextFields */
+  guint			ascent;		/* font ascent */
+  guint			descent;	/* font descent */
+  guint			leading;	/* */
 };
 
 struct _SwfdecFontClass
@@ -81,8 +87,6 @@ int		tag_func_define_font_info	(SwfdecSwfDecoder *	s,
 int		tag_func_define_font		(SwfdecSwfDecoder *	s,
 						 guint			tag);
 int		tag_func_define_font_2		(SwfdecSwfDecoder *	s,
-						 guint			tag);
-int		tag_func_define_font_3		(SwfdecSwfDecoder *	s,
 						 guint			tag);
 
 G_END_DECLS

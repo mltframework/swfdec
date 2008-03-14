@@ -10,3 +10,5 @@ Makefile.in
 *.la
 *.lo
 *.loT
+
+vivi-decompile

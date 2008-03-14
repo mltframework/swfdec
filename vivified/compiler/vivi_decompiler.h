@@ -38,6 +38,9 @@ typedef struct _ViviDecompilerClass ViviDecompilerClass;
 struct _ViviDecompiler
 {
   SwfdecAsObject	object;
+
+  SwfdecScript *	script;
+  GPtrArray *		lines;
 };
 
 struct _ViviDecompilerClass
@@ -47,8 +50,10 @@ struct _ViviDecompilerClass
 
 GType			vivi_decompiler_get_type   	(void);
 
-void			vivi_decompiler_set_active	(ViviDecompiler *	decompiler,
-							 gboolean		active);
+ViviDecompiler *	vivi_decompiler_new		(SwfdecScript *		script);
+guint			vivi_decompiler_get_n_lines	(ViviDecompiler *	dec);
+const char *		vivi_decompiler_get_line	(ViviDecompiler *	dec,
+							 guint			i);
 
 G_END_DECLS
 #endif

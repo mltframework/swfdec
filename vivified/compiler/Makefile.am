@@ -11,3 +11,11 @@ noinst_HEADERS = \
 	vivified-compiler.h
 
 
+noinst_PROGRAMS = vivi-decompile
+
+vivi_decompile_SOURCES = \
+	decompiler.c
+
+vivi_decompile_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
+vivi_decompile_LDFLAGS = $(SWFDEC_LIBS)
+vivi_decompile_LDADD = libvivified-compiler.la

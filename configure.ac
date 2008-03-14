@@ -338,6 +338,7 @@ test/trace/Makefile
 test/various/Makefile
 tools/Makefile
 vivified/Makefile
+vivified/compiler/Makefile
 vivified/core/Makefile
 vivified/dock/Makefile
 vivified/ui/Makefile

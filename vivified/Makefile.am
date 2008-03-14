@@ -1,1 +1,1 @@
-SUBDIRS = core dock ui
+SUBDIRS = compiler core dock ui

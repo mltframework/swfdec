@@ -64,13 +64,14 @@ main (int argc, char *argv[])
   swfdec_url_free (url);
   /* FIXME: HACK! */
   swfdec_player_advance (player, 0);
-  if (!SWFDEC_IS_SPRITE_MOVIE (player->priv->roots->data)) {
+  if (player->priv->roots == NULL ||
+      !SWFDEC_IS_SPRITE_MOVIE (player->priv->roots->data) ||
+      (dec = SWFDEC_SWF_DECODER (SWFDEC_MOVIE (player->priv->roots->data)->resource->decoder)) == NULL) {
     g_printerr ("Error parsing file \"%s\"\n", argv[1]);
     g_object_unref (player);
     player = NULL;
     return 1;
   }
-  dec = SWFDEC_SWF_DECODER (SWFDEC_MOVIE (player->priv->roots->data)->resource->decoder);
 
   g_print ("/* version: %d - size: %ux%u */\n", dec->version,
       player->priv->width, player->priv->height);

@@ -374,7 +374,7 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerState *state,
       if (decompile_funcs[code]) {
 	return decompile_funcs[code] (dec, state, code, data, len);
       } else {
-	vivi_decompiler_emit_error (dec, state,"unknown bytecode %20X %u", code, code);
+	vivi_decompiler_emit_error (dec, state,"unknown bytecode 0x%02X %u", code, code);
 	return FALSE;
       }
   };

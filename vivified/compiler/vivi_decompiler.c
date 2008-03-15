@@ -165,7 +165,7 @@ struct _ViviDecompilerBlock {
   ViviDecompilerState *	start;		/* starting state */
   GPtrArray *		lines;		/* lines parsed from this block */
   ViviDecompilerBlock *	next;		/* block following this one or NULL if returning */
-  ViviDecompilerBlock *	if_block;	/* NULL or block branched to i if statement */
+  ViviDecompilerBlock *	branch;	/* NULL or block branched to i if statement */
   /* parsing state */
   const guint8 *	exitpc;		/* pointer to after last parsed command or NULL if not parsed yet */
   char *		label;		/* label generated for this block, so we can goto it */
@@ -467,6 +467,28 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
     ViviDecompilerState *state, guint code, const guint8 *data, guint len)
 {
   switch (code) {
+    case SWFDEC_AS_ACTION_IF:
+      {
+	ViviDecompilerValue val;
+	ViviDecompilerState *new;
+	gint16 offset;
+
+	if (len != 2) {
+	  vivi_decompiler_block_emit_error (block, state, "If action length invalid (is %u, should be 2)", len);
+	  return FALSE;
+	}
+	offset = data[0] | (data[1] << 8);
+	state->pc += 5;
+	vivi_decompiler_state_pop (state, &val);
+	vivi_decompiler_block_emit_line (block, state, "if (%s)", vivi_decompiler_value_get (&val));
+	vivi_decompiler_value_reset (&val);
+	new = vivi_decompiler_state_copy (state);
+	block->next = vivi_decompiler_push_block_for_state (dec, new);
+	new = vivi_decompiler_state_copy (state);
+	new->pc += offset;
+	block->branch = vivi_decompiler_push_block_for_state (dec, new);
+	return FALSE;
+      }
     case SWFDEC_AS_ACTION_JUMP:
       {
 	ViviDecompilerState *new;

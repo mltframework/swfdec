@@ -40,7 +40,7 @@ struct _ViviDecompiler
   SwfdecAsObject	object;
 
   SwfdecScript *	script;
-  GPtrArray *		lines;
+  GList *		blocks;
 };
 
 struct _ViviDecompilerClass

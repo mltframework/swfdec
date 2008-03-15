@@ -718,9 +718,9 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
       continue;
     /* one of the blocks doesn't exist */
     if (if_block == else_block->next)
-      else_block = NULL;
-    else if (else_block == if_block->next)
       if_block = NULL;
+    else if (else_block == if_block->next)
+      else_block = NULL;
     /* if other blocks reference the blocks, bail, there's loops involved */
     if ((else_block && else_block->incoming > 1) ||
 	(if_block && if_block->incoming > 1))

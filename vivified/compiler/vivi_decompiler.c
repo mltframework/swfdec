@@ -167,7 +167,7 @@ struct _ViviDecompilerBlock {
   ViviDecompilerBlock *	next;		/* block following this one or NULL if returning */
   ViviDecompilerBlock *	if_block;	/* NULL or block branched to i if statement */
   /* parsing state */
-  gboolean		finished;	/* TRUE if this block has been parsed already */
+  const guint8 *	exitpc;		/* pointer to after last parsed command or NULL if not parsed yet */
   char *		label;		/* label generated for this block, so we can goto it */
 };
 
@@ -228,20 +228,31 @@ vivi_decompiler_block_emit_line (ViviDecompilerBlock *block, ViviDecompilerState
   g_ptr_array_add (block->lines, s);
 }
 
-static void
-vivi_decompiler_push_block (ViviDecompiler *dec, ViviDecompilerBlock *block)
-{
-  dec->blocks = g_list_prepend (dec->blocks, block);
-}
-
-static void
+static ViviDecompilerBlock *
 vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *state)
 {
   ViviDecompilerBlock *block;
+  GList *walk;
+
+  for (walk = dec->blocks; walk; walk = walk->next) {
+    block = walk->data;
+    if (block->start->pc < state->pc)
+      continue;
+    if (block->exitpc && block->exitpc > state->pc) {
+      g_printerr ("FIXME: handle splitting of blocks\n");
+      return NULL;
+    }
+    if (block->start->pc == state->pc) {
+      g_printerr ("FIXME: check that the blocks are equal\n");
+      return block;
+    }
+    break;
+  }
 
   /* FIXME: see if the block is already there! */
   block = vivi_decompiler_block_new (state);
-  vivi_decompiler_push_block (dec, block);
+  dec->blocks = g_list_insert_before (dec->blocks, walk, block);
+  return block;
 }
 
 /*** BYTECODE DECOMPILER ***/
@@ -456,7 +467,6 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
     ViviDecompilerState *state, guint code, const guint8 *data, guint len)
 {
   switch (code) {
-    case SWFDEC_AS_ACTION_IF:
     case SWFDEC_AS_ACTION_JUMP:
       {
 	ViviDecompilerState *new;
@@ -470,7 +480,7 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	state->pc += 5;
 	new = vivi_decompiler_state_copy (state);
 	new->pc += offset;
-	vivi_decompiler_push_block_for_state (dec, new);
+	block->next = vivi_decompiler_push_block_for_state (dec, new);
 	return FALSE;
       }
       break;
@@ -532,8 +542,8 @@ vivi_decompiler_block_decompile (ViviDecompiler *dec, ViviDecompilerBlock *block
   }
 
 error:
+  block->exitpc = state->pc;
   vivi_decompiler_state_free (state);
-  block->finished = TRUE;
 }
 
 static void
@@ -546,11 +556,12 @@ vivi_decompiler_run (ViviDecompiler *dec)
   state = vivi_decompiler_state_new (dec->script, dec->script->main, 4);
   block = vivi_decompiler_block_new (state);
   state = vivi_decompiler_state_copy (state);
-  vivi_decompiler_push_block (dec, block);
+  g_assert (dec->blocks == NULL);
+  dec->blocks = g_list_prepend (dec->blocks, block);
   while (TRUE) {
     for (walk = dec->blocks; walk; walk = walk->next) {
       block = walk->data;
-      if (!block->finished)
+      if (block->exitpc == NULL)
 	break;
     }
     if (walk == NULL)

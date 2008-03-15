@@ -167,7 +167,7 @@ struct _ViviDecompilerBlock {
   ViviDecompilerState *	start;		/* starting state */
   GPtrArray *		lines;		/* lines parsed from this block */
   ViviDecompilerBlock *	next;		/* block following this one or NULL if returning */
-  ViviDecompilerBlock *	branch;	/* NULL or block branched to i if statement */
+  ViviDecompilerBlock *	branch;		/* NULL or block branched to i if statement */
   /* parsing state */
   guint			incoming;	/* number of incoming blocks */
   const guint8 *	exitpc;		/* pointer to after last parsed command or NULL if not parsed yet */
@@ -175,8 +175,23 @@ struct _ViviDecompilerBlock {
 };
 
 static void
+vivi_decompiler_block_unparse (ViviDecompilerBlock *block)
+{
+  guint i;
+
+  for (i = 0; i < block->lines->len; i++) {
+    g_free (g_ptr_array_index (block->lines, i));
+  }
+  g_ptr_array_set_size (block->lines, 0);
+  block->next = NULL;
+  block->branch = NULL;
+  block->exitpc = NULL;
+}
+
+static void
 vivi_decompiler_block_free (ViviDecompilerBlock *block)
 {
+  vivi_decompiler_block_unparse (block);
   vivi_decompiler_state_free (block->start);
   g_ptr_array_free (block->lines, TRUE);
   g_free (block->label);
@@ -252,12 +267,13 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
     if (block->start->pc < state->pc)
       continue;
     if (block->exitpc && block->exitpc > state->pc) {
-      g_printerr ("FIXME: handle splitting of blocks\n");
-      return NULL;
+      vivi_decompiler_block_unparse (block);
+      break;
     }
     if (block->start->pc == state->pc) {
       g_printerr ("FIXME: check that the blocks are equal\n");
       block->incoming++;
+      vivi_decompiler_state_free (state);
       return block;
     }
     break;
@@ -540,15 +556,25 @@ static void
 vivi_decompiler_block_decompile (ViviDecompiler *dec, ViviDecompilerBlock *block)
 {
   ViviDecompilerState *state;
-  const guint8 *start, *end;
+  ViviDecompilerBlock *next_block;
+  GList *list;
+  const guint8 *start, *end, *exit;
   const guint8 *data;
   guint code, len;
 
   start = dec->script->buffer->data;
   end = start + dec->script->buffer->length;
   state = vivi_decompiler_state_copy (block->start);
+  exit = dec->script->exit;
+  list = g_list_find (dec->blocks, block);
+  if (list->next) {
+    next_block = list->next->data;
+    exit = next_block->start->pc;
+  } else {
+    next_block = NULL;
+  }
 
-  while (state->pc != dec->script->exit) {
+  while (state->pc != exit) {
     code = state->pc[0];
     if (code & 0x80) {
       if (state->pc + 2 >= end) {
@@ -566,13 +592,18 @@ vivi_decompiler_block_decompile (ViviDecompiler *dec, ViviDecompilerBlock *block
       len = 0;
     }
     if (!vivi_decompiler_process (dec, block, state, code, data, len))
-      goto error;
+      goto out;
     if (state->pc < start || state->pc >= end) {
       vivi_decompiler_block_emit_error (block, state, "program counter out of range");
       goto error;
     }
   }
+  if (next_block) {
+    block->next = next_block;
+    next_block->incoming++;
+  }
 
+out:
 error:
   block->exitpc = state->pc;
   vivi_decompiler_state_free (state);

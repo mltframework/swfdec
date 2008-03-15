@@ -37,10 +37,13 @@ decode_script (gpointer offset, gpointer scriptp, gpointer unused)
   ViviDecompiler *dec = vivi_decompiler_new (scriptp);
   guint i;
 
-  g_print ("%s:\n", script->name);
+  g_print ("/* %s */\n", script->name);
+  g_print ("{\n");
   for (i = 0; i < vivi_decompiler_get_n_lines (dec); i++) {
     g_print ("  %s\n", vivi_decompiler_get_line (dec, i));
   }
+  g_print ("}\n");
+  g_print ("\n");
 }
 
 int 
@@ -69,6 +72,9 @@ main (int argc, char *argv[])
   }
   dec = SWFDEC_SWF_DECODER (SWFDEC_MOVIE (player->priv->roots->data)->resource->decoder);
 
+  g_print ("/* version: %d - size: %ux%u */\n", dec->version,
+      player->priv->width, player->priv->height);
+  g_print ("\n");
   g_hash_table_foreach (dec->scripts, decode_script, NULL);
 
   g_object_unref (player);

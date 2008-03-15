@@ -613,14 +613,18 @@ error:
 
 static void
 vivi_decompiler_block_append_block (ViviDecompilerBlock *block, 
-    ViviDecompilerBlock *append, const char *prefix)
+    ViviDecompilerBlock *append, gboolean indent)
 {
   guint i;
 
+  if (indent && append->lines->len > 1)
+    vivi_decompiler_block_emit_line (block, NULL, "{");
   for (i = 0; i < append->lines->len; i++) {
-    vivi_decompiler_block_emit_line (block, NULL, "%s%s", 
-	prefix, (char *) g_ptr_array_index (append->lines, i));
+    vivi_decompiler_block_emit_line (block, NULL, "%s%s", indent ? "  " : "",
+	(char *) g_ptr_array_index (append->lines, i));
   }
+  if (indent && append->lines->len > 1)
+    vivi_decompiler_block_emit_line (block, NULL, "}");
 }
 
 static ViviDecompilerBlock *
@@ -655,7 +659,7 @@ vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec)
       vivi_decompiler_block_emit_line (block, NULL, "%s:", 
 	  vivi_decompiler_block_get_label (current));
     }
-    vivi_decompiler_block_append_block (block, current, "");
+    vivi_decompiler_block_append_block (block, current, FALSE);
     if (current->branch) {
       vivi_decompiler_block_emit_line (block, NULL, "  goto %s;",
 	  vivi_decompiler_block_get_label (current->branch));
@@ -683,8 +687,88 @@ vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec)
 }
 
 static void
+vivi_decompiler_purge_block (ViviDecompiler *dec, ViviDecompilerBlock *block)
+{
+  g_assert (block->incoming == 0);
+  dec->blocks = g_list_remove (dec->blocks, block);
+  if (block->next)
+    block->next->incoming--;
+  if (block->branch)
+    block->branch->incoming--;
+  vivi_decompiler_block_free (block);
+}
+
+static gboolean
+vivi_decompiler_merge_if (ViviDecompiler *dec)
+{
+  ViviDecompilerBlock *block, *if_block, *else_block;
+  gboolean result;
+  GList *walk;
+
+  result = FALSE;
+  for (walk = dec->blocks; walk; walk = walk->next) {
+    block = walk->data;
+    /* not an if block */
+    if (block->branch == NULL)
+      continue;
+    else_block = block->next;
+    if_block = block->branch;
+    /* if in if in if in if... */
+    if (else_block->branch || if_block->branch)
+      continue;
+    /* one of the blocks doesn't exist */
+    if (if_block == else_block->next)
+      else_block = NULL;
+    else if (else_block == if_block->next)
+      if_block = NULL;
+    /* if other blocks reference the blocks, bail, there's loops involved */
+    if ((else_block && else_block->incoming > 1) ||
+	(if_block && if_block->incoming > 1))
+      continue;
+    /* if both blocks exist, they must have the same exit block */
+    if (if_block && else_block && if_block->next != else_block->next)
+      continue;
+
+    /* FINALLY we can merge the blocks */
+    block->branch = NULL;
+    if (if_block) {
+      vivi_decompiler_block_append_block (block, if_block, TRUE);
+      block->next = if_block->next;
+      if (block->next)
+	block->next->incoming++;
+      if_block->incoming--;
+      vivi_decompiler_purge_block (dec, if_block);
+    } else {
+      vivi_decompiler_block_emit_line (block, NULL, "  ;");
+      block->next = NULL;
+    }
+    if (else_block) {
+      vivi_decompiler_block_emit_line (block, NULL, "else");
+      vivi_decompiler_block_append_block (block, else_block, TRUE);
+      if (block->next == NULL) {
+	block->next = else_block->next;
+	if (block->next)
+	  block->next->incoming++;
+      }
+      else_block->incoming--;
+      vivi_decompiler_purge_block (dec, else_block);
+    }
+    result = TRUE;
+  }
+
+  return result;
+}
+
+static void
 vivi_decompiler_merge_blocks (ViviDecompiler *dec)
 {
+  gboolean restart;
+
+  do {
+    restart = FALSE;
+
+    restart |= vivi_decompiler_merge_if (dec);
+  } while (restart);
   vivi_decompiler_merge_blocks_last_resort (dec);
 }
 

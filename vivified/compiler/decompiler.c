@@ -39,7 +39,7 @@ decode_script (gpointer offset, gpointer scriptp, gpointer unused)
 
   g_print ("%s:\n", script->name);
   for (i = 0; i < vivi_decompiler_get_n_lines (dec); i++) {
-    g_print ("%s  \n", vivi_decompiler_get_line (dec, i));
+    g_print ("  %s\n", vivi_decompiler_get_line (dec, i));
   }
 }
 

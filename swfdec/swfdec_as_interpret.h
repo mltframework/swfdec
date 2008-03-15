@@ -37,6 +37,7 @@ extern const SwfdecActionSpec swfdec_as_actions[256];
 
 /* all known actions */
 typedef enum {
+  SWFDEC_AS_ACTION_END = 0x00,
   SWFDEC_AS_ACTION_NEXT_FRAME = 0x04,
   SWFDEC_AS_ACTION_PREVIOUS_FRAME = 0x05,
   SWFDEC_AS_ACTION_PLAY = 0x06,

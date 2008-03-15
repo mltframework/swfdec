@@ -73,7 +73,8 @@ vivi_decompiler_state_free (ViviDecompilerState *state)
     vivi_decompiler_value_reset (&g_array_index (state->stack, ViviDecompilerValue, i));
   }
 
-  swfdec_constant_pool_free (state->pool);
+  if (state->pool)
+    swfdec_constant_pool_free (state->pool);
   g_array_free (state->stack, TRUE);
   g_slice_free1 (sizeof (ViviDecompilerValue) * state->n_registers, state->registers);
   g_slice_free (ViviDecompilerState, state);
@@ -249,7 +250,7 @@ vivi_decompile_push (ViviDecompiler *dec, ViviDecompilerState *state,
 	    return FALSE;
 	  }
 	  if (i >= swfdec_constant_pool_size (state->pool)) {
-	    vivi_decompiler_emit_error (dec, state,"constant pool index %u too high - only %u elements\n",
+	    vivi_decompiler_emit_error (dec, state,"constant pool index %u too high - only %u elements",
 		i, swfdec_constant_pool_size (state->pool));
 	    return FALSE;
 	  }
@@ -373,7 +374,7 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerState *state,
       if (decompile_funcs[code]) {
 	return decompile_funcs[code] (dec, state, code, data, len);
       } else {
-	vivi_decompiler_emit_error (dec, state,"unknown bytecode %20X %u\n", code, code);
+	vivi_decompiler_emit_error (dec, state,"unknown bytecode %20X %u", code, code);
 	return FALSE;
       }
   };

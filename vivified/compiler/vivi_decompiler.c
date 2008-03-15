@@ -321,8 +321,8 @@ vivi_decompile_get_url2 (ViviDecompiler *dec, ViviDecompilerState *state,
   ViviDecompilerValue url, target;
   const char *fun;
 
-  vivi_decompiler_state_pop (state, &url);
   vivi_decompiler_state_pop (state, &target);
+  vivi_decompiler_state_pop (state, &url);
 
   state->pc = data + len;
   if (len != 1) {

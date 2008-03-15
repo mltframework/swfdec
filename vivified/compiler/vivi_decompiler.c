@@ -145,6 +145,8 @@ vivi_decompiler_state_copy (const ViviDecompilerState *src)
 	&g_array_index (src->stack, ViviDecompilerValue, i));
     vivi_decompiler_state_push (dest, &val);
   }
+  if (src->pool)
+    dest->pool = swfdec_constant_pool_copy (src->pool);
 
   return dest;
 }
@@ -167,6 +169,7 @@ struct _ViviDecompilerBlock {
   ViviDecompilerBlock *	next;		/* block following this one or NULL if returning */
   ViviDecompilerBlock *	branch;	/* NULL or block branched to i if statement */
   /* parsing state */
+  guint			incoming;	/* number of incoming blocks */
   const guint8 *	exitpc;		/* pointer to after last parsed command or NULL if not parsed yet */
   char *		label;		/* label generated for this block, so we can goto it */
 };
@@ -190,6 +193,16 @@ vivi_decompiler_block_new (ViviDecompilerState *state)
   block->lines = g_ptr_array_new ();
 
   return block;
+}
+
+static const char *
+vivi_decompiler_block_get_label (ViviDecompilerBlock *block)
+{
+  /* NB: lael must be unique */
+  if (block->label == NULL)
+    block->label = g_strdup_printf ("label_%p", block->start->pc);
+
+  return block->label;
 }
 
 static void
@@ -244,6 +257,7 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
     }
     if (block->start->pc == state->pc) {
       g_printerr ("FIXME: check that the blocks are equal\n");
+      block->incoming++;
       return block;
     }
     break;
@@ -251,6 +265,7 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
 
   /* FIXME: see if the block is already there! */
   block = vivi_decompiler_block_new (state);
+  block->incoming++;
   dec->blocks = g_list_insert_before (dec->blocks, walk, block);
   return block;
 }
@@ -505,7 +520,6 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	block->next = vivi_decompiler_push_block_for_state (dec, new);
 	return FALSE;
       }
-      break;
     default:
       if (decompile_funcs[code]) {
 	return decompile_funcs[code] (block, state, code, data, len);
@@ -532,11 +546,7 @@ vivi_decompiler_block_decompile (ViviDecompiler *dec, ViviDecompilerBlock *block
 
   start = dec->script->buffer->data;
   end = start + dec->script->buffer->length;
-  state = vivi_decompiler_state_new (dec->script, dec->script->main, 4);
-  if (dec->script->constant_pool) {
-    state->pool = swfdec_constant_pool_new_from_action (dec->script->constant_pool->data,
-	dec->script->constant_pool->length, dec->script->version);
-  }
+  state = vivi_decompiler_state_copy (block->start);
 
   while (state->pc != dec->script->exit) {
     code = state->pc[0];
@@ -568,6 +578,85 @@ error:
   vivi_decompiler_state_free (state);
 }
 
+/*** PROGRAM STRUCTURE ANALYSIS ***/
+
+static void
+vivi_decompiler_block_append_block (ViviDecompilerBlock *block, 
+    ViviDecompilerBlock *append, const char *prefix)
+{
+  guint i;
+
+  for (i = 0; i < append->lines->len; i++) {
+    vivi_decompiler_block_emit_line (block, NULL, "%s%s", 
+	prefix, (char *) g_ptr_array_index (append->lines, i));
+  }
+}
+
+static ViviDecompilerBlock *
+vivi_decompiler_find_start_block (ViviDecompiler *dec)
+{
+  GList *walk;
+  
+  for (walk = dec->blocks; walk; walk = walk->next) {
+    ViviDecompilerBlock *block = walk->data;
+
+    if (block->start->pc == dec->script->main)
+      return block;
+  }
+  g_assert_not_reached ();
+  return NULL;
+}
+
+static void
+vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec)
+{
+  ViviDecompilerBlock *block, *current, *next;
+  GList *all_blocks;
+
+  current = vivi_decompiler_find_start_block (dec);
+  block = vivi_decompiler_block_new (vivi_decompiler_state_copy (current->start));
+
+  all_blocks = g_list_copy (dec->blocks);
+  while (current) {
+    g_assert (g_list_find (dec->blocks, current));
+    dec->blocks = g_list_remove (dec->blocks, current);
+    if (current->incoming) {
+      vivi_decompiler_block_emit_line (block, NULL, "%s:", 
+	  vivi_decompiler_block_get_label (current));
+    }
+    vivi_decompiler_block_append_block (block, current, "");
+    if (current->branch) {
+      vivi_decompiler_block_emit_line (block, NULL, "  goto %s;",
+	  vivi_decompiler_block_get_label (current->branch));
+    }
+    next = current->next;
+    if (next == NULL || !g_list_find (dec->blocks, next))
+      next = dec->blocks ? dec->blocks->data : NULL;
+    if (current->next == NULL) {
+      if (next)
+	vivi_decompiler_block_emit_line (block, NULL, "return;");
+    } else {
+      if (next == current->next) {
+	next->incoming--;
+      } else {
+	vivi_decompiler_block_emit_line (block, NULL, "goto %s;", 
+	    vivi_decompiler_block_get_label (current->next));
+      }
+    }
+    current = next;
+  }
+  g_list_foreach (all_blocks, (GFunc) vivi_decompiler_block_free, NULL);
+  g_list_free (all_blocks);
+  g_assert (dec->blocks == NULL);
+  dec->blocks = g_list_prepend (dec->blocks, block);
+}
+
+static void
+vivi_decompiler_merge_blocks (ViviDecompiler *dec)
+{
+  vivi_decompiler_merge_blocks_last_resort (dec);
+}
+
 static void
 vivi_decompiler_run (ViviDecompiler *dec)
 {
@@ -576,6 +665,10 @@ vivi_decompiler_run (ViviDecompiler *dec)
   GList *walk;
 
   state = vivi_decompiler_state_new (dec->script, dec->script->main, 4);
+  if (dec->script->constant_pool) {
+    state->pool = swfdec_constant_pool_new_from_action (dec->script->constant_pool->data,
+	dec->script->constant_pool->length, dec->script->version);
+  }
   block = vivi_decompiler_block_new (state);
   state = vivi_decompiler_state_copy (state);
   g_assert (dec->blocks == NULL);
@@ -590,6 +683,8 @@ vivi_decompiler_run (ViviDecompiler *dec)
       break;
     vivi_decompiler_block_decompile (dec, block);
   }
+
+  vivi_decompiler_merge_blocks (dec);
 }
 
 /*** OBJECT ***/

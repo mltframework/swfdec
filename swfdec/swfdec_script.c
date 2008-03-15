@@ -77,6 +77,22 @@ swfdec_constant_pool_new_from_action (const guint8 *data, guint len, guint versi
   return pool;
 }
 
+SwfdecConstantPool *
+swfdec_constant_pool_copy (SwfdecConstantPool *pool)
+{
+  SwfdecConstantPool *new;
+  guint i;
+
+  g_return_val_if_fail (pool != NULL, NULL);
+
+  new = g_malloc0 (sizeof (SwfdecConstantPool) + (pool->n_strings - 1) * sizeof (char *));
+  new->n_strings = pool->n_strings;
+  for (i = 0; i < pool->n_strings; i++) {
+    new->strings[i] = g_strdup (pool->strings[i]);
+  }
+  return new;
+}
+
 void
 swfdec_constant_pool_attach_to_context (SwfdecConstantPool *pool, SwfdecAsContext *context)
 {

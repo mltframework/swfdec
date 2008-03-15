@@ -73,6 +73,8 @@ SwfdecConstantPool *
 							 guint			len,
 							 guint			version);
 void		swfdec_constant_pool_free	  	(SwfdecConstantPool *	pool);
+SwfdecConstantPool *
+		swfdec_constant_pool_copy		(SwfdecConstantPool *	pool);
 guint		swfdec_constant_pool_size		(SwfdecConstantPool *	pool);
 const char *	swfdec_constant_pool_get		(SwfdecConstantPool *	pool,
 							 guint			i);

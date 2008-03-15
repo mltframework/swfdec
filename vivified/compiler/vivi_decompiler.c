@@ -245,11 +245,11 @@ vivi_decompile_push (ViviDecompiler *dec, ViviDecompilerState *state,
 	{
 	  guint i = type == 8 ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
 	  if (state->pool == NULL) {
-	    g_printerr ("no constant pool to push from");
+	    vivi_decompiler_emit_error (dec, state,"no constant pool to push from");
 	    return FALSE;
 	  }
 	  if (i >= swfdec_constant_pool_size (state->pool)) {
-	    g_printerr ("constant pool index %u too high - only %u elements\n",
+	    vivi_decompiler_emit_error (dec, state,"constant pool index %u too high - only %u elements\n",
 		i, swfdec_constant_pool_size (state->pool));
 	    return FALSE;
 	  }
@@ -257,7 +257,7 @@ vivi_decompile_push (ViviDecompiler *dec, ViviDecompilerState *state,
 	  break;
 	}
       default:
-	g_printerr ("Push: type %u not implemented", type);
+	vivi_decompiler_emit_error (dec, state,"Push: type %u not implemented", type);
 	return FALSE;
     }
     vivi_decompiler_state_push (state, &val);
@@ -373,7 +373,7 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerState *state,
       if (decompile_funcs[code]) {
 	return decompile_funcs[code] (dec, state, code, data, len);
       } else {
-	g_printerr ("unknown bytecode %20X %u\n", code, code);
+	vivi_decompiler_emit_error (dec, state,"unknown bytecode %20X %u\n", code, code);
 	return FALSE;
       }
   };
@@ -401,13 +401,13 @@ vivi_decompiler_run (ViviDecompiler *dec)
     code = state->pc[0];
     if (code & 0x80) {
       if (state->pc + 2 >= end) {
-	g_printerr ("bytecode %u length value out of range", code);
+	vivi_decompiler_emit_error (dec, state,"bytecode %u length value out of range", code);
 	goto error;
       }
       data = state->pc + 3;
       len = state->pc[1] | state->pc[2] << 8;
       if (data + len > end) {
-	g_printerr ("bytecode %u length %u out of range", code, len);
+	vivi_decompiler_emit_error (dec, state,"bytecode %u length %u out of range", code, len);
 	goto error;
       }
     } else {
@@ -417,7 +417,7 @@ vivi_decompiler_run (ViviDecompiler *dec)
     if (!vivi_decompiler_process (dec, state, code, data, len))
       goto error;
     if (state->pc < start || state->pc >= end) {
-      g_printerr ("program counter out of range");
+      vivi_decompiler_emit_error (dec, state,"program counter out of range");
       goto error;
     }
   }

@@ -58,6 +58,14 @@ vivi_decompiler_value_get (const ViviDecompilerValue *value)
   return value->value ? value->value : "undefined";
 }
 
+/* NB: takes ownership of string */
+static void
+vivi_decompiler_value_set (ViviDecompilerValue *value, char *new_string)
+{
+  g_free (value->value);
+  value->value = new_string;
+}
+
 typedef struct _ViviDecompilerState ViviDecompilerState;
 struct _ViviDecompilerState {
   SwfdecScript *	script;
@@ -481,8 +489,22 @@ vivi_decompile_get_url2 (ViviDecompilerBlock *block, ViviDecompilerState *state,
   return TRUE;
 }
 
+static gboolean
+vivi_decompile_not (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviDecompilerValue val;
+
+  vivi_decompiler_state_pop (state, &val);
+  vivi_decompiler_value_set (&val, g_strdup_printf ("!(%s)", vivi_decompiler_value_get (&val)));
+  vivi_decompiler_state_push (state, &val);
+  state->pc++;
+  return TRUE;
+}
+
 static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_END] = vivi_decompile_end,
+  [SWFDEC_AS_ACTION_NOT] = vivi_decompile_not,
   [SWFDEC_AS_ACTION_TRACE] = vivi_decompile_trace,
   [SWFDEC_AS_ACTION_POP] = vivi_decompile_pop,
 

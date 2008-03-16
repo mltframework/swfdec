@@ -615,6 +615,10 @@ vivi_decompiler_block_decompile (ViviDecompiler *dec, ViviDecompilerBlock *block
   }
 
   while (state->pc != exit) {
+    if (state->pc < start || state->pc >= end) {
+      vivi_decompiler_block_emit_error (block, state, "program counter out of range");
+      goto error;
+    }
     code = state->pc[0];
     if (code & 0x80) {
       if (state->pc + 2 >= end) {
@@ -633,10 +637,6 @@ vivi_decompiler_block_decompile (ViviDecompiler *dec, ViviDecompilerBlock *block
     }
     if (!vivi_decompiler_process (dec, block, state, code, data, len))
       goto out;
-    if (state->pc < start || state->pc >= end) {
-      vivi_decompiler_block_emit_error (block, state, "program counter out of range");
-      goto error;
-    }
   }
   if (next_block) {
     block->next = next_block;

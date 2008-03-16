@@ -8,4 +8,8 @@ check-local: ../vivi-decompile
 EXTRA_DIST = \
 	hello-world.as \
 	hello-world.swf \
-	hello-world.swf.trace
+	hello-world.swf.trace \
+	if.as \
+	if.swf \
+	if.swf.expect
+

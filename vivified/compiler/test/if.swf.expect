@@ -1,0 +1,17 @@
+/* version: 7 - size: 200x150 */
+
+/* Sprite0_Frame0 */
+{
+  if (1)
+    trace ("Hello World!");
+  else
+    trace ("Goodbye cruel world");
+  if ("foo")
+    trace ("Hello World");
+  if (true)
+    ;
+  else
+    trace ("Goodbye cruel world");
+  loadMovie ("fscommand:quit", "");
+}
+

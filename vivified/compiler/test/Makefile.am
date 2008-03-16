@@ -11,5 +11,8 @@ EXTRA_DIST = \
 	hello-world.swf.trace \
 	if.as \
 	if.swf \
-	if.swf.expect
+	if.swf.expect \
+	if-nested.as \
+	if-nested.swf \
+	if-nested.swf.expect
 

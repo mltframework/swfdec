@@ -229,6 +229,26 @@ vivi_decompiler_block_get_label (ViviDecompilerBlock *block)
 }
 
 static void
+vivi_decompiler_block_set_next (ViviDecompilerBlock *block, ViviDecompilerBlock *next)
+{
+  if (block->next)
+    block->next->incoming--;
+  block->next = next;
+  if (next)
+    next->incoming++;
+}
+
+static void
+vivi_decompiler_block_set_branch (ViviDecompilerBlock *block, ViviDecompilerBlock *branch)
+{
+  if (block->branch)
+    block->branch->incoming--;
+  block->branch = branch;
+  if (branch)
+    branch->incoming++;
+}
+
+static void
 vivi_decompiler_block_emit_error (ViviDecompilerBlock *block, ViviDecompilerState *state,
     const char *format, ...) G_GNUC_PRINTF (3, 4);
 static void
@@ -773,6 +793,47 @@ vivi_decompiler_purge_block (ViviDecompiler *dec, ViviDecompilerBlock *block)
   vivi_decompiler_block_free (block);
 }
 
+/*  ONE
+ *   |              ==>   BLOCK
+ *  TWO
+ */
+static gboolean
+vivi_decompiler_merge_lines (ViviDecompiler *dec)
+{
+  ViviDecompilerBlock *block, *next;
+  gboolean result;
+  GList *walk;
+
+  result = FALSE;
+  for (walk = dec->blocks; walk; walk = walk->next) {
+    block = walk->data;
+
+    /* This is an if block or so */
+    if (block->branch != NULL)
+      continue;
+    /* has no next block */
+    if (block->next == NULL)
+      continue;
+    /* The next block has multiple incoming blocks */
+    if (block->next->incoming != 1)
+      continue;
+
+    next = block->next;
+    vivi_decompiler_block_append_block (block, next, FALSE);
+    vivi_decompiler_block_set_next (block, next->next);
+    vivi_decompiler_block_set_branch (block, next->branch);
+    vivi_decompiler_purge_block (dec, next);
+  }
+
+  return result;
+}
+
+/*     COND
+ *    /    \
+ *  [IF] [ELSE]     ==>   BLOCK
+ *    \    /
+ *     NEXT
+ */
 static gboolean
 vivi_decompiler_merge_if (ViviDecompiler *dec)
 {
@@ -849,6 +910,7 @@ vivi_decompiler_merge_blocks (ViviDecompiler *dec)
   do {
     restart = FALSE;
 
+    restart |= vivi_decompiler_merge_lines (dec);
     restart |= vivi_decompiler_merge_if (dec);
   } while (restart);
 

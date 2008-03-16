@@ -264,19 +264,37 @@ vivi_decompiler_block_emit_line (ViviDecompilerBlock *block, ViviDecompilerState
   g_ptr_array_add (block->lines, s);
 }
 
+#if 0
+static G_GNUC_UNUSED void
+DUMP_BLOCKS (ViviDecompiler *dec)
+{
+  GList *walk;
+
+  g_print ("dumping blocks:\n");
+  for (walk = dec->blocks; walk; walk = walk->next) {
+    ViviDecompilerBlock *block = walk->data;
+    g_print ("  %p -> %p\n", block->start->pc, block->exitpc);
+  }
+}
+#else
+#define DUMP_BLOCKS(dec) (void) 0
+#endif
+
 static ViviDecompilerBlock *
 vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *state)
 {
   ViviDecompilerBlock *block;
   GList *walk;
 
+  DUMP_BLOCKS (dec);
   for (walk = dec->blocks; walk; walk = walk->next) {
     block = walk->data;
-    if (block->start->pc < state->pc)
+    if (block->start->pc < state->pc) {
+      if (block->exitpc && block->exitpc > state->pc) {
+	vivi_decompiler_block_unparse (block);
+	break;
+      }
       continue;
-    if (block->exitpc && block->exitpc > state->pc) {
-      vivi_decompiler_block_unparse (block);
-      break;
     }
     if (block->start->pc == state->pc) {
       g_printerr ("FIXME: check that the blocks are equal\n");
@@ -290,7 +308,7 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
   /* FIXME: see if the block is already there! */
   block = vivi_decompiler_block_new (state);
   block->incoming++;
-  dec->blocks = g_list_insert_before (dec->blocks, walk, block);
+  dec->blocks = g_list_insert_before (dec->blocks, walk ? walk->next : NULL, block);
   return block;
 }
 
@@ -522,10 +540,10 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
   switch (code) {
     case SWFDEC_AS_ACTION_IF:
       {
+	ViviDecompilerBlock *next, *branch;
 	ViviDecompilerValue val;
 	ViviDecompilerState *new;
 	gint16 offset;
-	char *s, *t;
 
 	if (len != 2) {
 	  vivi_decompiler_block_emit_error (block, state, "If action length invalid (is %u, should be 2)", len);
@@ -534,34 +552,45 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	offset = data[0] | (data[1] << 8);
 	state->pc += 5;
 	vivi_decompiler_state_pop (state, &val);
+	block->exitpc = state->pc;
 	new = vivi_decompiler_state_copy (state);
-	block->next = vivi_decompiler_push_block_for_state (dec, new);
+	next = vivi_decompiler_push_block_for_state (dec, new);
 	new = vivi_decompiler_state_copy (state);
 	new->pc += offset;
-	block->branch = vivi_decompiler_push_block_for_state (dec, new);
-	s = t = val.value;
-	val.value = NULL;
-	vivi_decompiler_value_reset (&val);
-	len = strlen (s);
-	while (*s == '!') {
-	  ViviDecompilerBlock *tmp;
-	  tmp = block->next;
-	  block->next = block->branch;
-	  block->branch = tmp;
-	  s++;
-	  len--;
-	  if (s[0] == '(' && s[len - 1] == ')') {
+	branch = vivi_decompiler_push_block_for_state (dec, new);
+	/* push_block_for_state() can unprocess this block */
+	if (block->exitpc) {
+	  char *s, *t;
+	  block->next = next;
+	  block->branch = branch;
+	  s = t = val.value;
+	  val.value = NULL;
+	  vivi_decompiler_value_reset (&val);
+	  len = strlen (s);
+	  while (*s == '!') {
+	    ViviDecompilerBlock *tmp;
+	    tmp = block->next;
+	    block->next = block->branch;
+	    block->branch = tmp;
 	    s++;
-	    len -= 2;
-	    s[len] = '\0';
+	    len--;
+	    if (s[0] == '(' && s[len - 1] == ')') {
+	      s++;
+	      len -= 2;
+	      s[len] = '\0';
+	    }
 	  }
+	  vivi_decompiler_block_emit_line (block, state, "if (%s)", s);
+	  g_free (t);
+	} else {
+	  next->incoming--;
+	  branch->incoming--;
 	}
-	vivi_decompiler_block_emit_line (block, state, "if (%s)", s);
-	g_free (t);
 	return FALSE;
       }
     case SWFDEC_AS_ACTION_JUMP:
       {
+	ViviDecompilerBlock *next;
 	ViviDecompilerState *new;
 	gint16 offset;
 
@@ -571,9 +600,15 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	}
 	offset = data[0] | (data[1] << 8);
 	state->pc += 5;
+	block->exitpc = state->pc;
 	new = vivi_decompiler_state_copy (state);
 	new->pc += offset;
-	block->next = vivi_decompiler_push_block_for_state (dec, new);
+	next = vivi_decompiler_push_block_for_state (dec, new);
+	if (block->exitpc) {
+	  block->next = next;
+	} else {
+	  next->incoming--;
+	}
 	return FALSE;
       }
     default:
@@ -808,11 +843,15 @@ vivi_decompiler_merge_blocks (ViviDecompiler *dec)
 {
   gboolean restart;
 
+  DUMP_BLOCKS (dec);
+
   do {
     restart = FALSE;
 
     restart |= vivi_decompiler_merge_if (dec);
   } while (restart);
+
+  DUMP_BLOCKS (dec);
   vivi_decompiler_merge_blocks_last_resort (dec);
 }
 
@@ -829,7 +868,6 @@ vivi_decompiler_run (ViviDecompiler *dec)
 	dec->script->constant_pool->length, dec->script->version);
   }
   block = vivi_decompiler_block_new (state);
-  state = vivi_decompiler_state_copy (state);
   g_assert (dec->blocks == NULL);
   dec->blocks = g_list_prepend (dec->blocks, block);
   while (TRUE) {

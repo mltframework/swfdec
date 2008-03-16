@@ -1,3 +1,5 @@
+SUBDIRS = test
+
 noinst_LTLIBRARIES = libvivified-compiler.la
 
 libvivified_compiler_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)

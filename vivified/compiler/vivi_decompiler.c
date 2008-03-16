@@ -223,7 +223,7 @@ vivi_decompiler_block_get_label (ViviDecompilerBlock *block)
 {
   /* NB: lael must be unique */
   if (block->label == NULL)
-    block->label = g_strdup_printf ("label_%p", block->start->pc);
+    block->label = g_strdup_printf ("label_%d", (int) (block->start->pc - block->start->script->main));
 
   return block->label;
 }
@@ -788,9 +788,6 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
       continue;
     else_block = block->next;
     if_block = block->branch;
-    /* if in if in if in if... */
-    if (else_block->branch || if_block->branch)
-      continue;
     /* one of the blocks doesn't exist */
     if (if_block == else_block->next) {
       if_block->incoming--;
@@ -800,6 +797,10 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
       else_block->incoming--;
       else_block = NULL;
     }
+    /* if in if in if in if... */
+    if ((else_block && else_block->branch) || 
+	(if_block && if_block->branch))
+      continue;
     /* if other blocks reference the blocks, bail, there's loops involved */
     if ((else_block && else_block->incoming > 1) ||
 	(if_block && if_block->incoming > 1))

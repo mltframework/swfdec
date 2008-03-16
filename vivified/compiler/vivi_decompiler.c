@@ -525,7 +525,7 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	ViviDecompilerValue val;
 	ViviDecompilerState *new;
 	gint16 offset;
-	const char *s;
+	char *s, *t;
 
 	if (len != 2) {
 	  vivi_decompiler_block_emit_error (block, state, "If action length invalid (is %u, should be 2)", len);
@@ -539,16 +539,25 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	new = vivi_decompiler_state_copy (state);
 	new->pc += offset;
 	block->branch = vivi_decompiler_push_block_for_state (dec, new);
-	s = vivi_decompiler_value_get (&val);
+	s = t = val.value;
+	val.value = NULL;
+	vivi_decompiler_value_reset (&val);
+	len = strlen (s);
 	while (*s == '!') {
 	  ViviDecompilerBlock *tmp;
 	  tmp = block->next;
 	  block->next = block->branch;
 	  block->branch = tmp;
 	  s++;
+	  len--;
+	  if (s[0] == '(' && s[len - 1] == ')') {
+	    s++;
+	    len -= 2;
+	    s[len] = '\0';
+	  }
 	}
 	vivi_decompiler_block_emit_line (block, state, "if (%s)", s);
-	vivi_decompiler_value_reset (&val);
+	g_free (t);
 	return FALSE;
       }
     case SWFDEC_AS_ACTION_JUMP:

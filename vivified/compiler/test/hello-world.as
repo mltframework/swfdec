@@ -1,4 +1,4 @@
-// makeswf -v 7 -s 200x150 -r 1 -o movie23.swf movie23.as
+// makeswf -v 7 -s 200x150 -r 1 -o hello-world.swf hello-world.as
 
 trace ("Hello World!");
 

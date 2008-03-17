@@ -8,9 +8,7 @@
     trace ("Goodbye cruel world");
   if ("foo")
     trace ("Hello World");
-  if (true)
-    ;
-  else
+  if (!true)
     trace ("Goodbye cruel world");
   loadMovie ("fscommand:quit", "");
 }

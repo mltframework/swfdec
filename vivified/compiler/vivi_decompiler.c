@@ -28,261 +28,9 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_decompiler.h"
-
-/*** DECOMPILER ENGINE ***/
-
-typedef struct _ViviDecompilerValue ViviDecompilerValue;
-struct _ViviDecompilerValue {
-  char *	value;
-  gboolean	unconstant;
-};
-
-static void
-vivi_decompiler_value_reset (ViviDecompilerValue *value)
-{
-  g_free (value->value);
-  value->value = NULL;
-  value->unconstant = FALSE;
-}
-
-static void
-vivi_decompiler_value_copy (ViviDecompilerValue *dest, const ViviDecompilerValue *src)
-{
-  dest->value = g_strdup (src->value);
-  dest->unconstant = src->unconstant;
-}
-
-static const char * 
-vivi_decompiler_value_get (const ViviDecompilerValue *value)
-{
-  return value->value ? value->value : "undefined";
-}
-
-/* NB: takes ownership of string */
-static void
-vivi_decompiler_value_set (ViviDecompilerValue *value, char *new_string)
-{
-  g_free (value->value);
-  value->value = new_string;
-}
-
-typedef struct _ViviDecompilerState ViviDecompilerState;
-struct _ViviDecompilerState {
-  SwfdecScript *	script;
-  const guint8 *	pc;
-  ViviDecompilerValue *	registers;
-  guint			n_registers;
-  GArray *		stack;
-  SwfdecConstantPool *	pool;
-};
-
-static void
-vivi_decompiler_state_free (ViviDecompilerState *state)
-{
-  guint i;
-
-  for (i = 0; i < state->n_registers; i++) {
-    vivi_decompiler_value_reset (&state->registers[i]);
-  }
-  for (i = 0; i < state->stack->len; i++) {
-    vivi_decompiler_value_reset (&g_array_index (state->stack, ViviDecompilerValue, i));
-  }
-
-  if (state->pool)
-    swfdec_constant_pool_free (state->pool);
-  g_array_free (state->stack, TRUE);
-  g_slice_free1 (sizeof (ViviDecompilerValue) * state->n_registers, state->registers);
-  swfdec_script_unref (state->script);
-  g_slice_free (ViviDecompilerState, state);
-}
-
-static ViviDecompilerState *
-vivi_decompiler_state_new (SwfdecScript *script, const guint8 *pc, guint n_registers)
-{
-  ViviDecompilerState *state = g_slice_new0 (ViviDecompilerState);
-
-  state->script = swfdec_script_ref (script);
-  state->pc = pc;
-  state->registers = g_slice_alloc0 (sizeof (ViviDecompilerValue) * n_registers);
-  state->n_registers = n_registers;
-  state->stack = g_array_new (FALSE, TRUE, sizeof (ViviDecompilerValue));
-
-  return state;
-}
-
-static void
-vivi_decompiler_state_push (ViviDecompilerState *state, ViviDecompilerValue *val)
-{
-  g_array_append_val (state->stack, *val);
-}
-
-static const ViviDecompilerValue undefined = { NULL, FALSE };
-
-static void
-vivi_decompiler_state_pop (ViviDecompilerState *state, ViviDecompilerValue *val)
-{
-  if (state->stack->len == 0) {
-    if (val)
-      *val = undefined;
-  } else {
-    ViviDecompilerValue *pop;
-    pop = &g_array_index (state->stack, ViviDecompilerValue, state->stack->len - 1);
-    if (val)
-      *val = *pop;
-    else
-      vivi_decompiler_value_reset (pop);
-  }
-
-  g_array_set_size (state->stack, state->stack->len - 1);
-}
-
-static ViviDecompilerState *
-vivi_decompiler_state_copy (const ViviDecompilerState *src)
-{
-  ViviDecompilerState *dest;
-  guint i;
-
-  dest = vivi_decompiler_state_new (src->script, src->pc, src->n_registers);
-  for (i = 0; i < src->n_registers; i++) {
-    if (src->registers[i].value)
-      vivi_decompiler_value_copy (&dest->registers[i], &src->registers[i]);
-  }
-  for (i = 0; i < src->stack->len; i++) {
-    ViviDecompilerValue val = { NULL, };
-    vivi_decompiler_value_copy (&val, 
-	&g_array_index (src->stack, ViviDecompilerValue, i));
-    vivi_decompiler_state_push (dest, &val);
-  }
-  if (src->pool)
-    dest->pool = swfdec_constant_pool_copy (src->pool);
-
-  return dest;
-}
-
-static const ViviDecompilerValue *
-vivi_decompiler_state_get_register (ViviDecompilerState *state, guint reg)
-{
-  if (reg >= state->n_registers)
-    return &undefined;
-  else
-    return &state->registers[state->n_registers];
-}
-
-/*** BLOCK ***/
-
-typedef struct _ViviDecompilerBlock ViviDecompilerBlock;
-struct _ViviDecompilerBlock {
-  ViviDecompilerState *	start;		/* starting state */
-  GPtrArray *		lines;		/* lines parsed from this block */
-  ViviDecompilerBlock *	next;		/* block following this one or NULL if returning */
-  ViviDecompilerBlock *	branch;		/* NULL or block branched to i if statement */
-  /* parsing state */
-  guint			incoming;	/* number of incoming blocks */
-  const guint8 *	exitpc;		/* pointer to after last parsed command or NULL if not parsed yet */
-  char *		label;		/* label generated for this block, so we can goto it */
-};
-
-static void
-vivi_decompiler_block_unparse (ViviDecompilerBlock *block)
-{
-  guint i;
-
-  for (i = 0; i < block->lines->len; i++) {
-    g_free (g_ptr_array_index (block->lines, i));
-  }
-  g_ptr_array_set_size (block->lines, 0);
-  block->next = NULL;
-  block->branch = NULL;
-  block->exitpc = NULL;
-}
-
-static void
-vivi_decompiler_block_free (ViviDecompilerBlock *block)
-{
-  vivi_decompiler_block_unparse (block);
-  vivi_decompiler_state_free (block->start);
-  g_ptr_array_free (block->lines, TRUE);
-  g_free (block->label);
-  g_slice_free (ViviDecompilerBlock, block);
-}
-
-static ViviDecompilerBlock *
-vivi_decompiler_block_new (ViviDecompilerState *state)
-{
-  ViviDecompilerBlock *block;
-
-  block = g_slice_new0 (ViviDecompilerBlock);
-  block->start = state;
-  block->lines = g_ptr_array_new ();
-
-  return block;
-}
-
-static const char *
-vivi_decompiler_block_get_label (ViviDecompilerBlock *block)
-{
-  /* NB: lael must be unique */
-  if (block->label == NULL)
-    block->label = g_strdup_printf ("label_%d", (int) (block->start->pc - block->start->script->main));
-
-  return block->label;
-}
-
-static void
-vivi_decompiler_block_set_next (ViviDecompilerBlock *block, ViviDecompilerBlock *next)
-{
-  if (block->next)
-    block->next->incoming--;
-  block->next = next;
-  if (next)
-    next->incoming++;
-}
-
-static void
-vivi_decompiler_block_set_branch (ViviDecompilerBlock *block, ViviDecompilerBlock *branch)
-{
-  if (block->branch)
-    block->branch->incoming--;
-  block->branch = branch;
-  if (branch)
-    branch->incoming++;
-}
-
-static void
-vivi_decompiler_block_emit_error (ViviDecompilerBlock *block, ViviDecompilerState *state,
-    const char *format, ...) G_GNUC_PRINTF (3, 4);
-static void
-vivi_decompiler_block_emit_error (ViviDecompilerBlock *block, ViviDecompilerState *state,
-    const char *format, ...)
-{
-  va_list varargs;
-  char *s, *t;
-
-  va_start (varargs, format);
-  s = g_strdup_vprintf (format, varargs);
-  va_end (varargs);
-  t = g_strdup_printf ("/* %s */", s);
-  g_free (s);
-
-  g_ptr_array_add (block->lines, t);
-}
-
-static void
-vivi_decompiler_block_emit_line (ViviDecompilerBlock *block, ViviDecompilerState *state,
-    const char *format, ...) G_GNUC_PRINTF (3, 4);
-static void
-vivi_decompiler_block_emit_line (ViviDecompilerBlock *block, ViviDecompilerState *state,
-    const char *format, ...)
-{
-  va_list varargs;
-  char *s;
-
-  va_start (varargs, format);
-  s = g_strdup_vprintf (format, varargs);
-  va_end (varargs);
-
-  g_ptr_array_add (block->lines, s);
-}
+#include "vivi_decompiler_block.h"
+#include "vivi_decompiler_state.h"
+#include "vivi_decompiler_value.h"
 
 #if 0
 static G_GNUC_UNUSED void
@@ -305,20 +53,22 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
 {
   ViviDecompilerBlock *block;
   GList *walk;
+  const guint8 *pc, *block_start;
 
   DUMP_BLOCKS (dec);
+  pc = vivi_decompiler_state_get_pc (state);
   for (walk = dec->blocks; walk; walk = walk->next) {
     block = walk->data;
-    if (block->start->pc < state->pc) {
-      if (block->exitpc && block->exitpc > state->pc) {
-	vivi_decompiler_block_unparse (block);
+    block_start = vivi_decompiler_block_get_start (block);
+    if (block_start < pc) {
+      if (vivi_decompiler_block_contains (block, pc)) {
+	vivi_decompiler_block_reset (block);
 	break;
       }
       continue;
     }
-    if (block->start->pc == state->pc) {
+    if (block_start == pc) {
       g_printerr ("FIXME: check that the blocks are equal\n");
-      block->incoming++;
       vivi_decompiler_state_free (state);
       return block;
     }
@@ -327,7 +77,6 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
 
   /* FIXME: see if the block is already there! */
   block = vivi_decompiler_block_new (state);
-  block->incoming++;
   dec->blocks = g_list_insert_before (dec->blocks, walk ? walk->next : NULL, block);
   return block;
 }
@@ -367,73 +116,75 @@ static gboolean
 vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviDecompilerValue val;
+  ViviDecompilerValue *val;
   SwfdecBits bits;
   guint type;
+  char *value;
 
   swfdec_bits_init_data (&bits, data, len);
   while (swfdec_bits_left (&bits)) {
-    memset (&val, 0, sizeof (ViviDecompilerValue));
     type = swfdec_bits_get_u8 (&bits);
     switch (type) {
       case 0: /* string */
 	{
-	  char *s = swfdec_bits_get_string (&bits, state->script->version);
+	  char *s = swfdec_bits_get_string (&bits, vivi_decompiler_state_get_version (state));
 	  if (s == NULL) {
-	    vivi_decompiler_block_emit_error (block, state, "could not read string");
+	    vivi_decompiler_block_emit_error (block, "could not read string");
 	    return FALSE;
 	  }
-	  val.value = escape_string (s);
+	  value = escape_string (s);
 	  g_free (s);
 	  break;
 	}
       case 1: /* float */
-	val.value = g_strdup_printf ("%f", swfdec_bits_get_float (&bits));
+	value = g_strdup_printf ("%f", swfdec_bits_get_float (&bits));
 	break;
       case 2: /* null */
-	val.value = g_strdup ("null");
+	value = g_strdup ("null");
 	break;
       case 3: /* undefined */
 	break;
       case 4: /* register */
 	{
-	  vivi_decompiler_value_copy (&val,
-	      vivi_decompiler_state_get_register (state, swfdec_bits_get_u8 (&bits)));
-	  break;
+	  val = vivi_decompiler_value_copy (vivi_decompiler_state_get_register (
+		state, swfdec_bits_get_u8 (&bits)));
+	  vivi_decompiler_state_push (state, val);
+	  continue;
 	}
       case 5: /* boolean */
-	val.value = g_strdup (swfdec_bits_get_u8 (&bits) ? "true" : "false");
+	value = g_strdup (swfdec_bits_get_u8 (&bits) ? "true" : "false");
 	break;
       case 6: /* double */
-	val.value = g_strdup_printf ("%g", swfdec_bits_get_double (&bits));
+	value = g_strdup_printf ("%g", swfdec_bits_get_double (&bits));
 	break;
       case 7: /* 32bit int */
-	val.value = g_strdup_printf ("%d", swfdec_bits_get_u32 (&bits));
+	value = g_strdup_printf ("%d", swfdec_bits_get_u32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
       case 9: /* 16bit ConstantPool address */
 	{
 	  guint i = type == 8 ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
-	  if (state->pool == NULL) {
-	    vivi_decompiler_block_emit_error (block, state, "no constant pool to push from");
+	  const SwfdecConstantPool *pool = vivi_decompiler_state_get_constant_pool (state);
+	  if (pool == NULL) {
+	    vivi_decompiler_block_emit_error (block, "no constant pool to push from");
 	    return FALSE;
 	  }
-	  if (i >= swfdec_constant_pool_size (state->pool)) {
-	    vivi_decompiler_block_emit_error (block, state, "constant pool index %u too high - only %u elements",
-		i, swfdec_constant_pool_size (state->pool));
+	  if (i >= swfdec_constant_pool_size (pool)) {
+	    vivi_decompiler_block_emit_error (block, "constant pool index %u too high - only %u elements",
+		i, swfdec_constant_pool_size (pool));
 	    return FALSE;
 	  }
-	  val.value = escape_string (swfdec_constant_pool_get (state->pool, i));
+	  value = escape_string (swfdec_constant_pool_get (pool, i));
 	  break;
 	}
       default:
-	vivi_decompiler_block_emit_error (block, state, "Push: type %u not implemented", type);
+	vivi_decompiler_block_emit_error (block, "Push: type %u not implemented", type);
 	return FALSE;
     }
-    vivi_decompiler_state_push (state, &val);
+    val = vivi_decompiler_value_new (VIVI_PRECEDENCE_NONE, TRUE, value);
+    vivi_decompiler_state_push (state, val);
   }
 
-  state->pc = data + len;
   return TRUE;
 }
 
@@ -441,12 +192,11 @@ static gboolean
 vivi_decompile_pop (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviDecompilerValue val;
+  ViviDecompilerValue *val;
   
-  vivi_decompiler_state_pop (state, &val);
-  state->pc++;
-  vivi_decompiler_block_emit_line (block, state, "%s;", vivi_decompiler_value_get (&val));
-  vivi_decompiler_value_reset (&val);
+  val = vivi_decompiler_state_pop (state);
+  vivi_decompiler_block_emit (block, state, "%s;", vivi_decompiler_value_get_text (val));
+  vivi_decompiler_value_free (val);
   return TRUE;
 }
 
@@ -454,11 +204,10 @@ static gboolean
 vivi_decompile_constant_pool (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  if (state->pool)
-    swfdec_constant_pool_free (state->pool);
+  SwfdecConstantPool *pool = swfdec_constant_pool_new_from_action (data, len, 
+      vivi_decompiler_state_get_version (state));
 
-  state->pool = swfdec_constant_pool_new_from_action (data, len, state->script->version);
-  state->pc = data + len;
+  vivi_decompiler_state_set_constant_pool (state, pool);
   return TRUE;
 }
 
@@ -466,12 +215,11 @@ static gboolean
 vivi_decompile_trace (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviDecompilerValue val;
+  ViviDecompilerValue *val;
   
-  vivi_decompiler_state_pop (state, &val);
-  state->pc++;
-  vivi_decompiler_block_emit_line (block, state, "trace (%s);", vivi_decompiler_value_get (&val));
-  vivi_decompiler_value_reset (&val);
+  val = vivi_decompiler_state_pop (state);
+  vivi_decompiler_block_emit (block, state, "trace (%s);", vivi_decompiler_value_get_text (val));
+  vivi_decompiler_value_free (val);
   return TRUE;
 }
 
@@ -479,6 +227,7 @@ static gboolean
 vivi_decompile_end (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
+  vivi_decompiler_block_finish (block, state);
   return FALSE;
 }
 
@@ -486,21 +235,20 @@ static gboolean
 vivi_decompile_get_url2 (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviDecompilerValue url, target;
+  ViviDecompilerValue *url, *target;
   const char *fun;
 
-  vivi_decompiler_state_pop (state, &target);
-  vivi_decompiler_state_pop (state, &url);
+  target = vivi_decompiler_state_pop (state);
+  url = vivi_decompiler_state_pop (state);
 
-  state->pc = data + len;
   if (len != 1) {
-    vivi_decompiler_block_emit_error (block, state, "invalid length in getURL2 command");   
+    vivi_decompiler_block_emit_error (block, "invalid length in getURL2 command");   
   } else {
     guint method = data[0] & 3;
     guint internal = data[0] & 64;
     guint variables = data[0] & 128;
     if (method == 3) {
-      vivi_decompiler_block_emit_error (block, state, "GetURL method 3 invalid");
+      vivi_decompiler_block_emit_error (block, "GetURL method 3 invalid");
       method = 0;
     }
 
@@ -512,18 +260,18 @@ vivi_decompile_get_url2 (ViviDecompilerBlock *block, ViviDecompilerState *state,
       fun = "getURL";
     }
     if (method == 0) {
-      vivi_decompiler_block_emit_line (block, state, "%s (%s, %s);", fun, 
-	  vivi_decompiler_value_get (&url),
-	  vivi_decompiler_value_get (&target));
+      vivi_decompiler_block_emit (block, state, "%s (%s, %s);", fun, 
+	  vivi_decompiler_value_get_text (url),
+	  vivi_decompiler_value_get_text (target));
     } else {
-      vivi_decompiler_block_emit_line (block, state, "%s (%s, %s, %s);", fun,
-	  vivi_decompiler_value_get (&url),
-	  vivi_decompiler_value_get (&target),
+      vivi_decompiler_block_emit (block, state, "%s (%s, %s, %s);", fun,
+	  vivi_decompiler_value_get_text (url),
+	  vivi_decompiler_value_get_text (target),
 	  method == 1 ? "\"GET\"" : "\"POST\"");
     }
   }
-  vivi_decompiler_value_reset (&url);
-  vivi_decompiler_value_reset (&target);
+  vivi_decompiler_value_free (url);
+  vivi_decompiler_value_free (target);
   return TRUE;
 }
 
@@ -531,12 +279,14 @@ static gboolean
 vivi_decompile_not (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviDecompilerValue val;
+  ViviDecompilerValue *pop, *push;
 
-  vivi_decompiler_state_pop (state, &val);
-  vivi_decompiler_value_set (&val, g_strdup_printf ("!(%s)", vivi_decompiler_value_get (&val)));
-  vivi_decompiler_state_push (state, &val);
-  state->pc++;
+  pop = vivi_decompiler_state_pop (state);
+  pop = vivi_decompiler_value_ensure_precedence (pop, VIVI_PRECEDENCE_UNARY);
+  push = vivi_decompiler_value_new_printf (VIVI_PRECEDENCE_UNARY,
+      vivi_decompiler_value_is_constant (pop), "!%s", vivi_decompiler_value_get_text (pop));
+  vivi_decompiler_state_push (state, push);
+  vivi_decompiler_value_free (pop);
   return TRUE;
 }
 
@@ -557,41 +307,39 @@ static gboolean
 vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block, 
     ViviDecompilerState *state, guint code, const guint8 *data, guint len)
 {
+  gboolean result;
+
   switch (code) {
     case SWFDEC_AS_ACTION_IF:
       {
 	ViviDecompilerBlock *next, *branch;
-	ViviDecompilerValue val;
+	ViviDecompilerValue *val, *val2;
 	ViviDecompilerState *new;
 	gint16 offset;
 
 	if (len != 2) {
-	  vivi_decompiler_block_emit_error (block, state, "If action length invalid (is %u, should be 2)", len);
+	  vivi_decompiler_block_emit_error (block, "If action length invalid (is %u, should be 2)", len);
 	  return FALSE;
 	}
 	offset = data[0] | (data[1] << 8);
-	state->pc += 5;
-	vivi_decompiler_state_pop (state, &val);
-	block->exitpc = state->pc;
+	vivi_decompiler_state_add_pc (state, 5);
+	val = vivi_decompiler_state_pop (state);
+	vivi_decompiler_block_finish (block, state);
 	new = vivi_decompiler_state_copy (state);
 	next = vivi_decompiler_push_block_for_state (dec, new);
 	new = vivi_decompiler_state_copy (state);
-	new->pc += offset;
+	vivi_decompiler_state_add_pc (new, offset);
 	branch = vivi_decompiler_push_block_for_state (dec, new);
-	/* push_block_for_state() can unprocess this block */
-	if (block->exitpc) {
+	if (vivi_decompiler_block_is_finished (block)) {
 	  char *s, *t;
-	  block->next = next;
-	  block->branch = branch;
-	  s = t = val.value;
-	  val.value = NULL;
-	  vivi_decompiler_value_reset (&val);
+	  ViviPrecedence prec = vivi_decompiler_value_get_precedence (val);
+	  s = t = g_strdup (vivi_decompiler_value_get_text (val));
 	  len = strlen (s);
 	  while (*s == '!') {
 	    ViviDecompilerBlock *tmp;
-	    tmp = block->next;
-	    block->next = block->branch;
-	    block->branch = tmp;
+	    tmp = next;
+	    next = branch;
+	    branch = tmp;
 	    s++;
 	    len--;
 	    if (s[0] == '(' && s[len - 1] == ')') {
@@ -599,15 +347,17 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	      len -= 2;
 	      s[len] = '\0';
 	    }
+	    prec = VIVI_PRECEDENCE_COMMA;
 	  }
-	  vivi_decompiler_block_emit_line (block, state, "if (%s)", s);
+	  val2 = vivi_decompiler_value_new (prec, vivi_decompiler_value_is_constant (val),
+	      g_strdup (s));
+	  vivi_decompiler_value_free (val);
+	  vivi_decompiler_block_set_next (block, next);
+	  vivi_decompiler_block_set_branch (block, branch, val2);
 	  g_free (t);
-	} else {
-	  next->incoming--;
-	  branch->incoming--;
 	}
-	return FALSE;
       }
+      return FALSE;
     case SWFDEC_AS_ACTION_JUMP:
       {
 	ViviDecompilerBlock *next;
@@ -615,33 +365,32 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	gint16 offset;
 
 	if (len != 2) {
-	  vivi_decompiler_block_emit_error (block, state, "Jump action length invalid (is %u, should be 2)", len);
+	  vivi_decompiler_block_emit_error (block, "Jump action length invalid (is %u, should be 2)", len);
 	  return FALSE;
 	}
 	offset = data[0] | (data[1] << 8);
-	state->pc += 5;
-	block->exitpc = state->pc;
+	vivi_decompiler_state_add_pc (state, 5);
+	vivi_decompiler_block_finish (block, state);
 	new = vivi_decompiler_state_copy (state);
-	new->pc += offset;
+	vivi_decompiler_state_add_pc (new, offset);
 	next = vivi_decompiler_push_block_for_state (dec, new);
-	if (block->exitpc) {
-	  block->next = next;
-	} else {
-	  next->incoming--;
+	if (vivi_decompiler_block_is_finished (block)) {
+	  vivi_decompiler_block_set_next (block, next);
 	}
-	return FALSE;
       }
+      return FALSE;
     default:
       if (decompile_funcs[code]) {
-	return decompile_funcs[code] (block, state, code, data, len);
+	result = decompile_funcs[code] (block, state, code, data, len);
       } else {
-	vivi_decompiler_block_emit_error (block, state, "unknown bytecode 0x%02X %u", code, code);
-	if (data)
-	  state->pc = data + len;
-	else
-	  state->pc++;
-	break;
+	vivi_decompiler_block_emit_error (block, "unknown bytecode 0x%02X %u", code, code);
+	result = FALSE;
       }
+      if (data)
+	vivi_decompiler_state_add_pc (state, 3 + len);
+      else
+	vivi_decompiler_state_add_pc (state, 1);
+      return result;
   };
 
   return TRUE;
@@ -653,37 +402,37 @@ vivi_decompiler_block_decompile (ViviDecompiler *dec, ViviDecompilerBlock *block
   ViviDecompilerState *state;
   ViviDecompilerBlock *next_block;
   GList *list;
-  const guint8 *start, *end, *exit;
+  const guint8 *pc, *start, *end, *exit;
   const guint8 *data;
   guint code, len;
 
   start = dec->script->buffer->data;
   end = start + dec->script->buffer->length;
-  state = vivi_decompiler_state_copy (block->start);
+  state = vivi_decompiler_state_copy (vivi_decompiler_block_get_start_state (block));
   exit = dec->script->exit;
   list = g_list_find (dec->blocks, block);
   if (list->next) {
     next_block = list->next->data;
-    exit = next_block->start->pc;
+    exit = vivi_decompiler_block_get_start (next_block);
   } else {
     next_block = NULL;
   }
 
-  while (state->pc != exit) {
-    if (state->pc < start || state->pc >= end) {
-      vivi_decompiler_block_emit_error (block, state, "program counter out of range");
+  while ((pc = vivi_decompiler_state_get_pc (state)) != exit) {
+    if (pc < start || pc >= end) {
+      vivi_decompiler_block_emit_error (block, "program counter out of range");
       goto error;
     }
-    code = state->pc[0];
+    code = pc[0];
     if (code & 0x80) {
-      if (state->pc + 2 >= end) {
-	vivi_decompiler_block_emit_error (block, state, "bytecode %u length value out of range", code);
+      if (pc + 2 >= end) {
+	vivi_decompiler_block_emit_error (block, "bytecode %u length value out of range", code);
 	goto error;
       }
-      data = state->pc + 3;
-      len = state->pc[1] | state->pc[2] << 8;
+      data = pc + 3;
+      len = pc[1] | pc[2] << 8;
       if (data + len > end) {
-	vivi_decompiler_block_emit_error (block, state, "bytecode %u length %u out of range", code, len);
+	vivi_decompiler_block_emit_error (block, "bytecode %u length %u out of range", code, len);
 	goto error;
       }
     } else {
@@ -693,14 +442,13 @@ vivi_decompiler_block_decompile (ViviDecompiler *dec, ViviDecompilerBlock *block
     if (!vivi_decompiler_process (dec, block, state, code, data, len))
       goto out;
   }
+  vivi_decompiler_block_finish (block, state);
   if (next_block) {
-    block->next = next_block;
-    next_block->incoming++;
+    vivi_decompiler_block_set_next (block, next_block);
   }
 
 out:
 error:
-  block->exitpc = state->pc;
   vivi_decompiler_state_free (state);
 }
 
@@ -710,16 +458,17 @@ static void
 vivi_decompiler_block_append_block (ViviDecompilerBlock *block, 
     ViviDecompilerBlock *append, gboolean indent)
 {
-  guint i;
+  guint i, lines;
 
-  if (indent && append->lines->len > 1)
-    vivi_decompiler_block_emit_line (block, NULL, "{");
-  for (i = 0; i < append->lines->len; i++) {
-    vivi_decompiler_block_emit_line (block, NULL, "%s%s", indent ? "  " : "",
-	(char *) g_ptr_array_index (append->lines, i));
+  lines = vivi_decompiler_block_get_n_lines (append);
+  if (indent && lines > 1)
+    vivi_decompiler_block_emit (block, NULL, "{");
+  for (i = 0; i < lines; i++) {
+    vivi_decompiler_block_emit (block, NULL, "%s%s", indent ? "  " : "",
+	vivi_decompiler_block_get_line (append, i));
   }
-  if (indent && append->lines->len > 1)
-    vivi_decompiler_block_emit_line (block, NULL, "}");
+  if (indent && lines > 1)
+    vivi_decompiler_block_emit (block, NULL, "}");
 }
 
 static ViviDecompilerBlock *
@@ -730,7 +479,7 @@ vivi_decompiler_find_start_block (ViviDecompiler *dec)
   for (walk = dec->blocks; walk; walk = walk->next) {
     ViviDecompilerBlock *block = walk->data;
 
-    if (block->start->pc == dec->script->main)
+    if (vivi_decompiler_block_get_start (block) == dec->script->main)
       return block;
   }
   g_assert_not_reached ();
@@ -742,35 +491,44 @@ vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec)
 {
   ViviDecompilerBlock *block, *current, *next;
   GList *all_blocks;
+  guint max_incoming = 0;
 
   current = vivi_decompiler_find_start_block (dec);
-  block = vivi_decompiler_block_new (vivi_decompiler_state_copy (current->start));
+  block = vivi_decompiler_block_new (vivi_decompiler_state_copy (
+	vivi_decompiler_block_get_start_state (current)));
 
   all_blocks = g_list_copy (dec->blocks);
   while (current) {
     g_assert (g_list_find (dec->blocks, current));
     dec->blocks = g_list_remove (dec->blocks, current);
-    if (current->incoming) {
-      vivi_decompiler_block_emit_line (block, NULL, "%s:", 
+    if (vivi_decompiler_block_get_n_incoming (current) > max_incoming) {
+      vivi_decompiler_block_force_label (current);
+      vivi_decompiler_block_emit (block, NULL, "%s:", 
 	  vivi_decompiler_block_get_label (current));
     }
+    max_incoming = 0;
     vivi_decompiler_block_append_block (block, current, FALSE);
-    if (current->branch) {
-      vivi_decompiler_block_emit_line (block, NULL, "  goto %s;",
-	  vivi_decompiler_block_get_label (current->branch));
+    next = vivi_decompiler_block_get_branch (current);
+    if (next) {
+      vivi_decompiler_block_force_label (next);
+      vivi_decompiler_block_emit (block, NULL, "if (%s)", vivi_decompiler_value_get_text (
+	  vivi_decompiler_block_get_branch_condition (next)));
+      vivi_decompiler_block_emit (block, NULL, "  goto %s;",
+	  vivi_decompiler_block_get_label (next));
     }
-    next = current->next;
+    next = vivi_decompiler_block_get_next (current);
     if (next == NULL || !g_list_find (dec->blocks, next))
       next = dec->blocks ? dec->blocks->data : NULL;
-    if (current->next == NULL) {
+    if (vivi_decompiler_block_get_next (current) == NULL) {
       if (next)
-	vivi_decompiler_block_emit_line (block, NULL, "return;");
+	vivi_decompiler_block_emit (block, NULL, "return;");
     } else {
-      if (next == current->next) {
-	next->incoming--;
+      if (next == vivi_decompiler_block_get_next (current)) {
+	max_incoming = 1;
       } else {
-	vivi_decompiler_block_emit_line (block, NULL, "goto %s;", 
-	    vivi_decompiler_block_get_label (current->next));
+	vivi_decompiler_block_force_label (next);
+	vivi_decompiler_block_emit (block, NULL, "goto %s;", 
+	    vivi_decompiler_block_get_label (next));
       }
     }
     current = next;
@@ -784,12 +542,8 @@ vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec)
 static void
 vivi_decompiler_purge_block (ViviDecompiler *dec, ViviDecompilerBlock *block)
 {
-  g_assert (block->incoming == 0);
+  g_assert (vivi_decompiler_block_get_n_incoming (block) == 0);
   dec->blocks = g_list_remove (dec->blocks, block);
-  if (block->next)
-    block->next->incoming--;
-  if (block->branch)
-    block->branch->incoming--;
   vivi_decompiler_block_free (block);
 }
 
@@ -801,6 +555,7 @@ static gboolean
 vivi_decompiler_merge_lines (ViviDecompiler *dec)
 {
   ViviDecompilerBlock *block, *next;
+  const ViviDecompilerValue *val;
   gboolean result;
   GList *walk;
 
@@ -809,19 +564,24 @@ vivi_decompiler_merge_lines (ViviDecompiler *dec)
     block = walk->data;
 
     /* This is an if block or so */
-    if (block->branch != NULL)
+    if (vivi_decompiler_block_get_branch (block) != NULL)
       continue;
     /* has no next block */
-    if (block->next == NULL)
+    next = vivi_decompiler_block_get_next (block);
+    if (next == NULL)
       continue;
     /* The next block has multiple incoming blocks */
-    if (block->next->incoming != 1)
+    if (vivi_decompiler_block_get_n_incoming (next) != 1)
       continue;
 
-    next = block->next;
     vivi_decompiler_block_append_block (block, next, FALSE);
-    vivi_decompiler_block_set_next (block, next->next);
-    vivi_decompiler_block_set_branch (block, next->branch);
+    vivi_decompiler_block_set_next (block, vivi_decompiler_block_get_next (next));
+    val = vivi_decompiler_block_get_branch_condition (next);
+    if (val) {
+      vivi_decompiler_block_set_branch (block, 
+	  vivi_decompiler_block_get_branch (next),
+	  vivi_decompiler_value_copy (val));
+    }
     vivi_decompiler_purge_block (dec, next);
   }
 
@@ -844,54 +604,53 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
   result = FALSE;
   for (walk = dec->blocks; walk; walk = walk->next) {
     block = walk->data;
+
+    if_block = vivi_decompiler_block_get_branch (block);
+    else_block = vivi_decompiler_block_get_next (block);
     /* not an if block */
-    if (block->branch == NULL)
+    if (if_block == NULL)
       continue;
-    else_block = block->next;
-    if_block = block->branch;
     /* one of the blocks doesn't exist */
-    if (if_block == else_block->next) {
-      if_block->incoming--;
+    if (if_block == vivi_decompiler_block_get_next (else_block)) 
       if_block = NULL;
-    }
-    else if (else_block == if_block->next) {
-      else_block->incoming--;
+    else if (else_block == vivi_decompiler_block_get_next (if_block))
       else_block = NULL;
-    }
     /* if in if in if in if... */
-    if ((else_block && else_block->branch) || 
-	(if_block && if_block->branch))
+    if ((else_block && vivi_decompiler_block_get_branch (else_block)) || 
+	(if_block && vivi_decompiler_block_get_branch (if_block)))
       continue;
     /* if other blocks reference the blocks, bail, there's loops involved */
-    if ((else_block && else_block->incoming > 1) ||
-	(if_block && if_block->incoming > 1))
+    if ((else_block && vivi_decompiler_block_get_n_incoming (else_block) > 1) ||
+	(if_block && vivi_decompiler_block_get_n_incoming (if_block) > 1))
       continue;
     /* if both blocks exist, they must have the same exit block */
-    if (if_block && else_block && if_block->next != else_block->next)
+    if (if_block && else_block && 
+	vivi_decompiler_block_get_next (if_block) != vivi_decompiler_block_get_next (else_block))
       continue;
 
     /* FINALLY we can merge the blocks */
-    block->branch = NULL;
     if (if_block) {
+      vivi_decompiler_block_emit (block, NULL, "if (%s)", 
+	  vivi_decompiler_value_get_text (vivi_decompiler_block_get_branch_condition (block)));
       vivi_decompiler_block_append_block (block, if_block, TRUE);
-      block->next = if_block->next;
-      if (block->next)
-	block->next->incoming++;
-      if_block->incoming--;
+      vivi_decompiler_block_set_next (block,
+	  vivi_decompiler_block_get_next (if_block));
+      vivi_decompiler_block_set_branch (block, NULL, NULL);
       vivi_decompiler_purge_block (dec, if_block);
+      if (else_block)
+	vivi_decompiler_block_emit (block, NULL, "else");
     } else {
-      vivi_decompiler_block_emit_line (block, NULL, "  ;");
-      block->next = NULL;
+      ViviDecompilerValue *cond = vivi_decompiler_value_copy (
+	  vivi_decompiler_block_get_branch_condition (block));
+      cond = vivi_decompiler_value_ensure_precedence (cond, VIVI_PRECEDENCE_UNARY);
+      vivi_decompiler_block_emit (block, NULL, "if (!%s)", vivi_decompiler_value_get_text (cond));
+      vivi_decompiler_value_free (cond);
+      vivi_decompiler_block_set_branch (block, NULL, NULL);
     }
     if (else_block) {
-      vivi_decompiler_block_emit_line (block, NULL, "else");
       vivi_decompiler_block_append_block (block, else_block, TRUE);
-      if (block->next == NULL) {
-	block->next = else_block->next;
-	if (block->next)
-	  block->next->incoming++;
-      }
-      else_block->incoming--;
+      vivi_decompiler_block_set_next (block,
+	  vivi_decompiler_block_get_next (else_block));
       vivi_decompiler_purge_block (dec, else_block);
     }
     result = TRUE;
@@ -927,8 +686,9 @@ vivi_decompiler_run (ViviDecompiler *dec)
 
   state = vivi_decompiler_state_new (dec->script, dec->script->main, 4);
   if (dec->script->constant_pool) {
-    state->pool = swfdec_constant_pool_new_from_action (dec->script->constant_pool->data,
-	dec->script->constant_pool->length, dec->script->version);
+    vivi_decompiler_state_set_constant_pool (state,
+	swfdec_constant_pool_new_from_action (dec->script->constant_pool->data,
+	    dec->script->constant_pool->length, dec->script->version));
   }
   block = vivi_decompiler_block_new (state);
   g_assert (dec->blocks == NULL);
@@ -936,7 +696,7 @@ vivi_decompiler_run (ViviDecompiler *dec)
   while (TRUE) {
     for (walk = dec->blocks; walk; walk = walk->next) {
       block = walk->data;
-      if (block->exitpc == NULL)
+      if (!vivi_decompiler_block_is_finished (block))
 	break;
     }
     if (walk == NULL)
@@ -994,28 +754,20 @@ vivi_decompiler_new (SwfdecScript *script)
 guint
 vivi_decompiler_get_n_lines (ViviDecompiler *dec)
 {
-  ViviDecompilerBlock *block;
-
   g_return_val_if_fail (VIVI_IS_DECOMPILER (dec), 0);
 
   if (dec->blocks == NULL)
     return 0;
 
-  block = dec->blocks->data;
-  return block->lines->len;
+  return vivi_decompiler_block_get_n_lines (dec->blocks->data);
 }
 
 const char *
 vivi_decompiler_get_line (ViviDecompiler *dec, guint i)
 {
-  ViviDecompilerBlock *block;
-
   g_return_val_if_fail (VIVI_IS_DECOMPILER (dec), NULL);
   g_return_val_if_fail (dec->blocks != NULL, NULL);
-  block = dec->blocks->data;
-  g_return_val_if_fail (i < block->lines->len, NULL);
 
-  return g_ptr_array_index (block->lines, i);
+  return vivi_decompiler_block_get_line (dec->blocks->data, i);
 }
-
 

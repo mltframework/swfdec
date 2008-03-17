@@ -39,8 +39,8 @@ struct _ViviDecompiler
 {
   SwfdecAsObject	object;
 
-  SwfdecScript *	script;
-  GList *		blocks;
+  SwfdecScript *	script;		/* script that we decompile */
+  GList *		blocks;		/* list of all blocks in this script ordered by pc (should be one after decompilation is done) */
 };
 
 struct _ViviDecompilerClass

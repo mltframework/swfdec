@@ -57,6 +57,24 @@ AC_PROG_AWK
 
 AC_HEADER_STDC
 
+AC_MSG_CHECKING([for timezone support])
+AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM([[
+    @%:@include <time.h>
+  ]], [[
+    time_t t;
+    localtime (&t)->tm_gmtoff;
+  ]])],
+  HAVE_TIMEZONE="yes",
+  HAVE_TIMEZONE="no")
+if test "x$HAVE_TIMEZONE" = "xyes"; then
+  AC_MSG_RESULT([yes])
+  AC_DEFINE(HAVE_TIMEZONE, 1, [Define if we can query the timezone])
+else
+  AC_MSG_RESULT([no])
+fi
+
+
 dnl ##############################
 dnl # Do automated configuration #
 dnl ##############################

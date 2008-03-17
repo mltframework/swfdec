@@ -21,7 +21,7 @@ SUBDIRS= \
 	test \
 	tools
 
-ACLOCAL_FLAGS = -I m4
+ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST=depcomp \
 	AUTHORS \

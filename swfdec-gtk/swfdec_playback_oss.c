@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <sys/ioctl.h>
 #include <sys/soundcard.h>
 #include <fcntl.h>
 #include <unistd.h>

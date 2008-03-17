@@ -114,8 +114,12 @@ swfdec_gtk_system_get_language (void)
 static int
 swfdec_gtk_system_get_utc_offset (void)
 {
-  tzset ();
-  return timezone / 60;
+#if HAVE_TIMEZONE
+  time_t t = time (NULL);
+  return localtime (&t)->tm_gmtoff;
+#else
+  return 0;
+#endif
 }
 
 /*** PUBLIC API ***/

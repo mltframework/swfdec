@@ -16,7 +16,7 @@ SWFDEC_MAJORMINOR=0.7
 AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)
-AC_SUBST(ACLOCAL_AMFLAGS, "-I m4")
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl decide on error flags
 dnl if we support them, we set them unconditionally
@@ -55,7 +55,25 @@ AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_AWK
 
-AC_HEADER_STDC([])
+AC_HEADER_STDC
+
+AC_MSG_CHECKING([for timezone support])
+AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM([[
+    @%:@include <time.h>
+  ]], [[
+    time_t t;
+    localtime (&t)->tm_gmtoff;
+  ]])],
+  HAVE_TIMEZONE="yes",
+  HAVE_TIMEZONE="no")
+if test "x$HAVE_TIMEZONE" = "xyes"; then
+  AC_MSG_RESULT([yes])
+  AC_DEFINE(HAVE_TIMEZONE, 1, [Define if we can query the timezone])
+else
+  AC_MSG_RESULT([no])
+fi
+
 
 dnl ##############################
 dnl # Do automated configuration #

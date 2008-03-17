@@ -305,6 +305,14 @@ swfdec_script_unref (SwfdecScript *script)
   g_free (script);
 }
 
+guint
+swfdec_script_get_version (SwfdecScript *script)
+{
+  g_return_val_if_fail (script != NULL, 0);
+
+  return script->version;
+}
+
 /*** UTILITY FUNCTIONS ***/
 
 const char *

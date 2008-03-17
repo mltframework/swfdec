@@ -32,6 +32,7 @@ SwfdecScript *	swfdec_script_new			(SwfdecBuffer *		buffer,
 SwfdecScript *	swfdec_script_ref			(SwfdecScript *		script);
 void		swfdec_script_unref			(SwfdecScript *		script);
 
+guint		swfdec_script_get_version		(SwfdecScript *		script);
 
 G_END_DECLS
 

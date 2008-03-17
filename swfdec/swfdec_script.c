@@ -78,7 +78,7 @@ swfdec_constant_pool_new_from_action (const guint8 *data, guint len, guint versi
 }
 
 SwfdecConstantPool *
-swfdec_constant_pool_copy (SwfdecConstantPool *pool)
+swfdec_constant_pool_copy (const SwfdecConstantPool *pool)
 {
   SwfdecConstantPool *new;
   guint i;
@@ -109,13 +109,13 @@ swfdec_constant_pool_attach_to_context (SwfdecConstantPool *pool, SwfdecAsContex
 }
 
 guint
-swfdec_constant_pool_size (SwfdecConstantPool *pool)
+swfdec_constant_pool_size (const SwfdecConstantPool *pool)
 {
   return pool->n_strings;
 }
 
 const char *
-swfdec_constant_pool_get (SwfdecConstantPool *pool, guint i)
+swfdec_constant_pool_get (const SwfdecConstantPool *pool, guint i)
 {
   g_assert (i < pool->n_strings);
   return pool->strings[i];

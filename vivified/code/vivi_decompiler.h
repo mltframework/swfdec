@@ -21,6 +21,7 @@
 #define _VIVI_DECOMPILER_H_
 
 #include <swfdec/swfdec.h>
+#include <vivified/code/vivi_code_block.h>
 
 G_BEGIN_DECLS
 
@@ -51,9 +52,7 @@ struct _ViviDecompilerClass
 GType			vivi_decompiler_get_type   	(void);
 
 ViviDecompiler *	vivi_decompiler_new		(SwfdecScript *		script);
-guint			vivi_decompiler_get_n_lines	(ViviDecompiler *	dec);
-const char *		vivi_decompiler_get_line	(ViviDecompiler *	dec,
-							 guint			i);
+ViviCodeBlock *		vivi_decompiler_get_block	(ViviDecompiler *	dec);
 
 G_END_DECLS
 #endif

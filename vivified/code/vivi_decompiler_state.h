@@ -21,7 +21,7 @@
 #define _VIVI_DECOMPILER_STATE_H_
 
 #include <swfdec/swfdec.h>
-#include <vivified/compiler/vivi_decompiler_value.h>
+#include <vivified/code/vivi_code_value.h>
 
 G_BEGIN_DECLS
 
@@ -36,9 +36,9 @@ ViviDecompilerState *		vivi_decompiler_state_new	(SwfdecScript *			script,
 ViviDecompilerState *		vivi_decompiler_state_copy	(const ViviDecompilerState *	src);
 
 void				vivi_decompiler_state_push	(ViviDecompilerState *		state,
-								 ViviDecompilerValue *		val);
-ViviDecompilerValue *		vivi_decompiler_state_pop	(ViviDecompilerState *		state);
-const ViviDecompilerValue *	vivi_decompiler_state_get_register (const ViviDecompilerState *	state,
+								 ViviCodeValue *		val);
+ViviCodeValue *			vivi_decompiler_state_pop	(ViviDecompilerState *		state);
+ViviCodeValue *			vivi_decompiler_state_get_register (const ViviDecompilerState *	state,
 								 guint				reg);
 
 const guint8 *			vivi_decompiler_state_get_pc	(const ViviDecompilerState *	state);

@@ -24,11 +24,12 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_decompiler_state.h"
+#include "vivi_code_constant.h"
 
 struct _ViviDecompilerState {
   SwfdecScript *	script;
   const guint8 *	pc;
-  ViviDecompilerValue **registers;
+  ViviCodeValue **	registers;
   guint			n_registers;
   GSList *		stack;
   SwfdecConstantPool *	pool;
@@ -41,10 +42,10 @@ vivi_decompiler_state_free (ViviDecompilerState *state)
 
   for (i = 0; i < state->n_registers; i++) {
     if (state->registers[i])
-      vivi_decompiler_value_free (state->registers[i]);
+      g_object_unref (state->registers[i]);
   }
-  g_slice_free1 (sizeof (ViviDecompilerValue *) * state->n_registers, state->registers);
-  g_slist_foreach (state->stack, (GFunc) vivi_decompiler_value_free, NULL);
+  g_slice_free1 (sizeof (ViviCodeValue *) * state->n_registers, state->registers);
+  g_slist_foreach (state->stack, (GFunc) g_object_unref, NULL);
   g_slist_free (state->stack);
   if (state->pool)
     swfdec_constant_pool_free (state->pool);
@@ -59,25 +60,25 @@ vivi_decompiler_state_new (SwfdecScript *script, const guint8 *pc, guint n_regis
 
   state->script = swfdec_script_ref (script);
   state->pc = pc;
-  state->registers = g_slice_alloc0 (sizeof (ViviDecompilerValue *) * n_registers);
+  state->registers = g_slice_alloc0 (sizeof (ViviCodeValue *) * n_registers);
   state->n_registers = n_registers;
 
   return state;
 }
 
 void
-vivi_decompiler_state_push (ViviDecompilerState *state, ViviDecompilerValue *val)
+vivi_decompiler_state_push (ViviDecompilerState *state, ViviCodeValue *val)
 {
   state->stack = g_slist_prepend (state->stack, val);
 }
 
-ViviDecompilerValue *
+ViviCodeValue *
 vivi_decompiler_state_pop (ViviDecompilerState *state)
 {
   if (state->stack == NULL) {
-    return vivi_decompiler_value_copy (vivi_decompiler_value_get_undefined ());
+    return VIVI_CODE_VALUE (vivi_code_constant_new_undefined ());
   } else {
-    ViviDecompilerValue *pop;
+    ViviCodeValue *pop;
     pop = state->stack->data;
     state->stack = g_slist_remove (state->stack, pop);
     return pop;
@@ -89,30 +90,27 @@ vivi_decompiler_state_copy (const ViviDecompilerState *src)
 {
   ViviDecompilerState *dest;
   guint i;
-  GSList *walk;
 
   dest = vivi_decompiler_state_new (src->script, src->pc, src->n_registers);
   for (i = 0; i < src->n_registers; i++) {
     if (src->registers[i])
-      dest->registers[i] = vivi_decompiler_value_copy (src->registers[i]);
+      dest->registers[i] = g_object_ref (src->registers[i]);
   }
-  for (walk = src->stack; walk; walk = walk->next) {
-    dest->stack = g_slist_prepend (dest->stack, vivi_decompiler_value_copy (walk->data));
-  }
-  dest->stack = g_slist_reverse (dest->stack);
+  dest->stack = g_slist_copy (src->stack);
+  g_slist_foreach (dest->stack, (GFunc) g_object_ref, NULL);
   if (src->pool)
     dest->pool = swfdec_constant_pool_copy (src->pool);
 
   return dest;
 }
 
-const ViviDecompilerValue *
+ViviCodeValue *
 vivi_decompiler_state_get_register (const ViviDecompilerState *state, guint reg)
 {
   if (reg >= state->n_registers || state->registers[state->n_registers] == NULL)
-    return vivi_decompiler_value_get_undefined ();
+    return VIVI_CODE_VALUE (vivi_code_constant_new_undefined ());
   else
-    return state->registers[state->n_registers];
+    return g_object_ref (state->registers[state->n_registers]);
 }
 
 const guint8 *

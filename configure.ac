@@ -356,8 +356,8 @@ test/trace/Makefile
 test/various/Makefile
 tools/Makefile
 vivified/Makefile
-vivified/compiler/Makefile
-vivified/compiler/test/Makefile
+vivified/code/Makefile
+vivified/code/test/Makefile
 vivified/core/Makefile
 vivified/dock/Makefile
 vivified/ui/Makefile

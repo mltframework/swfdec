@@ -35,15 +35,15 @@ decode_script (gpointer offset, gpointer scriptp, gpointer unused)
 {
   SwfdecScript *script = scriptp;
   ViviDecompiler *dec = vivi_decompiler_new (scriptp);
-  guint i;
+  ViviCodeToken *token;
+  char *s;
 
   g_print ("/* %s */\n", script->name);
-  g_print ("{\n");
-  for (i = 0; i < vivi_decompiler_get_n_lines (dec); i++) {
-    g_print ("  %s\n", vivi_decompiler_get_line (dec, i));
-  }
-  g_print ("}\n");
-  g_print ("\n");
+  token = VIVI_CODE_TOKEN (vivi_decompiler_get_block (dec));
+  s = vivi_code_token_to_code (token);
+  g_print ("%s\n", s);
+  g_free (s);
+  g_object_unref (dec);
 }
 
 int 

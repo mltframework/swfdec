@@ -136,7 +136,7 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	  char *s = swfdec_bits_get_string (&bits, vivi_decompiler_state_get_version (state));
 	  if (s == NULL) {
 	    vivi_decompiler_block_add_error (block, "could not read string");
-	    return FALSE;
+	    return TRUE;
 	  }
 	  value = escape_string (s);
 	  g_free (s);
@@ -173,19 +173,19 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	  const SwfdecConstantPool *pool = vivi_decompiler_state_get_constant_pool (state);
 	  if (pool == NULL) {
 	    vivi_decompiler_block_add_error (block, "no constant pool to push from");
-	    return FALSE;
+	    return TRUE;
 	  }
 	  if (i >= swfdec_constant_pool_size (pool)) {
 	    vivi_decompiler_block_add_error (block, "constant pool index %u too high - only %u elements",
 		i, swfdec_constant_pool_size (pool));
-	    return FALSE;
+	    return TRUE;
 	  }
 	  value = escape_string (swfdec_constant_pool_get (pool, i));
 	  break;
 	}
       default:
 	vivi_decompiler_block_add_error (block, "Push: type %u not implemented", type);
-	return FALSE;
+	return TRUE;
     }
     val = VIVI_CODE_VALUE (vivi_code_constant_new (value));
     vivi_decompiler_state_push (state, val);
@@ -303,12 +303,13 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	ViviDecompilerState *new;
 	gint16 offset;
 
+	vivi_decompiler_state_add_pc (state, 5);
 	if (len != 2) {
 	  vivi_decompiler_block_add_error (block, "If action length invalid (is %u, should be 2)", len);
-	  return FALSE;
+	  vivi_decompiler_block_finish (block, state);
+	  return TRUE;
 	}
 	offset = data[0] | (data[1] << 8);
-	vivi_decompiler_state_add_pc (state, 5);
 	val = vivi_decompiler_state_pop (state);
 	vivi_decompiler_block_finish (block, state);
 	new = vivi_decompiler_state_copy (state);
@@ -330,12 +331,13 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	ViviDecompilerState *new;
 	gint16 offset;
 
+	vivi_decompiler_state_add_pc (state, 5);
 	if (len != 2) {
 	  vivi_decompiler_block_add_error (block, "Jump action length invalid (is %u, should be 2)", len);
+	  vivi_decompiler_block_finish (block, state);
 	  return FALSE;
 	}
 	offset = data[0] | (data[1] << 8);
-	vivi_decompiler_state_add_pc (state, 5);
 	vivi_decompiler_block_finish (block, state);
 	new = vivi_decompiler_state_copy (state);
 	vivi_decompiler_state_add_pc (new, offset);
@@ -350,7 +352,7 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	result = decompile_funcs[code] (block, state, code, data, len);
       } else {
 	vivi_decompiler_block_add_error (block, "unknown bytecode 0x%02X %u", code, code);
-	result = FALSE;
+	result = TRUE;
       }
       if (data)
 	vivi_decompiler_state_add_pc (state, 3 + len);

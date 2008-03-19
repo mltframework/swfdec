@@ -55,6 +55,14 @@ vivi_code_block_optimize (ViviCodeStatement *stmt)
   return g_object_ref (block);
 }
 
+static gboolean
+vivi_code_block_needs_braces (ViviCodeStatement *stmt)
+{
+  ViviCodeBlock *block = VIVI_CODE_BLOCK (stmt);
+
+  return g_queue_get_length (block->statements) > 1;
+}
+
 static void
 vivi_code_block_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
@@ -96,6 +104,7 @@ vivi_code_block_class_init (ViviCodeBlockClass *klass)
   token_class->print = vivi_code_block_print;
 
   statement_class->optimize = vivi_code_block_optimize;
+  statement_class->needs_braces = vivi_code_block_needs_braces;
 }
 
 static void

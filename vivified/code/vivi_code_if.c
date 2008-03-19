@@ -73,6 +73,13 @@ vivi_code_if_optimize (ViviCodeStatement *statement)
   return VIVI_CODE_STATEMENT (stmt);
 }
 
+static gboolean
+vivi_code_if_needs_braces (ViviCodeStatement *stmt)
+{
+  /* only set because it makes code way more readable, especially on nested ifs */
+  return TRUE;
+}
+
 static void
 vivi_code_if_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
@@ -109,6 +116,7 @@ vivi_code_if_class_init (ViviCodeIfClass *klass)
   token_class->print = vivi_code_if_print;
 
   statement_class->optimize = vivi_code_if_optimize;
+  statement_class->needs_braces = vivi_code_if_needs_braces;
 }
 
 static void

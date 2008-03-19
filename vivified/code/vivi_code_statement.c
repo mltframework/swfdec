@@ -62,3 +62,18 @@ vivi_code_statement_optimize (ViviCodeStatement *stmt)
   }
 }
 
+gboolean
+vivi_code_statement_needs_braces (ViviCodeStatement *stmt)
+{
+  ViviCodeStatementClass *klass;
+
+  g_return_val_if_fail (VIVI_IS_CODE_STATEMENT (stmt), FALSE);
+
+  klass = VIVI_CODE_STATEMENT_GET_CLASS (stmt);
+  if (klass->needs_braces) {
+    return klass->needs_braces (stmt);
+  } else {
+    return FALSE;
+  }
+}
+

@@ -44,12 +44,14 @@ struct _ViviCodeStatementClass
 {
   ViviCodeTokenClass	token_class;
 
+  gboolean		(* needs_braces)		(ViviCodeStatement *	stmt);
   ViviCodeStatement *	(* optimize)			(ViviCodeStatement *	stmt);
 };
 
 GType			vivi_code_statement_get_type   	(void);
 
 ViviCodeStatement *   	vivi_code_statement_optimize	(ViviCodeStatement *	stmt);
+gboolean		vivi_code_statement_needs_braces(ViviCodeStatement *	stmt);
 
 G_END_DECLS
 #endif

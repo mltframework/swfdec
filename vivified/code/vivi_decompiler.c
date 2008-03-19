@@ -625,6 +625,39 @@ vivi_decompiler_merge_blocks (ViviDecompiler *dec)
 }
 
 static void
+vivi_decompiler_dump_graphviz (ViviDecompiler *dec)
+{
+  GString *string;
+  GList *walk;
+  const char *filename;
+
+  filename = g_getenv ("VIVI_DECOMPILER_DUMP");
+  if (filename == NULL)
+    return;
+
+  string = g_string_new ("digraph G\n{\n");
+  g_string_append (string, "  node [ shape = box ]\n");
+  for (walk = dec->blocks; walk; walk = walk->next) {
+    g_string_append_printf (string, "  node%p\n", walk->data);
+  }
+  g_string_append (string, "\n");
+  for (walk = dec->blocks; walk; walk = walk->next) {
+    ViviDecompilerBlock *block, *next;
+
+    block = walk->data;
+    next = vivi_decompiler_block_get_next (block);
+    if (next)
+      g_string_append_printf (string, "  node%p -> node%p\n", block, next);
+    next = vivi_decompiler_block_get_branch (block);
+    if (next)
+      g_string_append_printf (string, "  node%p -> node%p\n", block, next);
+  }
+  g_string_append (string, "}\n");
+  g_file_set_contents (filename, string->str, string->len, NULL);
+  g_string_free (string, TRUE);
+}
+
+static void
 vivi_decompiler_run (ViviDecompiler *dec)
 {
   ViviDecompilerBlock *block;
@@ -651,6 +684,7 @@ vivi_decompiler_run (ViviDecompiler *dec)
     vivi_decompiler_block_decompile (dec, block);
   }
 
+  vivi_decompiler_dump_graphviz (dec);
   vivi_decompiler_merge_blocks (dec);
 }
 

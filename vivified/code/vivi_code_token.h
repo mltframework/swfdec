@@ -48,12 +48,9 @@ struct _ViviCodeTokenClass
 
   void			(* print)			(ViviCodeToken *	token,
 							 ViviCodePrinter *	printer);
-  ViviCodeToken *	(* optimize)			(ViviCodeToken *	token);
 };
 
 GType			vivi_code_token_get_type   	(void);
-
-ViviCodeToken *		vivi_code_token_optimize	(ViviCodeToken *	token);
 
 
 G_END_DECLS

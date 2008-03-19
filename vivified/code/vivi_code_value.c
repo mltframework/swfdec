@@ -76,3 +76,19 @@ vivi_code_value_get_precedence (ViviCodeValue *value)
   return value->precedence;
 }
 
+ViviCodeValue *
+vivi_code_value_optimize (ViviCodeValue *value, SwfdecAsValueType hint)
+{
+  ViviCodeValueClass *klass;
+
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (value), NULL);
+
+  klass = VIVI_CODE_VALUE_GET_CLASS (value);
+  if (klass->optimize) {
+    ViviCodeValue *ret = klass->optimize (value, hint);
+    return ret;
+  } else {
+    return g_object_ref (value);
+  }
+}
+

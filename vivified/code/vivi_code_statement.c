@@ -46,3 +46,19 @@ vivi_code_statement_init (ViviCodeStatement *token)
 {
 }
 
+ViviCodeStatement *
+vivi_code_statement_optimize (ViviCodeStatement *stmt)
+{
+  ViviCodeStatementClass *klass;
+
+  g_return_val_if_fail (VIVI_IS_CODE_STATEMENT (stmt), NULL);
+
+  klass = VIVI_CODE_STATEMENT_GET_CLASS (stmt);
+  if (klass->optimize) {
+    ViviCodeStatement *ret = klass->optimize (stmt);
+    return ret;
+  } else {
+    return g_object_ref (stmt);
+  }
+}
+

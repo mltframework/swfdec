@@ -541,7 +541,7 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
 {
   ViviDecompilerBlock *block, *if_block, *else_block;
   ViviCodeIf *if_stmt;
-  ViviCodeToken *token;
+  ViviCodeStatement *stmt;
   gboolean result;
   GList *walk;
 
@@ -596,11 +596,10 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
       vivi_decompiler_purge_block (dec, else_block);
       vivi_code_if_set_else (if_stmt, VIVI_CODE_STATEMENT (tmp));
     }
-    token = vivi_code_token_optimize (VIVI_CODE_TOKEN (if_stmt));
+    stmt = vivi_code_statement_optimize (VIVI_CODE_STATEMENT (if_stmt));
     g_object_unref (if_stmt);
-    if (token)
-      vivi_code_block_add_statement (VIVI_CODE_BLOCK (block),
-	  VIVI_CODE_STATEMENT (token));
+    if (stmt)
+      vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), stmt);
     result = TRUE;
   }
 

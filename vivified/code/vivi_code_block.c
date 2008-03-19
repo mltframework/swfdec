@@ -42,10 +42,10 @@ vivi_code_block_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_block_parent_class)->dispose (object);
 }
 
-static ViviCodeToken *
-vivi_code_block_optimize (ViviCodeToken *token)
+static ViviCodeStatement *
+vivi_code_block_optimize (ViviCodeStatement *stmt)
 {
-  ViviCodeBlock *block = VIVI_CODE_BLOCK (token);
+  ViviCodeBlock *block = VIVI_CODE_BLOCK (stmt);
   guint length;
 
   length = g_queue_get_length (block->statements);
@@ -89,11 +89,13 @@ vivi_code_block_class_init (ViviCodeBlockClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeStatementClass *statement_class = VIVI_CODE_STATEMENT_CLASS (klass);
 
   object_class->dispose = vivi_code_block_dispose;
 
   token_class->print = vivi_code_block_print;
-  token_class->optimize = vivi_code_block_optimize;
+
+  statement_class->optimize = vivi_code_block_optimize;
 }
 
 static void

@@ -36,17 +36,19 @@ vivi_code_unary_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_unary_parent_class)->dispose (object);
 }
 
-static ViviCodeToken * 
-vivi_code_unary_optimize (ViviCodeToken *token)
+static ViviCodeValue * 
+vivi_code_unary_optimize (ViviCodeValue *value, SwfdecAsValueType hint)
 {
-  ViviCodeUnary *unary = VIVI_CODE_UNARY (token);
+  ViviCodeUnary *unary = VIVI_CODE_UNARY (value);
 
   if (unary->operation == '!' && 
+      hint == SWFDEC_AS_TYPE_BOOLEAN &&
       VIVI_IS_CODE_UNARY (unary->value) && 
       VIVI_CODE_UNARY (unary->value)->operation == unary->operation) {
-    return vivi_code_token_optimize (VIVI_CODE_TOKEN (VIVI_CODE_UNARY (unary->value)->value));
+    return vivi_code_value_optimize (VIVI_CODE_UNARY (unary->value)->value, hint);
   }
 
+  /* FIXME: optimize unary->value */
   return g_object_ref (unary);
 }
 
@@ -80,9 +82,9 @@ vivi_code_unary_class_init (ViviCodeUnaryClass *klass)
   object_class->dispose = vivi_code_unary_dispose;
 
   token_class->print = vivi_code_unary_print;
-  token_class->optimize = vivi_code_unary_optimize;
 
   value_class->is_constant = vivi_code_unary_is_constant;
+  value_class->optimize = vivi_code_unary_optimize;
 }
 
 static void

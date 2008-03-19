@@ -46,19 +46,3 @@ vivi_code_token_init (ViviCodeToken *token)
 {
 }
 
-ViviCodeToken *
-vivi_code_token_optimize (ViviCodeToken *token)
-{
-  ViviCodeTokenClass *klass;
-
-  g_return_val_if_fail (VIVI_IS_CODE_TOKEN (token), NULL);
-
-  klass = VIVI_CODE_TOKEN_GET_CLASS (token);
-  if (klass->optimize) {
-    ViviCodeToken *ret = klass->optimize (token);
-    return ret;
-  } else {
-    return g_object_ref (token);
-  }
-}
-

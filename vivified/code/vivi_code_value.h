@@ -71,6 +71,8 @@ struct _ViviCodeValueClass
   ViviCodeTokenClass  	token_class;
 
   gboolean		(* is_constant)			(ViviCodeValue *	value);
+  ViviCodeValue *	(* optimize)			(ViviCodeValue *	value,
+							 SwfdecAsValueType	hint);
 };
 
 GType			vivi_code_value_get_type   	(void);
@@ -80,6 +82,9 @@ gboolean		vivi_code_value_is_constant	(ViviCodeValue *	value);
 void			vivi_code_value_set_precedence	(ViviCodeValue *	value,
 							 ViviPrecedence		precedence);
 ViviPrecedence		vivi_code_value_get_precedence	(ViviCodeValue *	value);
+
+ViviCodeValue *		vivi_code_value_optimize	(ViviCodeValue *	value,
+							 SwfdecAsValueType	hint);
 
 
 G_END_DECLS

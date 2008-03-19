@@ -41,17 +41,15 @@ vivi_code_if_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_if_parent_class)->dispose (object);
 }
 
-static ViviCodeToken *
-vivi_code_if_optimize (ViviCodeToken *token)
+static ViviCodeStatement *
+vivi_code_if_optimize (ViviCodeStatement *statement)
 {
-  ViviCodeIf *stmt = VIVI_CODE_IF (token);
+  ViviCodeIf *stmt = VIVI_CODE_IF (statement);
   ViviCodeStatement *if_stmt, *else_stmt;
   ViviCodeValue *cond, *tmp;
 
-  if_stmt = stmt->if_statement ? VIVI_CODE_STATEMENT (vivi_code_token_optimize (
-	VIVI_CODE_TOKEN (stmt->if_statement))) : NULL;
-  else_stmt = stmt->else_statement ? VIVI_CODE_STATEMENT (
-      vivi_code_token_optimize (VIVI_CODE_TOKEN (stmt->else_statement))) : NULL;
+  if_stmt = stmt->if_statement ? vivi_code_statement_optimize (stmt->if_statement) : NULL;
+  else_stmt = stmt->else_statement ? vivi_code_statement_optimize (stmt->else_statement) : NULL;
 #if 0
   if (if_stmt == NULL && else_stmt == NULL)
     return NULL;
@@ -63,7 +61,7 @@ vivi_code_if_optimize (ViviCodeToken *token)
     if_stmt = else_stmt;
     else_stmt = NULL;
   }
-  tmp = VIVI_CODE_VALUE (vivi_code_token_optimize (VIVI_CODE_TOKEN (cond)));
+  tmp = vivi_code_value_optimize (cond, SWFDEC_AS_TYPE_BOOLEAN);
   g_object_unref (cond);
   cond = tmp;
 
@@ -72,7 +70,7 @@ vivi_code_if_optimize (ViviCodeToken *token)
     vivi_code_if_set_if (stmt, if_stmt);
   if (else_stmt)
     vivi_code_if_set_else (stmt, else_stmt);
-  return VIVI_CODE_TOKEN (stmt);
+  return VIVI_CODE_STATEMENT (stmt);
 }
 
 static void
@@ -104,11 +102,13 @@ vivi_code_if_class_init (ViviCodeIfClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeStatementClass *statement_class = VIVI_CODE_STATEMENT_CLASS (klass);
 
   object_class->dispose = vivi_code_if_dispose;
 
-  token_class->optimize = vivi_code_if_optimize;
   token_class->print = vivi_code_if_print;
+
+  statement_class->optimize = vivi_code_if_optimize;
 }
 
 static void

@@ -43,10 +43,13 @@ struct _ViviCodeStatement
 struct _ViviCodeStatementClass
 {
   ViviCodeTokenClass	token_class;
+
+  ViviCodeStatement *	(* optimize)			(ViviCodeStatement *	stmt);
 };
 
 GType			vivi_code_statement_get_type   	(void);
 
+ViviCodeStatement *   	vivi_code_statement_optimize	(ViviCodeStatement *	stmt);
 
 G_END_DECLS
 #endif

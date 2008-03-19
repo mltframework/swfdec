@@ -36,15 +36,22 @@ vivi_code_text_printer_dispose (GObject *object)
 static void
 vivi_code_text_printer_print (ViviCodePrinter *printer, const char *text)
 {
+  ViviCodeTextPrinter *tp = VIVI_CODE_TEXT_PRINTER (printer);
+
+  if (tp->need_indent) {
+    g_print ("%*s", vivi_code_printer_get_indentation (printer) * 2, "");
+    tp->need_indent = FALSE;
+  }
   g_print ("%s", text);
 }
 
 static void
 vivi_code_text_printer_new_line (ViviCodePrinter *printer, gboolean ignore_indentation)
 {
+  ViviCodeTextPrinter *text = VIVI_CODE_TEXT_PRINTER (printer);
+
   g_print ("\n");
-  if (!ignore_indentation)
-    g_print ("%*s", vivi_code_printer_get_indentation (printer) * 2, "");
+  text->need_indent = !ignore_indentation;
 }
 
 static void
@@ -60,8 +67,9 @@ vivi_code_text_printer_class_init (ViviCodeTextPrinterClass *klass)
 }
 
 static void
-vivi_code_text_printer_init (ViviCodeTextPrinter *text_printer)
+vivi_code_text_printer_init (ViviCodeTextPrinter *tp)
 {
+  tp->need_indent = TRUE;
 }
 
 ViviCodePrinter *

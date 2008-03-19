@@ -84,13 +84,20 @@ static void
 vivi_code_if_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeIf *stmt = VIVI_CODE_IF (token);
+  gboolean needs_braces;
 
-  vivi_code_printer_new_line (printer, FALSE);
   vivi_code_printer_print (printer, "if (");
   vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (stmt->condition));
   vivi_code_printer_print (printer, ")");
+  needs_braces = stmt->if_statement && vivi_code_statement_needs_braces (stmt->if_statement);
+  needs_braces |= stmt->else_statement && vivi_code_statement_needs_braces (stmt->else_statement);
   if (stmt->if_statement) {
+    if (needs_braces)
+      vivi_code_printer_print (printer, " {");
+    vivi_code_printer_new_line (printer, FALSE);
+    vivi_code_printer_push_indentation (printer);
     vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (stmt->if_statement));
+    vivi_code_printer_pop_indentation (printer);
   } else {
     vivi_code_printer_push_indentation (printer);
     vivi_code_printer_new_line (printer, FALSE);
@@ -98,9 +105,18 @@ vivi_code_if_print (ViviCodeToken *token, ViviCodePrinter *printer)
     vivi_code_printer_pop_indentation (printer);
   }
   if (stmt->else_statement) {
+    if (needs_braces)
+      vivi_code_printer_print (printer, "} else {");
+    else
+      vivi_code_printer_print (printer, "else");
     vivi_code_printer_new_line (printer, FALSE);
-    vivi_code_printer_print (printer, "else");
+    vivi_code_printer_push_indentation (printer);
     vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (stmt->else_statement));
+    vivi_code_printer_pop_indentation (printer);
+  }
+  if (needs_braces) {
+    vivi_code_printer_print (printer, "}");
+    vivi_code_printer_new_line (printer, FALSE);
   }
 }
 

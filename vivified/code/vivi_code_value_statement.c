@@ -41,9 +41,9 @@ vivi_code_value_statement_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeValueStatement *stmt = VIVI_CODE_VALUE_STATEMENT (token);
 
-  vivi_code_printer_new_line (printer, FALSE);
   vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (stmt->value));
   vivi_code_printer_print (printer, ";");
+  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void

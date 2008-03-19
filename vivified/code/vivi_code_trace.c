@@ -41,10 +41,10 @@ vivi_code_trace_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeTrace *trace = VIVI_CODE_TRACE (token);
 
-  vivi_code_printer_new_line (printer, FALSE);
   vivi_code_printer_print (printer, "trace (");
   vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (trace->value));
   vivi_code_printer_print (printer, ");");
+  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void

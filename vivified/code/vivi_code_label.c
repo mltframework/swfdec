@@ -44,6 +44,7 @@ vivi_code_label_print (ViviCodeToken *token, ViviCodePrinter *printer)
   vivi_code_printer_new_line (printer, TRUE);
   vivi_code_printer_print (printer, label->name);
   vivi_code_printer_print (printer, ":");
+  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void

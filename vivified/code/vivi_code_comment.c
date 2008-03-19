@@ -41,10 +41,10 @@ vivi_code_comment_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeComment *comment = VIVI_CODE_COMMENT (token);
 
-  vivi_code_printer_new_line (printer, FALSE);
   vivi_code_printer_print (printer, "/* ");
   vivi_code_printer_print (printer, comment->comment);
   vivi_code_printer_print (printer, " */");
+  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void

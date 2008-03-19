@@ -42,8 +42,11 @@ decode_script (gpointer offset, gpointer scriptp, gpointer unused)
   g_print ("/* %s */\n", script->name);
   token = VIVI_CODE_TOKEN (vivi_decompiler_get_block (dec));
   printer = vivi_code_text_printer_new ();
+  g_print ("{\n");
+  vivi_code_printer_push_indentation (printer);
   vivi_code_printer_print_token (printer, token);
-  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_pop_indentation (printer);
+  g_print ("}\n\n");
   g_object_unref (printer);
   g_object_unref (dec);
 }

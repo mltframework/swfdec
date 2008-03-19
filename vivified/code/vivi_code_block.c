@@ -59,36 +59,31 @@ static gboolean
 vivi_code_block_needs_braces (ViviCodeStatement *stmt)
 {
   ViviCodeBlock *block = VIVI_CODE_BLOCK (stmt);
+  GList *first;
 
-  return g_queue_get_length (block->statements) > 1;
+  first = g_queue_peek_head_link (block->statements);
+
+  if (first == NULL)
+    return FALSE;
+  if (first->next)
+    return TRUE;
+  return vivi_code_statement_needs_braces (first->data);
 }
 
 static void
 vivi_code_block_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeBlock *block = VIVI_CODE_BLOCK (token);
-  guint length;
 
-  length = g_queue_get_length (block->statements);
-  if (length > 1) {
-    vivi_code_printer_new_line (printer, FALSE);
-    vivi_code_printer_print (printer, "{");
-  }
-  vivi_code_printer_push_indentation (printer);
-  if (length == 0) {
-    vivi_code_printer_new_line (printer, FALSE);
+  if (g_queue_is_empty (block->statements)) {
     vivi_code_printer_print (printer, ";");
+    vivi_code_printer_new_line (printer, FALSE);
   } else {
     GList *walk;
 
     for (walk = g_queue_peek_head_link (block->statements); walk; walk = walk->next) {
       vivi_code_printer_print_token (printer, walk->data);
     }
-  }
-  vivi_code_printer_pop_indentation (printer);
-  if (length > 1) {
-    vivi_code_printer_new_line (printer, FALSE);
-    vivi_code_printer_print (printer, "}");
   }
 }
 

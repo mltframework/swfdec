@@ -41,10 +41,10 @@ vivi_code_goto_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeGoto *gotoo = VIVI_CODE_GOTO (token);
 
-  vivi_code_printer_new_line (printer, FALSE);
   vivi_code_printer_print (printer, "goto ");
   vivi_code_printer_print (printer, vivi_code_label_get_name (gotoo->label));
   vivi_code_printer_print (printer, ";");
+  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void

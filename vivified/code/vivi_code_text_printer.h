@@ -38,6 +38,8 @@ typedef struct _ViviCodeTextPrinterClass ViviCodeTextPrinterClass;
 struct _ViviCodeTextPrinter
 {
   ViviCodePrinter	printer;
+
+  gboolean		need_indent;	/* need to print indentation */
 };
 
 struct _ViviCodeTextPrinterClass

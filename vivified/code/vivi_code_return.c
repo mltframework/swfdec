@@ -29,8 +29,8 @@ G_DEFINE_TYPE (ViviCodeReturn, vivi_code_return, VIVI_TYPE_CODE_STATEMENT)
 static void
 vivi_code_return_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
-  vivi_code_printer_new_line (printer, FALSE);
   vivi_code_printer_print (printer, "return;");
+  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void

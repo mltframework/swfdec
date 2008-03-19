@@ -42,8 +42,6 @@ vivi_code_get_url_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeGetUrl *url = VIVI_CODE_GET_URL (token);
 
-  vivi_code_printer_new_line (printer, FALSE);
-
   if (url->variables) {
     vivi_code_printer_print (printer, "loadVariables (");
   } else if (url->internal) {
@@ -59,6 +57,7 @@ vivi_code_get_url_print (ViviCodeToken *token, ViviCodePrinter *printer)
 	url->method == 2 ? ", \"POST\"" : ", \"GET\"");
   }
   vivi_code_printer_print (printer, ");");
+  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void

@@ -1,9 +1,17 @@
 check-local: ../vivi-decompile
-	RESULT=0; \
+	RESULT=""; \
 	for file in $(srcdir)/*.swf; do \
-	  ../vivi-decompile $$file | diff -u $$file.expect - || RESULT=1; \
+	  ../vivi-decompile $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
 	done; \
-	exit $$RESULT
+	if test "x$$RESULT" == "x"; then \
+	  echo "OK"; \
+	else \
+	  echo "FAILED:"; \
+	  for fail in $$RESULT; do \
+	    echo "  $$fail"; \
+	  done; \
+	  exit 1; \
+	fi
 
 EXTRA_DIST = \
 	hello-world.as \

@@ -2,15 +2,12 @@
 
 /* Sprite0_Frame0 */
 {
-  if (1)
-  {
+  if (1) {
     if (2)
       trace ("one");
     else
       trace ("two");
-  }
-  else
-  {
+  } else {
     if (3)
       trace ("three");
     else

@@ -36,6 +36,20 @@ vivi_code_unary_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_unary_parent_class)->dispose (object);
 }
 
+static ViviCodeToken * 
+vivi_code_unary_optimize (ViviCodeToken *token)
+{
+  ViviCodeUnary *unary = VIVI_CODE_UNARY (token);
+
+  if (unary->operation == '!' && 
+      VIVI_IS_CODE_UNARY (unary->value) && 
+      VIVI_CODE_UNARY (unary->value)->operation == unary->operation) {
+    return vivi_code_token_optimize (VIVI_CODE_TOKEN (VIVI_CODE_UNARY (unary->value)->value));
+  }
+
+  return g_object_ref (unary);
+}
+
 static void
 vivi_code_unary_print (ViviCodeToken *token, ViviCodePrinter*printer)
 {
@@ -66,6 +80,7 @@ vivi_code_unary_class_init (ViviCodeUnaryClass *klass)
   object_class->dispose = vivi_code_unary_dispose;
 
   token_class->print = vivi_code_unary_print;
+  token_class->optimize = vivi_code_unary_optimize;
 
   value_class->is_constant = vivi_code_unary_is_constant;
 }

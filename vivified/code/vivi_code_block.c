@@ -42,6 +42,19 @@ vivi_code_block_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_block_parent_class)->dispose (object);
 }
 
+static ViviCodeToken *
+vivi_code_block_optimize (ViviCodeToken *token)
+{
+  ViviCodeBlock *block = VIVI_CODE_BLOCK (token);
+  guint length;
+
+  length = g_queue_get_length (block->statements);
+  if (length == 0)
+    return NULL;
+
+  return g_object_ref (block);
+}
+
 static void
 vivi_code_block_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
@@ -80,6 +93,7 @@ vivi_code_block_class_init (ViviCodeBlockClass *klass)
   object_class->dispose = vivi_code_block_dispose;
 
   token_class->print = vivi_code_block_print;
+  token_class->optimize = vivi_code_block_optimize;
 }
 
 static void

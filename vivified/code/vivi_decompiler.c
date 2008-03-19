@@ -513,7 +513,6 @@ vivi_decompiler_merge_lines (ViviDecompiler *dec)
     if (vivi_decompiler_block_get_n_incoming (next) != 1)
       continue;
 
-    vivi_decompiler_block_add_to_block (next, VIVI_CODE_BLOCK (block));
     vivi_decompiler_block_set_next (block, vivi_decompiler_block_get_next (next));
     val = vivi_decompiler_block_get_branch_condition (next);
     if (val) {
@@ -521,7 +520,11 @@ vivi_decompiler_merge_lines (ViviDecompiler *dec)
 	  vivi_decompiler_block_get_branch (next),
 	  g_object_ref (val));
     }
+    vivi_decompiler_block_set_next (next, NULL);
+    vivi_decompiler_block_set_branch (next, NULL, NULL);
+    vivi_decompiler_block_add_to_block (next, VIVI_CODE_BLOCK (block));
     vivi_decompiler_purge_block (dec, next);
+    result = TRUE;
   }
 
   return result;

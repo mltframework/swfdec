@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_goto.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeGoto, vivi_code_goto, VIVI_TYPE_CODE_STATEMENT)
 
@@ -35,12 +36,15 @@ vivi_code_goto_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_goto_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_goto_to_code (ViviCodeToken *token)
+static void
+vivi_code_goto_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeGoto *gotoo = VIVI_CODE_GOTO (token);
 
-  return g_strdup_printf ("  goto %s;\n", vivi_code_label_get_name (gotoo->label));
+  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, "goto ");
+  vivi_code_printer_print (printer, vivi_code_label_get_name (gotoo->label));
+  vivi_code_printer_print (printer, ";");
 }
 
 static void
@@ -51,7 +55,7 @@ vivi_code_goto_class_init (ViviCodeGotoClass *klass)
 
   object_class->dispose = vivi_code_goto_dispose;
 
-  token_class->to_code = vivi_code_goto_to_code;
+  token_class->print = vivi_code_goto_print;
 }
 
 static void

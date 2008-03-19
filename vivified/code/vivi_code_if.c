@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_if.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeIf, vivi_code_if, VIVI_TYPE_CODE_STATEMENT)
 
@@ -39,32 +40,28 @@ vivi_code_if_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_if_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_if_to_code (ViviCodeToken *token)
+static void
+vivi_code_if_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeIf *stmt = VIVI_CODE_IF (token);
-  GString *string;
-  char *s;
 
-  string = g_string_new ("");
-  s = vivi_code_token_to_code (VIVI_CODE_TOKEN (stmt->condition));
-  g_string_append_printf (string, "if (%s)\n", s);
-  g_free (s);
+  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, "if (");
+  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (stmt->condition));
+  vivi_code_printer_print (printer, ")");
   if (stmt->if_statement) {
-    s = vivi_code_token_to_code (VIVI_CODE_TOKEN (stmt->if_statement));
-    g_string_append (string, s);
-    g_free (s);
+    vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (stmt->if_statement));
   } else {
-    g_string_append (string, "  ;\n");
+    vivi_code_printer_push_indentation (printer);
+    vivi_code_printer_new_line (printer, FALSE);
+    vivi_code_printer_print (printer, ";");
+    vivi_code_printer_pop_indentation (printer);
   }
   if (stmt->else_statement) {
-    g_string_append (string, "else");
-    s = vivi_code_token_to_code (VIVI_CODE_TOKEN (stmt->else_statement));
-    g_string_append (string, s);
-    g_free (s);
+    vivi_code_printer_new_line (printer, FALSE);
+    vivi_code_printer_print (printer, "else");
+    vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (stmt->else_statement));
   }
-
-  return g_string_free (string, FALSE);
 }
 
 static void
@@ -75,7 +72,7 @@ vivi_code_if_class_init (ViviCodeIfClass *klass)
 
   object_class->dispose = vivi_code_if_dispose;
 
-  token_class->to_code = vivi_code_if_to_code;
+  token_class->print = vivi_code_if_print;
 }
 
 static void

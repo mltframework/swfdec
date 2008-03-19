@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_unary.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeUnary, vivi_code_unary, VIVI_TYPE_CODE_VALUE)
 
@@ -35,20 +36,18 @@ vivi_code_unary_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_unary_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_unary_to_code (ViviCodeToken *token)
+static void
+vivi_code_unary_print (ViviCodeToken *token, ViviCodePrinter*printer)
 {
   ViviCodeUnary *unary = VIVI_CODE_UNARY (token);
-  char *s, *ret;
+  char *sign;
 
-  s = vivi_code_token_to_code (VIVI_CODE_TOKEN (unary->value));
-  if (vivi_code_value_get_precedence (unary->value) < VIVI_PRECEDENCE_UNARY)
-    ret = g_strdup_printf ("%c(%s)", unary->operation, s);
-  else
-    ret = g_strdup_printf ("%c%s", unary->operation, s);
-  g_free (s);
+  /* FIXME: ugly! */
+  sign = g_strndup (&unary->operation, 1);
+  vivi_code_printer_print (printer, sign);
+  g_free (sign);
 
-  return ret;
+  vivi_code_printer_print_value (printer, unary->value, VIVI_PRECEDENCE_UNARY);
 }
 
 static gboolean
@@ -66,7 +65,7 @@ vivi_code_unary_class_init (ViviCodeUnaryClass *klass)
 
   object_class->dispose = vivi_code_unary_dispose;
 
-  token_class->to_code = vivi_code_unary_to_code;
+  token_class->print = vivi_code_unary_print;
 
   value_class->is_constant = vivi_code_unary_is_constant;
 }

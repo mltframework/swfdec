@@ -27,6 +27,7 @@
 #include "vivi_code_block.h"
 #include "vivi_code_comment.h"
 #include "vivi_code_label.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeBlock, vivi_code_block, VIVI_TYPE_CODE_STATEMENT)
 
@@ -41,31 +42,33 @@ vivi_code_block_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_block_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_block_to_code (ViviCodeToken *token)
+static void
+vivi_code_block_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeBlock *block = VIVI_CODE_BLOCK (token);
-  GString *string;
-  char *s;
   guint length;
-  GList *walk;
 
   length = g_queue_get_length (block->statements);
-  if (length == 0)
-    return g_strdup ("  ;");
-
-  string = g_string_new ("");
-  if (length > 1)
-    g_string_append (string, "{\n");
-  for (walk = g_queue_peek_head_link (block->statements); walk; walk = walk->next) {
-    s = vivi_code_token_to_code (walk->data);
-    g_string_append (string, s);
-    g_free (s);
+  if (length > 1) {
+    vivi_code_printer_new_line (printer, FALSE);
+    vivi_code_printer_print (printer, "{");
   }
-  if (length > 1)
-    g_string_append (string, "}\n");
+  vivi_code_printer_push_indentation (printer);
+  if (length == 0) {
+    vivi_code_printer_new_line (printer, FALSE);
+    vivi_code_printer_print (printer, ";");
+  } else {
+    GList *walk;
 
-  return g_string_free (string, FALSE);
+    for (walk = g_queue_peek_head_link (block->statements); walk; walk = walk->next) {
+      vivi_code_printer_print_token (printer, walk->data);
+    }
+  }
+  vivi_code_printer_pop_indentation (printer);
+  if (length > 1) {
+    vivi_code_printer_new_line (printer, FALSE);
+    vivi_code_printer_print (printer, "}");
+  }
 }
 
 static void
@@ -76,7 +79,7 @@ vivi_code_block_class_init (ViviCodeBlockClass *klass)
 
   object_class->dispose = vivi_code_block_dispose;
 
-  token_class->to_code = vivi_code_block_to_code;
+  token_class->print = vivi_code_block_print;
 }
 
 static void

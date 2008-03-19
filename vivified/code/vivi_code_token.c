@@ -46,16 +46,3 @@ vivi_code_token_init (ViviCodeToken *token)
 {
 }
 
-char *
-vivi_code_token_to_code (ViviCodeToken *token)
-{
-  ViviCodeTokenClass *klass;
-
-  g_return_val_if_fail (VIVI_IS_CODE_TOKEN (token), NULL);
-
-  klass = VIVI_CODE_TOKEN_GET_CLASS (token);
-  g_return_val_if_fail (klass->to_code != NULL, NULL);
-
-  return klass->to_code (token);
-}
-

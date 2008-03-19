@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_comment.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeComment, vivi_code_comment, VIVI_TYPE_CODE_STATEMENT)
 
@@ -35,12 +36,15 @@ vivi_code_comment_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_comment_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_comment_to_code (ViviCodeToken *token)
+static void
+vivi_code_comment_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeComment *comment = VIVI_CODE_COMMENT (token);
 
-  return g_strdup_printf ("/* %s */\n", comment->comment);
+  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, "/* ");
+  vivi_code_printer_print (printer, comment->comment);
+  vivi_code_printer_print (printer, " */");
 }
 
 static void
@@ -51,7 +55,7 @@ vivi_code_comment_class_init (ViviCodeCommentClass *klass)
 
   object_class->dispose = vivi_code_comment_dispose;
 
-  token_class->to_code = vivi_code_comment_to_code;
+  token_class->print = vivi_code_comment_print;
 }
 
 static void

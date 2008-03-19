@@ -43,10 +43,10 @@ vivi_decompiler_block_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_decompiler_block_parent_class)->dispose (object);
 }
 
-static char *
-vivi_decompiler_block_to_code (ViviCodeToken *token)
+static void
+vivi_decompiler_block_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
-  g_return_val_if_reached (NULL);
+  g_return_if_reached ();
 }
 
 static void
@@ -57,7 +57,7 @@ vivi_decompiler_block_class_init (ViviDecompilerBlockClass *klass)
 
   object_class->dispose = vivi_decompiler_block_dispose;
 
-  token_class->to_code = vivi_decompiler_block_to_code;
+  token_class->print = vivi_decompiler_block_print;
 }
 
 static void

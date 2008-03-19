@@ -25,6 +25,8 @@
 G_BEGIN_DECLS
 
 
+typedef struct _ViviCodePrinter ViviCodePrinter;
+
 typedef struct _ViviCodeToken ViviCodeToken;
 typedef struct _ViviCodeTokenClass ViviCodeTokenClass;
 
@@ -44,12 +46,11 @@ struct _ViviCodeTokenClass
 {
   GObjectClass		object_class;
 
-  char *		(* to_code)			(ViviCodeToken *	token);
+  void			(* print)			(ViviCodeToken *	token,
+							 ViviCodePrinter *	printer);
 };
 
 GType			vivi_code_token_get_type   	(void);
-
-char *			vivi_code_token_to_code		(ViviCodeToken *	token);
 
 
 G_END_DECLS

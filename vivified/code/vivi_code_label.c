@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_label.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_STATEMENT)
 
@@ -35,12 +36,14 @@ vivi_code_label_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_label_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_label_to_code (ViviCodeToken *token)
+static void
+vivi_code_label_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeLabel *label = VIVI_CODE_LABEL (token);
 
-  return g_strdup_printf ("%s:\n", label->name);
+  vivi_code_printer_new_line (printer, TRUE);
+  vivi_code_printer_print (printer, label->name);
+  vivi_code_printer_print (printer, ":");
 }
 
 static void
@@ -51,7 +54,7 @@ vivi_code_label_class_init (ViviCodeLabelClass *klass)
 
   object_class->dispose = vivi_code_label_dispose;
 
-  token_class->to_code = vivi_code_label_to_code;
+  token_class->print = vivi_code_label_print;
 }
 
 static void

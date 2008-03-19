@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_get_url.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeGetUrl, vivi_code_get_url, VIVI_TYPE_CODE_STATEMENT)
 
@@ -36,32 +37,28 @@ vivi_code_get_url_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_get_url_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_get_url_to_code (ViviCodeToken *token)
+static void
+vivi_code_get_url_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeGetUrl *url = VIVI_CODE_GET_URL (token);
-  char *t, *u, *ret;
-  const char *name;
+
+  vivi_code_printer_new_line (printer, FALSE);
 
   if (url->variables) {
-    name = "loadVariables";
+    vivi_code_printer_print (printer, "loadVariables (");
   } else if (url->internal) {
-    name = "loadMovie";
+    vivi_code_printer_print (printer, "loadMovie (");
   } else {
-    name = "getURL";
+    vivi_code_printer_print (printer, "getURL (");
   }
-  u = vivi_code_token_to_code (VIVI_CODE_TOKEN (url->url));
-  t = vivi_code_token_to_code (VIVI_CODE_TOKEN (url->target));
-  if (url->method == 0) {
-    ret = g_strdup_printf ("%s (%s, %s);\n", name, u, t);
-  } else {
-    ret = g_strdup_printf ("%s (%s, %s, %s);\n", name, u, t,
-	url->method == 2 ? "\"POST\"" : "\"GET\"");
+  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (url->url));
+  vivi_code_printer_print (printer, ", ");
+  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (url->target));
+  if (url->method != 0) {
+    vivi_code_printer_print (printer,
+	url->method == 2 ? ", \"POST\"" : ", \"GET\"");
   }
-  g_free (t);
-  g_free (u);
-
-  return ret;
+  vivi_code_printer_print (printer, ");");
 }
 
 static void
@@ -72,7 +69,7 @@ vivi_code_get_url_class_init (ViviCodeGetUrlClass *klass)
 
   object_class->dispose = vivi_code_get_url_dispose;
 
-  token_class->to_code = vivi_code_get_url_to_code;
+  token_class->print = vivi_code_get_url_print;
 }
 
 static void

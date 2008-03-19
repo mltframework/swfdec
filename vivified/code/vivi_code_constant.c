@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_constant.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeConstant, vivi_code_constant, VIVI_TYPE_CODE_VALUE)
 
@@ -35,12 +36,12 @@ vivi_code_constant_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_constant_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_constant_to_code (ViviCodeToken *token)
+static void
+vivi_code_constant_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeConstant *constant = VIVI_CODE_CONSTANT (token);
 
-  return g_strdup (constant->text);
+  vivi_code_printer_print (printer, constant->text);
 }
 
 static gboolean
@@ -58,7 +59,7 @@ vivi_code_constant_class_init (ViviCodeConstantClass *klass)
 
   object_class->dispose = vivi_code_constant_dispose;
 
-  token_class->to_code = vivi_code_constant_to_code;
+  token_class->print = vivi_code_constant_print;
 
   value_class->is_constant = vivi_code_constant_is_constant;
 }

@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_trace.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeTrace, vivi_code_trace, VIVI_TYPE_CODE_STATEMENT)
 
@@ -35,17 +36,15 @@ vivi_code_trace_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_trace_parent_class)->dispose (object);
 }
 
-static char *
-vivi_code_trace_to_code (ViviCodeToken *token)
+static void
+vivi_code_trace_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeTrace *trace = VIVI_CODE_TRACE (token);
-  char *s, *ret;
 
-  s = vivi_code_token_to_code (VIVI_CODE_TOKEN (trace->value));
-  ret = g_strdup_printf ("  trace (%s);\n", s);
-  g_free (s);
-
-  return ret;
+  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, "trace (");
+  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (trace->value));
+  vivi_code_printer_print (printer, ");");
 }
 
 static void
@@ -56,7 +55,7 @@ vivi_code_trace_class_init (ViviCodeTraceClass *klass)
 
   object_class->dispose = vivi_code_trace_dispose;
 
-  token_class->to_code = vivi_code_trace_to_code;
+  token_class->print = vivi_code_trace_print;
 }
 
 static void

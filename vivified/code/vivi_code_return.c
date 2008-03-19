@@ -22,13 +22,15 @@
 #endif
 
 #include "vivi_code_return.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeReturn, vivi_code_return, VIVI_TYPE_CODE_STATEMENT)
 
-static char *
-vivi_code_return_to_code (ViviCodeToken *token)
+static void
+vivi_code_return_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
-  return g_strdup_printf ("  return;\n");
+  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, "return;");
 }
 
 static void
@@ -36,7 +38,7 @@ vivi_code_return_class_init (ViviCodeReturnClass *klass)
 {
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
 
-  token_class->to_code = vivi_code_return_to_code;
+  token_class->print = vivi_code_return_print;
 }
 
 static void

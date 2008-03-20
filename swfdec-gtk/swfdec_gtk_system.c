@@ -116,7 +116,7 @@ swfdec_gtk_system_get_utc_offset (void)
 {
 #if HAVE_TIMEZONE
   time_t t = time (NULL);
-  return localtime (&t)->tm_gmtoff;
+  return localtime (&t)->tm_gmtoff / 60;
 #else
   return 0;
 #endif

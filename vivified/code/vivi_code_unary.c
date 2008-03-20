@@ -95,7 +95,7 @@ vivi_code_unary_init (ViviCodeUnary *unary)
   vivi_code_value_set_precedence (value, VIVI_PRECEDENCE_UNARY);
 }
 
-ViviCodeToken *
+ViviCodeValue *
 vivi_code_unary_new (ViviCodeValue *value, char operation)
 {
   ViviCodeUnary *unary;
@@ -106,6 +106,6 @@ vivi_code_unary_new (ViviCodeValue *value, char operation)
   unary->value = value;
   unary->operation = operation;
 
-  return VIVI_CODE_TOKEN (unary);
+  return VIVI_CODE_VALUE (unary);
 }
 

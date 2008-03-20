@@ -51,8 +51,11 @@ GType			vivi_code_block_get_type		(void);
 
 ViviCodeBlock *		vivi_code_block_new			(void);
 
-void			vivi_code_block_add_statement   	(ViviCodeBlock *		block,
-								 ViviCodeStatement *		statement);
+void			vivi_code_block_prepend_statement   	(ViviCodeBlock *	block,
+								 ViviCodeStatement *	statement);
+void			vivi_code_block_add_statement   	(ViviCodeBlock *	block,
+								 ViviCodeStatement *	statement);
+guint			vivi_code_block_get_n_statements	(ViviCodeBlock *	block);
 
 
 G_END_DECLS

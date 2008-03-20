@@ -50,7 +50,7 @@ struct _ViviCodeUnaryClass
 
 GType			vivi_code_unary_get_type   	(void);
 
-ViviCodeToken *		vivi_code_unary_new		(ViviCodeValue *	value,
+ViviCodeValue *		vivi_code_unary_new		(ViviCodeValue *	value,
 							 char			operation);
 
 char			vivi_code_unary_get_operation	(ViviCodeUnary *	unary);

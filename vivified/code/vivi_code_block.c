@@ -115,6 +115,15 @@ vivi_code_block_new (void)
 }
 
 void
+vivi_code_block_prepend_statement (ViviCodeBlock *block,
+    ViviCodeStatement *statement)
+{
+  g_return_if_fail (VIVI_IS_CODE_BLOCK (block));
+  g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
+
+  g_queue_push_head (block->statements, statement);
+}
+void
 vivi_code_block_add_statement (ViviCodeBlock *block,
     ViviCodeStatement *statement)
 {
@@ -122,5 +131,13 @@ vivi_code_block_add_statement (ViviCodeBlock *block,
   g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
 
   g_queue_push_tail (block->statements, statement);
+}
+
+guint
+vivi_code_block_get_n_statements (ViviCodeBlock *block)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_BLOCK (block), 0);
+
+  return g_queue_get_length (block->statements);
 }
 

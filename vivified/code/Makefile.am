@@ -7,12 +7,15 @@ libvivified_compiler_la_LDFLAGS = $(SWFDEC_LIBS)
 
 libvivified_compiler_la_SOURCES = \
 	vivi_code_block.c \
+	vivi_code_break.c \
 	vivi_code_comment.c \
 	vivi_code_constant.c \
+	vivi_code_continue.c \
 	vivi_code_get_url.c \
 	vivi_code_goto.c \
 	vivi_code_if.c \
 	vivi_code_label.c \
+	vivi_code_loop.c \
 	vivi_code_printer.c \
 	vivi_code_return.c \
 	vivi_code_statement.c \
@@ -28,12 +31,15 @@ libvivified_compiler_la_SOURCES = \
 
 noinst_HEADERS = \
 	vivi_code_block.h \
+	vivi_code_break.h \
 	vivi_code_comment.h \
 	vivi_code_constant.h \
+	vivi_code_continue.h \
 	vivi_code_get_url.h \
 	vivi_code_goto.h \
 	vivi_code_if.h \
 	vivi_code_label.h \
+	vivi_code_loop.h \
 	vivi_code_printer.h \
 	vivi_code_return.h \
 	vivi_code_statement.h \

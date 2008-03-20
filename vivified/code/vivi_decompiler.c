@@ -437,8 +437,8 @@ vivi_decompiler_find_start_block (ViviDecompiler *dec)
   return NULL;
 }
 
-static void
-vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec)
+static ViviCodeToken *
+vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec, GList *list)
 {
   ViviCodeBlock *block;
   ViviDecompilerBlock *current, *next;
@@ -448,21 +448,21 @@ vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec)
 
   ordered = NULL;
   while (current) {
-    g_assert (g_list_find (dec->blocks, current));
-    dec->blocks = g_list_remove (dec->blocks, current);
+    g_assert (g_list_find (list, current));
+    list = g_list_remove (list, current);
     ordered = g_list_prepend (ordered, current);
     next = vivi_decompiler_block_get_branch (current);
     if (next)
       vivi_decompiler_block_force_label (next);
     next = vivi_decompiler_block_get_next (current);
-    if (next == NULL || !g_list_find (dec->blocks, next)) {
+    if (next == NULL || !g_list_find (list, next)) {
       if (next)
 	vivi_decompiler_block_force_label (next);
-      next = dec->blocks ? dec->blocks->data : NULL;
+      next = list ? list->data : NULL;
     }
     current = next;
   }
-  g_assert (dec->blocks == NULL);
+  g_assert (list == NULL);
   ordered = g_list_reverse (ordered);
 
   block = VIVI_CODE_BLOCK (vivi_code_block_new ());
@@ -477,15 +477,16 @@ vivi_decompiler_merge_blocks_last_resort (ViviDecompiler *dec)
   }
   g_list_foreach (ordered, (GFunc) g_object_unref, NULL);
   g_list_free (ordered);
-  dec->blocks = g_list_prepend (dec->blocks, block);
+  return VIVI_CODE_TOKEN (block);
 }
 
-static void
-vivi_decompiler_purge_block (ViviDecompiler *dec, ViviDecompilerBlock *block)
+static GList *
+vivi_decompiler_purge_block (GList *list, ViviDecompilerBlock *block)
 {
   g_assert (vivi_decompiler_block_get_n_incoming (block) == 0);
-  dec->blocks = g_list_remove (dec->blocks, block);
+  list = g_list_remove (list, block);
   g_object_unref (block);
+  return list;
 }
 
 /*  ONE
@@ -493,7 +494,7 @@ vivi_decompiler_purge_block (ViviDecompiler *dec, ViviDecompilerBlock *block)
  *  TWO
  */
 static gboolean
-vivi_decompiler_merge_lines (ViviDecompiler *dec)
+vivi_decompiler_merge_lines (ViviDecompiler *dec, GList **list)
 {
   ViviDecompilerBlock *block, *next;
   ViviCodeValue *val;
@@ -501,7 +502,7 @@ vivi_decompiler_merge_lines (ViviDecompiler *dec)
   GList *walk;
 
   result = FALSE;
-  for (walk = dec->blocks; walk; walk = walk->next) {
+  for (walk = *list; walk; walk = walk->next) {
     block = walk->data;
 
     /* This is an if block or so */
@@ -525,7 +526,7 @@ vivi_decompiler_merge_lines (ViviDecompiler *dec)
     vivi_decompiler_block_set_next (next, NULL);
     vivi_decompiler_block_set_branch (next, NULL, NULL);
     vivi_decompiler_block_add_to_block (next, VIVI_CODE_BLOCK (block));
-    vivi_decompiler_purge_block (dec, next);
+    *list = vivi_decompiler_purge_block (*list, next);
     result = TRUE;
   }
 
@@ -539,7 +540,7 @@ vivi_decompiler_merge_lines (ViviDecompiler *dec)
  *     NEXT
  */
 static gboolean
-vivi_decompiler_merge_if (ViviDecompiler *dec)
+vivi_decompiler_merge_if (ViviDecompiler *dec, GList **list)
 {
   ViviDecompilerBlock *block, *if_block, *else_block;
   ViviCodeIf *if_stmt;
@@ -548,7 +549,7 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
   GList *walk;
 
   result = FALSE;
-  for (walk = dec->blocks; walk; walk = walk->next) {
+  for (walk = *list; walk; walk = walk->next) {
     block = walk->data;
 
     if_block = vivi_decompiler_block_get_branch (block);
@@ -586,7 +587,7 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
       vivi_decompiler_block_set_next (if_block, NULL);
       vivi_decompiler_block_set_branch (if_block, NULL, NULL);
       vivi_decompiler_block_add_to_block (if_block, tmp);
-      vivi_decompiler_purge_block (dec, if_block);
+      *list = vivi_decompiler_purge_block (*list, if_block);
       vivi_code_if_set_if (if_stmt, VIVI_CODE_STATEMENT (tmp));
     }
     if (else_block) {
@@ -595,7 +596,7 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
       vivi_decompiler_block_set_next (else_block, NULL);
       vivi_decompiler_block_set_branch (else_block, NULL, NULL);
       vivi_decompiler_block_add_to_block (else_block, tmp);
-      vivi_decompiler_purge_block (dec, else_block);
+      *list = vivi_decompiler_purge_block (*list, else_block);
       vivi_code_if_set_else (if_stmt, VIVI_CODE_STATEMENT (tmp));
     }
     stmt = vivi_code_statement_optimize (VIVI_CODE_STATEMENT (if_stmt));
@@ -608,8 +609,8 @@ vivi_decompiler_merge_if (ViviDecompiler *dec)
   return result;
 }
 
-static void
-vivi_decompiler_merge_blocks (ViviDecompiler *dec)
+static ViviCodeToken *
+vivi_decompiler_merge_blocks (ViviDecompiler *dec, GList *blocks)
 {
   gboolean restart;
 
@@ -618,12 +619,12 @@ vivi_decompiler_merge_blocks (ViviDecompiler *dec)
   do {
     restart = FALSE;
 
-    restart |= vivi_decompiler_merge_lines (dec);
-    restart |= vivi_decompiler_merge_if (dec);
+    restart |= vivi_decompiler_merge_lines (dec, &blocks);
+    restart |= vivi_decompiler_merge_if (dec, &blocks);
   } while (restart);
 
   DUMP_BLOCKS (dec);
-  vivi_decompiler_merge_blocks_last_resort (dec);
+  return vivi_decompiler_merge_blocks_last_resort (dec, blocks);
 }
 
 static void
@@ -664,6 +665,7 @@ vivi_decompiler_run (ViviDecompiler *dec)
 {
   ViviDecompilerBlock *block;
   ViviDecompilerState *state;
+  ViviCodeToken *token;
   GList *walk;
 
   state = vivi_decompiler_state_new (dec->script, dec->script->main, 4);
@@ -687,7 +689,8 @@ vivi_decompiler_run (ViviDecompiler *dec)
   }
 
   vivi_decompiler_dump_graphviz (dec);
-  vivi_decompiler_merge_blocks (dec);
+  token = vivi_decompiler_merge_blocks (dec, dec->blocks);
+  dec->blocks = g_list_prepend (NULL, token);
 }
 
 /*** OBJECT ***/

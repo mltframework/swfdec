@@ -1,0 +1,9 @@
+/* version: 7 - size: 200x150 */
+
+/* Sprite0_Frame0 */
+{
+  while (false) {
+    trace ("Hello World!");
+  }
+}
+

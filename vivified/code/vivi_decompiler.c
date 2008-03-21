@@ -55,7 +55,7 @@ DUMP_BLOCKS (ViviDecompiler *dec)
   g_print ("dumping blocks:\n");
   for (walk = dec->blocks; walk; walk = walk->next) {
     ViviDecompilerBlock *block = walk->data;
-    g_print ("  %p -> %p\n", block->start->pc, block->exitpc);
+    g_print ("  %p -> %p\n", vivi_decompiler_block_get_start (block), block->endpc);
   }
 }
 #else
@@ -77,6 +77,7 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
     if (block_start < pc) {
       if (vivi_decompiler_block_contains (block, pc)) {
 	vivi_decompiler_block_reset (block);
+	walk = walk->next;
 	break;
       }
       continue;
@@ -91,7 +92,7 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
 
   /* FIXME: see if the block is already there! */
   block = vivi_decompiler_block_new (state);
-  dec->blocks = g_list_insert_before (dec->blocks, walk ? walk->next : NULL, block);
+  dec->blocks = g_list_insert_before (dec->blocks, walk, block);
   return block;
 }
 

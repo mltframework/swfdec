@@ -581,7 +581,7 @@ vivi_decompiler_purge_block (GList *list, ViviDecompilerBlock *block)
  *  TWO
  */
 static gboolean
-vivi_decompiler_merge_lines (ViviDecompiler *dec, GList **list)
+vivi_decompiler_merge_lines (GList **list)
 {
   ViviDecompilerBlock *block, *next;
   ViviCodeValue *val;
@@ -626,7 +626,7 @@ vivi_decompiler_merge_lines (ViviDecompiler *dec, GList **list)
  *     NEXT
  */
 static gboolean
-vivi_decompiler_merge_if (ViviDecompiler *dec, GList **list)
+vivi_decompiler_merge_if (GList **list)
 {
   ViviDecompilerBlock *block, *if_block, *else_block;
   ViviCodeIf *if_stmt;
@@ -696,11 +696,11 @@ vivi_decompiler_merge_if (ViviDecompiler *dec, GList **list)
   return result;
 }
 
-static ViviCodeStatement *vivi_decompiler_merge_blocks (ViviDecompiler *dec, 
-    const guint8 *startpc, GList *blocks);
+static ViviCodeStatement *vivi_decompiler_merge_blocks (GList *blocks,
+    const guint8 *startpc);
 
 static gboolean
-vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
+vivi_decompiler_merge_loops (GList **list)
 {
   ViviDecompilerBlock *end, *start, *block, *next;
   ViviCodeBlock *body;
@@ -712,7 +712,7 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
   guint len;
 
   result = FALSE;
-  for (walk = dec->blocks; walk; walk = walk->next) {
+  for (walk = *list; walk; walk = walk->next) {
     end = walk->data;
     /* noone has a branch at the end of a loop */
     if (vivi_decompiler_block_get_branch (end))
@@ -876,7 +876,7 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
 	vivi_decompiler_block_set_next (block, NULL);
       }
     }
-    body = VIVI_CODE_BLOCK (vivi_decompiler_merge_blocks (dec, loop_start, contained));
+    body = VIVI_CODE_BLOCK (vivi_decompiler_merge_blocks (contained, loop_start));
     while ((len = vivi_code_block_get_n_statements (body))) {
       stmt = vivi_code_block_get_statement (body, len - 1);
       if (VIVI_IS_CODE_CONTINUE (stmt)) {
@@ -897,21 +897,18 @@ failed:
 }
 
 static ViviCodeStatement *
-vivi_decompiler_merge_blocks (ViviDecompiler *dec, const guint8 *startpc, GList *blocks)
+vivi_decompiler_merge_blocks (GList *blocks, const guint8 *startpc)
 {
   gboolean restart;
-
-  DUMP_BLOCKS (dec);
 
   do {
     restart = FALSE;
 
-    restart |= vivi_decompiler_merge_lines (dec, &blocks);
-    restart |= vivi_decompiler_merge_if (dec, &blocks);
-    restart |= vivi_decompiler_merge_loops (dec, &blocks);
+    restart |= vivi_decompiler_merge_lines (&blocks);
+    restart |= vivi_decompiler_merge_if (&blocks);
+    restart |= vivi_decompiler_merge_loops (&blocks);
   } while (restart);
 
-  DUMP_BLOCKS (dec);
   return vivi_decompiler_merge_blocks_last_resort (blocks, startpc);
 }
 
@@ -977,7 +974,7 @@ vivi_decompiler_run (ViviDecompiler *dec)
   }
 
   vivi_decompiler_dump_graphviz (dec);
-  stmt = vivi_decompiler_merge_blocks (dec, dec->script->main, dec->blocks);
+  stmt = vivi_decompiler_merge_blocks (dec->blocks, dec->script->main);
   dec->blocks = g_list_prepend (NULL, stmt);
 }
 

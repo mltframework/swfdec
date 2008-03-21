@@ -37,6 +37,7 @@ vivi_decompiler_block_dispose (GObject *object)
 {
   ViviDecompilerBlock *block = VIVI_DECOMPILER_BLOCK (object);
 
+  g_assert (block->incoming == 0);
   vivi_decompiler_block_reset (block);
   vivi_decompiler_state_free (block->start);
 

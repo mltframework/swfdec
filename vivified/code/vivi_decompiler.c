@@ -99,32 +99,6 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
 typedef gboolean (* DecompileFunc) (ViviDecompilerBlock *block, ViviDecompilerState *state,
           guint code, const guint8 *data, guint len);
 
-static char *
-escape_string (const char *s)
-{
-  GString *str;
-  char *next;
-
-  str = g_string_new ("\"");
-  while ((next = strpbrk (s, "\"\n"))) {
-    g_string_append_len (str, s, next - s);
-    switch (*next) {
-      case '"':
-	g_string_append (str, "\"");
-	break;
-      case '\n':
-	g_string_append (str, "\n");
-	break;
-      default:
-	g_assert_not_reached ();
-    }
-    s = next + 1;
-  }
-  g_string_append (str, s);
-  g_string_append_c (str, '"');
-  return g_string_free (str, FALSE);
-}
-
 static gboolean
 vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
@@ -132,7 +106,6 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
   ViviCodeValue *val;
   SwfdecBits bits;
   guint type;
-  char *value;
 
   swfdec_bits_init_data (&bits, data, len);
   while (swfdec_bits_left (&bits)) {
@@ -145,33 +118,31 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	    vivi_decompiler_block_add_error (block, "could not read string");
 	    return TRUE;
 	  }
-	  value = escape_string (s);
+	  val = vivi_code_constant_new_string (s);
 	  g_free (s);
 	  break;
 	}
       case 1: /* float */
-	value = g_strdup_printf ("%f", swfdec_bits_get_float (&bits));
+	val = vivi_code_constant_new_number (swfdec_bits_get_float (&bits));
 	break;
       case 2: /* null */
-	value = g_strdup ("null");
+	val = vivi_code_constant_new_null ();
 	break;
       case 3: /* undefined */
+	val = vivi_code_constant_new_undefined ();
 	break;
       case 4: /* register */
-	{
-	  val = vivi_decompiler_state_get_register (
-		state, swfdec_bits_get_u8 (&bits));
-	  vivi_decompiler_state_push (state, g_object_ref (val));
-	  continue;
-	}
+	val = vivi_decompiler_state_get_register (
+	      state, swfdec_bits_get_u8 (&bits));
+	break;
       case 5: /* boolean */
-	value = g_strdup (swfdec_bits_get_u8 (&bits) ? "true" : "false");
+	val = vivi_code_constant_new_boolean (swfdec_bits_get_u8 (&bits) ? TRUE : FALSE);
 	break;
       case 6: /* double */
-	value = g_strdup_printf ("%g", swfdec_bits_get_double (&bits));
+	val = vivi_code_constant_new_number (swfdec_bits_get_double (&bits));
 	break;
       case 7: /* 32bit int */
-	value = g_strdup_printf ("%d", swfdec_bits_get_u32 (&bits));
+	val = vivi_code_constant_new_int ((int) swfdec_bits_get_u32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
       case 9: /* 16bit ConstantPool address */
@@ -187,14 +158,13 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 		i, swfdec_constant_pool_size (pool));
 	    return TRUE;
 	  }
-	  value = escape_string (swfdec_constant_pool_get (pool, i));
+	  val = vivi_code_constant_new_string (swfdec_constant_pool_get (pool, i));
 	  break;
 	}
       default:
 	vivi_decompiler_block_add_error (block, "Push: type %u not implemented", type);
 	return TRUE;
     }
-    val = VIVI_CODE_VALUE (vivi_code_constant_new (value));
     vivi_decompiler_state_push (state, val);
   }
 

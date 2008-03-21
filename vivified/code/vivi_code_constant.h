@@ -37,9 +37,9 @@ typedef struct _ViviCodeConstantClass ViviCodeConstantClass;
 
 struct _ViviCodeConstant
 {
-  ViviCodeValue		value;
+  ViviCodeValue		parent;
 
-  char *		text;
+  SwfdecAsValue		value;
 };
 
 struct _ViviCodeConstantClass
@@ -49,8 +49,12 @@ struct _ViviCodeConstantClass
 
 GType			vivi_code_constant_get_type   	(void);
 
-ViviCodeToken *		vivi_code_constant_new		(const char *	text);
-ViviCodeToken *		vivi_code_constant_new_undefined(void);
+ViviCodeValue *		vivi_code_constant_new_null	(void);
+ViviCodeValue *		vivi_code_constant_new_undefined(void);
+ViviCodeValue *		vivi_code_constant_new_string	(const char *	string);
+#define vivi_code_constant_new_int vivi_code_constant_new_number
+ViviCodeValue *		vivi_code_constant_new_number	(double		number);
+ViviCodeValue *		vivi_code_constant_new_boolean	(gboolean	boolean);
 
 
 G_END_DECLS

@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
 
@@ -31,17 +33,69 @@ vivi_code_constant_dispose (GObject *object)
 {
   ViviCodeConstant *constant = VIVI_CODE_CONSTANT (object);
 
-  g_free (constant->text);
+  if (SWFDEC_AS_VALUE_IS_STRING (&constant->value))
+    g_free ((char *) SWFDEC_AS_VALUE_GET_STRING (&constant->value));
 
   G_OBJECT_CLASS (vivi_code_constant_parent_class)->dispose (object);
+}
+
+static char *
+escape_string (const char *s)
+{
+  GString *str;
+  char *next;
+
+  str = g_string_new ("\"");
+  while ((next = strpbrk (s, "\"\n"))) {
+    g_string_append_len (str, s, next - s);
+    switch (*next) {
+      case '"':
+	g_string_append (str, "\"");
+	break;
+      case '\n':
+	g_string_append (str, "\n");
+	break;
+      default:
+	g_assert_not_reached ();
+    }
+    s = next + 1;
+  }
+  g_string_append (str, s);
+  g_string_append_c (str, '"');
+  return g_string_free (str, FALSE);
 }
 
 static void
 vivi_code_constant_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeConstant *constant = VIVI_CODE_CONSTANT (token);
+  char *s;
 
-  vivi_code_printer_print (printer, constant->text);
+  switch (constant->value.type) {
+    case SWFDEC_AS_TYPE_UNDEFINED:
+      vivi_code_printer_print (printer, "undefined");
+      break;
+    case SWFDEC_AS_TYPE_NULL:
+      vivi_code_printer_print (printer, "null");
+      break;
+    case SWFDEC_AS_TYPE_BOOLEAN:
+      vivi_code_printer_print (printer, SWFDEC_AS_VALUE_GET_BOOLEAN (&constant->value) ? "true" : "false");
+      break;
+    case SWFDEC_AS_TYPE_NUMBER:
+      s = g_strdup_printf ("%.16g", SWFDEC_AS_VALUE_GET_NUMBER (&constant->value));
+      vivi_code_printer_print (printer, s);
+      g_free (s);
+      break;
+    case SWFDEC_AS_TYPE_STRING:
+      s = escape_string (SWFDEC_AS_VALUE_GET_STRING (&constant->value));
+      vivi_code_printer_print (printer, s);
+      g_free (s);
+      break;
+    case SWFDEC_AS_TYPE_INT:
+    case SWFDEC_AS_TYPE_OBJECT:
+    default:
+      g_assert_not_reached ();
+  }
 }
 
 static gboolean
@@ -70,22 +124,59 @@ vivi_code_constant_init (ViviCodeConstant *constant)
   vivi_code_value_set_precedence (VIVI_CODE_VALUE (constant), VIVI_PRECEDENCE_MAX);
 }
 
-ViviCodeToken *
-vivi_code_constant_new (const char *text)
+static ViviCodeValue *
+vivi_code_constant_new (const SwfdecAsValue *value)
 {
   ViviCodeConstant *constant;
 
-  g_return_val_if_fail (text != NULL, NULL);
-
   constant = g_object_new (VIVI_TYPE_CODE_CONSTANT, NULL);
-  constant->text = g_strdup (text);
+  constant->value = *value;
 
-  return VIVI_CODE_TOKEN (constant);
+  return VIVI_CODE_VALUE (constant);
 }
 
-ViviCodeToken *
+ViviCodeValue *
 vivi_code_constant_new_undefined (void)
 {
-  return vivi_code_constant_new ("undefined");
+  SwfdecAsValue val = { 0, };
+  return vivi_code_constant_new (&val);
+}
+
+ViviCodeValue *
+vivi_code_constant_new_null (void)
+{
+  SwfdecAsValue val;
+
+  SWFDEC_AS_VALUE_SET_NULL (&val);
+  return vivi_code_constant_new (&val);
+}
+
+ViviCodeValue *
+vivi_code_constant_new_string (const char *string)
+{
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (string != NULL, NULL);
+
+  SWFDEC_AS_VALUE_SET_STRING (&val, g_strdup (string));
+  return vivi_code_constant_new (&val);
+}
+
+ViviCodeValue *
+vivi_code_constant_new_number (double number)
+{
+  SwfdecAsValue val;
+
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, number);
+  return vivi_code_constant_new (&val);
+}
+
+ViviCodeValue *
+vivi_code_constant_new_boolean (gboolean boolean)
+{
+  SwfdecAsValue val;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&val, boolean);
+  return vivi_code_constant_new (&val);
 }
 

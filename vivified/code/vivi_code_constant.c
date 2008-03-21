@@ -184,6 +184,8 @@ vivi_code_constant_new_boolean (gboolean boolean)
 char *
 vivi_code_constant_get_variable_name (ViviCodeConstant *constant)
 {
+  static const char *accept = G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "_$";
+
   g_return_val_if_fail (VIVI_IS_CODE_CONSTANT (constant), NULL);
 
   switch (constant->value.type) {
@@ -198,13 +200,9 @@ vivi_code_constant_get_variable_name (ViviCodeConstant *constant)
     case SWFDEC_AS_TYPE_STRING:
       {
 	const char *s = SWFDEC_AS_VALUE_GET_STRING (&constant->value);
-	if (isascii (*s)) {
-	  s++;
-	  while (isalnum (*s))
-	    s++;
-	}
-	if (*s == '\0')
-	  return g_strdup (SWFDEC_AS_VALUE_GET_STRING (&constant->value));
+	gsize len = strspn (s, accept);
+	if (s[len] == '\0')
+	  return g_strdup (s);
 	else
 	  return NULL;
       }

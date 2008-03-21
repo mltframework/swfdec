@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>
 #include <string.h>
 
 #include "vivi_code_constant.h"
@@ -180,3 +181,38 @@ vivi_code_constant_new_boolean (gboolean boolean)
   return vivi_code_constant_new (&val);
 }
 
+char *
+vivi_code_constant_get_variable_name (ViviCodeConstant *constant)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_CONSTANT (constant), NULL);
+
+  switch (constant->value.type) {
+    case SWFDEC_AS_TYPE_UNDEFINED:
+      return g_strdup ("undefined");
+    case SWFDEC_AS_TYPE_NULL:
+      return g_strdup ("null");
+      break;
+    case SWFDEC_AS_TYPE_BOOLEAN:
+      return g_strdup (SWFDEC_AS_VALUE_GET_BOOLEAN (&constant->value) ? "true" : "false");
+      break;
+    case SWFDEC_AS_TYPE_STRING:
+      {
+	const char *s = SWFDEC_AS_VALUE_GET_STRING (&constant->value);
+	if (isascii (*s)) {
+	  s++;
+	  while (isalnum (*s))
+	    s++;
+	}
+	if (*s == '\0')
+	  return g_strdup (SWFDEC_AS_VALUE_GET_STRING (&constant->value));
+	else
+	  return NULL;
+      }
+    case SWFDEC_AS_TYPE_NUMBER:
+      return NULL;
+    case SWFDEC_AS_TYPE_INT:
+    case SWFDEC_AS_TYPE_OBJECT:
+    default:
+      g_assert_not_reached ();
+  }
+}

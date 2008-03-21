@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_get.h"
+#include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeGet, vivi_code_get, VIVI_TYPE_CODE_VALUE)
@@ -42,27 +43,33 @@ static void
 vivi_code_get_print (ViviCodeToken *token, ViviCodePrinter*printer)
 {
   ViviCodeGet *get = VIVI_CODE_GET (token);
-  gboolean needs_brackets = TRUE; /* FIXME */
+  char *varname;
+
+  if (VIVI_IS_CODE_CONSTANT (get->name))
+    varname = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (get->name));
+  else
+    varname = NULL;
 
   if (get->from) {
     vivi_code_printer_print_value (printer, get->from, VIVI_PRECEDENCE_MEMBER);
-    if (needs_brackets) {
+    if (varname) {
+      vivi_code_printer_print (printer, ".");
+      vivi_code_printer_print (printer, varname);
+    } else {
       vivi_code_printer_print (printer, "[");
       vivi_code_printer_print_value (printer, get->name, VIVI_PRECEDENCE_MIN);
       vivi_code_printer_print (printer, "]");
-    } else {
-      vivi_code_printer_print (printer, ".");
-      vivi_code_printer_print_value (printer, get->name, VIVI_PRECEDENCE_MEMBER);
     }
   } else {
-    if (needs_brackets) {
+    if (varname) {
+      vivi_code_printer_print (printer, varname);
+    } else {
       vivi_code_printer_print (printer, "eval (");
       vivi_code_printer_print_value (printer, get->name, VIVI_PRECEDENCE_MIN);
       vivi_code_printer_print (printer, ")");
-    } else {
-      vivi_code_printer_print_value (printer, get->name, VIVI_PRECEDENCE_MEMBER);
     }
   }
+  g_free (varname);
 }
 
 static gboolean

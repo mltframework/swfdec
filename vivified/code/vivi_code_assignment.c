@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_assignment.h"
+#include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeAssignment, vivi_code_assignment, VIVI_TYPE_CODE_STATEMENT)
@@ -43,32 +44,38 @@ static void
 vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
 {
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
-  gboolean needs_brackets = TRUE; /* FIXME */
+  char *varname;
+
+  if (VIVI_IS_CODE_CONSTANT (assignment->name))
+    varname = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (assignment->name));
+  else
+    varname = NULL;
 
   if (assignment->from) {
     vivi_code_printer_print_value (printer, assignment->from, VIVI_PRECEDENCE_MEMBER);
-    if (needs_brackets) {
+    if (varname) {
+      vivi_code_printer_print (printer, ".");
+      vivi_code_printer_print (printer, varname);
+    } else {
       vivi_code_printer_print (printer, "[");
       vivi_code_printer_print_value (printer, assignment->name, VIVI_PRECEDENCE_MIN);
       vivi_code_printer_print (printer, "]");
-    } else {
-      vivi_code_printer_print (printer, ".");
-      vivi_code_printer_print_value (printer, assignment->name, VIVI_PRECEDENCE_MEMBER);
     }
   } else {
-    if (needs_brackets) {
+    if (varname) {
+      vivi_code_printer_print (printer, varname);
+    } else {
       vivi_code_printer_print (printer, "set (");
       vivi_code_printer_print_value (printer, assignment->name, VIVI_PRECEDENCE_MIN);
       vivi_code_printer_print (printer, ", ");
       vivi_code_printer_print_value (printer, assignment->value, VIVI_PRECEDENCE_ASSIGNMENT);
       vivi_code_printer_print (printer, ")");
       goto finalize;
-    } else {
-      vivi_code_printer_print_value (printer, assignment->name, VIVI_PRECEDENCE_MEMBER);
     }
   }
   vivi_code_printer_print (printer, " = ");
   vivi_code_printer_print_value (printer, assignment->value, VIVI_PRECEDENCE_ASSIGNMENT);
+  g_free (varname);
 finalize:
   vivi_code_printer_print (printer, ";");
   vivi_code_printer_new_line (printer, FALSE);

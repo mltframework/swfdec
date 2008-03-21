@@ -51,11 +51,13 @@ GType			vivi_code_constant_get_type   	(void);
 
 ViviCodeValue *		vivi_code_constant_new_null	(void);
 ViviCodeValue *		vivi_code_constant_new_undefined(void);
-ViviCodeValue *		vivi_code_constant_new_string	(const char *	string);
+ViviCodeValue *		vivi_code_constant_new_string	(const char *		string);
 #define vivi_code_constant_new_int vivi_code_constant_new_number
-ViviCodeValue *		vivi_code_constant_new_number	(double		number);
-ViviCodeValue *		vivi_code_constant_new_boolean	(gboolean	boolean);
+ViviCodeValue *		vivi_code_constant_new_number	(double			number);
+ViviCodeValue *		vivi_code_constant_new_boolean	(gboolean		boolean);
 
+char *			vivi_code_constant_get_variable_name
+							(ViviCodeConstant *	constant);
 
 G_END_DECLS
 #endif

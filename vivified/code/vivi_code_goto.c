@@ -63,7 +63,7 @@ vivi_code_goto_init (ViviCodeGoto *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_goto_new (ViviCodeLabel *label)
 {
   ViviCodeGoto *gotoo;
@@ -73,6 +73,6 @@ vivi_code_goto_new (ViviCodeLabel *label)
   gotoo = g_object_new (VIVI_TYPE_CODE_GOTO, NULL);
   gotoo->label = g_object_ref (label);
 
-  return VIVI_CODE_TOKEN (gotoo);
+  return VIVI_CODE_STATEMENT (gotoo);
 }
 

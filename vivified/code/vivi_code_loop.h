@@ -51,7 +51,7 @@ struct _ViviCodeLoopClass
 
 GType			vivi_code_loop_get_type   	(void);
 
-ViviCodeToken *		vivi_code_loop_new		(void);
+ViviCodeStatement *	vivi_code_loop_new		(void);
 void			vivi_code_loop_set_condition	(ViviCodeLoop *		loop,
 							 ViviCodeValue *	condition);
 void			vivi_code_loop_set_statement	(ViviCodeLoop *		loop,

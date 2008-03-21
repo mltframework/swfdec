@@ -86,7 +86,7 @@ vivi_code_loop_init (ViviCodeLoop *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_loop_new (void)
 {
   return g_object_new (VIVI_TYPE_CODE_LOOP, NULL);

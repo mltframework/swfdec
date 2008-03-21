@@ -621,11 +621,13 @@ static gboolean
 vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
 {
   ViviDecompilerBlock *end, *start, *block, *next;
+  ViviCodeBlock *body;
   gboolean result;
   GList *walk, *walk2;
   const guint8 *loop_start, *loop_end;
   GList *contained, *to_check;
-  ViviCodeToken *loop;
+  ViviCodeStatement *loop, *stmt;
+  guint len;
 
   result = FALSE;
   for (walk = dec->blocks; walk; walk = walk->next) {
@@ -655,7 +657,7 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
     /* this is just a rough guess for now */
     loop_end = vivi_decompiler_block_get_start (end);
     /* let's find the rest of the loop */
-    to_check = g_list_prepend (contained, start);
+    to_check = g_list_prepend (NULL, start);
     contained = NULL;
     while (to_check) {
       block = to_check->data;
@@ -743,8 +745,7 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
       *list = g_list_remove (*list, block);
       next = vivi_decompiler_block_get_branch (block);
       if (next && !g_list_find (contained, next)) {
-	ViviCodeStatement *stmt = VIVI_CODE_STATEMENT (vivi_code_if_new (
-	    g_object_ref (vivi_decompiler_block_get_branch_condition (block))));
+	stmt = vivi_code_if_new (g_object_ref (vivi_decompiler_block_get_branch_condition (block)));
 	if (next == start) {
 	  vivi_code_if_set_if (VIVI_CODE_IF (stmt), vivi_code_continue_new ());
 	} else if (next == end) {
@@ -776,8 +777,7 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
       block = walk2->data;
       next = vivi_decompiler_block_get_branch (block);
       if (next && !g_list_find (*list, next)) {
-	ViviCodeStatement *stmt = VIVI_CODE_STATEMENT (vivi_code_if_new (
-	    g_object_ref (vivi_decompiler_block_get_branch_condition (block))));
+	stmt = vivi_code_if_new (g_object_ref (vivi_decompiler_block_get_branch_condition (block)));
 	vivi_decompiler_block_force_label (next);
 	vivi_code_if_set_if (VIVI_CODE_IF (stmt), VIVI_CODE_STATEMENT (vivi_code_goto_new (
 	      VIVI_CODE_LABEL (vivi_decompiler_block_get_label (next)))));
@@ -792,8 +792,17 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
 	vivi_decompiler_block_set_next (block, NULL);
       }
     }
-    vivi_code_loop_set_statement (VIVI_CODE_LOOP (loop), vivi_decompiler_merge_blocks (dec, loop_start,
-	  contained));
+    body = VIVI_CODE_BLOCK (vivi_decompiler_merge_blocks (dec, loop_start, contained));
+    while ((len = vivi_code_block_get_n_statements (body))) {
+      stmt = vivi_code_block_get_statement (body, len - 1);
+      if (VIVI_IS_CODE_CONTINUE (stmt)) {
+	g_print ("removing continue stmt\n");
+	vivi_code_block_remove_statement (body, stmt);
+      } else {
+	break;
+      }
+    }
+    vivi_code_loop_set_statement (VIVI_CODE_LOOP (loop), VIVI_CODE_STATEMENT (body));
 
     return TRUE;
 failed:

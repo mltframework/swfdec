@@ -140,7 +140,7 @@ vivi_code_if_init (ViviCodeIf *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_if_new (ViviCodeValue *condition)
 {
   ViviCodeIf *stmt;
@@ -150,7 +150,7 @@ vivi_code_if_new (ViviCodeValue *condition)
   stmt = g_object_new (VIVI_TYPE_CODE_IF, NULL);
   stmt->condition = condition;
 
-  return VIVI_CODE_TOKEN (stmt);
+  return VIVI_CODE_STATEMENT (stmt);
 }
 
 void

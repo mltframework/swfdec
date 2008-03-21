@@ -50,7 +50,7 @@ struct _ViviCodeGotoClass
 
 GType			vivi_code_goto_get_type   	(void);
 
-ViviCodeToken *		vivi_code_goto_new		(ViviCodeLabel *	label);
+ViviCodeStatement *	vivi_code_goto_new		(ViviCodeLabel *	label);
 
 
 G_END_DECLS

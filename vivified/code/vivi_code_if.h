@@ -52,7 +52,7 @@ struct _ViviCodeIfClass
 
 GType			vivi_code_if_get_type   	(void);
 
-ViviCodeToken *		vivi_code_if_new		(ViviCodeValue *	condition);
+ViviCodeStatement *	vivi_code_if_new		(ViviCodeValue *	condition);
 void			vivi_code_if_set_if		(ViviCodeIf *		if_stmt,
 							 ViviCodeStatement *	statement);
 void		  	vivi_code_if_set_else		(ViviCodeIf *		if_stmt,

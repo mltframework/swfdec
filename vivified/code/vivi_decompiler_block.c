@@ -241,19 +241,18 @@ vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
 	vivi_code_block_get_statement (VIVI_CODE_BLOCK (block), i)));
   }
   if (block->branch) {
-    ViviCodeToken *token = vivi_code_if_new (
+    ViviCodeStatement *stmt = vivi_code_if_new (
 	g_object_ref (block->branch_condition));
     vivi_decompiler_block_force_label (block->branch);
-    vivi_code_if_set_if (VIVI_CODE_IF (token), VIVI_CODE_STATEMENT (
+    vivi_code_if_set_if (VIVI_CODE_IF (stmt), VIVI_CODE_STATEMENT (
 	  vivi_code_goto_new (g_object_ref (
 		vivi_decompiler_block_get_label (block->branch)))));
-    vivi_code_block_add_statement (target, VIVI_CODE_STATEMENT (token));
+    vivi_code_block_add_statement (target, stmt);
   }
   if (block->next) {
     vivi_decompiler_block_force_label (block->next);
-    vivi_code_block_add_statement (target, VIVI_CODE_STATEMENT (
-	  vivi_code_goto_new (g_object_ref (
-	      vivi_decompiler_block_get_label (block->next)))));
+    vivi_code_block_add_statement (target, vivi_code_goto_new (g_object_ref (
+	vivi_decompiler_block_get_label (block->next))));
   }
 }
 

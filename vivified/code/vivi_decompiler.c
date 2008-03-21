@@ -29,6 +29,7 @@
 
 #include "vivi_decompiler.h"
 #include "vivi_code_assignment.h"
+#include "vivi_code_binary.h"
 #include "vivi_code_block.h"
 #include "vivi_code_break.h"
 #include "vivi_code_constant.h"
@@ -321,6 +322,21 @@ vivi_decompile_set_member (ViviDecompilerBlock *block, ViviDecompilerState *stat
   return TRUE;
 }
 
+static gboolean
+vivi_decompile_binary (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *right, *left, *result;
+
+  right = vivi_decompiler_state_pop (state);
+  left = vivi_decompiler_state_pop (state);
+  result = vivi_code_binary_new_bytecode (left, right, code);
+  g_object_unref (left);
+  g_object_unref (right);
+  vivi_decompiler_state_push (state, result);
+  return TRUE;
+}
+
 static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_END] = vivi_decompile_end,
   [SWFDEC_AS_ACTION_NOT] = vivi_decompile_not,
@@ -330,6 +346,28 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_TRACE] = vivi_decompile_trace,
   [SWFDEC_AS_ACTION_GET_MEMBER] = vivi_decompile_get_member,
   [SWFDEC_AS_ACTION_SET_MEMBER] = vivi_decompile_set_member,
+  [SWFDEC_AS_ACTION_ADD] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_SUBTRACT] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_MULTIPLY] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_DIVIDE] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_EQUALS] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_LESS] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_AND] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_OR] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_STRING_EQUALS] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_STRING_LESS] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_ADD2] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_LESS2] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_EQUALS2] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_BIT_AND] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_BIT_OR] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_BIT_XOR] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_BIT_LSHIFT] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_BIT_RSHIFT] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_BIT_URSHIFT] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_STRICT_EQUALS] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_GREATER] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_STRING_GREATER] = vivi_decompile_binary,
 
   [SWFDEC_AS_ACTION_PUSH] = vivi_decompile_push,
   [SWFDEC_AS_ACTION_CONSTANT_POOL] = vivi_decompile_constant_pool,

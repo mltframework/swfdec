@@ -60,7 +60,7 @@ GType			vivi_decompiler_block_get_type   	(void);
 ViviDecompilerBlock *	vivi_decompiler_block_new		(ViviDecompilerState *		state);
 void			vivi_decompiler_block_reset		(ViviDecompilerBlock *		block);
 
-ViviCodeToken *		vivi_decompiler_block_get_label		(ViviDecompilerBlock *  	block);
+ViviCodeStatement *	vivi_decompiler_block_get_label		(ViviDecompilerBlock *  	block);
 void			vivi_decompiler_block_force_label	(ViviDecompilerBlock *		block);
 const ViviDecompilerState *
 			vivi_decompiler_block_get_start_state	(ViviDecompilerBlock *	        block);

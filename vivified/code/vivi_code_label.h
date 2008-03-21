@@ -49,7 +49,7 @@ struct _ViviCodeLabelClass
 
 GType			vivi_code_label_get_type   	(void);
 
-ViviCodeToken *		vivi_code_label_new		(const char *		name);
+ViviCodeStatement *	vivi_code_label_new		(const char *		name);
 
 const char *		vivi_code_label_get_name	(ViviCodeLabel *	label);
 

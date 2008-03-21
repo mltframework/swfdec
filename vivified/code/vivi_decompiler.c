@@ -652,7 +652,6 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
      * it is and go from there.
      */
     loop_start = vivi_decompiler_block_get_start (start);
-    g_print ("found a loop starting at %p\n", loop_start);
     /* this is just a rough guess for now */
     loop_end = vivi_decompiler_block_get_start (end);
     /* let's find the rest of the loop */
@@ -663,7 +662,6 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
       to_check = g_list_remove (to_check, block);
       /* jump to before start?! */
       if (vivi_decompiler_block_get_start (block) < loop_start) {
-	g_print ("found jump to before loop, bailing\n");
 	g_list_free (contained);
 	g_list_free (to_check);
 	goto failed;
@@ -717,14 +715,14 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
       vivi_decompiler_block_set_branch (start, NULL, NULL);
       loop_start = vivi_decompiler_block_get_start (
 	  vivi_decompiler_block_get_next (start));
-      vivi_code_block_prepend_statement (VIVI_CODE_BLOCK (start), VIVI_CODE_STATEMENT (loop));
+      vivi_code_block_add_statement (VIVI_CODE_BLOCK (start), VIVI_CODE_STATEMENT (loop));
       vivi_decompiler_block_set_next (start, end);
     } else {
       /* FIXME: for (;;) loop */
       contained = g_list_prepend (contained, start);
       block = vivi_decompiler_block_new (vivi_decompiler_state_copy (
 	    vivi_decompiler_block_get_start_state (start)));
-      vivi_code_block_prepend_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (loop));
+      vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (loop));
       for (walk2 = *list; walk2; walk2 = walk2->next) {
 	if (walk2->data == start) {
 	  walk2->data = block;

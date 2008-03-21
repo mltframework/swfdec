@@ -63,7 +63,7 @@ vivi_code_label_init (ViviCodeLabel *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_label_new (const char *name)
 {
   ViviCodeLabel *label;
@@ -73,7 +73,7 @@ vivi_code_label_new (const char *name)
   label = g_object_new (VIVI_TYPE_CODE_LABEL, NULL);
   label->name = g_strdup (name);
 
-  return VIVI_CODE_TOKEN (label);
+  return VIVI_CODE_STATEMENT (label);
 }
 
 const char *

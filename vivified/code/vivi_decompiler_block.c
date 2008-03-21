@@ -68,8 +68,14 @@ vivi_decompiler_block_init (ViviDecompilerBlock *block)
 void
 vivi_decompiler_block_reset (ViviDecompilerBlock *block)
 {
-  g_queue_foreach (VIVI_CODE_BLOCK (block)->statements, (GFunc) g_object_unref, NULL);
-  g_queue_clear (VIVI_CODE_BLOCK (block)->statements);
+  ViviCodeBlock *code_block = VIVI_CODE_BLOCK (block);
+  guint i, len;
+  
+  len = vivi_code_block_get_n_statements (code_block);
+  for (i = len - 1; i < len; i--) {
+    vivi_code_block_remove_statement (code_block,
+	vivi_code_block_get_statement (code_block, i));
+  }
   vivi_decompiler_block_set_next (block, NULL);
   vivi_decompiler_block_set_branch (block, NULL, NULL);
   block->endpc = NULL;
@@ -89,24 +95,26 @@ vivi_decompiler_block_new (ViviDecompilerState *state)
   return block;
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_decompiler_block_get_label (ViviDecompilerBlock *block)
 {
-  ViviCodeToken *token;
+  ViviCodeStatement *stmt;
 
   g_return_val_if_fail (VIVI_IS_DECOMPILER_BLOCK (block), NULL);
 
-  token = g_queue_peek_head (VIVI_CODE_BLOCK (block)->statements);
-  if (!VIVI_IS_CODE_LABEL (token))
+  if (vivi_code_block_get_n_statements (VIVI_CODE_BLOCK (block)) == 0)
+    return NULL;
+  stmt = vivi_code_block_get_statement (VIVI_CODE_BLOCK (block), 0);
+  if (!VIVI_IS_CODE_LABEL (stmt))
     return NULL;
 
-  return token;
+  return stmt;
 }
 
 void
 vivi_decompiler_block_force_label (ViviDecompilerBlock *block)
 {
-  ViviCodeToken *token;
+  ViviCodeStatement *stmt;
   char *s;
 
   g_return_if_fail (VIVI_IS_DECOMPILER_BLOCK (block));
@@ -115,9 +123,9 @@ vivi_decompiler_block_force_label (ViviDecompilerBlock *block)
     return;
 
   s = g_strdup_printf ("label_%p", block);
-  token = vivi_code_label_new (s);
+  stmt = vivi_code_label_new (s);
   g_free (s);
-  g_queue_push_head (VIVI_CODE_BLOCK (block)->statements, token);
+  vivi_code_block_insert_statement (VIVI_CODE_BLOCK (block), 0, stmt);
 }
 
 void
@@ -223,14 +231,14 @@ void
 vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
     ViviCodeBlock *target)
 {
-  GList *walk;
+  guint i;
 
   g_return_if_fail (VIVI_IS_DECOMPILER_BLOCK (block));
   g_return_if_fail (VIVI_IS_CODE_BLOCK (target));
 
-  for (walk = g_queue_peek_head_link (VIVI_CODE_BLOCK (block)->statements); 
-      walk; walk = walk->next) {
-    vivi_code_block_add_statement (target, g_object_ref (walk->data));
+  for (i = 0; i < vivi_code_block_get_n_statements (VIVI_CODE_BLOCK (block)); i++) {
+    vivi_code_block_add_statement (target, 
+	vivi_code_block_get_statement (VIVI_CODE_BLOCK (block), i));
   }
   if (block->branch) {
     ViviCodeToken *token = vivi_code_if_new (

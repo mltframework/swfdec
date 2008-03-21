@@ -39,7 +39,7 @@ struct _ViviCodeBlock
 {
   ViviCodeStatement	statement;
 
-  GQueue *		statements;	/* ViviCodeStatements inside this block */
+  GPtrArray *		statements;	/* ViviCodeStatements inside this block */
 };
 
 struct _ViviCodeBlockClass
@@ -51,11 +51,15 @@ GType			vivi_code_block_get_type		(void);
 
 ViviCodeBlock *		vivi_code_block_new			(void);
 
-void			vivi_code_block_prepend_statement   	(ViviCodeBlock *	block,
-								 ViviCodeStatement *	statement);
-void			vivi_code_block_add_statement   	(ViviCodeBlock *	block,
-								 ViviCodeStatement *	statement);
 guint			vivi_code_block_get_n_statements	(ViviCodeBlock *	block);
+ViviCodeStatement *	vivi_code_block_get_statement		(ViviCodeBlock *	block,
+								 guint			i);
+#define vivi_code_block_add_statement(block, stmt) vivi_code_block_insert_statement (block, G_MAXUINT, stmt)
+void			vivi_code_block_insert_statement   	(ViviCodeBlock *	block,
+								 guint			i,
+								 ViviCodeStatement *	statement);
+void			vivi_code_block_remove_statement	(ViviCodeBlock *	block,
+								 ViviCodeStatement *	statement);
 
 
 G_END_DECLS

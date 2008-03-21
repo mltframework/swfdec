@@ -373,8 +373,11 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
       if (!skip_scripts) {
 	SwfdecScript *script = swfdec_swf_decoder_get_script (
 	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data);
-	g_assert (script);
-	swfdec_player_add_action_script (player, mov, script, 2);
+	if (script) {
+	  swfdec_player_add_action_script (player, mov, script, 2);
+	} else {
+	  SWFDEC_ERROR ("Failed to locate script for DoAction tag");
+	}
       }
       return TRUE;
     case SWFDEC_TAG_PLACEOBJECT:
@@ -447,7 +450,6 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
       {
 	guint id;
 	SwfdecSprite *sprite;
-	char *name;
 
 	id = swfdec_bits_get_u16 (&bits);
 	SWFDEC_LOG ("InitAction");
@@ -461,12 +463,12 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	  SWFDEC_ERROR ("sprite %u already has an init action", id);
 	  return TRUE;
 	}
-	name = g_strdup_printf ("InitAction %u", id);
-	sprite->init_action = swfdec_script_new_from_bits (&bits, name, 
-	    swfdec_movie_get_version (mov));
-	g_free (name);
+	sprite->init_action = swfdec_script_ref (swfdec_swf_decoder_get_script (
+	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data + 2));
 	if (sprite->init_action) {
 	  swfdec_player_add_action_script (player, mov, sprite->init_action, 0);
+	} else {
+	  SWFDEC_ERROR ("Failed to locate script for InitAction of Sprite %u", id);
 	}
       }
       return TRUE;

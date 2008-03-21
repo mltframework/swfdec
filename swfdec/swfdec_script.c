@@ -271,6 +271,14 @@ swfdec_script_new_from_bits (SwfdecBits *bits, const char *name, guint version)
   return script;
 }
 
+/**
+ * swfdec_script_ref:
+ * @script: a script
+ *
+ * Increases the reference count of the given @script by one.
+ *
+ * Returns: The @script given as an argument
+ **/
 SwfdecScript *
 swfdec_script_ref (SwfdecScript *script)
 {
@@ -281,6 +289,13 @@ swfdec_script_ref (SwfdecScript *script)
   return script;
 }
 
+/**
+ * swfdec_script_unref:
+ * @script: a script
+ *
+ * Decreases the reference count of the given @script by one. If the count 
+ * reaches zero, it will automatically be destroyed.
+ **/
 void
 swfdec_script_unref (SwfdecScript *script)
 {

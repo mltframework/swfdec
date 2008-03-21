@@ -122,7 +122,6 @@ IGNORE_HFILES= \
 	swfdec_root_movie.h \
 	swfdec_root_sprite.h \
 	swfdec_sandbox.h \
-	swfdec_script.h \
 	swfdec_script_internal.h \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \

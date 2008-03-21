@@ -241,6 +241,7 @@
 
 /**
  * SWFDEC_TYPE_TIME_VAL:
+ *
  * This type wraps a @GTimeVal object as a boxed type and makes it available 
  * for use in object properties.
  */

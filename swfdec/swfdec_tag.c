@@ -509,6 +509,31 @@ tag_func_do_action (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
+static int
+tag_func_do_init_action (SwfdecSwfDecoder * s, guint tag)
+{
+  SwfdecScript *script;
+  SwfdecBits bits;
+  char *name;
+  guint id;
+
+  bits = s->b;
+  id = swfdec_bits_get_u16 (&bits);
+  if (swfdec_bits_left (&bits) == 0) {
+    SWFDEC_WARNING ("empty script, ignoring");
+    return SWFDEC_STATUS_OK;
+  }
+  name = g_strdup_printf ("Init %u", id);
+  script = swfdec_script_new_from_bits (&bits, name, s->version);
+  g_free (name);
+  if (script) {
+    swfdec_swf_decoder_add_script (s, script);
+    tag_func_enqueue (s, tag);
+  }
+
+  return SWFDEC_STATUS_OK;
+}
+
 struct tag_func_struct
 {
   const char *name;
@@ -568,7 +593,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_EXPORTASSETS] = {"ExportAssets", tag_func_enqueue, 0},
   [SWFDEC_TAG_IMPORTASSETS] = {"ImportAssets", NULL, 0},
   [SWFDEC_TAG_ENABLEDEBUGGER] = {"EnableDebugger", NULL, 0},
-  [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
+  [SWFDEC_TAG_DOINITACTION] = {"DoInitAction", tag_func_do_init_action, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEVIDEOSTREAM] = {"DefineVideoStream", tag_func_define_video, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_VIDEOFRAME] = {"VideoFrame", tag_func_video_frame, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEFONTINFO2] = {"DefineFontInfo2", tag_func_define_font_info, 0},

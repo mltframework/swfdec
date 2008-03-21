@@ -542,7 +542,11 @@ SWFDEC_TYPE_AS_FRAME
 <TITLE>SwfdecAsDebugger</TITLE>
 SwfdecAsDebugger
 SwfdecAsDebuggerClass
+<SUBSECTION SwfdecScript>
 SwfdecScript
+swfdec_script_new
+swfdec_script_ref
+swfdec_script_unref
 <SUBSECTION Standard>
 swfdec_as_debugger_get_type
 SWFDEC_AS_DEBUGGER

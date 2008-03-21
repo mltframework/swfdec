@@ -155,7 +155,9 @@ vivi_code_block_remove_statement (ViviCodeBlock *block, ViviCodeStatement *state
   g_return_if_fail (VIVI_IS_CODE_BLOCK (block));
   g_return_if_fail (VIVI_IS_CODE_STATEMENT (block));
 
-  if (!g_ptr_array_remove (block->statements, statement))
+  if (g_ptr_array_remove (block->statements, statement))
+    g_object_unref (statement);
+  else
     g_return_if_reached ();
 }
 

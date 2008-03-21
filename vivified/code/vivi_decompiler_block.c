@@ -237,8 +237,8 @@ vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
   g_return_if_fail (VIVI_IS_CODE_BLOCK (target));
 
   for (i = 0; i < vivi_code_block_get_n_statements (VIVI_CODE_BLOCK (block)); i++) {
-    vivi_code_block_add_statement (target, 
-	vivi_code_block_get_statement (VIVI_CODE_BLOCK (block), i));
+    vivi_code_block_add_statement (target, g_object_ref (
+	vivi_code_block_get_statement (VIVI_CODE_BLOCK (block), i)));
   }
   if (block->branch) {
     ViviCodeToken *token = vivi_code_if_new (

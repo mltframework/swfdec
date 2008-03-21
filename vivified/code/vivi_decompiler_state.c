@@ -107,10 +107,10 @@ vivi_decompiler_state_copy (const ViviDecompilerState *src)
 ViviCodeValue *
 vivi_decompiler_state_get_register (const ViviDecompilerState *state, guint reg)
 {
-  if (reg >= state->n_registers || state->registers[state->n_registers] == NULL)
+  if (reg >= state->n_registers || state->registers[reg] == NULL)
     return VIVI_CODE_VALUE (vivi_code_constant_new_undefined ());
   else
-    return g_object_ref (state->registers[state->n_registers]);
+    return g_object_ref (state->registers[reg]);
 }
 
 const guint8 *

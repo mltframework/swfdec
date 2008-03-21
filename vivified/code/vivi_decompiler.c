@@ -524,6 +524,16 @@ vivi_decompiler_find_start_block (GList *list, const guint8 *startpc)
   return NULL;
 }
 
+#define ASSERT_BLOCK_LIST(list) \
+  { \
+    GList *_walk; \
+    for (_walk = list; _walk; _walk = _walk->next) { \
+      ViviDecompilerBlock *_block = _walk->data; \
+      g_assert (_block->next == NULL || g_list_find (list, _block->next)); \
+      g_assert (_block->branch == NULL || g_list_find (list, _block->branch)); \
+    } \
+  }
+
 static ViviCodeStatement *
 vivi_decompiler_merge_blocks_last_resort (GList *list, const guint8 *startpc)
 {
@@ -531,6 +541,7 @@ vivi_decompiler_merge_blocks_last_resort (GList *list, const guint8 *startpc)
   ViviDecompilerBlock *current, *next;
   GList *ordered, *walk;
 
+  //ASSERT_BLOCK_LIST (list);
   current = vivi_decompiler_find_start_block (list, startpc);
 
   ordered = NULL;
@@ -561,6 +572,8 @@ vivi_decompiler_merge_blocks_last_resort (GList *list, const guint8 *startpc)
     vivi_decompiler_block_add_to_block (current, block);
     if (next == NULL && walk->next != NULL)
       vivi_code_block_add_statement (block, VIVI_CODE_STATEMENT (vivi_code_return_new ()));
+    vivi_decompiler_block_set_next (current, NULL);
+    vivi_decompiler_block_set_branch (current, NULL, NULL);
   }
   g_list_foreach (ordered, (GFunc) g_object_unref, NULL);
   g_list_free (ordered);

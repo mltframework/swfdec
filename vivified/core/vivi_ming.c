@@ -88,7 +88,7 @@ vivi_ming_compile (const char *code, char **error)
 {
   byte *data;
   SWFAction action;
-  gsize len;
+  gssize len;
   SwfdecBuffer *buffer;
   SwfdecScript *script;
 

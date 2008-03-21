@@ -730,6 +730,8 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
 	  walk2->data = block;
 	  continue;
 	}
+	if (g_list_find (contained, walk2->data))
+	  continue;
 	if (vivi_decompiler_block_get_branch (walk2->data) == start)
 	  vivi_decompiler_block_set_branch (walk2->data, block,
 	      g_object_ref (vivi_decompiler_block_get_branch_condition (walk2->data)));
@@ -744,7 +746,7 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
       block = walk2->data;
       *list = g_list_remove (*list, block);
       next = vivi_decompiler_block_get_branch (block);
-      if (next && !g_list_find (contained, next)) {
+      if (next != NULL && (!g_list_find (contained, next) || next == start)) {
 	stmt = vivi_code_if_new (g_object_ref (vivi_decompiler_block_get_branch_condition (block)));
 	if (next == start) {
 	  vivi_code_if_set_if (VIVI_CODE_IF (stmt), vivi_code_continue_new ());
@@ -759,7 +761,7 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
 	vivi_decompiler_block_set_branch (block, NULL, NULL);
       }
       next = vivi_decompiler_block_get_next (block);
-      if (next && !g_list_find (contained, next)) {
+      if (next != NULL && (!g_list_find (contained, next) || next == start)) {
 	if (next == start) {
 	  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), vivi_code_continue_new ());
 	} else if (next == end) {

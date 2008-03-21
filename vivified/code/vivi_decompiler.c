@@ -803,7 +803,6 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
     while ((len = vivi_code_block_get_n_statements (body))) {
       stmt = vivi_code_block_get_statement (body, len - 1);
       if (VIVI_IS_CODE_CONTINUE (stmt)) {
-	g_print ("removing continue stmt\n");
 	vivi_code_block_remove_statement (body, stmt);
       } else {
 	break;

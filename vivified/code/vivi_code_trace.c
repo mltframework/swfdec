@@ -63,7 +63,7 @@ vivi_code_trace_init (ViviCodeTrace *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_trace_new (ViviCodeValue *value)
 {
   ViviCodeTrace *trace;
@@ -71,8 +71,8 @@ vivi_code_trace_new (ViviCodeValue *value)
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (value), NULL);
 
   trace = g_object_new (VIVI_TYPE_CODE_TRACE, NULL);
-  trace->value = value;
+  trace->value = g_object_ref (value);
 
-  return VIVI_CODE_TOKEN (trace);
+  return VIVI_CODE_STATEMENT (trace);
 }
 

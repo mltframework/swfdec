@@ -50,7 +50,7 @@ struct _ViviCodeValueStatementClass
 
 GType			vivi_code_value_statement_get_type   	(void);
 
-ViviCodeToken *		vivi_code_value_statement_new		(ViviCodeValue *	value);
+ViviCodeStatement *   	vivi_code_value_statement_new		(ViviCodeValue *	value);
 
 G_END_DECLS
 #endif

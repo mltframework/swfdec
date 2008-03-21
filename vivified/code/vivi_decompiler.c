@@ -203,12 +203,14 @@ static gboolean
 vivi_decompile_pop (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviCodeToken *stmt;
+  ViviCodeStatement *stmt;
   ViviCodeValue *val;
   
   val = vivi_decompiler_state_pop (state);
   stmt = vivi_code_value_statement_new (val);
-  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (stmt));
+  g_object_unref (val);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), stmt);
+  g_object_unref (stmt);
   return TRUE;
 }
 
@@ -227,12 +229,14 @@ static gboolean
 vivi_decompile_trace (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviCodeToken *trace;
+  ViviCodeStatement *trace;
   ViviCodeValue *val;
   
   val = vivi_decompiler_state_pop (state);
   trace = vivi_code_trace_new (val);
-  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (trace));
+  g_object_unref (val);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), trace);
+  g_object_unref (trace);
   return TRUE;
 }
 
@@ -255,17 +259,18 @@ vivi_decompile_get_url2 (ViviDecompilerBlock *block, ViviDecompilerState *state,
 
   if (len != 1) {
     vivi_decompiler_block_add_error (block, "invalid length in getURL2 command");   
-    g_object_unref (target);
-    g_object_unref (url);
   } else {
-    ViviCodeToken *token;
+    ViviCodeStatement *stmt;
     guint method = data[0] & 3;
     guint internal = data[0] & 64;
     guint variables = data[0] & 128;
 
-    token = vivi_code_get_url_new (target, url, method, internal, variables);
-    vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (token));
+    stmt = vivi_code_get_url_new (target, url, method, internal, variables);
+    vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), stmt);
+    g_object_unref (stmt);
   }
+  g_object_unref (target);
+  g_object_unref (url);
   return TRUE;
 }
 
@@ -273,11 +278,12 @@ static gboolean
 vivi_decompile_not (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviCodeValue *val;
+  ViviCodeValue *val, *unary;
 
   val = vivi_decompiler_state_pop (state);
-  val = vivi_code_unary_new (val, '!');
-  vivi_decompiler_state_push (state, val);
+  unary = vivi_code_unary_new (val, '!');
+  vivi_decompiler_state_push (state, unary);
+  g_object_unref (val);
   return TRUE;
 }
 
@@ -325,9 +331,8 @@ vivi_decompiler_process (ViviDecompiler *dec, ViviDecompilerBlock *block,
 	if (vivi_decompiler_block_is_finished (block)) {
 	  vivi_decompiler_block_set_next (block, next);
 	  vivi_decompiler_block_set_branch (block, branch, val);
-	} else {
-	  g_object_unref (val);
 	}
+	g_object_unref (val);
       }
       return FALSE;
     case SWFDEC_AS_ACTION_JUMP:
@@ -525,8 +530,7 @@ vivi_decompiler_merge_lines (ViviDecompiler *dec, GList **list)
     val = vivi_decompiler_block_get_branch_condition (next);
     if (val) {
       vivi_decompiler_block_set_branch (block, 
-	  vivi_decompiler_block_get_branch (next),
-	  g_object_ref (val));
+	  vivi_decompiler_block_get_branch (next), val);
     }
     vivi_decompiler_block_set_next (next, NULL);
     vivi_decompiler_block_set_branch (next, NULL, NULL);
@@ -581,8 +585,7 @@ vivi_decompiler_merge_if (ViviDecompiler *dec, GList **list)
       continue;
 
     /* FINALLY we can merge the blocks */
-    if_stmt = VIVI_CODE_IF (vivi_code_if_new (g_object_ref (
-	  vivi_decompiler_block_get_branch_condition (block))));
+    if_stmt = VIVI_CODE_IF (vivi_code_if_new (vivi_decompiler_block_get_branch_condition (block)));
     vivi_decompiler_block_set_branch (block, NULL, NULL);
     vivi_decompiler_block_set_next (block, 
 	vivi_decompiler_block_get_next (if_block ? if_block : else_block));
@@ -606,8 +609,10 @@ vivi_decompiler_merge_if (ViviDecompiler *dec, GList **list)
     }
     stmt = vivi_code_statement_optimize (VIVI_CODE_STATEMENT (if_stmt));
     g_object_unref (if_stmt);
-    if (stmt)
+    if (stmt) {
       vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), stmt);
+      g_object_unref (stmt);
+    }
     result = TRUE;
   }
 
@@ -703,14 +708,14 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
 	 (vivi_decompiler_block_get_branch (start) &&
 	  vivi_decompiler_block_get_next (start) == end))) {
       if (vivi_decompiler_block_get_branch (start) == end) {
-	ViviCodeValue *value = vivi_code_unary_new (g_object_ref (
-	    vivi_decompiler_block_get_branch_condition (start)), '!');
+	ViviCodeValue *value = vivi_code_unary_new (
+	    vivi_decompiler_block_get_branch_condition (start), '!');
 	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop),
 	    vivi_code_value_optimize (value, SWFDEC_AS_TYPE_BOOLEAN));
 	g_object_unref (value);
       } else {
-	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), g_object_ref (
-	    vivi_decompiler_block_get_branch_condition (start)));
+	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), 
+	    vivi_decompiler_block_get_branch_condition (start));
 	vivi_decompiler_block_set_next (start,
 	    vivi_decompiler_block_get_branch (start));
       }
@@ -805,6 +810,8 @@ vivi_decompiler_merge_loops (ViviDecompiler *dec, GList **list)
       }
     }
     vivi_code_loop_set_statement (VIVI_CODE_LOOP (loop), VIVI_CODE_STATEMENT (body));
+    g_object_unref (body);
+    g_object_unref (loop);
 
     return TRUE;
 failed:

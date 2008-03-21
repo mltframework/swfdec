@@ -76,7 +76,7 @@ vivi_code_get_url_init (ViviCodeGetUrl *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_get_url_new (ViviCodeValue *target, ViviCodeValue *url,
     SwfdecLoaderRequest method, gboolean internal, gboolean variables)
 {
@@ -87,12 +87,12 @@ vivi_code_get_url_new (ViviCodeValue *target, ViviCodeValue *url,
   g_return_val_if_fail (method < 4, NULL);
 
   ret = g_object_new (VIVI_TYPE_CODE_GET_URL, NULL);
-  ret->target = target;
-  ret->url = url;
+  ret->target = g_object_ref (target);
+  ret->url = g_object_ref (url);
   ret->method = method;
   ret->internal = internal;
   ret->variables = variables;
 
-  return VIVI_CODE_TOKEN (ret);
+  return VIVI_CODE_STATEMENT (ret);
 }
 

@@ -148,7 +148,7 @@ vivi_code_if_new (ViviCodeValue *condition)
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (condition), NULL);
 
   stmt = g_object_new (VIVI_TYPE_CODE_IF, NULL);
-  stmt->condition = condition;
+  stmt->condition = g_object_ref (condition);
 
   return VIVI_CODE_STATEMENT (stmt);
 }
@@ -159,6 +159,8 @@ vivi_code_if_set_if (ViviCodeIf *if_stmt, ViviCodeStatement *statement)
   g_return_if_fail (VIVI_IS_CODE_IF (if_stmt));
   g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
 
+  if (statement)
+    g_object_ref (statement);
   if (if_stmt->if_statement)
     g_object_unref (if_stmt->if_statement);
   if_stmt->if_statement = statement;
@@ -170,6 +172,8 @@ vivi_code_if_set_else (ViviCodeIf *if_stmt, ViviCodeStatement *statement)
   g_return_if_fail (VIVI_IS_CODE_IF (if_stmt));
   g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
 
+  if (statement)
+    g_object_ref (statement);
   if (if_stmt->else_statement)
     g_object_unref (if_stmt->else_statement);
   if_stmt->else_statement = statement;

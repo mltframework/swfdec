@@ -98,6 +98,8 @@ vivi_code_loop_set_condition (ViviCodeLoop *loop, ViviCodeValue *condition)
   g_return_if_fail (VIVI_IS_CODE_LOOP (loop));
   g_return_if_fail (VIVI_IS_CODE_VALUE (condition));
 
+  if (condition)
+    g_object_ref (condition);
   if (loop->condition)
     g_object_unref (loop->condition);
   loop->condition = condition;
@@ -109,6 +111,8 @@ vivi_code_loop_set_statement (ViviCodeLoop *loop, ViviCodeStatement *statement)
   g_return_if_fail (VIVI_IS_CODE_LOOP (loop));
   g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
 
+  if (statement)
+    g_object_ref (statement);
   if (loop->statement)
     g_object_unref (loop->statement);
   loop->statement = statement;

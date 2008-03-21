@@ -62,7 +62,7 @@ vivi_code_value_statement_init (ViviCodeValueStatement *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_value_statement_new (ViviCodeValue *value)
 {
   ViviCodeValueStatement *stmt;
@@ -70,8 +70,8 @@ vivi_code_value_statement_new (ViviCodeValue *value)
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (value), NULL);
 
   stmt = g_object_new (VIVI_TYPE_CODE_VALUE_STATEMENT, NULL);
-  stmt->value = value;
+  stmt->value = g_object_ref (value);
 
-  return VIVI_CODE_TOKEN (stmt);
+  return VIVI_CODE_STATEMENT (stmt);
 }
 

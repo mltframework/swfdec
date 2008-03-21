@@ -54,7 +54,7 @@ struct _ViviCodeGetUrlClass
 
 GType			vivi_code_get_url_get_type   	(void);
 
-ViviCodeToken *		vivi_code_get_url_new		(ViviCodeValue *	target,
+ViviCodeStatement *	vivi_code_get_url_new		(ViviCodeValue *	target,
 							 ViviCodeValue *	url,
 							 SwfdecLoaderRequest	method,
 							 gboolean		internal,

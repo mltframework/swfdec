@@ -103,7 +103,7 @@ vivi_code_unary_new (ViviCodeValue *value, char operation)
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (value), NULL);
 
   unary = g_object_new (VIVI_TYPE_CODE_UNARY, NULL);
-  unary->value = value;
+  unary->value = g_object_ref (value);
   unary->operation = operation;
 
   return VIVI_CODE_VALUE (unary);

@@ -126,6 +126,7 @@ vivi_decompiler_block_force_label (ViviDecompilerBlock *block)
   stmt = vivi_code_label_new (s);
   g_free (s);
   vivi_code_block_insert_statement (VIVI_CODE_BLOCK (block), 0, stmt);
+  g_object_unref (stmt);
 }
 
 void
@@ -150,14 +151,16 @@ vivi_decompiler_block_set_branch (ViviDecompilerBlock *block, ViviDecompilerBloc
 {
   g_return_if_fail ((branch != NULL) ^ (branch_condition == NULL));
 
+  if (branch) {
+    g_object_ref (branch_condition);
+    branch->incoming++;
+  }
   if (block->branch) {
     block->branch->incoming--;
     g_object_unref (block->branch_condition);
   }
   block->branch = branch;
   block->branch_condition = branch_condition;
-  if (branch)
-    branch->incoming++;
 }
 
 ViviDecompilerBlock *
@@ -231,6 +234,7 @@ void
 vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
     ViviCodeBlock *target)
 {
+  ViviCodeStatement *stmt, *stmt2;
   guint i;
 
   g_return_if_fail (VIVI_IS_DECOMPILER_BLOCK (block));
@@ -241,18 +245,19 @@ vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
 	vivi_code_block_get_statement (VIVI_CODE_BLOCK (block), i)));
   }
   if (block->branch) {
-    ViviCodeStatement *stmt = vivi_code_if_new (
-	g_object_ref (block->branch_condition));
+    stmt = vivi_code_if_new (block->branch_condition);
     vivi_decompiler_block_force_label (block->branch);
-    vivi_code_if_set_if (VIVI_CODE_IF (stmt), VIVI_CODE_STATEMENT (
-	  vivi_code_goto_new (g_object_ref (
-		vivi_decompiler_block_get_label (block->branch)))));
+    stmt2 = vivi_code_goto_new (VIVI_CODE_LABEL (vivi_decompiler_block_get_label (block->branch)));
+    vivi_code_if_set_if (VIVI_CODE_IF (stmt), stmt2);
+    g_object_unref (stmt2);
     vivi_code_block_add_statement (target, stmt);
+    g_object_unref (stmt);
   }
   if (block->next) {
     vivi_decompiler_block_force_label (block->next);
-    vivi_code_block_add_statement (target, vivi_code_goto_new (g_object_ref (
-	vivi_decompiler_block_get_label (block->next))));
+    stmt = vivi_code_goto_new (VIVI_CODE_LABEL (vivi_decompiler_block_get_label (block->next)));
+    vivi_code_block_add_statement (target, stmt);
+    g_object_unref (stmt);
   }
 }
 

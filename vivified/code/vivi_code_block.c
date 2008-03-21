@@ -138,6 +138,7 @@ vivi_code_block_insert_statement (ViviCodeBlock *block, guint i, ViviCodeStateme
   g_return_if_fail (VIVI_IS_CODE_BLOCK (block));
   g_return_if_fail (VIVI_IS_CODE_STATEMENT (block));
 
+  g_object_ref (statement);
   if (i >= block->statements->len) {
     g_ptr_array_add (block->statements, statement);
   } else {

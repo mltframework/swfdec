@@ -50,7 +50,7 @@ struct _ViviCodeTraceClass
 
 GType			vivi_code_trace_get_type   	(void);
 
-ViviCodeToken *		vivi_code_trace_new		(ViviCodeValue *	value);
+ViviCodeStatement *	vivi_code_trace_new		(ViviCodeValue *	value);
 
 
 G_END_DECLS

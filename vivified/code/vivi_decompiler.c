@@ -32,6 +32,7 @@
 #include "vivi_code_break.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
+#include "vivi_code_get.h"
 #include "vivi_code_get_url.h"
 #include "vivi_code_goto.h"
 #include "vivi_code_if.h"
@@ -287,11 +288,41 @@ vivi_decompile_not (ViviDecompilerBlock *block, ViviDecompilerState *state,
   return TRUE;
 }
 
+static gboolean
+vivi_decompile_get_variable (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *get, *name;
+
+  name = vivi_decompiler_state_pop (state);
+  get = vivi_code_get_new (NULL, name);
+  g_object_unref (name);
+  vivi_decompiler_state_push (state, get);
+  return TRUE;
+}
+
+static gboolean
+vivi_decompile_get_member (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *get, *from, *name;
+
+  name = vivi_decompiler_state_pop (state);
+  from = vivi_decompiler_state_pop (state);
+  get = vivi_code_get_new (from, name);
+  g_object_unref (from);
+  g_object_unref (name);
+  vivi_decompiler_state_push (state, get);
+  return TRUE;
+}
+
 static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_END] = vivi_decompile_end,
   [SWFDEC_AS_ACTION_NOT] = vivi_decompile_not,
-  [SWFDEC_AS_ACTION_TRACE] = vivi_decompile_trace,
   [SWFDEC_AS_ACTION_POP] = vivi_decompile_pop,
+  [SWFDEC_AS_ACTION_GET_VARIABLE] = vivi_decompile_get_variable,
+  [SWFDEC_AS_ACTION_TRACE] = vivi_decompile_trace,
+  [SWFDEC_AS_ACTION_GET_MEMBER] = vivi_decompile_get_member,
 
   [SWFDEC_AS_ACTION_PUSH] = vivi_decompile_push,
   [SWFDEC_AS_ACTION_CONSTANT_POOL] = vivi_decompile_constant_pool,

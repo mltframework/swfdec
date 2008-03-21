@@ -6,6 +6,7 @@ libvivified_compiler_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
 libvivified_compiler_la_LDFLAGS = $(SWFDEC_LIBS)
 
 libvivified_compiler_la_SOURCES = \
+	vivi_code_assignment.c \
 	vivi_code_block.c \
 	vivi_code_break.c \
 	vivi_code_comment.c \
@@ -31,6 +32,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_decompiler.c
 
 noinst_HEADERS = \
+	vivi_code_assignment.h \
 	vivi_code_block.h \
 	vivi_code_break.h \
 	vivi_code_comment.h \

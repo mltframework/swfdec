@@ -28,6 +28,7 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_decompiler.h"
+#include "vivi_code_assignment.h"
 #include "vivi_code_block.h"
 #include "vivi_code_break.h"
 #include "vivi_code_constant.h"
@@ -316,13 +317,49 @@ vivi_decompile_get_member (ViviDecompilerBlock *block, ViviDecompilerState *stat
   return TRUE;
 }
 
+static gboolean
+vivi_decompile_set_variable (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *name, *value;
+  ViviCodeStatement *assign;
+
+  value = vivi_decompiler_state_pop (state);
+  name = vivi_decompiler_state_pop (state);
+  assign = vivi_code_assignment_new (NULL, name, value);
+  g_object_unref (name);
+  g_object_unref (value);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), assign);
+  return TRUE;
+}
+
+static gboolean
+vivi_decompile_set_member (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *from, *name, *value;
+  ViviCodeStatement *assign;
+
+  value = vivi_decompiler_state_pop (state);
+  name = vivi_decompiler_state_pop (state);
+  from = vivi_decompiler_state_pop (state);
+  assign = vivi_code_assignment_new (from, name, value);
+  g_object_unref (from);
+  g_object_unref (name);
+  g_object_unref (value);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), assign);
+  return TRUE;
+}
+
 static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_END] = vivi_decompile_end,
   [SWFDEC_AS_ACTION_NOT] = vivi_decompile_not,
   [SWFDEC_AS_ACTION_POP] = vivi_decompile_pop,
   [SWFDEC_AS_ACTION_GET_VARIABLE] = vivi_decompile_get_variable,
+  [SWFDEC_AS_ACTION_SET_VARIABLE] = vivi_decompile_set_variable,
   [SWFDEC_AS_ACTION_TRACE] = vivi_decompile_trace,
   [SWFDEC_AS_ACTION_GET_MEMBER] = vivi_decompile_get_member,
+  [SWFDEC_AS_ACTION_SET_MEMBER] = vivi_decompile_set_member,
 
   [SWFDEC_AS_ACTION_PUSH] = vivi_decompile_push,
   [SWFDEC_AS_ACTION_CONSTANT_POOL] = vivi_decompile_constant_pool,

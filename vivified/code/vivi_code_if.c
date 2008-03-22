@@ -102,6 +102,7 @@ vivi_code_if_print (ViviCodeToken *token, ViviCodePrinter *printer)
     vivi_code_printer_push_indentation (printer);
     vivi_code_printer_new_line (printer, FALSE);
     vivi_code_printer_print (printer, ";");
+    vivi_code_printer_new_line (printer, FALSE);
     vivi_code_printer_pop_indentation (printer);
   }
   if (stmt->else_statement) {

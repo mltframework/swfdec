@@ -23,6 +23,9 @@ EXTRA_DIST = \
 	if-nested.as \
 	if-nested.swf \
 	if-nested.swf.expect \
+	loop-nested.as \
+	loop-nested.swf \
+	loop-nested.swf.expect \
 	simple-loop.as \
 	simple-loop.swf \
 	simple-loop.swf.expect

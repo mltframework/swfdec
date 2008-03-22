@@ -1,0 +1,9 @@
+/* version: 7 - size: 200x150 */
+
+/* Sprite0_Frame0 */
+{
+  while (5 < i)
+    while (j < 10 * -1)
+      trace ("Hello");
+}
+

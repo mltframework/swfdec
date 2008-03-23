@@ -272,16 +272,19 @@ vivi_decompiler_block_add_state_transition (ViviDecompilerBlock *from,
 
   for (i = 0; i < len; i++) {
     ViviCodeValue *name;
+    ViviCodeValue *val_from;
     ViviDecompilerUnknown *val_to = (ViviDecompilerUnknown *) vivi_decompiler_state_peek_nth (to->start, i);
 
     if (!VIVI_IS_DECOMPILER_UNKNOWN (val_to) ||
 	vivi_decompiler_unknown_get_value (val_to))
       continue;
 
-    name = vivi_code_constant_new_string (vivi_decompiler_unknown_get_name (val_to));
-    vivi_code_block_add_statement (block,
-	vivi_code_assignment_new (NULL, name,
-	  vivi_decompiler_state_peek_nth (from->end, i)));
+    val_from = vivi_decompiler_state_peek_nth (from->end, i);
+    if (val_from != VIVI_CODE_VALUE (val_to)) {
+      name = vivi_code_constant_new_string (vivi_decompiler_unknown_get_name (val_to));
+      vivi_code_block_add_statement (block,
+	  vivi_code_assignment_new (NULL, name, val_from));
+    }
   }
 }
 

@@ -44,7 +44,7 @@ struct _ViviDecompilerBlock
   guint			incoming;	/* number of incoming blocks */
   const guint8 *	startpc;	/* pointer to first command in block */
   /* set by parsing the block */
-  const guint8 *	endpc;		/* pointer to after last parsed command or NULL if not parsed yet */
+  ViviDecompilerState *	end;		/* pointer to after last parsed command or NULL if not parsed yet */
   ViviDecompilerBlock *	next;		/* block following this one or NULL if returning */
   ViviDecompilerBlock *	branch;		/* NULL or block branched to i if statement */
   ViviCodeValue *	branch_condition;/* NULL or value for deciding if a branch should be taken */

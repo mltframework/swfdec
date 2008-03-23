@@ -79,7 +79,10 @@ vivi_decompiler_block_reset (ViviDecompilerBlock *block)
   }
   vivi_decompiler_block_set_next (block, NULL);
   vivi_decompiler_block_set_branch (block, NULL, NULL);
-  block->endpc = NULL;
+  if (block->end) {
+    vivi_decompiler_state_free (block->end);
+    block->end = NULL;
+  }
 }
 
 ViviDecompilerBlock *
@@ -202,21 +205,27 @@ vivi_decompiler_block_get_start (ViviDecompilerBlock *block)
 gboolean
 vivi_decompiler_block_contains (ViviDecompilerBlock *block, const guint8 *pc)
 {
-  return pc >= block->startpc && pc < block->endpc;
+  g_return_val_if_fail (VIVI_IS_DECOMPILER_BLOCK (block), FALSE);
+  g_return_val_if_fail (pc != NULL, FALSE);
+
+  if (block->end == NULL)
+    return FALSE;
+
+  return pc >= block->startpc && pc < vivi_decompiler_state_get_pc (block->end);
 }
 
 void
 vivi_decompiler_block_finish (ViviDecompilerBlock *block, const ViviDecompilerState *state)
 {
-  g_return_if_fail (block->endpc == NULL);
+  g_return_if_fail (block->end == NULL);
 
-  block->endpc = vivi_decompiler_state_get_pc (state);
+  block->end = vivi_decompiler_state_copy (state);
 }
 
 gboolean
 vivi_decompiler_block_is_finished (ViviDecompilerBlock *block)
 {
-  return block->endpc != NULL;
+  return block->end != NULL;
 }
 
 const ViviDecompilerState *

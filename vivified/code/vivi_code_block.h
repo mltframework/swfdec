@@ -49,7 +49,7 @@ struct _ViviCodeBlockClass
 
 GType			vivi_code_block_get_type		(void);
 
-ViviCodeBlock *		vivi_code_block_new			(void);
+ViviCodeStatement *	vivi_code_block_new			(void);
 
 guint			vivi_code_block_get_n_statements	(ViviCodeBlock *	block);
 ViviCodeStatement *	vivi_code_block_get_statement		(ViviCodeBlock *	block,

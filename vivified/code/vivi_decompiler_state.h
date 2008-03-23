@@ -38,6 +38,10 @@ ViviDecompilerState *		vivi_decompiler_state_copy	(const ViviDecompilerState *	s
 void				vivi_decompiler_state_push	(ViviDecompilerState *		state,
 								 ViviCodeValue *		val);
 ViviCodeValue *			vivi_decompiler_state_pop	(ViviDecompilerState *		state);
+ViviCodeValue *			vivi_decompiler_state_peek_nth	(const ViviDecompilerState *	state,
+								 guint				i);
+guint				vivi_decompiler_state_get_stack_depth
+								(const ViviDecompilerState *  	state);
 ViviCodeValue *			vivi_decompiler_state_get_register (const ViviDecompilerState *	state,
 								 guint				reg);
 
@@ -51,6 +55,13 @@ void				vivi_decompiler_state_set_constant_pool
 								 SwfdecConstantPool *		pool);
 guint				vivi_decompiler_state_get_version
 								(const ViviDecompilerState *  	state);
+
+gboolean			vivi_decompiler_state_is_compatible	
+								(const ViviDecompilerState *	a,
+								 const ViviDecompilerState *	b);
+gboolean			vivi_decompiler_state_is_equal	(const ViviDecompilerState *	a,
+								 const ViviDecompilerState *	b);
+
 
 
 G_END_DECLS

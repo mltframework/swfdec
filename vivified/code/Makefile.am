@@ -31,6 +31,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_decompiler_block.c \
 	vivi_decompiler_duplicate.c \
 	vivi_decompiler_state.c \
+	vivi_decompiler_unknown.c \
 	vivi_decompiler.c
 
 noinst_HEADERS = \
@@ -60,6 +61,7 @@ noinst_HEADERS = \
 	vivi_decompiler_block.h \
 	vivi_decompiler_duplicate.h \
 	vivi_decompiler_state.h
+	vivi_decompiler_unknown.h \
 	vivified-compiler.h
 
 

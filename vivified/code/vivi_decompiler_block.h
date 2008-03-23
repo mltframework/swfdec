@@ -58,7 +58,8 @@ struct _ViviDecompilerBlockClass
 GType			vivi_decompiler_block_get_type   	(void);
 
 ViviDecompilerBlock *	vivi_decompiler_block_new		(ViviDecompilerState *		state);
-void			vivi_decompiler_block_reset		(ViviDecompilerBlock *		block);
+void			vivi_decompiler_block_reset		(ViviDecompilerBlock *		block,
+								 gboolean			generalize_start_state);
 
 ViviCodeStatement *	vivi_decompiler_block_get_label		(ViviDecompilerBlock *  	block);
 void			vivi_decompiler_block_force_label	(ViviDecompilerBlock *		block);
@@ -87,6 +88,10 @@ void			vivi_decompiler_block_add_error		(ViviDecompilerBlock *		block,
 
 void			vivi_decompiler_block_add_to_block	(ViviDecompilerBlock *		block,
 								 ViviCodeBlock *		target);
+void			vivi_decompiler_block_add_state_transition 
+								(ViviDecompilerBlock *		from,
+								 ViviDecompilerBlock *		to,
+								 ViviCodeBlock *		block);
 
 
 G_END_DECLS

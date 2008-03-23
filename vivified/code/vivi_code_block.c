@@ -109,7 +109,7 @@ vivi_code_block_init (ViviCodeBlock *block)
   block->statements = g_ptr_array_new ();
 }
 
-ViviCodeBlock *
+ViviCodeStatement *
 vivi_code_block_new (void)
 {
   return g_object_new (VIVI_TYPE_CODE_BLOCK, NULL);

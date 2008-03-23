@@ -25,10 +25,14 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_decompiler_block.h"
+#include "vivi_code_assignment.h"
+#include "vivi_code_block.h"
 #include "vivi_code_comment.h"
+#include "vivi_code_constant.h"
 #include "vivi_code_goto.h"
 #include "vivi_code_if.h"
 #include "vivi_code_label.h"
+#include "vivi_decompiler_unknown.h"
 
 G_DEFINE_TYPE (ViviDecompilerBlock, vivi_decompiler_block, VIVI_TYPE_CODE_BLOCK)
 
@@ -38,7 +42,7 @@ vivi_decompiler_block_dispose (GObject *object)
   ViviDecompilerBlock *block = VIVI_DECOMPILER_BLOCK (object);
 
   g_assert (block->incoming == 0);
-  vivi_decompiler_block_reset (block);
+  vivi_decompiler_block_reset (block, FALSE);
   vivi_decompiler_state_free (block->start);
 
   G_OBJECT_CLASS (vivi_decompiler_block_parent_class)->dispose (object);
@@ -67,7 +71,7 @@ vivi_decompiler_block_init (ViviDecompilerBlock *block)
 }
 
 void
-vivi_decompiler_block_reset (ViviDecompilerBlock *block)
+vivi_decompiler_block_reset (ViviDecompilerBlock *block, gboolean generalize_start_state)
 {
   ViviCodeBlock *code_block = VIVI_CODE_BLOCK (block);
   guint i, len;
@@ -82,6 +86,18 @@ vivi_decompiler_block_reset (ViviDecompilerBlock *block)
   if (block->end) {
     vivi_decompiler_state_free (block->end);
     block->end = NULL;
+  }
+  if (generalize_start_state) {
+    len = vivi_decompiler_state_get_stack_depth (block->start);
+    for (i = 0; i < len; i++) {
+      g_object_unref (vivi_decompiler_state_pop (block->start));
+    }
+    for (i = 0; i < len; i++) {
+      char *s = g_strdup_printf ("$stack%u", len - i);
+      vivi_decompiler_state_push (block->start,
+	  vivi_decompiler_unknown_new (s));
+      g_free (s);
+    }
   }
 }
 
@@ -217,9 +233,15 @@ vivi_decompiler_block_contains (ViviDecompilerBlock *block, const guint8 *pc)
 void
 vivi_decompiler_block_finish (ViviDecompilerBlock *block, const ViviDecompilerState *state)
 {
-  g_return_if_fail (block->end == NULL);
+  ViviDecompilerState *new;
 
-  block->end = vivi_decompiler_state_copy (state);
+  g_return_if_fail (VIVI_IS_DECOMPILER_BLOCK (block));
+  g_return_if_fail (state != NULL);
+
+  new = vivi_decompiler_state_copy (state);
+  if (block->end)
+    vivi_decompiler_state_free (block->end);
+  block->end = new;
 }
 
 gboolean
@@ -241,6 +263,29 @@ vivi_decompiler_block_get_n_incoming (ViviDecompilerBlock *block)
 }
 
 void
+vivi_decompiler_block_add_state_transition (ViviDecompilerBlock *from,
+    ViviDecompilerBlock *to, ViviCodeBlock *block)
+{
+  guint i, len;
+  
+  len = vivi_decompiler_state_get_stack_depth (to->start);
+
+  for (i = 0; i < len; i++) {
+    ViviCodeValue *name;
+    ViviDecompilerUnknown *val_to = (ViviDecompilerUnknown *) vivi_decompiler_state_peek_nth (to->start, i);
+
+    if (!VIVI_IS_DECOMPILER_UNKNOWN (val_to) ||
+	vivi_decompiler_unknown_get_value (val_to))
+      continue;
+
+    name = vivi_code_constant_new_string (vivi_decompiler_unknown_get_name (val_to));
+    vivi_code_block_add_statement (block,
+	vivi_code_assignment_new (NULL, name,
+	  vivi_decompiler_state_peek_nth (from->end, i)));
+  }
+}
+
+void
 vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
     ViviCodeBlock *target)
 {
@@ -255,9 +300,19 @@ vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
 	vivi_code_block_get_statement (VIVI_CODE_BLOCK (block), i)));
   }
   if (block->branch) {
+    ViviCodeStatement *b;
     stmt = vivi_code_if_new (block->branch_condition);
     vivi_decompiler_block_force_label (block->branch);
+
+    b = vivi_code_block_new ();
+    vivi_decompiler_block_add_state_transition (block, block->branch, VIVI_CODE_BLOCK (b));
     stmt2 = vivi_code_goto_new (VIVI_CODE_LABEL (vivi_decompiler_block_get_label (block->branch)));
+    vivi_code_block_add_statement (VIVI_CODE_BLOCK (b), stmt2);
+    g_object_unref (stmt2);
+    stmt2 = vivi_code_statement_optimize (b);
+    g_assert (stmt2);
+    g_object_unref (b);
+    
     vivi_code_if_set_if (VIVI_CODE_IF (stmt), stmt2);
     g_object_unref (stmt2);
     vivi_code_block_add_statement (target, stmt);
@@ -265,6 +320,7 @@ vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
   }
   if (block->next) {
     vivi_decompiler_block_force_label (block->next);
+    vivi_decompiler_block_add_state_transition (block, block->next, target);
     stmt = vivi_code_goto_new (VIVI_CODE_LABEL (vivi_decompiler_block_get_label (block->next)));
     vivi_code_block_add_statement (target, stmt);
     g_object_unref (stmt);

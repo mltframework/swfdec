@@ -25,6 +25,7 @@
 
 #include "vivi_decompiler_state.h"
 #include "vivi_code_constant.h"
+#include "vivi_decompiler_unknown.h"
 
 struct _ViviDecompilerState {
   SwfdecScript *	script;
@@ -83,6 +84,22 @@ vivi_decompiler_state_pop (ViviDecompilerState *state)
     state->stack = g_slist_remove (state->stack, pop);
     return pop;
   }
+}
+
+guint
+vivi_decompiler_state_get_stack_depth (const ViviDecompilerState *state)
+{
+  g_return_val_if_fail (state != NULL, 0);
+
+  return g_slist_length (state->stack);
+}
+
+ViviCodeValue *
+vivi_decompiler_state_peek_nth (const ViviDecompilerState *state, guint i)
+{
+  g_return_val_if_fail (state != NULL, NULL);
+
+  return g_slist_nth_data (state->stack, i);
 }
 
 ViviDecompilerState *
@@ -144,5 +161,64 @@ guint
 vivi_decompiler_state_get_version (const ViviDecompilerState *state)
 {
   return swfdec_script_get_version (state->script);
+}
+
+gboolean
+vivi_decompiler_state_is_compatible (const ViviDecompilerState *a, const ViviDecompilerState *b)
+{
+  g_return_val_if_fail (a != NULL, FALSE);
+  g_return_val_if_fail (b != NULL, FALSE);
+
+  if (a->n_registers != b->n_registers)
+    return FALSE;
+  /* FIXME: check registers */
+  if (a->pool || b->pool) {
+    guint i, len;
+
+    if (a->pool == NULL || b->pool == NULL)
+      return FALSE;
+    len = swfdec_constant_pool_size (a->pool);
+    if (len != swfdec_constant_pool_size (b->pool))
+      return FALSE;
+    for (i = 0; i < len; i++) {
+      if (!g_str_equal (swfdec_constant_pool_get (a->pool, i),
+	    swfdec_constant_pool_get (b->pool, i)))
+	return FALSE;
+    }
+  }
+  /* FIXME: is this necessary? */
+  if (g_slist_length (a->stack) != g_slist_length (b->stack))
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+vivi_decompiler_state_is_equal (const ViviDecompilerState *a, const ViviDecompilerState *b)
+{
+  ViviCodeValue *vala, *valb;
+  GSList *walka, *walkb;
+
+  g_return_val_if_fail (a != NULL, FALSE);
+  g_return_val_if_fail (b != NULL, FALSE);
+
+  if (!vivi_decompiler_state_is_compatible (a, b))
+    return FALSE;
+
+  for (walka = a->stack, walkb = b->stack; walka && walkb; walka = walka->next, walkb = walkb->next) {
+    vala = walka->data;
+    valb = walkb->data;
+    
+    g_printerr ("comparison!\n"); 
+    if (VIVI_IS_DECOMPILER_UNKNOWN (vala) &&
+	vivi_decompiler_unknown_get_value (VIVI_DECOMPILER_UNKNOWN (vala)) == NULL)
+      continue;
+    if (VIVI_IS_DECOMPILER_UNKNOWN (valb) &&
+	vivi_decompiler_unknown_get_value (VIVI_DECOMPILER_UNKNOWN (valb)) == NULL)
+      continue;
+    return FALSE;
+  }
+
+  return TRUE;
 }
 

@@ -275,6 +275,10 @@ vivi_decompiler_block_add_state_transition (ViviDecompilerBlock *from,
   guint i, len;
   
   len = vivi_decompiler_state_get_stack_depth (to->start);
+  if (from->end == NULL) {
+    g_printerr ("broken source - no state transition possible\n");
+    return;
+  }
 
   for (i = 0; i < len; i++) {
     ViviCodeValue *name;
@@ -286,6 +290,10 @@ vivi_decompiler_block_add_state_transition (ViviDecompilerBlock *from,
       continue;
 
     val_from = vivi_decompiler_state_peek_nth (from->end, i);
+    if (val_from == NULL) {
+      g_printerr ("incompatible states - aborting transition\n");
+      return;
+    }
     if (val_from != VIVI_CODE_VALUE (val_to)) {
       name = vivi_code_constant_new_string (vivi_decompiler_unknown_get_name (val_to));
       vivi_code_block_add_statement (block,

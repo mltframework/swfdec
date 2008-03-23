@@ -815,12 +815,12 @@ vivi_decompiler_merge_if (GList **list)
       vivi_decompiler_block_set_next (if_block, NULL);
       vivi_decompiler_block_set_branch (if_block, NULL, NULL);
       vivi_decompiler_block_add_to_block (if_block, b);
-      vivi_decompiler_block_add_state_transition (if_block, 
-	  vivi_decompiler_block_get_next (block), b);
+      if (next)
+	vivi_decompiler_block_add_state_transition (if_block, next, b);
       *list = vivi_decompiler_purge_block (*list, if_block);
     } else {
-      vivi_decompiler_block_add_state_transition (block, 
-	  vivi_decompiler_block_get_next (block), b);
+      if (next)
+	vivi_decompiler_block_add_state_transition (block, next, b);
     }
     stmt = vivi_code_statement_optimize (VIVI_CODE_STATEMENT (b));
     g_object_unref (b);
@@ -834,12 +834,12 @@ vivi_decompiler_merge_if (GList **list)
       vivi_decompiler_block_set_next (else_block, NULL);
       vivi_decompiler_block_set_branch (else_block, NULL, NULL);
       vivi_decompiler_block_add_to_block (else_block, b);
-      vivi_decompiler_block_add_state_transition (else_block, 
-	  vivi_decompiler_block_get_next (block), b);
+      if (next)
+	vivi_decompiler_block_add_state_transition (else_block, next, b);
       *list = vivi_decompiler_purge_block (*list, else_block);
     } else {
-      vivi_decompiler_block_add_state_transition (block, 
-	  vivi_decompiler_block_get_next (block), b);
+      if (next)
+	vivi_decompiler_block_add_state_transition (block, next, b);
     }
     stmt = vivi_code_statement_optimize (VIVI_CODE_STATEMENT (b));
     g_object_unref (b);
@@ -854,7 +854,8 @@ vivi_decompiler_merge_if (GList **list)
       vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), stmt);
       g_object_unref (stmt);
     }
-    vivi_decompiler_block_finish (block, vivi_decompiler_block_get_start_state (next));
+    if (next)
+      vivi_decompiler_block_finish (block, vivi_decompiler_block_get_start_state (next));
     result = TRUE;
   }
 

@@ -209,7 +209,6 @@ vivi_decompiler_state_is_equal (const ViviDecompilerState *a, const ViviDecompil
     vala = walka->data;
     valb = walkb->data;
     
-    g_printerr ("comparison!\n"); 
     if (VIVI_IS_DECOMPILER_UNKNOWN (vala) &&
 	vivi_decompiler_unknown_get_value (VIVI_DECOMPILER_UNKNOWN (vala)) == NULL)
       continue;

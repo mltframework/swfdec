@@ -221,13 +221,28 @@ vivi_decompiler_block_get_start (ViviDecompilerBlock *block)
 gboolean
 vivi_decompiler_block_contains (ViviDecompilerBlock *block, const guint8 *pc)
 {
+  const guint8 *check;
+  guint code;
+
   g_return_val_if_fail (VIVI_IS_DECOMPILER_BLOCK (block), FALSE);
   g_return_val_if_fail (pc != NULL, FALSE);
 
+  if (pc == block->startpc)
+    return TRUE;
   if (block->end == NULL)
     return FALSE;
 
-  return pc >= block->startpc && pc < vivi_decompiler_state_get_pc (block->end);
+  if (pc >= vivi_decompiler_state_get_pc (block->end))
+    return FALSE;
+  for (check = block->startpc; check < pc; ) {
+    code = *check;
+    if (code & 0x80) {
+      check += (check[1] | check[2] << 8) + 3;
+    } else {
+      check++;
+    }
+  }
+  return check == pc;
 }
 
 void

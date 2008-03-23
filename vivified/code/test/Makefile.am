@@ -14,9 +14,12 @@ check-local: ../vivi-decompile
 	fi
 
 EXTRA_DIST = \
+	and-or.as \
+	and-or.swf \
+	and-or.swf.expect \
 	hello-world.as \
 	hello-world.swf \
-	hello-world.swf.trace \
+	hello-world.swf.expect \
 	if.as \
 	if.swf \
 	if.swf.expect \

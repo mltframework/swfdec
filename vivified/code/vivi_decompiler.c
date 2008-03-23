@@ -63,7 +63,8 @@ DUMP_BLOCKS (ViviDecompiler *dec)
   g_print ("dumping blocks:\n");
   for (walk = dec->blocks; walk; walk = walk->next) {
     ViviDecompilerBlock *block = walk->data;
-    g_print ("  %p -> %p\n", vivi_decompiler_block_get_start (block), block->endpc);
+    g_printerr ("  %p -> %p\n", vivi_decompiler_block_get_start (block), 
+	block->end ? vivi_decompiler_state_get_pc (block->end) : NULL);
   }
 }
 #else
@@ -77,8 +78,9 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
   GList *walk;
   const guint8 *pc, *block_start;
 
-  DUMP_BLOCKS (dec);
   pc = vivi_decompiler_state_get_pc (state);
+  DEBUG ("pc: %p\n", pc);
+  DUMP_BLOCKS (dec);
   for (walk = dec->blocks; walk; walk = walk->next) {
     block = walk->data;
     block_start = vivi_decompiler_block_get_start (block);
@@ -1069,6 +1071,7 @@ vivi_decompiler_merge_blocks (GList *blocks, const guint8 *startpc)
 
   do {
     restart = FALSE;
+    DEBUG ("merging: %u blocks left\n", g_list_length (blocks));
 
     restart |= vivi_decompiler_merge_lines (&blocks);
     if (vivi_decompiler_merge_andor (&blocks)) {

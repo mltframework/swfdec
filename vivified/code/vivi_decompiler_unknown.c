@@ -95,14 +95,17 @@ vivi_decompiler_unknown_init (ViviDecompilerUnknown *unknown)
 }
 
 ViviCodeValue *
-vivi_decompiler_unknown_new (const char *name)
+vivi_decompiler_unknown_new (ViviDecompilerBlock *block, const char *name)
 {
   ViviDecompilerUnknown *unknown;
 
+  g_return_val_if_fail (VIVI_IS_DECOMPILER_BLOCK (block), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
   unknown = g_object_new (VIVI_TYPE_DECOMPILER_UNKNOWN, NULL);
   unknown->name = g_strdup (name);
+  /* NB: can't ref the block due to cycles */
+  unknown->block = block;
 
   return VIVI_CODE_VALUE (unknown);
 }
@@ -136,5 +139,13 @@ vivi_decompiler_unknown_get_name (ViviDecompilerUnknown *unknown)
   g_return_val_if_fail (VIVI_IS_DECOMPILER_UNKNOWN (unknown), NULL);
 
   return unknown->name;
+}
+
+ViviDecompilerBlock *
+vivi_decompiler_unknown_get_block (ViviDecompilerUnknown *unknown)
+{
+  g_return_val_if_fail (VIVI_IS_DECOMPILER_UNKNOWN (unknown), NULL);
+
+  return unknown->block;
 }
 

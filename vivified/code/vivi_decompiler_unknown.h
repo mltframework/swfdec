@@ -21,6 +21,7 @@
 #define _VIVI_DECOMPILER_UNKNOWN_H_
 
 #include <vivified/code/vivi_code_value.h>
+#include <vivified/code/vivi_decompiler_block.h>
 
 G_BEGIN_DECLS
 
@@ -41,6 +42,7 @@ struct _ViviDecompilerUnknown
 
   char *		name;
   ViviCodeValue *	value;
+  ViviDecompilerBlock *	block;
 };
 
 struct _ViviDecompilerUnknownClass
@@ -50,12 +52,14 @@ struct _ViviDecompilerUnknownClass
 
 GType			vivi_decompiler_unknown_get_type   	(void);
 
-ViviCodeValue *		vivi_decompiler_unknown_new		(const char *		name);
+ViviCodeValue *		vivi_decompiler_unknown_new		(ViviDecompilerBlock *	block,
+								 const char *		name);
 
 void			vivi_decompiler_unknown_set_value	(ViviDecompilerUnknown *unknown,
 								 ViviCodeValue *	value);
 ViviCodeValue *		vivi_decompiler_unknown_get_value	(ViviDecompilerUnknown *unknown);
 const char *		vivi_decompiler_unknown_get_name	(ViviDecompilerUnknown *unknown);
+ViviDecompilerBlock *	vivi_decompiler_unknown_get_block	(ViviDecompilerUnknown *unknown);
 
 
 G_END_DECLS

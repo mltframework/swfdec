@@ -193,31 +193,3 @@ vivi_decompiler_state_is_compatible (const ViviDecompilerState *a, const ViviDec
   return TRUE;
 }
 
-gboolean
-vivi_decompiler_state_is_equal (const ViviDecompilerState *a, const ViviDecompilerState *b)
-{
-  ViviCodeValue *vala, *valb;
-  GSList *walka, *walkb;
-
-  g_return_val_if_fail (a != NULL, FALSE);
-  g_return_val_if_fail (b != NULL, FALSE);
-
-  if (!vivi_decompiler_state_is_compatible (a, b))
-    return FALSE;
-
-  for (walka = a->stack, walkb = b->stack; walka && walkb; walka = walka->next, walkb = walkb->next) {
-    vala = walka->data;
-    valb = walkb->data;
-    
-    if (VIVI_IS_DECOMPILER_UNKNOWN (vala) &&
-	vivi_decompiler_unknown_get_value (VIVI_DECOMPILER_UNKNOWN (vala)) == NULL)
-      continue;
-    if (VIVI_IS_DECOMPILER_UNKNOWN (valb) &&
-	vivi_decompiler_unknown_get_value (VIVI_DECOMPILER_UNKNOWN (valb)) == NULL)
-      continue;
-    return FALSE;
-  }
-
-  return TRUE;
-}
-

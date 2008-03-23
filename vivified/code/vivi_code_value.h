@@ -78,6 +78,8 @@ struct _ViviCodeValueClass
 GType			vivi_code_value_get_type   	(void);
 
 gboolean		vivi_code_value_is_constant	(ViviCodeValue *	value);
+gboolean		vivi_code_value_is_equal	(ViviCodeValue *	a,
+							 ViviCodeValue *	b);
 
 void			vivi_code_value_set_precedence	(ViviCodeValue *	value,
 							 ViviPrecedence		precedence);

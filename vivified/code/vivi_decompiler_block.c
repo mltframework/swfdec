@@ -95,7 +95,7 @@ vivi_decompiler_block_reset (ViviDecompilerBlock *block, gboolean generalize_sta
     for (i = 0; i < len; i++) {
       char *s = g_strdup_printf ("$stack%u", len - i);
       vivi_decompiler_state_push (block->start,
-	  vivi_decompiler_unknown_new (s));
+	  vivi_decompiler_unknown_new (block, s));
       g_free (s);
     }
   }
@@ -334,5 +334,26 @@ vivi_decompiler_block_add_to_block (ViviDecompilerBlock *block,
     vivi_code_block_add_statement (target, stmt);
     g_object_unref (stmt);
   }
+}
+
+gboolean
+vivi_decompiler_block_is_compatible (ViviDecompilerBlock *block, const ViviDecompilerState *state)
+{
+  guint i, n;
+
+  g_return_val_if_fail (VIVI_IS_DECOMPILER_BLOCK (block), FALSE);
+  g_return_val_if_fail (state != NULL, FALSE);
+
+  n = vivi_decompiler_state_get_stack_depth (state);
+  for (i = 0; i < n; i++) {
+    ViviCodeValue *val = vivi_decompiler_state_peek_nth (block->start, i);
+
+    if (VIVI_IS_DECOMPILER_UNKNOWN (val) &&
+	vivi_decompiler_unknown_get_block (VIVI_DECOMPILER_UNKNOWN (val)) == block)
+      continue;
+    if (!vivi_code_value_is_equal (vivi_decompiler_state_peek_nth (state, i), val))
+      return FALSE;
+  }
+  return TRUE;
 }
 

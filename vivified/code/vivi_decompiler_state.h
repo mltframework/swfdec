@@ -21,6 +21,7 @@
 #define _VIVI_DECOMPILER_STATE_H_
 
 #include <swfdec/swfdec.h>
+#include <swfdec/swfdec_script_internal.h>
 #include <vivified/code/vivi_code_value.h>
 
 G_BEGIN_DECLS
@@ -58,8 +59,6 @@ guint				vivi_decompiler_state_get_version
 
 gboolean			vivi_decompiler_state_is_compatible	
 								(const ViviDecompilerState *	a,
-								 const ViviDecompilerState *	b);
-gboolean			vivi_decompiler_state_is_equal	(const ViviDecompilerState *	a,
 								 const ViviDecompilerState *	b);
 
 

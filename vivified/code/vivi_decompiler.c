@@ -48,6 +48,12 @@
 #include "vivi_decompiler_state.h"
 #include "vivi_decompiler_unknown.h"
 
+#if 1
+#define DEBUG g_printerr
+#else
+#define DEBUG(...)
+#endif
+
 #if 0
 static G_GNUC_UNUSED void
 DUMP_BLOCKS (ViviDecompiler *dec)
@@ -92,7 +98,7 @@ vivi_decompiler_push_block_for_state (ViviDecompiler *dec, ViviDecompilerState *
 	vivi_decompiler_state_free (state);
 	return block;
       }
-      if (!vivi_decompiler_state_is_equal (block_state, state))
+      if (!vivi_decompiler_block_is_compatible (block, state))
 	vivi_decompiler_block_reset (block, TRUE);
       vivi_decompiler_state_free (state);
       return block;
@@ -731,6 +737,7 @@ vivi_decompiler_merge_andor (GList **list)
       continue;
 
     /* setting code starts here */
+    DEBUG ("merging %s code for %p\n", type, vivi_decompiler_block_get_start (andor));
 
     /* update our finish state */
     value = vivi_code_binary_new_name (value, value2, type);
@@ -744,8 +751,12 @@ vivi_decompiler_merge_andor (GList **list)
     /* possibly update the start state of the next block */
     if (vivi_decompiler_block_get_n_incoming (next) == 1) {
       value2 = vivi_decompiler_state_peek_nth (vivi_decompiler_block_get_start_state (next), 0);
-      if (VIVI_IS_DECOMPILER_UNKNOWN (value2))
+      DEBUG ("resolving unknown (1)\n");
+      if (VIVI_IS_DECOMPILER_UNKNOWN (value2) &&
+	  vivi_decompiler_unknown_get_block (VIVI_DECOMPILER_UNKNOWN (value2)) == next) {
+	DEBUG ("resolving unknown (2)\n");
 	vivi_decompiler_unknown_set_value (VIVI_DECOMPILER_UNKNOWN (value2), value);
+      }
     }
     return TRUE;
   }

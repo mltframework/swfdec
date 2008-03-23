@@ -92,3 +92,12 @@ vivi_code_value_optimize (ViviCodeValue *value, SwfdecAsValueType hint)
   }
 }
 
+gboolean
+vivi_code_value_is_equal (ViviCodeValue *a, ViviCodeValue *b)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (a), FALSE);
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (b), FALSE);
+
+  return a == b;
+}
+

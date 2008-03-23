@@ -73,6 +73,8 @@ gboolean		vivi_decompiler_block_contains		(ViviDecompilerBlock *  	block,
 void			vivi_decompiler_block_finish		(ViviDecompilerBlock *		block,
 								 const ViviDecompilerState *	state);
 gboolean		vivi_decompiler_block_is_finished	(ViviDecompilerBlock *		block);
+gboolean		vivi_decompiler_block_is_compatible	(ViviDecompilerBlock *		block,
+								 const ViviDecompilerState *	state);
 
 guint			vivi_decompiler_block_get_n_incoming	(ViviDecompilerBlock *		block);
 void			vivi_decompiler_block_set_next		(ViviDecompilerBlock *		block,

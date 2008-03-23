@@ -48,7 +48,7 @@
 #include "vivi_decompiler_state.h"
 #include "vivi_decompiler_unknown.h"
 
-#if 1
+#if 0
 #define DEBUG g_printerr
 #else
 #define DEBUG(...)
@@ -751,10 +751,8 @@ vivi_decompiler_merge_andor (GList **list)
     /* possibly update the start state of the next block */
     if (vivi_decompiler_block_get_n_incoming (next) == 1) {
       value2 = vivi_decompiler_state_peek_nth (vivi_decompiler_block_get_start_state (next), 0);
-      DEBUG ("resolving unknown (1)\n");
       if (VIVI_IS_DECOMPILER_UNKNOWN (value2) &&
 	  vivi_decompiler_unknown_get_block (VIVI_DECOMPILER_UNKNOWN (value2)) == next) {
-	DEBUG ("resolving unknown (2)\n");
 	vivi_decompiler_unknown_set_value (VIVI_DECOMPILER_UNKNOWN (value2), value);
       }
     }

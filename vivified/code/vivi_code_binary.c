@@ -52,7 +52,9 @@ static struct {
   { ">>>",	SWFDEC_AS_ACTION_BIT_URSHIFT,	VIVI_PRECEDENCE_SHIFT },
   { "===",	SWFDEC_AS_ACTION_STRICT_EQUALS,	VIVI_PRECEDENCE_EQUALITY },
   { ">",	SWFDEC_AS_ACTION_GREATER,	VIVI_PRECEDENCE_RELATIONAL },
-  { "gt",	SWFDEC_AS_ACTION_STRING_GREATER,VIVI_PRECEDENCE_RELATIONAL }
+  { "gt",	SWFDEC_AS_ACTION_STRING_GREATER,VIVI_PRECEDENCE_RELATIONAL },
+  { "&&",	0,				VIVI_PRECEDENCE_AND },
+  { "||",	0,				VIVI_PRECEDENCE_OR }
 };
 
 G_DEFINE_TYPE (ViviCodeBinary, vivi_code_binary, VIVI_TYPE_CODE_VALUE)
@@ -120,6 +122,32 @@ vivi_code_binary_new_bytecode (ViviCodeValue *left, ViviCodeValue *right, guint 
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (right), NULL);
   for (id = 0; id < G_N_ELEMENTS (operation_table); id++) {
     if (operation_table[id].bytecode == code)
+      break;
+  }
+  g_return_val_if_fail (id < G_N_ELEMENTS (operation_table), NULL);
+
+  binary = g_object_new (VIVI_TYPE_CODE_BINARY, NULL);
+  binary->left = g_object_ref (left);
+  binary->right = g_object_ref (right);
+  binary->operation_index = id;
+
+  vivi_code_value_set_precedence (VIVI_CODE_VALUE (binary), 
+      operation_table[id].precedence);
+
+  return VIVI_CODE_VALUE (binary);
+}
+
+ViviCodeValue *
+vivi_code_binary_new_name (ViviCodeValue *left, ViviCodeValue *right, const char *name)
+{
+  ViviCodeBinary *binary;
+  guint id;
+
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (left), NULL);
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (right), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+  for (id = 0; id < G_N_ELEMENTS (operation_table); id++) {
+    if (g_str_equal (operation_table[id].operation, name))
       break;
   }
   g_return_val_if_fail (id < G_N_ELEMENTS (operation_table), NULL);

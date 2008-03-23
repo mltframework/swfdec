@@ -75,3 +75,11 @@ vivi_code_value_statement_new (ViviCodeValue *value)
   return VIVI_CODE_STATEMENT (stmt);
 }
 
+ViviCodeValue *
+vivi_code_value_statement_get_value (ViviCodeValueStatement *stmt)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE_STATEMENT (stmt), NULL);
+
+  return stmt->value;
+}
+

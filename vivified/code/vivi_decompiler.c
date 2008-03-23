@@ -46,6 +46,7 @@
 #include "vivi_decompiler_block.h"
 #include "vivi_decompiler_duplicate.h"
 #include "vivi_decompiler_state.h"
+#include "vivi_decompiler_unknown.h"
 
 #if 0
 static G_GNUC_UNUSED void
@@ -356,7 +357,6 @@ vivi_decompile_duplicate (ViviDecompilerBlock *block, ViviDecompilerState *state
   value = vivi_decompiler_state_pop (state);
   vivi_decompiler_state_push (state, value);
   dupl = vivi_decompiler_duplicate_new (value);
-  g_object_unref (value);
   vivi_decompiler_state_push (state, dupl);
   return TRUE;
 }
@@ -662,7 +662,97 @@ vivi_decompiler_merge_lines (GList **list)
   return result;
 }
 
-/*     CONDi
+/*      DUP
+ *     (NOT)
+ *     BLOCK
+ *    /   |
+ *[ANDOR] |
+ *    \   |
+ *     NEXT
+ */
+static gboolean
+vivi_decompiler_merge_andor (GList **list)
+{
+  ViviDecompilerBlock *block, *andor, *next;
+  gboolean result;
+  const char *type;
+  ViviCodeValue *value, *value2;
+  ViviDecompilerState *state;
+
+  GList *walk;
+  result = FALSE;
+  for (walk = *list; walk; walk = walk->next) {
+    block = walk->data;
+
+    next = vivi_decompiler_block_get_branch (block);
+    andor = vivi_decompiler_block_get_next (block);
+
+    /* not an if block */
+    if (andor == NULL)
+      continue;
+
+    /* not an && or || block */
+    if (vivi_decompiler_block_get_n_incoming (andor) > 1 ||
+	next != vivi_decompiler_block_get_next (andor) ||
+	vivi_decompiler_block_get_branch (andor) != NULL)
+      continue;
+    /* extract the value */
+    value = vivi_decompiler_block_get_branch_condition (block);
+    if (VIVI_IS_CODE_UNARY (value)) {
+      value = vivi_code_unary_get_value (VIVI_CODE_UNARY (value));
+      type = "&&";
+    } else {
+      type = "||";
+    }
+    if (!VIVI_IS_DECOMPILER_DUPLICATE (value))
+      continue;
+    value = vivi_decompiler_duplicate_get_value (VIVI_DECOMPILER_DUPLICATE (value));
+    /* check the extracted value is the only statement in the and/or block */
+    switch (vivi_code_block_get_n_statements (VIVI_CODE_BLOCK (andor))) {
+      case 0:
+	break;
+      case 1:
+	{
+	  ViviCodeStatement *stmt = vivi_code_block_get_statement (VIVI_CODE_BLOCK (andor), 0);
+	  if (!VIVI_IS_CODE_VALUE_STATEMENT (stmt))
+	    continue;
+	  if (value != vivi_code_value_statement_get_value (VIVI_CODE_VALUE_STATEMENT (stmt)))
+	    continue;
+	}
+	break;
+      default:
+	continue;
+    }
+    value2 = vivi_decompiler_state_peek_nth (vivi_decompiler_block_get_end_state (block), 0);
+    if (value != value2)
+      continue;
+    value2 = vivi_decompiler_state_peek_nth (vivi_decompiler_block_get_end_state (andor), 0);
+    if (value2 == NULL)
+      continue;
+
+    /* setting code starts here */
+
+    /* update our finish state */
+    value = vivi_code_binary_new_name (value, value2, type);
+    state = (ViviDecompilerState *) vivi_decompiler_block_get_end_state (block);
+    g_object_unref (vivi_decompiler_state_pop (state));
+    vivi_decompiler_state_push (state, value);
+    /* get rid of the and/or block */
+    vivi_decompiler_block_set_branch (block, NULL, NULL);
+    vivi_decompiler_block_set_next (block, next);
+    *list = vivi_decompiler_purge_block (*list, andor);
+    /* possibly update the start state of the next block */
+    if (vivi_decompiler_block_get_n_incoming (next) == 1) {
+      value2 = vivi_decompiler_state_peek_nth (vivi_decompiler_block_get_start_state (next), 0);
+      if (VIVI_IS_DECOMPILER_UNKNOWN (value2))
+	vivi_decompiler_unknown_set_value (VIVI_DECOMPILER_UNKNOWN (value2), value);
+    }
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/*     COND
  *    /    \
  *  [IF] [ELSE]     ==>   BLOCK
  *    \    /
@@ -971,6 +1061,10 @@ vivi_decompiler_merge_blocks (GList *blocks, const guint8 *startpc)
     restart = FALSE;
 
     restart |= vivi_decompiler_merge_lines (&blocks);
+    if (vivi_decompiler_merge_andor (&blocks)) {
+      restart = TRUE;
+      continue;
+    }
     restart |= vivi_decompiler_merge_if (&blocks);
     restart |= vivi_decompiler_merge_loops (&blocks);
   } while (restart);

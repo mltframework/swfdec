@@ -51,6 +51,8 @@ GType			vivi_decompiler_duplicate_get_type   	(void);
 
 ViviCodeValue *		vivi_decompiler_duplicate_new		(ViviCodeValue *	value);
 
+ViviCodeValue *		vivi_decompiler_duplicate_get_value	(ViviDecompilerDuplicate *dupl);
+
 
 G_END_DECLS
 #endif

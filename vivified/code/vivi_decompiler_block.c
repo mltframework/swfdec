@@ -256,6 +256,12 @@ vivi_decompiler_block_get_start_state (ViviDecompilerBlock *block)
   return block->start;
 }
 
+const ViviDecompilerState *
+vivi_decompiler_block_get_end_state (ViviDecompilerBlock *block)
+{
+  return block->end;
+}
+
 guint
 vivi_decompiler_block_get_n_incoming (ViviDecompilerBlock *block)
 {

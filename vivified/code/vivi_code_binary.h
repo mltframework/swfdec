@@ -54,6 +54,9 @@ GType			vivi_code_binary_get_type   	(void);
 ViviCodeValue *		vivi_code_binary_new_bytecode 	(ViviCodeValue *	left,
 							 ViviCodeValue *	right,
 							 guint			code);
+ViviCodeValue *		vivi_code_binary_new_name	(ViviCodeValue *	left,
+							 ViviCodeValue *	right,
+							 const char *		name);
 
 G_END_DECLS
 #endif

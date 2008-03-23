@@ -109,3 +109,11 @@ vivi_code_unary_new (ViviCodeValue *value, char operation)
   return VIVI_CODE_VALUE (unary);
 }
 
+ViviCodeValue *
+vivi_code_unary_get_value (ViviCodeUnary *unary)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_UNARY (unary), NULL);
+
+  return unary->value;
+}
+

@@ -85,3 +85,11 @@ vivi_decompiler_duplicate_new (ViviCodeValue *value)
   return VIVI_CODE_VALUE (dupl);
 }
 
+ViviCodeValue *
+vivi_decompiler_duplicate_get_value (ViviDecompilerDuplicate *dupl)
+{
+  g_return_val_if_fail (VIVI_IS_DECOMPILER_DUPLICATE (dupl), NULL);
+
+  return dupl->value;
+}
+

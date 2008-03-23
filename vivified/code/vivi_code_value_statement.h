@@ -52,5 +52,8 @@ GType			vivi_code_value_statement_get_type   	(void);
 
 ViviCodeStatement *   	vivi_code_value_statement_new		(ViviCodeValue *	value);
 
+ViviCodeValue *   	vivi_code_value_statement_get_value	(ViviCodeValueStatement *stmt);
+
+
 G_END_DECLS
 #endif

@@ -63,9 +63,11 @@ void			vivi_decompiler_block_reset		(ViviDecompilerBlock *		block,
 
 ViviCodeStatement *	vivi_decompiler_block_get_label		(ViviDecompilerBlock *  	block);
 void			vivi_decompiler_block_force_label	(ViviDecompilerBlock *		block);
+const guint8 *		vivi_decompiler_block_get_start		(ViviDecompilerBlock *		block);
 const ViviDecompilerState *
 			vivi_decompiler_block_get_start_state	(ViviDecompilerBlock *	        block);
-const guint8 *		vivi_decompiler_block_get_start		(ViviDecompilerBlock *		block);
+const ViviDecompilerState *
+			vivi_decompiler_block_get_end_state	(ViviDecompilerBlock *	        block);
 gboolean		vivi_decompiler_block_contains		(ViviDecompilerBlock *  	block,
 								 const guint8 *			pc);
 void			vivi_decompiler_block_finish		(ViviDecompilerBlock *		block,

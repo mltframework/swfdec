@@ -53,7 +53,7 @@ GType			vivi_code_unary_get_type   	(void);
 ViviCodeValue *		vivi_code_unary_new		(ViviCodeValue *	value,
 							 char			operation);
 
-char			vivi_code_unary_get_operation	(ViviCodeUnary *	unary);
+ViviCodeValue *		vivi_code_unary_get_value	(ViviCodeUnary *	unary);
 
 G_END_DECLS
 #endif

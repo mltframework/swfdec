@@ -50,26 +50,29 @@ vivi_code_if_optimize (ViviCodeStatement *statement)
 
   if_stmt = stmt->if_statement ? vivi_code_statement_optimize (stmt->if_statement) : NULL;
   else_stmt = stmt->else_statement ? vivi_code_statement_optimize (stmt->else_statement) : NULL;
-#if 0
   if (if_stmt == NULL && else_stmt == NULL)
     return NULL;
-#endif
 
-  cond = g_object_ref (stmt->condition);
   if (if_stmt == NULL && else_stmt != NULL) {
-    cond = VIVI_CODE_VALUE (vivi_code_unary_new (cond, '!'));
+    tmp = VIVI_CODE_VALUE (vivi_code_unary_new (stmt->condition, '!'));
+    cond = vivi_code_value_optimize (tmp, SWFDEC_AS_TYPE_BOOLEAN);
+    g_object_unref (tmp);
     if_stmt = else_stmt;
     else_stmt = NULL;
+  } else {
+    cond = vivi_code_value_optimize (stmt->condition, SWFDEC_AS_TYPE_BOOLEAN);
   }
-  tmp = vivi_code_value_optimize (cond, SWFDEC_AS_TYPE_BOOLEAN);
-  g_object_unref (cond);
-  cond = tmp;
 
   stmt = VIVI_CODE_IF (vivi_code_if_new (cond));
-  if (if_stmt)
+  g_object_unref (cond);
+  if (if_stmt) {
     vivi_code_if_set_if (stmt, if_stmt);
-  if (else_stmt)
+    g_object_unref (if_stmt);
+  }
+  if (else_stmt) {
     vivi_code_if_set_else (stmt, else_stmt);
+    g_object_unref (else_stmt);
+  }
   return VIVI_CODE_STATEMENT (stmt);
 }
 

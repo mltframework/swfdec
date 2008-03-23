@@ -44,6 +44,7 @@
 #include "vivi_code_unary.h"
 #include "vivi_code_value_statement.h"
 #include "vivi_decompiler_block.h"
+#include "vivi_decompiler_duplicate.h"
 #include "vivi_decompiler_state.h"
 
 #if 0
@@ -338,6 +339,20 @@ vivi_decompile_binary (ViviDecompilerBlock *block, ViviDecompilerState *state,
   return TRUE;
 }
 
+static gboolean
+vivi_decompile_duplicate (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *value, *dupl;
+
+  value = vivi_decompiler_state_pop (state);
+  vivi_decompiler_state_push (state, value);
+  dupl = vivi_decompiler_duplicate_new (value);
+  g_object_unref (value);
+  vivi_decompiler_state_push (state, dupl);
+  return TRUE;
+}
+
 static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_END] = vivi_decompile_end,
   [SWFDEC_AS_ACTION_NOT] = vivi_decompile_not,
@@ -345,8 +360,6 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_GET_VARIABLE] = vivi_decompile_get_variable,
   [SWFDEC_AS_ACTION_SET_VARIABLE] = vivi_decompile_set_variable,
   [SWFDEC_AS_ACTION_TRACE] = vivi_decompile_trace,
-  [SWFDEC_AS_ACTION_GET_MEMBER] = vivi_decompile_get_member,
-  [SWFDEC_AS_ACTION_SET_MEMBER] = vivi_decompile_set_member,
   [SWFDEC_AS_ACTION_ADD] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_SUBTRACT] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_MULTIPLY] = vivi_decompile_binary,
@@ -360,6 +373,9 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_ADD2] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_LESS2] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_EQUALS2] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_PUSH_DUPLICATE] = vivi_decompile_duplicate,
+  [SWFDEC_AS_ACTION_GET_MEMBER] = vivi_decompile_get_member,
+  [SWFDEC_AS_ACTION_SET_MEMBER] = vivi_decompile_set_member,
   [SWFDEC_AS_ACTION_BIT_AND] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_BIT_OR] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_BIT_XOR] = vivi_decompile_binary,

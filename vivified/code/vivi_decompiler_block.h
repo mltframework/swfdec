@@ -87,6 +87,10 @@ ViviDecompilerBlock *	vivi_decompiler_block_get_branch	(ViviDecompilerBlock *		b
 ViviCodeValue *		vivi_decompiler_block_get_branch_condition
 								(ViviDecompilerBlock *		block);
 void			vivi_decompiler_block_add_error		(ViviDecompilerBlock *		block,
+								 ViviDecompilerState *		state,
+								 const char *			format,
+								 ...) G_GNUC_PRINTF (3, 4);
+void			vivi_decompiler_block_add_warning	(ViviDecompilerBlock *		block,
 								 const char *			format,
 								 ...) G_GNUC_PRINTF (2, 3);
 

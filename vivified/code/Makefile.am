@@ -13,6 +13,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_comment.c \
 	vivi_code_constant.c \
 	vivi_code_continue.c \
+	vivi_code_function.c \
 	vivi_code_function_call.c \
 	vivi_code_get.c \
 	vivi_code_get_url.c \
@@ -43,6 +44,7 @@ noinst_HEADERS = \
 	vivi_code_comment.h \
 	vivi_code_constant.h \
 	vivi_code_continue.h \
+	vivi_code_function.h \
 	vivi_code_function_call.h \
 	vivi_code_get.h \
 	vivi_code_get_url.h \

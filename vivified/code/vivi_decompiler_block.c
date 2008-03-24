@@ -197,6 +197,25 @@ vivi_decompiler_block_get_branch_condition (ViviDecompilerBlock *block)
 
 void
 vivi_decompiler_block_add_error (ViviDecompilerBlock *block,
+    ViviDecompilerState *state, const char *format, ...)
+{
+  ViviCodeToken *token;
+  va_list varargs;
+  char *s;
+
+  va_start (varargs, format);
+  s = g_strdup_vprintf (format, varargs);
+  va_end (varargs);
+
+  token = vivi_code_comment_new (s);
+  g_printerr ("ERROR: %s\n", s);
+  g_free (s);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (token));
+  vivi_decompiler_block_finish (block, state);
+}
+
+void
+vivi_decompiler_block_add_warning (ViviDecompilerBlock *block,
     const char *format, ...)
 {
   ViviCodeToken *token;
@@ -208,6 +227,7 @@ vivi_decompiler_block_add_error (ViviDecompilerBlock *block,
   va_end (varargs);
 
   token = vivi_code_comment_new (s);
+  g_printerr ("WARNING: %s\n", s);
   g_free (s);
   vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (token));
 }

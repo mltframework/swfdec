@@ -49,6 +49,7 @@ ViviCodeValue *			vivi_decompiler_state_get_register (const ViviDecompilerState 
 const guint8 *			vivi_decompiler_state_get_pc	(const ViviDecompilerState *	state);
 void				vivi_decompiler_state_add_pc	(ViviDecompilerState *		state,
 								 int				diff);
+SwfdecScript *	        	vivi_decompiler_state_get_script(const ViviDecompilerState *	state);
 const SwfdecConstantPool *    	vivi_decompiler_state_get_constant_pool 
 								(const ViviDecompilerState *	state);
 void				vivi_decompiler_state_set_constant_pool 

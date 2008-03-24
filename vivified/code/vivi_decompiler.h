@@ -26,33 +26,8 @@
 G_BEGIN_DECLS
 
 
-typedef struct _ViviDecompiler ViviDecompiler;
-typedef struct _ViviDecompilerClass ViviDecompilerClass;
+ViviCodeStatement *	vivi_decompile_script		(SwfdecScript *		script);
 
-#define VIVI_TYPE_DECOMPILER                    (vivi_decompiler_get_type())
-#define VIVI_IS_DECOMPILER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_DECOMPILER))
-#define VIVI_IS_DECOMPILER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_DECOMPILER))
-#define VIVI_DECOMPILER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_DECOMPILER, ViviDecompiler))
-#define VIVI_DECOMPILER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_DECOMPILER, ViviDecompilerClass))
-#define VIVI_DECOMPILER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_DECOMPILER, ViviDecompilerClass))
-
-struct _ViviDecompiler
-{
-  SwfdecAsObject	object;
-
-  SwfdecScript *	script;		/* script that we decompile */
-  GList *		blocks;		/* list of all blocks in this script ordered by pc (should be one after decompilation is done) */
-};
-
-struct _ViviDecompilerClass
-{
-  SwfdecAsObjectClass	object_class;
-};
-
-GType			vivi_decompiler_get_type   	(void);
-
-ViviDecompiler *	vivi_decompiler_new		(SwfdecScript *		script);
-ViviCodeBlock *		vivi_decompiler_get_block	(ViviDecompiler *	dec);
 
 G_END_DECLS
 #endif

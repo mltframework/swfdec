@@ -142,6 +142,12 @@ vivi_decompiler_state_add_pc (ViviDecompilerState *state, int diff)
   state->pc += diff;
 }
 
+SwfdecScript *
+vivi_decompiler_state_get_script (const ViviDecompilerState *state)
+{
+  return state->script;
+}
+
 const SwfdecConstantPool *
 vivi_decompiler_state_get_constant_pool (const ViviDecompilerState *state)
 {

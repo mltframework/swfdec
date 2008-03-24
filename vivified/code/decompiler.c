@@ -28,27 +28,24 @@
 #include <swfdec/swfdec_sprite_movie.h>
 #include <swfdec/swfdec_swf_decoder.h>
 
+#include "vivi_code_function.h"
 #include "vivi_code_text_printer.h"
-#include "vivi_decompiler.h"
 
 static void
 decode_script (gpointer offset, gpointer scriptp, gpointer unused)
 {
   SwfdecScript *script = scriptp;
-  ViviDecompiler *dec = vivi_decompiler_new (scriptp);
-  ViviCodeToken *token;
+  ViviCodeValue *fun;
   ViviCodePrinter *printer;
 
   g_print ("/* %s */\n", script->name);
-  token = VIVI_CODE_TOKEN (vivi_decompiler_get_block (dec));
+  fun = vivi_code_function_new (scriptp);
   printer = vivi_code_text_printer_new ();
-  g_print ("{\n");
-  vivi_code_printer_push_indentation (printer);
-  vivi_code_printer_print_token (printer, token);
-  vivi_code_printer_pop_indentation (printer);
-  g_print ("}\n\n");
+
+  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (fun));
+
   g_object_unref (printer);
-  g_object_unref (dec);
+  g_object_unref (fun);
 }
 
 int 

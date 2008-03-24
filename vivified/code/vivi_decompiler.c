@@ -34,6 +34,7 @@
 #include "vivi_code_break.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
+#include "vivi_code_function_call.h"
 #include "vivi_code_get.h"
 #include "vivi_code_get_url.h"
 #include "vivi_code_goto.h"
@@ -369,6 +370,65 @@ vivi_decompile_duplicate (ViviDecompilerBlock *block, ViviDecompilerState *state
   return TRUE;
 }
 
+static gboolean
+vivi_decompile_function_call (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    ViviCodeValue *value, ViviCodeValue *name, ViviCodeValue *args)
+{
+  ViviCodeValue *call;
+  double d;
+  guint i, count;
+
+  call = vivi_code_function_call_new (value, name);
+  if (value)
+    g_object_unref (value);
+  if (name)
+    g_object_unref (name);
+
+  if (!VIVI_IS_CODE_CONSTANT (args) || 
+      vivi_code_constant_get_value_type (VIVI_CODE_CONSTANT (args)) != SWFDEC_AS_TYPE_NUMBER ||
+      ((count = d = vivi_code_constant_get_number (VIVI_CODE_CONSTANT (args))) != d)) {
+    vivi_decompiler_block_add_error (block, "could not determine function argument count");
+    g_object_unref (args);
+    g_object_unref (call);
+    return FALSE;
+  }
+  g_object_unref (args);
+
+  count = MIN (count, vivi_decompiler_state_get_stack_depth (state));
+  for (i = 0; i < count; i++) {
+    value = vivi_decompiler_state_pop (state);
+    vivi_code_function_call_add_argument (VIVI_CODE_FUNCTION_CALL (call), value);
+    g_object_unref (value);
+  }
+  vivi_decompiler_state_push (state, call);
+  return TRUE;
+}
+
+static gboolean
+vivi_decompile_call_function (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *name, *args;
+
+  name = vivi_decompiler_state_pop (state);
+  args = vivi_decompiler_state_pop (state);
+
+  return vivi_decompile_function_call (block, state, NULL, name, args);
+}
+
+static gboolean
+vivi_decompile_call_method (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *value, *name, *args;
+
+  name = vivi_decompiler_state_pop (state);
+  value = vivi_decompiler_state_pop (state);
+  args = vivi_decompiler_state_pop (state);
+
+  return vivi_decompile_function_call (block, state, value, name, args);
+}
+
 static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_END] = vivi_decompile_end,
   [SWFDEC_AS_ACTION_NOT] = vivi_decompile_not,
@@ -386,12 +446,14 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_OR] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_STRING_EQUALS] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_STRING_LESS] = vivi_decompile_binary,
+  [SWFDEC_AS_ACTION_CALL_FUNCTION] = vivi_decompile_call_function,
   [SWFDEC_AS_ACTION_ADD2] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_LESS2] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_EQUALS2] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_PUSH_DUPLICATE] = vivi_decompile_duplicate,
   [SWFDEC_AS_ACTION_GET_MEMBER] = vivi_decompile_get_member,
   [SWFDEC_AS_ACTION_SET_MEMBER] = vivi_decompile_set_member,
+  [SWFDEC_AS_ACTION_CALL_METHOD] = vivi_decompile_call_method,
   [SWFDEC_AS_ACTION_BIT_AND] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_BIT_OR] = vivi_decompile_binary,
   [SWFDEC_AS_ACTION_BIT_XOR] = vivi_decompile_binary,

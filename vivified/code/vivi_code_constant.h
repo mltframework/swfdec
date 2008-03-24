@@ -58,6 +58,9 @@ ViviCodeValue *		vivi_code_constant_new_boolean	(gboolean		boolean);
 
 char *			vivi_code_constant_get_variable_name
 							(ViviCodeConstant *	constant);
+SwfdecAsValueType	vivi_code_constant_get_value_type
+							(ViviCodeConstant *	constant);
+double			vivi_code_constant_get_number	(ViviCodeConstant *	constant);
 
 G_END_DECLS
 #endif

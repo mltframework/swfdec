@@ -22,6 +22,7 @@
 #endif
 
 #include <ctype.h>
+#include <math.h>
 #include <string.h>
 
 #include "vivi_code_constant.h"
@@ -214,3 +215,23 @@ vivi_code_constant_get_variable_name (ViviCodeConstant *constant)
       g_assert_not_reached ();
   }
 }
+
+SwfdecAsValueType
+vivi_code_constant_get_value_type (ViviCodeConstant *constant)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_CONSTANT (constant), SWFDEC_AS_TYPE_UNDEFINED);
+
+  return constant->value.type;
+}
+
+double
+vivi_code_constant_get_number (ViviCodeConstant *constant)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_CONSTANT (constant), NAN);
+
+  if (SWFDEC_AS_VALUE_IS_NUMBER (&constant->value))
+    return SWFDEC_AS_VALUE_GET_NUMBER (&constant->value);
+  else
+    return NAN;
+}
+

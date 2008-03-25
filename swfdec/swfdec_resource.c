@@ -76,7 +76,9 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
 
   if (SWFDEC_IS_SWF_DECODER (instance->decoder)) {
     SwfdecSwfDecoder *dec = SWFDEC_SWF_DECODER (instance->decoder);
+    SwfdecSandbox *old_sandbox;
 
+    old_sandbox = instance->sandbox;
     instance->sandbox = swfdec_sandbox_get_for_url (player,
 	swfdec_loader_get_url (instance->loader), instance->version,
 	SWFDEC_SWF_DECODER (instance->decoder)->use_network);
@@ -95,7 +97,8 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
       SWFDEC_FIXME ("cannot continue loading %s, invalid rights", 
 	  swfdec_url_get_url (swfdec_loader_get_url (instance->loader)));
       swfdec_stream_set_target (SWFDEC_STREAM (instance->loader), NULL);
-      /* FIXME: anyting on the movie we need to clear? */
+      instance->sandbox = old_sandbox;
+      /* FIXME: anyting else on the movie we need to clear? */
     }
   } else {
     g_assert_not_reached ();

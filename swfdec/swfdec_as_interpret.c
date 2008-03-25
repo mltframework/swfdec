@@ -287,19 +287,19 @@ swfdec_action_constant_pool (SwfdecAsContext *cx, guint action, const guint8 *da
 {
   SwfdecConstantPool *pool;
   SwfdecAsFrame *frame;
+  SwfdecBuffer *buffer;
 
   frame = cx->frame;
-  pool = swfdec_constant_pool_new_from_action (data, len, cx->version);
+  /* FIXME: lots of hackery to get at the buffer */
+  buffer = frame->script->buffer;
+  buffer = swfdec_buffer_new_subbuffer (buffer, data - buffer->data, len);
+  pool = swfdec_constant_pool_new (cx, buffer, cx->version);
+  swfdec_buffer_unref (buffer);
   if (pool == NULL)
     return;
-  swfdec_constant_pool_attach_to_context (pool, cx);
   if (frame->constant_pool)
-    swfdec_constant_pool_free (frame->constant_pool);
+    swfdec_constant_pool_unref (frame->constant_pool);
   frame->constant_pool = pool;
-  if (frame->constant_pool_buffer)
-    swfdec_buffer_unref (frame->constant_pool_buffer);
-  frame->constant_pool_buffer = swfdec_buffer_new_subbuffer (frame->script->buffer,
-      data - frame->script->buffer->data, len);
 }
 
 static void
@@ -1885,8 +1885,8 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
     g_free (function_name);
     return;
   }
-  if (frame->constant_pool_buffer)
-    script->constant_pool = swfdec_buffer_ref (frame->constant_pool_buffer);
+  if (frame->constant_pool)
+    script->constant_pool = swfdec_buffer_ref (swfdec_constant_pool_get_buffer (frame->constant_pool));
   script->flags = flags;
   script->n_registers = n_registers;
   script->n_arguments = n_args;
@@ -3059,9 +3059,11 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
   guint i;
   GString *string;
   SwfdecConstantPool *pool;
+  SwfdecBuffer *buffer;
 
   /* FIXME: version */
-  pool = swfdec_constant_pool_new_from_action (data, len, 6);
+  buffer = swfdec_buffer_new_static (data, len);
+  pool = swfdec_constant_pool_new (NULL, buffer, 6);
   if (pool == NULL)
     return g_strdup ("ConstantPool (invalid)");
   string = g_string_new ("ConstantPool");
@@ -3070,6 +3072,8 @@ swfdec_action_print_constant_pool (guint action, const guint8 *data, guint len)
     g_string_append (string, swfdec_constant_pool_get (pool, i));
     g_string_append_printf (string, " (%u)", i);
   }
+  swfdec_constant_pool_unref (pool);
+  swfdec_buffer_unref (buffer);
   return g_string_free (string, FALSE);
 }
 

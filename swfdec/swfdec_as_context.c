@@ -36,6 +36,7 @@
 #include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_types.h"
+#include "swfdec_constant_pool.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h" /* for swfdec_player_preinit_global() */
 #include "swfdec_script.h"
@@ -380,6 +381,18 @@ swfdec_as_context_mark_roots (gpointer key, gpointer value, gpointer data)
     swfdec_as_object_mark (object);
 }
 
+/* FIXME: replace this with refcounted strings? */
+static void 
+swfdec_as_context_mark_constant_pools (gpointer key, gpointer value, gpointer unused)
+{
+  SwfdecConstantPool *pool = value;
+  guint i;
+
+  for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
+    swfdec_as_string_mark (swfdec_constant_pool_get (pool, i));
+  }
+}
+
 static void
 swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
@@ -394,6 +407,7 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
   if (context->exception)
     swfdec_as_value_mark (&context->exception_value);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
+  g_hash_table_foreach (context->constant_pools, swfdec_as_context_mark_constant_pools, NULL);
 }
 
 /**
@@ -524,6 +538,8 @@ swfdec_as_context_dispose (GObject *object)
     g_critical ("%zu bytes of memory left over\n", context->memory);
   }
   g_assert (g_hash_table_size (context->objects) == 0);
+  g_assert (g_hash_table_size (context->constant_pools) == 0);
+  g_hash_table_destroy (context->constant_pools);
   g_hash_table_destroy (context->objects);
   g_hash_table_destroy (context->strings);
   g_rand_free (context->rand);
@@ -583,6 +599,7 @@ swfdec_as_context_init (SwfdecAsContext *context)
 
   context->strings = g_hash_table_new (g_str_hash, g_str_equal);
   context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
+  context->constant_pools = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   for (s = swfdec_as_strings; *s == '\2'; s += strlen (s) + 1) {
     g_hash_table_insert (context->strings, (char *) s + 1, (char *) s);

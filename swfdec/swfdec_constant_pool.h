@@ -21,26 +21,25 @@
 #define _SWFDEC_CONSTANT_POOL_H_
 
 #include <swfdec/swfdec.h>
-#include <swfdec/swfdec_as_types.h>
-#include <swfdec/swfdec_types.h>
-#include <swfdec/swfdec_bits.h>
 
 G_BEGIN_DECLS
 
 
+#define SWFDEC_IS_CONSTANT_POOL(pool) ((pool) != NULL)
+
 typedef struct _SwfdecConstantPool SwfdecConstantPool;
 
 
-SwfdecConstantPool *
-		swfdec_constant_pool_new_from_action	(const guint8 *		data,
-							 guint			len,
+SwfdecConstantPool *	swfdec_constant_pool_new	(SwfdecAsContext *	context,
+							 SwfdecBuffer *		buffer,
 							 guint			version);
-void		swfdec_constant_pool_free	  	(SwfdecConstantPool *	pool);
-guint		swfdec_constant_pool_size		(SwfdecConstantPool *	pool);
-const char *	swfdec_constant_pool_get		(SwfdecConstantPool *	pool,
+SwfdecConstantPool *	swfdec_constant_pool_ref      	(SwfdecConstantPool *	pool);
+void			swfdec_constant_pool_unref     	(SwfdecConstantPool *	pool);
+
+guint			swfdec_constant_pool_size	(SwfdecConstantPool *	pool);
+const char *	  	swfdec_constant_pool_get	(SwfdecConstantPool *	pool,
 							 guint			i);
-void		swfdec_constant_pool_attach_to_context	(SwfdecConstantPool *	pool,
-							 SwfdecAsContext *	context);
+SwfdecBuffer *		swfdec_constant_pool_get_buffer	(SwfdecConstantPool *	pool);
 
 
 G_END_DECLS

@@ -278,12 +278,8 @@ swfdec_as_frame_dispose (GObject *object)
   /* clean up */
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
   if (frame->constant_pool) {
-    swfdec_constant_pool_free (frame->constant_pool);
+    swfdec_constant_pool_unref (frame->constant_pool);
     frame->constant_pool = NULL;
-  }
-  if (frame->constant_pool_buffer) {
-    swfdec_buffer_unref (frame->constant_pool_buffer);
-    frame->constant_pool_buffer = NULL;
   }
   g_array_free (frame->blocks, TRUE);
   g_slist_free (frame->scope_chain);
@@ -409,12 +405,9 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
   if (script->constant_pool) {
-    frame->constant_pool_buffer = swfdec_buffer_ref (script->constant_pool);
-    frame->constant_pool = swfdec_constant_pool_new_from_action (
-	script->constant_pool->data, script->constant_pool->length, script->version);
-    if (frame->constant_pool) {
-      swfdec_constant_pool_attach_to_context (frame->constant_pool, context);
-    } else {
+    frame->constant_pool = swfdec_constant_pool_new (context, 
+	script->constant_pool, script->version);
+    if (frame->constant_pool == NULL) {
       SWFDEC_ERROR ("couldn't create constant pool");
     }
   }

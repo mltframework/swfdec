@@ -24,11 +24,11 @@
 #include <swfdec/swfdec_as_types.h>
 #include <swfdec/swfdec_types.h>
 #include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_constant_pool.h>
 
 G_BEGIN_DECLS
 
 typedef struct _SwfdecScriptArgument SwfdecScriptArgument;
-typedef struct _SwfdecConstantPool SwfdecConstantPool;
 
 typedef enum {
   SWFDEC_SCRIPT_PRELOAD_THIS = (1 << 0),
@@ -67,17 +67,6 @@ struct _SwfdecScriptArgument {
 
 const char *	swfdec_action_get_name		(guint			action);
 guint		swfdec_action_get_from_name	(const char *		name);
-
-SwfdecConstantPool *
-		swfdec_constant_pool_new_from_action	(const guint8 *		data,
-							 guint			len,
-							 guint			version);
-void		swfdec_constant_pool_free	  	(SwfdecConstantPool *	pool);
-guint		swfdec_constant_pool_size		(SwfdecConstantPool *	pool);
-const char *	swfdec_constant_pool_get		(SwfdecConstantPool *	pool,
-							 guint			i);
-void		swfdec_constant_pool_attach_to_context	(SwfdecConstantPool *	pool,
-							 SwfdecAsContext *	context);
 
 SwfdecScript *	swfdec_script_new_from_bits   		(SwfdecBits *		bits,
 							 const char *		name,

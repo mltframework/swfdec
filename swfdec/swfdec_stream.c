@@ -215,9 +215,11 @@ swfdec_stream_process (gpointer streamp, gpointer unused)
 	if (swfdec_stream_target_parse (priv->target, stream)) {
 	  swfdec_stream_queue_processing (stream);
 	  goto out;
-	} else {
+	} else if (priv->target) {
 	  priv->processed_state = SWFDEC_STREAM_STATE_CLOSED;
 	  swfdec_stream_target_close (priv->target, stream);
+	} else {
+	  goto out;
 	}
       }
     }

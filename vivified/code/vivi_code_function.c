@@ -62,7 +62,6 @@ vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
     vivi_code_printer_pop_indentation (printer);
   }
   vivi_code_printer_print (printer, "}");
-  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static gboolean

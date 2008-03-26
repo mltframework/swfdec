@@ -67,7 +67,7 @@ vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
 static gboolean
 vivi_code_function_is_constant (ViviCodeValue *value)
 {
-  return TRUE;
+  return FALSE;
 }
 
 static void

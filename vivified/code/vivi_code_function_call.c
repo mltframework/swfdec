@@ -79,6 +79,8 @@ vivi_code_function_call_print (ViviCodeToken *token, ViviCodePrinter*printer)
   char *varname;
   guint i;
 
+  if (call->construct)
+    vivi_code_printer_print (printer, "new ");
   if (call->name) {
     if (VIVI_IS_CODE_CONSTANT (call->name))
       varname = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (call->name));
@@ -164,6 +166,14 @@ vivi_code_function_call_new (ViviCodeValue *value, ViviCodeValue *name)
     call->name = g_object_ref (name);
 
   return VIVI_CODE_VALUE (call);
+}
+
+void
+vivi_code_function_call_set_construct (ViviCodeFunctionCall *call, gboolean construct)
+{
+  g_return_if_fail (VIVI_IS_CODE_FUNCTION_CALL (call));
+
+  call->construct = construct;
 }
 
 void

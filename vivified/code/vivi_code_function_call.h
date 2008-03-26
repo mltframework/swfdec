@@ -39,9 +39,10 @@ struct _ViviCodeFunctionCall
 {
   ViviCodeValue		parent;
 
-  ViviCodeValue *	value;
-  ViviCodeValue *	name;
-  GPtrArray *		arguments;
+  gboolean		construct;	/* This is a constructor call */
+  ViviCodeValue *	value;		/* value to call function with */
+  ViviCodeValue *	name;		/* property to get */
+  GPtrArray *		arguments;	/* array of ViviCodeValue containing the function's arguments */
 };
 
 struct _ViviCodeFunctionCallClass
@@ -54,6 +55,8 @@ GType			vivi_code_function_call_get_type   	(void);
 ViviCodeValue *		vivi_code_function_call_new		(ViviCodeValue *	value,
 								 ViviCodeValue *	name);
 
+void			vivi_code_function_call_set_construct	(ViviCodeFunctionCall * call,
+								 gboolean		construct);
 void			vivi_code_function_call_add_argument	(ViviCodeFunctionCall *	call,
 								 ViviCodeValue *	argument);
 

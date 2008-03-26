@@ -404,7 +404,7 @@ vivi_decompile_duplicate (ViviDecompilerBlock *block, ViviDecompilerState *state
   return TRUE;
 }
 
-static gboolean
+static ViviCodeValue *
 vivi_decompile_function_call (ViviDecompilerBlock *block, ViviDecompilerState *state,
     ViviCodeValue *value, ViviCodeValue *name, ViviCodeValue *args)
 {
@@ -424,7 +424,7 @@ vivi_decompile_function_call (ViviDecompilerBlock *block, ViviDecompilerState *s
     vivi_decompiler_block_add_error (block, state, "could not determine function argument count");
     g_object_unref (args);
     g_object_unref (call);
-    return FALSE;
+    return NULL;
   }
   g_object_unref (args);
 
@@ -435,32 +435,28 @@ vivi_decompile_function_call (ViviDecompilerBlock *block, ViviDecompilerState *s
     g_object_unref (value);
   }
   vivi_decompiler_state_push (state, call);
+  return call;
+}
+
+static gboolean
+vivi_decompile_call (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *call, *name, *value, *args;
+
+  name = vivi_decompiler_state_pop (state);
+  if (code == SWFDEC_AS_ACTION_CALL_METHOD || code == SWFDEC_AS_ACTION_NEW_METHOD)
+    value = vivi_decompiler_state_pop (state);
+  else
+    value = NULL;
+  args = vivi_decompiler_state_pop (state);
+
+  call = vivi_decompile_function_call (block, state, value, name, args);
+  if (!call)
+    return FALSE;
+  if (code == SWFDEC_AS_ACTION_NEW_OBJECT || code == SWFDEC_AS_ACTION_NEW_METHOD)
+    vivi_code_function_call_set_construct (VIVI_CODE_FUNCTION_CALL (call), TRUE);
   return TRUE;
-}
-
-static gboolean
-vivi_decompile_call_function (ViviDecompilerBlock *block, ViviDecompilerState *state,
-    guint code, const guint8 *data, guint len)
-{
-  ViviCodeValue *name, *args;
-
-  name = vivi_decompiler_state_pop (state);
-  args = vivi_decompiler_state_pop (state);
-
-  return vivi_decompile_function_call (block, state, NULL, name, args);
-}
-
-static gboolean
-vivi_decompile_call_method (ViviDecompilerBlock *block, ViviDecompilerState *state,
-    guint code, const guint8 *data, guint len)
-{
-  ViviCodeValue *value, *name, *args;
-
-  name = vivi_decompiler_state_pop (state);
-  value = vivi_decompiler_state_pop (state);
-  args = vivi_decompiler_state_pop (state);
-
-  return vivi_decompile_function_call (block, state, value, name, args);
 }
 
 static gboolean
@@ -686,10 +682,10 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_DELETE] = NULL,
   [SWFDEC_AS_ACTION_DELETE2] = NULL,
   [SWFDEC_AS_ACTION_DEFINE_LOCAL] = NULL,
-  [SWFDEC_AS_ACTION_CALL_FUNCTION] = vivi_decompile_call_function,
+  [SWFDEC_AS_ACTION_CALL_FUNCTION] = vivi_decompile_call,
   [SWFDEC_AS_ACTION_RETURN] = vivi_decompile_return,
   [SWFDEC_AS_ACTION_MODULO] = NULL,
-  [SWFDEC_AS_ACTION_NEW_OBJECT] = NULL,
+  [SWFDEC_AS_ACTION_NEW_OBJECT] = vivi_decompile_call,
   [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = NULL,
   [SWFDEC_AS_ACTION_INIT_ARRAY] = NULL,
   [SWFDEC_AS_ACTION_INIT_OBJECT] = vivi_decompile_init_object,
@@ -707,8 +703,8 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_SET_MEMBER] = vivi_decompile_set_member,
   [SWFDEC_AS_ACTION_INCREMENT] = NULL,
   [SWFDEC_AS_ACTION_DECREMENT] = NULL,
-  [SWFDEC_AS_ACTION_CALL_METHOD] = vivi_decompile_call_method,
-  [SWFDEC_AS_ACTION_NEW_METHOD] = NULL,
+  [SWFDEC_AS_ACTION_CALL_METHOD] = vivi_decompile_call,
+  [SWFDEC_AS_ACTION_NEW_METHOD] = vivi_decompile_call,
   [SWFDEC_AS_ACTION_INSTANCE_OF] = NULL,
   [SWFDEC_AS_ACTION_ENUMERATE2] = NULL,
   [SWFDEC_AS_ACTION_BREAKPOINT] = NULL,

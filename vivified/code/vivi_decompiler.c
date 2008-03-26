@@ -1480,7 +1480,7 @@ vivi_decompile_script (SwfdecScript *script)
   g_return_val_if_fail (script != NULL, NULL);
 
   DEBUG ("--> starting decompilation\n");
-  state = vivi_decompiler_state_new (script, script->main, 4);
+  state = vivi_decompiler_state_new (script, script->main, script->n_registers);
   vivi_decompiler_preload (state, script);
   if (script->constant_pool) {
     vivi_decompiler_state_set_constant_pool (state,

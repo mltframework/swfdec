@@ -137,8 +137,10 @@ vivi_decompiler_state_set_register (ViviDecompilerState *state, guint reg,
   g_return_if_fail (state != NULL);
   g_return_if_fail (VIVI_IS_CODE_VALUE (value));
 
-  if (reg >= state->n_registers)
+  if (reg >= state->n_registers) {
+    g_printerr ("register %u out of range [0,%u]\n", reg, state->n_registers);
     return;
+  }
 
   if (state->registers[reg] != NULL)
     g_object_unref (state->registers[reg]);

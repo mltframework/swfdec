@@ -50,13 +50,13 @@
 #include "vivi_decompiler_state.h"
 #include "vivi_decompiler_unknown.h"
 
-#if 1
+#if 0
 #define DEBUG g_printerr
 #else
 #define DEBUG(...)
 #endif
 
-#if 1
+#if 0
 static G_GNUC_UNUSED void
 DUMP_BLOCKS (GList *blocks)
 {

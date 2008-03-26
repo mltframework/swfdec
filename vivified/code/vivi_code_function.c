@@ -65,15 +65,24 @@ vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
   vivi_code_printer_new_line (printer, FALSE);
 }
 
+static gboolean
+vivi_code_function_is_constant (ViviCodeValue *value)
+{
+  return TRUE;
+}
+
 static void
 vivi_code_function_class_init (ViviCodeFunctionClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_function_dispose;
 
   token_class->print = vivi_code_function_print;
+
+  value_class->is_constant = vivi_code_function_is_constant;
 }
 
 static void

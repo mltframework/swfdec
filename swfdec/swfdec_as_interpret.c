@@ -356,34 +356,20 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	    (int) swfdec_bits_get_u32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
-	{
-	  guint i = swfdec_bits_get_u8 (&bits);
-	  SwfdecConstantPool *pool = cx->frame->constant_pool;
-	  if (pool == NULL) {
-	    SWFDEC_ERROR ("no constant pool to push from");
-	    return;
-	  }
-	  if (i >= swfdec_constant_pool_size (pool)) {
-	    SWFDEC_ERROR ("constant pool index %u too high - only %u elements",
-		i, swfdec_constant_pool_size (pool));
-	    return;
-	  }
-	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
-	      swfdec_constant_pool_get (pool, i));
-	  break;
-	}
       case 9: /* 16bit ConstantPool address */
 	{
-	  guint i = swfdec_bits_get_u16 (&bits);
+	  guint i = type == 8 ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
 	  SwfdecConstantPool *pool = cx->frame->constant_pool;
 	  if (pool == NULL) {
 	    SWFDEC_ERROR ("no constant pool to push from");
-	    return;
+	    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (cx));
+	    break;
 	  }
 	  if (i >= swfdec_constant_pool_size (pool)) {
 	    SWFDEC_ERROR ("constant pool index %u too high - only %u elements",
 		i, swfdec_constant_pool_size (pool));
-	    return;
+	    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (cx));
+	    break;
 	  }
 	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
 	      swfdec_constant_pool_get (pool, i));

@@ -43,7 +43,7 @@ decode_script (gpointer offset, gpointer scriptp, gpointer unused)
   printer = vivi_code_text_printer_new ();
 
   vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (fun));
-  g_print ("\n");
+  g_print ("\n\n");
 
   g_object_unref (printer);
   g_object_unref (fun);

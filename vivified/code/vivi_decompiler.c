@@ -244,6 +244,32 @@ static gboolean
 vivi_decompile_end (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
+  ViviCodeStatement *ret;
+
+  ret = vivi_code_return_new ();
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), ret);
+  g_object_unref (ret);
+
+  vivi_decompiler_block_finish (block, state);
+  return FALSE;
+}
+
+static gboolean
+vivi_decompile_return (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeStatement *ret;
+  ViviCodeValue *value;
+
+  value = vivi_decompiler_state_pop (state);
+  ret = vivi_code_return_new ();
+  if (!VIVI_IS_CODE_CONSTANT (value) ||
+      vivi_code_constant_get_value_type (VIVI_CODE_CONSTANT (value)) != SWFDEC_AS_TYPE_UNDEFINED)
+    vivi_code_return_set_value (VIVI_CODE_RETURN (ret), value);
+  g_object_unref (value);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), ret);
+  g_object_unref (ret);
+
   vivi_decompiler_block_finish (block, state);
   return FALSE;
 }
@@ -629,7 +655,7 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_DELETE2] = NULL,
   [SWFDEC_AS_ACTION_DEFINE_LOCAL] = NULL,
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = vivi_decompile_call_function,
-  [SWFDEC_AS_ACTION_RETURN] = NULL,
+  [SWFDEC_AS_ACTION_RETURN] = vivi_decompile_return,
   [SWFDEC_AS_ACTION_MODULO] = NULL,
   [SWFDEC_AS_ACTION_NEW_OBJECT] = NULL,
   [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = NULL,
@@ -747,16 +773,16 @@ vivi_decompiler_process (GList **blocks, ViviDecompilerBlock *block,
       }
       return FALSE;
     default:
+      if (data)
+	vivi_decompiler_state_add_pc (state, 3 + len);
+      else
+	vivi_decompiler_state_add_pc (state, 1);
       if (decompile_funcs[code]) {
 	result = decompile_funcs[code] (block, state, code, data, len);
       } else {
 	vivi_decompiler_block_add_warning (block, "unknown bytecode 0x%02X %u", code, code);
 	result = TRUE;
       }
-      if (data)
-	vivi_decompiler_state_add_pc (state, 3 + len);
-      else
-	vivi_decompiler_state_add_pc (state, 1);
       return result;
   };
 
@@ -814,6 +840,12 @@ vivi_decompiler_block_decompile (GList *blocks, ViviDecompilerBlock *block, Swfd
     vivi_decompiler_block_set_next (block,
 	vivi_decompiler_push_block_for_state (&blocks, state));
   } else {
+    ViviCodeStatement *ret;
+
+    ret = vivi_code_return_new ();
+    vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), ret);
+    g_object_unref (ret);
+
 out:
 error:
     vivi_decompiler_state_free (state);
@@ -887,8 +919,6 @@ vivi_decompiler_merge_blocks_last_resort (GList *list, const guint8 *startpc)
     } else {
       vivi_decompiler_block_add_to_block (current, block);
     }
-    if (next == NULL && walk->next != NULL)
-      vivi_code_block_add_statement (block, VIVI_CODE_STATEMENT (vivi_code_return_new ()));
     vivi_decompiler_block_set_next (current, NULL);
     vivi_decompiler_block_set_branch (current, NULL, NULL);
   }

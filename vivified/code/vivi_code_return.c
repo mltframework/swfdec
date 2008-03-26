@@ -69,7 +69,7 @@ vivi_code_return_init (ViviCodeReturn *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_return_new (void)
 {
   return g_object_new (VIVI_TYPE_CODE_RETURN, NULL);

@@ -50,7 +50,7 @@ struct _ViviCodeReturnClass
 
 GType			vivi_code_return_get_type   	(void);
 
-ViviCodeToken *		vivi_code_return_new		(void);
+ViviCodeStatement *   	vivi_code_return_new		(void);
 
 void			vivi_code_return_set_value	(ViviCodeReturn *	ret,
 							 ViviCodeValue *	value);

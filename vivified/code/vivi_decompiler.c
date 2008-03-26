@@ -550,6 +550,36 @@ vivi_decompile_define_function (ViviDecompilerBlock *block, ViviDecompilerState 
   return TRUE;
 }
 
+static gboolean
+vivi_decompile_store_register (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *value;
+  
+  if (len != 1) {
+    vivi_decompiler_block_add_error (block, state, "invalid length %u in StoreRegister", len);
+    return FALSE;
+  }
+
+  value = vivi_decompiler_state_pop (state);
+  if (!vivi_code_value_is_constant (value)) {
+    ViviCodeStatement *assign;
+    char *name;
+
+    name = g_strdup_printf ("$reg%u", data[0]);
+    assign = vivi_code_assignment_new_name (name, value);
+    vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), assign);
+    g_object_unref (assign);
+
+    g_object_unref (value);
+    value = vivi_code_get_new_name (name);
+    g_free (name);
+  }
+  vivi_decompiler_state_set_register (state, data[0], value);
+  vivi_decompiler_state_push (state, value);
+  return TRUE;
+}
+
 static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_END] = vivi_decompile_end,
   [SWFDEC_AS_ACTION_NOT] = vivi_decompile_not,
@@ -586,6 +616,7 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_STRING_GREATER] = vivi_decompile_binary,
 
   [SWFDEC_AS_ACTION_PUSH] = vivi_decompile_push,
+  [SWFDEC_AS_ACTION_STORE_REGISTER] = vivi_decompile_store_register,
   [SWFDEC_AS_ACTION_CONSTANT_POOL] = vivi_decompile_constant_pool,
   [SWFDEC_AS_ACTION_JUMP] = NULL, /* handled directly */
   [SWFDEC_AS_ACTION_GET_URL2] = vivi_decompile_get_url2,

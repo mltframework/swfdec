@@ -115,3 +115,17 @@ vivi_code_assignment_new (ViviCodeValue *from, ViviCodeValue *name, ViviCodeValu
   return VIVI_CODE_STATEMENT (assignment);
 }
 
+ViviCodeStatement *
+vivi_code_assignment_new_name (const char *name, ViviCodeValue *value)
+{
+  ViviCodeValue *constant;
+  ViviCodeStatement *result;
+
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (value), NULL);
+
+  constant = vivi_code_constant_new_string (name);
+  result = vivi_code_assignment_new (NULL, constant, value);
+  g_object_unref (constant);
+  return result;
+}

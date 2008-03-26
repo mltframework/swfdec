@@ -55,6 +55,8 @@ GType			vivi_code_assignment_get_type   	(void);
 ViviCodeStatement *	vivi_code_assignment_new		(ViviCodeValue *	from,
 								 ViviCodeValue *	name,
 								 ViviCodeValue *	value);
+ViviCodeStatement *	vivi_code_assignment_new_name		(const char *		name,
+								 ViviCodeValue *	value);
 
 
 G_END_DECLS

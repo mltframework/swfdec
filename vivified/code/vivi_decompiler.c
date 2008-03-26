@@ -170,7 +170,7 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
       case 9: /* 16bit ConstantPool address */
 	{
 	  guint i = type == 8 ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
-	  const SwfdecConstantPool *pool = vivi_decompiler_state_get_constant_pool (state);
+	  SwfdecConstantPool *pool = vivi_decompiler_state_get_constant_pool (state);
 	  if (pool == NULL) {
 	    vivi_decompiler_block_add_error (block, state, "no constant pool to push from");
 	    return TRUE;
@@ -528,10 +528,10 @@ vivi_decompile_define_function (ViviDecompilerBlock *block, ViviDecompilerState 
     g_free (function_name);
     return FALSE;
   }
-#if 0
-  if (frame->constant_pool_buffer)
-    script->constant_pool = swfdec_buffer_ref (frame->constant_pool_buffer);
-#endif
+  if (vivi_decompiler_state_get_constant_pool (state)) {
+    script->constant_pool = swfdec_buffer_ref (swfdec_constant_pool_get_buffer (
+	  vivi_decompiler_state_get_constant_pool (state)));
+  }
   script->flags = flags;
   script->n_registers = n_registers;
   script->n_arguments = n_args;

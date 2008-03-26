@@ -30,16 +30,16 @@ G_BEGIN_DECLS
 typedef struct _SwfdecConstantPool SwfdecConstantPool;
 
 
-SwfdecConstantPool *	swfdec_constant_pool_new	(SwfdecAsContext *		context,
-							 SwfdecBuffer *			buffer,
-							 guint				version);
-SwfdecConstantPool *	swfdec_constant_pool_ref      	(SwfdecConstantPool *		pool);
-void			swfdec_constant_pool_unref     	(SwfdecConstantPool *		pool);
+SwfdecConstantPool *	swfdec_constant_pool_new	(SwfdecAsContext *	context,
+							 SwfdecBuffer *		buffer,
+							 guint			version);
+SwfdecConstantPool *	swfdec_constant_pool_ref      	(SwfdecConstantPool *	pool);
+void			swfdec_constant_pool_unref     	(SwfdecConstantPool *	pool);
 
-guint			swfdec_constant_pool_size	(const SwfdecConstantPool *	pool);
-const char *	  	swfdec_constant_pool_get	(const SwfdecConstantPool *	pool,
-							 guint				i);
-SwfdecBuffer *		swfdec_constant_pool_get_buffer	(SwfdecConstantPool *		pool);
+guint			swfdec_constant_pool_size	(SwfdecConstantPool *	pool);
+const char *	  	swfdec_constant_pool_get	(SwfdecConstantPool *	pool,
+							 guint			i);
+SwfdecBuffer *		swfdec_constant_pool_get_buffer	(SwfdecConstantPool *	pool);
 
 
 G_END_DECLS

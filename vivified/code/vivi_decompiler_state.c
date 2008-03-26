@@ -148,7 +148,7 @@ vivi_decompiler_state_get_script (const ViviDecompilerState *state)
   return state->script;
 }
 
-const SwfdecConstantPool *
+SwfdecConstantPool *
 vivi_decompiler_state_get_constant_pool (const ViviDecompilerState *state)
 {
   return state->pool;

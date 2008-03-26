@@ -154,7 +154,7 @@ swfdec_constant_pool_unref (SwfdecConstantPool *pool)
  * Returns: The number of strings in this @pool
  **/
 guint
-swfdec_constant_pool_size (const SwfdecConstantPool *pool)
+swfdec_constant_pool_size (SwfdecConstantPool *pool)
 {
   g_return_val_if_fail (SWFDEC_IS_CONSTANT_POOL (pool), 0);
 
@@ -173,7 +173,7 @@ swfdec_constant_pool_size (const SwfdecConstantPool *pool)
  * Returns: the string at position @i
  **/
 const char *
-swfdec_constant_pool_get (const SwfdecConstantPool *pool, guint i)
+swfdec_constant_pool_get (SwfdecConstantPool *pool, guint i)
 {
   g_return_val_if_fail (SWFDEC_IS_CONSTANT_POOL (pool), NULL);
   g_return_val_if_fail (i < pool->n_strings, NULL);

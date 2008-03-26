@@ -576,6 +576,15 @@ EXTRA_DIST = \
 	constantpool-functions-8.swf \
 	constantpool-functions-8.swf.trace \
 	constantpool-functions.xml \
+	constantpool-when-lookup-5.swf \
+	constantpool-when-lookup-5.swf.trace \
+	constantpool-when-lookup-6.swf \
+	constantpool-when-lookup-6.swf.trace \
+	constantpool-when-lookup-7.swf \
+	constantpool-when-lookup-7.swf.trace \
+	constantpool-when-lookup-8.swf \
+	constantpool-when-lookup-8.swf.trace \
+	constantpool-when-lookup.xml \
 	construct-constructors.as \
 	construct-constructors-5.swf \
 	construct-constructors-5.swf.trace \

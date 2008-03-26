@@ -377,6 +377,27 @@ vivi_decompile_set_member (ViviDecompilerBlock *block, ViviDecompilerState *stat
 }
 
 static gboolean
+vivi_decompile_define_local (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *name, *value;
+  ViviCodeStatement *assign;
+
+  if (code == SWFDEC_AS_ACTION_DEFINE_LOCAL)
+    value = vivi_decompiler_state_pop (state);
+  else
+    value = vivi_code_constant_new_undefined ();
+  name = vivi_decompiler_state_pop (state);
+
+  assign = vivi_code_assignment_new (NULL, name, value);
+  vivi_code_assignment_set_local (VIVI_CODE_ASSIGNMENT (assign), TRUE);
+  g_object_unref (name);
+  g_object_unref (value);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), assign);
+  return TRUE;
+}
+
+static gboolean
 vivi_decompile_binary (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
@@ -681,12 +702,12 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR] = NULL,
   [SWFDEC_AS_ACTION_DELETE] = NULL,
   [SWFDEC_AS_ACTION_DELETE2] = NULL,
-  [SWFDEC_AS_ACTION_DEFINE_LOCAL] = NULL,
+  [SWFDEC_AS_ACTION_DEFINE_LOCAL] = vivi_decompile_define_local,
   [SWFDEC_AS_ACTION_CALL_FUNCTION] = vivi_decompile_call,
   [SWFDEC_AS_ACTION_RETURN] = vivi_decompile_return,
   [SWFDEC_AS_ACTION_MODULO] = NULL,
   [SWFDEC_AS_ACTION_NEW_OBJECT] = vivi_decompile_call,
-  [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = NULL,
+  [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = vivi_decompile_define_local,
   [SWFDEC_AS_ACTION_INIT_ARRAY] = NULL,
   [SWFDEC_AS_ACTION_INIT_OBJECT] = vivi_decompile_init_object,
   [SWFDEC_AS_ACTION_TYPE_OF] = NULL,

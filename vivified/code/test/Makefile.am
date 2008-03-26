@@ -1,7 +1,7 @@
 check-local: ../vivi-decompile
 	RESULT=""; \
 	for file in $(srcdir)/*.swf; do \
-	  ../vivi-decompile $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
+	  echo "$$file ..." && ../vivi-decompile $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
 	done; \
 	if test "x$$RESULT" == "x"; then \
 	  echo "OK"; \

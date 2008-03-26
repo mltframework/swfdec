@@ -1368,7 +1368,7 @@ vivi_decompiler_preload (ViviDecompilerState *state, SwfdecScript *script)
       g_object_unref (value);
     }
   }
-  reg = 0;
+  reg = 1;
   for (i = 0; i < G_N_ELEMENTS (preloads); i++) {
     if (script->flags & preloads[i].flag) {
       ViviCodeValue *value = vivi_code_get_new_name (preloads[i].name);

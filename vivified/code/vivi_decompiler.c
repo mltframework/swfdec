@@ -1314,6 +1314,39 @@ vivi_decompiler_dump_graphviz (GList *blocks)
   g_string_free (string, TRUE);
 }
 
+static void
+vivi_decompiler_preload (ViviDecompilerState *state, SwfdecScript *script)
+{
+  static const struct {
+    const char *name;
+    guint	flag;
+  } preloads[] = {
+    { "this", SWFDEC_SCRIPT_PRELOAD_THIS },
+    { "arguments", SWFDEC_SCRIPT_PRELOAD_ARGS },
+    { "super", SWFDEC_SCRIPT_PRELOAD_SUPER },
+    { "_root", SWFDEC_SCRIPT_PRELOAD_ROOT },
+    { "_parent", SWFDEC_SCRIPT_PRELOAD_PARENT },
+    { "_global", SWFDEC_SCRIPT_PRELOAD_GLOBAL }
+  };
+  guint reg, i;
+
+  for (i = 0; i < script->n_arguments; i++) {
+    if (script->arguments[i].preload) {
+      ViviCodeValue *value = vivi_code_get_new_name (script->arguments[i].name);
+      vivi_decompiler_state_set_register (state, script->arguments[i].preload, value);
+      g_object_unref (value);
+    }
+  }
+  reg = 0;
+  for (i = 0; i < G_N_ELEMENTS (preloads); i++) {
+    if (script->flags & preloads[i].flag) {
+      ViviCodeValue *value = vivi_code_get_new_name (preloads[i].name);
+      vivi_decompiler_state_set_register (state, reg++, value);
+      g_object_unref (value);
+    }
+  }
+}
+
 ViviCodeStatement *
 vivi_decompile_script (SwfdecScript *script)
 {
@@ -1326,6 +1359,7 @@ vivi_decompile_script (SwfdecScript *script)
 
   DEBUG ("--> starting decompilation\n");
   state = vivi_decompiler_state_new (script, script->main, 4);
+  vivi_decompiler_preload (state, script);
   if (script->constant_pool) {
     vivi_decompiler_state_set_constant_pool (state,
 	swfdec_constant_pool_new (NULL, script->constant_pool, script->version));

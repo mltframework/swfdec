@@ -45,6 +45,9 @@ guint				vivi_decompiler_state_get_stack_depth
 								(const ViviDecompilerState *  	state);
 ViviCodeValue *			vivi_decompiler_state_get_register (const ViviDecompilerState *	state,
 								 guint				reg);
+void				vivi_decompiler_state_set_register (ViviDecompilerState *	state,
+								 guint				reg,
+								 ViviCodeValue *		value);
 
 const guint8 *			vivi_decompiler_state_get_pc	(const ViviDecompilerState *	state);
 void				vivi_decompiler_state_add_pc	(ViviDecompilerState *		state,

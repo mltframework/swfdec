@@ -130,6 +130,21 @@ vivi_decompiler_state_get_register (const ViviDecompilerState *state, guint reg)
     return g_object_ref (state->registers[reg]);
 }
 
+void
+vivi_decompiler_state_set_register (ViviDecompilerState *state, guint reg,
+    ViviCodeValue *value)
+{
+  g_return_if_fail (state != NULL);
+  g_return_if_fail (VIVI_IS_CODE_VALUE (value));
+
+  if (reg >= state->n_registers)
+    return;
+
+  if (state->registers[reg] != NULL)
+    g_object_unref (state->registers[reg]);
+  state->registers[reg] = g_object_ref (value);
+}
+
 const guint8 *
 vivi_decompiler_state_get_pc (const ViviDecompilerState *state)
 {

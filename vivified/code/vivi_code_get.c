@@ -116,3 +116,15 @@ vivi_code_get_new (ViviCodeValue *from, ViviCodeValue *name)
   return VIVI_CODE_VALUE (get);
 }
 
+ViviCodeValue *
+vivi_code_get_new_name (const char *name)
+{
+  ViviCodeValue *result, *constant;
+
+  g_return_val_if_fail (name != NULL, NULL);
+
+  constant = vivi_code_constant_new_string (name);
+  result = vivi_code_get_new (NULL, constant);
+  g_object_unref (constant);
+  return result;
+}

@@ -52,6 +52,7 @@ GType			vivi_code_get_get_type   	(void);
 
 ViviCodeValue *		vivi_code_get_new		(ViviCodeValue *	from,
 							 ViviCodeValue *	name);
+ViviCodeValue *		vivi_code_get_new_name		(const char *		name);
 
 
 G_END_DECLS

@@ -919,6 +919,23 @@ vivi_decompiler_find_start_block (GList *list, const guint8 *startpc)
   return NULL;
 }
 
+static void
+vivi_decompiler_remove_return (ViviCodeBlock *block)
+{
+  ViviCodeStatement *stmt;
+  guint len;
+
+  while ((len = vivi_code_block_get_n_statements (block))) {
+    stmt = vivi_code_block_get_statement (block, len - 1);
+    if (VIVI_IS_CODE_RETURN (stmt) &&
+	vivi_code_return_get_value (VIVI_CODE_RETURN (stmt)) == NULL) {
+      vivi_code_block_remove_statement (block, stmt);
+    } else {
+      break;
+    }
+  }
+}
+
 #define ASSERT_BLOCK_LIST(list) \
   { \
     GList *_walk; \
@@ -973,6 +990,8 @@ vivi_decompiler_merge_blocks_last_resort (GList *list, const guint8 *startpc)
   }
   g_list_foreach (ordered, (GFunc) g_object_unref, NULL);
   g_list_free (ordered);
+
+  vivi_decompiler_remove_return (block);
   return VIVI_CODE_STATEMENT (block);
 }
 

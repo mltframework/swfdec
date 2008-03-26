@@ -212,8 +212,14 @@ static gboolean
 vivi_decompile_constant_pool (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  SwfdecConstantPool *pool = swfdec_constant_pool_new_from_action (data, len, 
+  SwfdecConstantPool *pool;
+  SwfdecBuffer *buffer;
+  
+  buffer = vivi_decompiler_state_get_script (state)->buffer;
+  buffer = swfdec_buffer_new_subbuffer (buffer, data - buffer->data, len);
+  pool = swfdec_constant_pool_new (NULL, buffer, 
       vivi_decompiler_state_get_version (state));
+  swfdec_buffer_unref (buffer);
 
   vivi_decompiler_state_set_constant_pool (state, pool);
   return TRUE;
@@ -1322,8 +1328,7 @@ vivi_decompile_script (SwfdecScript *script)
   state = vivi_decompiler_state_new (script, script->main, 4);
   if (script->constant_pool) {
     vivi_decompiler_state_set_constant_pool (state,
-	swfdec_constant_pool_new_from_action (script->constant_pool->data,
-	    script->constant_pool->length, script->version));
+	swfdec_constant_pool_new (NULL, script->constant_pool, script->version));
   }
   block = vivi_decompiler_block_new (state);
   blocks = g_list_prepend (NULL, block);

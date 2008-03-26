@@ -554,6 +554,37 @@ EXTRA_DIST = \
 	comparisons-6.swf.trace \
 	comparisons-7.swf \
 	comparisons-7.swf.trace \
+	constantpool-broken-5.swf \
+	constantpool-broken-5.swf.trace \
+	constantpool-broken-5.swf.trace.org \
+	constantpool-broken-6.swf \
+	constantpool-broken-6.swf.trace \
+	constantpool-broken-6.swf.trace.org \
+	constantpool-broken-7.swf \
+	constantpool-broken-7.swf.trace \
+	constantpool-broken-7.swf.trace.org \
+	constantpool-broken-8.swf \
+	constantpool-broken-8.swf.trace \
+	constantpool-broken-8.swf.trace.org \
+	constantpool-broken.xml \
+	constantpool-functions-5.swf \
+	constantpool-functions-5.swf.trace \
+	constantpool-functions-6.swf \
+	constantpool-functions-6.swf.trace \
+	constantpool-functions-7.swf \
+	constantpool-functions-7.swf.trace \
+	constantpool-functions-8.swf \
+	constantpool-functions-8.swf.trace \
+	constantpool-functions.xml \
+	constantpool-when-lookup-5.swf \
+	constantpool-when-lookup-5.swf.trace \
+	constantpool-when-lookup-6.swf \
+	constantpool-when-lookup-6.swf.trace \
+	constantpool-when-lookup-7.swf \
+	constantpool-when-lookup-7.swf.trace \
+	constantpool-when-lookup-8.swf \
+	constantpool-when-lookup-8.swf.trace \
+	constantpool-when-lookup.xml \
 	construct-constructors.as \
 	construct-constructors-5.swf \
 	construct-constructors-5.swf.trace \

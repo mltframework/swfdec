@@ -49,7 +49,7 @@ vivi_decompiler_state_free (ViviDecompilerState *state)
   g_slist_foreach (state->stack, (GFunc) g_object_unref, NULL);
   g_slist_free (state->stack);
   if (state->pool)
-    swfdec_constant_pool_free (state->pool);
+    swfdec_constant_pool_unref (state->pool);
   swfdec_script_unref (state->script);
   g_slice_free (ViviDecompilerState, state);
 }
@@ -116,7 +116,7 @@ vivi_decompiler_state_copy (const ViviDecompilerState *src)
   dest->stack = g_slist_copy (src->stack);
   g_slist_foreach (dest->stack, (GFunc) g_object_ref, NULL);
   if (src->pool)
-    dest->pool = swfdec_constant_pool_copy (src->pool);
+    dest->pool = swfdec_constant_pool_ref (src->pool);
 
   return dest;
 }
@@ -159,7 +159,7 @@ vivi_decompiler_state_set_constant_pool (ViviDecompilerState *state,
     SwfdecConstantPool *pool)
 {
   if (state->pool)
-    swfdec_constant_pool_free (state->pool);
+    swfdec_constant_pool_unref (state->pool);
   state->pool = pool;
 }
 

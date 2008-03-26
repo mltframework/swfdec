@@ -567,6 +567,15 @@ EXTRA_DIST = \
 	constantpool-broken-8.swf.trace \
 	constantpool-broken-8.swf.trace.org \
 	constantpool-broken.xml \
+	constantpool-functions-5.swf \
+	constantpool-functions-5.swf.trace \
+	constantpool-functions-6.swf \
+	constantpool-functions-6.swf.trace \
+	constantpool-functions-7.swf \
+	constantpool-functions-7.swf.trace \
+	constantpool-functions-8.swf \
+	constantpool-functions-8.swf.trace \
+	constantpool-functions.xml \
 	construct-constructors.as \
 	construct-constructors-5.swf \
 	construct-constructors-5.swf.trace \

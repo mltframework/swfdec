@@ -27,16 +27,39 @@
 G_DEFINE_TYPE (ViviCodeReturn, vivi_code_return, VIVI_TYPE_CODE_STATEMENT)
 
 static void
+vivi_code_return_dispose (GObject *object)
+{
+  ViviCodeReturn *ret = VIVI_CODE_RETURN (object);
+
+  if (ret->value) {
+    g_object_unref (ret->value);
+    ret->value = NULL;
+  }
+
+  G_OBJECT_CLASS (vivi_code_return_parent_class)->dispose (object);
+}
+
+static void
 vivi_code_return_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
-  vivi_code_printer_print (printer, "return;");
+  ViviCodeReturn *ret = VIVI_CODE_RETURN (token);
+
+  vivi_code_printer_print (printer, "return");
+  if (ret->value) {
+    vivi_code_printer_print (printer, " ");
+    vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (ret->value));
+  }
+  vivi_code_printer_print (printer, ";");
   vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void
 vivi_code_return_class_init (ViviCodeReturnClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+
+  object_class->dispose = vivi_code_return_dispose;
 
   token_class->print = vivi_code_return_print;
 }
@@ -50,5 +73,18 @@ ViviCodeToken *
 vivi_code_return_new (void)
 {
   return g_object_new (VIVI_TYPE_CODE_RETURN, NULL);
+}
+
+void
+vivi_code_return_set_value (ViviCodeReturn *ret, ViviCodeValue *value)
+{
+  g_return_if_fail (VIVI_IS_CODE_RETURN (ret));
+  g_return_if_fail (value == NULL || VIVI_IS_CODE_VALUE (value));
+
+  if (value)
+    g_object_ref (value);
+  if (ret->value)
+    g_object_unref (ret->value);
+  ret->value = value;
 }
 

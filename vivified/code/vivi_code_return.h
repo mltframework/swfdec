@@ -21,6 +21,7 @@
 #define _VIVI_CODE_RETURN_H_
 
 #include <vivified/code/vivi_code_statement.h>
+#include <vivified/code/vivi_code_value.h>
 
 G_BEGIN_DECLS
 
@@ -38,6 +39,8 @@ typedef struct _ViviCodeReturnClass ViviCodeReturnClass;
 struct _ViviCodeReturn
 {
   ViviCodeStatement	statement;
+
+  ViviCodeValue *	value;
 };
 
 struct _ViviCodeReturnClass
@@ -48,6 +51,9 @@ struct _ViviCodeReturnClass
 GType			vivi_code_return_get_type   	(void);
 
 ViviCodeToken *		vivi_code_return_new		(void);
+
+void			vivi_code_return_set_value	(ViviCodeReturn *	ret,
+							 ViviCodeValue *	value);
 
 
 G_END_DECLS

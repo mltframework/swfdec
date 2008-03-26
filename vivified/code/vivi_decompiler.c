@@ -40,6 +40,7 @@
 #include "vivi_code_get_url.h"
 #include "vivi_code_goto.h"
 #include "vivi_code_if.h"
+#include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
 #include "vivi_code_return.h"
 #include "vivi_code_trace.h"
@@ -606,6 +607,37 @@ vivi_decompile_store_register (ViviDecompilerBlock *block, ViviDecompilerState *
   return TRUE;
 }
 
+static gboolean
+vivi_decompile_init_object (ViviDecompilerBlock *block, ViviDecompilerState *state,
+    guint code, const guint8 *data, guint len)
+{
+  ViviCodeValue *args, *init, *name, *value;
+  double d;
+  guint i, count;
+
+  args = vivi_decompiler_state_pop (state);
+  if (!VIVI_IS_CODE_CONSTANT (args) || 
+      vivi_code_constant_get_value_type (VIVI_CODE_CONSTANT (args)) != SWFDEC_AS_TYPE_NUMBER ||
+      ((count = d = vivi_code_constant_get_number (VIVI_CODE_CONSTANT (args))) != d)) {
+    vivi_decompiler_block_add_error (block, state, "could not determine init object argument count");
+    g_object_unref (args);
+    return FALSE;
+  }
+  g_object_unref (args);
+  count = MIN (count, (vivi_decompiler_state_get_stack_depth (state) + 1) / 2);
+
+  init = vivi_code_init_object_new ();
+  for (i = 0; i < count; i++) {
+    value = vivi_decompiler_state_pop (state);
+    name = vivi_decompiler_state_pop (state);
+    vivi_code_init_object_add_variable (VIVI_CODE_INIT_OBJECT (init), name, value);
+    g_object_unref (name);
+    g_object_unref (value);
+  }
+  vivi_decompiler_state_push (state, init);
+  return TRUE;
+}
+
 static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_END] = vivi_decompile_end,
   [SWFDEC_AS_ACTION_NEXT_FRAME] = NULL,
@@ -660,7 +692,7 @@ static DecompileFunc decompile_funcs[256] = {
   [SWFDEC_AS_ACTION_NEW_OBJECT] = NULL,
   [SWFDEC_AS_ACTION_DEFINE_LOCAL2] = NULL,
   [SWFDEC_AS_ACTION_INIT_ARRAY] = NULL,
-  [SWFDEC_AS_ACTION_INIT_OBJECT] = NULL,
+  [SWFDEC_AS_ACTION_INIT_OBJECT] = vivi_decompile_init_object,
   [SWFDEC_AS_ACTION_TYPE_OF] = NULL,
   [SWFDEC_AS_ACTION_TARGET_PATH] = NULL,
   [SWFDEC_AS_ACTION_ENUMERATE] = NULL,

@@ -17,6 +17,9 @@ EXTRA_DIST = \
 	and-or.as \
 	and-or.swf \
 	and-or.swf.expect \
+	function-calls.as \
+	function-calls.swf \
+	function-calls.swf.expect \
 	hello-world.as \
 	hello-world.swf \
 	hello-world.swf.expect \

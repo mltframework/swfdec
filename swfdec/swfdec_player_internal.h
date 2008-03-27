@@ -150,11 +150,6 @@ void		swfdec_player_initialize	(SwfdecPlayer *		player,
 						 guint			width,
 						 guint			height);
 void		swfdec_player_start_ticking	(SwfdecPlayer *		player);
-void		swfdec_player_add_movie		(SwfdecPlayer *		player,
-						 guint			depth,
-						 const char *		url);
-void		swfdec_player_remove_movie	(SwfdecPlayer *		player,
-						 SwfdecMovie *		movie);
 
 gboolean	swfdec_player_lock		(SwfdecPlayer *		player);
 void		swfdec_player_lock_soft		(SwfdecPlayer *		player);

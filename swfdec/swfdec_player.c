@@ -668,15 +668,6 @@ enum {
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
 
-void
-swfdec_player_remove_movie (SwfdecPlayer *player, SwfdecMovie *movie)
-{
-  SwfdecPlayerPrivate *priv = player->priv;
-
-  swfdec_movie_remove (movie);
-  priv->movies = g_list_remove (priv->movies, movie);
-}
-
 static guint
 swfdec_player_alignment_to_flags (SwfdecAlignment alignment)
 {

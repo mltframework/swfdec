@@ -2607,6 +2607,15 @@ EXTRA_DIST = \
 	scope-chain-with-and-scope-chain-7.swf.trace \
 	scope-chain-with-and-scope-chain-8.swf \
 	scope-chain-with-and-scope-chain-8.swf.trace \
+	selection-focus-5.swf \
+	selection-focus-5.swf.trace \
+	selection-focus-6.swf \
+	selection-focus-6.swf.trace \
+	selection-focus-7.swf \
+	selection-focus-7.swf.trace \
+	selection-focus-8.swf \
+	selection-focus-8.swf.trace \
+	selection-focus.as \
 	selection-properties.as \
 	selection-properties-5.swf \
 	selection-properties-5.swf.trace \

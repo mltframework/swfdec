@@ -12,3 +12,4 @@ Makefile.in
 *.loT
 
 vivi-decompile
+vivi-compile

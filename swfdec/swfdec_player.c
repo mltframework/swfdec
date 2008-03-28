@@ -663,7 +663,8 @@ enum {
   PROP_BASE_URL,
   PROP_URL,
   PROP_VARIABLES,
-  PROP_START_TIME
+  PROP_START_TIME,
+  PROP_FOCUS
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -782,6 +783,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_VARIABLES:
       g_value_set_string (value, priv->variables);
+      break;
+    case PROP_FOCUS:
+      g_value_set_boolean (value, priv->has_focus);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -923,6 +927,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
 	  SWFDEC_AS_CONTEXT (player)->start_time = *set;
 	/* else use default time from context */
       }
+      break;
+    case PROP_FOCUS:
+      swfdec_player_set_focus (player, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -1802,6 +1809,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_START_TIME,
       g_param_spec_boxed ("start-time", "start-time", "time to use as the beginning time for this player",
 	  SWFDEC_TYPE_TIME_VAL, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_FOCUS,
+      g_param_spec_boolean ("focus", "focus", "TRUE if the player has keyboard focus",
+	  TRUE, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -1992,6 +2002,7 @@ swfdec_player_init (SwfdecPlayer *player)
   priv->mouse_cursor = SWFDEC_MOUSE_CURSOR_NORMAL;
   priv->stage_width = -1;
   priv->stage_height = -1;
+  priv->has_focus = TRUE;
 }
 
 void
@@ -2556,6 +2567,7 @@ swfdec_player_key_press (SwfdecPlayer *player, guint keycode, guint character)
   gboolean ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (player->priv->has_focus, FALSE);
   g_return_val_if_fail (keycode < 256, FALSE);
 
   g_signal_emit (player, signals[HANDLE_KEY], 0, keycode, character, TRUE, &ret);
@@ -2581,6 +2593,7 @@ swfdec_player_key_release (SwfdecPlayer *player, guint keycode, guint character)
   gboolean ret;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (player->priv->has_focus, FALSE);
   g_return_val_if_fail (keycode < 256, FALSE);
 
   g_signal_emit (player, signals[HANDLE_KEY], 0, keycode, character, FALSE, &ret);
@@ -3090,6 +3103,66 @@ swfdec_player_set_scripting (SwfdecPlayer *player, SwfdecPlayerScripting *script
     g_object_unref (priv->scripting);
   priv->scripting = g_object_ref (scripting);
   g_object_notify (G_OBJECT (player), "scripting");
+}
+
+static void
+swfdec_player_update_focus (gpointer playerp, gpointer unused)
+{
+  SwfdecPlayer *player = playerp;
+  SwfdecPlayerPrivate *priv = player->priv;
+
+  if (priv->has_focus) {
+    swfdec_player_grab_focus (player, priv->focus_previous);
+  } else {
+    swfdec_player_grab_focus (player, NULL);
+  }
+}
+
+/**
+ * swfdec_player_get_focus:
+ * @player: a #SwfdecPlayer
+ *
+ * Checks if the @player has keyboard focus. See swfdec_player_set_focus() for
+ * details.
+ *
+ * Returns: %TRUE if the player has keyboard focus.
+ **/
+gboolean
+swfdec_player_get_focus (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+
+  return player->priv->has_focus;
+}
+
+/**
+ * swfdec_player_set_focus:
+ * @player: the player
+ * @focus: if the player is focussed
+ *
+ * Tells the @player whether keyboard focus is inside it. The player will use 
+ * this information to draw focus indicators around objects. Note that this
+ * update will not happen immediately, but only the next time you call 
+ * swfdec_player_advance(). The player is focussed by default. So if you 
+ * integrate it into a widget system such, you likely want to unset this upon 
+ * creation of the player.
+ * <note><para>The player must be focussed to receive keyboard events.</para>
+ * </note>
+ **/
+void
+swfdec_player_set_focus	(SwfdecPlayer *player, gboolean	focus)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+  if (priv->has_focus == focus)
+    return;
+
+  priv->has_focus = focus;
+  swfdec_player_add_external_action (player, player, swfdec_player_update_focus, NULL);
+  g_object_notify (G_OBJECT (player), "focus");
 }
 
 /**

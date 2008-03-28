@@ -145,6 +145,9 @@ SwfdecPlayerScripting *
 		swfdec_player_get_scripting	(SwfdecPlayer *		player);
 void		swfdec_player_set_scripting	(SwfdecPlayer *		player,
 						 SwfdecPlayerScripting *scripting);
+gboolean	swfdec_player_get_focus		(SwfdecPlayer *		player);
+void		swfdec_player_set_focus		(SwfdecPlayer *		player,
+						 gboolean		focus);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,

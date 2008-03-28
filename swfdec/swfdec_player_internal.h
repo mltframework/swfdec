@@ -76,6 +76,7 @@ struct _SwfdecPlayerPrivate
   GHashTable *		scripting_callbacks;	/* GC string => SwfdecAsFunction mapping of script callbacks */
   GType			loader_type;		/* type to use for creating sockets */
   GType			socket_type;		/* type to use for creating sockets */
+  gboolean		has_focus;		/* TRUE if this movie is given focus */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */

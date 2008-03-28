@@ -167,7 +167,8 @@ parse_source_element (GScanner *scanner, ViviCodeToken **token)
 static ParseStatus
 parse_function_declaration (GScanner *scanner, ViviCodeToken **token)
 {
-  ViviCodeToken *function, *identifier;
+  //ViviCodeToken *function;
+  ViviCodeToken *identifier;
   ViviCodeToken **arguments, **body;
 
   *token = NULL;
@@ -201,16 +202,17 @@ parse_function_declaration (GScanner *scanner, ViviCodeToken **token)
   if (!check_token (scanner, '}'))
     goto fail;
 
-  //function = vivi_code_function_new (arguments, body);
-  function = NULL;
+  /*function = vivi_code_function_new (arguments, body);
   *token = VIVI_CODE_TOKEN (
       vivi_code_assignment_new (NULL, VIVI_CODE_VALUE (identifier),
-      VIVI_CODE_VALUE (function)));
+      VIVI_CODE_VALUE (function)));*/
+  *token = VIVI_CODE_TOKEN (vivi_code_empty_new ());
 
   g_object_unref (identifier);
   if (arguments != NULL)
     free_list (arguments);
-  free_list (body);
+  if (body != NULL)
+    free_list (body);
 
   return STATUS_OK;
 
@@ -336,12 +338,14 @@ parse_expression (GScanner *scanner, ViviCodeToken **token)
   ViviCodeToken **list;
   ParseStatus status;
 
+  *token = NULL;
+
   status = parse_list (scanner, SYMBOL_ASSIGNMENT_EXPRESSION, &list, ',');
   if (status != STATUS_OK)
     return status;
 
   if (list[1] == NULL) {
-    *token = list[0];
+    *token = g_object_ref (list[0]);
   } else {
     *token = VIVI_CODE_TOKEN (create_block (list));
   }
@@ -624,12 +628,18 @@ parse (GScanner *scanner, ParseSymbol symbol, ViviCodeToken **token)
 {
   int i;
 
+  g_return_val_if_fail (scanner != NULL, STATUS_FAIL);
+  g_return_val_if_fail (symbol != SYMBOL_NONE, STATUS_FAIL);
+  g_return_val_if_fail (token != NULL, STATUS_FAIL);
+
   for (i = 0; symbols[i].id != SYMBOL_NONE; i++) {
     if (symbols[i].id == symbol) {
-      ParseStatus ret = symbols[i].parse (scanner, token);
-      if (ret != STATUS_CANCEL)
-	g_print (":%i: %s\n", ret, symbols[i].name);
-      return ret;
+      ParseStatus status = symbols[i].parse (scanner, token);
+      g_assert ((status == STATUS_OK && VIVI_IS_CODE_TOKEN (*token)) ||
+	  (status != STATUS_OK && *token == NULL));
+      if (status != STATUS_CANCEL)
+	g_print (":%i: %s\n", status, symbols[i].name);
+      return status;
     }
   }
 
@@ -644,6 +654,10 @@ parse_list (GScanner *scanner, ParseSymbol symbol, ViviCodeToken ***list,
   GPtrArray *array;
   ViviCodeToken *token;
   ParseStatus ret;
+
+  g_return_val_if_fail (scanner != NULL, STATUS_FAIL);
+  g_return_val_if_fail (symbol != SYMBOL_NONE, STATUS_FAIL);
+  g_return_val_if_fail (list != NULL, STATUS_FAIL);
 
   ret = parse (scanner, symbol, &token);
   if (ret != STATUS_OK)
@@ -678,6 +692,9 @@ main (int argc, char *argv[])
   gsize test_text_len;
   int ret;
   ViviCodeToken **list;
+  SwfdecPlayer *player;
+
+  player = swfdec_player_new (NULL);
 
   if (argc < 2) {
     g_print ("Usage!\n");

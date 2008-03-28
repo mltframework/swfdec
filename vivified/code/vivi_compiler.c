@@ -57,7 +57,11 @@ enum {
   TOKEN_FUNCTION = G_TOKEN_LAST + 1,
   TOKEN_PLUSPLUS = G_TOKEN_LAST + 2,
   TOKEN_MINUSMINUS = G_TOKEN_LAST + 3,
-  TOKEN_NEW = G_TOKEN_LAST + 4
+  TOKEN_NEW = G_TOKEN_LAST + 4,
+  TOKEN_TRUE = G_TOKEN_LAST + 5,
+  TOKEN_FALSE = G_TOKEN_LAST + 6,
+  TOKEN_NULL = G_TOKEN_LAST + 7,
+  TOKEN_THIS = G_TOKEN_LAST + 8
 };
 
 typedef enum {
@@ -96,8 +100,12 @@ typedef enum {
   SYMBOL_MEMBER_EXPRESSION,
   SYMBOL_FUNCTION_EXPRESSION,
   SYMBOL_PRIMARY_EXPRESSION,
-  // misc
+  // values
   SYMBOL_IDENTIFIER,
+  SYMBOL_LITERAL,
+  SYMBOL_ARRAY_LITERAL,
+  SYMBOL_OBJECT_LITERAL,
+  // misc
   SYMBOL_ASSIGNMENT_OPERATOR,
   SYMBOL_ARGUMENTS,
 } ParseSymbol;
@@ -408,10 +416,10 @@ parse_conditional_expression (GScanner *scanner, ViviCodeStatement **statement)
 {
   ParseStatus status;
   ViviCodeValue *value;
-  ViviCodeStatement *first, *second;
+  ViviCodeStatement *if_statement, *else_statement;
 
   *statement = NULL;
-  first = NULL;
+  if_statement = NULL;
 
   status = parse_value (scanner, SYMBOL_OPERATOR_EXPRESSION, &value);
   if (status != STATUS_OK)
@@ -423,31 +431,32 @@ parse_conditional_expression (GScanner *scanner, ViviCodeStatement **statement)
     return STATUS_OK;
   }
 
-  if (parse_statement (scanner, SYMBOL_ASSIGNMENT_EXPRESSION, &first) !=
+  if (parse_statement (scanner, SYMBOL_ASSIGNMENT_EXPRESSION, &if_statement) !=
       STATUS_OK)
     goto fail;
 
   if (!check_token (scanner, ':'))
     goto fail;
 
-  if (parse_statement (scanner, SYMBOL_ASSIGNMENT_EXPRESSION, &second) !=
-      STATUS_OK)
+  if (parse_statement (scanner, SYMBOL_ASSIGNMENT_EXPRESSION,
+	&else_statement) != STATUS_OK)
     goto fail;
 
-  //*statement = vivi_code_condional_new (VIVI_CODE_VALUE (value),
-  //    VIVI_CODE_STATEMENT (first), VIVI_CODE_STATEMENT (second));
+  *statement = vivi_code_if_new (value);
+  vivi_code_if_set_if (VIVI_CODE_IF (*statement), if_statement);
+  vivi_code_if_set_else (VIVI_CODE_IF (*statement), else_statement);
 
   g_object_unref (value);
-  g_object_unref (first);
-  g_object_unref (second);
+  g_object_unref (if_statement);
+  g_object_unref (else_statement);
 
   return STATUS_OK;
 
 fail:
 
   g_object_unref (value);
-  if (first != NULL)
-    g_object_unref (first);
+  if (if_statement != NULL)
+    g_object_unref (if_statement);
 
   return STATUS_FAIL;
 }
@@ -603,11 +612,36 @@ parse_member_expression (GScanner *scanner, ViviCodeValue **value)
 static ParseStatus
 parse_primary_expression (GScanner *scanner, ViviCodeValue **value)
 {
-  // TODO
-  return parse_value (scanner, SYMBOL_IDENTIFIER, value);
+  int i, status;
+  ParseSymbol options[] = {
+    SYMBOL_IDENTIFIER,
+    SYMBOL_LITERAL,
+    SYMBOL_ARRAY_LITERAL,
+    SYMBOL_OBJECT_LITERAL,
+    SYMBOL_NONE
+  };
+
+  *value = NULL;
+
+  if (check_token (scanner, TOKEN_THIS)) {
+    *value = vivi_code_get_new_name ("this");
+    return STATUS_OK;
+  }
+
+  /*if (check_token (scanner, '(')) {
+    return STATUS_OK;
+  }*/
+
+  for (i = 0; options[i] != SYMBOL_NONE; i++) {
+    status = parse_value (scanner, options[i], value);
+    if (status != STATUS_CANCEL)
+      return status;
+  }
+
+  return STATUS_CANCEL;
 }
 
-// misc.
+// values
 
 static ParseStatus
 parse_identifier (GScanner *scanner, ViviCodeValue **value)
@@ -616,6 +650,35 @@ parse_identifier (GScanner *scanner, ViviCodeValue **value)
 
   if (!check_token (scanner, G_TOKEN_IDENTIFIER))
     return STATUS_CANCEL;
+
+  *value = vivi_code_get_new_name (scanner->value.v_identifier);
+
+  return STATUS_OK;
+}
+
+static ParseStatus
+parse_literal (GScanner *scanner, ViviCodeValue **value)
+{
+  *value = NULL;
+
+  if (check_token (scanner, G_TOKEN_STRING)) {
+    *value = vivi_code_constant_new_string (scanner->value.v_string);
+    return STATUS_OK;
+  } else if (check_token (scanner, G_TOKEN_FLOAT)) {
+    *value = vivi_code_constant_new_number (scanner->value.v_float);
+    return STATUS_OK;
+  } else if (check_token (scanner, TOKEN_TRUE)) {
+    *value = vivi_code_constant_new_boolean (TRUE);
+    return STATUS_OK;
+  } else if (check_token (scanner, TOKEN_FALSE)) {
+    *value = vivi_code_constant_new_boolean (FALSE);
+    return STATUS_OK;
+  } else if (check_token (scanner, TOKEN_NULL)) {
+    *value = vivi_code_constant_new_null ();
+    return STATUS_OK;
+  } else {
+    return STATUS_CANCEL;
+  }
 
   *value = vivi_code_get_new_name (scanner->value.v_identifier);
 
@@ -669,8 +732,9 @@ static const SymbolValueFunctionList value_symbols[] = {
   { SYMBOL_NEW_EXPRESSION, "NewExpression", parse_new_expression },
   { SYMBOL_MEMBER_EXPRESSION, "MemberExpression", parse_member_expression },
   { SYMBOL_PRIMARY_EXPRESSION, "PrimaryExpression", parse_primary_expression },
-  // misc
+  // value
   { SYMBOL_IDENTIFIER, "Identifier", parse_identifier },
+  { SYMBOL_LITERAL, "Literal", parse_literal },
   { SYMBOL_NONE, NULL, NULL }
 };
 
@@ -805,6 +869,12 @@ vivi_compile_text (const char *text, gsize len, const char *input_name)
   scanner->config->numbers_2_int = TRUE;
   scanner->config->int_2_float = TRUE;
   scanner->config->symbol_2_token = TRUE;
+  // FIXME: Should allow other Unicode characters
+  scanner->config->cset_identifier_first =
+    g_strdup (G_CSET_A_2_Z G_CSET_a_2_z G_CSET_LATINS G_CSET_LATINC "_$");
+  scanner->config->cset_identifier_nth = g_strdup (G_CSET_A_2_Z G_CSET_a_2_z
+      G_CSET_LATINS G_CSET_LATINC "_$" G_CSET_DIGITS);
+  scanner->config->scan_identifier_1char = TRUE;
 
   g_scanner_set_scope (scanner, 0);
   g_scanner_scope_add_symbol (scanner, 0, "function",

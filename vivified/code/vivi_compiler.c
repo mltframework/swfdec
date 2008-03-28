@@ -179,7 +179,8 @@ parse_program (GScanner *scanner, ViviCodeStatement **statement)
 
   *statement = NULL;
 
-  status = parse_statement_list (scanner, SYMBOL_SOURCE_ELEMENT, &list, G_TOKEN_NONE);
+  status = parse_statement_list (scanner, SYMBOL_SOURCE_ELEMENT, &list,
+      G_TOKEN_NONE);
   if (status != STATUS_OK)
     return status;
 
@@ -228,7 +229,8 @@ parse_function_declaration (GScanner *scanner, ViviCodeStatement **statement)
   if (!check_token (scanner, '('))
     goto fail;
 
-  if (parse_value_list (scanner, SYMBOL_IDENTIFIER, &arguments, ',') == STATUS_FAIL)
+  if (parse_value_list (scanner, SYMBOL_IDENTIFIER, &arguments, ',') ==
+      STATUS_FAIL)
     goto fail;
 
   if (!check_token (scanner, ')'))
@@ -313,18 +315,17 @@ parse_block (GScanner *scanner, ViviCodeStatement **statement)
   if (!check_token (scanner, '{'))
     return STATUS_CANCEL;
 
-  list = NULL;
-
   g_scanner_peek_next_token (scanner);
   if (scanner->next_token != '}') {
     if (parse_statement_list (scanner, SYMBOL_STATEMENT, &list, G_TOKEN_NONE)
 	!= STATUS_OK)
       return STATUS_FAIL;
+  } else {
+    list = g_new0 (ViviCodeStatement *, 1);
   }
 
   if (!check_token (scanner, '}')) {
-    if (list != NULL)
-      free_statement_list (list);
+    free_statement_list (list);
     return STATUS_FAIL;
   }
 
@@ -386,12 +387,7 @@ parse_expression (GScanner *scanner, ViviCodeStatement **statement)
   if (status != STATUS_OK)
     return status;
 
-  if (list[1] == NULL) {
-    *statement = g_object_ref (list[0]);
-  } else {
-    *statement = create_block (list);
-  }
-
+  *statement = create_block (list);
   free_statement_list (list);
 
   return STATUS_OK;

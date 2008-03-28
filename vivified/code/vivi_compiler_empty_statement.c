@@ -30,14 +30,7 @@ G_DEFINE_TYPE (ViviCompilerEmptyStatement, vivi_compiler_empty_statement, VIVI_T
 static ViviCodeStatement *
 vivi_compiler_empty_statement_optimize (ViviCodeStatement *statement)
 {
-  // FIXME
-  return statement;
-}
-
-static gboolean
-vivi_compiler_empty_statement_needs_braces (ViviCodeStatement *stmt)
-{
-  return FALSE;
+  return NULL;
 }
 
 static void
@@ -58,7 +51,6 @@ vivi_compiler_empty_statement_class_init (
   token_class->print = vivi_compiler_empty_statement_print;
 
   statement_class->optimize = vivi_compiler_empty_statement_optimize;
-  statement_class->needs_braces = vivi_compiler_empty_statement_needs_braces;
 }
 
 static void

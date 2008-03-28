@@ -17,43 +17,19 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef _VIVI_DECOMPILER_H_
+#define _VIVI_DECOMPILER_H_
 
 #include <swfdec/swfdec.h>
+#include <vivified/code/vivi_code_statement.h>
 
-#include "vivi_compiler.h"
-#include "vivi_code_text_printer.h"
+G_BEGIN_DECLS
 
-int
-main (int argc, char *argv[])
-{
-  SwfdecPlayer *player;
-  char *text;
-  gsize text_len;
-  ViviCodeStatement *statement;
 
-  player = swfdec_player_new (NULL);
+ViviCodeStatement *	vivi_compile_text		(const char *	text,
+							 gsize		len,
+							 const char *	input_name);
 
-  if (argc != 2) {
-    g_printerr ("Usage: %s <filename>\n", argv[0]);
-    return 1;
-  }
 
-  if (!g_file_get_contents (argv[1], &text, &text_len, NULL)) {
-    g_printerr ("Couldn't open file %s", argv[1]);
-    return -1;
-  }
-
-  statement = vivi_compile_text (text, text_len, argv[1]);
-  if (statement == NULL) {
-    g_printerr ("Compilation failed\n");
-    return -1;
-  } else {
-    ViviCodePrinter *printer = vivi_code_text_printer_new ();
-    vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (statement));
-    g_object_unref (printer);
-    return 0;
-  }
-}
+G_END_DECLS
+#endif

@@ -32,6 +32,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_unary.c \
 	vivi_code_value.c \
 	vivi_code_value_statement.c \
+	vivi_compiler.c \
 	vivi_decompiler_block.c \
 	vivi_decompiler_duplicate.c \
 	vivi_decompiler_state.c \
@@ -65,6 +66,7 @@ noinst_HEADERS = \
 	vivi_code_unary.h \
 	vivi_code_value.h \
 	vivi_code_value_statement.h \
+	vivi_compiler.h \
 	vivi_decompiler.h \
 	vivi_decompiler_block.h \
 	vivi_decompiler_duplicate.h \

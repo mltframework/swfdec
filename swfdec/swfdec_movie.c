@@ -42,6 +42,7 @@
 #include "swfdec_sprite_movie.h"
 #include "swfdec_resource.h"
 #include "swfdec_system.h"
+#include "swfdec_text_field_movie.h"
 #include "swfdec_utils.h"
 #include "swfdec_as_internal.h"
 
@@ -795,6 +796,31 @@ swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean event
   }
 
   return NULL;
+}
+
+gboolean
+swfdec_movie_can_focus (SwfdecMovie *movie)
+{
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
+
+  /* FIXME: subclass plz? */
+  if (!SWFDEC_IS_TEXT_FIELD_MOVIE (movie) &&
+      !SWFDEC_IS_BUTTON_MOVIE (movie) &&
+      !SWFDEC_IS_SPRITE_MOVIE (movie))
+    return FALSE;
+
+  /* apparently root movies can't receive focus? */
+  if (movie->parent == NULL)
+    return FALSE;
+
+  if (!swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (movie),
+	SWFDEC_AS_STR_focusEnabled, &val) ||
+      swfdec_as_value_to_boolean (SWFDEC_AS_OBJECT (movie)->context, &val) == FALSE)
+    return FALSE;
+
+  return TRUE;
 }
 
 static gboolean

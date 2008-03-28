@@ -121,6 +121,9 @@ struct _SwfdecPlayerPrivate
   guint			last_keycode;		/* last keycode that was pressed/released */
   guint			last_character;		/* UCS4 of last character pressed/released */
   guint8		key_pressed[256/8];   	/* boolean array for isDown */
+  SwfdecMovie *		focus;			/* movie that currently has keyboard focus (or NULL if none) */
+  SwfdecMovie *		focus_previous;		/* the last movie that had focus */
+  GList *		focus_list;	      	/* list of movies with a tabIndex set or NULL for no tabIndex usage */
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
@@ -181,6 +184,8 @@ SwfdecSocket *	swfdec_player_create_socket	(SwfdecPlayer *		player,
 						 const char *		hostname,
 						 guint			port);
 
+void		swfdec_player_grab_focus	(SwfdecPlayer *		player,
+						 SwfdecMovie *		movie);
 #define swfdec_player_is_mouse_pressed(player) ((player)->priv->mouse_button & 1)
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);

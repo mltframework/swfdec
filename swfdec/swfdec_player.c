@@ -1025,24 +1025,94 @@ swfdec_player_dispose (GObject *object)
 }
 
 static void
-swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const char *signal)
+swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const char *signal,
+    guint argc, SwfdecAsValue *argv)
 {
   GSList *walk;
-  SwfdecAsValue val;
+  SwfdecAsValue vals[3];
   SwfdecAsObject *obj;
 
+  /* FIXME: extend when needed, by increasing the array size above */
+  g_return_if_fail (argc <= 2);
+
+  if (argc > 0) {
+    memcpy (&vals[1], argv, argc * sizeof (SwfdecAsValue));
+  }
+
   SWFDEC_DEBUG ("broadcasting message %s.%s", object_name, signal);
+  /* FIXME: sandbox ordering? */
   for (walk = player->priv->sandboxes; walk; walk = walk->next) {
     SwfdecSandbox *sandbox = walk->data;
-    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (sandbox), object_name, &val);
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (sandbox), object_name, &vals[0]);
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&vals[0]))
       return;
-    obj = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-    SWFDEC_AS_VALUE_SET_STRING (&val, signal);
+    obj = SWFDEC_AS_VALUE_GET_OBJECT (&vals[0]);
+    SWFDEC_AS_VALUE_SET_STRING (&vals[0], signal);
     swfdec_sandbox_use (sandbox);
-    swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, 1, &val, NULL);
+    swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, argc + 1, vals, NULL);
     swfdec_sandbox_unuse (sandbox);
   }
+}
+
+/**
+ * swfdec_player_grab_focus:
+ * @player: the player
+ * @movie: the movie to give focus or %NULL to unset focus
+ *
+ * This function handles passing the focus around. It is supposed to be called
+ * by all functions that wish to change keyboard focus. Note that only the 
+ * currently focused movie receives keyboard events - i.e. key_pressed and 
+ * key_released vfuncs.
+ **/
+void
+swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecMovie *movie)
+{
+  SwfdecAsValue vals[2];
+  SwfdecPlayerPrivate *priv;
+  SwfdecMovieClass *klass;
+  SwfdecMovie *prev;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (movie == NULL || SWFDEC_IS_MOVIE (movie));
+
+  /* set variables */
+  priv = player->priv;
+  if (movie == priv->focus) {
+    SWFDEC_DEBUG ("nothing to do, focus change request from movie %s to itself", movie ? movie->name : "---");
+    return;
+  }
+  prev = priv->focus;
+  if (prev) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&vals[0], SWFDEC_AS_OBJECT (prev));
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (&vals[0]);
+  }
+  if (movie) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&vals[1], SWFDEC_AS_OBJECT (movie));
+  } else {
+    SWFDEC_AS_VALUE_SET_NULL (&vals[1]);
+  }
+  if (prev) {
+    swfdec_sandbox_use (prev->resource->sandbox);
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (prev), SWFDEC_AS_STR_onKillFocus,
+	1, &vals[1], NULL);
+    swfdec_sandbox_unuse (prev->resource->sandbox);
+    klass = SWFDEC_MOVIE_GET_CLASS (prev);
+    if (klass->focus_out)
+      klass->focus_out (prev);
+  }
+  priv->focus_previous = prev;
+  priv->focus = movie;
+  if (movie) {
+    swfdec_sandbox_use (movie->resource->sandbox);
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onSetFocus,
+	1, &vals[0], NULL);
+    swfdec_sandbox_unuse (movie->resource->sandbox);
+    klass = SWFDEC_MOVIE_GET_CLASS (movie);
+    if (klass->focus_in)
+      klass->focus_in (movie);
+  }
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Selection, SWFDEC_AS_STR_onSetFocus, 2, vals);
 }
 
 static void
@@ -1184,7 +1254,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
     for (walk = priv->movies; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
     }
-    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove);
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove, 0, NULL);
   }
   swfdec_player_grab_mouse_movie (player);
   if (priv->mouse_grab) {
@@ -1210,7 +1280,7 @@ swfdec_player_do_mouse_press (SwfdecPlayer *player, guint button)
     for (walk = priv->movies; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_DOWN);
     }
-    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseDown);
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseDown, 0, NULL);
   }
   if (priv->mouse_grab) {
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
@@ -1233,7 +1303,7 @@ swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
     for (walk = priv->movies; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_UP);
     }
-    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseUp);
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseUp, 0, NULL);
   }
   if (priv->mouse_grab) {
     SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
@@ -1311,7 +1381,8 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
   } else {
     priv->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
   }
-  swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp);
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, 
+      down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp, 0, NULL);
   swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
 
@@ -2742,7 +2813,7 @@ swfdec_player_update_size (gpointer playerp, gpointer unused)
 
   priv->broadcasted_width = priv->internal_width;
   priv->broadcasted_height = priv->internal_height;
-  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize);
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize, 0, NULL);
 }
 
 /**

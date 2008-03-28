@@ -182,10 +182,8 @@ struct _SwfdecMovieClass {
 						 double			x,
 						 double			y);
   /* keyboard handling */
-  void			(* focus_in)		(SwfdecMovie *		movie,
-						 SwfdecMovie *		previous);
-  void			(* focus_out)		(SwfdecMovie *		movie,
-						 SwfdecMovie *		next);
+  void			(* focus_in)		(SwfdecMovie *		movie);
+  void			(* focus_out)		(SwfdecMovie *		movie);
   void			(* key_pressed)		(SwfdecMovie *		movie,
 						 guint			keycode,
 						 guint			character);
@@ -253,6 +251,7 @@ void		swfdec_movie_rect_global_to_local (SwfdecMovie *	movie,
 void		swfdec_movie_set_depth		(SwfdecMovie *		movie,
 						 int			depth);
 
+gboolean	swfdec_movie_can_focus		(SwfdecMovie *		movie);
 void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);

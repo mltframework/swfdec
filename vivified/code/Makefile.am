@@ -90,16 +90,3 @@ vivi_compile_SOURCES = \
 vivi_compile_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
 vivi_compile_LDFLAGS = $(SWFDEC_LIBS)
 vivi_compile_LDADD = libvivified-compiler.la
-
-if SECRET_TEST_CODE
-noinst_PROGRAMS += vivi-decompile-gtk
-
-vivi_decompile_gtk_SOURCES = \
-	vivi_code_gtk_printer.c \
-	vivi_code_gtk_printer.h \
-	gtk_decompiler.c
-
-vivi_decompile_gtk_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS)
-vivi_decompile_gtk_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS)
-vivi_decompile_gtk_LDADD = libvivified-compiler.la
-endif

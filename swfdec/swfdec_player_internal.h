@@ -76,6 +76,7 @@ struct _SwfdecPlayerPrivate
   GHashTable *		scripting_callbacks;	/* GC string => SwfdecAsFunction mapping of script callbacks */
   GType			loader_type;		/* type to use for creating sockets */
   GType			socket_type;		/* type to use for creating sockets */
+  gboolean		has_focus;		/* TRUE if this movie is given focus */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */
@@ -121,6 +122,9 @@ struct _SwfdecPlayerPrivate
   guint			last_keycode;		/* last keycode that was pressed/released */
   guint			last_character;		/* UCS4 of last character pressed/released */
   guint8		key_pressed[256/8];   	/* boolean array for isDown */
+  SwfdecMovie *		focus;			/* movie that currently has keyboard focus (or NULL if none) */
+  SwfdecMovie *		focus_previous;		/* the last movie that had focus */
+  GList *		focus_list;	      	/* list of movies with a tabIndex set or NULL for no tabIndex usage */
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
@@ -150,11 +154,6 @@ void		swfdec_player_initialize	(SwfdecPlayer *		player,
 						 guint			width,
 						 guint			height);
 void		swfdec_player_start_ticking	(SwfdecPlayer *		player);
-void		swfdec_player_add_movie		(SwfdecPlayer *		player,
-						 guint			depth,
-						 const char *		url);
-void		swfdec_player_remove_movie	(SwfdecPlayer *		player,
-						 SwfdecMovie *		movie);
 
 gboolean	swfdec_player_lock		(SwfdecPlayer *		player);
 void		swfdec_player_lock_soft		(SwfdecPlayer *		player);
@@ -186,6 +185,8 @@ SwfdecSocket *	swfdec_player_create_socket	(SwfdecPlayer *		player,
 						 const char *		hostname,
 						 guint			port);
 
+void		swfdec_player_grab_focus	(SwfdecPlayer *		player,
+						 SwfdecMovie *		movie);
 #define swfdec_player_is_mouse_pressed(player) ((player)->priv->mouse_button & 1)
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);

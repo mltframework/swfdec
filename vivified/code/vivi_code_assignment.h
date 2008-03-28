@@ -43,6 +43,7 @@ struct _ViviCodeAssignment
   ViviCodeValue *	from;
   ViviCodeValue *	name;
   ViviCodeValue	*	value;
+  gboolean		local;
 };
 
 struct _ViviCodeAssignmentClass
@@ -57,6 +58,9 @@ ViviCodeStatement *	vivi_code_assignment_new		(ViviCodeValue *	from,
 								 ViviCodeValue *	value);
 ViviCodeStatement *	vivi_code_assignment_new_name		(const char *		name,
 								 ViviCodeValue *	value);
+
+void			vivi_code_assignment_set_local		(ViviCodeAssignment *	assign,
+								 gboolean		local);
 
 
 G_END_DECLS

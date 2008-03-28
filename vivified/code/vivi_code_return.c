@@ -88,3 +88,10 @@ vivi_code_return_set_value (ViviCodeReturn *ret, ViviCodeValue *value)
   ret->value = value;
 }
 
+ViviCodeValue *
+vivi_code_return_get_value (ViviCodeReturn *ret)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_RETURN (ret), NULL);
+
+  return ret->value;
+}

@@ -183,6 +183,30 @@ swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
   return FALSE;
 }
 
+/* NB: called for both focus in and focus out */
+static gboolean
+swfdec_gtk_widget_focus_inout (GtkWidget *gtkwidget, GdkEventFocus *focus)
+{
+  SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+
+  if (priv->interactive && priv->player)
+    swfdec_player_set_focus (priv->player, focus->in);
+  return FALSE;
+}
+
+static gboolean
+swfdec_gtk_widget_focus (GtkWidget *gtkwidget, GtkDirectionType direction)
+{
+  SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+
+  if (!priv->interactive || priv->player == NULL)
+    return FALSE;
+
+  return GTK_WIDGET_CLASS (swfdec_gtk_widget_parent_class)->focus (gtkwidget, direction);
+}
+
 static cairo_surface_t *
 swfdec_gtk_widget_create_renderer (cairo_surface_type_t type, int width, int height)
 {
@@ -404,7 +428,8 @@ swfdec_gtk_widget_realize (GtkWidget *widget)
 			   GDK_POINTER_MOTION_MASK | 
 			   GDK_POINTER_MOTION_HINT_MASK |
 			   GDK_KEY_PRESS_MASK |
-			   GDK_KEY_RELEASE_MASK;
+			   GDK_KEY_RELEASE_MASK |
+			   GDK_FOCUS_CHANGE_MASK;
 
   attributes_mask = GDK_WA_X | GDK_WA_Y;
 
@@ -453,6 +478,9 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
   widget_class->leave_notify_event = swfdec_gtk_widget_leave_notify;
   widget_class->key_press_event = swfdec_gtk_widget_key_press;
   widget_class->key_release_event = swfdec_gtk_widget_key_release;
+  widget_class->focus_in_event = swfdec_gtk_widget_focus_inout;
+  widget_class->focus_out_event = swfdec_gtk_widget_focus_inout;
+  widget_class->focus = swfdec_gtk_widget_focus;
 
   g_type_class_add_private (object_class, sizeof (SwfdecGtkWidgetPrivate));
 }
@@ -515,21 +543,22 @@ swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
   g_return_if_fail (SWFDEC_IS_GTK_WIDGET (widget));
   g_return_if_fail (player == NULL || SWFDEC_IS_PLAYER (player));
   
+  if (player) {
+    g_signal_connect (player, "invalidate", G_CALLBACK (swfdec_gtk_widget_invalidate_cb), widget);
+    g_signal_connect (player, "notify", G_CALLBACK (swfdec_gtk_widget_notify_cb), widget);
+    g_object_ref (player);
+    swfdec_gtk_widget_update_cursor (widget);
+    swfdec_player_set_focus (player, GTK_WIDGET_HAS_FOCUS (GTK_WIDGET (widget)));
+  } else {
+    if (GTK_WIDGET (widget)->window)
+      gdk_window_set_cursor (GTK_WIDGET (widget)->window, NULL); 
+  }
   if (priv->player) {
     g_signal_handlers_disconnect_by_func (priv->player, swfdec_gtk_widget_invalidate_cb, widget);
     g_signal_handlers_disconnect_by_func (priv->player, swfdec_gtk_widget_notify_cb, widget);
     g_object_unref (priv->player);
   }
   priv->player = player;
-  if (player) {
-    g_signal_connect (player, "invalidate", G_CALLBACK (swfdec_gtk_widget_invalidate_cb), widget);
-    g_signal_connect (player, "notify", G_CALLBACK (swfdec_gtk_widget_notify_cb), widget);
-    g_object_ref (player);
-    swfdec_gtk_widget_update_cursor (widget);
-  } else {
-    if (GTK_WIDGET (widget)->window)
-      gdk_window_set_cursor (GTK_WIDGET (widget)->window, NULL); 
-  }
   gtk_widget_queue_resize (GTK_WIDGET (widget));
   g_object_notify (G_OBJECT (widget), "player");
 }

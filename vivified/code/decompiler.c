@@ -32,7 +32,7 @@
 #include "vivi_code_text_printer.h"
 
 static void
-decode_script (gpointer offset, gpointer scriptp, gpointer unused)
+decode_script (gpointer scriptp, gpointer unused)
 {
   SwfdecScript *script = scriptp;
   ViviCodeValue *fun;
@@ -49,12 +49,30 @@ decode_script (gpointer offset, gpointer scriptp, gpointer unused)
   g_object_unref (fun);
 }
 
+static void
+enqueue (gpointer offset, gpointer script, gpointer listp)
+{
+  GList **list = listp;
+
+  *list = g_list_prepend (*list, script);
+}
+
+static int
+script_compare (gconstpointer a, gconstpointer b)
+{
+  const SwfdecScript *scripta = a;
+  const SwfdecScript *scriptb = b;
+
+  return scripta->main - scriptb->main;
+}
+
 int 
 main (int argc, char *argv[])
 {
   SwfdecPlayer *player;
   SwfdecSwfDecoder *dec;
   SwfdecURL *url;
+  GList *scripts;
 
   if (argc < 2) {
     g_print ("%s FILENAME\n", argv[0]);
@@ -79,8 +97,13 @@ main (int argc, char *argv[])
   g_print ("/* version: %d - size: %ux%u */\n", dec->version,
       player->priv->width, player->priv->height);
   g_print ("\n");
-  g_hash_table_foreach (dec->scripts, decode_script, NULL);
+  scripts = NULL;
+  g_hash_table_foreach (dec->scripts, enqueue, &scripts);
+  scripts = g_list_sort (scripts, script_compare);
+  
+  g_list_foreach (scripts, decode_script, NULL);
 
+  g_list_free (scripts);
   g_object_unref (player);
   return 0;
 }

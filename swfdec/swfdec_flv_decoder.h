@@ -76,8 +76,7 @@ SwfdecBuffer *	swfdec_flv_decoder_get_data		(SwfdecFlvDecoder *	flv,
 							 guint			timestamp,
 							 guint *		real_timestamp);
 
-SwfdecMovie *	swfdec_flv_decoder_add_movie		(SwfdecFlvDecoder *	flv,
-							 SwfdecMovie *		parent);
+
 G_END_DECLS
 
 #endif

@@ -491,5 +491,10 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("height")
   SWFDEC_AS_CONSTANT_STRING ("deblocking")
   SWFDEC_AS_CONSTANT_STRING ("smoothing")
+  SWFDEC_AS_CONSTANT_STRING ("onKillFocus")
+  SWFDEC_AS_CONSTANT_STRING ("onSetFocus")
+  SWFDEC_AS_CONSTANT_STRING ("Selection")
+  SWFDEC_AS_CONSTANT_STRING ("tabEnabled")
+  SWFDEC_AS_CONSTANT_STRING ("focusEnabled")
   /* add more here */
 ;

@@ -54,6 +54,7 @@ ViviCodeStatement *   	vivi_code_return_new		(void);
 
 void			vivi_code_return_set_value	(ViviCodeReturn *	ret,
 							 ViviCodeValue *	value);
+ViviCodeValue *		vivi_code_return_get_value	(ViviCodeReturn *	ret);
 
 
 G_END_DECLS

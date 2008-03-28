@@ -59,12 +59,6 @@ swfdec_decoder_new (SwfdecPlayer *player, const SwfdecBuffer *buffer)
       data[1] == 'W' &&
       data[2] == 'S') {
     retval = g_object_new (SWFDEC_TYPE_SWF_DECODER, NULL);
-#if 0
-  } else if (data[0] == 'F' &&
-      data[1] == 'L' &&
-      data[2] == 'V') {
-    retval = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
-#endif
   } else if (swfdec_image_detect (data) != SWFDEC_IMAGE_TYPE_UNKNOWN) {
     retval = g_object_new (SWFDEC_TYPE_IMAGE_DECODER, NULL);
   } else {

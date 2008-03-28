@@ -1,7 +1,7 @@
 check-local: ../vivi-decompile
 	RESULT=""; \
 	for file in $(srcdir)/*.swf; do \
-	  ../vivi-decompile $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
+	  echo "$$file ..." && ../vivi-decompile $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
 	done; \
 	if test "x$$RESULT" == "x"; then \
 	  echo "OK"; \
@@ -17,6 +17,9 @@ EXTRA_DIST = \
 	and-or.as \
 	and-or.swf \
 	and-or.swf.expect \
+	function-calls.as \
+	function-calls.swf \
+	function-calls.swf.expect \
 	hello-world.as \
 	hello-world.swf \
 	hello-world.swf.expect \

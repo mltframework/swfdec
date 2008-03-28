@@ -51,6 +51,9 @@ vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
   else
     varname = NULL;
 
+  if (assignment->local)
+    vivi_code_printer_print (printer, "var ");
+
   if (assignment->from) {
     vivi_code_printer_print_value (printer, assignment->from, VIVI_PRECEDENCE_MEMBER);
     if (varname) {
@@ -129,3 +132,14 @@ vivi_code_assignment_new_name (const char *name, ViviCodeValue *value)
   g_object_unref (constant);
   return result;
 }
+
+void
+vivi_code_assignment_set_local (ViviCodeAssignment *assign, gboolean local)
+{
+  g_return_if_fail (VIVI_IS_CODE_ASSIGNMENT (assign));
+  /* can't assign to non-local variables */
+  g_return_if_fail (assign->from == NULL);
+
+  assign->local = local;
+}
+

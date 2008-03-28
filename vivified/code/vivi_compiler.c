@@ -54,14 +54,113 @@ typedef enum {
 } ParseStatus;
 
 enum {
-  TOKEN_FUNCTION = G_TOKEN_LAST + 1,
-  TOKEN_PLUSPLUS = G_TOKEN_LAST + 2,
-  TOKEN_MINUSMINUS = G_TOKEN_LAST + 3,
-  TOKEN_NEW = G_TOKEN_LAST + 4,
-  TOKEN_TRUE = G_TOKEN_LAST + 5,
-  TOKEN_FALSE = G_TOKEN_LAST + 6,
-  TOKEN_NULL = G_TOKEN_LAST + 7,
-  TOKEN_THIS = G_TOKEN_LAST + 8
+  // keywords
+  TOKEN_BREAK = G_TOKEN_LAST + 1,
+  TOKEN_CASE,
+  TOKEN_CATCH,
+  TOKEN_CONTINUE,
+  TOKEN_DEFAULT,
+  TOKEN_DELETE,
+  TOKEN_DO,
+  TOKEN_ELSE,
+  TOKEN_FINALLY,
+  TOKEN_FOR,
+  TOKEN_FUNCTION,
+  TOKEN_IF,
+  TOKEN_IN,
+  TOKEN_INSTANCEOF,
+  TOKEN_NEW,
+  TOKEN_RETURN,
+  TOKEN_SWITCH,
+  TOKEN_THIS,
+  TOKEN_THROW,
+  TOKEN_TRY,
+  TOKEN_TYPEOF,
+  TOKEN_VAR,
+  TOKEN_VOID,
+  TOKEN_WITH,
+  // reserved keywords
+  TOKEN_FUTURE,
+  // values
+  TOKEN_TRUE,
+  TOKEN_FALSE,
+  TOKEN_NULL,
+  // misc
+  TOKEN_PLUSPLUS,
+  TOKEN_MINUSMINUS
+};
+
+typedef struct {
+  guint		token;
+  const char *	symbol;
+} TokenDescription;
+
+static const TokenDescription custom_tokens[] = {
+  // keywords
+  { TOKEN_BREAK, "break" },
+  { TOKEN_CASE, "case" },
+  { TOKEN_CATCH, "catch" },
+  { TOKEN_CONTINUE, "continue" },
+  { TOKEN_DEFAULT, "default" },
+  { TOKEN_DELETE, "delete" },
+  { TOKEN_DO, "do" },
+  { TOKEN_ELSE, "else" },
+  { TOKEN_FINALLY, "finally" },
+  { TOKEN_FOR, "for" },
+  { TOKEN_FUNCTION, "function" },
+  { TOKEN_IF, "if" },
+  { TOKEN_IN, "in" },
+  { TOKEN_INSTANCEOF, "instanceof" },
+  { TOKEN_NEW, "new" },
+  { TOKEN_RETURN, "return" },
+  { TOKEN_SWITCH, "switch" },
+  { TOKEN_THIS, "this" },
+  { TOKEN_THROW, "throw" },
+  { TOKEN_TRY, "try" },
+  { TOKEN_TYPEOF, "typeof" },
+  { TOKEN_VAR, "var" },
+  { TOKEN_VOID, "while" },
+  { TOKEN_WITH, "with" },
+  // reserved keywords
+  { TOKEN_FUTURE, "abstract" },
+  { TOKEN_FUTURE, "boolean" },
+  { TOKEN_FUTURE, "byte" },
+  { TOKEN_FUTURE, "char" },
+  { TOKEN_FUTURE, "class" },
+  { TOKEN_FUTURE, "const" },
+  { TOKEN_FUTURE, "debugger" },
+  { TOKEN_FUTURE, "double" },
+  { TOKEN_FUTURE, "enum" },
+  { TOKEN_FUTURE, "export" },
+  { TOKEN_FUTURE, "extends" },
+  { TOKEN_FUTURE, "final" },
+  { TOKEN_FUTURE, "float" },
+  { TOKEN_FUTURE, "goto" },
+  { TOKEN_FUTURE, "implements" },
+  { TOKEN_FUTURE, "import" },
+  { TOKEN_FUTURE, "int" },
+  { TOKEN_FUTURE, "interface" },
+  { TOKEN_FUTURE, "long" },
+  { TOKEN_FUTURE, "native" },
+  { TOKEN_FUTURE, "package" },
+  { TOKEN_FUTURE, "private" },
+  { TOKEN_FUTURE, "protected" },
+  { TOKEN_FUTURE, "public" },
+  { TOKEN_FUTURE, "short" },
+  { TOKEN_FUTURE, "static" },
+  { TOKEN_FUTURE, "super" },
+  { TOKEN_FUTURE, "synchronized" },
+  { TOKEN_FUTURE, "throws" },
+  { TOKEN_FUTURE, "transient" },
+  { TOKEN_FUTURE, "volatile" },
+  // values
+  { TOKEN_TRUE, "true" },
+  { TOKEN_FALSE, "false" },
+  { TOKEN_NULL, "null" },
+  // misc
+  { TOKEN_PLUSPLUS, "++" },
+  { TOKEN_MINUSMINUS, "--" },
+  { G_TOKEN_NONE, NULL }
 };
 
 typedef enum {
@@ -861,6 +960,7 @@ vivi_compile_text (const char *text, gsize len, const char *input_name)
   GScanner *scanner;
   ViviCodeStatement *statement;
   ParseStatus status;
+  int i;
 
   g_return_val_if_fail (text != NULL, NULL);
 
@@ -877,13 +977,10 @@ vivi_compile_text (const char *text, gsize len, const char *input_name)
   scanner->config->scan_identifier_1char = TRUE;
 
   g_scanner_set_scope (scanner, 0);
-  g_scanner_scope_add_symbol (scanner, 0, "function",
-      GINT_TO_POINTER (TOKEN_FUNCTION));
-  g_scanner_scope_add_symbol (scanner, 0, "++",
-      GINT_TO_POINTER (TOKEN_PLUSPLUS));
-  g_scanner_scope_add_symbol (scanner, 0, "--",
-      GINT_TO_POINTER (TOKEN_MINUSMINUS));
-  g_scanner_scope_add_symbol (scanner, 0, "new", GINT_TO_POINTER (TOKEN_NEW));
+  for (i = 0; custom_tokens[i].token != G_TOKEN_NONE; i++) {
+    g_scanner_scope_add_symbol (scanner, 0, custom_tokens[i].symbol,
+	GINT_TO_POINTER (custom_tokens[i].token));
+  }
 
   scanner->input_name = input_name;
   g_scanner_input_text (scanner, text, len);

@@ -31,7 +31,6 @@
 #include "vivi_code_break.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
-#include "vivi_code_empty.h"
 #include "vivi_code_function.h"
 #include "vivi_code_function_call.h"
 #include "vivi_code_get.h"
@@ -44,6 +43,7 @@
 #include "vivi_code_trace.h"
 #include "vivi_code_unary.h"
 #include "vivi_code_value_statement.h"
+#include "vivi_compiler_empty_statement.h"
 
 #include "vivi_code_text_printer.h"
 
@@ -249,7 +249,7 @@ parse_function_declaration (GScanner *scanner, ViviCodeStatement **statement)
   /*function = vivi_code_function_new (arguments, body);
   *statement = vivi_code_assignment_new (NULL, VIVI_CODE_VALUE (identifier),
       VIVI_CODE_VALUE (function));*/
-  *statement = vivi_code_empty_new ();
+  *statement = vivi_compiler_empty_statement_new ();
 
   g_object_unref (identifier);
   if (arguments != NULL)
@@ -343,7 +343,7 @@ parse_empty_statement (GScanner *scanner, ViviCodeStatement **statement)
   if (!check_token (scanner, ';'))
     return STATUS_CANCEL;
 
-  *statement = vivi_code_empty_new ();
+  *statement = vivi_compiler_empty_statement_new ();
 
   return STATUS_OK;
 }
@@ -603,6 +603,7 @@ parse_member_expression (GScanner *scanner, ViviCodeValue **value)
 static ParseStatus
 parse_primary_expression (GScanner *scanner, ViviCodeValue **value)
 {
+  // TODO
   return parse_value (scanner, SYMBOL_IDENTIFIER, value);
 }
 

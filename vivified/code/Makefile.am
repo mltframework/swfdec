@@ -71,7 +71,7 @@ noinst_HEADERS = \
 	vivified-compiler.h
 
 
-noinst_PROGRAMS = vivi-decompile vivi-decompile-gtk
+noinst_PROGRAMS = vivi-decompile
 
 vivi_decompile_SOURCES = \
 	decompiler.c
@@ -79,6 +79,9 @@ vivi_decompile_SOURCES = \
 vivi_decompile_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
 vivi_decompile_LDFLAGS = $(SWFDEC_LIBS)
 vivi_decompile_LDADD = libvivified-compiler.la
+
+if SECRET_TEST_CODE
+noinst_PROGRAMS += vivi-decompile-gtk
 
 vivi_decompile_gtk_SOURCES = \
 	vivi_code_gtk_printer.c \
@@ -88,3 +91,4 @@ vivi_decompile_gtk_SOURCES = \
 vivi_decompile_gtk_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) $(GTK_CFLAGS)
 vivi_decompile_gtk_LDFLAGS = $(SWFDEC_LIBS) $(GTK_LIBS)
 vivi_decompile_gtk_LDADD = libvivified-compiler.la
+endif

@@ -184,10 +184,10 @@ struct _SwfdecMovieClass {
   /* keyboard handling */
   void			(* focus_in)		(SwfdecMovie *		movie);
   void			(* focus_out)		(SwfdecMovie *		movie);
-  void			(* key_pressed)		(SwfdecMovie *		movie,
+  void			(* key_press)		(SwfdecMovie *		movie,
 						 guint			keycode,
 						 guint			character);
-  void			(* key_released)      	(SwfdecMovie *		movie,
+  void			(* key_release)      	(SwfdecMovie *		movie,
 						 guint			keycode,
 						 guint			character);
 

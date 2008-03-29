@@ -1082,6 +1082,7 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecMovie *movie)
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (movie == NULL || SWFDEC_IS_MOVIE (movie));
 
+  g_print ("movie %s grabs focus (%d)\n", movie ? movie->name : "---", player->priv->has_focus);
   /* set variables */
   priv = player->priv;
   if (movie == priv->focus) {
@@ -1372,6 +1373,11 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
   }
 }
 
+static void
+swfdec_player_handle_special_keys (SwfdecPlayer *player, guint key)
+{
+}
+
 static gboolean
 swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint character, gboolean down)
 {
@@ -1390,6 +1396,19 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
   }
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, 
       down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp, 0, NULL);
+  if (priv->focus) {
+    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->focus);
+    g_print ("got a focus movie!\n");
+    if (down) {
+      if (klass->key_press)
+	klass->key_press (priv->focus, keycode, character);
+    } else {
+      if (klass->key_release)
+	klass->key_release (priv->focus, keycode, character);
+    }
+  }
+  if (down)
+    swfdec_player_handle_special_keys (player, keycode);
   swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
 
@@ -3112,7 +3131,8 @@ swfdec_player_update_focus (gpointer playerp, gpointer unused)
   SwfdecPlayerPrivate *priv = player->priv;
 
   if (priv->has_focus) {
-    swfdec_player_grab_focus (player, priv->focus_previous);
+    if (priv->focus == NULL)
+      swfdec_player_grab_focus (player, priv->focus_previous);
   } else {
     swfdec_player_grab_focus (player, NULL);
   }

@@ -1455,6 +1455,18 @@ swfdec_movie_mouse_move (SwfdecMovie *movie, double x, double y)
 }
 
 static void
+swfdec_movie_key_press (SwfdecMovie *movie, guint keycode, guint character)
+{
+  swfdec_movie_queue_script (movie, SWFDEC_EVENT_KEY_DOWN);
+}
+
+static void
+swfdec_movie_key_release (SwfdecMovie *movie, guint keycode, guint character)
+{
+  swfdec_movie_queue_script (movie, SWFDEC_EVENT_KEY_UP);
+}
+
+static void
 swfdec_movie_do_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
 {
   GList *walk;
@@ -1506,6 +1518,8 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   movie_class->mouse_press = swfdec_movie_mouse_press;
   movie_class->mouse_release = swfdec_movie_mouse_release;
   movie_class->mouse_move = swfdec_movie_mouse_move;
+  movie_class->key_press = swfdec_movie_key_press;
+  movie_class->key_release = swfdec_movie_key_release;
 }
 
 void

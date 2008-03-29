@@ -1,4 +1,9 @@
 
+ 0.6.2 ("Badger Badger Badger")
+
+This is the first bugfix release in the stable release series. It contains 
+mostly compilation fixes. No new features were added.
+
  0.6.0 ("Fedora TV")
 
 Here is the first API/ABI-stable release of Swfdec. Enjoy!

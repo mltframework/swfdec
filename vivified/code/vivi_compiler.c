@@ -205,6 +205,7 @@ typedef enum {
   SYMBOL_ARRAY_LITERAL,
   SYMBOL_OBJECT_LITERAL,
   // misc
+  SYMBOL_VARIABLE_DECLARATION,
   SYMBOL_ASSIGNMENT_OPERATOR,
   SYMBOL_ARGUMENTS,
 } ParseSymbol;
@@ -379,6 +380,34 @@ parse_block (GScanner *scanner, ViviCodeStatement **statement)
   }
 
   if (!check_token (scanner, '}')) {
+    free_statement_list (list);
+    return STATUS_FAIL;
+  }
+
+  *statement = create_block (list);
+  free_statement_list (list);
+
+  return STATUS_OK;
+}
+
+static ParseStatus
+parse_variable_statement (GScanner *scanner, ViviCodeStatement **statement)
+{
+  ViviCodeStatement **list;
+  ParseStatus status;
+
+  *statement = NULL;
+
+  if (!check_token (scanner, TOKEN_VAR)) {
+    return STATUS_CANCEL;
+  }
+
+  status =
+    parse_statement_list (scanner, SYMBOL_VARIABLE_DECLARATION, &list, ',');
+  if (status != STATUS_OK)
+    return status;
+
+  if (!check_token (scanner, ';')) {
     free_statement_list (list);
     return STATUS_FAIL;
   }
@@ -761,7 +790,8 @@ parse_member_expression (GScanner *scanner, ViviCodeValue **value)
 static ParseStatus
 parse_primary_expression (GScanner *scanner, ViviCodeValue **value)
 {
-  int i, status;
+  int i;
+  ParseStatus status;
   ParseSymbol options[] = {
     SYMBOL_IDENTIFIER,
     SYMBOL_LITERAL,
@@ -790,6 +820,34 @@ parse_primary_expression (GScanner *scanner, ViviCodeValue **value)
   return STATUS_CANCEL;
 }
 
+// misc
+
+static ParseStatus
+parse_variable_declaration (GScanner *scanner, ViviCodeStatement **statement)
+{
+  ParseStatus status;
+  ViviCodeValue *identifier;
+  ViviCodeValue *value;
+
+  *statement = NULL;
+
+  status = parse_value (scanner, SYMBOL_IDENTIFIER, &identifier);
+  if (status != STATUS_OK)
+    return status;
+
+  if (check_token (scanner, '=')) {
+    // TODO
+    return STATUS_FAIL;
+  } else {
+    value = vivi_code_constant_new_undefined ();
+  }
+
+  *statement = vivi_code_assignment_new (NULL, identifier, value);
+  vivi_code_assignment_set_local (VIVI_CODE_ASSIGNMENT (*statement), TRUE);
+
+  return STATUS_OK;
+}
+
 // parsing
 
 typedef struct {
@@ -808,7 +866,7 @@ static const SymbolStatementFunctionList statement_symbols[] = {
   // statement
   { SYMBOL_STATEMENT, "Statement", parse_statement_symbol },
   { SYMBOL_BLOCK, "Block", parse_block },
-  //{ SYMBOL_VARIABLE_STATEMENT, "VariableStatement", parse_variable_statement },
+  { SYMBOL_VARIABLE_STATEMENT, "VariableStatement", parse_variable_statement },
   { SYMBOL_EMPTY_STATEMENT, "EmptyStatement", parse_empty_statement },
   { SYMBOL_EXPRESSION_STATEMENT, "ExpressionStatement",
     parse_expression_statement },
@@ -829,6 +887,9 @@ static const SymbolStatementFunctionList statement_symbols[] = {
     parse_assignment_expression },
   { SYMBOL_CONDITIONAL_EXPRESSION, "ConditionalExpression",
     parse_conditional_expression },
+  // misc
+  { SYMBOL_VARIABLE_DECLARATION, "VariableDeclaration",
+    parse_variable_declaration },
   { SYMBOL_NONE, NULL, NULL }
 };
 

@@ -2616,6 +2616,15 @@ EXTRA_DIST = \
 	selection-focus-8.swf \
 	selection-focus-8.swf.trace \
 	selection-focus.as \
+	selection-focus-events-5.swf \
+	selection-focus-events-5.swf.trace \
+	selection-focus-events-6.swf \
+	selection-focus-events-6.swf.trace \
+	selection-focus-events-7.swf \
+	selection-focus-events-7.swf.trace \
+	selection-focus-events-8.swf \
+	selection-focus-events-8.swf.trace \
+	selection-focus-events.as \
 	selection-properties.as \
 	selection-properties-5.swf \
 	selection-properties-5.swf.trace \

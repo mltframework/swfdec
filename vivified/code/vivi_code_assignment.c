@@ -23,6 +23,7 @@
 
 #include "vivi_code_assignment.h"
 #include "vivi_code_constant.h"
+#include "vivi_code_get.h"
 #include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeAssignment, vivi_code_assignment, VIVI_TYPE_CODE_STATEMENT)
@@ -46,10 +47,13 @@ vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
   char *varname;
 
-  if (VIVI_IS_CODE_CONSTANT (assignment->name))
+  if (VIVI_IS_CODE_CONSTANT (assignment->name)) {
     varname = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (assignment->name));
-  else
+  } else if (VIVI_IS_CODE_GET (assignment->name)) {
+    varname = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (VIVI_CODE_GET (assignment->name)->name));
+  } else {
     varname = NULL;
+  }
 
   if (assignment->local)
     vivi_code_printer_print (printer, "var ");
@@ -76,8 +80,12 @@ vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
       goto finalize;
     }
   }
-  vivi_code_printer_print (printer, " = ");
-  vivi_code_printer_print_value (printer, assignment->value, VIVI_PRECEDENCE_ASSIGNMENT);
+  if (!assignment->local || !VIVI_IS_CODE_CONSTANT (assignment->value) ||
+      vivi_code_constant_get_value_type (
+	VIVI_CODE_CONSTANT (assignment->value)) != SWFDEC_AS_TYPE_UNDEFINED) {
+    vivi_code_printer_print (printer, " = ");
+    vivi_code_printer_print_value (printer, assignment->value, VIVI_PRECEDENCE_ASSIGNMENT);
+  }
   g_free (varname);
 finalize:
   vivi_code_printer_print (printer, ";");

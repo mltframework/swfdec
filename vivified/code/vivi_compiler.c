@@ -168,7 +168,7 @@ typedef ParseStatus (*ParseValueFunction) (GScanner *scanner, ViviCodeValue **va
 
 static ParseStatus
 parse_statement_list (GScanner *scanner, ParseStatementFunction function,
-    ViviCodeStatement ***list, guint separator);
+    ViviCodeStatement **statement, guint separator);
 static ParseStatus
 parse_value_list (GScanner *scanner, ParseValueFunction function,
     ViviCodeValue ***list, guint separator);
@@ -186,17 +186,6 @@ check_token (GScanner *scanner, guint token)
 }
 
 static void
-free_statement_list (ViviCodeStatement **list)
-{
-  int i;
-
-  for (i = 0; list[i] != NULL; i++) {
-    g_object_unref (list[i]);
-  }
-  g_free (list);
-}
-
-static void
 free_value_list (ViviCodeValue **list)
 {
   int i;
@@ -205,21 +194,6 @@ free_value_list (ViviCodeValue **list)
     g_object_unref (list[i]);
   }
   g_free (list);
-}
-
-static ViviCodeStatement *
-create_block (ViviCodeStatement **list)
-{
-  ViviCodeBlock *block;
-  int i;
-
-  block = VIVI_CODE_BLOCK (vivi_code_block_new ());
-
-  for (i = 0; list[i] != NULL; i++) {
-    vivi_code_block_add_statement (block, list[i]);
-  }
-
-  return VIVI_CODE_STATEMENT (block);
 }
 
 // values
@@ -542,20 +516,10 @@ parse_assignment_expression (GScanner *scanner, ViviCodeStatement **statement)
 static ParseStatus
 parse_expression (GScanner *scanner, ViviCodeStatement **statement)
 {
-  ViviCodeStatement **list;
-  ParseStatus status;
-
   *statement = NULL;
 
-  status =
-    parse_statement_list (scanner, parse_assignment_expression, &list, ',');
-  if (status != STATUS_OK)
-    return status;
-
-  *statement = create_block (list);
-  free_statement_list (list);
-
-  return STATUS_OK;
+  return parse_statement_list (scanner, parse_assignment_expression, statement,
+      ',');
 }
 
 // statement
@@ -603,8 +567,6 @@ parse_statement (GScanner *scanner, ViviCodeStatement **statement);
 static ParseStatus
 parse_block (GScanner *scanner, ViviCodeStatement **statement)
 {
-  ViviCodeStatement **list;
-
   *statement = NULL;
 
   if (!check_token (scanner, '{'))
@@ -612,20 +574,18 @@ parse_block (GScanner *scanner, ViviCodeStatement **statement)
 
   g_scanner_peek_next_token (scanner);
   if (scanner->next_token != '}') {
-    if (parse_statement_list (scanner, parse_statement, &list, G_TOKEN_NONE)
-	!= STATUS_OK)
+    if (parse_statement_list (scanner, parse_statement, statement,
+	  G_TOKEN_NONE) != STATUS_OK)
       return STATUS_FAIL;
   } else {
-    list = g_new0 (ViviCodeStatement *, 1);
+    *statement = vivi_code_block_new ();
   }
 
   if (!check_token (scanner, '}')) {
-    free_statement_list (list);
+    g_object_unref (*statement);
+    *statement = NULL;
     return STATUS_FAIL;
   }
-
-  *statement = create_block (list);
-  free_statement_list (list);
 
   return STATUS_OK;
 }
@@ -633,27 +593,20 @@ parse_block (GScanner *scanner, ViviCodeStatement **statement)
 static ParseStatus
 parse_variable_statement (GScanner *scanner, ViviCodeStatement **statement)
 {
-  ViviCodeStatement **list;
-  ParseStatus status;
-
   *statement = NULL;
 
-  if (!check_token (scanner, TOKEN_VAR)) {
+  if (!check_token (scanner, TOKEN_VAR))
     return STATUS_CANCEL;
-  }
 
-  status =
-    parse_statement_list (scanner, parse_variable_declaration, &list, ',');
-  if (status != STATUS_OK)
-    return status;
+  if (parse_statement_list (scanner, parse_variable_declaration, statement,
+	',') != STATUS_OK)
+    return STATUS_FAIL;
 
   if (!check_token (scanner, ';')) {
-    free_statement_list (list);
+    g_object_unref (*statement);
+    *statement = NULL;
     return STATUS_FAIL;
   }
-
-  *statement = create_block (list);
-  free_statement_list (list);
 
   return STATUS_OK;
 }
@@ -702,7 +655,7 @@ parse_function_declaration (GScanner *scanner, ViviCodeStatement **statement)
   //ViviCodeStatement *function;
   ViviCodeValue *identifier;
   ViviCodeValue **arguments;
-  ViviCodeStatement **body;
+  ViviCodeStatement *body;
 
   *statement = NULL;
 
@@ -745,7 +698,7 @@ parse_function_declaration (GScanner *scanner, ViviCodeStatement **statement)
   if (arguments != NULL)
     free_value_list (arguments);
   if (body != NULL)
-    free_statement_list (body);
+    g_object_unref (body);
 
   return STATUS_OK;
 
@@ -755,7 +708,7 @@ fail:
   if (arguments != NULL)
     free_value_list (arguments);
   if (body != NULL)
-    free_statement_list (body);
+    g_object_unref (body);
 
   return STATUS_FAIL;
 }
@@ -779,54 +732,47 @@ parse_source_element (GScanner *scanner, ViviCodeStatement **statement)
 static ParseStatus
 parse_program (GScanner *scanner, ViviCodeStatement **statement)
 {
-  ParseStatus status;
-  ViviCodeStatement **list;
-
   *statement = NULL;
 
-  status = parse_statement_list (scanner, parse_source_element, &list,
+  return parse_statement_list (scanner, parse_source_element, statement,
       G_TOKEN_NONE);
-  if (status != STATUS_OK)
-    return status;
-
-  *statement = create_block (list);
-
-  return STATUS_OK;
 }
 
 // parsing
 
 static ParseStatus
 parse_statement_list (GScanner *scanner, ParseStatementFunction function,
-    ViviCodeStatement ***list, guint separator)
+    ViviCodeStatement **block, guint separator)
 {
-  GPtrArray *array;
   ViviCodeStatement *statement;
   ParseStatus status;
 
   g_return_val_if_fail (scanner != NULL, STATUS_FAIL);
   g_return_val_if_fail (function != NULL, STATUS_FAIL);
-  g_return_val_if_fail (list != NULL, STATUS_FAIL);
+  g_return_val_if_fail (block != NULL, STATUS_FAIL);
+
+  *block = NULL;
 
   status = function (scanner, &statement);
   if (status != STATUS_OK)
     return status;
 
-  array = g_ptr_array_new ();
+  *block = vivi_code_block_new ();
 
   do {
-    g_ptr_array_add (array, statement);
+    vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), statement);
+    g_object_unref (statement);
 
     if (separator != G_TOKEN_NONE && !check_token (scanner, separator))
       break;
 
     status = function (scanner, &statement);
-    if (status == STATUS_FAIL)
+    if (status == STATUS_FAIL) {
+      g_object_unref (*block);
+      *block = NULL;
       return STATUS_FAIL;
+    }
   } while (status == STATUS_OK);
-  g_ptr_array_add (array, NULL);
-
-  *list = (ViviCodeStatement **)g_ptr_array_free (array, FALSE);
 
   return STATUS_OK;
 }

@@ -199,32 +199,79 @@ free_value_list (ViviCodeValue **list)
 // values
 
 static ParseStatus
-parse_literal (GScanner *scanner, ViviCodeValue **value)
+parse_null_literal (GScanner *scanner, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (check_token (scanner, G_TOKEN_STRING)) {
-    *value = vivi_code_constant_new_string (scanner->value.v_string);
-    return STATUS_OK;
-  } else if (check_token (scanner, G_TOKEN_FLOAT)) {
-    *value = vivi_code_constant_new_number (scanner->value.v_float);
-    return STATUS_OK;
-  } else if (check_token (scanner, TOKEN_TRUE)) {
+  if (!check_token (scanner, TOKEN_NULL))
+    return STATUS_CANCEL;
+
+  *value = vivi_code_constant_new_null ();
+  return STATUS_OK;
+}
+
+static ParseStatus
+parse_boolean_literal (GScanner *scanner, ViviCodeValue **value)
+{
+  *value = NULL;
+
+  if (check_token (scanner, TOKEN_TRUE)) {
     *value = vivi_code_constant_new_boolean (TRUE);
     return STATUS_OK;
   } else if (check_token (scanner, TOKEN_FALSE)) {
     *value = vivi_code_constant_new_boolean (FALSE);
     return STATUS_OK;
-  } else if (check_token (scanner, TOKEN_NULL)) {
-    *value = vivi_code_constant_new_null ();
-    return STATUS_OK;
   } else {
     return STATUS_CANCEL;
   }
+}
 
-  *value = vivi_code_get_new_name (scanner->value.v_identifier);
+static ParseStatus
+parse_numeric_literal (GScanner *scanner, ViviCodeValue **value)
+{
+  *value = NULL;
 
+  if (!check_token (scanner, G_TOKEN_FLOAT))
+    return STATUS_CANCEL;
+
+  *value = vivi_code_constant_new_number (scanner->value.v_float);
   return STATUS_OK;
+}
+
+static ParseStatus
+parse_string_literal (GScanner *scanner, ViviCodeValue **value)
+{
+  *value = NULL;
+
+  if (!check_token (scanner, G_TOKEN_STRING))
+    return STATUS_CANCEL;
+
+  *value = vivi_code_constant_new_string (scanner->value.v_string);
+  return STATUS_OK;
+}
+
+static ParseStatus
+parse_literal (GScanner *scanner, ViviCodeValue **value)
+{
+  int i;
+  ParseStatus status;
+  ParseValueFunction functions[] = {
+    parse_null_literal,
+    parse_boolean_literal,
+    parse_numeric_literal,
+    parse_string_literal,
+    NULL
+  };
+
+  *value = NULL;
+
+  for (i = 0; functions[i] != NULL; i++) {
+    status = functions[i] (scanner, value);
+    if (status != STATUS_CANCEL)
+      return status;
+  }
+
+  return STATUS_CANCEL;
 }
 
 static ParseStatus
@@ -238,6 +285,74 @@ parse_identifier (GScanner *scanner, ViviCodeValue **value)
   *value = vivi_code_get_new_name (scanner->value.v_identifier);
 
   return STATUS_OK;
+}
+
+static ParseStatus
+parse_property_name (GScanner *scanner, ViviCodeValue **value)
+{
+  int i;
+  ParseStatus status;
+  ParseValueFunction functions[] = {
+    parse_identifier,
+    parse_string_literal,
+    parse_numeric_literal,
+    NULL
+  };
+
+  *value = NULL;
+
+  for (i = 0; functions[i] != NULL; i++) {
+    status = functions[i] (scanner, value);
+    if (status != STATUS_CANCEL)
+      return status;
+  }
+
+  return STATUS_CANCEL;
+}
+
+// FIXME
+static ParseStatus
+parse_operator_expression (GScanner *scanner, ViviCodeValue **value);
+
+static ParseStatus
+parse_object_literal (GScanner *scanner, ViviCodeValue **value)
+{
+  *value = NULL;
+
+  if (!check_token (scanner, '{'))
+    return STATUS_CANCEL;
+
+  *value = vivi_code_init_object_new ();
+
+  if (!check_token (scanner, '}')) {
+    do {
+      ViviCodeValue *property, *initializer;
+
+      if (parse_property_name (scanner, &property) != STATUS_OK)
+	goto fail;
+
+      if (!check_token (scanner, ':'))
+	goto fail;
+
+      // FIXME
+      if (parse_operator_expression (scanner, &initializer) != STATUS_OK)
+	goto fail;
+
+      vivi_code_init_object_add_variable (VIVI_CODE_INIT_OBJECT (*value),
+	  property, initializer);
+    } while (check_token (scanner, ','));
+  }
+
+  if (!check_token (scanner, '}'))
+    goto fail;
+
+  return STATUS_OK;
+
+fail:
+
+  g_object_unref (*value);
+  *value = NULL;
+  return STATUS_FAIL;
 }
 
 // misc
@@ -279,7 +394,7 @@ parse_primary_expression (GScanner *scanner, ViviCodeValue **value)
     parse_identifier,
     parse_literal,
     //parse_array_literal,
-    //parse_object_literal,
+    parse_object_literal,
     NULL
   };
 

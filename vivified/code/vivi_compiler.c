@@ -760,7 +760,7 @@ parse_statement_list (GScanner *scanner, ParseStatementFunction function,
   *block = vivi_code_block_new ();
 
   do {
-    vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), statement);
+    vivi_code_block_add_statement (VIVI_CODE_BLOCK (*block), statement);
     g_object_unref (statement);
 
     if (separator != G_TOKEN_NONE && !check_token (scanner, separator))

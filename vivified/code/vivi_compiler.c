@@ -310,7 +310,6 @@ parse_property_name (GScanner *scanner, ViviCodeValue **value)
   return STATUS_CANCEL;
 }
 
-// FIXME
 static ParseStatus
 parse_operator_expression (GScanner *scanner, ViviCodeValue **value);
 
@@ -334,7 +333,7 @@ parse_object_literal (GScanner *scanner, ViviCodeValue **value)
       if (!check_token (scanner, ':'))
 	goto fail;
 
-      // FIXME
+      // FIXME: assignment expression
       if (parse_operator_expression (scanner, &initializer) != STATUS_OK)
 	goto fail;
 
@@ -371,8 +370,11 @@ parse_variable_declaration (GScanner *scanner, ViviCodeStatement **statement)
     return status;
 
   if (check_token (scanner, '=')) {
-    // TODO
-    return STATUS_FAIL;
+    // FIXME: assignment expression
+    if (parse_operator_expression (scanner, &value) != STATUS_OK) {
+      g_object_unref (identifier);
+      return STATUS_FAIL;
+    }
   } else {
     value = vivi_code_constant_new_undefined ();
   }
@@ -405,9 +407,17 @@ parse_primary_expression (GScanner *scanner, ViviCodeValue **value)
     return STATUS_OK;
   }
 
-  /*if (check_token (scanner, '(')) {
+  if (check_token (scanner, '(')) {
+    // FIXME: assignment expression
+    if (parse_operator_expression (scanner, value) != STATUS_OK)
+      return STATUS_FAIL;
+    if (!check_token (scanner, ')')) {
+      g_object_unref (*value);
+      *value = NULL;
+      return STATUS_FAIL;
+    }
     return STATUS_OK;
-  }*/
+  }
 
   for (i = 0; functions[i] != NULL; i++) {
     status = functions[i] (scanner, value);
@@ -436,13 +446,13 @@ parse_member_expression (GScanner *scanner, ViviCodeValue **value)
   do {
     ViviCodeValue *tmp;
 
-    /*if (check_token (scanner, '[')) {
-      if (parse_expression (scanner, &member) != STATUS_OK)
+    if (check_token (scanner, '[')) {
+      // FIXME: expression
+      if (parse_operator_expression (scanner, &member) != STATUS_OK)
 	return STATUS_FAIL;
       if (!check_token (scanner, ']'))
 	return STATUS_FAIL;
-    } else*/
-    if (check_token (scanner, '.')) {
+    } else if (check_token (scanner, '.')) {
       if (parse_identifier (scanner, &member) != STATUS_OK)
 	return STATUS_FAIL;
     } else {

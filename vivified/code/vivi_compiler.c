@@ -598,7 +598,7 @@ parse_empty_statement (GScanner *scanner, ViviCodeStatement **statement)
 }
 
 static ParseStatus
-parse_statement_symbol (GScanner *scanner, ViviCodeStatement **statement);
+parse_statement (GScanner *scanner, ViviCodeStatement **statement);
 
 static ParseStatus
 parse_block (GScanner *scanner, ViviCodeStatement **statement)
@@ -612,8 +612,8 @@ parse_block (GScanner *scanner, ViviCodeStatement **statement)
 
   g_scanner_peek_next_token (scanner);
   if (scanner->next_token != '}') {
-    if (parse_statement_list (scanner, parse_statement_symbol, &list,
-	  G_TOKEN_NONE) != STATUS_OK)
+    if (parse_statement_list (scanner, parse_statement, &list, G_TOKEN_NONE)
+	!= STATUS_OK)
       return STATUS_FAIL;
   } else {
     list = g_new0 (ViviCodeStatement *, 1);
@@ -659,7 +659,7 @@ parse_variable_statement (GScanner *scanner, ViviCodeStatement **statement)
 }
 
 static ParseStatus
-parse_statement_symbol (GScanner *scanner, ViviCodeStatement **statement)
+parse_statement (GScanner *scanner, ViviCodeStatement **statement)
 {
   int i, status;
   ParseStatementFunction functions[] = {
@@ -771,7 +771,7 @@ parse_source_element (GScanner *scanner, ViviCodeStatement **statement)
 
   status = parse_function_declaration (scanner, statement);
   if (status == STATUS_CANCEL)
-    status = parse_statement_symbol (scanner, statement);
+    status = parse_statement (scanner, statement);
 
   return status;
 }

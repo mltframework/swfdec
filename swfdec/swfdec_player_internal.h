@@ -140,7 +140,7 @@ struct _SwfdecPlayerPrivate
   SwfdecRingBuffer *	external_actions;     	/* external actions we've queued up, like resize or loader stuff */
   SwfdecTimeout		external_timeout;      	/* callback for iterating */
   /* iterating */
-  GList *		movies;			/* list of all movies that want to be iterated */
+  GList *		actors;			/* list of all SwfdecActor isntances active in this player */
   SwfdecRingBuffer *	actions[SWFDEC_PLAYER_N_ACTION_QUEUES]; /* all actions we've queued up so far */
 
   /* security */

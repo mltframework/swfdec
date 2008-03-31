@@ -190,10 +190,6 @@ struct _SwfdecMovieClass {
   void			(* key_release)      	(SwfdecMovie *		movie,
 						 guint			keycode,
 						 guint			character);
-
-  /* iterating */
-  void			(* iterate_start)     	(SwfdecMovie *		movie);
-  gboolean		(* iterate_end)		(SwfdecMovie *		movie);
 };
 
 GType		swfdec_movie_get_type		(void);

@@ -27,9 +27,19 @@
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecActor, swfdec_actor, SWFDEC_TYPE_MOVIE)
 
+static gboolean
+swfdec_actor_iterate_end (SwfdecActor *actor)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (actor);
+
+  return movie->parent == NULL || 
+	 movie->state < SWFDEC_MOVIE_STATE_REMOVED;
+}
+
 static void
 swfdec_actor_class_init (SwfdecActorClass *klass)
 {
+  klass->iterate_end = swfdec_actor_iterate_end;
 }
 
 static void

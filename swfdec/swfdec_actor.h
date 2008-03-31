@@ -43,6 +43,10 @@ struct _SwfdecActor
 struct _SwfdecActorClass
 {
   SwfdecMovieClass    	movie_class;
+
+  /* iterating */
+  void			(* iterate_start)     	(SwfdecActor *		actor);
+  gboolean		(* iterate_end)		(SwfdecActor *		actor);
 };
 
 GType		swfdec_actor_get_type		(void);

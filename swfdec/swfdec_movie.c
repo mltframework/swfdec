@@ -396,7 +396,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   swfdec_player_remove_all_actions (player, movie);
   if (klass->finish_movie)
     klass->finish_movie (movie);
-  player->priv->movies = g_list_remove (player->priv->movies, movie);
+  player->priv->actors = g_list_remove (player->priv->actors, movie);
   movie->state = SWFDEC_MOVIE_STATE_DESTROYED;
   /* unset prototype here, so we don't work in AS anymore */
   SWFDEC_AS_OBJECT (movie)->prototype = NULL;
@@ -1290,13 +1290,6 @@ swfdec_movie_get_debug (SwfdecAsObject *object)
   return swfdec_movie_get_path (movie, TRUE);
 }
 
-static gboolean
-swfdec_movie_iterate_end (SwfdecMovie *movie)
-{
-  return movie->parent == NULL || 
-	 movie->state < SWFDEC_MOVIE_STATE_REMOVED;
-}
-
 typedef struct {
   SwfdecMovie *		movie;
   int			depth;
@@ -1511,7 +1504,6 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   movie_class->render = swfdec_movie_do_render;
   movie_class->invalidate = swfdec_movie_do_invalidate;
   movie_class->contains = swfdec_movie_do_contains;
-  movie_class->iterate_end = swfdec_movie_iterate_end;
   movie_class->mouse_events = swfdec_movie_mouse_events;
   movie_class->mouse_in = swfdec_movie_mouse_in;
   movie_class->mouse_out = swfdec_movie_mouse_out;
@@ -1648,7 +1640,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
    * Setting the parent does a gotoAndPlay(0) for Sprites which can cause
    * new movies to be created (and added to this list)
    */
-  player->priv->movies = g_list_prepend (player->priv->movies, movie);
+  if (SWFDEC_IS_ACTOR (movie))
+    player->priv->actors = g_list_prepend (player->priv->actors, movie);
   /* only add the movie here, because it needs to be setup for the debugger */
   swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   swfdec_movie_set_version (movie);

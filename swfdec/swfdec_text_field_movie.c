@@ -1278,20 +1278,20 @@ swfdec_text_field_movie_finish_movie (SwfdecMovie *movie)
 }
 
 static void
-swfdec_text_field_movie_iterate (SwfdecMovie *movie)
+swfdec_text_field_movie_iterate (SwfdecActor *actor)
 {
-  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
 
   if (text->scroll_changed) {
     SwfdecAsValue argv[2];
 
     SWFDEC_FIXME ("I'm pretty sure this is swfdec_player_add_action()'d");
     SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
-    SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (movie));
-    swfdec_sandbox_use (movie->resource->sandbox);
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie),
+    SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (text));
+    swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (text),
 	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);
-    swfdec_sandbox_unuse (movie->resource->sandbox);
+    swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
 
     /* FIXME: unset this before or after emitting the event? */
     text->scroll_changed = FALSE;
@@ -1533,6 +1533,7 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
+  SwfdecActorClass *actor_class = SWFDEC_ACTOR_CLASS (g_class);
 
   object_class->dispose = swfdec_text_field_movie_dispose;
 
@@ -1540,7 +1541,6 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 
   movie_class->init_movie = swfdec_text_field_movie_init_movie;
   movie_class->finish_movie = swfdec_text_field_movie_finish_movie;
-  movie_class->iterate_start = swfdec_text_field_movie_iterate;
   movie_class->update_extents = swfdec_text_field_movie_update_extents;
   movie_class->render = swfdec_text_field_movie_render;
   movie_class->invalidate = swfdec_text_field_movie_invalidate;
@@ -1551,6 +1551,8 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   movie_class->mouse_press = swfdec_text_field_movie_mouse_press;
   movie_class->mouse_release = swfdec_text_field_movie_mouse_release;
   movie_class->mouse_move = swfdec_text_field_movie_mouse_move;
+
+  actor_class->iterate_start = swfdec_text_field_movie_iterate;
 }
 
 static void

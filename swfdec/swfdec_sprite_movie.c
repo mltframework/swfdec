@@ -653,19 +653,19 @@ swfdec_sprite_movie_add (SwfdecAsObject *object)
 }
 
 static void
-swfdec_sprite_movie_iterate (SwfdecMovie *mov)
+swfdec_sprite_movie_iterate (SwfdecActor *actor)
 {
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (actor);
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context);
   guint goto_frame;
 
-  if (mov->state >= SWFDEC_MOVIE_STATE_REMOVED)
+  if (SWFDEC_MOVIE (actor)->state >= SWFDEC_MOVIE_STATE_REMOVED)
     return;
 
   if (movie->sprite && movie->frame == (guint) -1)
     movie->frame = 0;
 
-  swfdec_player_add_action (player, mov, SWFDEC_EVENT_ENTER, 2);
+  swfdec_player_add_action (player, SWFDEC_MOVIE (actor), SWFDEC_EVENT_ENTER, 2);
   if (movie->playing && movie->sprite != NULL) {
     if (movie->frame == movie->n_frames)
       goto_frame = 1;
@@ -679,14 +679,14 @@ swfdec_sprite_movie_iterate (SwfdecMovie *mov)
 
 /* FIXME: This function is a mess */
 static gboolean
-swfdec_sprite_movie_iterate_end (SwfdecMovie *mov)
+swfdec_sprite_movie_iterate_end (SwfdecActor *actor)
 {
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (actor);
   SwfdecSpriteFrame *last;
   SwfdecSpriteFrame *current;
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context);
 
-  if (!SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (mov))
+  if (!SWFDEC_ACTOR_CLASS (swfdec_sprite_movie_parent_class)->iterate_end (actor))
     return FALSE;
   
   if (movie->sprite == NULL)
@@ -771,6 +771,7 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
+  SwfdecActorClass *actor_class = SWFDEC_ACTOR_CLASS (g_class);
 
   object_class->dispose = swfdec_sprite_movie_dispose;
 
@@ -779,8 +780,9 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;
-  movie_class->iterate_start = swfdec_sprite_movie_iterate;
-  movie_class->iterate_end = swfdec_sprite_movie_iterate_end;
+  
+  actor_class->iterate_start = swfdec_sprite_movie_iterate;
+  actor_class->iterate_end = swfdec_sprite_movie_iterate_end;
 }
 
 static void

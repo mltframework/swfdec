@@ -999,7 +999,7 @@ swfdec_player_dispose (GObject *object)
   for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
     swfdec_ring_buffer_free (priv->actions[i]);
   }
-  g_assert (priv->movies == NULL);
+  g_assert (priv->actors == NULL);
   g_assert (priv->audio == NULL);
   g_slist_free (priv->sandboxes);
   if (priv->external_timeout.callback)
@@ -1259,7 +1259,7 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
   if (priv->mouse_x != x || priv->mouse_y != y) {
     priv->mouse_x = x;
     priv->mouse_y = y;
-    for (walk = priv->movies; walk; walk = walk->next) {
+    for (walk = priv->actors; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove, 0, NULL);
@@ -1285,7 +1285,7 @@ swfdec_player_do_mouse_press (SwfdecPlayer *player, guint button)
 
   priv->mouse_button |= 1 << button;
   if (button == 0) {
-    for (walk = priv->movies; walk; walk = walk->next) {
+    for (walk = priv->actors; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_DOWN);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseDown, 0, NULL);
@@ -1308,7 +1308,7 @@ swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
 
   priv->mouse_button &= ~(1 << button);
   if (button == 0) {
-    for (walk = priv->movies; walk; walk = walk->next) {
+    for (walk = priv->actors; walk; walk = walk->next) {
       swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_UP);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseUp, 0, NULL);
@@ -1480,7 +1480,7 @@ swfdec_player_execute_on_load_init (SwfdecPlayer *player)
 
   /* FIXME: This can be made a LOT faster with correct caching, but I'm lazy */
   do {
-    for (walk = player->priv->movies; walk; walk = walk->next) {
+    for (walk = player->priv->actors; walk; walk = walk->next) {
       SwfdecMovie *movie = walk->data;
       SwfdecResource *resource = swfdec_movie_get_own_resource (movie);
       if (resource == NULL)
@@ -1507,21 +1507,21 @@ swfdec_player_iterate (SwfdecTimeout *timeout)
   /* start the iteration. This performs a goto next frame on all 
    * movies that are not stopped. It also queues onEnterFrame.
    */
-  for (walk = priv->movies; walk; walk = walk->next) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (walk->data);
+  for (walk = priv->actors; walk; walk = walk->next) {
+    SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (walk->data);
     if (klass->iterate_start)
       klass->iterate_start (walk->data);
   }
   swfdec_player_perform_actions (player);
   SWFDEC_INFO ("=== STOP ITERATION ===");
   /* this loop allows removal of walk->data */
-  walk = priv->movies;
+  walk = priv->actors;
   while (walk) {
     SwfdecMovie *cur = walk->data;
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (cur);
+    SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (cur);
     walk = walk->next;
     g_assert (klass->iterate_end);
-    if (!klass->iterate_end (cur))
+    if (!klass->iterate_end (SWFDEC_ACTOR (cur)))
       swfdec_movie_destroy (cur);
   }
   swfdec_player_execute_on_load_init (player);
@@ -1660,7 +1660,7 @@ swfdec_player_update_movies (SwfdecPlayer *player)
 
   swfdec_player_update_drag_movie (player);
   /* FIXME: This g_list_last could be slow */
-  for (walk = g_list_last (player->priv->movies); walk; walk = walk->prev) {
+  for (walk = g_list_last (player->priv->actors); walk; walk = walk->prev) {
     movie = walk->data;
 
     swfdec_movie_update (movie);

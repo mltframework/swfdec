@@ -121,9 +121,12 @@ swfdec_sprite_movie_perform_old_place (SwfdecSpriteMovie *movie,
   cur = swfdec_movie_new (player, depth, mov, mov->resource, graphic, NULL);
   swfdec_movie_set_static_properties (cur, &transform,
       has_ctrans ? &ctrans : NULL, -1, 0, 0, NULL);
-  swfdec_movie_queue_script (cur, SWFDEC_EVENT_INITIALIZE);
-  swfdec_movie_queue_script (cur, SWFDEC_EVENT_CONSTRUCT);
-  swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
+  if (SWFDEC_IS_ACTOR (cur)) {
+    SwfdecActor *actor = SWFDEC_ACTOR (cur);
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_INITIALIZE);
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_CONSTRUCT);
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
+  }
   swfdec_movie_initialize (cur);
 
   return TRUE;
@@ -326,9 +329,12 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     cur = swfdec_movie_new (player, depth, mov, mov->resource, graphic, name);
     swfdec_movie_set_static_properties (cur, has_transform ? &transform : NULL, 
 	has_ctrans ? &ctrans : NULL, ratio, clip_depth, blend_mode, events);
-    swfdec_movie_queue_script (cur, SWFDEC_EVENT_INITIALIZE);
-    swfdec_movie_queue_script (cur, SWFDEC_EVENT_CONSTRUCT);
-    swfdec_movie_queue_script (cur, SWFDEC_EVENT_LOAD);
+    if (SWFDEC_IS_ACTOR (cur)) {
+      SwfdecActor *actor = SWFDEC_ACTOR (cur);
+      swfdec_actor_queue_script (actor, SWFDEC_EVENT_INITIALIZE);
+      swfdec_actor_queue_script (actor, SWFDEC_EVENT_CONSTRUCT);
+      swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
+    }
     swfdec_movie_initialize (cur);
   }
 
@@ -359,6 +365,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
     gboolean skip_scripts, gboolean first_time)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
+  SwfdecActor *actor = SWFDEC_ACTOR (movie);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
   SwfdecBits bits;
 
@@ -374,7 +381,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	SwfdecScript *script = swfdec_swf_decoder_get_script (
 	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data);
 	if (script) {
-	  swfdec_player_add_action_script (player, mov, script, 2);
+	  swfdec_player_add_action_script (player, actor, script, 2);
 	} else {
 	  SWFDEC_ERROR ("Failed to locate script for DoAction tag");
 	}
@@ -466,7 +473,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	sprite->init_action = swfdec_script_ref (swfdec_swf_decoder_get_script (
 	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data + 2));
 	if (sprite->init_action) {
-	  swfdec_player_add_action_script (player, mov, sprite->init_action, 0);
+	  swfdec_player_add_action_script (player, actor, sprite->init_action, 0);
 	} else {
 	  SWFDEC_ERROR ("Failed to locate script for InitAction of Sprite %u", id);
 	}
@@ -602,7 +609,7 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
 	  klass->replace (prev, cur->graphic);
 	swfdec_movie_set_static_properties (prev, &cur->original_transform,
 	    &cur->original_ctrans, cur->original_ratio, cur->clip_depth, 
-	    cur->blend_mode, cur->events);
+	    cur->blend_mode, SWFDEC_IS_ACTOR (cur) ? SWFDEC_ACTOR (cur)->events : NULL);
 	swfdec_movie_destroy (cur);
 	cur = prev;
 	continue;
@@ -665,7 +672,7 @@ swfdec_sprite_movie_iterate (SwfdecActor *actor)
   if (movie->sprite && movie->frame == (guint) -1)
     movie->frame = 0;
 
-  swfdec_player_add_action (player, SWFDEC_MOVIE (actor), SWFDEC_EVENT_ENTER, 2);
+  swfdec_player_add_action (player, actor, SWFDEC_EVENT_ENTER, 2);
   if (movie->playing && movie->sprite != NULL) {
     if (movie->frame == movie->n_frames)
       goto_frame = 1;
@@ -743,7 +750,7 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
 
-  swfdec_player_remove_all_actions (player, mov);
+  swfdec_player_remove_all_actions (player, SWFDEC_ACTOR (mov));
   if (movie->sound_stream) {
     swfdec_audio_remove (movie->sound_stream);
     g_object_unref (movie->sound_stream);

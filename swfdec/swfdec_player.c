@@ -366,7 +366,7 @@ swfdec_player_remove_timeout (SwfdecPlayer *player, SwfdecTimeout *timeout)
 /*** Actions ***/
 
 typedef struct {
-  SwfdecMovie *		movie;		/* the movie to trigger the action on */
+  SwfdecActor *		actor;		/* the actor to trigger the action on */
   SwfdecScript *	script;		/* script to execute or NULL to trigger action */
   SwfdecEventType	event;		/* the action to trigger */
 } SwfdecPlayerAction;
@@ -386,7 +386,7 @@ swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
   for (i = swfdec_ring_buffer_get_n_elements (buffer); i > 0; i--) {
     action = swfdec_ring_buffer_pop (buffer);
     g_assert (action);
-    if (action->movie == NULL)
+    if (action->actor == NULL)
       continue;
     tmp = *action;
     action = swfdec_ring_buffer_push (buffer);
@@ -396,7 +396,7 @@ swfdec_player_compress_actions (SwfdecRingBuffer *buffer)
       swfdec_ring_buffer_get_n_elements (buffer));
   for (i = 0; i < swfdec_ring_buffer_get_n_elements (buffer); i++) {
     action = swfdec_ring_buffer_peek_nth (buffer, i);
-    g_assert (action->movie != NULL);
+    g_assert (action->actor != NULL);
   }
 }
 
@@ -435,31 +435,31 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
  * is calling Actionscript code, you want to do this by using actions.
  **/
 void
-swfdec_player_add_action (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecEventType type,
+swfdec_player_add_action (SwfdecPlayer *player, SwfdecActor *actor, SwfdecEventType type,
     guint importance)
 {
-  SwfdecPlayerAction action = { movie, NULL, type };
+  SwfdecPlayerAction action = { actor, NULL, type };
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (SWFDEC_IS_ACTOR (actor));
   g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
 
-  SWFDEC_LOG ("adding action %s %u", movie->name, type);
+  SWFDEC_LOG ("adding action %s %u", SWFDEC_MOVIE (actor)->name, type);
   swfdec_player_do_add_action (player, importance, &action);
 }
 
 void
-swfdec_player_add_action_script	(SwfdecPlayer *player, SwfdecMovie *movie,
+swfdec_player_add_action_script	(SwfdecPlayer *player, SwfdecActor *actor,
     SwfdecScript *script, guint importance)
 {
-  SwfdecPlayerAction action = { movie, script, 0 };
+  SwfdecPlayerAction action = { actor, script, 0 };
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (SWFDEC_IS_ACTOR (actor));
   g_return_if_fail (script != NULL);
   g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
 
-  SWFDEC_LOG ("adding action script %s %s", movie->name, script->name);
+  SWFDEC_LOG ("adding action script %s %s", SWFDEC_MOVIE (actor)->name, script->name);
   swfdec_player_do_add_action (player, importance, &action);
 }
 
@@ -472,24 +472,24 @@ swfdec_player_add_action_script	(SwfdecPlayer *player, SwfdecMovie *movie,
  * See swfdec_player_add_action() for details about actions.
  **/
 void
-swfdec_player_remove_all_actions (SwfdecPlayer *player, SwfdecMovie *movie)
+swfdec_player_remove_all_actions (SwfdecPlayer *player, SwfdecActor *actor)
 {
   SwfdecPlayerAction *action;
   SwfdecPlayerPrivate *priv;
   guint i, j;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (SWFDEC_IS_ACTOR (actor));
 
   priv = player->priv;
   for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
     for (j = 0; j < swfdec_ring_buffer_get_n_elements (priv->actions[i]); j++) {
       action = swfdec_ring_buffer_peek_nth (priv->actions[i], j);
 
-      if (action->movie == movie) {
+      if (action->actor == actor) {
 	SWFDEC_LOG ("removing action %p %u", 
-	    action->movie, action->event);
-	action->movie = NULL;
+	    action->actor, action->event);
+	action->actor = NULL;
       }
     }
   }
@@ -508,15 +508,15 @@ swfdec_player_do_action (SwfdecPlayer *player)
       action = swfdec_ring_buffer_pop (priv->actions[i]);
       if (action == NULL)
 	break;
-    } while (action->movie == NULL); /* skip removed actions */
+    } while (action->actor == NULL); /* skip removed actions */
     if (action) {
       if (action->script) {
-	SwfdecSandbox *sandbox = action->movie->resource->sandbox;
+	SwfdecSandbox *sandbox = SWFDEC_MOVIE (action->actor)->resource->sandbox;
 	swfdec_sandbox_use (sandbox);
-	swfdec_as_object_run (SWFDEC_AS_OBJECT (action->movie), action->script);
+	swfdec_as_object_run (SWFDEC_AS_OBJECT (action->actor), action->script);
 	swfdec_sandbox_unuse (sandbox);
       } else {
-	swfdec_movie_execute (action->movie, action->event);
+	swfdec_actor_execute (action->actor, action->event);
       }
       return TRUE;
     }
@@ -992,7 +992,7 @@ swfdec_player_dispose (GObject *object)
     SwfdecPlayerAction *action;
     for (i = 0; i < SWFDEC_PLAYER_N_ACTION_QUEUES; i++) {
       while ((action = swfdec_ring_buffer_pop (priv->actions[i])) != NULL) {
-	g_assert (action->movie == NULL); /* skip removed actions */
+	g_assert (action->actor == NULL); /* skip removed actions */
       }
     }
   }
@@ -1066,7 +1066,7 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const ch
 /**
  * swfdec_player_grab_focus:
  * @player: the player
- * @movie: the movie to give focus or %NULL to unset focus
+ * @actor: the actor to give focus or %NULL to unset focus
  *
  * This function handles passing the focus around. It is supposed to be called
  * by all functions that wish to change keyboard focus. Note that only the 
@@ -1074,21 +1074,21 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const ch
  * key_released vfuncs.
  **/
 void
-swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecMovie *movie)
+swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
 {
   SwfdecAsValue vals[2];
   SwfdecPlayerPrivate *priv;
-  SwfdecMovieClass *klass;
-  SwfdecMovie *prev;
+  SwfdecActorClass *klass;
+  SwfdecActor *prev;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (movie == NULL || SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (actor == NULL || SWFDEC_IS_ACTOR (actor));
 
-  g_print ("movie %s grabs focus (%d)\n", movie ? movie->name : "---", player->priv->has_focus);
   /* set variables */
   priv = player->priv;
-  if (movie == priv->focus) {
-    SWFDEC_DEBUG ("nothing to do, focus change request from movie %s to itself", movie ? movie->name : "---");
+  if (actor == priv->focus) {
+    SWFDEC_DEBUG ("nothing to do, focus change request from movie %s to itself", 
+	actor ? SWFDEC_MOVIE (actor)->name : "---");
     return;
   }
   prev = priv->focus;
@@ -1097,30 +1097,30 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecMovie *movie)
   } else {
     SWFDEC_AS_VALUE_SET_NULL (&vals[0]);
   }
-  if (movie) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&vals[1], SWFDEC_AS_OBJECT (movie));
+  if (actor) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&vals[1], SWFDEC_AS_OBJECT (actor));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (&vals[1]);
   }
   if (prev) {
-    swfdec_sandbox_use (prev->resource->sandbox);
+    swfdec_sandbox_use (SWFDEC_MOVIE (prev)->resource->sandbox);
     swfdec_as_object_call (SWFDEC_AS_OBJECT (prev), SWFDEC_AS_STR_onKillFocus,
 	1, &vals[1], NULL);
-    swfdec_sandbox_unuse (prev->resource->sandbox);
-    klass = SWFDEC_MOVIE_GET_CLASS (prev);
+    swfdec_sandbox_unuse (SWFDEC_MOVIE (prev)->resource->sandbox);
+    klass = SWFDEC_ACTOR_GET_CLASS (prev);
     if (klass->focus_out)
       klass->focus_out (prev);
   }
   priv->focus_previous = prev;
-  priv->focus = movie;
-  if (movie) {
-    swfdec_sandbox_use (movie->resource->sandbox);
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onSetFocus,
+  priv->focus = actor;
+  if (actor) {
+    swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_onSetFocus,
 	1, &vals[0], NULL);
-    swfdec_sandbox_unuse (movie->resource->sandbox);
-    klass = SWFDEC_MOVIE_GET_CLASS (movie);
+    swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
+    klass = SWFDEC_ACTOR_GET_CLASS (actor);
     if (klass->focus_in)
-      klass->focus_in (movie);
+      klass->focus_in (actor);
   }
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Selection, SWFDEC_AS_STR_onSetFocus, 2, vals);
 }
@@ -1134,7 +1134,7 @@ swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
   if (!priv->mouse_visible) {
     new = SWFDEC_MOUSE_CURSOR_NONE;
   } else if (priv->mouse_grab != NULL) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+    SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->mouse_grab);
 
     if (klass->mouse_cursor)
       new = klass->mouse_cursor (priv->mouse_grab);
@@ -1160,13 +1160,13 @@ swfdec_player_update_mouse_cursor (SwfdecPlayer *player)
  * Sets or unsets the movie that is dragged by the mouse.
  **/
 void
-swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean center,
+swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecActor *drag, gboolean center,
     SwfdecRect *rect)
 {
   SwfdecPlayerPrivate *priv;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (drag == NULL || SWFDEC_IS_MOVIE (drag));
+  g_return_if_fail (drag == NULL || SWFDEC_IS_ACTOR (drag));
 
   /* FIXME: need to do anything with old drag? */
   priv = player->priv;
@@ -1176,10 +1176,10 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
     priv->mouse_drag_x = priv->mouse_x;
     priv->mouse_drag_y = priv->mouse_y;
     swfdec_player_stage_to_global (player, &priv->mouse_drag_x, &priv->mouse_drag_y);
-    if (drag->parent)
-      swfdec_movie_global_to_local (drag->parent, &priv->mouse_drag_x, &priv->mouse_drag_y);
-    priv->mouse_drag_x -= drag->matrix.x0;
-    priv->mouse_drag_y -= drag->matrix.y0;
+    if (SWFDEC_MOVIE (drag)->parent)
+      swfdec_movie_global_to_local (SWFDEC_MOVIE (drag)->parent, &priv->mouse_drag_x, &priv->mouse_drag_y);
+    priv->mouse_drag_x -= SWFDEC_MOVIE (drag)->matrix.x0;
+    priv->mouse_drag_y -= SWFDEC_MOVIE (drag)->matrix.y0;
   }
   if (rect) {
     priv->mouse_drag_rect = *rect;
@@ -1192,8 +1192,8 @@ swfdec_player_set_drag_movie (SwfdecPlayer *player, SwfdecMovie *drag, gboolean 
   SWFDEC_DEBUG ("starting drag in %g %g  %g %g", 
       priv->mouse_drag_rect.x0, priv->mouse_drag_rect.y0,
       priv->mouse_drag_rect.x1, priv->mouse_drag_rect.y1);
-  if (drag)
-    drag->modified = TRUE;
+  if (SWFDEC_MOVIE (drag))
+    SWFDEC_MOVIE (drag)->modified = TRUE;
 }
 
 static void
@@ -1202,17 +1202,17 @@ swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
   SwfdecPlayerPrivate *priv = player->priv;
   GList *walk;
   double x, y;
-  SwfdecMovie *below_mouse = NULL;
+  SwfdecActor *below_mouse = NULL;
 
   x = priv->mouse_x;
   y = priv->mouse_y;
   swfdec_player_stage_to_global (player, &x, &y);
   for (walk = g_list_last (priv->roots); walk; walk = walk->prev) {
-    below_mouse = swfdec_movie_get_movie_at (walk->data, x, y, TRUE);
-    if (below_mouse) {
-      if (swfdec_movie_get_mouse_events (below_mouse))
-	break;
-      below_mouse = NULL;
+    SwfdecMovie *movie = swfdec_movie_get_movie_at (walk->data, x, y, TRUE);
+    if (SWFDEC_IS_ACTOR (movie) &&
+	swfdec_actor_get_mouse_events (SWFDEC_ACTOR (movie))) {
+      below_mouse = SWFDEC_ACTOR (movie);
+      break;
     }
   }
   if (swfdec_player_is_mouse_pressed (player)) {
@@ -1220,12 +1220,12 @@ swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
     if (priv->mouse_grab) {
       if (below_mouse == priv->mouse_grab &&
 	  priv->mouse_below != priv->mouse_grab) {
-	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+	SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->mouse_grab);
 	if (klass->mouse_in)
 	  klass->mouse_in (priv->mouse_grab);
       } else if (below_mouse != priv->mouse_grab &&
 	  priv->mouse_below == priv->mouse_grab) {
-	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+	SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->mouse_grab);
 	if (klass->mouse_out)
 	  klass->mouse_out (priv->mouse_grab);
       }
@@ -1234,12 +1234,12 @@ swfdec_player_grab_mouse_movie (SwfdecPlayer *player)
     /* no mouse grab is active */
     if (below_mouse != priv->mouse_grab) {
       if (priv->mouse_grab) {
-	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+	SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->mouse_grab);
 	if (klass->mouse_out)
 	  klass->mouse_out (priv->mouse_grab);
       }
       if (below_mouse) {
-	SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (below_mouse);
+	SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (below_mouse);
 	if (klass->mouse_in)
 	  klass->mouse_in (below_mouse);
       }
@@ -1262,15 +1262,15 @@ swfdec_player_do_mouse_move (SwfdecPlayer *player, double x, double y)
     priv->mouse_x = x;
     priv->mouse_y = y;
     for (walk = priv->actors; walk; walk = walk->next) {
-      swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
+      swfdec_actor_queue_script (walk->data, SWFDEC_EVENT_MOUSE_MOVE);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseMove, 0, NULL);
   }
   swfdec_player_grab_mouse_movie (player);
   if (priv->mouse_grab) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+    SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->mouse_grab);
     swfdec_player_stage_to_global (player, &x, &y);
-    swfdec_movie_global_to_local (priv->mouse_grab, &x, &y);
+    swfdec_movie_global_to_local (SWFDEC_MOVIE (priv->mouse_grab), &x, &y);
     if (klass->mouse_move)
       klass->mouse_move (priv->mouse_grab, x, y);
   }
@@ -1288,12 +1288,12 @@ swfdec_player_do_mouse_press (SwfdecPlayer *player, guint button)
   priv->mouse_button |= 1 << button;
   if (button == 0) {
     for (walk = priv->actors; walk; walk = walk->next) {
-      swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_DOWN);
+      swfdec_actor_queue_script (walk->data, SWFDEC_EVENT_MOUSE_DOWN);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseDown, 0, NULL);
   }
   if (priv->mouse_grab) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+    SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->mouse_grab);
     if (klass->mouse_press)
       klass->mouse_press (priv->mouse_grab, button);
   }
@@ -1311,18 +1311,18 @@ swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
   priv->mouse_button &= ~(1 << button);
   if (button == 0) {
     for (walk = priv->actors; walk; walk = walk->next) {
-      swfdec_movie_queue_script (walk->data, SWFDEC_EVENT_MOUSE_UP);
+      swfdec_actor_queue_script (walk->data, SWFDEC_EVENT_MOUSE_UP);
     }
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Mouse, SWFDEC_AS_STR_onMouseUp, 0, NULL);
   }
   if (priv->mouse_grab) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+    SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->mouse_grab);
     if (klass->mouse_release)
       klass->mouse_release (priv->mouse_grab, button);
     if (button == 0 && priv->mouse_grab != priv->mouse_below) {
       priv->mouse_grab = priv->mouse_below;
       if (priv->mouse_grab) {
-	klass = SWFDEC_MOVIE_GET_CLASS (priv->mouse_grab);
+	klass = SWFDEC_ACTOR_GET_CLASS (priv->mouse_grab);
 	if (klass->mouse_in)
 	  klass->mouse_in (priv->mouse_grab);
       }
@@ -1409,8 +1409,7 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, 
       down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp, 0, NULL);
   if (priv->focus) {
-    SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (priv->focus);
-    g_print ("got a focus movie!\n");
+    SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->focus);
     if (down) {
       if (klass->key_press)
 	klass->key_press (priv->focus, keycode, character);
@@ -1629,7 +1628,7 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
   if (priv->mouse_drag == NULL)
     return;
 
-  movie = priv->mouse_drag;
+  movie = SWFDEC_MOVIE (priv->mouse_drag);
   swfdec_movie_update (movie);
   x = priv->mouse_x;
   y = priv->mouse_y;

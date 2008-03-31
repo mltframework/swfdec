@@ -70,7 +70,7 @@ swfdec_button_create_movie (SwfdecGraphic *graphic, gsize *size)
   movie->button = g_object_ref (button);
   *size = sizeof (SwfdecButtonMovie);
   if (button->events)
-    SWFDEC_MOVIE (movie)->events = swfdec_event_list_copy (button->events);
+    SWFDEC_ACTOR (movie)->events = swfdec_event_list_copy (button->events);
 
   return SWFDEC_MOVIE (movie);
 }

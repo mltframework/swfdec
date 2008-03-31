@@ -61,7 +61,7 @@ swfdec_selection_getFocus (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
 
   if (priv->focus) {
-    char *s = swfdec_movie_get_path (priv->focus, TRUE);
+    char *s = swfdec_movie_get_path (SWFDEC_MOVIE (priv->focus), TRUE);
     SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -73,23 +73,27 @@ void
 swfdec_selection_setFocus (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecMovie *movie;
+  SwfdecAsValue val;
+  SwfdecActor *actor;
   SwfdecSandbox *sandbox;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, FALSE);
-  SWFDEC_AS_CHECK (0, NULL, "O", &movie);
+  SWFDEC_AS_CHECK (0, NULL, "O", &actor);
 
-  if (movie != NULL &&
-      (!SWFDEC_IS_MOVIE (movie) ||
-      !swfdec_movie_can_focus (movie)))
+  if (actor != NULL &&
+      (!SWFDEC_IS_MOVIE (actor) ||
+       SWFDEC_MOVIE (actor)->parent == NULL ||
+       !swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor),
+	  SWFDEC_AS_STR_focusEnabled, &val) ||
+       swfdec_as_value_to_boolean (SWFDEC_AS_OBJECT (actor)->context, &val) == FALSE))
     return;
 
   /* FIXME: how is security handled here? */
   sandbox = SWFDEC_SANDBOX (cx->global);
   swfdec_sandbox_unuse (sandbox);
-  swfdec_player_grab_focus (SWFDEC_PLAYER (cx), movie);
+  swfdec_player_grab_focus (SWFDEC_PLAYER (cx), actor);
   swfdec_sandbox_use (sandbox);
-  if (movie == NULL) {
+  if (actor == NULL) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (ret, TRUE);
   }
   return;

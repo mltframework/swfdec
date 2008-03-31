@@ -1307,7 +1307,7 @@ swfdec_text_field_movie_contains (SwfdecMovie *movie, double x, double y,
     SwfdecMovie *ret;
     ret = SWFDEC_MOVIE_CLASS (swfdec_text_field_movie_parent_class)->contains (
 	movie, x, y, TRUE);
-    if (ret && ret != movie && swfdec_movie_get_mouse_events (ret))
+    if (ret && SWFDEC_IS_ACTOR (ret) && swfdec_actor_get_mouse_events (SWFDEC_ACTOR (ret)))
       return ret;
   }
 
@@ -1403,14 +1403,14 @@ swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
 }
 
 static SwfdecMouseCursor
-swfdec_text_field_movie_mouse_cursor (SwfdecMovie *movie)
+swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
 {
-  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
   guint index_;
   SwfdecTextFormat *format;
 
-  swfdec_movie_get_mouse (movie, &x, &y);
+  swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
   if (swfdec_text_field_movie_xy_to_index (text, x, y, &index_, NULL)) {
     format = swfdec_text_field_movie_format_for_index (text, index_);
@@ -1429,18 +1429,18 @@ swfdec_text_field_movie_mouse_cursor (SwfdecMovie *movie)
 }
 
 static gboolean
-swfdec_text_field_movie_mouse_events (SwfdecMovie *movie)
+swfdec_text_field_movie_mouse_events (SwfdecActor *actor)
 {
-  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
 
   // FIXME: is this correct?
   return (text->text->editable || text->text->selectable);
 }
 
 static void
-swfdec_text_field_movie_mouse_press (SwfdecMovie *movie, guint button)
+swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
 {
-  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
   guint index_;
   gboolean direct, before;
@@ -1450,7 +1450,7 @@ swfdec_text_field_movie_mouse_press (SwfdecMovie *movie, guint button)
   if (button != 0)
     return;
 
-  swfdec_movie_get_mouse (movie, &x, &y);
+  swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
   direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
 
@@ -1471,9 +1471,9 @@ swfdec_text_field_movie_mouse_press (SwfdecMovie *movie, guint button)
 }
 
 static void
-swfdec_text_field_movie_mouse_move (SwfdecMovie *movie, double x, double y)
+swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
 {
-  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   guint index_;
   gboolean direct, before;
 
@@ -1496,9 +1496,9 @@ swfdec_text_field_movie_mouse_move (SwfdecMovie *movie, double x, double y)
 }
 
 static void
-swfdec_text_field_movie_mouse_release (SwfdecMovie *movie, guint button)
+swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
 {
-  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
   guint index_;
   gboolean direct, before;
@@ -1508,10 +1508,10 @@ swfdec_text_field_movie_mouse_release (SwfdecMovie *movie, guint button)
   if (button != 0)
     return;
 
-  swfdec_movie_get_mouse (movie, &x, &y);
+  swfdec_movie_get_mouse (SWFDEC_MOVIE (text), &x, &y);
 
   //FIXME
-  swfdec_text_field_movie_mouse_move (movie, x, y);
+  swfdec_text_field_movie_mouse_move (actor, x, y);
 
   text->mouse_pressed = FALSE;
 
@@ -1546,11 +1546,11 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   movie_class->invalidate = swfdec_text_field_movie_invalidate;
   movie_class->contains = swfdec_text_field_movie_contains;
 
-  movie_class->mouse_cursor = swfdec_text_field_movie_mouse_cursor;
-  movie_class->mouse_events = swfdec_text_field_movie_mouse_events;
-  movie_class->mouse_press = swfdec_text_field_movie_mouse_press;
-  movie_class->mouse_release = swfdec_text_field_movie_mouse_release;
-  movie_class->mouse_move = swfdec_text_field_movie_mouse_move;
+  actor_class->mouse_cursor = swfdec_text_field_movie_mouse_cursor;
+  actor_class->mouse_events = swfdec_text_field_movie_mouse_events;
+  actor_class->mouse_press = swfdec_text_field_movie_mouse_press;
+  actor_class->mouse_release = swfdec_text_field_movie_mouse_release;
+  actor_class->mouse_move = swfdec_text_field_movie_mouse_move;
 
   actor_class->iterate_start = swfdec_text_field_movie_iterate;
 }

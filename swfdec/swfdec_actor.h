@@ -38,6 +38,9 @@ typedef struct _SwfdecActorClass SwfdecActorClass;
 struct _SwfdecActor
 {
   SwfdecMovie		movie;
+
+  /* static properties (set by PlaceObject tags) */
+  SwfdecEventList *	events;			/* events queued on this movie */
 };
 
 struct _SwfdecActorClass
@@ -47,9 +50,39 @@ struct _SwfdecActorClass
   /* iterating */
   void			(* iterate_start)     	(SwfdecActor *		actor);
   gboolean		(* iterate_end)		(SwfdecActor *		actor);
+
+  /* mouse handling */
+  gboolean		(* mouse_events)	(SwfdecActor *		movie);
+  SwfdecMouseCursor	(* mouse_cursor)	(SwfdecActor *		movie);
+  void			(* mouse_in)      	(SwfdecActor *		movie);
+  void			(* mouse_out)      	(SwfdecActor *		movie);
+  void			(* mouse_press)      	(SwfdecActor *		movie,
+						 guint			button);
+  void			(* mouse_release)      	(SwfdecActor *		movie,
+						 guint			button);
+  void			(* mouse_move)      	(SwfdecActor *		movie,
+						 double			x,
+						 double			y);
+
+  /* keyboard handling */
+  void			(* focus_in)		(SwfdecActor *		movie);
+  void			(* focus_out)		(SwfdecActor *		movie);
+  void			(* key_press)		(SwfdecActor *		movie,
+						 guint			keycode,
+						 guint			character);
+  void			(* key_release)      	(SwfdecActor *		movie,
+						 guint			keycode,
+						 guint			character);
 };
 
 GType		swfdec_actor_get_type		(void);
+
+void		swfdec_actor_execute		(SwfdecActor *		actor,
+						 SwfdecEventType	condition);
+void		swfdec_actor_queue_script	(SwfdecActor *		actor,
+  						 SwfdecEventType	condition);
+
+gboolean	swfdec_actor_get_mouse_events	(SwfdecActor *		actor);
 
 
 G_END_DECLS

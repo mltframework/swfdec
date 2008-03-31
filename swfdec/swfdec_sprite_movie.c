@@ -619,7 +619,7 @@ out:
 
 /*** MOVIE ***/
 
-G_DEFINE_TYPE (SwfdecSpriteMovie, swfdec_sprite_movie, SWFDEC_TYPE_MOVIE)
+G_DEFINE_TYPE (SwfdecSpriteMovie, swfdec_sprite_movie, SWFDEC_TYPE_ACTOR)
 
 static void
 swfdec_sprite_movie_dispose (GObject *object)

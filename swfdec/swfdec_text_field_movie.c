@@ -37,7 +37,7 @@
 #include "swfdec_text_format.h"
 #include "swfdec_xml.h"
 
-G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_MOVIE)
+G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_ACTOR)
 
 #define EXTRA_MARGIN 2
 #define BULLET_MARGIN 36

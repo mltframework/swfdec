@@ -21,7 +21,7 @@
 #define _SWFDEC_BUTTON_MOVIE_H_
 
 #include <glib-object.h>
-#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_actor.h>
 #include <swfdec/swfdec_button.h>
 
 G_BEGIN_DECLS
@@ -37,14 +37,14 @@ typedef struct _SwfdecButtonMovieClass SwfdecButtonMovieClass;
 #define SWFDEC_BUTTON_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_BUTTON_MOVIE, SwfdecButtonMovieClass))
 
 struct _SwfdecButtonMovie {
-  SwfdecMovie		movie;
+  SwfdecActor		actor;
 
   SwfdecButton *	button;		/* button we render */
   SwfdecButtonState	state;		/* current state we're in */
 };
 
 struct _SwfdecButtonMovieClass {
-  SwfdecMovieClass	movie_class;
+  SwfdecActorClass	actor_class;
 };
 
 GType		swfdec_button_movie_get_type		(void);

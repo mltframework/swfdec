@@ -30,7 +30,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
 
-G_DEFINE_TYPE (SwfdecButtonMovie, swfdec_button_movie, SWFDEC_TYPE_MOVIE)
+G_DEFINE_TYPE (SwfdecButtonMovie, swfdec_button_movie, SWFDEC_TYPE_ACTOR)
 
 static void
 swfdec_button_movie_update_extents (SwfdecMovie *movie,

@@ -1374,8 +1374,18 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
 }
 
 static void
+swfdec_player_handle_tab (SwfdecPlayer *player, gboolean forward)
+{
+  SWFDEC_FIXME ("handle tab properly");
+}
+
+static void
 swfdec_player_handle_special_keys (SwfdecPlayer *player, guint key)
 {
+  if (key == SWFDEC_KEY_TAB) {
+    gboolean forward = swfdec_player_is_key_pressed (player, SWFDEC_KEY_SHIFT);
+    swfdec_player_handle_tab (player, forward);
+  }
 }
 
 static gboolean

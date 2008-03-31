@@ -187,6 +187,7 @@ SwfdecSocket *	swfdec_player_create_socket	(SwfdecPlayer *		player,
 
 void		swfdec_player_grab_focus	(SwfdecPlayer *		player,
 						 SwfdecMovie *		movie);
+#define swfdec_player_is_key_pressed(player,key) ((player)->priv->key_pressed[(key) / 8] & (1 << ((key) % 8)))
 #define swfdec_player_is_mouse_pressed(player) ((player)->priv->mouse_button & 1)
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);

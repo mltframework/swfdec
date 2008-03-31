@@ -1053,6 +1053,15 @@ EXTRA_DIST = \
 	file-reference-list-properties-7.swf.trace \
 	file-reference-list-properties-8.swf \
 	file-reference-list-properties-8.swf.trace \
+	focusrect-values-5.swf \
+	focusrect-values-5.swf.trace \
+	focusrect-values-6.swf \
+	focusrect-values-6.swf.trace \
+	focusrect-values-7.swf \
+	focusrect-values-7.swf.trace \
+	focusrect-values-8.swf \
+	focusrect-values-8.swf.trace \
+	focusrect-values.as \
 	foreach-propflags.as \
 	foreach-propflags-5.swf \
 	foreach-propflags-5.swf.trace \

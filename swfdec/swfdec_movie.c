@@ -86,7 +86,7 @@ swfdec_movie_init (SwfdecMovie * movie)
  *                if the old contents are invalidated.
  *
  * Performs an instant invalidation on @movie. You most likely don't want to
- * call this function directly, but use swfdec_movie_invalidate_last_last() or
+ * call this function directly, but use swfdec_movie_invalidate_last() or
  * swfdec_movie_invalidate_next() instead.
  **/
 void
@@ -99,9 +99,12 @@ swfdec_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *parent_to_glo
   if (new_contents) {
     movie->invalidate_next = FALSE;
   } else {
+    SwfdecPlayer *player;
     if (movie->invalidate_last)
       return;
     movie->invalidate_last = TRUE;
+    player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    player->priv->invalid_pending = g_slist_prepend (player->priv->invalid_pending, movie);
   }
   g_assert (movie->cache_state <= SWFDEC_MOVIE_INVALID_CHILDREN);
   SWFDEC_LOG ("invalidating %s %s at %s", G_OBJECT_TYPE_NAME (movie), 
@@ -137,7 +140,7 @@ swfdec_movie_invalidate_last (SwfdecMovie *movie)
 }
 
 /**
- * swfdec_movie_invalidate_last_next:
+ * swfdec_movie_invalidate_next:
  * @movie: a #SwfdecMovie
  *
  * Ensures the movie will be invalidated after script execution is done. So
@@ -397,6 +400,8 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   if (klass->finish_movie)
     klass->finish_movie (movie);
   player->priv->actors = g_list_remove (player->priv->actors, movie);
+  if (movie->invalidate_last)
+    player->priv->invalid_pending = g_slist_remove (player->priv->invalid_pending, movie);
   movie->state = SWFDEC_MOVIE_STATE_DESTROYED;
   /* unset prototype here, so we don't work in AS anymore */
   SWFDEC_AS_OBJECT (movie)->prototype = NULL;
@@ -1650,6 +1655,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
     g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
     resource->movie = SWFDEC_SPRITE_MOVIE (movie);
   }
+  /* the movie is invalid already */
+  player->priv->invalid_pending = g_slist_prepend (player->priv->invalid_pending, movie);
 
   return movie;
 }

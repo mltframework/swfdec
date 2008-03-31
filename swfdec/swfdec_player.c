@@ -969,6 +969,8 @@ swfdec_player_dispose (GObject *object)
   g_slist_foreach (priv->policy_files, (GFunc) g_object_unref, NULL);
   g_slist_free (priv->policy_files);
   priv->policy_files = NULL;
+  g_slist_free (priv->invalid_pending);
+  priv->invalid_pending = NULL;
 
   while (priv->roots)
     swfdec_movie_destroy (priv->roots->data);
@@ -1655,26 +1657,28 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
 static void
 swfdec_player_update_movies (SwfdecPlayer *player)
 {
+  SwfdecPlayerPrivate *priv = player->priv;
   SwfdecMovie *movie;
-  GList *walk;
+  cairo_matrix_t matrix;
+  GSList *walk;
 
   swfdec_player_update_drag_movie (player);
-  /* FIXME: This g_list_last could be slow */
-  for (walk = g_list_last (player->priv->actors); walk; walk = walk->prev) {
+  for (walk = priv->invalid_pending; walk; walk = walk->next) {
     movie = walk->data;
 
     swfdec_movie_update (movie);
-    if (movie->invalidate_last) {
-      cairo_matrix_t matrix;
+    g_assert (movie->invalidate_last);
 
-      if (movie->parent)
-	swfdec_movie_local_to_global_matrix (movie->parent, &matrix);
-      else
-	cairo_matrix_init_identity (&matrix);
-      swfdec_movie_invalidate (movie, &matrix, TRUE);
-      movie->invalidate_last = FALSE;
-    }
+    if (movie->parent)
+      swfdec_movie_local_to_global_matrix (movie->parent, &matrix);
+    else
+      cairo_matrix_init_identity (&matrix);
+    swfdec_movie_invalidate (movie, &matrix, TRUE);
+    /* also clear invalidation flag from first invalidation */
+    movie->invalidate_last = FALSE;
   }
+  g_slist_free (priv->invalid_pending);
+  priv->invalid_pending = NULL;
 }
 
 /* used for breakpoints */

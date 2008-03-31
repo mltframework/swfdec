@@ -103,6 +103,7 @@ struct _SwfdecPlayerPrivate
   /* rendering */
   SwfdecRectangle     	invalid_extents;      	/* extents of area that needs a redraw in global coordinates */
   GArray *		invalidations;		/* fine-grained areas in need of redraw */
+  GSList *		invalid_pending;	/* pending invalidations due to invalidate_last */
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */

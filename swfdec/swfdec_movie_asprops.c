@@ -401,6 +401,7 @@ mc_url_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 static void
 mc_focusrect_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
+  SwfdecAsContext *cx;
   SwfdecActor *actor;
   
   if (!SWFDEC_IS_ACTOR (movie)) {
@@ -408,15 +409,20 @@ mc_focusrect_get (SwfdecMovie *movie, SwfdecAsValue *rval)
     return;
   }
   actor = SWFDEC_ACTOR (movie);
+  cx = SWFDEC_AS_OBJECT (actor)->context;
 
   switch (actor->focusrect) {
     case SWFDEC_FLASH_YES:
-      SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
-      //SWFDEC_AS_VALUE_SET_INTEGER (rval, 1);
+      if (cx->version > 5)
+	SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
+      else
+	SWFDEC_AS_VALUE_SET_INT (rval, 1);
       break;
     case SWFDEC_FLASH_NO:
-      SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
-      //SWFDEC_AS_VALUE_SET_INTEGER (rval, 0);
+      if (cx->version > 5)
+	SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
+      else
+	SWFDEC_AS_VALUE_SET_INT (rval, 0);
       break;
     case SWFDEC_FLASH_MAYBE:
       SWFDEC_AS_VALUE_SET_NULL (rval);
@@ -446,10 +452,14 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
       return;
     b = SWFDEC_FLASH_MAYBE;
   } else {
-    if (movie->parent == NULL)
-      b = swfdec_as_value_to_number (cx, val) ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
-    else
+    if (movie->parent == NULL) {
+      double d = swfdec_as_value_to_number (cx, val);
+      if (isnan (d))
+	return;
+      b = d ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
+    } else {
       b = swfdec_as_value_to_boolean (cx, val) ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
+    }
   }
 
   if (b != actor->focusrect) {

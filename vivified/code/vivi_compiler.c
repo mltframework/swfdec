@@ -47,12 +47,6 @@
 
 #include "vivi_code_text_printer.h"
 
-typedef enum {
-  STATUS_FAIL = -1,
-  STATUS_OK = 0,
-  STATUS_CANCEL = 1
-} ParseStatus;
-
 enum {
   // keywords
   TOKEN_BREAK = G_TOKEN_LAST + 1,
@@ -87,7 +81,14 @@ enum {
   TOKEN_NULL,
   // misc
   TOKEN_PLUSPLUS,
-  TOKEN_MINUSMINUS
+  TOKEN_MINUSMINUS,
+  // errors
+  ERROR_TOKEN_BOOLEAN,
+  ERROR_TOKEN_LITERAL,
+  ERROR_TOKEN_PROPERTY_NAME,
+  ERROR_TOKEN_PRIMARY_EXPRESSION,
+  ERROR_TOKEN_EXPRESSION_STATEMENT,
+  ERROR_TOKEN_STATEMENT
 };
 
 typedef struct {
@@ -163,13 +164,26 @@ static const TokenDescription custom_tokens[] = {
   { G_TOKEN_NONE, NULL }
 };
 
-typedef ParseStatus (*ParseStatementFunction) (GScanner *scanner, ViviCodeStatement **statement);
-typedef ParseStatus (*ParseValueFunction) (GScanner *scanner, ViviCodeValue **value);
+static const TokenDescription error_tokens[] = {
+  // errors
+  { ERROR_TOKEN_BOOLEAN, "boolean" },
+  { ERROR_TOKEN_LITERAL, "literal" },
+  { ERROR_TOKEN_PROPERTY_NAME, "property name" },
+  { ERROR_TOKEN_PRIMARY_EXPRESSION, "primary expression" },
+  { ERROR_TOKEN_EXPRESSION_STATEMENT, "expression statement" },
+  { ERROR_TOKEN_STATEMENT, "statement" },
+  { G_TOKEN_NONE, NULL }
+};
 
-static ParseStatus
+#define FAIL(x) ((x) < 0 ? -x : x)
+
+typedef int (*ParseStatementFunction) (GScanner *scanner, ViviCodeStatement **statement);
+typedef int (*ParseValueFunction) (GScanner *scanner, ViviCodeValue **value);
+
+static int
 parse_statement_list (GScanner *scanner, ParseStatementFunction function,
     ViviCodeStatement **statement, guint separator);
-static ParseStatus
+static int
 parse_value_list (GScanner *scanner, ParseValueFunction function,
     ViviCodeValue ***list, guint separator);
 
@@ -198,63 +212,62 @@ free_value_list (ViviCodeValue **list)
 
 // values
 
-static ParseStatus
+static int
 parse_null_literal (GScanner *scanner, ViviCodeValue **value)
 {
   *value = NULL;
 
   if (!check_token (scanner, TOKEN_NULL))
-    return STATUS_CANCEL;
+    return -TOKEN_NULL;
 
   *value = vivi_code_constant_new_null ();
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_boolean_literal (GScanner *scanner, ViviCodeValue **value)
 {
   *value = NULL;
 
   if (check_token (scanner, TOKEN_TRUE)) {
     *value = vivi_code_constant_new_boolean (TRUE);
-    return STATUS_OK;
+    return G_TOKEN_NONE;
   } else if (check_token (scanner, TOKEN_FALSE)) {
     *value = vivi_code_constant_new_boolean (FALSE);
-    return STATUS_OK;
+    return G_TOKEN_NONE;
   } else {
-    return STATUS_CANCEL;
+    return -ERROR_TOKEN_BOOLEAN;
   }
 }
 
-static ParseStatus
+static int
 parse_numeric_literal (GScanner *scanner, ViviCodeValue **value)
 {
   *value = NULL;
 
   if (!check_token (scanner, G_TOKEN_FLOAT))
-    return STATUS_CANCEL;
+    return -G_TOKEN_FLOAT;
 
   *value = vivi_code_constant_new_number (scanner->value.v_float);
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_string_literal (GScanner *scanner, ViviCodeValue **value)
 {
   *value = NULL;
 
   if (!check_token (scanner, G_TOKEN_STRING))
-    return STATUS_CANCEL;
+    return -G_TOKEN_STRING;
 
   *value = vivi_code_constant_new_string (scanner->value.v_string);
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_literal (GScanner *scanner, ViviCodeValue **value)
 {
-  int i;
-  ParseStatus status;
+  int i, expected;
   ParseValueFunction functions[] = {
     parse_null_literal,
     parse_boolean_literal,
@@ -266,32 +279,31 @@ parse_literal (GScanner *scanner, ViviCodeValue **value)
   *value = NULL;
 
   for (i = 0; functions[i] != NULL; i++) {
-    status = functions[i] (scanner, value);
-    if (status != STATUS_CANCEL)
-      return status;
+    expected = functions[i] (scanner, value);
+    if (expected >= 0)
+      return expected;
   }
 
-  return STATUS_CANCEL;
+  return -ERROR_TOKEN_LITERAL;
 }
 
-static ParseStatus
+static int
 parse_identifier (GScanner *scanner, ViviCodeValue **value)
 {
   *value = NULL;
 
   if (!check_token (scanner, G_TOKEN_IDENTIFIER))
-    return STATUS_CANCEL;
+    return -G_TOKEN_IDENTIFIER;
 
   *value = vivi_code_get_new_name (scanner->value.v_identifier);
 
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_property_name (GScanner *scanner, ViviCodeValue **value)
 {
-  int i;
-  ParseStatus status;
+  int i, expected;
   ParseValueFunction functions[] = {
     parse_identifier,
     parse_string_literal,
@@ -302,24 +314,26 @@ parse_property_name (GScanner *scanner, ViviCodeValue **value)
   *value = NULL;
 
   for (i = 0; functions[i] != NULL; i++) {
-    status = functions[i] (scanner, value);
-    if (status != STATUS_CANCEL)
-      return status;
+    expected = functions[i] (scanner, value);
+    if (expected >= 0)
+      return expected;
   }
 
-  return STATUS_CANCEL;
+  return -ERROR_TOKEN_PROPERTY_NAME;
 }
 
-static ParseStatus
+static int
 parse_operator_expression (GScanner *scanner, ViviCodeValue **value);
 
-static ParseStatus
+static int
 parse_object_literal (GScanner *scanner, ViviCodeValue **value)
 {
+  int expected;
+
   *value = NULL;
 
   if (!check_token (scanner, '{'))
-    return STATUS_CANCEL;
+    return -'{';
 
   *value = vivi_code_init_object_new ();
 
@@ -327,53 +341,62 @@ parse_object_literal (GScanner *scanner, ViviCodeValue **value)
     do {
       ViviCodeValue *property, *initializer;
 
-      if (parse_property_name (scanner, &property) != STATUS_OK)
-	goto fail;
+      expected = parse_property_name (scanner, &property);
+      if (expected != G_TOKEN_NONE) {
+	g_object_unref (*value);
+	*value = NULL;
+	return FAIL (expected);
+      }
 
-      if (!check_token (scanner, ':'))
-	goto fail;
+      if (!check_token (scanner, ':')) {
+	g_object_unref (*value);
+	*value = NULL;
+	return ':';
+      }
 
       // FIXME: assignment expression
-      if (parse_operator_expression (scanner, &initializer) != STATUS_OK)
-	goto fail;
+      expected = parse_operator_expression (scanner, &initializer);
+      if (expected != G_TOKEN_NONE) {
+	g_object_unref (*value);
+	*value = NULL;
+	return FAIL (expected);
+      }
 
       vivi_code_init_object_add_variable (VIVI_CODE_INIT_OBJECT (*value),
 	  property, initializer);
     } while (check_token (scanner, ','));
   }
 
-  if (!check_token (scanner, '}'))
-    goto fail;
+  if (!check_token (scanner, '}')) {
+    g_object_unref (*value);
+    *value = NULL;
+    return '}';
+  }
 
-  return STATUS_OK;
-
-fail:
-
-  g_object_unref (*value);
-  *value = NULL;
-  return STATUS_FAIL;
+  return G_TOKEN_NONE;
 }
 
 // misc
 
-static ParseStatus
+static int
 parse_variable_declaration (GScanner *scanner, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  int expected;
   ViviCodeValue *identifier;
   ViviCodeValue *value;
 
   *statement = NULL;
 
-  status = parse_identifier (scanner, &identifier);
-  if (status != STATUS_OK)
-    return status;
+  expected = parse_identifier (scanner, &identifier);
+  if (expected != G_TOKEN_NONE)
+    return expected;
 
   if (check_token (scanner, '=')) {
     // FIXME: assignment expression
-    if (parse_operator_expression (scanner, &value) != STATUS_OK) {
+    expected = parse_operator_expression (scanner, &value);
+    if (expected != G_TOKEN_NONE) {
       g_object_unref (identifier);
-      return STATUS_FAIL;
+      return FAIL (expected);
     }
   } else {
     value = vivi_code_constant_new_undefined ();
@@ -382,16 +405,15 @@ parse_variable_declaration (GScanner *scanner, ViviCodeStatement **statement)
   *statement = vivi_code_assignment_new (NULL, identifier, value);
   vivi_code_assignment_set_local (VIVI_CODE_ASSIGNMENT (*statement), TRUE);
 
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
 // expression
 
-static ParseStatus
+static int
 parse_primary_expression (GScanner *scanner, ViviCodeValue **value)
 {
-  int i;
-  ParseStatus status;
+  int i, expected;
   ParseValueFunction functions[] = {
     parse_identifier,
     parse_literal,
@@ -404,59 +426,62 @@ parse_primary_expression (GScanner *scanner, ViviCodeValue **value)
 
   if (check_token (scanner, TOKEN_THIS)) {
     *value = vivi_code_get_new_name ("this");
-    return STATUS_OK;
+    return G_TOKEN_NONE;
   }
 
   if (check_token (scanner, '(')) {
     // FIXME: assignment expression
-    if (parse_operator_expression (scanner, value) != STATUS_OK)
-      return STATUS_FAIL;
+    expected = parse_operator_expression (scanner, value);
+    if (expected != G_TOKEN_NONE)
+      return FAIL (expected);
     if (!check_token (scanner, ')')) {
       g_object_unref (*value);
       *value = NULL;
-      return STATUS_FAIL;
+      return ')';
     }
-    return STATUS_OK;
+    return G_TOKEN_NONE;
   }
 
   for (i = 0; functions[i] != NULL; i++) {
-    status = functions[i] (scanner, value);
-    if (status != STATUS_CANCEL)
-      return status;
+    expected = functions[i] (scanner, value);
+    if (expected >= 0)
+      return expected;
   }
 
-  return STATUS_CANCEL;
+  return -ERROR_TOKEN_PRIMARY_EXPRESSION;
 }
 
-static ParseStatus
+static int
 parse_member_expression (GScanner *scanner, ViviCodeValue **value)
 {
-  ParseStatus status;
+  int expected;
   ViviCodeValue *member;
 
   // TODO: new MemberExpression Arguments
 
-  status = parse_primary_expression (scanner, value);
-  //if (status == STATUS_CANCEL)
-  //  status = parse_function_expression (scanner, value);
+  expected = parse_primary_expression (scanner, value);
+  //if (expected == STATUS_CANCEL)
+  //  expected = parse_function_expression (scanner, value);
 
-  if (status != 0)
-    return status;
+  if (expected != G_TOKEN_NONE)
+    return expected;
 
   do {
     ViviCodeValue *tmp;
 
     if (check_token (scanner, '[')) {
       // FIXME: expression
-      if (parse_operator_expression (scanner, &member) != STATUS_OK)
-	return STATUS_FAIL;
+      expected = parse_operator_expression (scanner, &member);
+      if (expected != G_TOKEN_NONE)
+	return FAIL (expected);
       if (!check_token (scanner, ']'))
-	return STATUS_FAIL;
+	return ']';
     } else if (check_token (scanner, '.')) {
-      if (parse_identifier (scanner, &member) != STATUS_OK)
-	return STATUS_FAIL;
+      expected = parse_identifier (scanner, &member);
+      if (expected != G_TOKEN_NONE)
+	return FAIL (expected);
     } else {
-      return STATUS_OK;
+      return G_TOKEN_NONE;
     }
 
     tmp = *value;
@@ -466,17 +491,19 @@ parse_member_expression (GScanner *scanner, ViviCodeValue **value)
   } while (TRUE);
 
   g_assert_not_reached ();
-  return STATUS_FAIL;
 }
 
-static ParseStatus
+static int
 parse_new_expression (GScanner *scanner, ViviCodeValue **value)
 {
+  int expected;
+
   *value = NULL;
 
   if (check_token (scanner, TOKEN_NEW)) {
-    if (parse_new_expression (scanner, value) != STATUS_OK)
-      return STATUS_FAIL;
+    expected = parse_new_expression (scanner, value);
+    if (expected != G_TOKEN_NONE)
+      return FAIL (expected);
     if (!VIVI_IS_CODE_FUNCTION_CALL (*value)) {
       ViviCodeValue *tmp = VIVI_CODE_VALUE (*value);
       *value = vivi_code_function_call_new (NULL, tmp);
@@ -484,47 +511,60 @@ parse_new_expression (GScanner *scanner, ViviCodeValue **value)
     }
     vivi_code_function_call_set_construct (VIVI_CODE_FUNCTION_CALL (*value),
 	TRUE);
-    return STATUS_OK;
+    return G_TOKEN_NONE;
   } else {
     return parse_member_expression (scanner, value);
   }
 }
 
-static ParseStatus
+static int
 parse_left_hand_side_expression (GScanner *scanner, ViviCodeValue **value)
 {
-  ParseStatus status;
+  int expected;
 
   *value = NULL;
 
-  status = parse_new_expression (scanner, value);
-  //if (status == STATUS_CANCEL)
-  //  status = parse_call_expression (scanner, value);
+  expected = parse_new_expression (scanner, value);
+  //if (expected == STATUS_CANCEL)
+  //  expected = parse_call_expression (scanner, value);
 
-  return status;
+  return expected;
 }
 
-static ParseStatus
+static int
 parse_postfix_expression (GScanner *scanner, ViviCodeValue **value)
 {
-  ParseStatus status;
+  int expected;
+  ViviCodeValue *tmp, *one;
+  const char *operator;
 
-  status = parse_left_hand_side_expression (scanner, value);
-  if (status != STATUS_OK)
-    return status;
+  expected = parse_left_hand_side_expression (scanner, value);
+  if (expected != G_TOKEN_NONE)
+    return expected;
 
   // FIXME: Don't allow new line here
 
-  /*if (check_token (scanner, TOKEN_PLUSPLUS)) {
-    ViviCodeValue *tmp = *value;
-    *value = vivi_code_postfix_new (tmp, "++");
-    g_object_unref (tmp);
-  } else {*/
-    return STATUS_OK;
-  //}
+  if (check_token (scanner, TOKEN_PLUSPLUS)) {
+    operator = "+";
+  } else if (check_token (scanner, TOKEN_MINUSMINUS)) {
+    operator = "-";
+  } else {
+    return G_TOKEN_NONE;
+  }
+
+  one = vivi_code_constant_new_number (1);
+
+  // FIXME: Side effect!
+  tmp = *value;
+  *value = vivi_code_binary_new_name (tmp, one, operator);
+  g_object_unref (tmp);
+
+  g_object_unref (one);
+
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_unary_expression (GScanner *scanner, ViviCodeValue **value)
 {
   ViviCodeValue *tmp;
@@ -532,82 +572,88 @@ parse_unary_expression (GScanner *scanner, ViviCodeValue **value)
   *value = NULL;
 
   if (check_token (scanner, '!')) {
-    parse_unary_expression (scanner, value);
+    int expected = parse_unary_expression (scanner, value);
+    if (expected != G_TOKEN_NONE)
+      return FAIL (expected);
     tmp = VIVI_CODE_VALUE (*value);
     *value = vivi_code_unary_new (tmp, '!');
     g_object_unref (tmp);
-    return STATUS_OK;
+    return G_TOKEN_NONE;
   } else {
     return parse_postfix_expression (scanner, value);
   }
 }
 
-static ParseStatus
+static int
 parse_operator_expression (GScanner *scanner, ViviCodeValue **value)
 {
-  ParseStatus status;
+  int expected;
   ViviCodeValue *left;
   ViviCodeValue *right;
 
   *value = NULL;
 
-  status = parse_unary_expression (scanner, value);
-  if (status != STATUS_OK)
-    return status;
+  expected = parse_unary_expression (scanner, value);
+  if (expected != G_TOKEN_NONE)
+    return expected;
 
-  do {
-    if (!check_token (scanner, '+'))
-      return STATUS_OK;
-
-    if (parse_unary_expression (scanner, &right) != STATUS_OK) {
+  while (check_token (scanner, '+')) {
+    expected = parse_unary_expression (scanner, &right);
+    if (expected != G_TOKEN_NONE) {
       g_object_unref (*value);
       *value = NULL;
-      return STATUS_FAIL;
+      return FAIL (expected);
     }
 
     left = VIVI_CODE_VALUE (*value);
     *value = vivi_code_binary_new_name (left, VIVI_CODE_VALUE (right), "+");
     g_object_unref (left);
     g_object_unref (right);
-  } while (TRUE);
+  };
 
-  g_object_unref (*value);
-  *value = NULL;
-
-  return STATUS_FAIL;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_assignment_expression (GScanner *scanner, ViviCodeStatement **statement);
 
-static ParseStatus
+static int
 parse_conditional_expression (GScanner *scanner, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  int expected;
   ViviCodeValue *value;
   ViviCodeStatement *if_statement, *else_statement;
 
   *statement = NULL;
-  if_statement = NULL;
 
-  status = parse_operator_expression (scanner, &value);
-  if (status != STATUS_OK)
-    return status;
+  expected = parse_operator_expression (scanner, &value);
+  if (expected != G_TOKEN_NONE)
+    return expected;
 
   if (!check_token (scanner, '?')) {
     *statement = vivi_code_value_statement_new (VIVI_CODE_VALUE (value));
     g_object_unref (value);
-    return STATUS_OK;
+    return G_TOKEN_NONE;
   }
 
-  if (parse_assignment_expression (scanner, &if_statement) != STATUS_OK)
-    goto fail;
+  expected = parse_assignment_expression (scanner, &if_statement);
+  if (expected != G_TOKEN_NONE) {
+    g_object_unref (value);
+    return FAIL (expected);
+  }
 
-  if (!check_token (scanner, ':'))
-    goto fail;
+  if (!check_token (scanner, ':')) {
+    g_object_unref (value);
+    g_object_unref (if_statement);
+    return ':';
+  }
 
-  if (parse_assignment_expression (scanner, &else_statement) != STATUS_OK)
-    goto fail;
+  expected = parse_assignment_expression (scanner, &else_statement);
+  if (expected != G_TOKEN_NONE) {
+    g_object_unref (value);
+    g_object_unref (if_statement);
+    return FAIL (expected);
+  }
 
   *statement = vivi_code_if_new (value);
   vivi_code_if_set_if (VIVI_CODE_IF (*statement), if_statement);
@@ -617,18 +663,10 @@ parse_conditional_expression (GScanner *scanner, ViviCodeStatement **statement)
   g_object_unref (if_statement);
   g_object_unref (else_statement);
 
-  return STATUS_OK;
-
-fail:
-
-  g_object_unref (value);
-  if (if_statement != NULL)
-    g_object_unref (if_statement);
-
-  return STATUS_FAIL;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_assignment_expression (GScanner *scanner, ViviCodeStatement **statement)
 {
   *statement = NULL;
@@ -638,7 +676,7 @@ parse_assignment_expression (GScanner *scanner, ViviCodeStatement **statement)
   return parse_conditional_expression (scanner, statement);
 }
 
-static ParseStatus
+static int
 parse_expression (GScanner *scanner, ViviCodeStatement **statement)
 {
   *statement = NULL;
@@ -649,59 +687,62 @@ parse_expression (GScanner *scanner, ViviCodeStatement **statement)
 
 // statement
 
-static ParseStatus
+static int
 parse_expression_statement (GScanner *scanner, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  int expected;
 
   *statement = NULL;
 
   g_scanner_peek_next_token (scanner);
   if (scanner->next_token == '{' || scanner->next_token == TOKEN_FUNCTION)
-    return STATUS_CANCEL;
+    return -ERROR_TOKEN_EXPRESSION_STATEMENT;
 
-  status = parse_expression (scanner, statement);
-  if (status != STATUS_OK)
-    return status;
+  expected = parse_expression (scanner, statement);
+  if (expected != G_TOKEN_NONE)
+    return expected;
 
   if (!check_token (scanner, ';')) {
     g_object_unref (*statement);
     *statement = NULL;
-    return STATUS_FAIL;
+    return ';';
   }
 
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_empty_statement (GScanner *scanner, ViviCodeStatement **statement)
 {
   *statement = NULL;
 
   if (!check_token (scanner, ';'))
-    return STATUS_CANCEL;
+    return -';';
 
   *statement = vivi_compiler_empty_statement_new ();
 
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_statement (GScanner *scanner, ViviCodeStatement **statement);
 
-static ParseStatus
+static int
 parse_block (GScanner *scanner, ViviCodeStatement **statement)
 {
+  int expected;
+
   *statement = NULL;
 
   if (!check_token (scanner, '{'))
-    return STATUS_CANCEL;
+    return -'{';
 
   g_scanner_peek_next_token (scanner);
   if (scanner->next_token != '}') {
-    if (parse_statement_list (scanner, parse_statement, statement,
-	  G_TOKEN_NONE) != STATUS_OK)
-      return STATUS_FAIL;
+    expected =
+      parse_statement_list (scanner, parse_statement, statement, G_TOKEN_NONE);
+    if (expected != G_TOKEN_NONE)
+      return FAIL (expected);
   } else {
     *statement = vivi_code_block_new ();
   }
@@ -709,37 +750,40 @@ parse_block (GScanner *scanner, ViviCodeStatement **statement)
   if (!check_token (scanner, '}')) {
     g_object_unref (*statement);
     *statement = NULL;
-    return STATUS_FAIL;
+    return '}';
   }
 
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_variable_statement (GScanner *scanner, ViviCodeStatement **statement)
 {
+  int expected;
+
   *statement = NULL;
 
   if (!check_token (scanner, TOKEN_VAR))
-    return STATUS_CANCEL;
+    return -TOKEN_VAR;
 
-  if (parse_statement_list (scanner, parse_variable_declaration, statement,
-	',') != STATUS_OK)
-    return STATUS_FAIL;
+  expected =
+    parse_statement_list (scanner, parse_variable_declaration, statement, ',');
+  if (expected != G_TOKEN_NONE)
+    return FAIL (expected);
 
   if (!check_token (scanner, ';')) {
     g_object_unref (*statement);
     *statement = NULL;
-    return STATUS_FAIL;
+    return ';';
   }
 
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_statement (GScanner *scanner, ViviCodeStatement **statement)
 {
-  int i, status;
+  int i, expected;
   ParseStatementFunction functions[] = {
     parse_block,
     parse_variable_statement,
@@ -761,26 +805,27 @@ parse_statement (GScanner *scanner, ViviCodeStatement **statement)
   *statement = NULL;
 
   for (i = 0; functions[i] != NULL; i++) {
-    status = functions[i] (scanner, statement);
-    if (status != STATUS_CANCEL)
-      return status;
+    expected = functions[i] (scanner, statement);
+    if (expected >= 0)
+      return expected;
   }
 
-  return STATUS_CANCEL;
+  return -ERROR_TOKEN_STATEMENT;
 }
 
 // function
 
-static ParseStatus
+static int
 parse_source_element (GScanner *scanner, ViviCodeStatement **statement);
 
-static ParseStatus
+static int
 parse_function_declaration (GScanner *scanner, ViviCodeStatement **statement)
 {
   //ViviCodeStatement *function;
   ViviCodeValue *identifier;
   ViviCodeValue **arguments;
   ViviCodeStatement *body;
+  int expected;
 
   *statement = NULL;
 
@@ -789,30 +834,47 @@ parse_function_declaration (GScanner *scanner, ViviCodeStatement **statement)
   body = NULL;
 
   if (!check_token (scanner, TOKEN_FUNCTION))
-    return STATUS_CANCEL;
+    return -TOKEN_FUNCTION;
 
-  if (parse_identifier (scanner, &identifier) != STATUS_OK)
-    return STATUS_FAIL;
+  expected = parse_identifier (scanner, &identifier);
+  if (expected != G_TOKEN_NONE)
+    return FAIL (expected);
 
-  if (!check_token (scanner, '('))
-    goto fail;
+  if (!check_token (scanner, '(')) {
+    g_object_unref (identifier);
+    return '(';
+  }
 
-  if (parse_value_list (scanner, parse_identifier, &arguments, ',') ==
-      STATUS_FAIL)
-    goto fail;
+  expected = parse_value_list (scanner, parse_identifier, &arguments, ',');
+  if (expected != G_TOKEN_NONE && expected >= 0)
+    return expected;
 
-  if (!check_token (scanner, ')'))
-    goto fail;
+  if (!check_token (scanner, ')')) {
+    g_object_unref (identifier);
+    free_value_list (arguments);
+    return ')';
+  }
 
-  if (!check_token (scanner, '{'))
-    goto fail;
+  if (!check_token (scanner, '{')) {
+    g_object_unref (identifier);
+    free_value_list (arguments);
+    return '{';
+  }
 
-  if (parse_statement_list (scanner, parse_source_element, &body, G_TOKEN_NONE)
-      == STATUS_FAIL)
-    goto fail;
+  expected = parse_statement_list (scanner, parse_source_element, &body,
+      G_TOKEN_NONE);
+  if (expected != G_TOKEN_NONE && expected >= 0) {
+    g_object_unref (identifier);
+    free_value_list (arguments);
+    return expected;
+  }
 
-  if (!check_token (scanner, '}'))
-    goto fail;
+  if (!check_token (scanner, '}')) {
+    g_object_unref (identifier);
+    free_value_list (arguments);
+    g_object_unref (body);
+    return '}';
+  }
 
   /*function = vivi_code_function_new (arguments, body);
   *statement = vivi_code_assignment_new (NULL, VIVI_CODE_VALUE (identifier),
@@ -820,67 +882,66 @@ parse_function_declaration (GScanner *scanner, ViviCodeStatement **statement)
   *statement = vivi_compiler_empty_statement_new ();
 
   g_object_unref (identifier);
-  if (arguments != NULL)
-    free_value_list (arguments);
-  if (body != NULL)
-    g_object_unref (body);
+  free_value_list (arguments);
+  g_object_unref (body);
 
-  return STATUS_OK;
-
-fail:
-  if (identifier != NULL)
-    g_object_unref (identifier);
-  if (arguments != NULL)
-    free_value_list (arguments);
-  if (body != NULL)
-    g_object_unref (body);
-
-  return STATUS_FAIL;
+  return G_TOKEN_NONE;
 }
 
 // top
 
-static ParseStatus
+static int
 parse_source_element (GScanner *scanner, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  int expected;
 
   *statement = NULL;
 
-  status = parse_function_declaration (scanner, statement);
-  if (status == STATUS_CANCEL)
-    status = parse_statement (scanner, statement);
+  expected = parse_function_declaration (scanner, statement);
+  if (expected < 0)
+    expected = parse_statement (scanner, statement);
 
-  return status;
+  return expected;
 }
 
-static ParseStatus
+static int
 parse_program (GScanner *scanner, ViviCodeStatement **statement)
 {
+  int expected;
+
   *statement = NULL;
 
-  return parse_statement_list (scanner, parse_source_element, statement,
+  expected = parse_statement_list (scanner, parse_source_element, statement,
       G_TOKEN_NONE);
+  if (expected != G_TOKEN_NONE)
+    return FAIL (expected);
+
+  if (!check_token (scanner, G_TOKEN_EOF)) {
+    *statement = NULL;
+    return FAIL (parse_statement (scanner, statement));
+  }
+
+  return G_TOKEN_NONE;
 }
 
 // parsing
 
-static ParseStatus
+static int
 parse_statement_list (GScanner *scanner, ParseStatementFunction function,
     ViviCodeStatement **block, guint separator)
 {
   ViviCodeStatement *statement;
-  ParseStatus status;
+  int expected;
 
-  g_return_val_if_fail (scanner != NULL, STATUS_FAIL);
-  g_return_val_if_fail (function != NULL, STATUS_FAIL);
-  g_return_val_if_fail (block != NULL, STATUS_FAIL);
+  g_assert (scanner != NULL);
+  g_assert (function != NULL);
+  g_assert (block != NULL);
 
   *block = NULL;
 
-  status = function (scanner, &statement);
-  if (status != STATUS_OK)
-    return status;
+  expected = function (scanner, &statement);
+  if (expected != G_TOKEN_NONE)
+    return expected;
 
   *block = vivi_code_block_new ();
 
@@ -891,32 +952,32 @@ parse_statement_list (GScanner *scanner, ParseStatementFunction function,
     if (separator != G_TOKEN_NONE && !check_token (scanner, separator))
       break;
 
-    status = function (scanner, &statement);
-    if (status == STATUS_FAIL) {
+    expected = function (scanner, &statement);
+    if (expected != G_TOKEN_NONE && expected >= 0) {
       g_object_unref (*block);
       *block = NULL;
-      return STATUS_FAIL;
+      return expected;
     }
-  } while (status == STATUS_OK);
+  } while (expected == G_TOKEN_NONE);
 
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
-static ParseStatus
+static int
 parse_value_list (GScanner *scanner, ParseValueFunction function,
     ViviCodeValue ***list, guint separator)
 {
   GPtrArray *array;
   ViviCodeValue *value;
-  ParseStatus status;
+  int expected;
 
-  g_return_val_if_fail (scanner != NULL, STATUS_FAIL);
-  g_return_val_if_fail (function != NULL, STATUS_FAIL);
-  g_return_val_if_fail (list != NULL, STATUS_FAIL);
+  g_assert (scanner != NULL);
+  g_assert (function != NULL);
+  g_assert (list != NULL);
 
-  status = function (scanner, &value);
-  if (status != STATUS_OK)
-    return status;
+  expected = function (scanner, &value);
+  if (expected != G_TOKEN_NONE)
+    return expected;
 
   array = g_ptr_array_new ();
 
@@ -926,15 +987,15 @@ parse_value_list (GScanner *scanner, ParseValueFunction function,
     if (separator != G_TOKEN_NONE && !check_token (scanner, separator))
       break;
 
-    status = function (scanner, &value);
-    if (status == STATUS_FAIL)
-      return STATUS_FAIL;
-  } while (status == STATUS_OK);
+    expected = function (scanner, &value);
+    if (expected != G_TOKEN_NONE && expected >= 0)
+      return expected;
+  } while (expected == G_TOKEN_NONE);
   g_ptr_array_add (array, NULL);
 
   *list = (ViviCodeValue **)g_ptr_array_free (array, FALSE);
 
-  return STATUS_OK;
+  return G_TOKEN_NONE;
 }
 
 // public
@@ -944,8 +1005,7 @@ vivi_compile_text (const char *text, gsize len, const char *input_name)
 {
   GScanner *scanner;
   ViviCodeStatement *statement;
-  ParseStatus status;
-  int i;
+  int expected, i;
 
   g_return_val_if_fail (text != NULL, NULL);
 
@@ -970,9 +1030,31 @@ vivi_compile_text (const char *text, gsize len, const char *input_name)
   scanner->input_name = input_name;
   g_scanner_input_text (scanner, text, len);
 
-  status = parse_program (scanner, &statement);
-  g_assert ((status == STATUS_OK && VIVI_IS_CODE_STATEMENT (statement)) ||
-	(status != STATUS_OK && statement == NULL));
+  expected = parse_program (scanner, &statement);
+  g_assert ((expected == G_TOKEN_NONE && VIVI_IS_CODE_STATEMENT (statement)) ||
+	(expected != G_TOKEN_NONE && statement == NULL));
+  if (expected != G_TOKEN_NONE) {
+    char *name = NULL;
+
+    for (i = 0; custom_tokens[i].token != G_TOKEN_NONE; i++) {
+      if (custom_tokens[i].token == FAIL (expected)) {
+	name = g_ascii_strup (custom_tokens[i].symbol, -1);
+	break;
+      }
+    }
+    if (custom_tokens[i].token == G_TOKEN_NONE) {
+      for (i = 0; error_tokens[i].token != G_TOKEN_NONE; i++) {
+	if (error_tokens[i].token == FAIL (expected)) {
+	  name = g_ascii_strup (error_tokens[i].symbol, -1);
+	  break;
+	}
+      }
+    }
+
+    g_scanner_get_next_token (scanner);
+    g_scanner_unexp_token (scanner, FAIL (expected), NULL, name, NULL, NULL,
+	TRUE);
+  }
 
   g_scanner_destroy (scanner);
 

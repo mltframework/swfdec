@@ -1510,9 +1510,6 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
 
   swfdec_movie_get_mouse (SWFDEC_MOVIE (text), &x, &y);
 
-  //FIXME
-  swfdec_text_field_movie_mouse_move (actor, x, y);
-
   text->mouse_pressed = FALSE;
 
   direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);

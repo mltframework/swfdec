@@ -41,6 +41,8 @@ struct _SwfdecActor
 
   /* static properties (set by PlaceObject tags) */
   SwfdecEventList *	events;			/* events queued on this movie */
+
+  SwfdecFlashBool	focusrect;		/* if we should draw a focus rectangle or not */
 };
 
 struct _SwfdecActorClass

@@ -224,6 +224,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
     /* FIXME: is this correct? */
     movie = swfdec_resource_replace_movie (movie, resource);
   }
+  SWFDEC_ACTOR (movie)->focusrect = SWFDEC_FLASH_YES;
   swfdec_player_unroot (player, resource);
   return TRUE;
 }

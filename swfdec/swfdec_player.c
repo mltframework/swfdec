@@ -3298,6 +3298,7 @@ swfdec_player_set_url (SwfdecPlayer *player, const SwfdecURL *url)
       SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
   priv->resource = swfdec_resource_new (player, loader, priv->variables);
   movie = swfdec_movie_new (player, -16384, NULL, priv->resource, NULL, SWFDEC_AS_STR__level0);
+  SWFDEC_ACTOR (movie)->focusrect = SWFDEC_FLASH_YES;
   movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);
   g_object_notify (G_OBJECT (player), "url");

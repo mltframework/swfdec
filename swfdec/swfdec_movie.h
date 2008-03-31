@@ -47,6 +47,12 @@ typedef enum {
   SWFDEC_MOVIE_STATE_DESTROYED		/* swfdec_movie_destroy has been called */
 } SwfdecMovieState;
 
+typedef enum {
+  SWFDEC_FLASH_MAYBE = 0,
+  SWFDEC_FLASH_YES,
+  SWFDEC_FLASH_NO
+} SwfdecFlashBool;
+
 #define SWFDEC_BLEND_MODE_NORMAL	1
 #define SWFDEC_BLEND_MODE_LAYER		2
 #define SWFDEC_BLEND_MODE_MULTIPLY	3

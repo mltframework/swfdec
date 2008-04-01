@@ -502,20 +502,32 @@ parse_postfix_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
 static int
 parse_unary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
 {
+  int expected;
   ViviCodeValue *tmp;
 
   *value = NULL;
 
-  if (check_token (scanner, TOKEN_LOGICAL_NOT)) {
-    int expected = parse_unary_expression (scanner, value);
-    if (expected != TOKEN_NONE)
-      return FAIL (expected);
-    tmp = VIVI_CODE_VALUE (*value);
-    *value = vivi_code_unary_new (tmp, '!');
-    g_object_unref (tmp);
-    return TOKEN_NONE;
-  } else {
-    return parse_postfix_expression (scanner, value);
+  vivi_compiler_scanner_peek_next_token (scanner);
+  switch ((int)scanner->next_token) {
+    /*case TOKEN_DELETE:
+    case TOKEN_VOID:
+    case TOKEN_TYPEOF:
+    case TOKEN_PLUSPLUS:
+    case TOKEN_MINUSMINUS:
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+    case TOKEN_BITWISE_NOT:*/
+    case TOKEN_LOGICAL_NOT:
+      vivi_compiler_scanner_get_next_token (scanner);
+      expected = parse_unary_expression (scanner, value);
+      if (expected != TOKEN_NONE)
+	return FAIL (expected);
+      tmp = VIVI_CODE_VALUE (*value);
+      *value = vivi_code_unary_new (tmp, '!');
+      g_object_unref (tmp);
+      return TOKEN_NONE;
+    default:
+      return parse_postfix_expression (scanner, value);
   }
 }
 
@@ -555,14 +567,59 @@ parse_operator_expression (ViviCompilerScanner *scanner,
 }
 
 static int
+parse_multiplicative_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_MULTIPLY,
+    TOKEN_DIVIDE, TOKEN_REMAINDER, TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
+      parse_unary_expression);
+}
+
+static int
+parse_additive_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_PLUS, TOKEN_MINUS,
+    TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
+      parse_multiplicative_expression);
+}
+
+static int
+parse_shift_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
+{
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_SHIFT_LEFT,
+    TOKEN_SHIFT_RIGHT, TOKEN_SHIFT_RIGHT_UNSIGNED, TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
+      parse_additive_expression);
+}
+
+static int
+parse_relational_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_LESS_THAN,
+    TOKEN_GREATER_THAN, /*TOKEN_LESS_THAN_OR_EQUAL,
+    TOKEN_EQUAL_OR_GREATER_THAN, TOKEN_INSTANCEOF, TOKEN_IN,*/ TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
+      parse_shift_expression);
+}
+
+static int
 parse_equality_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_EQUAL,
-    TOKEN_NOT_EQUAL, TOKEN_STRICT_EQUAL, TOKEN_NOT_STRICT_EQUAL, TOKEN_NONE };
+    /*TOKEN_NOT_EQUAL,*/ TOKEN_STRICT_EQUAL, /*TOKEN_NOT_STRICT_EQUAL,*/
+    TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, tokens,
-      parse_unary_expression);
+      parse_relational_expression);
 }
 
 static int

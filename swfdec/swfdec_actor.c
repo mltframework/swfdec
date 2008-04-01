@@ -316,3 +316,19 @@ swfdec_actor_get_mouse_events (SwfdecActor *actor)
     return FALSE;
 }
 
+gboolean
+swfdec_actor_has_focusrect (SwfdecActor *actor)
+{
+  g_return_val_if_fail (SWFDEC_IS_ACTOR (actor), FALSE);
+
+  if (!SWFDEC_IS_BUTTON_MOVIE (actor) &&
+      !SWFDEC_IS_SPRITE_MOVIE (actor))
+    return FALSE;
+
+  if (actor->focusrect == SWFDEC_FLASH_MAYBE) {
+    actor = SWFDEC_ACTOR (swfdec_movie_get_root (SWFDEC_MOVIE (actor)));
+  }
+  g_assert (actor->focusrect != SWFDEC_FLASH_MAYBE);
+
+  return actor->focusrect != SWFDEC_FLASH_NO;
+}

@@ -2633,6 +2633,31 @@ swfdec_player_key_release (SwfdecPlayer *player, guint keycode, guint character)
   return ret;
 }
 
+static void
+swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *inval)
+{
+#define LINE_WIDTH (3.0)
+  //(3 * SWFDEC_TWIPS_SCALE_FACTOR)
+  SwfdecMovie *movie = SWFDEC_MOVIE (player->priv->focus);
+  SwfdecRect rect = movie->extents;
+  double w, h;
+
+  cairo_save (cr);
+  /* I wonder why this has to be yellow... */
+  cairo_set_source_rgb (cr, 1.0, 1.0, 0.0);
+  if (movie->parent)
+    swfdec_movie_rect_local_to_global (movie->parent, &rect);
+  swfdec_player_global_to_stage (player, &rect.x0, &rect.y0);
+  swfdec_player_global_to_stage (player, &rect.x1, &rect.y1);
+  cairo_set_line_width (cr, LINE_WIDTH);
+  w = MAX (rect.x1 - rect.x0 - LINE_WIDTH, 0);
+  h = MAX (rect.y1 - rect.y0 - LINE_WIDTH, 0);
+  cairo_rectangle (cr, rect.x0 + LINE_WIDTH / 2, rect.y0 + LINE_WIDTH / 2, w, h);
+  cairo_stroke (cr);
+  cairo_restore (cr);
+#undef LINE_WIDTH
+}
+
 /**
  * swfdec_player_render:
  * @player: a #SwfdecPlayer
@@ -2689,8 +2714,12 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
   for (walk = priv->roots; walk; walk = walk->next) {
     swfdec_movie_render (walk->data, cr, &trans, &real);
   }
-  SWFDEC_INFO ("=== %p: END RENDER ===", player);
   cairo_restore (cr);
+  /* NB: we render the focusrect after restoring, so the focusrect doesn't scale */
+  if (priv->focus && swfdec_actor_has_focusrect (priv->focus))
+    swfdec_player_render_focusrect (player, cr, &real);
+
+  SWFDEC_INFO ("=== %p: END RENDER ===", player);
 }
 
 /**

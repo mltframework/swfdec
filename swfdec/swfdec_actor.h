@@ -85,6 +85,7 @@ void		swfdec_actor_queue_script	(SwfdecActor *		actor,
   						 SwfdecEventType	condition);
 
 gboolean	swfdec_actor_get_mouse_events	(SwfdecActor *		actor);
+gboolean	swfdec_actor_has_focusrect	(SwfdecActor *		actor);
 
 
 G_END_DECLS

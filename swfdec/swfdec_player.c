@@ -1063,6 +1063,22 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const ch
   }
 }
 
+void
+swfdec_player_invalidate_focusrect (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+
+  if (swfdec_rect_is_empty (&priv->focusrect))
+    return;
+
+  swfdec_player_invalidate (player, &priv->focusrect);
+  swfdec_rect_init_empty (&priv->focusrect);
+}
+
 /**
  * swfdec_player_grab_focus:
  * @player: the player
@@ -1110,11 +1126,10 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
     klass = SWFDEC_ACTOR_GET_CLASS (prev);
     if (klass->focus_out)
       klass->focus_out (prev);
-    if (swfdec_actor_has_focusrect (prev))
-      swfdec_movie_invalidate_last (SWFDEC_MOVIE (prev));
   }
   priv->focus_previous = prev;
   priv->focus = actor;
+  swfdec_player_invalidate_focusrect (player);
   if (actor) {
     swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
     swfdec_as_object_call (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_onSetFocus,
@@ -1123,8 +1138,6 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
     klass = SWFDEC_ACTOR_GET_CLASS (actor);
     if (klass->focus_in)
       klass->focus_in (actor);
-    if (swfdec_actor_has_focusrect (actor))
-      swfdec_movie_invalidate_last (SWFDEC_MOVIE (actor));
   }
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Selection, SWFDEC_AS_STR_onSetFocus, 2, vals);
 }
@@ -1782,6 +1795,27 @@ swfdec_player_update_movies (SwfdecPlayer *player)
   priv->invalid_pending = NULL;
 }
 
+static void
+swfdec_player_update_focusrect (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv = player->priv;
+  SwfdecMovie *movie;
+
+  if (!swfdec_rect_is_empty (&priv->focusrect))
+    return;
+
+  if (priv->focus == NULL ||
+      !swfdec_actor_has_focusrect (priv->focus))
+    return;
+
+  movie = SWFDEC_MOVIE (priv->focus);
+  g_assert (movie->state == SWFDEC_MOVIE_UP_TO_DATE);
+  priv->focusrect = movie->extents;
+  if (movie->parent)
+    swfdec_movie_rect_local_to_global (movie->parent, &priv->focusrect);
+  swfdec_player_invalidate (player, &priv->focusrect);
+}
+
 /* used for breakpoints */
 void
 swfdec_player_unlock_soft (SwfdecPlayer *player)
@@ -1792,6 +1826,7 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
   g_timer_stop (player->priv->runtime);
   swfdec_player_update_movies (player);
   swfdec_player_update_mouse_cursor (player);
+  swfdec_player_update_focusrect (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);
 }
@@ -2739,18 +2774,21 @@ static void
 swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *inval)
 {
 #define LINE_WIDTH (3.0)
-  SwfdecMovie *movie = SWFDEC_MOVIE (player->priv->focus);
-  SwfdecRect rect = movie->extents;
+  SwfdecPlayerPrivate *priv;
   double w, h;
+  SwfdecRect rect;
 
+  priv = player->priv;
+  if (swfdec_rect_is_empty (&priv->focusrect))
+    return;
+
+  rect = priv->focusrect;
   cairo_save (cr);
   /* I wonder why this has to be yellow... */
   cairo_set_source_rgb (cr, 1.0, 1.0, 0.0);
-  if (movie->parent)
-    swfdec_movie_rect_local_to_global (movie->parent, &rect);
+  cairo_set_line_width (cr, LINE_WIDTH);
   swfdec_player_global_to_stage (player, &rect.x0, &rect.y0);
   swfdec_player_global_to_stage (player, &rect.x1, &rect.y1);
-  cairo_set_line_width (cr, LINE_WIDTH);
   w = MAX (rect.x1 - rect.x0 - LINE_WIDTH, 0);
   h = MAX (rect.y1 - rect.y0 - LINE_WIDTH, 0);
   cairo_rectangle (cr, rect.x0 + LINE_WIDTH / 2, rect.y0 + LINE_WIDTH / 2, w, h);
@@ -2817,8 +2855,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
   }
   cairo_restore (cr);
   /* NB: we render the focusrect after restoring, so the focusrect doesn't scale */
-  if (priv->focus && swfdec_actor_has_focusrect (priv->focus))
-    swfdec_player_render_focusrect (player, cr, &real);
+  swfdec_player_render_focusrect (player, cr, &real);
 
   SWFDEC_INFO ("=== %p: END RENDER ===", player);
 }

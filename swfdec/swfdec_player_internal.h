@@ -126,6 +126,7 @@ struct _SwfdecPlayerPrivate
   SwfdecActor *		focus;			/* actor that currently has keyboard focus (or NULL if none) */
   SwfdecActor *		focus_previous;		/* the previues actor that had focus */
   GList *		focus_list;	      	/* list of movies with a tabIndex set or NULL for no tabIndex usage */
+  SwfdecRect		focusrect;		/* current focus rectangle in global coordinates or empty */
 
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
@@ -186,6 +187,7 @@ SwfdecSocket *	swfdec_player_create_socket	(SwfdecPlayer *		player,
 						 const char *		hostname,
 						 guint			port);
 
+void		swfdec_player_invalidate_focusrect (SwfdecPlayer *	player);
 void		swfdec_player_grab_focus	(SwfdecPlayer *		player,
 						 SwfdecActor *		actor);
 #define swfdec_player_is_key_pressed(player,key) ((player)->priv->key_pressed[(key) / 8] & (1 << ((key) % 8)))

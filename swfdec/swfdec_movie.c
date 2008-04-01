@@ -150,10 +150,15 @@ swfdec_movie_invalidate_last (SwfdecMovie *movie)
 void
 swfdec_movie_invalidate_next (SwfdecMovie *movie)
 {
+  SwfdecPlayer *player;
+
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
   swfdec_movie_invalidate_last (movie);
   movie->invalidate_next = TRUE;
+  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  if (movie == SWFDEC_MOVIE (player->priv->focus))
+    swfdec_player_invalidate_focusrect (player);
 }
 
 /**
@@ -319,8 +324,10 @@ swfdec_movie_unset_actor (SwfdecPlayer *player, SwfdecActor *actor)
 
   if (priv->focus_previous == actor)
     priv->focus_previous = NULL;
-  if (priv->focus == actor)
+  if (priv->focus == actor) {
     priv->focus = NULL;
+    swfdec_player_invalidate_focusrect (player);
+  }
 }
 
 static gboolean

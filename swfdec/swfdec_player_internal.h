@@ -103,6 +103,7 @@ struct _SwfdecPlayerPrivate
   /* rendering */
   SwfdecRectangle     	invalid_extents;      	/* extents of area that needs a redraw in global coordinates */
   GArray *		invalidations;		/* fine-grained areas in need of redraw */
+  GSList *		invalid_pending;	/* pending invalidations due to invalidate_last */
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */
@@ -110,9 +111,9 @@ struct _SwfdecPlayerPrivate
   double      		mouse_x;		/* in stage coordinates */
   double		mouse_y;		/* in stage coordinates */
   guint			mouse_button; 		/* 0 for not pressed, 1 for pressed */
-  SwfdecMovie *		mouse_below;		/* movie that currently is below the mouse */
-  SwfdecMovie *		mouse_grab;		/* movie that currently has the mouse */
-  SwfdecMovie *		mouse_drag;		/* current movie activated by startDrag */
+  SwfdecActor *		mouse_below;		/* actor that currently is below the mouse */
+  SwfdecActor *		mouse_grab;		/* actor that currently has the mouse */
+  SwfdecActor *		mouse_drag;		/* current actor activated by startDrag */
   gboolean		mouse_drag_center;	/* TRUE to use center of movie at mouse, FALSE for movie's (0,0) */
   SwfdecRect		mouse_drag_rect;	/* clipping rectangle for movements */
   double		mouse_drag_x;		/* offset of mouse in x direction */
@@ -122,8 +123,8 @@ struct _SwfdecPlayerPrivate
   guint			last_keycode;		/* last keycode that was pressed/released */
   guint			last_character;		/* UCS4 of last character pressed/released */
   guint8		key_pressed[256/8];   	/* boolean array for isDown */
-  SwfdecMovie *		focus;			/* movie that currently has keyboard focus (or NULL if none) */
-  SwfdecMovie *		focus_previous;		/* the last movie that had focus */
+  SwfdecActor *		focus;			/* actor that currently has keyboard focus (or NULL if none) */
+  SwfdecActor *		focus_previous;		/* the previues actor that had focus */
   GList *		focus_list;	      	/* list of movies with a tabIndex set or NULL for no tabIndex usage */
 
   /* audio */
@@ -140,7 +141,7 @@ struct _SwfdecPlayerPrivate
   SwfdecRingBuffer *	external_actions;     	/* external actions we've queued up, like resize or loader stuff */
   SwfdecTimeout		external_timeout;      	/* callback for iterating */
   /* iterating */
-  GList *		movies;			/* list of all movies that want to be iterated */
+  GList *		actors;			/* list of all SwfdecActor isntances active in this player */
   SwfdecRingBuffer *	actions[SWFDEC_PLAYER_N_ACTION_QUEUES]; /* all actions we've queued up so far */
 
   /* security */
@@ -186,7 +187,8 @@ SwfdecSocket *	swfdec_player_create_socket	(SwfdecPlayer *		player,
 						 guint			port);
 
 void		swfdec_player_grab_focus	(SwfdecPlayer *		player,
-						 SwfdecMovie *		movie);
+						 SwfdecActor *		actor);
+#define swfdec_player_is_key_pressed(player,key) ((player)->priv->key_pressed[(key) / 8] & (1 << ((key) % 8)))
 #define swfdec_player_is_mouse_pressed(player) ((player)->priv->mouse_button & 1)
 void		swfdec_player_invalidate	(SwfdecPlayer *		player,
 						 const SwfdecRect *	rect);
@@ -203,18 +205,18 @@ void		swfdec_player_remove_all_external_actions
 						(SwfdecPlayer *      	player,
 						 gpointer		object);
 void		swfdec_player_add_action	(SwfdecPlayer *		player,
-						 SwfdecMovie *		movie,
+						 SwfdecActor *		actor,
 						 SwfdecEventType	type,
 						 guint			importance);
 void		swfdec_player_add_action_script	(SwfdecPlayer *		player,
-						 SwfdecMovie *		movie,
+						 SwfdecActor *		actor,
 						 SwfdecScript *		script,
 						 guint			importance);
 void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
-						 SwfdecMovie *		movie);
+						 SwfdecActor *		actor);
 
 void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
-						 SwfdecMovie *		drag,
+						 SwfdecActor *		drag,
 						 gboolean		center,
 						 SwfdecRect *		rect);
 void		swfdec_player_set_align_flags	(SwfdecPlayer *		player,

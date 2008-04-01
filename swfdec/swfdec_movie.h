@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -46,6 +46,12 @@ typedef enum {
   SWFDEC_MOVIE_STATE_REMOVED,		/* swfdec_movie_remove has been called */
   SWFDEC_MOVIE_STATE_DESTROYED		/* swfdec_movie_destroy has been called */
 } SwfdecMovieState;
+
+typedef enum {
+  SWFDEC_FLASH_MAYBE = 0,
+  SWFDEC_FLASH_YES,
+  SWFDEC_FLASH_NO
+} SwfdecFlashBool;
 
 #define SWFDEC_BLEND_MODE_NORMAL	1
 #define SWFDEC_BLEND_MODE_LAYER		2
@@ -103,7 +109,6 @@ struct _SwfdecMovie {
   cairo_matrix_t	original_transform;	/* initial transform used */
   guint			original_ratio;		/* ratio used in this movie */
   int			clip_depth;		/* up to which movie this movie clips */
-  SwfdecEventList *	events;			/* events queued on this movie */
 
   /* parenting information */
   SwfdecMovie *		parent;			/* movie that contains us or NULL for root movies */
@@ -169,31 +174,6 @@ struct _SwfdecMovieClass {
 						 double			x,
 						 double			y,
 						 gboolean		events);
-  /* mouse handling */
-  gboolean		(* mouse_events)	(SwfdecMovie *		movie);
-  SwfdecMouseCursor	(* mouse_cursor)	(SwfdecMovie *		movie);
-  void			(* mouse_in)      	(SwfdecMovie *		movie);
-  void			(* mouse_out)      	(SwfdecMovie *		movie);
-  void			(* mouse_press)      	(SwfdecMovie *		movie,
-						 guint			button);
-  void			(* mouse_release)      	(SwfdecMovie *		movie,
-						 guint			button);
-  void			(* mouse_move)      	(SwfdecMovie *		movie,
-						 double			x,
-						 double			y);
-  /* keyboard handling */
-  void			(* focus_in)		(SwfdecMovie *		movie);
-  void			(* focus_out)		(SwfdecMovie *		movie);
-  void			(* key_pressed)		(SwfdecMovie *		movie,
-						 guint			keycode,
-						 guint			character);
-  void			(* key_released)      	(SwfdecMovie *		movie,
-						 guint			keycode,
-						 guint			character);
-
-  /* iterating */
-  void			(* iterate_start)     	(SwfdecMovie *		movie);
-  gboolean		(* iterate_end)		(SwfdecMovie *		movie);
 };
 
 GType		swfdec_movie_get_type		(void);
@@ -251,11 +231,9 @@ void		swfdec_movie_rect_global_to_local (SwfdecMovie *	movie,
 void		swfdec_movie_set_depth		(SwfdecMovie *		movie,
 						 int			depth);
 
-gboolean	swfdec_movie_can_focus		(SwfdecMovie *		movie);
 void		swfdec_movie_get_mouse		(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);
-gboolean	swfdec_movie_get_mouse_events	(SwfdecMovie *		movie);
 #define swfdec_movie_contains(movie, x, y) \
   (swfdec_movie_get_movie_at ((movie), (x), (y), FALSE) != NULL)
 SwfdecMovie *	swfdec_movie_get_movie_at	(SwfdecMovie *		movie,
@@ -273,10 +251,6 @@ cairo_pattern_t *swfdec_movie_mask		(cairo_t *		cr,
 						 const SwfdecRect *	inval);
 SwfdecMovie *	swfdec_movie_resolve		(SwfdecMovie *		movie);
 guint		swfdec_movie_get_version	(SwfdecMovie *		movie);
-void		swfdec_movie_execute		(SwfdecMovie *		movie,
-						 SwfdecEventType	condition);
-void		swfdec_movie_queue_script	(SwfdecMovie *		movie,
-  						 SwfdecEventType	condition);
 
 int		swfdec_movie_compare_depths	(gconstpointer		a,
 						 gconstpointer		b);

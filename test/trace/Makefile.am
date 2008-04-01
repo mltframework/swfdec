@@ -1053,6 +1053,15 @@ EXTRA_DIST = \
 	file-reference-list-properties-7.swf.trace \
 	file-reference-list-properties-8.swf \
 	file-reference-list-properties-8.swf.trace \
+	focusrect-values-5.swf \
+	focusrect-values-5.swf.trace \
+	focusrect-values-6.swf \
+	focusrect-values-6.swf.trace \
+	focusrect-values-7.swf \
+	focusrect-values-7.swf.trace \
+	focusrect-values-8.swf \
+	focusrect-values-8.swf.trace \
+	focusrect-values.as \
 	foreach-propflags.as \
 	foreach-propflags-5.swf \
 	foreach-propflags-5.swf.trace \
@@ -2616,6 +2625,15 @@ EXTRA_DIST = \
 	selection-focus-8.swf \
 	selection-focus-8.swf.trace \
 	selection-focus.as \
+	selection-focus-events-5.swf \
+	selection-focus-events-5.swf.trace \
+	selection-focus-events-6.swf \
+	selection-focus-events-6.swf.trace \
+	selection-focus-events-7.swf \
+	selection-focus-events-7.swf.trace \
+	selection-focus-events-8.swf \
+	selection-focus-events-8.swf.trace \
+	selection-focus-events.as \
 	selection-properties.as \
 	selection-properties-5.swf \
 	selection-properties-5.swf.trace \

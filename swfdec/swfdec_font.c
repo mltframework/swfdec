@@ -276,7 +276,7 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
   if (!font)
     return SWFDEC_STATUS_OK;
   SWFDEC_LOG ("  id = %u", id);
-  font->scale_factor = 20 * SWFDEC_TEXT_SCALE_FACTOR * (tag == SWFDEC_TAG_DEFINEFONT3 ? 20 : 1);
+  font->scale_factor = SWFDEC_TEXT_SCALE_FACTOR * (tag == SWFDEC_TAG_DEFINEFONT3 ? 20 : 1);
 
   layout = swfdec_bits_getbit (bits);
   SWFDEC_LOG (" layout = %d", layout);

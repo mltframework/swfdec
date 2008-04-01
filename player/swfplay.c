@@ -37,6 +37,12 @@ set_title (GtkWindow *window, const SwfdecURL *url)
   g_free (title);
 }
 
+static void
+set_playing (SwfdecGtkWidget *widget, GParamSpec *pspec, gpointer player)
+{
+  swfdec_gtk_player_set_playing (player, TRUE);
+}
+
 static GtkWidget *
 view_swf (SwfdecPlayer *player, gboolean use_image)
 {
@@ -50,6 +56,7 @@ view_swf (SwfdecPlayer *player, gboolean use_image)
   gtk_container_add (GTK_CONTAINER (window), widget);
   g_signal_connect_swapped (window, "destroy", G_CALLBACK (g_main_loop_quit), loop);
   gtk_widget_show_all (window);
+  g_signal_connect (widget, "notify::has-focus", G_CALLBACK (set_playing), player);
 
   return window;
 }
@@ -149,8 +156,6 @@ main (int argc, char *argv[])
   swfdec_gtk_player_set_missing_plugins_window (SWFDEC_GTK_PLAYER (player),
       window->window);
   swfdec_url_free (url);
-
-  swfdec_gtk_player_set_playing (SWFDEC_GTK_PLAYER (player), TRUE);
 
   if (g_main_loop_is_running (loop))
     g_main_loop_run (loop);

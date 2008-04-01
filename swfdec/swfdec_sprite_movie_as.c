@@ -552,11 +552,11 @@ void
 swfdec_sprite_movie_startDrag (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
+  SwfdecActor *actor;
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
   gboolean center = FALSE;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_ACTOR, &actor, "");
 
   if (argc > 0) {
     center = swfdec_as_value_to_boolean (cx, &argv[0]);
@@ -568,9 +568,9 @@ swfdec_sprite_movie_startDrag (SwfdecAsContext *cx, SwfdecAsObject *object,
     rect.x1 = swfdec_as_value_to_number (cx, &argv[3]);
     rect.y1 = swfdec_as_value_to_number (cx, &argv[4]);
     swfdec_rect_scale (&rect, &rect, SWFDEC_TWIPS_SCALE_FACTOR);
-    swfdec_player_set_drag_movie (player, movie, center, &rect);
+    swfdec_player_set_drag_movie (player, actor, center, &rect);
   } else {
-    swfdec_player_set_drag_movie (player, movie, center, NULL);
+    swfdec_player_set_drag_movie (player, actor, center, NULL);
   }
 }
 
@@ -672,11 +672,12 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
 
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     SwfdecSandbox *sandbox = movie->resource->sandbox;
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_INITIALIZE);
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_LOAD);
+    SwfdecActor *actor = SWFDEC_ACTOR (movie);
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_INITIALIZE);
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
     swfdec_sandbox_unuse (sandbox);
     swfdec_movie_initialize (movie);
-    swfdec_movie_execute (movie, SWFDEC_EVENT_CONSTRUCT);
+    swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT);
     swfdec_sandbox_use (sandbox);
   } else {
     swfdec_movie_initialize (movie);

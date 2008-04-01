@@ -224,6 +224,7 @@ swfdec_resource_create_movie (SwfdecResource *resource)
     /* FIXME: is this correct? */
     movie = swfdec_resource_replace_movie (movie, resource);
   }
+  SWFDEC_ACTOR (movie)->focusrect = SWFDEC_FLASH_YES;
   swfdec_player_unroot (player, resource);
   return TRUE;
 }
@@ -355,7 +356,7 @@ swfdec_resource_stream_target_close (SwfdecStreamTarget *target, SwfdecStream *s
 
   if (resource->movie != NULL) {
     swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource)->context),
-	  SWFDEC_MOVIE (resource->movie), SWFDEC_EVENT_LOAD, 0);
+	  SWFDEC_ACTOR (resource->movie), SWFDEC_EVENT_LOAD, 0);
   }
 }
 

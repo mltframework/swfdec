@@ -17,6 +17,8 @@ lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 # these are files that must be in SRCDIR
 libswfdec_source_files = \
 	swfdec_accessibility.c \
+	swfdec_actor.c \
+	swfdec_amf.c \
 	swfdec_as_array.c \
 	swfdec_as_boolean.c \
 	swfdec_as_context.c \
@@ -35,7 +37,6 @@ libswfdec_source_files = \
 	swfdec_as_strings.c \
 	swfdec_as_super.c \
 	swfdec_as_types.c \
-	swfdec_amf.c \
 	swfdec_asbroadcaster.c \
 	swfdec_audio.c \
 	swfdec_audio_event.c \
@@ -205,6 +206,8 @@ libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINO
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
 
 noinst_HEADERS = \
+	swfdec_actor.h \
+	swfdec_amf.h \
 	swfdec_as_boolean.h \
 	swfdec_as_frame_internal.h \
 	swfdec_as_initialize.h \
@@ -218,7 +221,6 @@ noinst_HEADERS = \
 	swfdec_as_strings.h \
 	swfdec_as_super.h \
 	swfdec_asnative.h \
-	swfdec_amf.h \
 	swfdec_audio_internal.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \

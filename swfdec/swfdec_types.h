@@ -31,6 +31,7 @@ typedef int SwfdecFixed;
 #define SWFDEC_FIXED_TO_INT(f) ((f) / SWFDEC_FIXED_SCALE_FACTOR)
 #define SWFDEC_INT_TO_FIXED(i) ((i) * SWFDEC_FIXED_SCALE_FACTOR)
 
+typedef struct _SwfdecActor SwfdecActor;
 typedef struct _SwfdecButton SwfdecButton;
 typedef struct _SwfdecCache SwfdecCache;
 typedef struct _SwfdecCacheHandle SwfdecCacheHandle;

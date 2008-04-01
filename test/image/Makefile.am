@@ -71,6 +71,27 @@ EXTRA_DIST = \
 	fillstyle-order.swf \
 	fillstyle-order.swf.png \
 	fillstyle-order.xml \
+	focusrect-rotated-5.swf \
+	focusrect-rotated-5.swf.png \
+	focusrect-rotated-6.swf \
+	focusrect-rotated-6.swf.org.png \
+	focusrect-rotated-6.swf.png \
+	focusrect-rotated-7.swf \
+	focusrect-rotated-7.swf.org.png \
+	focusrect-rotated-7.swf.png \
+	focusrect-rotated-8.swf \
+	focusrect-rotated-8.swf.org.png \
+	focusrect-rotated-8.swf.png \
+	focusrect-rotated.as \
+	focusrect-simple-5.swf \
+	focusrect-simple-5.swf.png \
+	focusrect-simple-6.swf \
+	focusrect-simple-6.swf.png \
+	focusrect-simple-7.swf \
+	focusrect-simple-7.swf.png \
+	focusrect-simple-8.swf \
+	focusrect-simple-8.swf.png \
+	focusrect-simple.as \
 	gradient-beginGradientFill.as \
 	gradient-beginGradientFill-5.swf \
 	gradient-beginGradientFill-5.swf.png \

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -86,7 +86,7 @@ swfdec_movie_init (SwfdecMovie * movie)
  *                if the old contents are invalidated.
  *
  * Performs an instant invalidation on @movie. You most likely don't want to
- * call this function directly, but use swfdec_movie_invalidate_last_last() or
+ * call this function directly, but use swfdec_movie_invalidate_last() or
  * swfdec_movie_invalidate_next() instead.
  **/
 void
@@ -99,9 +99,12 @@ swfdec_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *parent_to_glo
   if (new_contents) {
     movie->invalidate_next = FALSE;
   } else {
+    SwfdecPlayer *player;
     if (movie->invalidate_last)
       return;
     movie->invalidate_last = TRUE;
+    player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    player->priv->invalid_pending = g_slist_prepend (player->priv->invalid_pending, movie);
   }
   g_assert (movie->cache_state <= SWFDEC_MOVIE_INVALID_CHILDREN);
   SWFDEC_LOG ("invalidating %s %s at %s", G_OBJECT_TYPE_NAME (movie), 
@@ -137,7 +140,7 @@ swfdec_movie_invalidate_last (SwfdecMovie *movie)
 }
 
 /**
- * swfdec_movie_invalidate_last_next:
+ * swfdec_movie_invalidate_next:
  * @movie: a #SwfdecMovie
  *
  * Ensures the movie will be invalidated after script execution is done. So
@@ -302,10 +305,27 @@ swfdec_movie_find (SwfdecMovie *movie, int depth)
   return NULL;
 }
 
+static void
+swfdec_movie_unset_actor (SwfdecPlayer *player, SwfdecActor *actor)
+{
+  SwfdecPlayerPrivate *priv = player->priv;
+
+  if (priv->mouse_below == actor)
+    priv->mouse_below = NULL;
+  if (priv->mouse_grab == actor)
+    priv->mouse_grab = NULL;
+  if (priv->mouse_drag == actor)
+    priv->mouse_drag = NULL;
+
+  if (priv->focus_previous == actor)
+    priv->focus_previous = NULL;
+  if (priv->focus == actor)
+    priv->focus = NULL;
+}
+
 static gboolean
 swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
 {
-  SwfdecPlayerPrivate *priv;
   SwfdecPlayer *player;
 
   SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
@@ -320,19 +340,18 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
     destroy &= swfdec_movie_do_remove (walk->data, destroy);
   }
   /* FIXME: all of this here or in destroy callback? */
-  priv = player->priv;
-  if (priv->mouse_grab == movie)
-    priv->mouse_grab = NULL;
-  if (priv->mouse_drag == movie)
-    priv->mouse_drag = NULL;
   swfdec_movie_invalidate_last (movie);
   movie->state = SWFDEC_MOVIE_STATE_REMOVED;
 
-  if ((movie->events && 
-	swfdec_event_list_has_conditions (movie->events, SWFDEC_AS_OBJECT (movie), SWFDEC_EVENT_UNLOAD, 0)) ||
-      swfdec_as_object_has_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onUnload)) {
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_UNLOAD);
-    destroy = FALSE;
+  if (SWFDEC_IS_ACTOR (movie)) {
+    SwfdecActor *actor = SWFDEC_ACTOR (movie);
+    swfdec_movie_unset_actor (player, actor);
+    if ((actor->events && 
+	  swfdec_event_list_has_conditions (actor->events, SWFDEC_AS_OBJECT (movie), SWFDEC_EVENT_UNLOAD, 0)) ||
+	swfdec_as_object_has_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onUnload)) {
+      swfdec_actor_queue_script (actor, SWFDEC_EVENT_UNLOAD);
+      destroy = FALSE;
+    }
   }
   if (destroy)
     swfdec_movie_destroy (movie);
@@ -393,40 +412,17 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   movie->mask_of = NULL;
   /* FIXME: figure out how to handle destruction pre-init/construct.
    * This is just a stop-gap measure to avoid dead movies in those queues */
-  swfdec_player_remove_all_actions (player, movie);
+  if (SWFDEC_IS_ACTOR (movie))
+    swfdec_player_remove_all_actions (player, SWFDEC_ACTOR (movie));
   if (klass->finish_movie)
     klass->finish_movie (movie);
-  player->priv->movies = g_list_remove (player->priv->movies, movie);
+  player->priv->actors = g_list_remove (player->priv->actors, movie);
+  if (movie->invalidate_last)
+    player->priv->invalid_pending = g_slist_remove (player->priv->invalid_pending, movie);
   movie->state = SWFDEC_MOVIE_STATE_DESTROYED;
   /* unset prototype here, so we don't work in AS anymore */
   SWFDEC_AS_OBJECT (movie)->prototype = NULL;
   g_object_unref (movie);
-}
-
-static void
-swfdec_movie_set_constructor (SwfdecSpriteMovie *movie)
-{
-  SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-  SwfdecAsContext *context = SWFDEC_AS_OBJECT (movie)->context;
-  SwfdecAsObject *constructor = NULL;
-
-  g_assert (mov->resource != NULL);
-
-  if (movie->sprite) {
-    const char *name;
-
-    name = swfdec_resource_get_export_name (mov->resource,
-	SWFDEC_CHARACTER (movie->sprite));
-    if (name != NULL) {
-      name = swfdec_as_context_get_string (context, name);
-      constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (context),
-	  name);
-    }
-  }
-  if (constructor == NULL)
-    constructor = mov->resource->sandbox->MovieClip;
-
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
 }
 
 /**
@@ -460,111 +456,6 @@ guint
 swfdec_movie_get_version (SwfdecMovie *movie)
 {
   return movie->resource->version;
-}
-
-void
-swfdec_movie_execute (SwfdecMovie *movie, SwfdecEventType condition)
-{
-  SwfdecAsObject *thisp;
-  const char *name;
-
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-
-  if (SWFDEC_IS_BUTTON_MOVIE (movie)) {
-    /* these conditions don't exist for buttons */
-    if (condition == SWFDEC_EVENT_CONSTRUCT || condition < SWFDEC_EVENT_PRESS)
-      return;
-    thisp = SWFDEC_AS_OBJECT (movie->parent);
-    if (swfdec_movie_get_version (movie) <= 5) {
-      while (!SWFDEC_IS_SPRITE_MOVIE (thisp))
-	thisp = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (thisp)->parent);
-    }
-    g_assert (thisp);
-  } else {
-    thisp = SWFDEC_AS_OBJECT (movie);
-  }
-
-  /* special cases */
-  if (condition == SWFDEC_EVENT_CONSTRUCT) {
-    if (swfdec_movie_get_version (movie) <= 5)
-      return;
-    swfdec_movie_set_constructor (SWFDEC_SPRITE_MOVIE (movie));
-  } else if (condition == SWFDEC_EVENT_ENTER) {
-    if (movie->state >= SWFDEC_MOVIE_STATE_REMOVED)
-      return;
-  }
-
-  swfdec_sandbox_use (movie->resource->sandbox);
-  if (movie->events) {
-    swfdec_event_list_execute (movie->events, thisp, condition, 0);
-  }
-  /* FIXME: how do we compute the version correctly here? */
-  if (swfdec_movie_get_version (movie) > 5) {
-    name = swfdec_event_type_get_name (condition);
-    if (name != NULL) {
-      swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), name, 0, NULL, NULL);
-    }
-    if (condition == SWFDEC_EVENT_CONSTRUCT)
-      swfdec_as_object_call (thisp, SWFDEC_AS_STR_constructor, 0, NULL, NULL);
-  }
-  swfdec_sandbox_unuse (movie->resource->sandbox);
-}
-
-/**
- * swfdec_movie_queue_script:
- * @movie: a #SwfdecMovie
- * @condition: the event that should happen
- *
- * Queues execution of all scripts associated with the given event.
- **/
-void
-swfdec_movie_queue_script (SwfdecMovie *movie, SwfdecEventType condition)
-{
-  SwfdecPlayer *player;
-  guint importance;
-  
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-
-  if (!SWFDEC_IS_SPRITE_MOVIE (movie) && !SWFDEC_IS_BUTTON_MOVIE (movie))
-    return;
-  /* can happen for mouse/keyboard events on the initial movie */
-  if (movie->resource->sandbox == NULL) {
-    SWFDEC_INFO ("movie %s not yet initialized, skipping event", movie->name);
-    return;
-  }
-
-  switch (condition) {
-    case SWFDEC_EVENT_INITIALIZE:
-      importance = 0;
-      break;
-    case SWFDEC_EVENT_CONSTRUCT:
-      importance = 1;
-      break;
-    case SWFDEC_EVENT_LOAD:
-    case SWFDEC_EVENT_ENTER:
-    case SWFDEC_EVENT_UNLOAD:
-    case SWFDEC_EVENT_MOUSE_MOVE:
-    case SWFDEC_EVENT_MOUSE_DOWN:
-    case SWFDEC_EVENT_MOUSE_UP:
-    case SWFDEC_EVENT_KEY_UP:
-    case SWFDEC_EVENT_KEY_DOWN:
-    case SWFDEC_EVENT_DATA:
-    case SWFDEC_EVENT_PRESS:
-    case SWFDEC_EVENT_RELEASE:
-    case SWFDEC_EVENT_RELEASE_OUTSIDE:
-    case SWFDEC_EVENT_ROLL_OVER:
-    case SWFDEC_EVENT_ROLL_OUT:
-    case SWFDEC_EVENT_DRAG_OVER:
-    case SWFDEC_EVENT_DRAG_OUT:
-    case SWFDEC_EVENT_KEY_PRESS:
-      importance = 2;
-      break;
-    default:
-      g_return_if_reached ();
-  }
-
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  swfdec_player_add_action (player, movie, condition, importance);
 }
 
 void
@@ -689,28 +580,6 @@ swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
 }
 
 /**
- * swfdec_movie_get_mouse_events:
- * @movie: a #SwfdecMovie
- *
- * Checks if this movie should respond to mouse events.
- *
- * Returns: %TRUE if this movie can receive mouse events
- **/
-gboolean
-swfdec_movie_get_mouse_events (SwfdecMovie *movie)
-{
-  SwfdecMovieClass *klass;
-
-  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
-
-  klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  if (klass->mouse_events)
-    return klass->mouse_events (movie);
-  else
-    return FALSE;
-}
-
-/**
  * swfdec_movie_get_movie_at:
  * @movie: a #SwfdecMovie
  * @x: x coordinate in parent's coordinate space
@@ -764,7 +633,7 @@ swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean event
     if (got != NULL) {
       if (events) {
 	/* set the return value to the topmost movie */
-	if (swfdec_movie_get_mouse_events (got)) {
+	if (SWFDEC_IS_ACTOR (got) && swfdec_actor_get_mouse_events (SWFDEC_ACTOR (got))) {
 	  ret = got;
 	} else if (ret == NULL) {
 	  ret = movie;
@@ -796,31 +665,6 @@ swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean event
   }
 
   return NULL;
-}
-
-gboolean
-swfdec_movie_can_focus (SwfdecMovie *movie)
-{
-  SwfdecAsValue val;
-
-  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), FALSE);
-
-  /* FIXME: subclass plz? */
-  if (!SWFDEC_IS_TEXT_FIELD_MOVIE (movie) &&
-      !SWFDEC_IS_BUTTON_MOVIE (movie) &&
-      !SWFDEC_IS_SPRITE_MOVIE (movie))
-    return FALSE;
-
-  /* apparently root movies can't receive focus? */
-  if (movie->parent == NULL)
-    return FALSE;
-
-  if (!swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (movie),
-	SWFDEC_AS_STR_focusEnabled, &val) ||
-      swfdec_as_value_to_boolean (SWFDEC_AS_OBJECT (movie)->context, &val) == FALSE)
-    return FALSE;
-
-  return TRUE;
 }
 
 static gboolean
@@ -1045,10 +889,6 @@ swfdec_movie_dispose (GObject *object)
   g_assert (movie->list == NULL);
 
   SWFDEC_LOG ("disposing movie %s (depth %d)", movie->name, movie->depth);
-  if (movie->events) {
-    swfdec_event_list_free (movie->events);
-    movie->events = NULL;
-  }
   if (movie->graphic) {
     g_object_unref (movie->graphic);
     movie->graphic = NULL;
@@ -1290,13 +1130,6 @@ swfdec_movie_get_debug (SwfdecAsObject *object)
   return swfdec_movie_get_path (movie, TRUE);
 }
 
-static gboolean
-swfdec_movie_iterate_end (SwfdecMovie *movie)
-{
-  return movie->parent == NULL || 
-	 movie->state < SWFDEC_MOVIE_STATE_REMOVED;
-}
-
 typedef struct {
   SwfdecMovie *		movie;
   int			depth;
@@ -1383,77 +1216,6 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
   g_assert (clips == NULL);
 }
 
-static gboolean
-swfdec_movie_mouse_events (SwfdecMovie *movie)
-{
-  SwfdecAsObject *object;
-
-  /* root movies don't get event */
-  if (movie->parent == NULL)
-    return FALSE;
-  /* look if we have a script that gets events */
-  if (movie->events && swfdec_event_list_has_mouse_events (movie->events))
-    return TRUE;
-  /* otherwise, require at least one of the custom script handlers */
-  object = SWFDEC_AS_OBJECT (movie);
-  if (swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onRollOver) ||
-      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onRollOut) ||
-      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onDragOver) ||
-      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onDragOut) ||
-      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onPress) ||
-      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onRelease) ||
-      swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onReleaseOutside))
-    return TRUE;
-  return FALSE;
-}
-
-static void
-swfdec_movie_mouse_in (SwfdecMovie *movie)
-{
-  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)))
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_DRAG_OVER);
-  else
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OVER);
-}
-
-static void
-swfdec_movie_mouse_out (SwfdecMovie *movie)
-{
-  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)))
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_DRAG_OUT);
-  else
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_ROLL_OUT);
-}
-
-static void
-swfdec_movie_mouse_press (SwfdecMovie *movie, guint button)
-{
-  if (button != 0)
-    return;
-  swfdec_movie_queue_script (movie, SWFDEC_EVENT_PRESS);
-}
-
-static void
-swfdec_movie_mouse_release (SwfdecMovie *movie, guint button)
-{
-  SwfdecPlayer *player;
-  
-  if (button != 0)
-    return;
-
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
-  if (player->priv->mouse_below == movie)
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_RELEASE);
-  else
-    swfdec_movie_queue_script (movie, SWFDEC_EVENT_RELEASE_OUTSIDE);
-}
-
-static void
-swfdec_movie_mouse_move (SwfdecMovie *movie, double x, double y)
-{
-  /* nothing to do here, it's just there so we don't need to check for NULL */
-}
-
 static void
 swfdec_movie_do_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
 {
@@ -1499,13 +1261,6 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   movie_class->render = swfdec_movie_do_render;
   movie_class->invalidate = swfdec_movie_do_invalidate;
   movie_class->contains = swfdec_movie_do_contains;
-  movie_class->iterate_end = swfdec_movie_iterate_end;
-  movie_class->mouse_events = swfdec_movie_mouse_events;
-  movie_class->mouse_in = swfdec_movie_mouse_in;
-  movie_class->mouse_out = swfdec_movie_mouse_out;
-  movie_class->mouse_press = swfdec_movie_mouse_press;
-  movie_class->mouse_release = swfdec_movie_mouse_release;
-  movie_class->mouse_move = swfdec_movie_mouse_move;
 }
 
 void
@@ -1634,7 +1389,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
    * Setting the parent does a gotoAndPlay(0) for Sprites which can cause
    * new movies to be created (and added to this list)
    */
-  player->priv->movies = g_list_prepend (player->priv->movies, movie);
+  if (SWFDEC_IS_ACTOR (movie))
+    player->priv->actors = g_list_prepend (player->priv->actors, movie);
   /* only add the movie here, because it needs to be setup for the debugger */
   swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   swfdec_movie_set_version (movie);
@@ -1643,6 +1399,8 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
     g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
     resource->movie = SWFDEC_SPRITE_MOVIE (movie);
   }
+  /* the movie is invalid already */
+  player->priv->invalid_pending = g_slist_prepend (player->priv->invalid_pending, movie);
 
   return movie;
 }
@@ -1695,9 +1453,10 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
   }
   if (events) {
     if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-      if (movie->events)
-	swfdec_event_list_free (movie->events);
-      movie->events = swfdec_event_list_copy (events);
+      SwfdecActor *actor = SWFDEC_ACTOR (movie);
+      if (actor->events)
+	swfdec_event_list_free (actor->events);
+      actor->events = swfdec_event_list_copy (events);
     } else {
       SWFDEC_WARNING ("trying to set events on a %s, not allowed", G_OBJECT_TYPE_NAME (movie));
     }
@@ -1742,13 +1501,14 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
     return NULL;
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
       &movie->original_ctrans, movie->original_ratio, movie->clip_depth, 
-      movie->blend_mode, movie->events);
+      movie->blend_mode, SWFDEC_IS_ACTOR (movie) ? SWFDEC_ACTOR (movie)->events : NULL);
   sandbox = SWFDEC_SANDBOX (SWFDEC_AS_OBJECT (movie)->context->global);
   swfdec_sandbox_unuse (sandbox);
   if (SWFDEC_IS_SPRITE_MOVIE (copy)) {
-    swfdec_movie_queue_script (copy, SWFDEC_EVENT_INITIALIZE);
-    swfdec_movie_queue_script (copy, SWFDEC_EVENT_LOAD);
-    swfdec_movie_execute (copy, SWFDEC_EVENT_CONSTRUCT);
+    SwfdecActor *actor = SWFDEC_ACTOR (copy);
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_INITIALIZE);
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
+    swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT);
   }
   swfdec_movie_initialize (copy);
   swfdec_sandbox_use (sandbox);

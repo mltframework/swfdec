@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_SPRITE_MOVIE_H_
 #define _SWFDEC_SPRITE_MOVIE_H_
 
-#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_actor.h>
 #include <swfdec/swfdec_audio.h>
 #include <swfdec/swfdec_types.h>
 
@@ -38,7 +38,7 @@ typedef struct _SwfdecSpriteMovieClass SwfdecSpriteMovieClass;
 
 struct _SwfdecSpriteMovie
 {
-  SwfdecMovie		movie;
+  SwfdecActor		actor;
 
   SwfdecSprite *	sprite;		/* displayed sprite */
 
@@ -59,7 +59,7 @@ struct _SwfdecSpriteMovie
 
 struct _SwfdecSpriteMovieClass
 {
-  SwfdecMovieClass	movie_class;
+  SwfdecActorClass	actor_class;
 };
 
 GType		swfdec_sprite_movie_get_type		(void);

@@ -1156,7 +1156,7 @@ swfdec_as_interpret_load_variables_on_finish (SwfdecAsObject *target,
 
   // only call onData for sprite movies
   // FIXME: is it called even when loading fails?
-  swfdec_movie_queue_script (SWFDEC_MOVIE (target), SWFDEC_EVENT_DATA);
+  swfdec_actor_queue_script (SWFDEC_ACTOR (target), SWFDEC_EVENT_DATA);
 }
 
 static void
@@ -1635,10 +1635,10 @@ swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data,
     SWFDEC_ERROR ("called startDrag on a non-SwfdecPlayer");
   } else {
     movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx), swfdec_as_stack_peek (cx, 1));
-    if (movie != NULL) {
-      swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), movie, center, rectp);
+    if (SWFDEC_IS_ACTOR (movie)) {
+      swfdec_player_set_drag_movie (SWFDEC_PLAYER (cx), SWFDEC_ACTOR (movie), center, rectp);
     } else {
-      SWFDEC_ERROR ("startDrag on something not a Movie");
+      SWFDEC_ERROR ("startDrag on something not an Actor");
     }
   }
   swfdec_as_stack_pop_n (cx, stack_size);

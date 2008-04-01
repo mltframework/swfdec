@@ -21,7 +21,7 @@
 #ifndef _SWFDEC_TEXT_FIELD_MOVIE_H_
 #define _SWFDEC_TEXT_FIELD_MOVIE_H_
 
-#include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_actor.h>
 #include <swfdec/swfdec_text_field.h>
 #include <swfdec/swfdec_style_sheet.h>
 #include <swfdec/swfdec_text_format.h>
@@ -85,7 +85,7 @@ typedef struct {
 } SwfdecFormatIndex;
 
 struct _SwfdecTextFieldMovie {
-  SwfdecMovie		movie;
+  SwfdecActor		actor;
 
   SwfdecTextField *	text;		/* the text_field object we render */
 
@@ -130,7 +130,7 @@ struct _SwfdecTextFieldMovie {
 };
 
 struct _SwfdecTextFieldMovieClass {
-  SwfdecMovieClass	movie_class;
+  SwfdecActorClass	actor_class;
 };
 
 GType		swfdec_text_field_movie_get_type		(void);

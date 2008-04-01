@@ -521,10 +521,10 @@ parse_unary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
 
 static int
 parse_operator_expression (ViviCompilerScanner *scanner,
-    ViviCodeValue **value, ViviCompilerScannerToken token, const char *name,
+    ViviCodeValue **value, const ViviCompilerScannerToken *tokens,
     ParseValueFunction next_parse_function)
 {
-  int expected;
+  int expected, i;
   ViviCodeValue *left;
   ViviCodeValue *right;
 
@@ -534,44 +534,78 @@ parse_operator_expression (ViviCompilerScanner *scanner,
   if (expected != TOKEN_NONE)
     return expected;
 
-  while (check_token (scanner, token)) {
-    expected = next_parse_function (scanner, &right);
-    if (expected != TOKEN_NONE) {
-      g_object_unref (*value);
-      *value = NULL;
-      return FAIL (expected);
-    }
+  for (i = 0; tokens[i] != TOKEN_NONE; i++) {
+    if (check_token (scanner, tokens[i])) {
+      expected = next_parse_function (scanner, &right);
+      if (expected != TOKEN_NONE) {
+	g_object_unref (*value);
+	*value = NULL;
+	return FAIL (expected);
+      }
 
-    left = VIVI_CODE_VALUE (*value);
-    *value = vivi_code_binary_new_name (left, VIVI_CODE_VALUE (right), name);
-    g_object_unref (left);
-    g_object_unref (right);
-  };
+      left = VIVI_CODE_VALUE (*value);
+      *value = vivi_code_binary_new_name (left, VIVI_CODE_VALUE (right),
+	  vivi_compiler_scanner_token_name (tokens[i]));
+      g_object_unref (left);
+      g_object_unref (right);
+    };
+  }
 
   return TOKEN_NONE;
+}
+
+static int
+parse_equality_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_EQUAL,
+    TOKEN_NOT_EQUAL, TOKEN_STRICT_EQUAL, TOKEN_NOT_STRICT_EQUAL, TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
+      parse_unary_expression);
 }
 
 static int
 parse_bitwise_and_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value)
 {
-  return parse_operator_expression (scanner, value, TOKEN_BITWISE_AND, "&",
-      parse_unary_expression);
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_BITWISE_AND,
+    TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
+      parse_equality_expression);
+}
+
+static int
+parse_bitwise_xor_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_BITWISE_XOR,
+    TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
+      parse_bitwise_and_expression);
 }
 
 static int
 parse_bitwise_or_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value)
 {
-  return parse_operator_expression (scanner, value, TOKEN_BITWISE_OR, "|",
-      parse_bitwise_and_expression);
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_BITWISE_OR,
+    TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
+      parse_bitwise_xor_expression);
 }
 
 static int
 parse_logical_and_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value)
 {
-  return parse_operator_expression (scanner, value, TOKEN_LOGICAL_AND, "&&",
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_LOGICAL_AND,
+    TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
       parse_bitwise_or_expression);
 }
 
@@ -579,7 +613,10 @@ static int
 parse_logical_or_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value)
 {
-  return parse_operator_expression (scanner, value, TOKEN_LOGICAL_OR, "||",
+  static const ViviCompilerScannerToken tokens[] = { TOKEN_LOGICAL_OR,
+    TOKEN_NONE };
+
+  return parse_operator_expression (scanner, value, tokens,
       parse_logical_and_expression);
 }
 

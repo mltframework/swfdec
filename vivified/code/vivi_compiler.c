@@ -49,65 +49,6 @@
 
 #include "vivi_code_text_printer.h"
 
-#if 0
-  { TOKEN_BREAK, "break" },
-  { TOKEN_CASE, "case" },
-  { TOKEN_CATCH, "catch" },
-  { TOKEN_CONTINUE, "continue" },
-  { TOKEN_DEFAULT, "default" },
-  { TOKEN_DELETE, "delete" },
-  { TOKEN_DO, "do" },
-  { TOKEN_ELSE, "else" },
-  { TOKEN_FINALLY, "finally" },
-  { TOKEN_FOR, "for" },
-  { TOKEN_FUNCTION, "function" },
-  { TOKEN_IF, "if" },
-  { TOKEN_IN, "in" },
-  { TOKEN_INSTANCEOF, "instanceof" },
-  { TOKEN_NEW, "new" },
-  { TOKEN_RETURN, "return" },
-  { TOKEN_SWITCH, "switch" },
-  { TOKEN_THIS, "this" },
-  { TOKEN_THROW, "throw" },
-  { TOKEN_TRY, "try" },
-  { TOKEN_TYPEOF, "typeof" },
-  { TOKEN_VAR, "var" },
-  { TOKEN_VOID, "while" },
-  { TOKEN_WITH, "with" },
-  // reserved keywords
-  { TOKEN_FUTURE, "abstract" },
-  { TOKEN_FUTURE, "boolean" },
-  { TOKEN_FUTURE, "byte" },
-  { TOKEN_FUTURE, "char" },
-  { TOKEN_FUTURE, "class" },
-  { TOKEN_FUTURE, "const" },
-  { TOKEN_FUTURE, "debugger" },
-  { TOKEN_FUTURE, "double" },
-  { TOKEN_FUTURE, "enum" },
-  { TOKEN_FUTURE, "export" },
-  { TOKEN_FUTURE, "extends" },
-  { TOKEN_FUTURE, "final" },
-  { TOKEN_FUTURE, "float" },
-  { TOKEN_FUTURE, "goto" },
-  { TOKEN_FUTURE, "implements" },
-  { TOKEN_FUTURE, "import" },
-  { TOKEN_FUTURE, "int" },
-  { TOKEN_FUTURE, "interface" },
-  { TOKEN_FUTURE, "long" },
-  { TOKEN_FUTURE, "native" },
-  { TOKEN_FUTURE, "package" },
-  { TOKEN_FUTURE, "private" },
-  { TOKEN_FUTURE, "protected" },
-  { TOKEN_FUTURE, "public" },
-  { TOKEN_FUTURE, "short" },
-  { TOKEN_FUTURE, "static" },
-  { TOKEN_FUTURE, "super" },
-  { TOKEN_FUTURE, "synchronized" },
-  { TOKEN_FUTURE, "throws" },
-  { TOKEN_FUTURE, "transient" },
-  { TOKEN_FUTURE, "volatile" },
-#endif
-
 enum {
   ERROR_TOKEN_LITERAL = TOKEN_LAST + 1,
   ERROR_TOKEN_PROPERTY_NAME,
@@ -479,9 +420,9 @@ parse_postfix_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
 
   // FIXME: Don't allow new line here
 
-  if (check_token (scanner, TOKEN_PLUSPLUS)) {
+  if (check_token (scanner, TOKEN_INCREASE)) {
     operator = "+";
-  } else if (check_token (scanner, TOKEN_MINUSMINUS)) {
+  } else if (check_token (scanner, TOKEN_DESCREASE)) {
     operator = "-";
   } else {
     return TOKEN_NONE;
@@ -512,8 +453,8 @@ parse_unary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
     /*case TOKEN_DELETE:
     case TOKEN_VOID:
     case TOKEN_TYPEOF:
-    case TOKEN_PLUSPLUS:
-    case TOKEN_MINUSMINUS:
+    case TOKEN_INCREASE:
+    case TOKEN_DESCREASE:
     case TOKEN_PLUS:
     case TOKEN_MINUS:
     case TOKEN_BITWISE_NOT:*/

@@ -77,8 +77,8 @@ typedef enum {
   // unary/postfix
   TOKEN_LOGICAL_NOT,
   TOKEN_BITWISE_NOT,
-  TOKEN_PLUSPLUS,
-  TOKEN_MINUSMINUS,
+  TOKEN_INCREASE,
+  TOKEN_DESCREASE,
 
   // conditional
   TOKEN_QUESTION_MARK,

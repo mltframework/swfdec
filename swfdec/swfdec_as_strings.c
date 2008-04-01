@@ -496,5 +496,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("Selection")
   SWFDEC_AS_CONSTANT_STRING ("tabEnabled")
   SWFDEC_AS_CONSTANT_STRING ("focusEnabled")
+  SWFDEC_AS_CONSTANT_STRING ("ascent")
+  SWFDEC_AS_CONSTANT_STRING ("descent")
+  SWFDEC_AS_CONSTANT_STRING ("textFieldHeight")
+  SWFDEC_AS_CONSTANT_STRING ("textFieldWidth")
   /* add more here */
 ;

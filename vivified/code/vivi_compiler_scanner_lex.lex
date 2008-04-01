@@ -69,9 +69,9 @@ identifier_part		[$_a-zA-Z0-9]
 "|="			{ return TOKEN_ASSIGN_BITWISE_OR; }
 
 "null"			{ return TOKEN_NULL; }
-"true"			{ yylval.boolean = 1;
+"true"			{ yylval.v_boolean = 1;
 			  return TOKEN_BOOLEAN; }
-"false"			{ yylval.boolean = 0;
+"false"			{ yylval.v_boolean = 0;
 			  return TOKEN_BOOLEAN; }
 "this"			{ return TOKEN_THIS; }
 
@@ -79,11 +79,11 @@ identifier_part		[$_a-zA-Z0-9]
 
 "abstract"		{ return TOKEN_FUTURE; }
 
-{digit}+		{ yylval.number = atoi(yytext);
+{digit}+		{ yylval.v_number = atoi(yytext);
 			  return TOKEN_NUMBER; }
 
 {identifier_start}({identifier_part})* {
-			  yylval.identifier = (char *)strdup(yytext);
+			  yylval.v_identifier = (char *)strdup(yytext);
 			  return TOKEN_IDENTIFIER; }
 
 .			{ printf("Unknown character [%c]\n",yytext[0]);

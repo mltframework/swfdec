@@ -26,6 +26,7 @@
 G_BEGIN_DECLS
 
 typedef enum {
+  TOKEN_NONE = 0,
   TOKEN_EOF,
   TOKEN_UNKNOWN,
 
@@ -132,14 +133,16 @@ typedef enum {
   TOKEN_WITH,
 
   // reserved keywords
-  TOKEN_FUTURE
+  TOKEN_FUTURE,
+
+  TOKEN_LAST
 } ViviCompilerScannerToken;
 
 typedef union {
-  gboolean	boolean;
-  double	number;
-  char *	string;
-  char *	identifier;
+  gboolean	v_boolean;
+  double	v_number;
+  char *	v_string;
+  char *	v_identifier;
 } ViviCompilerScannerValue;
 
 typedef struct _ViviCompilerScanner ViviCompilerScanner;
@@ -172,8 +175,8 @@ struct _ViviCompilerScannerClass
 GType				vivi_compiler_scanner_get_type   	(void);
 
 ViviCompilerScanner *		vivi_compiler_scanner_new		(FILE *		file);
-ViviCompilerScannerToken	vivi_compiler_scanner_get_token		(ViviCompilerScanner *	scanner);
-ViviCompilerScannerToken	vivi_compiler_scanner_peek_token	(ViviCompilerScanner *	scanner);
+ViviCompilerScannerToken	vivi_compiler_scanner_get_next_token	(ViviCompilerScanner *	scanner);
+ViviCompilerScannerToken	vivi_compiler_scanner_peek_next_token	(ViviCompilerScanner *	scanner);
 
 G_END_DECLS
 #endif

@@ -20,14 +20,15 @@
 #ifndef _VIVI_DECOMPILER_H_
 #define _VIVI_DECOMPILER_H_
 
+#include <stdio.h>
+
 #include <swfdec/swfdec.h>
 #include <vivified/code/vivi_code_statement.h>
 
 G_BEGIN_DECLS
 
 
-ViviCodeStatement *	vivi_compile_text		(const char *	text,
-							 gsize		len,
+ViviCodeStatement *	vivi_compile_file		(FILE *		file,
 							 const char *	input_name);
 
 

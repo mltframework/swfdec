@@ -72,7 +72,7 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
 
   if (scanner->file == NULL) {
     scanner->next_token = TOKEN_EOF;
-    scanner->next_value.string = NULL;
+    scanner->next_value.v_string = NULL;
   } else {
     scanner->next_token = yylex ();
     scanner->next_value = yylval;
@@ -80,7 +80,7 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
 }
 
 ViviCompilerScannerToken
-vivi_compiler_scanner_get_token (ViviCompilerScanner *scanner)
+vivi_compiler_scanner_get_next_token (ViviCompilerScanner *scanner)
 {
   g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), TOKEN_EOF);
 
@@ -90,7 +90,7 @@ vivi_compiler_scanner_get_token (ViviCompilerScanner *scanner)
 }
 
 ViviCompilerScannerToken
-vivi_compiler_scanner_peek_token (ViviCompilerScanner *scanner)
+vivi_compiler_scanner_peek_next_token (ViviCompilerScanner *scanner)
 {
   g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), TOKEN_EOF);
 

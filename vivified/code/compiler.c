@@ -30,8 +30,7 @@ int
 main (int argc, char *argv[])
 {
   SwfdecPlayer *player;
-  char *text;
-  gsize text_len;
+  FILE *file;
   ViviCodeStatement *statement;
 
   player = swfdec_player_new (NULL);
@@ -41,12 +40,13 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  if (!g_file_get_contents (argv[1], &text, &text_len, NULL)) {
+  file = fopen (argv[1], "r");
+  if (file == NULL) {
     g_printerr ("Couldn't open file %s", argv[1]);
     return -1;
   }
 
-  statement = vivi_compile_text (text, text_len, argv[1]);
+  statement = vivi_compile_file (file, argv[1]);
   if (statement == NULL) {
     g_printerr ("Compilation failed\n");
     return -1;

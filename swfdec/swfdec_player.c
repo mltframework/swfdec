@@ -1424,7 +1424,7 @@ static gboolean
 swfdec_player_handle_tab_list (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecMovie *stop, gboolean forward)
 {
   SwfdecPlayerPrivate *priv;
-  SwfdecMovie *cur;
+  SwfdecMovie *cur = NULL;
   GList *list, *walk;
 
   priv = player->priv;

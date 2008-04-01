@@ -362,3 +362,23 @@ tag_func_define_font_2 (SwfdecSwfDecoder * s, guint tag)
 
   return SWFDEC_STATUS_OK;
 }
+
+int
+tag_func_define_font_name (SwfdecSwfDecoder * s, guint tag)
+{
+  guint id;
+  SwfdecFont *font;
+
+  id = swfdec_bits_get_u16 (&s->b);
+  font = swfdec_swf_decoder_get_character (s, id);
+
+  if (!SWFDEC_IS_FONT (font)) {
+    SWFDEC_ERROR ("didn't find a font with id %u", id);
+    return SWFDEC_STATUS_OK;
+  }
+
+  font->name = swfdec_bits_get_string (&s->b, s->version);
+  font->copyright = swfdec_bits_get_string (&s->b, s->version);
+
+  return SWFDEC_STATUS_OK;
+}

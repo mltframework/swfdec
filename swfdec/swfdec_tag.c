@@ -432,7 +432,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_PRIVATE_IMAGE] = { "PrivateImage", NULL, 0},
   [SWFDEC_TAG_DEFINESCENEDATA] = { "DefineSceneData", NULL, 0},
   [SWFDEC_TAG_DEFINEBINARYDATA] = { "DefineBinaryData", NULL, 0},
-  [SWFDEC_TAG_DEFINEFONTNAME] = { "DefineFontName", NULL, 0},
+  [SWFDEC_TAG_DEFINEFONTNAME] = { "DefineFontName", tag_func_define_font_name, 0},
   [SWFDEC_TAG_STARTSOUND2] = {"StartSound2", NULL, SWFDEC_TAG_DEFINE_SPRITE }
 };
 

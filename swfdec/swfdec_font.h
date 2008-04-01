@@ -59,7 +59,8 @@ struct _SwfdecFont
 {
   SwfdecCharacter	character;
 
-  char *		name;		/* name of the font (FIXME: what name?) */
+  char *		name;		/* name of the font */
+  char *		copyright;	/* copyright of the font */
   PangoFontDescription *desc;
   gboolean		bold;		/* font is bold */
   gboolean		italic;		/* font is italic */
@@ -87,6 +88,9 @@ int		tag_func_define_font_info	(SwfdecSwfDecoder *	s,
 int		tag_func_define_font		(SwfdecSwfDecoder *	s,
 						 guint			tag);
 int		tag_func_define_font_2		(SwfdecSwfDecoder *	s,
+						 guint			tag);
+
+int		tag_func_define_font_name	(SwfdecSwfDecoder *	s,
 						 guint			tag);
 
 G_END_DECLS

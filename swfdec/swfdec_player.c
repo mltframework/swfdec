@@ -2637,7 +2637,6 @@ static void
 swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *inval)
 {
 #define LINE_WIDTH (3.0)
-  //(3 * SWFDEC_TWIPS_SCALE_FACTOR)
   SwfdecMovie *movie = SWFDEC_MOVIE (player->priv->focus);
   SwfdecRect rect = movie->extents;
   double w, h;

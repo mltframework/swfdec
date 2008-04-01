@@ -25,7 +25,9 @@
 
 G_BEGIN_DECLS
 
+
 typedef enum {
+  // special
   TOKEN_NONE = 0,
   TOKEN_EOF,
   TOKEN_UNKNOWN,
@@ -33,8 +35,8 @@ typedef enum {
   // comparision
   TOKEN_BRACE_LEFT,
   TOKEN_BRACE_RIGHT,
-  TOKEN_BRACKET_RIGHT,
   TOKEN_BRACKET_LEFT,
+  TOKEN_BRACKET_RIGHT,
   TOKEN_PARENTHESIS_LEFT,
   TOKEN_PARENTHESIS_RIGHT,
 
@@ -104,6 +106,7 @@ typedef enum {
   TOKEN_NULL,
   TOKEN_BOOLEAN,
   TOKEN_NUMBER,
+  TOKEN_STRING,
   TOKEN_IDENTIFIER,
 
   // keywords
@@ -177,6 +180,9 @@ GType				vivi_compiler_scanner_get_type   	(void);
 ViviCompilerScanner *		vivi_compiler_scanner_new		(FILE *		file);
 ViviCompilerScannerToken	vivi_compiler_scanner_get_next_token	(ViviCompilerScanner *	scanner);
 ViviCompilerScannerToken	vivi_compiler_scanner_peek_next_token	(ViviCompilerScanner *	scanner);
+
+const char *			vivi_compiler_scanner_token_name	(ViviCompilerScannerToken token);
+
 
 G_END_DECLS
 #endif

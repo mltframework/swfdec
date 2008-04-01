@@ -192,8 +192,8 @@ parse_string_literal (ViviCompilerScanner *scanner, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (!check_token (scanner, G_TOKEN_STRING))
-    return -G_TOKEN_STRING;
+  if (!check_token (scanner, TOKEN_STRING))
+    return -TOKEN_STRING;
 
   *value = vivi_code_constant_new_string (scanner->value.v_string);
   return TOKEN_NONE;
@@ -227,8 +227,8 @@ parse_identifier (ViviCompilerScanner *scanner, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (!check_token (scanner, G_TOKEN_IDENTIFIER))
-    return -G_TOKEN_IDENTIFIER;
+  if (!check_token (scanner, TOKEN_IDENTIFIER))
+    return -TOKEN_IDENTIFIER;
 
   *value = vivi_code_get_new_name (scanner->value.v_identifier);
 
@@ -258,7 +258,7 @@ parse_property_name (ViviCompilerScanner *scanner, ViviCodeValue **value)
 }
 
 static int
-parse_operator_expression (ViviCompilerScanner *scanner, ViviCodeValue **value);
+parse_logical_or_expression (ViviCompilerScanner *scanner, ViviCodeValue **value);
 
 static int
 parse_object_literal (ViviCompilerScanner *scanner, ViviCodeValue **value)
@@ -267,12 +267,12 @@ parse_object_literal (ViviCompilerScanner *scanner, ViviCodeValue **value)
 
   *value = NULL;
 
-  if (!check_token (scanner, '{'))
-    return -'{';
+  if (!check_token (scanner, TOKEN_BRACE_LEFT))
+    return -TOKEN_BRACE_LEFT;
 
   *value = vivi_code_init_object_new ();
 
-  if (!check_token (scanner, '}')) {
+  if (!check_token (scanner, TOKEN_BRACE_RIGHT)) {
     do {
       ViviCodeValue *property, *initializer;
 
@@ -283,14 +283,14 @@ parse_object_literal (ViviCompilerScanner *scanner, ViviCodeValue **value)
 	return FAIL (expected);
       }
 
-      if (!check_token (scanner, ':')) {
+      if (!check_token (scanner, TOKEN_COLON)) {
 	g_object_unref (*value);
 	*value = NULL;
-	return ':';
+	return TOKEN_COLON;
       }
 
       // FIXME: assignment expression
-      expected = parse_operator_expression (scanner, &initializer);
+      expected = parse_logical_or_expression (scanner, &initializer);
       if (expected != TOKEN_NONE) {
 	g_object_unref (*value);
 	*value = NULL;
@@ -299,13 +299,13 @@ parse_object_literal (ViviCompilerScanner *scanner, ViviCodeValue **value)
 
       vivi_code_init_object_add_variable (VIVI_CODE_INIT_OBJECT (*value),
 	  property, initializer);
-    } while (check_token (scanner, ','));
+    } while (check_token (scanner, TOKEN_COMMA));
   }
 
-  if (!check_token (scanner, '}')) {
+  if (!check_token (scanner, TOKEN_BRACE_RIGHT)) {
     g_object_unref (*value);
     *value = NULL;
-    return '}';
+    return TOKEN_BRACE_RIGHT;
   }
 
   return TOKEN_NONE;
@@ -326,9 +326,9 @@ parse_variable_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **st
   if (expected != TOKEN_NONE)
     return expected;
 
-  if (check_token (scanner, '=')) {
+  if (check_token (scanner, TOKEN_EQUAL)) {
     // FIXME: assignment expression
-    expected = parse_operator_expression (scanner, &value);
+    expected = parse_logical_or_expression (scanner, &value);
     if (expected != TOKEN_NONE) {
       g_object_unref (identifier);
       return FAIL (expected);
@@ -364,15 +364,15 @@ parse_primary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
     return TOKEN_NONE;
   }
 
-  if (check_token (scanner, '(')) {
+  if (check_token (scanner, TOKEN_PARENTHESIS_LEFT)) {
     // FIXME: assignment expression
-    expected = parse_operator_expression (scanner, value);
+    expected = parse_logical_or_expression (scanner, value);
     if (expected != TOKEN_NONE)
       return FAIL (expected);
-    if (!check_token (scanner, ')')) {
+    if (!check_token (scanner, TOKEN_PARENTHESIS_RIGHT)) {
       g_object_unref (*value);
       *value = NULL;
-      return ')';
+      return TOKEN_PARENTHESIS_RIGHT;
     }
     return TOKEN_NONE;
   }
@@ -404,14 +404,14 @@ parse_member_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
   do {
     ViviCodeValue *tmp;
 
-    if (check_token (scanner, '[')) {
+    if (check_token (scanner, TOKEN_BRACKET_LEFT)) {
       // FIXME: expression
-      expected = parse_operator_expression (scanner, &member);
+      expected = parse_logical_or_expression (scanner, &member);
       if (expected != TOKEN_NONE)
 	return FAIL (expected);
-      if (!check_token (scanner, ']'))
-	return ']';
-    } else if (check_token (scanner, '.')) {
+      if (!check_token (scanner, TOKEN_BRACKET_RIGHT))
+	return TOKEN_BRACKET_RIGHT;
+    } else if (check_token (scanner, TOKEN_DOT)) {
       expected = parse_identifier (scanner, &member);
       if (expected != TOKEN_NONE)
 	return FAIL (expected);
@@ -506,7 +506,7 @@ parse_unary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
 
   *value = NULL;
 
-  if (check_token (scanner, '!')) {
+  if (check_token (scanner, TOKEN_LOGICAL_NOT)) {
     int expected = parse_unary_expression (scanner, value);
     if (expected != TOKEN_NONE)
       return FAIL (expected);
@@ -520,7 +520,9 @@ parse_unary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
 }
 
 static int
-parse_operator_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
+parse_operator_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value, ViviCompilerScannerToken token, const char *name,
+    ParseValueFunction next_parse_function)
 {
   int expected;
   ViviCodeValue *left;
@@ -528,12 +530,12 @@ parse_operator_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
 
   *value = NULL;
 
-  expected = parse_unary_expression (scanner, value);
+  expected = next_parse_function (scanner, value);
   if (expected != TOKEN_NONE)
     return expected;
 
-  while (check_token (scanner, '+')) {
-    expected = parse_unary_expression (scanner, &right);
+  while (check_token (scanner, token)) {
+    expected = next_parse_function (scanner, &right);
     if (expected != TOKEN_NONE) {
       g_object_unref (*value);
       *value = NULL;
@@ -541,12 +543,44 @@ parse_operator_expression (ViviCompilerScanner *scanner, ViviCodeValue **value)
     }
 
     left = VIVI_CODE_VALUE (*value);
-    *value = vivi_code_binary_new_name (left, VIVI_CODE_VALUE (right), "+");
+    *value = vivi_code_binary_new_name (left, VIVI_CODE_VALUE (right), name);
     g_object_unref (left);
     g_object_unref (right);
   };
 
   return TOKEN_NONE;
+}
+
+static int
+parse_bitwise_and_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  return parse_operator_expression (scanner, value, TOKEN_BITWISE_AND, "&",
+      parse_unary_expression);
+}
+
+static int
+parse_bitwise_or_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  return parse_operator_expression (scanner, value, TOKEN_BITWISE_OR, "|",
+      parse_bitwise_and_expression);
+}
+
+static int
+parse_logical_and_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  return parse_operator_expression (scanner, value, TOKEN_LOGICAL_AND, "&&",
+      parse_bitwise_or_expression);
+}
+
+static int
+parse_logical_or_expression (ViviCompilerScanner *scanner,
+    ViviCodeValue **value)
+{
+  return parse_operator_expression (scanner, value, TOKEN_LOGICAL_OR, "||",
+      parse_logical_and_expression);
 }
 
 static int
@@ -561,11 +595,11 @@ parse_conditional_expression (ViviCompilerScanner *scanner, ViviCodeStatement **
 
   *statement = NULL;
 
-  expected = parse_operator_expression (scanner, &value);
+  expected = parse_logical_or_expression (scanner, &value);
   if (expected != TOKEN_NONE)
     return expected;
 
-  if (!check_token (scanner, '?')) {
+  if (!check_token (scanner, TOKEN_QUESTION_MARK)) {
     *statement = vivi_code_value_statement_new (VIVI_CODE_VALUE (value));
     g_object_unref (value);
     return TOKEN_NONE;
@@ -577,10 +611,10 @@ parse_conditional_expression (ViviCompilerScanner *scanner, ViviCodeStatement **
     return FAIL (expected);
   }
 
-  if (!check_token (scanner, ':')) {
+  if (!check_token (scanner, TOKEN_COLON)) {
     g_object_unref (value);
     g_object_unref (if_statement);
-    return ':';
+    return TOKEN_COLON;
   }
 
   expected = parse_assignment_expression (scanner, &else_statement);
@@ -617,7 +651,7 @@ parse_expression (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
   *statement = NULL;
 
   return parse_statement_list (scanner, parse_assignment_expression, statement,
-      ',');
+      TOKEN_COMMA);
 }
 
 // statement
@@ -630,17 +664,17 @@ parse_expression_statement (ViviCompilerScanner *scanner, ViviCodeStatement **st
   *statement = NULL;
 
   vivi_compiler_scanner_peek_next_token (scanner);
-  if (scanner->next_token == '{' || scanner->next_token == TOKEN_FUNCTION)
+  if (scanner->next_token == TOKEN_BRACE_LEFT || scanner->next_token == TOKEN_FUNCTION)
     return -ERROR_TOKEN_EXPRESSION_STATEMENT;
 
   expected = parse_expression (scanner, statement);
   if (expected != TOKEN_NONE)
     return expected;
 
-  if (!check_token (scanner, ';')) {
+  if (!check_token (scanner, TOKEN_SEMICOLON)) {
     g_object_unref (*statement);
     *statement = NULL;
-    return ';';
+    return TOKEN_SEMICOLON;
   }
 
   return TOKEN_NONE;
@@ -651,8 +685,8 @@ parse_empty_statement (ViviCompilerScanner *scanner, ViviCodeStatement **stateme
 {
   *statement = NULL;
 
-  if (!check_token (scanner, ';'))
-    return -';';
+  if (!check_token (scanner, TOKEN_SEMICOLON))
+    return -TOKEN_SEMICOLON;
 
   *statement = vivi_compiler_empty_statement_new ();
 
@@ -669,11 +703,11 @@ parse_block (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
 
   *statement = NULL;
 
-  if (!check_token (scanner, '{'))
-    return -'{';
+  if (!check_token (scanner, TOKEN_BRACE_LEFT))
+    return -TOKEN_BRACE_LEFT;
 
   vivi_compiler_scanner_peek_next_token (scanner);
-  if (scanner->next_token != '}') {
+  if (scanner->next_token != TOKEN_BRACE_RIGHT) {
     expected =
       parse_statement_list (scanner, parse_statement, statement, TOKEN_NONE);
     if (expected != TOKEN_NONE)
@@ -682,10 +716,10 @@ parse_block (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
     *statement = vivi_code_block_new ();
   }
 
-  if (!check_token (scanner, '}')) {
+  if (!check_token (scanner, TOKEN_BRACE_RIGHT)) {
     g_object_unref (*statement);
     *statement = NULL;
-    return '}';
+    return TOKEN_BRACE_RIGHT;
   }
 
   return TOKEN_NONE;
@@ -702,14 +736,14 @@ parse_variable_statement (ViviCompilerScanner *scanner, ViviCodeStatement **stat
     return -TOKEN_VAR;
 
   expected =
-    parse_statement_list (scanner, parse_variable_declaration, statement, ',');
+    parse_statement_list (scanner, parse_variable_declaration, statement, TOKEN_COMMA);
   if (expected != TOKEN_NONE)
     return FAIL (expected);
 
-  if (!check_token (scanner, ';')) {
+  if (!check_token (scanner, TOKEN_SEMICOLON)) {
     g_object_unref (*statement);
     *statement = NULL;
-    return ';';
+    return TOKEN_SEMICOLON;
   }
 
   return TOKEN_NONE;
@@ -775,25 +809,25 @@ parse_function_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **st
   if (expected != TOKEN_NONE)
     return FAIL (expected);
 
-  if (!check_token (scanner, '(')) {
+  if (!check_token (scanner, TOKEN_PARENTHESIS_LEFT)) {
     g_object_unref (identifier);
-    return '(';
+    return TOKEN_PARENTHESIS_LEFT;
   }
 
-  expected = parse_value_list (scanner, parse_identifier, &arguments, ',');
+  expected = parse_value_list (scanner, parse_identifier, &arguments, TOKEN_COMMA);
   if (expected != TOKEN_NONE && expected >= 0)
     return expected;
 
-  if (!check_token (scanner, ')')) {
+  if (!check_token (scanner, TOKEN_PARENTHESIS_RIGHT)) {
     g_object_unref (identifier);
     free_value_list (arguments);
-    return ')';
+    return TOKEN_PARENTHESIS_RIGHT;
   }
 
-  if (!check_token (scanner, '{')) {
+  if (!check_token (scanner, TOKEN_BRACE_LEFT)) {
     g_object_unref (identifier);
     free_value_list (arguments);
-    return '{';
+    return TOKEN_BRACE_LEFT;
   }
 
   expected = parse_statement_list (scanner, parse_source_element, &body,
@@ -804,11 +838,11 @@ parse_function_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **st
     return expected;
   }
 
-  if (!check_token (scanner, '}')) {
+  if (!check_token (scanner, TOKEN_BRACE_RIGHT)) {
     g_object_unref (identifier);
     free_value_list (arguments);
     g_object_unref (body);
-    return '}';
+    return TOKEN_BRACE_RIGHT;
   }
 
   /*function = vivi_code_function_new (arguments, body);
@@ -851,7 +885,7 @@ parse_program (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
   if (expected != TOKEN_NONE)
     return FAIL (expected);
 
-  if (!check_token (scanner, G_TOKEN_EOF)) {
+  if (!check_token (scanner, TOKEN_EOF)) {
     *statement = NULL;
     return FAIL (parse_statement (scanner, statement));
   }

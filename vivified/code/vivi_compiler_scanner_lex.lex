@@ -9,6 +9,8 @@ identifier_part		[$_a-zA-Z0-9]
 %%
 
 [ \t\n\r]		/* skip whitespace */
+<<EOF>>			{ return TOKEN_EOF; }
+
 "{"			{ return TOKEN_BRACE_LEFT; }
 "}"			{ return TOKEN_BRACE_RIGHT; }
 "["			{ return TOKEN_BRACKET_RIGHT; }

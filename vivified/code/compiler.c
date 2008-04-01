@@ -47,6 +47,9 @@ main (int argc, char *argv[])
   }
 
   statement = vivi_compile_file (file, argv[1]);
+
+  fclose (file);
+
   if (statement == NULL) {
     g_printerr ("Compilation failed\n");
     return -1;

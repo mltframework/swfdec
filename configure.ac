@@ -54,6 +54,8 @@ AM_PROG_CC_STDC
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_AWK
+dnl FIXME only require lex for vivi
+AM_PROG_LEX
 
 AC_HEADER_STDC
 

@@ -33,6 +33,8 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_value_statement.c \
 	vivi_compiler.c \
 	vivi_compiler_empty_statement.c \
+	vivi_compiler_scanner.c \
+	vivi_compiler_scanner_lex.c \
 	vivi_decompiler_block.c \
 	vivi_decompiler_duplicate.c \
 	vivi_decompiler_state.c \
@@ -67,6 +69,10 @@ noinst_HEADERS = \
 	vivi_code_value_statement.h \
 	vivi_compiler.h \
 	vivi_compiler_empty_statement.h \
+	vivi_compiler_scanner.h \
+	vivi_compiler_scanner_lex.h \
+	vivi_compiler_scanner_lex_include.h \
+	vivi_compiler_scanner_lex.lex \
 	vivi_decompiler.h \
 	vivi_decompiler_block.h \
 	vivi_decompiler_duplicate.h \
@@ -74,8 +80,11 @@ noinst_HEADERS = \
 	vivi_decompiler_unknown.h \
 	vivified-compiler.h
 
-
 noinst_PROGRAMS = vivi-decompile vivi-compile
+
+vivi_compiler_scanner_lex.h: vivi_compiler_scanner_lex.c
+vivi_compiler_scanner_lex.c: vivi_compiler_scanner_lex.lex
+	$(LEX) -o vivi_compiler_scanner_lex.c --header-file=vivi_compiler_scanner_lex.h vivi_compiler_scanner_lex.lex
 
 vivi_decompile_SOURCES = \
 	decompiler.c

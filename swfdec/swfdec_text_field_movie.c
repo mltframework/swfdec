@@ -1431,10 +1431,7 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
 static gboolean
 swfdec_text_field_movie_mouse_events (SwfdecActor *actor)
 {
-  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
-
-  // FIXME: is this correct?
-  return (text->text->editable || text->text->selectable);
+  return TRUE;
 }
 
 static void
@@ -1525,6 +1522,18 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
 }
 
 static void
+swfdec_text_field_movie_focus_in (SwfdecActor *actor)
+{
+  //SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+}
+
+static void
+swfdec_text_field_movie_focus_out (SwfdecActor *actor)
+{
+  //SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+}
+
+static void
 swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -1548,6 +1557,8 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   actor_class->mouse_press = swfdec_text_field_movie_mouse_press;
   actor_class->mouse_release = swfdec_text_field_movie_mouse_release;
   actor_class->mouse_move = swfdec_text_field_movie_mouse_move;
+  actor_class->focus_in = swfdec_text_field_movie_focus_in;
+  actor_class->focus_out = swfdec_text_field_movie_focus_out;
 
   actor_class->iterate_start = swfdec_text_field_movie_iterate;
 }

@@ -601,6 +601,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       // add background for selection
       layout.index_ = paragraphs[i].index_ + block->index_ + skip;
+      layout.index_end = layout.index_ + length;
       if (text->text->selectable && text->cursor != text->selection_end &&
 	  layout.index_ < MAX (text->cursor, text->selection_end)) {
 	SwfdecColor color;

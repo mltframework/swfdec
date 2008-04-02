@@ -41,8 +41,8 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 typedef struct {
   PangoLayout *		layout;		// layout to render
 
-  // the byte offset where this layout's text starts in text->input->str
-  guint			index_;
+  guint			index_;		// byte offset where this layout's text starts in text->input->str
+  guint			index_end;	// and the offset where it ends
 
   int			offset_x;	// x offset to apply before rendering
 

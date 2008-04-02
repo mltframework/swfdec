@@ -94,6 +94,43 @@ free_value_list (ViviCodeValue **list)
   g_free (list);
 }
 
+static ViviCodeStatement *
+vivi_compiler_combine_statements (guint count, ...)
+{
+  va_list args;
+  ViviCodeBlock *block;
+  guint i;
+
+  if (count == 0)
+    return NULL;
+
+  va_start (args, count);
+  block = NULL;
+  for (i = 0; i < count; i++) {
+    ViviCodeStatement *statement = va_arg (args, ViviCodeStatement *);
+
+    if (statement == NULL)
+      continue;
+
+    g_assert (VIVI_IS_CODE_STATEMENT (statement));
+
+    if (block == NULL) {
+      if (VIVI_IS_CODE_BLOCK (statement)) {
+	block = VIVI_CODE_BLOCK (statement);
+	continue;
+      } else {
+	block = VIVI_CODE_BLOCK (vivi_code_block_new ());
+      }
+    }
+
+    vivi_code_block_add_statement (block, statement);
+    g_object_unref (statement);
+  }
+  va_end (args);
+
+  return VIVI_CODE_STATEMENT (block);
+}
+
 // values
 
 static int
@@ -258,13 +295,8 @@ parse_object_literal (ViviCompilerScanner *scanner, ViviCodeValue **value,
 	return FAIL (expected);
       }
 
-      if (statement_new != NULL) {
-	if (*statement == NULL)
-	  *statement = vivi_code_block_new ();
-	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
-	    statement_new);
-	g_object_unref (statement_new);
-      }
+      *statement =
+	vivi_compiler_combine_statements (2, *statement, statement_new);
 
       vivi_code_init_object_add_variable (VIVI_CODE_INIT_OBJECT (*value),
 	  property, initializer);
@@ -314,16 +346,8 @@ parse_variable_declaration (ViviCompilerScanner *scanner,
   assignment = vivi_code_assignment_new (NULL, identifier, value);
   vivi_code_assignment_set_local (VIVI_CODE_ASSIGNMENT (assignment), TRUE);
 
-  if (statement_right != NULL) {
-    *statement = vivi_code_block_new ();
-    vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
-	statement_right);
-    g_object_unref (statement_right);
-    vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement), assignment);
-    g_object_unref (assignment);
-  } else {
-    *statement = assignment;
-  }
+  *statement =
+    vivi_compiler_combine_statements (2, statement_right, assignment);
 
   return TOKEN_NONE;
 }
@@ -403,12 +427,29 @@ parse_member_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
     ViviCodeValue *tmp;
 
     if (check_token (scanner, TOKEN_BRACKET_LEFT)) {
-      // TODO: statement
       expected = parse_expression (scanner, &member, &statement_member);
-      if (expected != TOKEN_NONE)
+      if (expected != TOKEN_NONE) {
+	g_object_unref (*value);
+	*value = NULL;
+	if (*statement != NULL) {
+	  g_object_unref (*statement);
+	  *statement = NULL;
+	}
 	return FAIL (expected);
-      if (!check_token (scanner, TOKEN_BRACKET_RIGHT))
+      }
+
+      *statement = vivi_compiler_combine_statements (2, *statement,
+	  statement_member);
+
+      if (!check_token (scanner, TOKEN_BRACKET_RIGHT)) {
+	g_object_unref (*value);
+	*value = NULL;
+	if (*statement != NULL) {
+	  g_object_unref (*statement);
+	  *statement = NULL;
+	}
 	return TOKEN_BRACKET_RIGHT;
+      }
     } else if (check_token (scanner, TOKEN_DOT)) {
       expected = parse_identifier (scanner, &member);
       g_assert (statement_member == NULL);
@@ -502,14 +543,9 @@ parse_postfix_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
   operation = vivi_code_binary_new_name (*value, one, operator);
   g_object_unref (one);
 
-  g_assert (*statement == NULL);
-
-  *statement = vivi_code_block_new ();
-
   temporary = vivi_compiler_get_temporary_new ();
-  vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
-      vivi_code_assignment_new (NULL, temporary, *value));
-  vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
+  *statement = vivi_compiler_combine_statements (3, *statement,
+      vivi_code_assignment_new (NULL, temporary, *value),
       vivi_code_assignment_new (NULL, *value, operation));
   g_object_unref (operation);
 
@@ -556,9 +592,8 @@ parse_unary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
       tmp = vivi_code_binary_new_name (*value, one, operator);
       g_object_unref (one);
 
-      g_assert (*statement == NULL);
-
-      *statement = vivi_code_assignment_new (NULL, *value, tmp);
+      *statement = vivi_compiler_combine_statements (2, *statement,
+	  vivi_code_assignment_new (NULL, *value, tmp));
       g_object_unref (tmp);
 
       return TOKEN_NONE;
@@ -612,7 +647,7 @@ parse_operator_expression (ViviCompilerScanner *scanner,
       }
 
       if (statement_right != NULL) {
-	ViviCodeStatement *statement_left, *tmp;
+	ViviCodeStatement *tmp;
 
 	switch (pass) {
 	  case PASS_LOGICAL_OR:
@@ -634,12 +669,8 @@ parse_operator_expression (ViviCompilerScanner *scanner,
 	    g_assert_not_reached ();
 	}
 
-	statement_left = *statement;
-	*statement = vivi_code_block_new ();
-	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
-	    statement_left);
-	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
-	    statement_right);
+	*statement = vivi_compiler_combine_statements (2, *statement,
+	    *statement_right);
       }
 
       left = VIVI_CODE_VALUE (*value);
@@ -835,8 +866,6 @@ parse_assignment_expression (ViviCompilerScanner *scanner,
   if (!VIVI_IS_CODE_GET (*value))
     return TOKEN_NONE;
 
-  g_assert (*statement == NULL);
-
   operator = NULL;
 
   vivi_compiler_scanner_peek_next_token (scanner);
@@ -881,17 +910,8 @@ parse_assignment_expression (ViviCompilerScanner *scanner,
       }
       g_object_unref (right);
 
-      if (statement_right != NULL) {
-	*statement = vivi_code_block_new ();
-	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
-	    statement_right);
-	g_object_unref (statement_right);
-	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
-	    assignment);
-	g_object_unref (assignment);
-      } else {
-	*statement = assignment;
-      }
+      *statement = vivi_compiler_combine_statements (3, *statement,
+	  statement_right, assignment);
 
       break;
     default:
@@ -915,14 +935,9 @@ parse_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
   if (expected != TOKEN_NONE)
     return expected;
 
-  *statement = vivi_code_block_new ();
-
   do {
-    if (statement_one != NULL) {
-      vivi_code_block_add_statement (VIVI_CODE_BLOCK (*statement),
-	  statement_one);
-      g_object_unref (statement_one);
-    }
+    *statement =
+      vivi_compiler_combine_statements (2, *statement, statement_one);
 
     if (!check_token (scanner, TOKEN_COMMA))
       break;

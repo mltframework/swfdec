@@ -376,7 +376,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
   if (num != NULL)
     *num = paragraphs->len;
 
-  if (text->text->password)
+  if (text->password)
     swfdec_text_field_movie_ensure_asterisks (text, max_length);
 
   return (SwfdecParagraph *) (void *) g_array_free (paragraphs, FALSE);
@@ -656,7 +656,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       pango_layout_set_attributes (playout, attr_list);
 
-      if (text->text->password) {
+      if (text->password) {
 	pango_layout_set_text (playout, text->asterisks, paragraphs[i].length -
 	    block->index_ - skip);
       } else {

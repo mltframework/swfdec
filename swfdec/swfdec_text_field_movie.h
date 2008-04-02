@@ -94,17 +94,17 @@ struct _SwfdecTextFieldMovie {
 #endif
 
   /* properties from the textfield */
-  gboolean		html;
-  gboolean		editable;
+  gboolean		html; // <--
+  gboolean		editable; // <--
   gboolean		password;
   int			max_chars;
-  gboolean		selectable;
+  gboolean		selectable; // <--
   gboolean		embed_fonts;
-  gboolean		word_wrap;
-  gboolean		multiline;
-  SwfdecAutoSize	auto_size;
-  gboolean		border;
-  gboolean		background;
+  gboolean		word_wrap; // <--
+  gboolean		multiline; // <--
+  SwfdecAutoSize	auto_size; // <--
+  gboolean		border; // <--
+  gboolean		background; // <--
  
   GString *		input;
   char *		asterisks; /* bunch of asterisks that we display when password mode is enabled */

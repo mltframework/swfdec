@@ -222,8 +222,8 @@ swfdec_text_field_movie_get_maxChars (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text->max_chars != 0) {
-    SWFDEC_AS_VALUE_SET_INT (ret, text->text->max_chars);
+  if (text->max_chars != 0) {
+    SWFDEC_AS_VALUE_SET_INT (ret, text->max_chars);
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
   }
@@ -242,7 +242,7 @@ swfdec_text_field_movie_set_maxChars (SwfdecAsContext *cx,
     return;
 
   swfdec_as_value_to_number (cx, &argv[0]);
-  text->text->max_chars = swfdec_as_value_to_integer (cx, &argv[0]);
+  text->max_chars = swfdec_as_value_to_integer (cx, &argv[0]);
 }
 
 static void
@@ -787,7 +787,7 @@ swfdec_text_field_movie_get_password (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->password);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->password);
 }
 
 static void
@@ -802,8 +802,8 @@ swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->text->password != value) {
-    text->text->password = value;
+  if (text->password != value) {
+    text->password = value;
     if (!value && text->asterisks != NULL) {
       g_free (text->asterisks);
       text->asterisks = NULL;
@@ -857,7 +857,7 @@ swfdec_text_field_movie_get_embedFonts (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->embed_fonts);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->embed_fonts);
 }
 
 static void
@@ -872,10 +872,10 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (!text->text->embed_fonts && value)
+  if (!text->embed_fonts && value)
     SWFDEC_FIXME ("Using embed fonts in TextField not supported");
 
-  text->text->embed_fonts = value;
+  text->embed_fonts = value;
 
   // FIXME: resize
 }

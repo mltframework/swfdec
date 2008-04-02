@@ -33,6 +33,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_value_statement.c \
 	vivi_compiler.c \
 	vivi_compiler_empty_statement.c \
+	vivi_compiler_get_temporary.c \
 	vivi_compiler_scanner.c \
 	vivi_compiler_scanner_lex.c \
 	vivi_decompiler_block.c \
@@ -69,6 +70,7 @@ noinst_HEADERS = \
 	vivi_code_value_statement.h \
 	vivi_compiler.h \
 	vivi_compiler_empty_statement.h \
+	vivi_compiler_get_temporary.h \
 	vivi_compiler_scanner.h \
 	vivi_compiler_scanner_lex.h \
 	vivi_compiler_scanner_lex_include.h \

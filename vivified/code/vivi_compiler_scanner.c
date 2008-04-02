@@ -233,3 +233,21 @@ vivi_compiler_scanner_peek_next_token (ViviCompilerScanner *scanner)
 
   return scanner->next_token;
 }
+
+guint
+vivi_compiler_scanner_cur_line (ViviCompilerScanner *scanner)
+{
+  g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), 0);
+
+  return yylineno;
+}
+
+void
+vivi_compiler_scanner_unexp_token (ViviCompilerScanner *scanner,
+    ViviCompilerScannerToken expected)
+{
+  g_printerr ("%i: Unexpected token %s, expected %s\n",
+      vivi_compiler_scanner_cur_line (scanner),
+      vivi_compiler_scanner_token_name (scanner->token),
+      vivi_compiler_scanner_token_name (expected));
+}

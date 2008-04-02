@@ -1395,17 +1395,40 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
 static int
 swfdec_player_focus_sort (gconstpointer ca, gconstpointer cb)
 {
-  const SwfdecMovie *a = ca;
-  const SwfdecMovie *b = cb;
+  SwfdecMovie *a = SWFDEC_MOVIE (ca);
+  SwfdecMovie *b = SWFDEC_MOVIE (cb);
+  double xa, ya, xb, yb;
+  int result;
+  char *na, *nb;
 
-  if (a->extents.y0 < b->extents.y0)
+  swfdec_movie_update (a);
+  swfdec_movie_update (b);
+
+  xa = a->extents.x0;
+  ya = a->extents.y0;
+  swfdec_movie_local_to_global (a->parent, &xa, &ya);
+  xb = b->extents.x0;
+  yb = b->extents.y0;
+  swfdec_movie_local_to_global (b->parent, &xb, &yb);
+
+  if (ya < yb)
     return 1;
-  else if (a->extents.y0 > b->extents.y0)
+  else if (ya > yb)
     return -1;
 
-  if (a->extents.x0 < b->extents.x0)
+  if (xa < xb)
     return 1;
-  else if (a->extents.x0 > b->extents.x0)
+  else if (xa > xb)
+    return -1;
+
+  na = swfdec_movie_get_path (a, TRUE);
+  nb = swfdec_movie_get_path (b, TRUE);
+  result = strcmp (na, nb);
+  g_free (na);
+  g_free (nb);
+  if (result < 0)
+    return 1;
+  if (result > 0)
     return -1;
 
   if (a->depth < b->depth)
@@ -1420,80 +1443,86 @@ swfdec_player_focus_sort (gconstpointer ca, gconstpointer cb)
     return 1;
 }
 
-static gboolean
-swfdec_movie_can_tab (SwfdecMovie *movie)
+static GList *
+swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
 {
-  if (!SWFDEC_IS_ACTOR (movie))
-    return FALSE;
+  SwfdecAsValue val;
+  const GList *walk;
+  GList *ret = NULL;
 
-  if (movie->parent == NULL)
-    return FALSE;
+  for (walk = current; walk; walk = walk->next) {
+    SwfdecActor *actor = walk->data;
 
-  /* FIXME */
-  return TRUE;
-}
+    if (!SWFDEC_IS_ACTOR (actor))
+      continue;
 
-static gboolean
-swfdec_player_handle_tab_list (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecMovie *stop, gboolean forward)
-{
-  SwfdecPlayerPrivate *priv;
-  SwfdecMovie *cur = NULL;
-  GList *list, *walk;
-
-  priv = player->priv;
-  if (movie) {
-    list = g_list_copy (movie->list);
-  } else {
-    list = g_list_copy (priv->roots);
-  }
-
-  list = g_list_sort (list, swfdec_player_focus_sort);
-  if (!forward)
-    list = g_list_reverse (list);
-  if (stop) {
-    walk = g_list_find (list, stop);
-    g_assert (walk);
-    walk = walk->next;
-  } else {
-    walk = list;
-  }
-  do {
-    if (walk == NULL) {
-      if (movie) {
-	if (swfdec_player_handle_tab_list (player, movie->parent, movie, forward))
-	  goto success;
+    swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
+    if (SWFDEC_MOVIE (actor)->parent != NULL) {
+      swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabEnabled, &val);
+      if (swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
+	swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabEnabled, &val);
+	ret = g_list_prepend (ret, actor);
+      } else if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val) && 
+	  swfdec_actor_get_mouse_events (actor)) {
+	ret = g_list_prepend (ret, actor);
       }
-      if (cur != NULL)
-	walk = list;
-      else
-	break;
     }
-    cur = walk->data;
-    if (swfdec_movie_can_tab (cur)) {
-      swfdec_player_grab_focus (player, SWFDEC_ACTOR (cur));
-      goto success;
+
+    if (SWFDEC_MOVIE (actor)->parent == NULL)
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+    else
+      swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabChildren, &val);
+
+    if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val) ||
+	swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
+      GList *list;
+      swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
+      list = swfdec_player_get_tab_movies (player, SWFDEC_MOVIE (actor)->list);
+      if (list)
+	ret = g_list_concat (list, ret);
+    } else {
+      swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
     }
-    walk = walk->next;
-  } while (cur != stop);
-
-  g_list_free (list);
-  return FALSE;
-
-success:
-  g_list_free (list);
-  return TRUE;
+  }
+  return ret;
 }
 
 static void
 swfdec_player_handle_tab (SwfdecPlayer *player, gboolean forward)
 {
-  /* FIXME: add tabIndex handling here */
-  if (player->priv->focus) {
-    SwfdecMovie *focus = SWFDEC_MOVIE (player->priv->focus);
-    swfdec_player_handle_tab_list (player, focus->parent, focus, forward);
+  SwfdecPlayerPrivate *priv = player->priv;
+  GList *walk, *list;
+  GList *free_list = NULL;
+  SwfdecActor *actor;
+
+  if (priv->focus_list) {
+    list = priv->focus_list;
   } else {
-    swfdec_player_handle_tab_list (player, NULL, NULL, forward);
+    free_list = swfdec_player_get_tab_movies (player, priv->roots);
+    free_list = g_list_sort (free_list, swfdec_player_focus_sort);
+    list = free_list;
   }
+
+  if (priv->focus) {
+    walk = g_list_find (list, priv->focus);
+  } else {
+    walk = NULL;
+  }
+  if (walk == NULL) {
+    walk = forward ? list : g_list_last (list);
+    actor = walk ? walk->data : NULL;
+  } else {
+    walk = forward ? walk->next : walk->prev;
+    if (walk == NULL) {
+      SWFDEC_FIXME ("try tabbing out of the flash movie here");
+      walk = forward ? list : g_list_last (list);
+    }
+    actor = walk ? walk->data : NULL;
+  }
+  swfdec_player_grab_focus (player, actor);
+
+  if (free_list)
+    g_list_free (free_list);
 }
 
 static void

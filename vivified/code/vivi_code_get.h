@@ -54,6 +54,8 @@ ViviCodeValue *		vivi_code_get_new		(ViviCodeValue *	from,
 							 ViviCodeValue *	name);
 ViviCodeValue *		vivi_code_get_new_name		(const char *		name);
 
+char *			vivi_code_get_get_variable_name	(ViviCodeGet *		get);
+
 
 G_END_DECLS
 #endif

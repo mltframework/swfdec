@@ -100,6 +100,19 @@ vivi_code_get_init (ViviCodeGet *get)
   vivi_code_value_set_precedence (value, VIVI_PRECEDENCE_MEMBER);
 }
 
+char *
+vivi_code_get_get_variable_name (ViviCodeGet *get)
+{
+  if (VIVI_IS_CODE_CONSTANT (get->name)) {
+    return
+      vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (get->name));
+  } else if (VIVI_IS_CODE_GET (get->name)) {
+    return vivi_code_get_get_variable_name (VIVI_CODE_GET (get->name));
+  } else {
+    return NULL;
+  }
+}
+
 ViviCodeValue *
 vivi_code_get_new (ViviCodeValue *from, ViviCodeValue *name)
 {

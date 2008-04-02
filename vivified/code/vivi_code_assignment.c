@@ -50,7 +50,7 @@ vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
   if (VIVI_IS_CODE_CONSTANT (assignment->name)) {
     varname = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (assignment->name));
   } else if (VIVI_IS_CODE_GET (assignment->name)) {
-    varname = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (VIVI_CODE_GET (assignment->name)->name));
+    varname = vivi_code_get_get_variable_name (VIVI_CODE_GET (assignment->name));
   } else {
     varname = NULL;
   }

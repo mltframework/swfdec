@@ -13,8 +13,8 @@ identifier_part		[$_a-zA-Z0-9]
 
 "{"			{ return TOKEN_BRACE_LEFT; }
 "}"			{ return TOKEN_BRACE_RIGHT; }
-"["			{ return TOKEN_BRACKET_RIGHT; }
-"]"			{ return TOKEN_BRACKET_LEFT; }
+"["			{ return TOKEN_BRACKET_LEFT; }
+"]"			{ return TOKEN_BRACKET_RIGHT; }
 "("			{ return TOKEN_PARENTHESIS_LEFT; }
 ")"			{ return TOKEN_PARENTHESIS_RIGHT; }
 

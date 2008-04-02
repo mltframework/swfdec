@@ -175,7 +175,7 @@ static const TokenDescription error_tokens[] = {
   { G_TOKEN_NONE, NULL }
 };
 
-#define FAIL(x) ((x) < 0 ? -x : x)
+#define FAIL(x) ((unsigned) ((x) < 0 ? -x : x))
 
 typedef int (*ParseStatementFunction) (GScanner *scanner, ViviCodeStatement **statement);
 typedef int (*ParseValueFunction) (GScanner *scanner, ViviCodeValue **value);

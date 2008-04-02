@@ -45,7 +45,7 @@ vivi_compiler_get_temporary_new (void)
 {
   static int counter = 0;
   ViviCompilerGetTemporary *get;
-  char *name = g_strdup_printf ("_%i", ++counter);
+  char *name = g_strdup_printf ("$%i", ++counter);
 
   get = g_object_new (VIVI_TYPE_COMPILER_GET_TEMPORARY, NULL);
   VIVI_CODE_GET (get)->name = vivi_code_constant_new_string (name);

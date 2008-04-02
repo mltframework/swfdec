@@ -46,6 +46,8 @@
 #include "vivi_code_unary.h"
 #include "vivi_code_value_statement.h"
 #include "vivi_compiler_empty_statement.h"
+#include "vivi_compiler_get_temporary.h"
+
 
 #include "vivi_code_text_printer.h"
 
@@ -432,7 +434,7 @@ parse_postfix_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
     ViviCodeStatement **pre_statement)
 {
   int expected;
-  ViviCodeValue *tmp, *one;
+  ViviCodeValue *operation, *one, *temporary;
   const char *operator;
 
   *value = NULL;
@@ -457,15 +459,22 @@ parse_postfix_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
   }
 
   one = vivi_code_constant_new_number (1);
-  tmp = vivi_code_binary_new_name (*value, one, operator);
+  operation = vivi_code_binary_new_name (*value, one, operator);
   g_object_unref (one);
 
   g_assert (*pre_statement == NULL);
 
   *pre_statement = vivi_code_block_new ();
+
+  temporary = vivi_compiler_get_temporary_new ();
   vivi_code_block_add_statement (VIVI_CODE_BLOCK (*pre_statement),
-      vivi_code_assignment_new (NULL, *value, tmp));
-  g_object_unref (tmp);
+      vivi_code_assignment_new (NULL, temporary, *value));
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (*pre_statement),
+      vivi_code_assignment_new (NULL, *value, operation));
+  g_object_unref (operation);
+
+  g_object_unref (*value);
+  *value = temporary;
 
   return TOKEN_NONE;
 }
@@ -554,6 +563,15 @@ parse_operator_expression (ViviCompilerScanner *scanner,
 	g_object_unref (*value);
 	*value = NULL;
 	return FAIL (expected);
+      }
+
+      if (pre_statement_right != NULL) {
+	ViviCodeStatement *pre_statement_left = *pre_statement;
+	*pre_statement = vivi_code_block_new ();
+	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*pre_statement),
+	    pre_statement_left);
+	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*pre_statement),
+	    pre_statement_right);
       }
 
       left = VIVI_CODE_VALUE (*value);
@@ -734,11 +752,37 @@ static int
 parse_assignment_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value, ViviCodeStatement **pre_statement)
 {
+  int expected;
+
   *value = NULL;
 
-  // TODO
+  expected = parse_conditional_expression (scanner, value, pre_statement);
+  if (expected != TOKEN_NONE)
+    return expected;
 
-  return parse_conditional_expression (scanner, value, pre_statement);
+  if (!VIVI_IS_CODE_GET (*value))
+    return TOKEN_NONE;
+
+  vivi_compiler_scanner_peek_next_token (scanner);
+  switch ((int)scanner->next_token) {
+    case TOKEN_ASSIGN:
+    /*case TOKEN_ASSIGN_MULTIPLY:
+    case TOKEN_ASSIGN_DIVIDE:
+    case TOKEN_ASSIGN_REMAINDER:
+    case TOKEN_ASSIGN_ADD:
+    case TOKEN_ASSIGN_MINUS:
+    case TOKEN_ASSIGN_SHIFT_LEFT:
+    case TOKEN_ASSIGN_SHIFT_RIGHT:
+    case TOKEN_ASSIGN_SHIFT_RIGHT_ZERO:
+    case TOKEN_ASSIGN_BITWISE_AND:
+    case TOKEN_ASSIGN_BITWISE_OR:
+    case TOKEN_ASSIGN_BITWISE_XOR:*/
+    default:
+      return TOKEN_NONE;
+  }
+
+
+  return TOKEN_NONE;
 }
 
 static int

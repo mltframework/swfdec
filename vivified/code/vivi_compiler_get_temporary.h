@@ -20,7 +20,7 @@
 #ifndef _VIVI_COMPILER_GET_TEMPORARY_H_
 #define _VIVI_COMPILER_GET_TEMPORARY_H_
 
-#include <vivified/code/vivi_code_value.h>
+#include <vivified/code/vivi_code_get.h>
 
 G_BEGIN_DECLS
 
@@ -37,12 +37,12 @@ typedef struct _ViviCompilerGetTemporaryClass ViviCompilerGetTemporaryClass;
 
 struct _ViviCompilerGetTemporary
 {
-  ViviCodeValue		value;
+  ViviCodeGet		value;
 };
 
 struct _ViviCompilerGetTemporaryClass
 {
-  ViviCodeValueClass	value_class;
+  ViviCodeGetClass	value_class;
 };
 
 GType			vivi_compiler_get_temporary_get_type   	(void);

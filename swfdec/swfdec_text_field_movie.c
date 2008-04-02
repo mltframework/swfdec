@@ -1090,7 +1090,7 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 
   graphic = SWFDEC_GRAPHIC (text->text);
 
-  if (text->text->auto_size == SWFDEC_AUTO_SIZE_NONE)
+  if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return FALSE;
 
   swfdec_text_field_movie_get_text_size (text, &width, &height);
@@ -1107,7 +1107,7 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   if (!text->text->word_wrap && graphic->extents.x1 -
       graphic->extents.x0 != width)
   {
-    switch (text->text->auto_size) {
+    switch (text->auto_size) {
       case SWFDEC_AUTO_SIZE_LEFT:
 	graphic->extents.x1 = graphic->extents.x0 + width;
 	break;
@@ -1253,10 +1253,10 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   if (text->text->input != NULL) {
     swfdec_text_field_movie_set_text (text,
 	swfdec_as_context_get_string (cx, text->text->input),
-	text->text->html);
+	text->html);
   } else {
     swfdec_text_field_movie_set_text (text, SWFDEC_AS_STR_EMPTY,
-	text->text->html);
+	text->html);
   }
 
   // variable
@@ -1767,7 +1767,7 @@ swfdec_text_field_movie_variable_listener_callback (SwfdecAsObject *object,
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
   swfdec_text_field_movie_set_text (text,
-      swfdec_as_value_to_string (object->context, val), text->text->html);
+      swfdec_as_value_to_string (object->context, val), text->html);
 }
 
 void
@@ -1801,7 +1801,7 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
     if (object != NULL && swfdec_as_object_get_variable (object, name, &val)) {
       swfdec_text_field_movie_set_text (text,
 	  swfdec_as_value_to_string (SWFDEC_AS_OBJECT (text)->context, &val),
-	  text->text->html);
+	  text->html);
     }
     if (object != NULL && SWFDEC_IS_MOVIE (object)) {
       swfdec_movie_add_variable_listener (SWFDEC_MOVIE (object),

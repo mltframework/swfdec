@@ -92,7 +92,7 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text (text, value, FALSE);
 
   if (text->variable != NULL) {
-    if (text->text->html) {
+    if (text->html) {
       swfdec_text_field_movie_set_listen_variable_text (text,
 	  swfdec_text_field_movie_get_html_text (text));
     } else {
@@ -110,7 +110,7 @@ swfdec_text_field_movie_get_html (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->html);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->html);
 }
 
 static void
@@ -124,7 +124,7 @@ swfdec_text_field_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  text->text->html = value;
+  text->html = value;
 
   // FIXME: resize? invalidate?
 }
@@ -140,7 +140,7 @@ swfdec_text_field_movie_get_htmlText (SwfdecAsContext *cx,
 
   if (text->style_sheet_input) {
     SWFDEC_AS_VALUE_SET_STRING (ret, text->style_sheet_input);
-  } else if (text->text->html) {
+  } else if (text->html) {
     SWFDEC_AS_VALUE_SET_STRING (ret,
 	swfdec_text_field_movie_get_html_text (text));
   } else {
@@ -159,10 +159,10 @@ swfdec_text_field_movie_set_htmlText (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
-  swfdec_text_field_movie_set_text (text, value, text->text->html);
+  swfdec_text_field_movie_set_text (text, value, text->html);
 
   if (text->variable != NULL) {
-    if (text->text->html) {
+    if (text->html) {
       swfdec_text_field_movie_set_listen_variable_text (text,
 	  swfdec_text_field_movie_get_html_text (text));
     } else {
@@ -717,7 +717,7 @@ swfdec_text_field_movie_get_autoSize (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  switch (text->text->auto_size) {
+  switch (text->auto_size) {
     case SWFDEC_AUTO_SIZE_NONE:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_none);
       break;
@@ -751,9 +751,9 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
 
   if (SWFDEC_AS_VALUE_IS_BOOLEAN (&argv[0])) {
     if (SWFDEC_AS_VALUE_GET_BOOLEAN (&argv[0])) {
-      text->text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
+      text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
     } else {
-      text->text->auto_size = SWFDEC_AUTO_SIZE_NONE;
+      text->auto_size = SWFDEC_AUTO_SIZE_NONE;
     }
     return;
   }
@@ -761,18 +761,18 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
   swfdec_as_value_to_number (cx, &argv[0]);
   s = swfdec_as_value_to_string (cx, &argv[0]);
 
-  old = text->text->auto_size;
+  old = text->auto_size;
   if (!g_ascii_strcasecmp (s, "none")) {
-    text->text->auto_size = SWFDEC_AUTO_SIZE_NONE;
+    text->auto_size = SWFDEC_AUTO_SIZE_NONE;
   } else if (!g_ascii_strcasecmp (s, "left")) {
-    text->text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
+    text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
   } else if (!g_ascii_strcasecmp (s, "right")) {
-    text->text->auto_size = SWFDEC_AUTO_SIZE_RIGHT;
+    text->auto_size = SWFDEC_AUTO_SIZE_RIGHT;
   } else if (!g_ascii_strcasecmp (s, "center")) {
-    text->text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
+    text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
   }
 
-  if (text->text->auto_size != old) {
+  if (text->auto_size != old) {
     swfdec_text_field_movie_auto_size (text);
     // FIXME: fix scrolling
   }

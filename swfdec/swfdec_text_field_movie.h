@@ -94,7 +94,7 @@ struct _SwfdecTextFieldMovie {
 #endif
 
   /* properties from the textfield */
-  gboolean		html; // <--
+  gboolean		html;
   gboolean		editable; // <--
   gboolean		password;
   int			max_chars;
@@ -102,7 +102,7 @@ struct _SwfdecTextFieldMovie {
   gboolean		embed_fonts;
   gboolean		word_wrap; // <--
   gboolean		multiline; // <--
-  SwfdecAutoSize	auto_size; // <--
+  SwfdecAutoSize	auto_size;
   gboolean		border; // <--
   gboolean		background; // <--
  

@@ -1903,7 +1903,6 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     gboolean html)
 {
   SwfdecFormatIndex *block;
-  GSList *iter;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
@@ -1914,11 +1913,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   }
 
   // remove old formatting info
-  iter = text->formats;
-  while (iter) {
-    g_free (iter->data);
-    iter = g_slist_next (iter);
-  }
+  g_slist_foreach (text->formats, (GFunc) g_free, NULL);
   g_slist_free (text->formats);
   text->formats = NULL;
 

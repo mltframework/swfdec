@@ -46,7 +46,7 @@ static void
 swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
-  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (text);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
 
   swfdec_rect_union (extents, extents, &text->extents);
 }
@@ -1442,10 +1442,14 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   guint index_;
   gboolean direct, before;
 
-  g_return_if_fail (text->editable || text->selectable);
-
-  if (button != 0)
+  if (button != 0) {
+    SWFDEC_FIXME ("implement popup menus, scrollwheel and middle mouse paste");
     return;
+  }
+
+  if (!text->selectable)
+    return;
+
 
   swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
@@ -1474,8 +1478,6 @@ swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
   guint index_;
   gboolean direct, before;
 
-  g_return_if_fail (text->editable || text->selectable);
-
   if (!text->selectable)
     return;
 
@@ -1500,10 +1502,10 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
   guint index_;
   gboolean direct, before;
 
-  g_return_if_fail (text->editable || text->selectable);
-
-  if (button != 0)
+  if (button != 0) {
+    SWFDEC_FIXME ("implement popup menus, scrollwheel and middle mouse paste");
     return;
+  }
 
   swfdec_movie_get_mouse (SWFDEC_MOVIE (text), &x, &y);
 

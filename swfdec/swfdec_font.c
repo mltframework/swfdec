@@ -51,10 +51,12 @@ swfdec_font_dispose (GObject *object)
     pango_font_description_free (font->desc);
     font->desc = NULL;
   }
-  if (font->name) {
-    g_free (font->name);
-    font->name = NULL;
-  }
+  g_free (font->name);
+  font->name = NULL;
+  g_free (font->display_name);
+  font->display_name = NULL;
+  g_free (font->copyright);
+  font->copyright = NULL;
 
   G_OBJECT_CLASS (swfdec_font_parent_class)->dispose (object);
 }
@@ -377,7 +379,7 @@ tag_func_define_font_name (SwfdecSwfDecoder * s, guint tag)
     return SWFDEC_STATUS_OK;
   }
 
-  font->name = swfdec_bits_get_string (&s->b, s->version);
+  font->display_name = swfdec_bits_get_string (&s->b, s->version);
   font->copyright = swfdec_bits_get_string (&s->b, s->version);
 
   return SWFDEC_STATUS_OK;

@@ -59,7 +59,8 @@ struct _SwfdecFont
 {
   SwfdecCharacter	character;
 
-  char *		name;		/* name of the font */
+  char *		name;		/* Flash's name of the font */
+  char *		display_name;	/* "legal" name of the font - use to display to user */
   char *		copyright;	/* copyright of the font */
   PangoFontDescription *desc;
   gboolean		bold;		/* font is bold */

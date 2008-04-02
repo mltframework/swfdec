@@ -1450,7 +1450,6 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   if (!text->selectable)
     return;
 
-
   swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
   direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
@@ -1469,6 +1468,8 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   } else {
     text->character_pressed = 0;
   }
+
+  swfdec_player_grab_focus (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), actor);
 }
 
 static void
@@ -1536,6 +1537,29 @@ swfdec_text_field_movie_focus_out (SwfdecActor *actor)
 }
 
 static void
+swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint character)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+  char insert[6];
+
+  switch (keycode) {
+    default:
+      break;
+  }
+
+  if (character == 0)
+    return;
+  g_unichar_to_utf8 (character, insert);
+  swfdec_text_field_movie_replace_text (text, text->cursor, text->cursor, insert);
+}
+
+static void
+swfdec_text_field_movie_key_release (SwfdecActor *actor, guint keycode, guint character)
+{
+  //SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+}
+
+static void
 swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -1561,6 +1585,8 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   actor_class->mouse_move = swfdec_text_field_movie_mouse_move;
   actor_class->focus_in = swfdec_text_field_movie_focus_in;
   actor_class->focus_out = swfdec_text_field_movie_focus_out;
+  actor_class->key_press = swfdec_text_field_movie_key_press;
+  actor_class->key_release = swfdec_text_field_movie_key_release;
 
   actor_class->iterate_start = swfdec_text_field_movie_iterate;
 }

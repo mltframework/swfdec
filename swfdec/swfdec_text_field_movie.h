@@ -87,8 +87,25 @@ typedef struct {
 struct _SwfdecTextFieldMovie {
   SwfdecActor		actor;
 
+#if 1
   SwfdecTextField *	text;		/* the text_field object we render */
+#else
+  const SwfdecTextField *	text;		/* the text_field object we render */
+#endif
 
+  /* properties from the textfield */
+  gboolean		html;
+  gboolean		editable;
+  gboolean		password;
+  int			max_chars;
+  gboolean		selectable;
+  gboolean		embed_fonts;
+  gboolean		word_wrap;
+  gboolean		multiline;
+  SwfdecAutoSize	auto_size;
+  gboolean		border;
+  gboolean		background;
+ 
   GString *		input;
   char *		asterisks; /* bunch of asterisks that we display when password mode is enabled */
   guint			asterisks_length;
@@ -100,7 +117,6 @@ struct _SwfdecTextFieldMovie {
   GSList *		formats;
 
   gboolean		condense_white;
-  gboolean		embed_fonts;
 
   SwfdecAsObject *	style_sheet;
   const char *		style_sheet_input; /* saved input, so it can be used to apply stylesheet again */

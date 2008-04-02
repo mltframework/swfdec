@@ -48,6 +48,17 @@ swfdec_text_field_create_movie (SwfdecGraphic *graphic, gsize *size)
 
   ret->text = text;
 
+  ret->html = text->html;
+  ret->editable = text->editable;
+  ret->password = text->password;
+  ret->max_chars = text->max_chars;
+  ret->selectable = text->selectable;
+  ret->embed_fonts = text->embed_fonts;
+  ret->word_wrap = text->word_wrap;
+  ret->multiline = text->multiline;
+  ret->auto_size = text->auto_size;
+  ret->border = text->border;
+
   *size = sizeof (SwfdecTextFieldMovie);
 
   return SWFDEC_MOVIE (ret);

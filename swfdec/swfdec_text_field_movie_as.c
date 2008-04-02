@@ -254,7 +254,7 @@ swfdec_text_field_movie_get_multiline (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->multiline);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->multiline);
 }
 
 static void
@@ -269,7 +269,7 @@ swfdec_text_field_movie_set_multiline (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  text->text->multiline = value;
+  text->multiline = value;
 }
 
 static void
@@ -318,7 +318,7 @@ swfdec_text_field_movie_get_selectable (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->selectable);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->selectable);
 }
 
 static void
@@ -333,7 +333,7 @@ swfdec_text_field_movie_set_selectable (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  text->text->selectable = value;
+  text->selectable = value;
 
   // FIXME: invalidate
 }
@@ -347,7 +347,7 @@ swfdec_text_field_movie_do_get_type (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text->editable) {
+  if (text->editable) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_input);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_dynamic);
@@ -368,10 +368,11 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   if (!g_strcasecmp (value, SWFDEC_AS_STR_input)) {
-    text->text->editable = TRUE;
+    text->editable = TRUE;
   } else if (!g_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
-    text->text->editable = FALSE;
+    text->editable = FALSE;
   }
+  /* else ignore */
 
   // FIXME: invalidate
 }
@@ -456,7 +457,7 @@ swfdec_text_field_movie_get_background (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->background);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->background);
 }
 
 static void
@@ -471,8 +472,8 @@ swfdec_text_field_movie_set_background (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->text->background != value) {
-    text->text->background = value;
+  if (text->background != value) {
+    text->background = value;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
@@ -519,7 +520,7 @@ swfdec_text_field_movie_get_border (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->border);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->border);
 }
 
 static void
@@ -534,8 +535,8 @@ swfdec_text_field_movie_set_border (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->text->border != value) {
-    text->text->border = value;
+  if (text->border != value) {
+    text->border = value;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
@@ -628,7 +629,7 @@ swfdec_text_field_movie_get_maxhscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (!text->text->word_wrap) {
+  if (!text->word_wrap) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, text->hscroll_max);
   } else {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, 0);
@@ -822,7 +823,7 @@ swfdec_text_field_movie_get_wordWrap (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->word_wrap);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->word_wrap);
 }
 
 static void
@@ -837,8 +838,8 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->text->word_wrap != value) {
-    text->text->word_wrap = value;
+  if (text->word_wrap != value) {
+    text->word_wrap = value;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
     swfdec_text_field_movie_auto_size (text);
     // special case: don't set scrolling

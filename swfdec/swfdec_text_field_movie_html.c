@@ -485,7 +485,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
   text->input = g_string_assign (text->input, "");
 
   data.cx = SWFDEC_AS_OBJECT (text)->context;
-  data.multiline = (data.cx->version < 7 || text->text->multiline);
+  data.multiline = (data.cx->version < 7 || text->multiline);
   data.condense_white = text->condense_white;
   if (text->style_sheet != NULL && SWFDEC_IS_STYLESHEET (text->style_sheet)) {
     data.style_sheet = SWFDEC_STYLESHEET (text->style_sheet);

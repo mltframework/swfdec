@@ -59,7 +59,7 @@ swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *ma
   extended = SWFDEC_GRAPHIC (text->text)->extents;
 
   // border is drawn partly outside the extents
-  if (text->text->border) {
+  if (text->border) {
     extended.x1 += SWFDEC_TWIPS_TO_DOUBLE (1);
     extended.y1 += SWFDEC_TWIPS_TO_DOUBLE (1);
   }
@@ -572,7 +572,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	width += -indent;
       }
 
-      if (text->text->word_wrap) {
+      if (text->word_wrap) {
 	pango_layout_set_wrap (playout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_width (playout, width * PANGO_SCALE);
 	pango_layout_set_alignment (playout, block->align);
@@ -602,7 +602,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       // add background for selection
       layout.index_ = paragraphs[i].index_ + block->index_ + skip;
       layout.index_end = layout.index_ + length;
-      if (text->text->selectable && text->cursor != text->selection_end &&
+      if (text->selectable && text->cursor != text->selection_end &&
 	  layout.index_ < MAX (text->cursor, text->selection_end)) {
 	SwfdecColor color;
 	PangoAttribute *attr_fg, *attr_bg;
@@ -665,7 +665,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	    paragraphs[i].length - block->index_ - skip);
       }
 
-      if (iter->next != NULL && text->text->word_wrap)
+      if (iter->next != NULL && text->word_wrap)
       {
 	PangoLayoutLine *line;
 	int line_num;
@@ -684,7 +684,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       }
       else
       {
-	if (!text->text->word_wrap && block->align != PANGO_ALIGN_LEFT) {
+	if (!text->word_wrap && block->align != PANGO_ALIGN_LEFT) {
 	  int line_width;
 	  pango_layout_get_pixel_size (playout, &line_width, 0);
 	  if (line_width < width) {
@@ -711,7 +711,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
       layouts = g_array_append_val (layouts, layout);
 
-      if (!text->text->word_wrap)
+      if (!text->word_wrap)
 	break;
     }
   }
@@ -806,8 +806,7 @@ static void
 swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
-  SwfdecTextFieldMovie *text_movie;
-  SwfdecTextField *text;
+  SwfdecTextFieldMovie *text;
   SwfdecLayout *layouts;
   SwfdecRect limit;
   SwfdecColor color;
@@ -824,17 +823,16 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   if (swfdec_color_transform_is_mask (trans))
     return;
 
-  text_movie = SWFDEC_TEXT_FIELD_MOVIE (movie);
-  text = SWFDEC_TEXT_FIELD (movie->graphic);
+  text = SWFDEC_TEXT_FIELD_MOVIE (movie);
 
-  paragraphs = swfdec_text_field_movie_get_paragraphs (text_movie, NULL);
+  paragraphs = swfdec_text_field_movie_get_paragraphs (text, NULL);
 
   swfdec_rect_intersect (&limit, &movie->original_extents, inval);
 
   if (text->background) {
     cairo_rectangle (cr, limit.x0, limit.y0, limit.x1 - limit.x0,
 	limit.y1 - limit.y0);
-    color = swfdec_color_apply_transform (text_movie->background_color, trans);
+    color = swfdec_color_apply_transform (text->background_color, trans);
     // always use full alpha
     swfdec_color_set_source (cr, color | SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
     cairo_fill (cr);
@@ -848,7 +846,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	SWFDEC_DOUBLE_TO_TWIPS (0.5),
 	movie->original_extents.x1 - movie->original_extents.x0,
 	movie->original_extents.y1 - movie->original_extents.y0);
-    color = swfdec_color_apply_transform (text_movie->border_color, trans);
+    color = swfdec_color_apply_transform (text->border_color, trans);
     // always use full alpha
     swfdec_color_set_source (cr, color | SWFDEC_COLOR_COMBINE (0, 0, 0, 255));
     cairo_set_line_width (cr, SWFDEC_DOUBLE_TO_TWIPS (1));
@@ -861,16 +859,16 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       limit.y1 - limit.y0);
   cairo_clip (cr);
 
-  layouts = swfdec_text_field_movie_get_layouts (text_movie, NULL, cr,
+  layouts = swfdec_text_field_movie_get_layouts (text, NULL, cr,
       paragraphs, trans);
 
   first = TRUE;
   x = movie->original_extents.x0 + SWFDEC_DOUBLE_TO_TWIPS (EXTRA_MARGIN) +
-    MIN (text_movie->hscroll, text_movie->hscroll_max);
+    MIN (text->hscroll, text->hscroll_max);
   y = movie->original_extents.y0 + SWFDEC_DOUBLE_TO_TWIPS (EXTRA_MARGIN);
 
   swfdec_text_field_movie_line_position (layouts,
-      MIN (text_movie->scroll, text_movie->scroll_max), NULL, &i, &skip);
+      MIN (text->scroll, text->scroll_max), NULL, &i, &skip);
 
   for (; layouts[i].layout != NULL && y < limit.y1; i++)
   {
@@ -1062,7 +1060,7 @@ swfdec_text_field_movie_get_text_size (SwfdecTextFieldMovie *text, int *width,
   layouts = swfdec_text_field_movie_get_layouts (text, NULL, NULL, NULL, NULL);
 
   for (i = 0; layouts[i].layout != NULL; i++) {
-    if (!text->text->word_wrap) {
+    if (!text->word_wrap) {
       if (width != NULL && layouts[i].width > *width)
 	*width = layouts[i].width;
     }
@@ -1097,14 +1095,14 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   width += SWFDEC_DOUBLE_TO_TWIPS (2 * EXTRA_MARGIN);
   height += SWFDEC_DOUBLE_TO_TWIPS (2 * EXTRA_MARGIN);
 
-  if ((text->text->word_wrap ||
+  if ((text->word_wrap ||
 	graphic->extents.x1 - graphic->extents.x0 == width) &&
       graphic->extents.y1 - graphic->extents.y0 == height)
     return FALSE;
 
   swfdec_movie_invalidate_next (SWFDEC_MOVIE (text));
 
-  if (!text->text->word_wrap && graphic->extents.x1 -
+  if (!text->word_wrap && graphic->extents.x1 -
       graphic->extents.x0 != width)
   {
     switch (text->auto_size) {
@@ -1422,7 +1420,7 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
   if (format != NULL && format->url != NULL &&
       format->url != SWFDEC_AS_STR_EMPTY) {
     return SWFDEC_MOUSE_CURSOR_CLICK;
-  } else if (text->text->editable || text->text->selectable) {
+  } else if (text->editable || text->selectable) {
     return SWFDEC_MOUSE_CURSOR_TEXT;
   } else{
     return SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -1443,7 +1441,7 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   guint index_;
   gboolean direct, before;
 
-  g_return_if_fail (text->text->editable || text->text->selectable);
+  g_return_if_fail (text->editable || text->selectable);
 
   if (button != 0)
     return;
@@ -1475,9 +1473,9 @@ swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
   guint index_;
   gboolean direct, before;
 
-  g_return_if_fail (text->text->editable || text->text->selectable);
+  g_return_if_fail (text->editable || text->selectable);
 
-  if (!text->text->selectable)
+  if (!text->selectable)
     return;
 
   if (!text->mouse_pressed)
@@ -1501,7 +1499,7 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
   guint index_;
   gboolean direct, before;
 
-  g_return_if_fail (text->text->editable || text->text->selectable);
+  g_return_if_fail (text->editable || text->selectable);
 
   if (button != 0)
     return;

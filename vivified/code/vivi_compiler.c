@@ -261,7 +261,8 @@ parse_assignment_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value, ViviCodeStatement **pre_statement);
 
 static int
-parse_variable_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
+parse_variable_declaration (ViviCompilerScanner *scanner,
+    ViviCodeStatement **statement)
 {
   int expected;
   ViviCodeValue *identifier, *value;
@@ -274,7 +275,7 @@ parse_variable_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **st
   if (expected != TOKEN_NONE)
     return expected;
 
-  if (check_token (scanner, TOKEN_EQUAL)) {
+  if (check_token (scanner, TOKEN_ASSIGN)) {
     expected = parse_assignment_expression (scanner, &value, &pre_statement);
     if (expected != TOKEN_NONE) {
       g_object_unref (identifier);
@@ -283,7 +284,6 @@ parse_variable_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **st
   } else {
     value = vivi_code_constant_new_undefined ();
   }
-
 
   assignment = vivi_code_assignment_new (NULL, identifier, value);
   vivi_code_assignment_set_local (VIVI_CODE_ASSIGNMENT (assignment), TRUE);
@@ -860,8 +860,8 @@ parse_variable_statement (ViviCompilerScanner *scanner, ViviCodeStatement **stat
   if (!check_token (scanner, TOKEN_VAR))
     return -TOKEN_VAR;
 
-  expected =
-    parse_statement_list (scanner, parse_variable_declaration, statement, TOKEN_COMMA);
+  expected = parse_statement_list (scanner, parse_variable_declaration,
+      statement, TOKEN_COMMA);
   if (expected != TOKEN_NONE)
     return FAIL (expected);
 

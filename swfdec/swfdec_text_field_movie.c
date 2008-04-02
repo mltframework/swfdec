@@ -1506,8 +1506,9 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     guint start_index, guint end_index, const char *str)
 {
   SwfdecFormatIndex *findex;
-  GSList *iter, *prev;
+  GSList *iter;
   gboolean first;
+  gsize len;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (end_index <= text->input->len);
@@ -1519,33 +1520,30 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   if (text->style_sheet_input)
     return;
 
+  len = strlen (str);
   first = TRUE;
-  prev = NULL;
-  for (iter = text->formats; iter != NULL; iter = iter->next)
-  {
+  iter = text->formats; 
+  while (iter) {
     findex = iter->data;
+    iter = iter->next;
 
-    if (findex->index_ >= start_index) {
-      if (end_index == text->input->len ||(iter->next != NULL &&
-	   ((SwfdecFormatIndex *)iter->next->data)->index_ <= end_index))
-      {
-	g_free (iter->data);
-	text->formats = g_slist_remove (text->formats, iter->data);
-	iter = (prev != NULL ? prev : text->formats);
-      }
-      else
-      {
-	findex->index_ += strlen (str) - (end_index - start_index);
-	if (first) {
-	  findex->index_ -= strlen (str);
-	  first = FALSE;
-	}
-      }
+    /* remove formats of deleted text */
+    if (findex->index_ >= start_index &&
+	(end_index == text->input->len ||
+	 (iter->next != NULL &&
+	  ((SwfdecFormatIndex *) iter->next->data)->index_ <= end_index)) &&
+	text->formats->next != NULL) {
+      g_free (findex);
+      text->formats = g_slist_remove (text->formats, iter->data);
+      continue;
     }
-    prev = iter;
+    /* adapt indexes: remove deleted part, add to-be inserted text */
+    if (findex->index_ > start_index) {
+      findex->index_ = findex->index_ + start_index - end_index + len;
+    }
   }
 
-  if (end_index == text->input->len) {
+  if (end_index == text->input->len && text->input->len > 0) {
     if (SWFDEC_AS_OBJECT (text)->context->version < 8) {
       SWFDEC_FIXME ("replaceText to the end of the TextField might use wrong text format on version 7");
     }

@@ -539,10 +539,16 @@ parse_unary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
   }
 }
 
+typedef enum {
+  PASS_ALWAYS,
+  PASS_LOGICAL_OR,
+  PASS_LOGICAL_AND
+} ParseOperatorPass;
+
 static int
 parse_operator_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value, ViviCodeStatement **pre_statement,
-    const ViviCompilerScannerToken *tokens,
+    const ViviCompilerScannerToken *tokens, ParseOperatorPass pass,
     ParseValueFunction next_parse_function)
 {
   int expected, i;
@@ -566,7 +572,29 @@ parse_operator_expression (ViviCompilerScanner *scanner,
       }
 
       if (pre_statement_right != NULL) {
-	ViviCodeStatement *pre_statement_left = *pre_statement;
+	ViviCodeStatement *pre_statement_left, *tmp;
+
+	switch (pass) {
+	  case PASS_LOGICAL_OR:
+	    tmp = vivi_code_if_new (vivi_code_unary_new (*value, '!'));
+	    vivi_code_if_set_if (VIVI_CODE_IF (tmp), pre_statement_right);
+	    g_object_unref (pre_statement_right);
+	    pre_statement_right = tmp;
+	    break;
+	  case PASS_LOGICAL_AND:
+	    tmp = vivi_code_if_new (*value);
+	    vivi_code_if_set_if (VIVI_CODE_IF (tmp), pre_statement_right);
+	    g_object_unref (pre_statement_right);
+	    pre_statement_right = tmp;
+	    break;
+	  case PASS_ALWAYS:
+	    // nothing
+	    break;
+	  default:
+	    g_assert_not_reached ();
+	}
+
+	pre_statement_left = *pre_statement;
 	*pre_statement = vivi_code_block_new ();
 	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*pre_statement),
 	    pre_statement_left);
@@ -593,7 +621,7 @@ parse_multiplicative_expression (ViviCompilerScanner *scanner,
     TOKEN_DIVIDE, TOKEN_REMAINDER, TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_unary_expression);
+      PASS_ALWAYS, parse_unary_expression);
 }
 
 static int
@@ -604,7 +632,7 @@ parse_additive_expression (ViviCompilerScanner *scanner,
     TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_multiplicative_expression);
+      PASS_ALWAYS, parse_multiplicative_expression);
 }
 
 static int
@@ -615,7 +643,7 @@ parse_shift_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
     TOKEN_SHIFT_RIGHT, TOKEN_SHIFT_RIGHT_UNSIGNED, TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_additive_expression);
+      PASS_ALWAYS, parse_additive_expression);
 }
 
 static int
@@ -627,7 +655,7 @@ parse_relational_expression (ViviCompilerScanner *scanner,
     TOKEN_EQUAL_OR_GREATER_THAN, TOKEN_INSTANCEOF, TOKEN_IN,*/ TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_shift_expression);
+      PASS_ALWAYS, parse_shift_expression);
 }
 
 static int
@@ -639,7 +667,7 @@ parse_equality_expression (ViviCompilerScanner *scanner,
     TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_relational_expression);
+      PASS_ALWAYS, parse_relational_expression);
 }
 
 static int
@@ -650,7 +678,7 @@ parse_bitwise_and_expression (ViviCompilerScanner *scanner,
     TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_equality_expression);
+      PASS_ALWAYS, parse_equality_expression);
 }
 
 static int
@@ -661,7 +689,7 @@ parse_bitwise_xor_expression (ViviCompilerScanner *scanner,
     TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_bitwise_and_expression);
+      PASS_ALWAYS, parse_bitwise_and_expression);
 }
 
 static int
@@ -672,7 +700,7 @@ parse_bitwise_or_expression (ViviCompilerScanner *scanner,
     TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_bitwise_xor_expression);
+      PASS_ALWAYS, parse_bitwise_xor_expression);
 }
 
 static int
@@ -683,7 +711,7 @@ parse_logical_and_expression (ViviCompilerScanner *scanner,
     TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_bitwise_or_expression);
+      PASS_LOGICAL_AND, parse_bitwise_or_expression);
 }
 
 static int
@@ -694,7 +722,7 @@ parse_logical_or_expression (ViviCompilerScanner *scanner,
     TOKEN_NONE };
 
   return parse_operator_expression (scanner, value, pre_statement, tokens,
-      parse_logical_and_expression);
+      PASS_LOGICAL_OR, parse_logical_and_expression);
 }
 
 static int

@@ -781,8 +781,12 @@ parse_assignment_expression (ViviCompilerScanner *scanner,
     ViviCodeValue **value, ViviCodeStatement **pre_statement)
 {
   int expected;
+  ViviCodeValue *right;
+  ViviCodeStatement *assignment, *pre_statement_right;
+  const char *operator;
 
   *value = NULL;
+  *pre_statement = NULL;
 
   expected = parse_conditional_expression (scanner, value, pre_statement);
   if (expected != TOKEN_NONE)
@@ -791,20 +795,65 @@ parse_assignment_expression (ViviCompilerScanner *scanner,
   if (!VIVI_IS_CODE_GET (*value))
     return TOKEN_NONE;
 
+  g_assert (*pre_statement == NULL);
+
+  operator = NULL;
+
   vivi_compiler_scanner_peek_next_token (scanner);
   switch ((int)scanner->next_token) {
-    case TOKEN_ASSIGN:
-    /*case TOKEN_ASSIGN_MULTIPLY:
+    case TOKEN_ASSIGN_MULTIPLY:
+      if (operator == NULL) operator = "*";
     case TOKEN_ASSIGN_DIVIDE:
+      if (operator == NULL) operator = "/";
     case TOKEN_ASSIGN_REMAINDER:
+      if (operator == NULL) operator = "%";
     case TOKEN_ASSIGN_ADD:
+      if (operator == NULL) operator = "+";
     case TOKEN_ASSIGN_MINUS:
+      if (operator == NULL) operator = "-";
     case TOKEN_ASSIGN_SHIFT_LEFT:
+      if (operator == NULL) operator = "<<";
     case TOKEN_ASSIGN_SHIFT_RIGHT:
+      if (operator == NULL) operator = ">>";
     case TOKEN_ASSIGN_SHIFT_RIGHT_ZERO:
+      if (operator == NULL) operator = ">>>";
     case TOKEN_ASSIGN_BITWISE_AND:
+      if (operator == NULL) operator = "&";
     case TOKEN_ASSIGN_BITWISE_OR:
-    case TOKEN_ASSIGN_BITWISE_XOR:*/
+      if (operator == NULL) operator = "|";
+    case TOKEN_ASSIGN_BITWISE_XOR:
+      if (operator == NULL) operator = "^";
+    case TOKEN_ASSIGN:
+      vivi_compiler_scanner_get_next_token (scanner);
+      expected = parse_assignment_expression (scanner, &right,
+	  &pre_statement_right);
+      if (expected != TOKEN_NONE) {
+	g_object_unref (*value);
+	*value = NULL;
+	return FAIL (expected);
+      }
+
+      if (operator != NULL) {
+	assignment = vivi_code_assignment_new (NULL, *value,
+	    vivi_code_binary_new_name (*value, right, operator));
+      } else {
+	assignment = vivi_code_assignment_new (NULL, *value, right);
+      }
+      g_object_unref (right);
+
+      if (pre_statement_right != NULL) {
+	*pre_statement = vivi_code_block_new ();
+	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*pre_statement),
+	    pre_statement_right);
+	g_object_unref (pre_statement_right);
+	vivi_code_block_add_statement (VIVI_CODE_BLOCK (*pre_statement),
+	    assignment);
+	g_object_unref (assignment);
+      } else {
+	*pre_statement = assignment;
+      }
+
+      break;
     default:
       return TOKEN_NONE;
   }

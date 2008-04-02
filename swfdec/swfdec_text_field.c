@@ -46,8 +46,6 @@ swfdec_text_field_create_movie (SwfdecGraphic *graphic, gsize *size)
   SwfdecTextFieldMovie *ret =
     g_object_new (SWFDEC_TYPE_TEXT_FIELD_MOVIE, NULL);
 
-  ret->text = text;
-
   ret->html = text->html;
   ret->editable = text->editable;
   ret->password = text->password;

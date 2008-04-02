@@ -46,25 +46,26 @@ static void
 swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
-  swfdec_rect_union (extents, extents,
-      &SWFDEC_GRAPHIC (SWFDEC_TEXT_FIELD_MOVIE (movie)->text)->extents);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (text);
+
+  swfdec_rect_union (extents, extents, &text->extents);
 }
 
 static void
 swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
-  SwfdecRect rect, extended;
+  SwfdecRect rect;
 
-  extended = SWFDEC_GRAPHIC (text->text)->extents;
+  rect = text->extents;
 
   // border is drawn partly outside the extents
   if (text->border) {
-    extended.x1 += SWFDEC_TWIPS_TO_DOUBLE (1);
-    extended.y1 += SWFDEC_TWIPS_TO_DOUBLE (1);
+    rect.x1 += SWFDEC_TWIPS_TO_DOUBLE (1);
+    rect.y1 += SWFDEC_TWIPS_TO_DOUBLE (1);
   }
 
-  swfdec_rect_transform (&rect, &extended, matrix);
+  swfdec_rect_transform (&rect, &rect, matrix);
   swfdec_player_invalidate (
       SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
 }
@@ -1081,12 +1082,9 @@ swfdec_text_field_movie_get_text_size (SwfdecTextFieldMovie *text, int *width,
 gboolean
 swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 {
-  SwfdecGraphic *graphic;
   int height, width, diff;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
-
-  graphic = SWFDEC_GRAPHIC (text->text);
 
   if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return FALSE;
@@ -1096,26 +1094,26 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   height += SWFDEC_DOUBLE_TO_TWIPS (2 * EXTRA_MARGIN);
 
   if ((text->word_wrap ||
-	graphic->extents.x1 - graphic->extents.x0 == width) &&
-      graphic->extents.y1 - graphic->extents.y0 == height)
+	text->extents.x1 - text->extents.x0 == width) &&
+      text->extents.y1 - text->extents.y0 == height)
     return FALSE;
 
   swfdec_movie_invalidate_next (SWFDEC_MOVIE (text));
 
-  if (!text->word_wrap && graphic->extents.x1 -
-      graphic->extents.x0 != width)
+  if (!text->word_wrap && text->extents.x1 -
+      text->extents.x0 != width)
   {
     switch (text->auto_size) {
       case SWFDEC_AUTO_SIZE_LEFT:
-	graphic->extents.x1 = graphic->extents.x0 + width;
+	text->extents.x1 = text->extents.x0 + width;
 	break;
       case SWFDEC_AUTO_SIZE_RIGHT:
-	graphic->extents.x0 = graphic->extents.x1 - width;
+	text->extents.x0 = text->extents.x1 - width;
 	break;
       case SWFDEC_AUTO_SIZE_CENTER:
-	diff = (graphic->extents.x1 - graphic->extents.x0) - width;
-	graphic->extents.x0 += floor (diff / 2.0);
-	graphic->extents.x1 = graphic->extents.x0 + width;
+	diff = (text->extents.x1 - text->extents.x0) - width;
+	text->extents.x0 += floor (diff / 2.0);
+	text->extents.x1 = text->extents.x0 + width;
 	break;
       case SWFDEC_AUTO_SIZE_NONE:
       default:
@@ -1123,9 +1121,9 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
     }
   }
 
-  if (graphic->extents.y1 - graphic->extents.y0 != height)
+  if (text->extents.y1 - text->extents.y0 != height)
   {
-    graphic->extents.y1 = graphic->extents.y0 + height;
+    text->extents.y1 = text->extents.y0 + height;
   }
 
   swfdec_movie_queue_update (SWFDEC_MOVIE (text),
@@ -1204,6 +1202,7 @@ static void
 swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecTextField *text_field = SWFDEC_TEXT_FIELD (movie->graphic);
   SwfdecAsContext *cx;
   SwfdecAsValue val;
   gboolean needs_unuse;
@@ -1231,26 +1230,28 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   if (!text->format_new)
     goto out;
 
-  swfdec_text_format_set_defaults (text->format_new);
-  text->format_new->color = text->text->color;
-  text->format_new->align = text->text->align;
-  if (text->text->font != NULL)  {
-    text->format_new->font =
-      swfdec_as_context_get_string (cx, text->text->font);
-  }
-  text->format_new->size = text->text->size / 20;
-  text->format_new->left_margin = text->text->left_margin / 20;
-  text->format_new->right_margin = text->text->right_margin / 20;
-  text->format_new->indent = text->text->indent / 20;
-  text->format_new->leading = text->text->leading / 20;
-
   text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 0);
   text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);
 
+  swfdec_text_format_set_defaults (text->format_new);
+  if (text_field) {
+    text->format_new->color = text_field->color;
+    text->format_new->align = text_field->align;
+    if (text_field->font != NULL)  {
+      text->format_new->font =
+	swfdec_as_context_get_string (cx, text_field->font);
+    }
+    text->format_new->size = text_field->size / 20;
+    text->format_new->left_margin = text_field->left_margin / 20;
+    text->format_new->right_margin = text_field->right_margin / 20;
+    text->format_new->indent = text_field->indent / 20;
+    text->format_new->leading = text_field->leading / 20;
+  }
+
   // text
-  if (text->text->input != NULL) {
+  if (text_field && text_field->input != NULL) {
     swfdec_text_field_movie_set_text (text,
-	swfdec_as_context_get_string (cx, text->text->input),
+	swfdec_as_context_get_string (cx, text_field->input),
 	text->html);
   } else {
     swfdec_text_field_movie_set_text (text, SWFDEC_AS_STR_EMPTY,
@@ -1258,9 +1259,9 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   }
 
   // variable
-  if (text->text->variable != NULL) {
+  if (text_field && text_field->variable != NULL) {
     swfdec_text_field_movie_set_listen_variable (text,
-	swfdec_as_context_get_string (cx, text->text->variable));
+	swfdec_as_context_get_string (cx, text_field->variable));
   }
 
 out:
@@ -1372,8 +1373,8 @@ swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
   if (layouts[0].layout == NULL)
     return FALSE;
 
-  layout_y = y - EXTRA_MARGIN - SWFDEC_GRAPHIC (text->text)->extents.y0;
-  layout_x = x - EXTRA_MARGIN - SWFDEC_GRAPHIC (text->text)->extents.x0;
+  layout_y = y - EXTRA_MARGIN - text->extents.y0;
+  layout_x = x - EXTRA_MARGIN - text->extents.x0;
 
   // take scrolling into account
   swfdec_text_field_movie_line_position (layouts,

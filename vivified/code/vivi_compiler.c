@@ -59,7 +59,19 @@ enum {
   ERROR_TOKEN_STATEMENT
 };
 
-#define FAIL(x) ((x) < 0 ? -x : x)
+static const struct {
+  int				token;
+  const char *			name;
+} error_names[] = {
+  { ERROR_TOKEN_LITERAL, "LITERAL" },
+  { ERROR_TOKEN_PROPERTY_NAME, "PROPERTY NAME" },
+  { ERROR_TOKEN_PRIMARY_EXPRESSION, "PRIMARY EXPRESSION" },
+  { ERROR_TOKEN_EXPRESSION_STATEMENT, "EXPRESSION STATEMENT" },
+  { ERROR_TOKEN_STATEMENT, "STATEMENT" },
+  { TOKEN_LAST, NULL }
+};
+
+#define FAIL(x) ((x) < 0 ? -(x) : (x))
 
 typedef int (*ParseValueFunction) (ViviCompilerScanner *scanner, ViviCodeValue **value);
 typedef int (*ParseValueStatementFunction) (ViviCompilerScanner *scanner, ViviCodeValue **value, ViviCodeStatement **statement);
@@ -497,7 +509,6 @@ parse_member_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
       }
     } else if (check_token (scanner, TOKEN_DOT)) {
       expected = parse_identifier (scanner, &member);
-      g_assert (statement_member == NULL);
       if (expected != TOKEN_NONE)
 	return FAIL (expected);
     } else {
@@ -1005,6 +1016,81 @@ parse_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
 // statement
 
 static int
+parse_statement (ViviCompilerScanner *scanner, ViviCodeStatement **statement);
+
+static int
+parse_if_statement (ViviCompilerScanner *scanner,
+    ViviCodeStatement **statement)
+{
+  int expected;
+  ViviCodeValue *condition;
+  ViviCodeStatement *pre_statement, *if_statement, *else_statement;
+
+  *statement = NULL;
+
+  if (!check_token (scanner, TOKEN_IF))
+    return -TOKEN_IF;
+
+  if (!check_token (scanner, TOKEN_PARENTHESIS_LEFT))
+    return TOKEN_PARENTHESIS_LEFT;
+
+  expected = parse_expression (scanner, &condition, &pre_statement);
+  if (expected != TOKEN_NONE)
+    return FAIL (expected);
+
+  if (!check_token (scanner, TOKEN_PARENTHESIS_RIGHT)) {
+    g_object_unref (condition);
+    if (pre_statement != NULL) {
+      g_object_unref (pre_statement);
+      pre_statement = NULL;
+    }
+    return TOKEN_PARENTHESIS_RIGHT;
+  }
+
+  expected = parse_statement (scanner, &if_statement);
+  if (expected != TOKEN_NONE) {
+    g_object_unref (condition);
+    if (pre_statement != NULL) {
+      g_object_unref (pre_statement);
+      pre_statement = NULL;
+    }
+    return FAIL (expected);
+  }
+
+  if (check_token (scanner, TOKEN_ELSE)) {
+    expected = parse_statement (scanner, &else_statement);
+    if (expected != TOKEN_NONE) {
+      g_object_unref (condition);
+      if (pre_statement != NULL) {
+	g_object_unref (pre_statement);
+	pre_statement = NULL;
+      }
+      g_object_unref (if_statement);
+      return FAIL (expected);
+    }
+  } else {
+    else_statement = NULL;
+  }
+
+  *statement = vivi_code_if_new (condition);
+  g_object_unref (condition);
+
+  vivi_code_if_set_if (VIVI_CODE_IF (*statement), if_statement);
+  g_object_unref (if_statement);
+
+  if (else_statement != NULL) {
+    vivi_code_if_set_if (VIVI_CODE_IF (*statement), else_statement);
+    g_object_unref (else_statement);
+  }
+
+  *statement = vivi_compiler_combine_statements (2, pre_statement, *statement);
+
+  g_assert (*statement != NULL);
+
+  return TOKEN_NONE;
+}
+
+static int
 parse_expression_statement (ViviCompilerScanner *scanner,
     ViviCodeStatement **statement)
 {
@@ -1033,7 +1119,8 @@ parse_expression_statement (ViviCompilerScanner *scanner,
 }
 
 static int
-parse_empty_statement (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
+parse_empty_statement (ViviCompilerScanner *scanner,
+    ViviCodeStatement **statement)
 {
   *statement = NULL;
 
@@ -1044,9 +1131,6 @@ parse_empty_statement (ViviCompilerScanner *scanner, ViviCodeStatement **stateme
 
   return TOKEN_NONE;
 }
-
-static int
-parse_statement (ViviCompilerScanner *scanner, ViviCodeStatement **statement);
 
 static int
 parse_block (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
@@ -1110,7 +1194,7 @@ parse_statement (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
     parse_variable_statement,
     parse_empty_statement,
     parse_expression_statement,
-    //parse_if_statement,
+    parse_if_statement,
     //parse_iteration_statement,
     //parse_continue_statement,
     //parse_break_statement,
@@ -1127,8 +1211,11 @@ parse_statement (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
 
   for (i = 0; functions[i] != NULL; i++) {
     expected = functions[i] (scanner, statement);
-    if (expected >= 0)
+    if (expected >= 0) {
+      g_assert ((expected == TOKEN_NONE && *statement != NULL) ||
+	  (expected != TOKEN_NONE && *statement == NULL));
       return expected;
+    }
   }
 
   return -ERROR_TOKEN_STATEMENT;
@@ -1249,8 +1336,9 @@ parse_program (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
 // parsing
 
 static int
-parse_statement_list (ViviCompilerScanner *scanner, ParseStatementFunction function,
-    ViviCodeStatement **block, guint separator)
+parse_statement_list (ViviCompilerScanner *scanner,
+    ParseStatementFunction function, ViviCodeStatement **block,
+    guint separator)
 {
   ViviCodeStatement *statement;
   int expected;
@@ -1338,10 +1426,28 @@ vivi_compile_file (FILE *file, const char *input_name)
   expected = parse_program (scanner, &statement);
   g_assert ((expected == TOKEN_NONE && VIVI_IS_CODE_STATEMENT (statement)) ||
 	(expected != TOKEN_NONE && statement == NULL));
+  g_assert (expected >= 0);
 
   if (expected != TOKEN_NONE) {
     vivi_compiler_scanner_get_next_token (scanner);
-    vivi_compiler_scanner_unexp_token (scanner, expected);
+    if (expected < TOKEN_LAST) {
+      vivi_compiler_scanner_unexp_token (scanner, expected);
+    } else {
+      guint i;
+      const char *name;
+
+      name = NULL;
+      for (i = 0; error_names[i].token != TOKEN_LAST; i++) {
+	if (error_names[i].token == expected) {
+	  name = error_names[i].name;
+	  break;
+	}
+      }
+
+      g_assert (name != NULL);
+
+      vivi_compiler_scanner_unexp_token_string (scanner, name);
+    }
   }
 
   g_object_unref (scanner);

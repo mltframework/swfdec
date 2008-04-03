@@ -187,6 +187,8 @@ guint				vivi_compiler_scanner_cur_line		(ViviCompilerScanner *scanner);
 
 void				vivi_compiler_scanner_unexp_token	(ViviCompilerScanner *	scanner,
 									 ViviCompilerScannerToken expected);
+void				vivi_compiler_scanner_unexp_token_string (ViviCompilerScanner *	scanner,
+									 const char *		expected);
 
 
 G_END_DECLS

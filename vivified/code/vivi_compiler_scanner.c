@@ -242,12 +242,27 @@ vivi_compiler_scanner_cur_line (ViviCompilerScanner *scanner)
   return yylineno;
 }
 
+static void
+vivi_compiler_scanner_print_unexp_token_message (ViviCompilerScanner *scanner,
+    const char *unexpected, const char *expected)
+{
+  g_printerr ("%i: Unexpected token %s expected %s\n",
+      vivi_compiler_scanner_cur_line (scanner), unexpected, expected);
+}
+
 void
 vivi_compiler_scanner_unexp_token (ViviCompilerScanner *scanner,
     ViviCompilerScannerToken expected)
 {
-  g_printerr ("%i: Unexpected token %s, expected %s\n",
-      vivi_compiler_scanner_cur_line (scanner),
+  vivi_compiler_scanner_print_unexp_token_message (scanner,
       vivi_compiler_scanner_token_name (scanner->token),
       vivi_compiler_scanner_token_name (expected));
+}
+
+void
+vivi_compiler_scanner_unexp_token_string (ViviCompilerScanner *scanner,
+    const char *expected)
+{
+  vivi_compiler_scanner_print_unexp_token_message (scanner,
+      vivi_compiler_scanner_token_name (scanner->token), expected);
 }

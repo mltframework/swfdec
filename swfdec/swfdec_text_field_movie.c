@@ -1521,7 +1521,7 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
-  gsize index_;
+  guint index_;
   gboolean direct, before;
 
   if (button != 0) {

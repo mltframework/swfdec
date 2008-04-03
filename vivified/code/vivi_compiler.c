@@ -48,7 +48,6 @@
 #include "vivi_compiler_empty_statement.h"
 #include "vivi_compiler_get_temporary.h"
 
-
 #include "vivi_code_text_printer.h"
 
 enum {
@@ -88,12 +87,13 @@ typedef struct {
 #define CANCEL(x) (data->expected = (x), STATUS_CANCEL)
 #define CANCEL_CUSTOM(x) (data->custom_error = (x), STATUS_CANCEL)
 
-typedef int (*ParseValueFunction) (ParseData *data, ViviCodeValue **value);
-typedef int (*ParseValueStatementFunction) (ParseData *data, ViviCodeValue **value, ViviCodeStatement **statement);
-typedef int (*ParseStatementFunction) (ParseData *data, ViviCodeStatement **statement);
+typedef ParseStatus (*ParseValueFunction) (ParseData *data, ViviCodeValue **value);
+typedef ParseStatus (*ParseValueStatementFunction) (ParseData *data, ViviCodeValue **value, ViviCodeStatement **statement);
+typedef ParseStatus (*ParseStatementFunction) (ParseData *data, ViviCodeStatement **statement);
 
 static ParseStatus
 parse_statement_list (ParseData *data, ParseStatementFunction function, ViviCodeStatement **statement, guint separator);
+
 static ParseStatus
 parse_value_list (ParseData *data, ParseValueFunction function,
     ViviCodeValue ***list, guint separator);
@@ -314,8 +314,8 @@ parse_property_name (ParseData *data, ViviCodeValue **value)
 }
 
 static ParseStatus
-parse_assignment_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement);
+parse_assignment_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement);
 
 static ParseStatus
 parse_object_literal (ParseData *data, ViviCodeValue **value,
@@ -393,8 +393,7 @@ parse_object_literal (ParseData *data, ViviCodeValue **value,
 // misc
 
 static ParseStatus
-parse_variable_declaration (ParseData *data,
-    ViviCodeStatement **statement)
+parse_variable_declaration (ParseData *data, ViviCodeStatement **statement)
 {
   ParseStatus status;
   ViviCodeValue *identifier, *value;
@@ -429,7 +428,8 @@ parse_variable_declaration (ParseData *data,
 // expression
 
 static ParseStatus
-parse_expression (ParseData *data, ViviCodeValue **value, ViviCodeStatement **statement);
+parse_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement);
 
 static ParseStatus
 parse_primary_expression (ParseData *data, ViviCodeValue **value,
@@ -691,10 +691,9 @@ typedef enum {
 } ParseOperatorPass;
 
 static ParseStatus
-parse_operator_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement,
-    const ViviCompilerScannerToken *tokens, ParseOperatorPass pass,
-    ParseValueStatementFunction next_parse_function)
+parse_operator_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement, const ViviCompilerScannerToken *tokens,
+    ParseOperatorPass pass, ParseValueStatementFunction next_parse_function)
 {
   ParseStatus status;
   int i;
@@ -756,8 +755,8 @@ parse_operator_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_multiplicative_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_multiplicative_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_MULTIPLY,
     TOKEN_DIVIDE, TOKEN_REMAINDER, TOKEN_NONE };
@@ -767,8 +766,8 @@ parse_multiplicative_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_additive_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_additive_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_PLUS, TOKEN_MINUS,
     TOKEN_NONE };
@@ -789,8 +788,8 @@ parse_shift_expression (ParseData *data, ViviCodeValue **value,
 }
 
 static ParseStatus
-parse_relational_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_relational_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_LESS_THAN,
     TOKEN_GREATER_THAN, /*TOKEN_LESS_THAN_OR_EQUAL,
@@ -801,8 +800,8 @@ parse_relational_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_equality_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_equality_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_EQUAL,
     /*TOKEN_NOT_EQUAL,*/ TOKEN_STRICT_EQUAL, /*TOKEN_NOT_STRICT_EQUAL,*/
@@ -813,8 +812,8 @@ parse_equality_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_bitwise_and_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_bitwise_and_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_BITWISE_AND,
     TOKEN_NONE };
@@ -824,8 +823,8 @@ parse_bitwise_and_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_bitwise_xor_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_bitwise_xor_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_BITWISE_XOR,
     TOKEN_NONE };
@@ -835,8 +834,8 @@ parse_bitwise_xor_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_bitwise_or_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_bitwise_or_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_BITWISE_OR,
     TOKEN_NONE };
@@ -846,8 +845,8 @@ parse_bitwise_or_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_logical_and_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_logical_and_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_LOGICAL_AND,
     TOKEN_NONE };
@@ -857,8 +856,8 @@ parse_logical_and_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_logical_or_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_logical_or_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   static const ViviCompilerScannerToken tokens[] = { TOKEN_LOGICAL_OR,
     TOKEN_NONE };
@@ -868,8 +867,8 @@ parse_logical_or_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_conditional_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_conditional_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   ParseStatus status;
   //ViviCodeStatement *if_statement, *else_statement;
@@ -919,8 +918,8 @@ parse_conditional_expression (ParseData *data,
 }
 
 static ParseStatus
-parse_assignment_expression (ParseData *data,
-    ViviCodeValue **value, ViviCodeStatement **statement)
+parse_assignment_expression (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   ParseStatus status;
   ViviCodeValue *right;
@@ -1034,8 +1033,7 @@ static ParseStatus
 parse_statement (ParseData *data, ViviCodeStatement **statement);
 
 static ParseStatus
-parse_if_statement (ParseData *data,
-    ViviCodeStatement **statement)
+parse_if_statement (ParseData *data, ViviCodeStatement **statement)
 {
   ParseStatus status;
   ViviCodeValue *condition;
@@ -1139,8 +1137,7 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
 }
 
 static ParseStatus
-parse_empty_statement (ParseData *data,
-    ViviCodeStatement **statement)
+parse_empty_statement (ParseData *data, ViviCodeStatement **statement)
 {
   *statement = NULL;
 
@@ -1191,8 +1188,8 @@ parse_variable_statement (ParseData *data, ViviCodeStatement **statement)
   if (!check_token (data, TOKEN_VAR))
     return CANCEL (TOKEN_VAR);
 
-  status = parse_statement_list (data, parse_variable_declaration,
-      statement, TOKEN_COMMA);
+  status = parse_statement_list (data, parse_variable_declaration, statement,
+      TOKEN_COMMA);
   if (status != STATUS_OK)
     return FAIL (status);
 
@@ -1270,8 +1267,7 @@ parse_function_declaration (ParseData *data, ViviCodeStatement **statement)
     return FAIL (TOKEN_PARENTHESIS_LEFT);
   }
 
-  status =
-    parse_value_list (data, parse_identifier, &arguments, TOKEN_COMMA);
+  status = parse_value_list (data, parse_identifier, &arguments, TOKEN_COMMA);
   if (status == STATUS_FAIL)
     return status;
 
@@ -1287,8 +1283,7 @@ parse_function_declaration (ParseData *data, ViviCodeStatement **statement)
     return FAIL (TOKEN_BRACE_LEFT);
   }
 
-  status = parse_statement_list (data, parse_source_element, &body,
-      STATUS_OK);
+  status = parse_statement_list (data, parse_source_element, &body, STATUS_OK);
   if (status == STATUS_FAIL) {
     g_object_unref (identifier);
     free_value_list (arguments);
@@ -1337,8 +1332,8 @@ parse_program (ParseData *data, ViviCodeStatement **statement)
 
   *statement = NULL;
 
-  status = parse_statement_list (data, parse_source_element, statement,
-      STATUS_OK);
+  status =
+    parse_statement_list (data, parse_source_element, statement, STATUS_OK);
   if (status != STATUS_OK)
     return FAIL_CHILD (status);
 
@@ -1355,9 +1350,8 @@ parse_program (ParseData *data, ViviCodeStatement **statement)
 // parsing
 
 static ParseStatus
-parse_statement_list (ParseData *data,
-    ParseStatementFunction function, ViviCodeStatement **block,
-    guint separator)
+parse_statement_list (ParseData *data, ParseStatementFunction function,
+    ViviCodeStatement **block, guint separator)
 {
   ViviCodeStatement *statement;
   ParseStatus status;

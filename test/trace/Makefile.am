@@ -965,6 +965,15 @@ EXTRA_DIST = \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \
+	empty-string-text-extent-5.swf \
+	empty-string-text-extent-5.swf.trace \
+	empty-string-text-extent-6.swf \
+	empty-string-text-extent-6.swf.trace \
+	empty-string-text-extent-7.swf \
+	empty-string-text-extent-7.swf.trace \
+	empty-string-text-extent-8.swf \
+	empty-string-text-extent-8.swf.trace \
+	empty-string-text-extent.as \
 	emptymovie-frames-bytes-5.swf \
 	emptymovie-frames-bytes-5.swf.trace \
 	emptymovie-frames-bytes-6.swf \

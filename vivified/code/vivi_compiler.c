@@ -1110,8 +1110,10 @@ parse_expression_statement (ViviCompilerScanner *scanner,
 
   if (!check_token (scanner, TOKEN_SEMICOLON)) {
     g_object_unref (value);
-    g_object_unref (*statement);
-    *statement = NULL;
+    if (*statement != NULL) {
+      g_object_unref (*statement);
+      *statement = NULL;
+    }
     return TOKEN_SEMICOLON;
   }
 
@@ -1233,8 +1235,7 @@ parse_source_element (ViviCompilerScanner *scanner, ViviCodeStatement **statemen
 static int
 parse_function_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **statement)
 {
-  //ViviCodeStatement *function;
-  ViviCodeValue *identifier;
+  ViviCodeValue *function, *identifier;
   ViviCodeValue **arguments;
   ViviCodeStatement *body;
   int expected;
@@ -1289,10 +1290,10 @@ parse_function_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **st
     return TOKEN_BRACE_RIGHT;
   }
 
-  /*function = vivi_code_function_new (arguments, body);
+  function = vivi_code_function_new ();
+  vivi_code_function_set_body (VIVI_CODE_FUNCTION (function), body);
   *statement = vivi_compiler_assignment_new (VIVI_CODE_VALUE (identifier),
-      VIVI_CODE_VALUE (function));*/
-  *statement = vivi_compiler_empty_statement_new ();
+      VIVI_CODE_VALUE (function));
 
   g_object_unref (identifier);
   free_value_list (arguments);
@@ -1389,7 +1390,7 @@ parse_value_list (ViviCompilerScanner *scanner, ParseValueFunction function,
   g_assert (function != NULL);
   g_assert (list != NULL);
 
-  **list = NULL;
+  *list = NULL;
 
   expected = function (scanner, &value);
   if (expected != TOKEN_NONE)

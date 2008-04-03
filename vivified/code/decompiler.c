@@ -39,7 +39,7 @@ decode_script (gpointer scriptp, gpointer unused)
   ViviCodePrinter *printer;
 
   g_print ("/* %s */\n", script->name);
-  fun = vivi_code_function_new (scriptp);
+  fun = vivi_code_function_new_from_script (scriptp);
   printer = vivi_code_text_printer_new ();
 
   vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (fun));

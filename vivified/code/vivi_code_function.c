@@ -24,6 +24,7 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_code_function.h"
+#include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
 
 #include "vivi_decompiler.h"
@@ -35,7 +36,6 @@ vivi_code_function_dispose (GObject *object)
 {
   ViviCodeFunction *function = VIVI_CODE_FUNCTION (object);
 
-  swfdec_script_unref (function->script);
   if (function->body)
     g_object_unref (function->body);
 
@@ -49,10 +49,11 @@ vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
   guint i;
 
   vivi_code_printer_print (printer, "function (");
-  for (i = 0; i < function->script->n_arguments; i++) {
+  for (i = 0; i < function->n_arguments; i++) {
     if (i != 0)
       vivi_code_printer_print (printer, ", ");
-    vivi_code_printer_print (printer, function->script->arguments[i].name);
+    vivi_code_printer_print_token (printer,
+	VIVI_CODE_TOKEN (&function->arguments[i]));
   }
   vivi_code_printer_print (printer, ") {");
   vivi_code_printer_new_line (printer, FALSE);
@@ -93,15 +94,48 @@ vivi_code_function_init (ViviCodeFunction *function)
 }
 
 ViviCodeValue *
-vivi_code_function_new (SwfdecScript *script)
+vivi_code_function_new (void)
+{
+  return VIVI_CODE_VALUE (g_object_new (VIVI_TYPE_CODE_FUNCTION, NULL));
+}
+
+void
+vivi_code_function_set_body (ViviCodeFunction *function,
+    ViviCodeStatement *body)
+{
+  g_return_if_fail (VIVI_IS_CODE_FUNCTION (function));
+  g_return_if_fail (VIVI_IS_CODE_STATEMENT (body));
+
+  function->body = g_object_ref (body);
+}
+
+void
+vivi_code_function_add_argument (ViviCodeFunction *function,
+    ViviCodeValue *argument)
+{
+  g_return_if_fail (VIVI_IS_CODE_FUNCTION (function));
+  g_return_if_fail (VIVI_IS_CODE_VALUE (argument));
+
+  // TODO
+}
+
+ViviCodeValue *
+vivi_code_function_new_from_script (SwfdecScript *script)
 {
   ViviCodeFunction *function;
+  guint i;
 
   g_return_val_if_fail (script != NULL, NULL);
 
   function = g_object_new (VIVI_TYPE_CODE_FUNCTION, NULL);
-  function->script = swfdec_script_ref (script);
   function->body = vivi_decompile_script (script);
+
+  for (i = 0; i < script->n_arguments; i++) {
+    ViviCodeValue *argument =
+      vivi_code_constant_new_string (script->arguments[i].name);
+    vivi_code_function_add_argument (function, argument);
+    g_object_unref (argument);
+  }
 
   return VIVI_CODE_VALUE (function);
 }

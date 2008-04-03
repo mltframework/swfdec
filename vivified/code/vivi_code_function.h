@@ -40,7 +40,8 @@ struct _ViviCodeFunction
 {
   ViviCodeValue		value;
 
-  SwfdecScript *	script;
+  guint			n_arguments;  		/* number of arguments */
+  ViviCodeValue *	arguments;		/* arguments or NULL if none */
   ViviCodeStatement *	body;
 };
 
@@ -51,7 +52,13 @@ struct _ViviCodeFunctionClass
 
 GType			vivi_code_function_get_type   	(void);
 
-ViviCodeValue *		vivi_code_function_new		(SwfdecScript *	script);
+ViviCodeValue *		vivi_code_function_new		(void);
+ViviCodeValue *		vivi_code_function_new_from_script (SwfdecScript *	script);
+
+void			vivi_code_function_set_body	(ViviCodeFunction *	function,
+							 ViviCodeStatement *	body);
+void			vivi_code_function_add_argument	(ViviCodeFunction *	function,
+							 ViviCodeValue *	argument);
 
 
 G_END_DECLS

@@ -581,7 +581,7 @@ vivi_decompile_define_function (ViviDecompilerBlock *block, ViviDecompilerState 
   script->n_arguments = n_args;
   script->arguments = args;
 
-  value = vivi_code_function_new (script);
+  value = vivi_code_function_new_from_script (script);
   /* attach the function */
   if (*function_name == '\0') {
     vivi_decompiler_state_push (state, value);

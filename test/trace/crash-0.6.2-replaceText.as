@@ -4,5 +4,7 @@ createTextField ("t", 0, 0, 0, 200, 150);
 
 t.replaceText (0, 0, "Hello World");
 trace (t.text);
+t.replaceText (0, 5, "Hi");
+trace (t.text);
 
 getURL ("fscommand:quit", "");

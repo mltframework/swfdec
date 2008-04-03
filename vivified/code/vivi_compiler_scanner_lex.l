@@ -6,6 +6,9 @@ digit			[0-9]
 identifier_start	[$_a-zA-Z]
 identifier_part		[$_a-zA-Z0-9]
 
+/* r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)? */
+/* '\.[0-9]+([eE][+-][0-9]+)?' */
+
 %%
 
 [ \t\n\r]		/* skip whitespace */

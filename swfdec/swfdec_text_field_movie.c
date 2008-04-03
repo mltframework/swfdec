@@ -1619,7 +1619,34 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   guint len;
   gsize start, end;
 
+  if (!text->editable)
+    return;
+
+  swfdec_text_field_movie_get_selection (text, &start, &end);
+
   switch (keycode) {
+    case SWFDEC_KEY_LEFT:
+      if (swfdec_text_field_movie_has_cursor (text)) {
+	if (start > 0) {
+	  start = g_utf8_prev_char (text->input->str + start) - text->input->str;
+	  swfdec_text_field_movie_set_cursor (text, start, start);
+	} /* else beep */
+      } else {
+	swfdec_text_field_movie_set_cursor (text, start, start);
+      }
+      swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
+      return;
+    case SWFDEC_KEY_RIGHT:
+      if (swfdec_text_field_movie_has_cursor (text)) {
+	if (start > 0) {
+	  start = g_utf8_next_char (text->input->str + start) - text->input->str;
+	  swfdec_text_field_movie_set_cursor (text, start, start);
+	} /* else beep */
+      } else {
+	swfdec_text_field_movie_set_cursor (text, end, end);
+      }
+      swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
+      return;
     default:
       break;
   }
@@ -1629,7 +1656,6 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   len = g_unichar_to_utf8 (character, insert);
   insert[len] = 0;
   swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-  swfdec_text_field_movie_get_selection (text, &start, &end);
   swfdec_text_field_movie_replace_text (text, start, end, insert);
   swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
 }

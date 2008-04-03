@@ -1533,8 +1533,8 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
 	 (iter != NULL &&
 	  ((SwfdecFormatIndex *) iter->data)->index_ <= end_index)) &&
 	text->formats->next != NULL) {
+      text->formats = g_slist_remove (text->formats, findex);
       g_free (findex);
-      text->formats = g_slist_remove (text->formats, iter->data);
       continue;
     }
     /* adapt indexes: remove deleted part, add to-be inserted text */

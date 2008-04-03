@@ -42,6 +42,43 @@ G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_ACTOR)
 #define EXTRA_MARGIN 2
 #define BULLET_MARGIN 36
 
+/*** CURSOR API ***/
+
+static gsize
+swfdec_text_field_movie_get_cursor (SwfdecTextFieldMovie *text)
+{
+  return text->cursor_start;
+}
+
+static gboolean
+swfdec_text_field_movie_has_cursor (SwfdecTextFieldMovie *text)
+{
+  return text->cursor_start == text->cursor_end;
+}
+#define swfdec_text_field_movie_has_selection(text) (!swfdec_text_field_movie_has_cursor (text))
+
+static void
+swfdec_text_field_movie_get_selection (SwfdecTextFieldMovie *text, gsize *start, gsize *end)
+{
+  if (start)
+    *start = MIN (text->cursor_start, text->cursor_end);
+  if (end)
+    *end = MAX (text->cursor_start, text->cursor_end);
+}
+
+static void
+swfdec_text_field_movie_set_cursor (SwfdecTextFieldMovie *text, gsize start, gsize end)
+{
+  g_return_if_fail (start <= text->input->len);
+  g_return_if_fail (end <= text->input->len);
+
+  text->cursor_start = start;
+  text->cursor_end = end;
+  /* FIXME: should we invalidate here? */
+}
+
+/*** VFUNCS ***/
+
 static void
 swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
@@ -507,6 +544,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
   GArray *layouts;
   guint i;
   SwfdecParagraph *paragraphs_free;
+  gsize cursor_start, cursor_end;
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
@@ -521,6 +559,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
   }
 
   layouts = g_array_new (TRUE, TRUE, sizeof (SwfdecLayout));
+  swfdec_text_field_movie_get_selection (text, &cursor_start, &cursor_end);
 
   for (i = 0; paragraphs[i].blocks != NULL; i++)
   {
@@ -603,8 +642,8 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       // add background for selection
       layout.index_ = paragraphs[i].index_ + block->index_ + skip;
       layout.index_end = layout.index_ + length;
-      if (text->selectable && text->cursor != text->selection_end &&
-	  layout.index_ < MAX (text->cursor, text->selection_end)) {
+      if (swfdec_text_field_movie_has_selection (text) &&
+	  layout.index_ < cursor_end) {
 	SwfdecColor color;
 	PangoAttribute *attr_fg, *attr_bg;
 
@@ -620,14 +659,12 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	attr_bg = pango_attr_background_new (SWFDEC_COLOR_R (color) << 8,
 	    SWFDEC_COLOR_G (color) << 8, SWFDEC_COLOR_B (color) << 8);
 
-	if (MIN (text->cursor, text->selection_end) > layout.index_) {
-	  attr_fg->start_index = attr_bg->start_index =
-	    MIN (text->cursor, text->selection_end) - layout.index_;
+	if (cursor_start > layout.index_) {
+	  attr_fg->start_index = attr_bg->start_index = cursor_start - layout.index_;
 	} else {
 	  attr_fg->start_index = attr_bg->start_index = 0;
 	}
-	attr_bg->end_index = attr_fg->end_index =
-	  MAX (text->cursor, text->selection_end) - layout.index_;
+	attr_bg->end_index = attr_fg->end_index = cursor_end - layout.index_;
 
 	pango_attr_list_insert (attr_list, attr_fg);
 	pango_attr_list_insert (attr_list, attr_bg);
@@ -1439,7 +1476,7 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
-  guint index_;
+  gsize index_;
   gboolean direct, before;
 
   if (button != 0) {
@@ -1455,16 +1492,13 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
 
   text->mouse_pressed = TRUE;
-  text->cursor = index_;
-  if (!before && text->cursor < text->input->len)
-    text->cursor++;
-  text->selection_end = text->cursor;
+  if (!before && index_ < text->input->len)
+    index_++;
+  swfdec_text_field_movie_set_cursor (text, index_, index_);
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 
   if (direct) {
-    text->character_pressed = index_ + 1;
-    if (before)
-      text->character_pressed--;
+    text->character_pressed = index_;
   } else {
     text->character_pressed = 0;
   }
@@ -1487,10 +1521,10 @@ swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
 
   direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
 
-  text->selection_end = index_;
+  if (!before && index_ < text->input->len)
+    index_++;
 
-  if (!before && text->selection_end < text->input->len)
-    text->selection_end++;
+  swfdec_text_field_movie_set_cursor (text, swfdec_text_field_movie_get_cursor (text), index_);
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 }
@@ -1540,7 +1574,9 @@ static void
 swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint character)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
-  char insert[6];
+  char insert[7];
+  guint len;
+  gsize start, end;
 
   switch (keycode) {
     default:
@@ -1549,8 +1585,12 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
 
   if (character == 0)
     return;
-  g_unichar_to_utf8 (character, insert);
-  swfdec_text_field_movie_replace_text (text, text->cursor, text->cursor, insert);
+  len = g_unichar_to_utf8 (character, insert);
+  insert[len] = 0;
+  swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
+  swfdec_text_field_movie_get_selection (text, &start, &end);
+  swfdec_text_field_movie_replace_text (text, start, end, insert);
+  swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
 }
 
 static void
@@ -1918,6 +1958,19 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   text->input = g_string_erase (text->input, start_index,
       end_index - start_index);
   text->input = g_string_insert (text->input, start_index, str);
+
+  if (text->cursor_start >= start_index) {
+    if (text->cursor_start <= end_index)
+      text->cursor_start = start_index + len;
+    else
+      text->cursor_start += end_index - start_index + len;
+  }
+  if (text->cursor_end >= start_index) {
+    if (text->cursor_end <= end_index)
+      text->cursor_end = start_index + len;
+    else
+      text->cursor_end += end_index - start_index + len;
+  }
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);

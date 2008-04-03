@@ -1007,7 +1007,7 @@ parse_expression (ParseData *data, ViviCodeValue **value,
   if (status != STATUS_OK)
     return status;
 
-  do {
+  while (TRUE) {
     *statement =
       vivi_compiler_combine_statements (2, *statement, statement_one);
 
@@ -1016,14 +1016,14 @@ parse_expression (ParseData *data, ViviCodeValue **value,
 
     statement_one = NULL;
     status = parse_assignment_expression (data, value, &statement_one);
-    if (status == STATUS_FAIL) {
+    if (status != STATUS_OK) {
       g_object_unref (*value);
       *value = NULL;
       g_object_unref (*statement);
       *statement = NULL;
-      return status;
+      return FAIL_CHILD (status);
     }
-  } while (status == STATUS_OK);
+  }
 
   return STATUS_OK;
 }

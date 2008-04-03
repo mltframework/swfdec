@@ -1603,13 +1603,19 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
 static void
 swfdec_text_field_movie_focus_in (SwfdecActor *actor)
 {
-  //SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+  
+  if (text->editable)
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (actor));
 }
 
 static void
 swfdec_text_field_movie_focus_out (SwfdecActor *actor)
 {
-  //SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+  
+  if (text->editable)
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (actor));
 }
 
 static void
@@ -1648,13 +1654,17 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
       if (swfdec_text_field_movie_has_cursor (text)) {
 	start = BACKWARD (text, start);
       }
+      swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
       swfdec_text_field_movie_replace_text (text, start, end, "");
+      swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
       return;
     case SWFDEC_KEY_DELETE:
       if (swfdec_text_field_movie_has_cursor (text)) {
 	end = FORWARD (text, end);
       }
+      swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
       swfdec_text_field_movie_replace_text (text, start, end, "");
+      swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
       return;
     default:
       break;

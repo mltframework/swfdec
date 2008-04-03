@@ -72,9 +72,13 @@ swfdec_text_field_movie_set_cursor (SwfdecTextFieldMovie *text, gsize start, gsi
   g_return_if_fail (start <= text->input->len);
   g_return_if_fail (end <= text->input->len);
 
+  if (text->cursor_start == start &&
+      text->cursor_end == end)
+    return;
+
   text->cursor_start = start;
   text->cursor_end = end;
-  /* FIXME: should we invalidate here? */
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 }
 
 /*** VFUNCS ***/
@@ -1536,7 +1540,6 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   if (!before && index_ < text->input->len)
     index_++;
   swfdec_text_field_movie_set_cursor (text, index_, index_);
-  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 
   if (direct) {
     text->character_pressed = index_;
@@ -1566,8 +1569,6 @@ swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
     index_++;
 
   swfdec_text_field_movie_set_cursor (text, swfdec_text_field_movie_get_cursor (text), index_);
-
-  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 }
 
 static void
@@ -1634,7 +1635,6 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
       } else {
 	swfdec_text_field_movie_set_cursor (text, start, start);
       }
-      swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
       return;
     case SWFDEC_KEY_RIGHT:
       if (swfdec_text_field_movie_has_cursor (text)) {
@@ -1645,7 +1645,6 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
       } else {
 	swfdec_text_field_movie_set_cursor (text, end, end);
       }
-      swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
       return;
     default:
       break;

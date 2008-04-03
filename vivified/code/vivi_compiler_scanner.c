@@ -163,7 +163,7 @@ static const struct {
   { TOKEN_WITH, "with" },
 
   // reserved keywords
-  { TOKEN_FUTURE, "RESERVED KEYWORD" },
+  { TOKEN_RESERVED_KEYWORD, "RESERVED KEYWORD" },
 
   { TOKEN_LAST, NULL }
 };

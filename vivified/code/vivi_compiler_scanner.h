@@ -137,7 +137,7 @@ typedef enum {
   TOKEN_WITH,
 
   // reserved keywords
-  TOKEN_FUTURE,
+  TOKEN_RESERVED_KEYWORD,
 
   TOKEN_LAST
 } ViviCompilerScannerToken;

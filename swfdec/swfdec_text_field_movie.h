@@ -41,8 +41,8 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 typedef struct {
   PangoLayout *		layout;		// layout to render
 
-  // the byte offset where this layout's text starts in text->input->str
-  guint			index_;
+  guint			index_;		// byte offset where this layout's text starts in text->input->str
+  guint			index_end;	// and the offset where it ends
 
   int			offset_x;	// x offset to apply before rendering
 
@@ -87,10 +87,23 @@ typedef struct {
 struct _SwfdecTextFieldMovie {
   SwfdecActor		actor;
 
-  SwfdecTextField *	text;		/* the text_field object we render */
+  SwfdecRect		extents;	/* the extents we were assigned / calculated during autosize */
 
+  /* properties copied from textfield */
+  gboolean		html;
+  gboolean		editable;
+  gboolean		password;
+  int			max_chars;
+  gboolean		selectable;
+  gboolean		embed_fonts;
+  gboolean		word_wrap;
+  gboolean		multiline;
+  SwfdecAutoSize	auto_size;
+  gboolean		border;
+  gboolean		background;
+ 
   GString *		input;
-  char *		asterisks; /* bunch of asterisks that we display when password mode is enabled */
+  char *		asterisks;	/* bunch of asterisks that we display when password mode is enabled */
   guint			asterisks_length;
   gboolean		input_html;	/* whether orginal input was given as HTML */
 
@@ -100,7 +113,6 @@ struct _SwfdecTextFieldMovie {
   GSList *		formats;
 
   gboolean		condense_white;
-  gboolean		embed_fonts;
 
   SwfdecAsObject *	style_sheet;
   const char *		style_sheet_input; /* saved input, so it can be used to apply stylesheet again */
@@ -119,8 +131,8 @@ struct _SwfdecTextFieldMovie {
   SwfdecColor		background_color;
 
   gboolean		mouse_pressed;
-  guint			cursor;
-  guint			selection_end;
+  gsize			cursor_start;		/* index of cursor (aka insertion point) in ->input */
+  gsize			cursor_end;		/* end of cursor, either equal to cursor_start or if text selected smaller or bigger */
   guint			character_pressed;
 
   // FIXME: Temporary using image surface, until there is a way to get cairo_t

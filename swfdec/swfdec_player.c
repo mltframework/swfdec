@@ -1063,6 +1063,22 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const ch
   }
 }
 
+void
+swfdec_player_invalidate_focusrect (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+
+  if (swfdec_rect_is_empty (&priv->focusrect))
+    return;
+
+  swfdec_player_invalidate (player, &priv->focusrect);
+  swfdec_rect_init_empty (&priv->focusrect);
+}
+
 /**
  * swfdec_player_grab_focus:
  * @player: the player
@@ -1110,11 +1126,10 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
     klass = SWFDEC_ACTOR_GET_CLASS (prev);
     if (klass->focus_out)
       klass->focus_out (prev);
-    if (swfdec_actor_has_focusrect (prev))
-      swfdec_movie_invalidate_last (SWFDEC_MOVIE (prev));
   }
   priv->focus_previous = prev;
   priv->focus = actor;
+  swfdec_player_invalidate_focusrect (player);
   if (actor) {
     swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
     swfdec_as_object_call (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_onSetFocus,
@@ -1123,8 +1138,6 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
     klass = SWFDEC_ACTOR_GET_CLASS (actor);
     if (klass->focus_in)
       klass->focus_in (actor);
-    if (swfdec_actor_has_focusrect (actor))
-      swfdec_movie_invalidate_last (SWFDEC_MOVIE (actor));
   }
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Selection, SWFDEC_AS_STR_onSetFocus, 2, vals);
 }
@@ -1382,17 +1395,40 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
 static int
 swfdec_player_focus_sort (gconstpointer ca, gconstpointer cb)
 {
-  const SwfdecMovie *a = ca;
-  const SwfdecMovie *b = cb;
+  SwfdecMovie *a = SWFDEC_MOVIE (ca);
+  SwfdecMovie *b = SWFDEC_MOVIE (cb);
+  double xa, ya, xb, yb;
+  int result;
+  char *na, *nb;
 
-  if (a->extents.y0 < b->extents.y0)
+  swfdec_movie_update (a);
+  swfdec_movie_update (b);
+
+  xa = a->extents.x0;
+  ya = a->extents.y0;
+  swfdec_movie_local_to_global (a->parent, &xa, &ya);
+  xb = b->extents.x0;
+  yb = b->extents.y0;
+  swfdec_movie_local_to_global (b->parent, &xb, &yb);
+
+  if (ya < yb)
     return 1;
-  else if (a->extents.y0 > b->extents.y0)
+  else if (ya > yb)
     return -1;
 
-  if (a->extents.x0 < b->extents.x0)
+  if (xa < xb)
     return 1;
-  else if (a->extents.x0 > b->extents.x0)
+  else if (xa > xb)
+    return -1;
+
+  na = swfdec_movie_get_path (a, TRUE);
+  nb = swfdec_movie_get_path (b, TRUE);
+  result = strcmp (na, nb);
+  g_free (na);
+  g_free (nb);
+  if (result < 0)
+    return 1;
+  if (result > 0)
     return -1;
 
   if (a->depth < b->depth)
@@ -1407,80 +1443,86 @@ swfdec_player_focus_sort (gconstpointer ca, gconstpointer cb)
     return 1;
 }
 
-static gboolean
-swfdec_movie_can_tab (SwfdecMovie *movie)
+static GList *
+swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
 {
-  if (!SWFDEC_IS_ACTOR (movie))
-    return FALSE;
+  SwfdecAsValue val;
+  const GList *walk;
+  GList *ret = NULL;
 
-  if (movie->parent == NULL)
-    return FALSE;
+  for (walk = current; walk; walk = walk->next) {
+    SwfdecActor *actor = walk->data;
 
-  /* FIXME */
-  return TRUE;
-}
+    if (!SWFDEC_IS_ACTOR (actor))
+      continue;
 
-static gboolean
-swfdec_player_handle_tab_list (SwfdecPlayer *player, SwfdecMovie *movie, SwfdecMovie *stop, gboolean forward)
-{
-  SwfdecPlayerPrivate *priv;
-  SwfdecMovie *cur = NULL;
-  GList *list, *walk;
-
-  priv = player->priv;
-  if (movie) {
-    list = g_list_copy (movie->list);
-  } else {
-    list = g_list_copy (priv->roots);
-  }
-
-  list = g_list_sort (list, swfdec_player_focus_sort);
-  if (!forward)
-    list = g_list_reverse (list);
-  if (stop) {
-    walk = g_list_find (list, stop);
-    g_assert (walk);
-    walk = walk->next;
-  } else {
-    walk = list;
-  }
-  do {
-    if (walk == NULL) {
-      if (movie) {
-	if (swfdec_player_handle_tab_list (player, movie->parent, movie, forward))
-	  goto success;
+    swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
+    if (SWFDEC_MOVIE (actor)->parent != NULL) {
+      swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabEnabled, &val);
+      if (swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
+	swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabEnabled, &val);
+	ret = g_list_prepend (ret, actor);
+      } else if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val) && 
+	  swfdec_actor_get_mouse_events (actor)) {
+	ret = g_list_prepend (ret, actor);
       }
-      if (cur != NULL)
-	walk = list;
-      else
-	break;
     }
-    cur = walk->data;
-    if (swfdec_movie_can_tab (cur)) {
-      swfdec_player_grab_focus (player, SWFDEC_ACTOR (cur));
-      goto success;
+
+    if (SWFDEC_MOVIE (actor)->parent == NULL)
+      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
+    else
+      swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabChildren, &val);
+
+    if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val) ||
+	swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
+      GList *list;
+      swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
+      list = swfdec_player_get_tab_movies (player, SWFDEC_MOVIE (actor)->list);
+      if (list)
+	ret = g_list_concat (list, ret);
+    } else {
+      swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
     }
-    walk = walk->next;
-  } while (cur != stop);
-
-  g_list_free (list);
-  return FALSE;
-
-success:
-  g_list_free (list);
-  return TRUE;
+  }
+  return ret;
 }
 
 static void
 swfdec_player_handle_tab (SwfdecPlayer *player, gboolean forward)
 {
-  /* FIXME: add tabIndex handling here */
-  if (player->priv->focus) {
-    SwfdecMovie *focus = SWFDEC_MOVIE (player->priv->focus);
-    swfdec_player_handle_tab_list (player, focus->parent, focus, forward);
+  SwfdecPlayerPrivate *priv = player->priv;
+  GList *walk, *list;
+  GList *free_list = NULL;
+  SwfdecActor *actor;
+
+  if (priv->focus_list) {
+    list = priv->focus_list;
   } else {
-    swfdec_player_handle_tab_list (player, NULL, NULL, forward);
+    free_list = swfdec_player_get_tab_movies (player, priv->roots);
+    free_list = g_list_sort (free_list, swfdec_player_focus_sort);
+    list = free_list;
   }
+
+  if (priv->focus) {
+    walk = g_list_find (list, priv->focus);
+  } else {
+    walk = NULL;
+  }
+  if (walk == NULL) {
+    walk = forward ? list : g_list_last (list);
+    actor = walk ? walk->data : NULL;
+  } else {
+    walk = forward ? walk->next : walk->prev;
+    if (walk == NULL) {
+      SWFDEC_FIXME ("try tabbing out of the flash movie here");
+      walk = forward ? list : g_list_last (list);
+    }
+    actor = walk ? walk->data : NULL;
+  }
+  swfdec_player_grab_focus (player, actor);
+
+  if (free_list)
+    g_list_free (free_list);
 }
 
 static void
@@ -1782,6 +1824,27 @@ swfdec_player_update_movies (SwfdecPlayer *player)
   priv->invalid_pending = NULL;
 }
 
+static void
+swfdec_player_update_focusrect (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv = player->priv;
+  SwfdecMovie *movie;
+
+  if (!swfdec_rect_is_empty (&priv->focusrect))
+    return;
+
+  if (priv->focus == NULL ||
+      !swfdec_actor_has_focusrect (priv->focus))
+    return;
+
+  movie = SWFDEC_MOVIE (priv->focus);
+  g_assert (movie->state == SWFDEC_MOVIE_UP_TO_DATE);
+  priv->focusrect = movie->extents;
+  if (movie->parent)
+    swfdec_movie_rect_local_to_global (movie->parent, &priv->focusrect);
+  swfdec_player_invalidate (player, &priv->focusrect);
+}
+
 /* used for breakpoints */
 void
 swfdec_player_unlock_soft (SwfdecPlayer *player)
@@ -1792,6 +1855,7 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
   g_timer_stop (player->priv->runtime);
   swfdec_player_update_movies (player);
   swfdec_player_update_mouse_cursor (player);
+  swfdec_player_update_focusrect (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);
 }
@@ -2739,18 +2803,21 @@ static void
 swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *inval)
 {
 #define LINE_WIDTH (3.0)
-  SwfdecMovie *movie = SWFDEC_MOVIE (player->priv->focus);
-  SwfdecRect rect = movie->extents;
+  SwfdecPlayerPrivate *priv;
   double w, h;
+  SwfdecRect rect;
 
+  priv = player->priv;
+  if (swfdec_rect_is_empty (&priv->focusrect))
+    return;
+
+  rect = priv->focusrect;
   cairo_save (cr);
   /* I wonder why this has to be yellow... */
   cairo_set_source_rgb (cr, 1.0, 1.0, 0.0);
-  if (movie->parent)
-    swfdec_movie_rect_local_to_global (movie->parent, &rect);
+  cairo_set_line_width (cr, LINE_WIDTH);
   swfdec_player_global_to_stage (player, &rect.x0, &rect.y0);
   swfdec_player_global_to_stage (player, &rect.x1, &rect.y1);
-  cairo_set_line_width (cr, LINE_WIDTH);
   w = MAX (rect.x1 - rect.x0 - LINE_WIDTH, 0);
   h = MAX (rect.y1 - rect.y0 - LINE_WIDTH, 0);
   cairo_rectangle (cr, rect.x0 + LINE_WIDTH / 2, rect.y0 + LINE_WIDTH / 2, w, h);
@@ -2817,8 +2884,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
   }
   cairo_restore (cr);
   /* NB: we render the focusrect after restoring, so the focusrect doesn't scale */
-  if (priv->focus && swfdec_actor_has_focusrect (priv->focus))
-    swfdec_player_render_focusrect (player, cr, &real);
+  swfdec_player_render_focusrect (player, cr, &real);
 
   SWFDEC_INFO ("=== %p: END RENDER ===", player);
 }

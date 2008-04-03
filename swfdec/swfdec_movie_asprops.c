@@ -464,10 +464,10 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 
   if (b != actor->focusrect) {
     SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
-    gboolean had_focusrect = swfdec_actor_has_focusrect (priv->focus);
+    gboolean had_focusrect = priv->focus ? swfdec_actor_has_focusrect (priv->focus) : FALSE;
     actor->focusrect = b;
-    if (had_focusrect != swfdec_actor_has_focusrect (priv->focus))
-      swfdec_movie_invalidate_last (SWFDEC_MOVIE (priv->focus));
+    if (priv->focus && had_focusrect != swfdec_actor_has_focusrect (priv->focus))
+      swfdec_player_invalidate_focusrect (SWFDEC_PLAYER (cx));
   }
 }
 

@@ -500,5 +500,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("descent")
   SWFDEC_AS_CONSTANT_STRING ("textFieldHeight")
   SWFDEC_AS_CONSTANT_STRING ("textFieldWidth")
+  SWFDEC_AS_CONSTANT_STRING ("tabChildren")
+  SWFDEC_AS_CONSTANT_STRING ("tabIndex")
   /* add more here */
 ;

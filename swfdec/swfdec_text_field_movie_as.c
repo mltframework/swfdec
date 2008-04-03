@@ -92,7 +92,7 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   swfdec_text_field_movie_set_text (text, value, FALSE);
 
   if (text->variable != NULL) {
-    if (text->text->html) {
+    if (text->html) {
       swfdec_text_field_movie_set_listen_variable_text (text,
 	  swfdec_text_field_movie_get_html_text (text));
     } else {
@@ -110,7 +110,7 @@ swfdec_text_field_movie_get_html (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->html);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->html);
 }
 
 static void
@@ -124,7 +124,7 @@ swfdec_text_field_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  text->text->html = value;
+  text->html = value;
 
   // FIXME: resize? invalidate?
 }
@@ -140,7 +140,7 @@ swfdec_text_field_movie_get_htmlText (SwfdecAsContext *cx,
 
   if (text->style_sheet_input) {
     SWFDEC_AS_VALUE_SET_STRING (ret, text->style_sheet_input);
-  } else if (text->text->html) {
+  } else if (text->html) {
     SWFDEC_AS_VALUE_SET_STRING (ret,
 	swfdec_text_field_movie_get_html_text (text));
   } else {
@@ -159,10 +159,10 @@ swfdec_text_field_movie_set_htmlText (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
-  swfdec_text_field_movie_set_text (text, value, text->text->html);
+  swfdec_text_field_movie_set_text (text, value, text->html);
 
   if (text->variable != NULL) {
-    if (text->text->html) {
+    if (text->html) {
       swfdec_text_field_movie_set_listen_variable_text (text,
 	  swfdec_text_field_movie_get_html_text (text));
     } else {
@@ -222,8 +222,8 @@ swfdec_text_field_movie_get_maxChars (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text->max_chars != 0) {
-    SWFDEC_AS_VALUE_SET_INT (ret, text->text->max_chars);
+  if (text->max_chars != 0) {
+    SWFDEC_AS_VALUE_SET_INT (ret, text->max_chars);
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
   }
@@ -242,7 +242,7 @@ swfdec_text_field_movie_set_maxChars (SwfdecAsContext *cx,
     return;
 
   swfdec_as_value_to_number (cx, &argv[0]);
-  text->text->max_chars = swfdec_as_value_to_integer (cx, &argv[0]);
+  text->max_chars = swfdec_as_value_to_integer (cx, &argv[0]);
 }
 
 static void
@@ -254,7 +254,7 @@ swfdec_text_field_movie_get_multiline (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->multiline);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->multiline);
 }
 
 static void
@@ -269,7 +269,7 @@ swfdec_text_field_movie_set_multiline (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  text->text->multiline = value;
+  text->multiline = value;
 }
 
 static void
@@ -318,7 +318,7 @@ swfdec_text_field_movie_get_selectable (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->selectable);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->selectable);
 }
 
 static void
@@ -333,7 +333,7 @@ swfdec_text_field_movie_set_selectable (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  text->text->selectable = value;
+  text->selectable = value;
 
   // FIXME: invalidate
 }
@@ -347,7 +347,7 @@ swfdec_text_field_movie_do_get_type (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (text->text->editable) {
+  if (text->editable) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_input);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_dynamic);
@@ -368,10 +368,11 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   if (!g_strcasecmp (value, SWFDEC_AS_STR_input)) {
-    text->text->editable = TRUE;
+    text->editable = TRUE;
   } else if (!g_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
-    text->text->editable = FALSE;
+    text->editable = FALSE;
   }
+  /* else ignore */
 
   // FIXME: invalidate
 }
@@ -456,7 +457,7 @@ swfdec_text_field_movie_get_background (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->background);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->background);
 }
 
 static void
@@ -471,8 +472,8 @@ swfdec_text_field_movie_set_background (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->text->background != value) {
-    text->text->background = value;
+  if (text->background != value) {
+    text->background = value;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
@@ -519,7 +520,7 @@ swfdec_text_field_movie_get_border (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->border);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->border);
 }
 
 static void
@@ -534,8 +535,8 @@ swfdec_text_field_movie_set_border (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->text->border != value) {
-    text->text->border = value;
+  if (text->border != value) {
+    text->border = value;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
@@ -628,7 +629,7 @@ swfdec_text_field_movie_get_maxhscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (!text->text->word_wrap) {
+  if (!text->word_wrap) {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, text->hscroll_max);
   } else {
     SWFDEC_AS_VALUE_SET_NUMBER (ret, 0);
@@ -717,7 +718,7 @@ swfdec_text_field_movie_get_autoSize (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  switch (text->text->auto_size) {
+  switch (text->auto_size) {
     case SWFDEC_AUTO_SIZE_NONE:
       SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_none);
       break;
@@ -751,9 +752,9 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
 
   if (SWFDEC_AS_VALUE_IS_BOOLEAN (&argv[0])) {
     if (SWFDEC_AS_VALUE_GET_BOOLEAN (&argv[0])) {
-      text->text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
+      text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
     } else {
-      text->text->auto_size = SWFDEC_AUTO_SIZE_NONE;
+      text->auto_size = SWFDEC_AUTO_SIZE_NONE;
     }
     return;
   }
@@ -761,18 +762,18 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
   swfdec_as_value_to_number (cx, &argv[0]);
   s = swfdec_as_value_to_string (cx, &argv[0]);
 
-  old = text->text->auto_size;
+  old = text->auto_size;
   if (!g_ascii_strcasecmp (s, "none")) {
-    text->text->auto_size = SWFDEC_AUTO_SIZE_NONE;
+    text->auto_size = SWFDEC_AUTO_SIZE_NONE;
   } else if (!g_ascii_strcasecmp (s, "left")) {
-    text->text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
+    text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
   } else if (!g_ascii_strcasecmp (s, "right")) {
-    text->text->auto_size = SWFDEC_AUTO_SIZE_RIGHT;
+    text->auto_size = SWFDEC_AUTO_SIZE_RIGHT;
   } else if (!g_ascii_strcasecmp (s, "center")) {
-    text->text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
+    text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
   }
 
-  if (text->text->auto_size != old) {
+  if (text->auto_size != old) {
     swfdec_text_field_movie_auto_size (text);
     // FIXME: fix scrolling
   }
@@ -787,7 +788,7 @@ swfdec_text_field_movie_get_password (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->password);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->password);
 }
 
 static void
@@ -802,8 +803,8 @@ swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->text->password != value) {
-    text->text->password = value;
+  if (text->password != value) {
+    text->password = value;
     if (!value && text->asterisks != NULL) {
       g_free (text->asterisks);
       text->asterisks = NULL;
@@ -822,7 +823,7 @@ swfdec_text_field_movie_get_wordWrap (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->word_wrap);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->word_wrap);
 }
 
 static void
@@ -837,8 +838,8 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->text->word_wrap != value) {
-    text->text->word_wrap = value;
+  if (text->word_wrap != value) {
+    text->word_wrap = value;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
     swfdec_text_field_movie_auto_size (text);
     // special case: don't set scrolling
@@ -857,7 +858,7 @@ swfdec_text_field_movie_get_embedFonts (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->text->embed_fonts);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->embed_fonts);
 }
 
 static void
@@ -872,10 +873,10 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (!text->text->embed_fonts && value)
+  if (!text->embed_fonts && value)
     SWFDEC_FIXME ("Using embed fonts in TextField not supported");
 
-  text->text->embed_fonts = value;
+  text->embed_fonts = value;
 
   // FIXME: resize
 }

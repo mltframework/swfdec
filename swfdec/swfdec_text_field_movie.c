@@ -1006,13 +1006,21 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     if (layouts[i].index_ <= cursor && 
 	(layouts[i].index_end > cursor || (layouts[i].index_end == cursor && cursor == text->input->len)) &&
 	(line == NULL || layouts[i].index_ + line->start_index >= cursor)) {
+      SwfdecTextFormat *format = ((SwfdecFormatIndex *) g_slist_last (text->formats))->format;
       PangoRectangle cursor_rect;
+
       pango_layout_get_cursor_pos (layouts[i].layout, 
 	  swfdec_text_field_movie_get_cursor (text) - layouts[i].index_,
 	  &cursor_rect, NULL);
 
       cairo_save (cr);
-      cairo_set_line_width (cr, 1.0);
+      if (format && format->values_set & (1 << SWFDEC_TEXT_FORMAT_COLOR))
+	swfdec_color_set_source (cr, format->color | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF));
+      else
+	swfdec_color_set_source (cr, text->format_new->color | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF));
+
+      /* FIXME: what's the propwer line width here? */
+      cairo_set_line_width (cr, SWFDEC_DOUBLE_TO_TWIPS (0.5));
       cairo_move_to (cr, x + layout->offset_x + rect.x, y - skipped);
       cairo_rel_move_to (cr, (double) cursor_rect.x / PANGO_SCALE, (double) cursor_rect.y / PANGO_SCALE);
       cairo_rel_line_to (cr, (double) cursor_rect.width / PANGO_SCALE, (double) cursor_rect.height / PANGO_SCALE);

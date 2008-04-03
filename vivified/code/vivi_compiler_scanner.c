@@ -159,6 +159,7 @@ static const struct {
   { TOKEN_TYPEOF, "typeof" },
   { TOKEN_VAR, "var" },
   { TOKEN_VOID, "void" },
+  { TOKEN_WHILE, "while" },
   { TOKEN_WITH, "with" },
 
   // reserved keywords
@@ -196,6 +197,8 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
     scanner->next_token = yylex ();
     scanner->next_value = yylval;
   }
+
+  g_print (":: %s\n", vivi_compiler_scanner_token_name (scanner->next_token));
 }
 
 ViviCompilerScanner *

@@ -2,15 +2,19 @@
 #include "vivi_compiler_scanner_lex_include.h"
 %}
 
+%option			noyywrap
+
 digit			[0-9]
 identifier_start	[$_a-zA-Z]
 identifier_part		[$_a-zA-Z0-9]
+line_terminator		[\n\r]
 
 /* r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)? */
 /* '\.[0-9]+([eE][+-][0-9]+)?' */
 
 %%
 
+"//".*{line_terminator}	/* skip single line comments */
 [ \t\n\r]		/* skip whitespace */
 <<EOF>>			{ return TOKEN_EOF; }
 
@@ -102,6 +106,7 @@ identifier_part		[$_a-zA-Z0-9]
 "typeof"		{ return TOKEN_TYPEOF; }
 "var"			{ return TOKEN_VAR; }
 "void"			{ return TOKEN_VOID; }
+"while"			{ return TOKEN_WHILE; }
 "with"			{ return TOKEN_WITH; }
 
 "abstract"		{ return TOKEN_FUTURE; }
@@ -138,13 +143,13 @@ identifier_part		[$_a-zA-Z0-9]
 
 {digit}+		{ yylval.v_number = atoi(yytext);
 			  return TOKEN_NUMBER; }
+"\"".*"\""		{ yylval.v_string = g_strndup (yytext + 1, yyleng - 2);
+			  return TOKEN_STRING; }
 
 {identifier_start}({identifier_part})* {
-			  yylval.v_identifier = (char *)strdup(yytext);
+			  yylval.v_identifier = g_strdup (yytext);
 			  return TOKEN_IDENTIFIER; }
 
 .			{ printf("Unknown character [%c]\n",yytext[0]);
 			  return TOKEN_UNKNOWN; }
 %%
-
-int yywrap(void){return 1;}

@@ -133,6 +133,7 @@ typedef enum {
   TOKEN_TYPEOF,
   TOKEN_VAR,
   TOKEN_VOID,
+  TOKEN_WHILE,
   TOKEN_WITH,
 
   // reserved keywords

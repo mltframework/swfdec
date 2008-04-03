@@ -709,7 +709,7 @@ parse_operator_expression (ParseData *data,
     return status;
 
   for (i = 0; tokens[i] != STATUS_OK; i++) {
-    if (check_token (data, tokens[i])) {
+    while (check_token (data, tokens[i])) {
       status = next_parse_function (data, &right, &statement_right);
       if (status != STATUS_OK) {
 	g_object_unref (*value);

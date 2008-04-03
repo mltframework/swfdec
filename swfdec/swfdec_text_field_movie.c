@@ -840,6 +840,14 @@ swfdec_text_field_movie_line_position (SwfdecLayout *layouts, int line_num,
     *layout_num = i;
 }
 
+static gboolean
+swfdec_text_field_movie_has_focus (SwfdecTextFieldMovie *text)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context);
+
+  return swfdec_player_has_focus (player, SWFDEC_ACTOR (text));
+}
+
 static void
 swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval)
@@ -851,6 +859,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecParagraph *paragraphs;
   int i, y, x, skip;
   gboolean first;
+  gsize cursor;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
   g_return_if_fail (cr != NULL);
@@ -907,6 +916,12 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   swfdec_text_field_movie_line_position (layouts,
       MIN (text->scroll, text->scroll_max), NULL, &i, &skip);
+
+  if (text->editable && swfdec_text_field_movie_has_focus (text) &&
+      swfdec_text_field_movie_has_cursor (text))
+    cursor = swfdec_text_field_movie_get_cursor (text);
+  else
+    cursor = G_MAXSIZE;
 
   for (; layouts[i].layout != NULL && y < limit.y1; i++)
   {
@@ -965,6 +980,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     do {
       pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
       pango_extents_to_pixels (NULL, &rect);
+      line = pango_layout_iter_get_line_readonly (iter_line);
 
       if (!first && y + rect.y + rect.height > movie->original_extents.y1)
 	break;
@@ -983,9 +999,26 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       cairo_rel_move_to (cr, layout->offset_x + rect.x,
 	  pango_layout_iter_get_baseline (iter_line) / PANGO_SCALE - skipped);
 
-      line = pango_layout_iter_get_line_readonly (iter_line);
       pango_cairo_show_layout_line (cr, line);
+      line = NULL;
     } while (pango_layout_iter_next_line (iter_line));
+
+    if (layouts[i].index_ <= cursor && 
+	(layouts[i].index_end > cursor || (layouts[i].index_end == cursor && cursor == text->input->len)) &&
+	(line == NULL || layouts[i].index_ + line->start_index >= cursor)) {
+      PangoRectangle cursor_rect;
+      pango_layout_get_cursor_pos (layouts[i].layout, 
+	  swfdec_text_field_movie_get_cursor (text) - layouts[i].index_,
+	  &cursor_rect, NULL);
+
+      cairo_save (cr);
+      cairo_set_line_width (cr, 1.0);
+      cairo_move_to (cr, x + layout->offset_x + rect.x, y - skipped);
+      cairo_rel_move_to (cr, (double) cursor_rect.x / PANGO_SCALE, (double) cursor_rect.y / PANGO_SCALE);
+      cairo_rel_line_to (cr, (double) cursor_rect.width / PANGO_SCALE, (double) cursor_rect.height / PANGO_SCALE);
+      cairo_stroke (cr);
+      cairo_restore (cr);
+    }
 
     y += layout->height - skipped;
 

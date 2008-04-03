@@ -1115,6 +1115,10 @@ parse_expression_statement (ViviCompilerScanner *scanner,
     return TOKEN_SEMICOLON;
   }
 
+  *statement = vivi_compiler_combine_statements (2, *statement,
+      vivi_code_value_statement_new (value));
+  g_object_unref (value);
+
   return TOKEN_NONE;
 }
 

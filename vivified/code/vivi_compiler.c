@@ -131,6 +131,51 @@ vivi_compiler_combine_statements (guint count, ...)
   return VIVI_CODE_STATEMENT (block);
 }
 
+static ViviCodeStatement *
+vivi_compiler_assignment_new (ViviCodeValue *left, ViviCodeValue *right)
+{
+  ViviCodeValue *from;
+
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (left), NULL);
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (right), NULL);
+
+  from = NULL;
+
+  if (VIVI_IS_CODE_GET (left)) {
+    ViviCodeGet *get = VIVI_CODE_GET (left);
+
+    if (get->from != NULL) {
+      from = g_object_ref (get->from);
+      left = g_object_ref (get->name);
+    }
+  }
+
+  if (VIVI_IS_CODE_GET (left)) {
+    ViviCodeGet *get = VIVI_CODE_GET (left);
+
+    if (get->from == NULL)
+      left = g_object_ref (get->name);
+  }
+
+  return vivi_code_assignment_new (from, left, right);
+}
+
+static ViviCodeValue *
+vivi_compiler_get_new (ViviCodeValue *from, ViviCodeValue *name)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (from), NULL);
+  g_return_val_if_fail (VIVI_IS_CODE_VALUE (name), NULL);
+
+  if (VIVI_IS_CODE_GET (name)) {
+    ViviCodeGet *get = VIVI_CODE_GET (name);
+
+    if (get->from == NULL)
+      name = g_object_ref (get->name);
+  }
+
+  return vivi_code_get_new (from, name);
+}
+
 // values
 
 static int
@@ -460,7 +505,7 @@ parse_member_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
     }
 
     tmp = *value;
-    *value = vivi_code_get_new (tmp, VIVI_CODE_VALUE (member));
+    *value = vivi_compiler_get_new (tmp, member);
     g_object_unref (tmp);
     g_object_unref (member);
   } while (TRUE);
@@ -903,10 +948,10 @@ parse_assignment_expression (ViviCompilerScanner *scanner,
       }
 
       if (operator != NULL) {
-	assignment = vivi_code_assignment_new (NULL, *value,
+	assignment = vivi_compiler_assignment_new (*value,
 	    vivi_code_binary_new_name (*value, right, operator));
       } else {
-	assignment = vivi_code_assignment_new (NULL, *value, right);
+	assignment = vivi_compiler_assignment_new (*value, right);
       }
       g_object_unref (right);
 
@@ -930,6 +975,7 @@ parse_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
   int expected;
 
   *statement = NULL;
+  statement_one = NULL;
 
   expected = parse_assignment_expression (scanner, value, &statement_one);
   if (expected != TOKEN_NONE)
@@ -942,6 +988,7 @@ parse_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
     if (!check_token (scanner, TOKEN_COMMA))
       break;
 
+    statement_one = NULL;
     expected = parse_assignment_expression (scanner, value, &statement_one);
     if (expected != TOKEN_NONE && expected >= 0) {
       g_object_unref (*value);

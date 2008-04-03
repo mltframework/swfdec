@@ -260,7 +260,7 @@ vivi_compiler_scanner_unexp_token (ViviCompilerScanner *scanner,
 }
 
 void
-vivi_compiler_scanner_unexp_token_string (ViviCompilerScanner *scanner,
+vivi_compiler_scanner_unexp_token_custom (ViviCompilerScanner *scanner,
     const char *expected)
 {
   vivi_compiler_scanner_print_unexp_token_message (scanner,

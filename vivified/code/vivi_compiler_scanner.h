@@ -168,6 +168,8 @@ struct _ViviCompilerScanner
   ViviCompilerScannerToken	next_token;
   ViviCompilerScannerValue	value;
   ViviCompilerScannerValue	next_value;
+
+  ViviCompilerScannerToken	expected;
 };
 
 struct _ViviCompilerScannerClass
@@ -187,7 +189,7 @@ guint				vivi_compiler_scanner_cur_line		(ViviCompilerScanner *scanner);
 
 void				vivi_compiler_scanner_unexp_token	(ViviCompilerScanner *	scanner,
 									 ViviCompilerScannerToken expected);
-void				vivi_compiler_scanner_unexp_token_string (ViviCompilerScanner *	scanner,
+void				vivi_compiler_scanner_unexp_token_custom (ViviCompilerScanner *	scanner,
 									 const char *		expected);
 
 

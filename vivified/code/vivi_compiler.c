@@ -400,7 +400,7 @@ parse_variable_declaration (ViviCompilerScanner *scanner,
     statement_right = NULL;
   }
 
-  assignment = vivi_code_assignment_new (NULL, identifier, value);
+  assignment = vivi_compiler_assignment_new (identifier, value);
   vivi_code_assignment_set_local (VIVI_CODE_ASSIGNMENT (assignment), TRUE);
 
   *statement =
@@ -601,8 +601,8 @@ parse_postfix_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
 
   temporary = vivi_compiler_get_temporary_new ();
   *statement = vivi_compiler_combine_statements (3, *statement,
-      vivi_code_assignment_new (NULL, temporary, *value),
-      vivi_code_assignment_new (NULL, *value, operation));
+      vivi_compiler_assignment_new (temporary, *value),
+      vivi_compiler_assignment_new (*value, operation));
   g_object_unref (operation);
 
   g_object_unref (*value);
@@ -649,7 +649,7 @@ parse_unary_expression (ViviCompilerScanner *scanner, ViviCodeValue **value,
       g_object_unref (one);
 
       *statement = vivi_compiler_combine_statements (2, *statement,
-	  vivi_code_assignment_new (NULL, *value, tmp));
+	  vivi_compiler_assignment_new (*value, tmp));
       g_object_unref (tmp);
 
       return TOKEN_NONE;
@@ -1290,7 +1290,7 @@ parse_function_declaration (ViviCompilerScanner *scanner, ViviCodeStatement **st
   }
 
   /*function = vivi_code_function_new (arguments, body);
-  *statement = vivi_code_assignment_new (NULL, VIVI_CODE_VALUE (identifier),
+  *statement = vivi_compiler_assignment_new (VIVI_CODE_VALUE (identifier),
       VIVI_CODE_VALUE (function));*/
   *statement = vivi_compiler_empty_statement_new ();
 

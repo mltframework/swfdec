@@ -1619,6 +1619,8 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   char insert[7];
   guint len;
   gsize start, end;
+#define BACKWARD(text, _index) ((_index) == 0 ? 0 : (gsize) (g_utf8_prev_char ((text)->input->str + (_index)) - (text)->input->str))
+#define FORWARD(text, _index) ((_index) == (text)->input->len ? (_index) : (gsize) (g_utf8_next_char ((text)->input->str + (_index)) - (text)->input->str))
 
   if (!text->editable)
     return;
@@ -1628,23 +1630,31 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   switch (keycode) {
     case SWFDEC_KEY_LEFT:
       if (swfdec_text_field_movie_has_cursor (text)) {
-	if (start > 0) {
-	  start = g_utf8_prev_char (text->input->str + start) - text->input->str;
-	  swfdec_text_field_movie_set_cursor (text, start, start);
-	} /* else beep */
+	start = BACKWARD (text, start);
+	swfdec_text_field_movie_set_cursor (text, start, start);
       } else {
 	swfdec_text_field_movie_set_cursor (text, start, start);
       }
       return;
     case SWFDEC_KEY_RIGHT:
       if (swfdec_text_field_movie_has_cursor (text)) {
-	if (start > 0) {
-	  start = g_utf8_next_char (text->input->str + start) - text->input->str;
-	  swfdec_text_field_movie_set_cursor (text, start, start);
-	} /* else beep */
+	start = FORWARD (text, start);
+	swfdec_text_field_movie_set_cursor (text, start, start);
       } else {
 	swfdec_text_field_movie_set_cursor (text, end, end);
       }
+      return;
+    case SWFDEC_KEY_BACKSPACE:
+      if (swfdec_text_field_movie_has_cursor (text)) {
+	start = BACKWARD (text, start);
+      }
+      swfdec_text_field_movie_replace_text (text, start, end, "");
+      return;
+    case SWFDEC_KEY_DELETE:
+      if (swfdec_text_field_movie_has_cursor (text)) {
+	end = FORWARD (text, end);
+      }
+      swfdec_text_field_movie_replace_text (text, start, end, "");
       return;
     default:
       break;

@@ -54,6 +54,7 @@ enum {
   ERROR_TOKEN_LITERAL = TOKEN_LAST + 1,
   ERROR_TOKEN_PROPERTY_NAME,
   ERROR_TOKEN_PRIMARY_EXPRESSION,
+  ERROR_TOKEN_ITERATION_STATEMENT,
   ERROR_TOKEN_EXPRESSION_STATEMENT,
   ERROR_TOKEN_STATEMENT
 };
@@ -65,6 +66,7 @@ static const struct {
   { ERROR_TOKEN_LITERAL, "LITERAL" },
   { ERROR_TOKEN_PROPERTY_NAME, "PROPERTY NAME" },
   { ERROR_TOKEN_PRIMARY_EXPRESSION, "PRIMARY EXPRESSION" },
+  { ERROR_TOKEN_ITERATION_STATEMENT, "ITERATION STATEMENT" },
   { ERROR_TOKEN_EXPRESSION_STATEMENT, "EXPRESSION STATEMENT" },
   { ERROR_TOKEN_STATEMENT, "STATEMENT" },
   { TOKEN_LAST, NULL }
@@ -1137,6 +1139,55 @@ static ParseStatus
 parse_statement (ParseData *data, ViviCodeStatement **statement);
 
 static ParseStatus
+parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
+{
+  ParseStatus status;
+  ViviCodeValue *condition;
+  ViviCodeStatement *pre_statement, *loop_statement;
+
+  *statement = NULL;
+
+  // TODO: for, do while
+
+  if (check_token (data, TOKEN_WHILE)) {
+    if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
+      return FAIL (TOKEN_PARENTHESIS_LEFT);
+
+    status = parse_expression (data, &condition, &pre_statement);
+    if (status != STATUS_OK)
+      return FAIL_CHILD (status);
+
+    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+      g_object_unref (condition);
+      if (pre_statement != NULL)
+	g_object_unref (pre_statement);
+      return FAIL (TOKEN_PARENTHESIS_RIGHT);
+    }
+
+    status = parse_statement (data, &loop_statement); 
+    if (status != STATUS_OK) {
+      g_object_unref (condition);
+      if (pre_statement != NULL)
+	g_object_unref (pre_statement);
+      return FAIL_CHILD (status);
+    }
+
+    *statement = vivi_code_loop_new ();
+    vivi_code_loop_set_condition (VIVI_CODE_LOOP (*statement), condition);
+    g_object_unref (condition);
+    vivi_code_loop_set_statement (VIVI_CODE_LOOP (*statement), loop_statement);
+    g_object_unref (loop_statement);
+
+    *statement =
+      vivi_compiler_combine_statements (2, pre_statement, *statement);
+
+    return STATUS_OK;
+  } else {
+    return CANCEL (ERROR_TOKEN_ITERATION_STATEMENT);
+  }
+}
+
+static ParseStatus
 parse_if_statement (ParseData *data, ViviCodeStatement **statement)
 {
   ParseStatus status;
@@ -1317,7 +1368,7 @@ parse_statement (ParseData *data, ViviCodeStatement **statement)
     parse_empty_statement,
     parse_expression_statement,
     parse_if_statement,
-    //parse_iteration_statement,
+    parse_iteration_statement,
     //parse_continue_statement,
     //parse_break_statement,
     //parse_return_statement,

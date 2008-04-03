@@ -141,7 +141,7 @@ line_terminator		[\n\r]
 "transient"		{ return TOKEN_FUTURE; }
 "volatile"		{ return TOKEN_FUTURE; }
 
-{digit}+		{ yylval.v_number = atoi(yytext);
+[-+]*{digit}+		{ yylval.v_number = atoi(yytext);
 			  return TOKEN_NUMBER; }
 "\"".*"\""		{ yylval.v_string = g_strndup (yytext + 1, yyleng - 2);
 			  return TOKEN_STRING; }

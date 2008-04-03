@@ -1079,7 +1079,7 @@ parse_if_statement (ViviCompilerScanner *scanner,
   g_object_unref (if_statement);
 
   if (else_statement != NULL) {
-    vivi_code_if_set_if (VIVI_CODE_IF (*statement), else_statement);
+    vivi_code_if_set_else (VIVI_CODE_IF (*statement), else_statement);
     g_object_unref (else_statement);
   }
 

@@ -80,14 +80,16 @@ typedef enum {
 
 typedef struct {
   ViviCompilerScanner *		scanner;
-  guint				expected;
+  guint				expected[2];
   const char *			custom_error;
 } ParseData;
 
-#define FAIL(x) (data->expected = (x), STATUS_FAIL)
+#define FAIL_OR(x, y) (data->expected[0] = (x), data->expected[1] = (y), STATUS_FAIL)
+#define FAIL(x) FAIL_OR(x,TOKEN_NONE)
 #define FAIL_CHILD(x) STATUS_FAIL
 #define FAIL_CUSTOM(x) (data->custom_error = (x), STATUS_FAIL)
-#define CANCEL(x) (data->expected = (x), STATUS_CANCEL)
+#define CANCEL_OR(x, y) (data->expected[0] = (x), data->expected[1] = (y), STATUS_CANCEL)
+#define CANCEL(x) CANCEL_OR(x, TOKEN_NONE)
 #define CANCEL_CUSTOM(x) (data->custom_error = (x), STATUS_CANCEL)
 
 typedef ParseStatus (*ParseValueFunction) (ParseData *data, ViviCodeValue **value);
@@ -1013,7 +1015,7 @@ parse_conditional_expression (ParseData *data, ViviCodeValue **value,
   status = parse_assignment_expression (data, &if_statement);
   if (status != STATUS_OK) {
     g_object_unref (value);
-    return FAIL (status);
+    return FAIL_CHILD (status);
   }
 
   if (!check_token (data, TOKEN_COLON)) {
@@ -1026,7 +1028,7 @@ parse_conditional_expression (ParseData *data, ViviCodeValue **value,
   if (status != STATUS_OK) {
     g_object_unref (value);
     g_object_unref (if_statement);
-    return FAIL (status);
+    return FAIL_CHILD (status);
   }
 
   *statement = vivi_code_if_new (value);
@@ -1229,76 +1231,120 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
       return FAIL_CHILD (status);
     }
   } else if (check_token (data, TOKEN_FOR)) {
+    ViviCodeValue *pre_value;
+    ViviCodeStatement *post_statement;
+
     if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
       return FAIL (TOKEN_PARENTHESIS_LEFT);
 
     if (check_token (data, TOKEN_VAR)) {
-      return FAIL (TOKEN_VAR);
+      // FIXME: no in
+      status = parse_statement_list (data, parse_variable_declaration,
+	  &pre_statement, TOKEN_COMMA);
+      if (status != STATUS_OK)
+	return FAIL_CHILD (status);
+      // FIXME: ugly
+      // If there was only one VariableDeclaration, get the name for pre_value
+      g_assert (VIVI_IS_CODE_BLOCK (pre_statement));
+      if (vivi_code_block_get_n_statements (VIVI_CODE_BLOCK (pre_statement))
+	  == 1) {
+	ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (
+	    vivi_code_block_get_statement (VIVI_CODE_BLOCK (pre_statement), 0));
+	g_assert (assignment->from == NULL);
+	pre_value = vivi_code_get_new (NULL, assignment->name);
+      } else {
+	pre_value = NULL;
+      }
     } else {
-      ViviCodeValue *pre_value;
-
       if (!check_token (data, TOKEN_SEMICOLON)) {
+	// FIXME: no in
 	status = parse_expression (data, &pre_value, &pre_statement);
 	if (status != STATUS_OK)
 	  return FAIL_CHILD (status);
-      }
-
-      if (check_token (data, TOKEN_SEMICOLON)) {
-	ViviCodeStatement *post_statement;
-
-	g_object_unref (pre_value);
-	if (!check_token (data, TOKEN_SEMICOLON)) {
-	  status = parse_expression (data, &condition, &condition_statement);
-	  if (status != STATUS_OK)
-	    return FAIL_CHILD (status);
-
-	  if (!check_token (data, TOKEN_SEMICOLON)) {
-	    g_object_unref (pre_statement);
-	    g_object_unref (condition);
-	    g_object_unref (condition_statement);
-	    return FAIL (TOKEN_SEMICOLON);
-	  }
-	}
-
-	status = parse_expression (data, &pre_value, &post_statement);
-	if (status != STATUS_OK) {
-	  g_object_unref (pre_statement);
-	  g_object_unref (condition);
-	  g_object_unref (condition_statement);
-	}
-	g_object_unref (pre_value);
-
-	if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-	  g_object_unref (pre_statement);
-	  g_object_unref (condition);
-	  g_object_unref (condition_statement);
-	  g_object_unref (post_statement);
-	  return FAIL (TOKEN_PARENTHESIS_RIGHT);
-	}
-
-	status = parse_statement (data, &loop_statement);
-	if (status != STATUS_OK) {
-	  g_object_unref (pre_statement);
-	  g_object_unref (condition);
-	  g_object_unref (condition_statement);
-	  g_object_unref (post_statement);
-	  return FAIL_CHILD (status);
-	}
-
-	loop_statement = vivi_compiler_combine_statements (2,
-	    loop_statement, post_statement);
-      } else if (check_token (data, TOKEN_IN)) {
-	if (!vivi_compiler_value_is_left_hand_side (pre_value)) {
-	  g_object_unref (pre_value);
-	  g_object_unref (pre_statement);
-	  return FAIL_CUSTOM ("Invalid left hand side expression for in");
-	}
-	FAIL (TOKEN_IN);
       } else {
-	// TODO: or TOKEN_IN
-	return FAIL (TOKEN_SEMICOLON);
+	pre_value = NULL;
+	pre_statement = NULL;
       }
     }
+
+    if (check_token (data, TOKEN_SEMICOLON)) {
+      if (pre_value != NULL)
+	g_object_unref (pre_value);
+      if (!check_token (data, TOKEN_SEMICOLON)) {
+	status = parse_expression (data, &condition, &condition_statement);
+	if (status != STATUS_OK)
+	  return FAIL_CHILD (status);
+
+	if (!check_token (data, TOKEN_SEMICOLON)) {
+	  if (pre_statement != NULL)
+	    g_object_unref (pre_statement);
+	  g_object_unref (condition);
+	  g_object_unref (condition_statement);
+	  return FAIL (TOKEN_SEMICOLON);
+	}
+      }
+
+      status = parse_expression (data, &pre_value, &post_statement);
+      if (status != STATUS_OK) {
+	if (pre_statement != NULL)
+	  g_object_unref (pre_statement);
+	g_object_unref (condition);
+	g_object_unref (condition_statement);
+	return FAIL_CHILD (status);
+      }
+      g_object_unref (pre_value);
+    // FIXME: or one in declaration
+    } else if (pre_value != NULL && check_token (data, TOKEN_IN)) {
+      post_statement = NULL;
+
+      if (!vivi_compiler_value_is_left_hand_side (pre_value)) {
+	g_object_unref (pre_value);
+	if (pre_statement != NULL)
+	  g_object_unref (pre_statement);
+	return FAIL_CUSTOM ("Invalid left hand side expression for in");
+      }
+
+      g_object_unref (pre_value);
+      if (pre_statement != NULL)
+	g_object_unref (pre_statement);
+      return FAIL_CUSTOM ("for (... in ...) has not been implemented yet");
+    } else {
+      ViviCompilerScannerToken fail_token;
+
+      if (pre_value != NULL) {
+	fail_token = TOKEN_IN;
+	g_object_unref (pre_value);
+      } else {
+	fail_token = TOKEN_NONE;
+      }
+
+      if (pre_statement != NULL)
+	g_object_unref (pre_statement);
+
+      return FAIL_OR (TOKEN_SEMICOLON, fail_token);
+    }
+
+    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+      if (pre_statement != NULL)
+	g_object_unref (pre_statement);
+      g_object_unref (condition);
+      g_object_unref (condition_statement);
+      g_object_unref (post_statement);
+      return FAIL (TOKEN_PARENTHESIS_RIGHT);
+    }
+
+    status = parse_statement (data, &loop_statement);
+    if (status != STATUS_OK) {
+      if (pre_statement != NULL)
+	g_object_unref (pre_statement);
+      g_object_unref (condition);
+      g_object_unref (condition_statement);
+      g_object_unref (post_statement);
+      return FAIL_CHILD (status);
+    }
+
+    loop_statement = vivi_compiler_combine_statements (2,
+	loop_statement, post_statement);
   } else {
     return CANCEL (ERROR_TOKEN_ITERATION_STATEMENT);
   }
@@ -1481,7 +1527,7 @@ parse_variable_statement (ParseData *data, ViviCodeStatement **statement)
   status = parse_statement_list (data, parse_variable_declaration, statement,
       TOKEN_COMMA);
   if (status != STATUS_OK)
-    return FAIL (status);
+    return FAIL_CHILD (status);
 
   if (!check_token (data, TOKEN_SEMICOLON)) {
     g_object_unref (*statement);
@@ -1810,7 +1856,8 @@ vivi_compile_file (FILE *file, const char *input_name)
   g_return_val_if_fail (file != NULL, NULL);
 
   data.scanner = vivi_compiler_scanner_new (file);
-  data.expected = TOKEN_NONE;
+  data.expected[0] = TOKEN_NONE;
+  data.expected[1] = TOKEN_NONE;
   data.custom_error = NULL;
 
   status = parse_program (&data, &statement);
@@ -1819,18 +1866,19 @@ vivi_compile_file (FILE *file, const char *input_name)
   g_assert (status >= 0);
 
   if (status != STATUS_OK) {
+    // FIXME: multiple expected tokens
     vivi_compiler_scanner_get_next_token (data.scanner);
     if (data.custom_error != NULL) {
       g_printerr ("%s\n", data.custom_error);
-    } else if (data.expected < TOKEN_LAST) {
-      vivi_compiler_scanner_unexp_token (data.scanner, data.expected);
+    } else if (data.expected[0] < TOKEN_LAST) {
+      vivi_compiler_scanner_unexp_token (data.scanner, data.expected[0]);
     } else {
       guint i;
       const char *name;
 
       name = NULL;
       for (i = 0; error_names[i].token != TOKEN_LAST; i++) {
-	if (error_names[i].token == data.expected) {
+	if (error_names[i].token == data.expected[0]) {
 	  name = error_names[i].name;
 	  break;
 	}

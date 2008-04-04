@@ -286,6 +286,10 @@ swfdec_actor_queue_script (SwfdecActor *actor, SwfdecEventType condition)
     case SWFDEC_EVENT_KEY_PRESS:
       importance = 2;
       break;
+    case SWFDEC_EVENT_CHANGED:
+    case SWFDEC_EVENT_SCROLL:
+      importance = 3;
+      break;
     default:
       g_return_if_reached ();
   }

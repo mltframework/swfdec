@@ -46,8 +46,13 @@ typedef enum _SwfdecEventType {
   SWFDEC_EVENT_DRAG_OVER = 15,
   SWFDEC_EVENT_DRAG_OUT = 16,
   SWFDEC_EVENT_KEY_PRESS = 17,
-  SWFDEC_EVENT_CONSTRUCT = 18
+  SWFDEC_EVENT_CONSTRUCT = 18,
+  /* non-loadable events go here */
+  SWFDEC_EVENT_CHANGED = 19,
+  SWFDEC_EVENT_SCROLL = 20,
 } SwfdecEventType;
+
+#define SWFDEC_EVENT_MASK ((1 << SWFDEC_EVENT_CONSTRUCT) - 1)
 
 const char *		swfdec_event_type_get_name	(SwfdecEventType      type);
 

@@ -43,6 +43,7 @@
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
 #include "vivi_code_return.h"
+#include "vivi_code_throw.h"
 #include "vivi_code_trace.h"
 #include "vivi_code_unary.h"
 #include "vivi_code_value_statement.h"
@@ -57,6 +58,7 @@ enum {
   ERROR_TOKEN_IDENTIFIER,
   ERROR_TOKEN_PROPERTY_NAME,
   ERROR_TOKEN_PRIMARY_EXPRESSION,
+  ERROR_TOKEN_EXPRESSION,
   ERROR_TOKEN_ITERATION_STATEMENT,
   ERROR_TOKEN_EXPRESSION_STATEMENT,
   ERROR_TOKEN_STATEMENT
@@ -70,6 +72,7 @@ static const struct {
   { ERROR_TOKEN_IDENTIFIER, "IDENTIFIER" },
   { ERROR_TOKEN_PROPERTY_NAME, "PROPERTY NAME" },
   { ERROR_TOKEN_PRIMARY_EXPRESSION, "PRIMARY EXPRESSION" },
+  { ERROR_TOKEN_EXPRESSION, "EXPRESSION" },
   { ERROR_TOKEN_ITERATION_STATEMENT, "ITERATION STATEMENT" },
   { ERROR_TOKEN_EXPRESSION_STATEMENT, "EXPRESSION STATEMENT" },
   { ERROR_TOKEN_STATEMENT, "STATEMENT" },
@@ -99,6 +102,7 @@ typedef struct {
 
 #define FAIL_OR(x, y) (data->expected[0] = (x), data->expected[1] = (y), STATUS_FAIL)
 #define FAIL_LINE_TERMINATOR_OR(x, y) (data->unexpected_line_terminator = TRUE, FAIL_OR(x,y))
+#define FAIL_LINE_TERMINATOR(x) FAIL_LINE_TERMINATOR_OR(x,TOKEN_NONE)
 #define FAIL(x) FAIL_OR(x,TOKEN_NONE)
 #define FAIL_CHILD(x) STATUS_FAIL
 #define FAIL_CUSTOM(x) (data->custom_error = (x), STATUS_FAIL)
@@ -1446,6 +1450,40 @@ parse_break_statement (ParseData *data, ViviCodeStatement **statement)
 }
 
 static ParseStatus
+parse_throw_statement (ParseData *data, ViviCodeStatement **statement)
+{
+  ParseStatus status;
+  ViviCodeValue *value;
+  ViviCodeStatement *expression_statement;
+
+  *statement = NULL;
+
+  if (!check_token (data, TOKEN_THROW))
+    return CANCEL (TOKEN_THROW);
+
+  if (check_line_terminator (data))
+    return FAIL_LINE_TERMINATOR (ERROR_TOKEN_EXPRESSION);
+
+  status = parse_expression (data, &value, &expression_statement);
+  if (status != STATUS_OK)
+    return FAIL_CHILD (status);
+
+  *statement = vivi_code_throw_new (value);
+  g_object_unref (value);
+
+  *statement =
+    vivi_compiler_combine_statements (2, expression_statement, *statement);
+
+  if (!check_token (data, TOKEN_SEMICOLON)) {
+    g_object_unref (*statement);
+    *statement = NULL;
+    return FAIL (TOKEN_SEMICOLON);
+  }
+
+  return STATUS_OK;
+}
+
+static ParseStatus
 parse_return_statement (ParseData *data, ViviCodeStatement **statement)
 {
   *statement = NULL;
@@ -1494,8 +1532,6 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
   ViviCodeStatement *pre_statement, *condition_statement, *loop_statement;
 
   *statement = NULL;
-
-  // TODO: for, do while
 
   pre_statement = NULL;
   condition_statement = NULL;
@@ -1897,7 +1933,7 @@ parse_statement (ParseData *data, ViviCodeStatement **statement)
     parse_return_statement,
     //parse_with_statement,
     //parse_switch_statement,
-    //parse_throw_statement,
+    parse_throw_statement,
     //parse_try_statement,
     NULL
   };

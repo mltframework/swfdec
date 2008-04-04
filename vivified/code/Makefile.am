@@ -37,6 +37,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_return.c \
 	vivi_code_statement.c \
 	vivi_code_text_printer.c \
+	vivi_code_throw.c \
 	vivi_code_token.c \
 	vivi_code_trace.c \
 	vivi_code_unary.c \
@@ -75,6 +76,7 @@ noinst_HEADERS = \
 	vivi_code_return.h \
 	vivi_code_statement.h \
 	vivi_code_text_printer.h \
+	vivi_code_throw.h \
 	vivi_code_token.h \
 	vivi_code_trace.h \
 	vivi_code_unary.h \

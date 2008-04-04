@@ -847,7 +847,7 @@ parse_new_expression (ParseData *data, ViviCodeValue **value,
       return FAIL_CHILD (status);
     if (!VIVI_IS_CODE_FUNCTION_CALL (*value)) {
       ViviCodeValue *tmp = VIVI_CODE_VALUE (*value);
-      *value = vivi_code_function_call_new (NULL, tmp);
+      *value = vivi_compiler_function_call_new (tmp);
       g_object_unref (tmp);
     }
     vivi_code_function_call_set_construct (VIVI_CODE_FUNCTION_CALL (*value),
@@ -877,7 +877,7 @@ parse_left_hand_side_expression (ParseData *data, ViviCodeValue **value,
       return FAIL_CHILD (status);
     if (!VIVI_IS_CODE_FUNCTION_CALL (*value)) {
       ViviCodeValue *tmp = VIVI_CODE_VALUE (*value);
-      *value = vivi_code_function_call_new (NULL, tmp);
+      *value = vivi_compiler_function_call_new (tmp);
       g_object_unref (tmp);
     }
     vivi_code_function_call_set_construct (VIVI_CODE_FUNCTION_CALL (*value),
@@ -1811,6 +1811,7 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
 {
   ParseStatus status;
   ViviCodeValue *value;
+  ViviCodeStatement *last;
 
   *statement = NULL;
 
@@ -1841,6 +1842,26 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
       *statement = NULL;
     }
     return FAIL (TOKEN_SEMICOLON);
+  }
+
+  // add a value statement, if the last statement is not an assignment with the
+  // same value
+  if (VIVI_IS_CODE_BLOCK (*statement)) {
+    ViviCodeBlock *block = VIVI_CODE_BLOCK (*statement);
+
+    last = vivi_code_block_get_statement (block,
+	vivi_code_block_get_n_statements (block) - 1);
+  } else {
+    last = *statement;
+  }
+
+  if (VIVI_IS_CODE_ASSIGNMENT (last)) {
+    ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (last);
+
+    if (assignment->from == NULL && assignment->name == value) {
+      g_object_unref (value);
+      return STATUS_OK;
+    }
   }
 
   *statement = vivi_compiler_combine_statements (2, *statement,

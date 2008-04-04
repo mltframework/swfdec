@@ -519,6 +519,9 @@ swfdec_as_context_dispose (GObject *object)
 
   while (context->stack)
     swfdec_as_stack_pop_segment (context);
+  /* We need to make sure there's no exception here. Otherwise collecting 
+   * frames that are inside a try block will assert */
+  swfdec_as_context_catch (context, NULL);
   swfdec_as_context_collect (context);
   if (context->memory != 0) {
     g_critical ("%zu bytes of memory left over\n", context->memory);

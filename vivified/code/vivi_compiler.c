@@ -39,6 +39,7 @@
 #include "vivi_code_get_url.h"
 #include "vivi_code_goto.h"
 #include "vivi_code_if.h"
+#include "vivi_code_init_array.h"
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
 #include "vivi_code_return.h"
@@ -543,6 +544,59 @@ parse_assignment_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement);
 
 static ParseStatus
+parse_array_literal (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
+{
+  ViviCodeValue *member;
+  ViviCodeStatement *statement_new;
+  ParseStatus status;
+
+  *value = NULL;
+  *statement = NULL;
+
+  if (!check_token (data, TOKEN_BRACKET_LEFT))
+    return CANCEL (TOKEN_BRACKET_LEFT);
+
+  *value = vivi_code_init_array_new ();
+
+  while (TRUE) {
+    if (check_token (data, TOKEN_BRACKET_RIGHT)) {
+      vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (*value),
+	 vivi_code_constant_new_undefined ());
+      break;
+    } else if (check_token (data, TOKEN_COMMA)) {
+      vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (*value),
+	 vivi_code_constant_new_undefined ());
+    } else {
+      status = parse_assignment_expression (data, &member, &statement_new);
+      if (status != STATUS_OK) {
+	if (*statement != NULL) {
+	  g_object_unref (*statement);
+	  *statement = NULL;
+	}
+	return FAIL_CHILD (status);
+      }
+
+      *statement = vivi_compiler_combine_statements (2, *statement,
+	  statement_new);
+
+      vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (*value),
+	  member);
+      g_object_unref (member);
+
+      if (!check_token (data, TOKEN_COMMA)) {
+	if (!check_token (data, TOKEN_BRACKET_RIGHT)) {
+	  return FAIL_OR (TOKEN_BRACKET_RIGHT, TOKEN_COMMA);
+	}
+	break;
+      }
+    }
+  }
+
+  return STATUS_OK;
+}
+
+static ParseStatus
 parse_object_literal (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -665,7 +719,6 @@ parse_primary_expression (ParseData *data, ViviCodeValue **value,
   ParseValueFunction functions[] = {
     parse_identifier,
     parse_literal,
-    //parse_array_literal,
     NULL
   };
 
@@ -691,6 +744,10 @@ parse_primary_expression (ParseData *data, ViviCodeValue **value,
 
 
   status = parse_object_literal (data, value, statement);
+  if (status != STATUS_CANCEL)
+    return status;
+
+  status = parse_array_literal (data, value, statement);
   if (status != STATUS_CANCEL)
     return status;
 

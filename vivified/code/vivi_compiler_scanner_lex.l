@@ -144,7 +144,8 @@ line_terminator		[\n\r]
 
 [-+]*{digit}+		{ yylval.v_number = atoi(yytext);
 			  return TOKEN_NUMBER; }
-"\"".*"\""		{ yylval.v_string = g_strndup (yytext + 1, yyleng - 2);
+("\""[^\"]*"\""|"'"[^']*"'") {
+			  yylval.v_string = g_strndup (yytext + 1, yyleng - 2);
 			  return TOKEN_STRING; }
 
 {identifier_start}({identifier_part})* {

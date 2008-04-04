@@ -52,7 +52,7 @@ escape_string (const char *s)
     g_string_append_len (str, s, next - s);
     switch (*next) {
       case '"':
-	g_string_append (str, "\"");
+	g_string_append (str, "\\\"");
 	break;
       case '\n':
 	g_string_append (str, "\n");

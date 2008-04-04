@@ -52,7 +52,7 @@ typedef enum _SwfdecEventType {
   SWFDEC_EVENT_SCROLL = 20,
 } SwfdecEventType;
 
-#define SWFDEC_EVENT_MASK ((1 << SWFDEC_EVENT_CONSTRUCT) - 1)
+#define SWFDEC_EVENT_MASK ((1 << SWFDEC_EVENT_CHANGED) - 1)
 
 const char *		swfdec_event_type_get_name	(SwfdecEventType      type);
 

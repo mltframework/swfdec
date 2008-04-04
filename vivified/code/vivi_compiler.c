@@ -1157,6 +1157,100 @@ static ParseStatus
 parse_statement (ParseData *data, ViviCodeStatement **statement);
 
 static ParseStatus
+parse_continue_statement (ParseData *data, ViviCodeStatement **statement)
+{
+  *statement = NULL;
+
+  if (!check_token (data, TOKEN_CONTINUE))
+    return CANCEL (TOKEN_CONTINUE);
+
+  // FIXME: no LineTerminator here
+
+  *statement = vivi_code_continue_new ();
+
+  if (!check_token (data, TOKEN_SEMICOLON)) {
+    g_object_unref (*statement);
+    *statement = NULL;
+    return FAIL_CUSTOM ("Handling of label in continue has not been implemented yet");
+
+    /* if (!check_token (data, TOKEN_SEMICOLON)) {
+      g_object_unref (*statement);
+      *statement = NULL;
+      return FAIL (TOKEN_SEMICOLON);
+    } */
+  }
+
+  return STATUS_OK;
+}
+
+static ParseStatus
+parse_break_statement (ParseData *data, ViviCodeStatement **statement)
+{
+  *statement = NULL;
+
+  if (!check_token (data, TOKEN_BREAK))
+    return CANCEL (TOKEN_BREAK);
+
+  // FIXME: no LineTerminator here
+
+  *statement = vivi_code_break_new ();
+
+  if (!check_token (data, TOKEN_SEMICOLON)) {
+    g_object_unref (*statement);
+    *statement = NULL;
+    return FAIL_CUSTOM ("Handling of label in break has not been implemented yet");
+
+    /* if (!check_token (data, TOKEN_SEMICOLON)) {
+      g_object_unref (*statement);
+      *statement = NULL;
+      return FAIL (TOKEN_SEMICOLON);
+    } */
+  }
+
+  return STATUS_OK;
+}
+
+static ParseStatus
+parse_return_statement (ParseData *data, ViviCodeStatement **statement)
+{
+  *statement = NULL;
+
+  if (!check_token (data, TOKEN_RETURN))
+    return CANCEL (TOKEN_RETURN);
+
+  // FIXME: no LineTerminator here
+
+  *statement = vivi_code_return_new ();
+
+  if (!check_token (data, TOKEN_SEMICOLON)) {
+    ParseStatus status;
+    ViviCodeValue *value;
+    ViviCodeStatement *expression_statement;
+
+    status = parse_expression (data, &value, &expression_statement);
+    if (status != STATUS_OK) {
+      g_object_unref (*statement);
+      *statement = NULL;
+      return FAIL_CHILD (status);
+    }
+
+    vivi_code_return_set_value (VIVI_CODE_RETURN (*statement), value);
+    g_object_unref (value);
+
+    *statement =
+      vivi_compiler_combine_statements (2, expression_statement, *statement);
+
+    if (!check_token (data, TOKEN_SEMICOLON)) {
+      g_object_unref (*statement);
+      *statement = NULL;
+      return FAIL (TOKEN_SEMICOLON);
+    }
+  }
+
+  return STATUS_OK;
+}
+
+static ParseStatus
 parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 {
   ParseStatus status;
@@ -1550,9 +1644,9 @@ parse_statement (ParseData *data, ViviCodeStatement **statement)
     parse_expression_statement,
     parse_if_statement,
     parse_iteration_statement,
-    //parse_continue_statement,
-    //parse_break_statement,
-    //parse_return_statement,
+    parse_continue_statement,
+    parse_break_statement,
+    parse_return_statement,
     //parse_with_statement,
     //parse_labelled_statement,
     //parse_switch_statement,

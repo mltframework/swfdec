@@ -1382,7 +1382,8 @@ parse_return_statement (ParseData *data, ViviCodeStatement **statement)
   if (!check_token (data, TOKEN_RETURN))
     return CANCEL (TOKEN_RETURN);
 
-  // FIXME: no LineTerminator here
+  if (check_line_terminator (data))
+    return FAIL_LINE_TERMINATOR_OR (TOKEN_SEMICOLON, TOKEN_IDENTIFIER);
 
   *statement = vivi_code_return_new ();
 

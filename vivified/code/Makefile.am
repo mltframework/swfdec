@@ -44,6 +44,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_compiler.c \
 	vivi_compiler_empty_statement.c \
 	vivi_compiler_get_temporary.c \
+	vivi_compiler_goto_name.c \
 	vivi_compiler_scanner.c \
 	vivi_decompiler_block.c \
 	vivi_decompiler_duplicate.c \
@@ -80,6 +81,7 @@ noinst_HEADERS = \
 	vivi_compiler.h \
 	vivi_compiler_empty_statement.h \
 	vivi_compiler_get_temporary.h \
+	vivi_compiler_goto_name.h \
 	vivi_compiler_scanner.h \
 	vivi_compiler_scanner_lex.h \
 	vivi_compiler_scanner_lex_include.h \

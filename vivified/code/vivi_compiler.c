@@ -47,6 +47,7 @@
 #include "vivi_code_value_statement.h"
 #include "vivi_compiler_empty_statement.h"
 #include "vivi_compiler_get_temporary.h"
+#include "vivi_compiler_goto_name.h"
 
 #include "vivi_code_text_printer.h"
 
@@ -1242,57 +1243,49 @@ static ParseStatus
 parse_statement (ParseData *data, ViviCodeStatement **statement);
 
 static ParseStatus
-parse_continue_statement (ParseData *data, ViviCodeStatement **statement)
+parse_continue_or_break_statement (ParseData *data,
+    ViviCodeStatement **statement, ViviCompilerScannerToken token)
 {
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_CONTINUE))
-    return CANCEL (TOKEN_CONTINUE);
+  if (!check_token (data, token))
+    return CANCEL (token);
 
   if (check_line_terminator (data))
     return FAIL_LINE_TERMINATOR_OR (TOKEN_SEMICOLON, ERROR_TOKEN_IDENTIFIER);
 
-  *statement = vivi_code_continue_new ();
-
   if (!check_token (data, TOKEN_SEMICOLON)) {
-    g_object_unref (*statement);
-    *statement = NULL;
-    return FAIL_CUSTOM ("Handling of label in continue has not been implemented yet");
+    ParseStatus status;
+    ViviCodeValue *identifier;
 
-    /* if (!check_token (data, TOKEN_SEMICOLON)) {
+    status = parse_identifier (data, &identifier);
+    *statement = vivi_compiler_goto_name_new (
+	vivi_code_constant_get_variable_name (
+	  VIVI_CODE_CONSTANT (VIVI_CODE_GET (identifier)->name)));
+    g_object_unref (identifier);
+
+    if (!check_token (data, TOKEN_SEMICOLON)) {
       g_object_unref (*statement);
       *statement = NULL;
       return FAIL (TOKEN_SEMICOLON);
-    } */
+    }
+  } else {
+    *statement = vivi_code_break_new ();
   }
 
   return STATUS_OK;
 }
 
 static ParseStatus
+parse_continue_statement (ParseData *data, ViviCodeStatement **statement)
+{
+  return parse_continue_or_break_statement (data, statement, TOKEN_CONTINUE);
+}
+
+static ParseStatus
 parse_break_statement (ParseData *data, ViviCodeStatement **statement)
 {
-  *statement = NULL;
-
-  if (!check_token (data, TOKEN_BREAK))
-    return CANCEL (TOKEN_BREAK);
-
-  if (check_line_terminator (data))
-    return FAIL_LINE_TERMINATOR_OR (TOKEN_SEMICOLON, ERROR_TOKEN_IDENTIFIER);
-
-  if (!check_token (data, TOKEN_SEMICOLON)) {
-    return FAIL_CUSTOM ("Handling of label in break has not been implemented yet");
-
-    /* if (!check_token (data, TOKEN_SEMICOLON)) {
-      g_object_unref (*statement);
-      *statement = NULL;
-      return FAIL (TOKEN_SEMICOLON);
-    } */
-  } else {
-    *statement = vivi_code_break_new ();
-  }
-
-  return STATUS_OK;
+  return parse_continue_or_break_statement (data, statement, TOKEN_BREAK);
 }
 
 static ParseStatus
@@ -1472,7 +1465,6 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 	return FAIL_CHILD (status);
       }
       g_object_unref (pre_value);
-    // FIXME: or one in declaration
     } else if (pre_value != NULL && check_token (data, TOKEN_IN)) {
       post_statement = NULL;
 

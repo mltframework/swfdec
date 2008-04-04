@@ -52,6 +52,7 @@
 
 enum {
   ERROR_TOKEN_LITERAL = TOKEN_LAST + 1,
+  ERROR_TOKEN_IDENTIFIER,
   ERROR_TOKEN_PROPERTY_NAME,
   ERROR_TOKEN_PRIMARY_EXPRESSION,
   ERROR_TOKEN_ITERATION_STATEMENT,
@@ -64,6 +65,7 @@ static const struct {
   const char *			name;
 } error_names[] = {
   { ERROR_TOKEN_LITERAL, "LITERAL" },
+  { ERROR_TOKEN_IDENTIFIER, "IDENTIFIER" },
   { ERROR_TOKEN_PROPERTY_NAME, "PROPERTY NAME" },
   { ERROR_TOKEN_PRIMARY_EXPRESSION, "PRIMARY EXPRESSION" },
   { ERROR_TOKEN_ITERATION_STATEMENT, "ITERATION STATEMENT" },
@@ -84,6 +86,7 @@ typedef struct {
 
 typedef struct {
   ViviCompilerScanner *		scanner;
+  gboolean			unexpected_line_terminator;
   guint				expected[2];
   const char *			custom_error;
 
@@ -92,6 +95,7 @@ typedef struct {
 } ParseData;
 
 #define FAIL_OR(x, y) (data->expected[0] = (x), data->expected[1] = (y), STATUS_FAIL)
+#define FAIL_LINE_TERMINATOR_OR(x, y) (data->unexpected_line_terminator = TRUE, FAIL_OR(x,y))
 #define FAIL(x) FAIL_OR(x,TOKEN_NONE)
 #define FAIL_CHILD(x) STATUS_FAIL
 #define FAIL_CUSTOM(x) (data->custom_error = (x), STATUS_FAIL)
@@ -116,6 +120,13 @@ parse_value_list (ParseData *data, ParseValueFunction function,
     ViviCodeValue ***list, guint separator);
 
 // helpers
+
+static gboolean
+check_line_terminator (ParseData *data)
+{
+  vivi_compiler_scanner_peek_next_token (data->scanner);
+  return data->scanner->next_line_terminator;
+}
 
 static gboolean
 check_token (ParseData *data, ViviCompilerScannerToken token)
@@ -724,7 +735,6 @@ parse_left_hand_side_expression (ParseData *data, ViviCodeValue **value,
       break;
 
     if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-      // FIXME: assignment expression
       status = parse_value_statement_list (data, parse_assignment_expression,
 	  &arguments, &argument_statement, TOKEN_COMMA);
       if (status != STATUS_OK) {
@@ -784,7 +794,15 @@ parse_postfix_expression (ParseData *data, ViviCodeValue **value,
   if (status != STATUS_OK)
     return status;
 
-  // FIXME: Don't allow new line here
+  if (check_line_terminator (data)) {
+    g_object_unref (*value);
+    *value = NULL;
+    if (*statement != NULL) {
+      g_object_unref (*statement);
+      *statement = NULL;
+    }
+    return FAIL_LINE_TERMINATOR_OR (TOKEN_INCREASE, TOKEN_DESCREASE);
+  }
 
   if (check_token (data, TOKEN_INCREASE)) {
     operator = "+";
@@ -1231,7 +1249,8 @@ parse_continue_statement (ParseData *data, ViviCodeStatement **statement)
   if (!check_token (data, TOKEN_CONTINUE))
     return CANCEL (TOKEN_CONTINUE);
 
-  // FIXME: no LineTerminator here
+  if (check_line_terminator (data))
+    return FAIL_LINE_TERMINATOR_OR (TOKEN_SEMICOLON, ERROR_TOKEN_IDENTIFIER);
 
   *statement = vivi_code_continue_new ();
 
@@ -1258,7 +1277,8 @@ parse_break_statement (ParseData *data, ViviCodeStatement **statement)
   if (!check_token (data, TOKEN_BREAK))
     return CANCEL (TOKEN_BREAK);
 
-  // FIXME: no LineTerminator here
+  if (check_line_terminator (data))
+    return FAIL_LINE_TERMINATOR_OR (TOKEN_SEMICOLON, ERROR_TOKEN_IDENTIFIER);
 
   if (!check_token (data, TOKEN_SEMICOLON)) {
     return FAIL_CUSTOM ("Handling of label in break has not been implemented yet");
@@ -2042,6 +2062,7 @@ vivi_compile_file (FILE *file, const char *input_name)
   g_return_val_if_fail (file != NULL, NULL);
 
   data.scanner = vivi_compiler_scanner_new (file);
+  data.unexpected_line_terminator = FALSE;
   data.expected[0] = TOKEN_NONE;
   data.expected[1] = TOKEN_NONE;
   data.custom_error = NULL;

@@ -15,8 +15,9 @@ line_terminator		[\n\r]
 %%
 
 "//".*{line_terminator}	/* skip single line comments */
-[ \t\n\r]		/* skip whitespace */
+[ \t]			/* skip whitespace */
 <<EOF>>			{ return TOKEN_EOF; }
+[\n\r]			{ return TOKEN_LINE_TERMINATOR; }
 
 "{"			{ return TOKEN_BRACE_LEFT; }
 "}"			{ return TOKEN_BRACE_RIGHT; }

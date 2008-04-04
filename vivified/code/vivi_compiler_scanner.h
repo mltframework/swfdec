@@ -31,6 +31,7 @@ typedef enum {
   TOKEN_NONE = 0,
   TOKEN_EOF,
   TOKEN_UNKNOWN,
+  TOKEN_LINE_TERMINATOR,
 
   // comparision
   TOKEN_BRACE_LEFT,
@@ -167,8 +168,10 @@ struct _ViviCompilerScanner
 
   ViviCompilerScannerToken	token;
   ViviCompilerScannerToken	next_token;
+  gboolean			line_terminator;
   ViviCompilerScannerValue	value;
   ViviCompilerScannerValue	next_value;
+  gboolean			next_line_terminator;
 
   ViviCompilerScannerToken	expected;
 };

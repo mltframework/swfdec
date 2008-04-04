@@ -57,6 +57,7 @@ static const struct {
   { TOKEN_NONE, "NONE" },
   { TOKEN_EOF, "EOF" },
   { TOKEN_UNKNOWN, "UNKNOWN" },
+  { TOKEN_LINE_TERMINATOR, "NEW LINE" },
 
   // comparision
   { TOKEN_BRACE_LEFT, "{", },
@@ -189,12 +190,19 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
 
   scanner->token = scanner->next_token;
   scanner->value = scanner->next_value;
+  scanner->line_terminator = scanner->next_line_terminator;
 
   if (scanner->file == NULL) {
     scanner->next_token = TOKEN_EOF;
     scanner->next_value.v_string = NULL;
   } else {
     scanner->next_token = yylex ();
+    if (scanner->next_token == TOKEN_LINE_TERMINATOR) {
+      scanner->next_line_terminator = TRUE;
+      scanner->next_token = yylex ();
+    } else {
+      scanner->next_line_terminator = FALSE;
+    }
     scanner->next_value = yylval;
   }
 }

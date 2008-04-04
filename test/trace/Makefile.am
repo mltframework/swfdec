@@ -758,6 +758,15 @@ EXTRA_DIST = \
 	crash-0.6.2-replaceText-8.swf \
 	crash-0.6.2-replaceText-8.swf.trace \
 	crash-0.6.2-replaceText.as \
+	crash-0.6.2-try-and-exception-on-dispose-5.swf \
+	crash-0.6.2-try-and-exception-on-dispose-5.swf.trace \
+	crash-0.6.2-try-and-exception-on-dispose-6.swf \
+	crash-0.6.2-try-and-exception-on-dispose-6.swf.trace \
+	crash-0.6.2-try-and-exception-on-dispose-7.swf \
+	crash-0.6.2-try-and-exception-on-dispose-7.swf.trace \
+	crash-0.6.2-try-and-exception-on-dispose-8.swf \
+	crash-0.6.2-try-and-exception-on-dispose-8.swf.trace \
+	crash-0.6.2-try-and-exception-on-dispose.as \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \

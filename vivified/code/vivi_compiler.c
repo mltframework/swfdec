@@ -83,13 +83,14 @@ typedef enum {
 
 typedef struct {
   GSList			*labels;
+  GSList			*gotos;
 } ParseLevel;
 
 typedef struct {
   ViviCompilerScanner *		scanner;
   gboolean			unexpected_line_terminator;
   guint				expected[2];
-  const char *			custom_error;
+  char *			custom_error;
 
   GSList *			levels; // ParseLevel, earlier levels
   ParseLevel *			level;  // current level
@@ -311,13 +312,50 @@ vivi_compiler_start_level (ParseData *data)
   data->level = g_new0 (ParseLevel, 1);
 }
 
-static void
-vivi_compiler_end_level (ParseData *data)
+static ViviCodeLabel *
+vivi_compiler_find_label (ParseData *data, const char *name)
 {
   GSList *iter;
 
-  g_return_if_fail (data != NULL);
-  g_return_if_fail (data->level != NULL);
+  for (iter = data->level->labels; iter != NULL; iter = iter->next) {
+    if (g_str_equal (vivi_code_label_get_name (VIVI_CODE_LABEL (iter->data)),
+	  name))
+      return VIVI_CODE_LABEL (iter->data);
+  }
+
+  return NULL;
+}
+
+static ParseStatus
+vivi_compiler_end_level (ParseData *data, gboolean fail)
+{
+  GSList *iter;
+  char *custom_error = NULL;
+
+  g_return_val_if_fail (data != NULL, STATUS_FAIL);
+  g_return_val_if_fail (data->level != NULL, STATUS_FAIL);
+
+  for (iter = data->level->gotos; iter != NULL; iter = iter->next) {
+    ViviCompilerGotoName *goto_;
+    ViviCodeLabel *label;
+
+    goto_ = VIVI_COMPILER_GOTO_NAME (iter->data);
+    label = vivi_compiler_find_label (data,
+	vivi_compiler_goto_name_get_name (goto_));
+
+    if (label != NULL) {
+      vivi_compiler_goto_name_set_label (goto_, label);
+    } else {
+      if (custom_error == NULL) {
+	custom_error =
+	  g_strdup_printf ("Label named '%s' doesn't exist in this block",
+	      vivi_compiler_goto_name_get_name (goto_));
+      }
+    }
+
+    g_object_unref (goto_);
+  }
+  g_slist_free (data->level->gotos);
 
   for (iter = data->level->labels; iter != NULL; iter = iter->next) {
     g_object_unref (VIVI_CODE_LABEL (iter->data));
@@ -332,6 +370,27 @@ vivi_compiler_end_level (ParseData *data)
   } else {
     data->level = NULL;
   }
+
+  if (custom_error != NULL) {
+    if (fail) {
+      return FAIL_CUSTOM (custom_error);
+    } else {
+      return STATUS_FAIL;
+    }
+  } else {
+    return STATUS_OK;
+  }
+}
+
+static void
+vivi_compiler_add_goto (ParseData *data, ViviCompilerGotoName *goto_)
+{
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (data->level != NULL);
+  g_return_if_fail (VIVI_IS_COMPILER_GOTO_NAME (goto_));
+
+  data->level->gotos =
+    g_slist_prepend (data->level->gotos, g_object_ref (goto_));
 }
 
 static gboolean
@@ -339,7 +398,9 @@ vivi_compiler_add_label (ParseData *data, ViviCodeLabel *label)
 {
   GSList *iter;
 
+  g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (data->level != NULL, FALSE);
+  g_return_val_if_fail (VIVI_IS_CODE_LABEL (label), FALSE);
 
   for (iter = data->level->labels; iter != NULL; iter = iter->next) {
     if (g_str_equal (vivi_code_label_get_name (VIVI_CODE_LABEL (iter->data)),
@@ -843,7 +904,7 @@ parse_postfix_expression (ParseData *data, ViviCodeValue **value,
       g_object_unref (*statement);
       *statement = NULL;
     }
-    return CANCEL_CUSTOM ("INCREASE/DECREASE not allowed here");
+    return CANCEL_CUSTOM (g_strdup ("INCREASE/DECREASE not allowed here"));
   }
 
   one = vivi_code_constant_new_number (1);
@@ -891,7 +952,7 @@ parse_unary_expression (ParseData *data, ViviCodeValue **value,
 	return FAIL_CHILD (status);
 
       if (!vivi_compiler_value_is_left_hand_side (*value))
-	return CANCEL_CUSTOM ("INCREASE/DECREASE not allowed here");
+	return CANCEL_CUSTOM (g_strdup ("INCREASE/DECREASE not allowed here"));
 
       one = vivi_code_constant_new_number (1);
       tmp = vivi_code_binary_new_name (*value, one, operator);
@@ -1287,6 +1348,8 @@ parse_continue_or_break_statement (ParseData *data,
 	  VIVI_CODE_CONSTANT (VIVI_CODE_GET (identifier)->name)));
     g_object_unref (identifier);
 
+    vivi_compiler_add_goto (data, VIVI_COMPILER_GOTO_NAME (*statement));
+
     if (!check_token (data, TOKEN_SEMICOLON)) {
       g_object_unref (*statement);
       *statement = NULL;
@@ -1495,13 +1558,15 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 	g_object_unref (pre_value);
 	if (pre_statement != NULL)
 	  g_object_unref (pre_statement);
-	return FAIL_CUSTOM ("Invalid left hand side expression for in");
+	return FAIL_CUSTOM (g_strdup (
+	      "Invalid left hand side expression for in"));
       }
 
       g_object_unref (pre_value);
       if (pre_statement != NULL)
 	g_object_unref (pre_statement);
-      return FAIL_CUSTOM ("for (... in ...) has not been implemented yet");
+      return FAIL_CUSTOM (g_strdup (
+	    "for (... in ...) has not been implemented yet"));
     } else {
       ViviCompilerScannerToken fail_token;
 
@@ -1656,7 +1721,7 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
       *statement = vivi_code_label_new (vivi_code_constant_get_variable_name (
 	    VIVI_CODE_CONSTANT (VIVI_CODE_GET (value)->name)));
       if (!vivi_compiler_add_label (data, VIVI_CODE_LABEL (*statement)))
-	return FAIL_CUSTOM ("Same label name used twice");
+	return FAIL_CUSTOM (g_strdup ("Same label name used twice"));
       return STATUS_OK;
     }
   }
@@ -1831,14 +1896,20 @@ parse_function_definition (ParseData *data, ViviCodeValue **function,
   vivi_compiler_start_level (data);
 
   status = parse_statement_list (data, parse_source_element, &body, STATUS_OK);
-
-  vivi_compiler_end_level (data);
-
   if (status == STATUS_FAIL) {
+    vivi_compiler_end_level (data, FALSE);
     g_object_unref (*identifier);
     if (arguments != NULL)
       free_value_list (arguments);
     return STATUS_FAIL;
+  }
+
+  status = vivi_compiler_end_level (data, TRUE);
+  if (status != STATUS_OK) {
+    g_object_unref (*identifier);
+    if (arguments != NULL)
+      free_value_list (arguments);
+    return FAIL_CHILD (status);
   }
 
   if (!check_token (data, TOKEN_BRACE_RIGHT)) {
@@ -1926,10 +1997,13 @@ parse_program (ParseData *data, ViviCodeStatement **statement)
 
   status =
     parse_statement_list (data, parse_source_element, statement, STATUS_OK);
-  if (status != STATUS_OK)
+  if (status != STATUS_OK) {
+    vivi_compiler_end_level (data, FALSE);
     return FAIL_CHILD (status);
+  }
 
   if (!check_token (data, TOKEN_EOF)) {
+    vivi_compiler_end_level (data, FALSE);
     g_object_unref (*statement);
     *statement = NULL;
     status = parse_statement (data, statement);
@@ -1937,7 +2011,13 @@ parse_program (ParseData *data, ViviCodeStatement **statement)
   }
 
 
-  vivi_compiler_end_level (data);
+  status = vivi_compiler_end_level (data, TRUE);
+  if (status != STATUS_OK) {
+    g_object_unref (*statement);
+    *statement = NULL;
+    return FAIL_CHILD (status);
+  }
+
   g_assert (data->level == NULL);
 
   return STATUS_OK;
@@ -2096,6 +2176,7 @@ vivi_compile_file (FILE *file, const char *input_name)
 
     if (data.custom_error != NULL) {
       g_printerr ("%s\n", data.custom_error);
+      g_free (data.custom_error);
     } else {
       vivi_compiler_scanner_get_next_token (data.scanner);
 

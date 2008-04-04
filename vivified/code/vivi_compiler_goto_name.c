@@ -24,7 +24,7 @@
 #include "vivi_compiler_goto_name.h"
 #include "vivi_code_printer.h"
 
-G_DEFINE_TYPE (ViviCompilerGotoName, vivi_compiler_goto_name, VIVI_TYPE_CODE_STATEMENT)
+G_DEFINE_TYPE (ViviCompilerGotoName, vivi_compiler_goto_name, VIVI_TYPE_CODE_GOTO)
 
 static void
 vivi_compiler_goto_name_dispose (GObject *object)
@@ -40,6 +40,12 @@ static void
 vivi_compiler_goto_name_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCompilerGotoName *goto_ = VIVI_COMPILER_GOTO_NAME (token);
+
+  if (VIVI_CODE_GOTO (goto_)->label != NULL) {
+    VIVI_CODE_TOKEN_CLASS (vivi_compiler_goto_name_parent_class)->print (token,
+	printer);
+    return;
+  }
 
   vivi_code_printer_print (printer, "goto ");
   vivi_code_printer_print (printer, goto_->name);
@@ -61,6 +67,24 @@ vivi_compiler_goto_name_class_init (ViviCompilerGotoNameClass *klass)
 static void
 vivi_compiler_goto_name_init (ViviCompilerGotoName *token)
 {
+}
+
+const char *
+vivi_compiler_goto_name_get_name (ViviCompilerGotoName *goto_)
+{
+  g_return_val_if_fail (VIVI_IS_COMPILER_GOTO_NAME (goto_), NULL);
+
+  return goto_->name;
+}
+
+void
+vivi_compiler_goto_name_set_label (ViviCompilerGotoName *goto_,
+    ViviCodeLabel *label)
+{
+  g_return_if_fail (VIVI_IS_COMPILER_GOTO_NAME (goto_));
+  g_return_if_fail (VIVI_IS_CODE_LABEL (label));
+
+  VIVI_CODE_GOTO (goto_)->label = g_object_ref (label);
 }
 
 ViviCodeStatement *

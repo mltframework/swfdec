@@ -20,8 +20,7 @@
 #ifndef _VIVI_COMPILER_GOTO_NAME_H_
 #define _VIVI_COMPILER_GOTO_NAME_H_
 
-#include <vivified/code/vivi_code_label.h>
-#include <vivified/code/vivi_code_statement.h>
+#include <vivified/code/vivi_code_goto.h>
 
 G_BEGIN_DECLS
 
@@ -38,19 +37,22 @@ typedef struct _ViviCompilerGotoNameClass ViviCompilerGotoNameClass;
 
 struct _ViviCompilerGotoName
 {
-  ViviCodeStatement	statement;
+  ViviCodeGoto		statement;
 
   char *		name;
 };
 
 struct _ViviCompilerGotoNameClass
 {
-  ViviCodeStatementClass	statement_class;
+  ViviCodeGotoClass	statement_class;
 };
 
 GType			vivi_compiler_goto_name_get_type	(void);
 
-ViviCodeStatement *	vivi_compiler_goto_name_new		(const char *	name);
+ViviCodeStatement *	vivi_compiler_goto_name_new		(const char *		name);
+const char *		vivi_compiler_goto_name_get_name	(ViviCompilerGotoName *	goto_);
+void			vivi_compiler_goto_name_set_label	(ViviCompilerGotoName *	goto_,
+								 ViviCodeLabel *	label);
 
 
 G_END_DECLS

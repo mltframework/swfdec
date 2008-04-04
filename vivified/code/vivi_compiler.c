@@ -122,6 +122,29 @@ parse_value_list (ParseData *data, ParseValueFunction function,
 
 // helpers
 
+static const char *
+vivi_compiler_token_name (guint token)
+{
+  if (token < TOKEN_LAST) {
+    return vivi_compiler_scanner_token_name (token);
+  } else {
+    guint i;
+    const char *name;
+
+    name = NULL;
+    for (i = 0; error_names[i].token != TOKEN_LAST; i++) {
+      if (error_names[i].token == token) {
+	name = error_names[i].name;
+	break;
+      }
+    }
+
+    g_assert (name != NULL);
+
+    return name;
+  }
+}
+
 static gboolean
 check_line_terminator (ParseData *data)
 {
@@ -2067,27 +2090,26 @@ vivi_compile_file (FILE *file, const char *input_name)
   g_assert (status >= 0);
 
   if (status != STATUS_OK) {
-    // FIXME: multiple expected tokens
-    vivi_compiler_scanner_get_next_token (data.scanner);
+    g_printerr ("%s:%i:%i: error: ", input_name,
+	vivi_compiler_scanner_cur_line (data.scanner),
+	vivi_compiler_scanner_cur_column (data.scanner));
+
     if (data.custom_error != NULL) {
       g_printerr ("%s\n", data.custom_error);
-    } else if (data.expected[0] < TOKEN_LAST) {
-      vivi_compiler_scanner_unexp_token (data.scanner, data.expected[0]);
     } else {
-      guint i;
-      const char *name;
+      vivi_compiler_scanner_get_next_token (data.scanner);
 
-      name = NULL;
-      for (i = 0; error_names[i].token != TOKEN_LAST; i++) {
-	if (error_names[i].token == data.expected[0]) {
-	  name = error_names[i].name;
-	  break;
-	}
+      g_printerr ("Expected %s ", vivi_compiler_token_name (data.expected[0]));
+      if (data.expected[1] != TOKEN_NONE)
+	g_printerr ("or %s ", vivi_compiler_token_name (data.expected[1]));
+
+      if (data.unexpected_line_terminator) {
+	g_printerr ("before %s token\n",
+	    vivi_compiler_token_name (TOKEN_LINE_TERMINATOR));
+      } else {
+	g_printerr ("before %s token\n",
+	    vivi_compiler_token_name (data.scanner->token));
       }
-
-      g_assert (name != NULL);
-
-      vivi_compiler_scanner_unexp_token_custom (data.scanner, name);
     }
   }
 

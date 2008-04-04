@@ -188,13 +188,9 @@ ViviCompilerScannerToken	vivi_compiler_scanner_get_next_token	(ViviCompilerScann
 ViviCompilerScannerToken	vivi_compiler_scanner_peek_next_token	(ViviCompilerScanner *	scanner);
 
 const char *			vivi_compiler_scanner_token_name	(ViviCompilerScannerToken token);
-
 guint				vivi_compiler_scanner_cur_line		(ViviCompilerScanner *scanner);
-
-void				vivi_compiler_scanner_unexp_token	(ViviCompilerScanner *	scanner,
-									 ViviCompilerScannerToken expected);
-void				vivi_compiler_scanner_unexp_token_custom (ViviCompilerScanner *	scanner,
-									 const char *		expected);
+guint				vivi_compiler_scanner_cur_column	(ViviCompilerScanner *scanner);
+char *				vivi_compiler_scanner_get_line		(ViviCompilerScanner *scanner);
 
 
 G_END_DECLS

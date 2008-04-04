@@ -416,6 +416,19 @@ vivi_compiler_add_label (ParseData *data, ViviCodeLabel *label)
 
 // values
 
+/* ActionScript specific */
+static ParseStatus
+parse_undefined_literal (ParseData *data, ViviCodeValue **value)
+{
+  *value = NULL;
+
+  if (!check_token (data, TOKEN_UNDEFINED))
+    return CANCEL (TOKEN_UNDEFINED);
+
+  *value = vivi_code_constant_new_undefined ();
+  return STATUS_OK;
+}
+
 static ParseStatus
 parse_null_literal (ParseData *data, ViviCodeValue **value)
 {
@@ -470,6 +483,7 @@ parse_literal (ParseData *data, ViviCodeValue **value)
   ParseStatus status;
   int i;
   ParseValueFunction functions[] = {
+    parse_undefined_literal,
     parse_null_literal,
     parse_boolean_literal,
     parse_numeric_literal,

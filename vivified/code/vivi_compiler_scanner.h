@@ -140,6 +140,9 @@ typedef enum {
   // reserved keywords
   TOKEN_RESERVED_KEYWORD,
 
+  // ActionScript specific
+  TOKEN_UNDEFINED,
+
   TOKEN_LAST
 } ViviCompilerScannerToken;
 

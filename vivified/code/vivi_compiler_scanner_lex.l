@@ -78,12 +78,6 @@ line_terminator		[\n\r]
 "^="			{ return TOKEN_ASSIGN_BITWISE_XOR; }
 "|="			{ return TOKEN_ASSIGN_BITWISE_OR; }
 
-"null"			{ return TOKEN_NULL; }
-"true"			{ yylval.v_boolean = 1;
-			  return TOKEN_BOOLEAN; }
-"false"			{ yylval.v_boolean = 0;
-			  return TOKEN_BOOLEAN; }
-
 "break"			{ return TOKEN_BREAK; }
 "case"			{ return TOKEN_CASE; }
 "catch"			{ return TOKEN_CATCH; }
@@ -142,6 +136,11 @@ line_terminator		[\n\r]
 "transient"		{ return TOKEN_RESERVED_KEYWORD; }
 "volatile"		{ return TOKEN_RESERVED_KEYWORD; }
 
+"null"			{ return TOKEN_NULL; }
+"true"			{ yylval.v_boolean = 1;
+			  return TOKEN_BOOLEAN; }
+"false"			{ yylval.v_boolean = 0;
+			  return TOKEN_BOOLEAN; }
 [-+]*{digit}+		{ yylval.v_number = atoi(yytext);
 			  return TOKEN_NUMBER; }
 ("\""[^\"]*"\""|"'"[^']*"'") {
@@ -151,6 +150,8 @@ line_terminator		[\n\r]
 {identifier_start}({identifier_part})* {
 			  yylval.v_identifier = g_strdup (yytext);
 			  return TOKEN_IDENTIFIER; }
+
+"undefined"		{ return TOKEN_UNDEFINED; }
 
 .			{ printf("Unknown character [%c]\n",yytext[0]);
 			  return TOKEN_UNKNOWN; }

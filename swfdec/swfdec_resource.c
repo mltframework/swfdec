@@ -354,10 +354,8 @@ swfdec_resource_stream_target_close (SwfdecStreamTarget *target, SwfdecStream *s
   if (swfdec_resource_abort_if_not_initialized (resource))
     return;
 
-  if (resource->movie != NULL) {
-    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource)->context),
-	  SWFDEC_ACTOR (resource->movie), SWFDEC_EVENT_LOAD, 0);
-  }
+  if (resource->movie != NULL)
+    swfdec_actor_queue_script (SWFDEC_ACTOR (resource->movie), SWFDEC_EVENT_LOAD);
 }
 
 static void

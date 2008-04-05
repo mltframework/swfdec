@@ -193,9 +193,9 @@ identifier_part		[$_a-zA-Z0-9]
   			}
   \\[0-9]+		{ g_string_free (string, TRUE);
   			  return TOKEN_ERROR; }
-  \\x[0-9a-fA-F]{1,2}	{ guint64 result;
+  \\x[0-9a-fA-F]{2}	{ guint64 result;
   			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
-  			  if (result > 0xff || result == 0) {
+  			  if (result == 0) {
   			    BEGIN(INITIAL);
   			    g_string_free (string, TRUE);
   			    return TOKEN_ERROR;

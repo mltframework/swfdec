@@ -381,7 +381,8 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	SwfdecScript *script = swfdec_swf_decoder_get_script (
 	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data);
 	if (script) {
-	  swfdec_player_add_action_script (player, actor, script, 2);
+	  swfdec_player_add_action_script (player, actor, script, 
+	      SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
 	} else {
 	  SWFDEC_ERROR ("Failed to locate script for DoAction tag");
 	}
@@ -473,7 +474,8 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 	sprite->init_action = swfdec_script_ref (swfdec_swf_decoder_get_script (
 	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data + 2));
 	if (sprite->init_action) {
-	  swfdec_player_add_action_script (player, actor, sprite->init_action, 0);
+	  swfdec_player_add_action_script (player, actor, sprite->init_action, 
+	      SWFDEC_PLAYER_ACTION_QUEUE_INIT);
 	} else {
 	  SWFDEC_ERROR ("Failed to locate script for InitAction of Sprite %u", id);
 	}
@@ -663,7 +665,6 @@ static void
 swfdec_sprite_movie_iterate (SwfdecActor *actor)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (actor);
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context);
   guint goto_frame;
 
   if (SWFDEC_MOVIE (actor)->state >= SWFDEC_MOVIE_STATE_REMOVED)
@@ -672,7 +673,7 @@ swfdec_sprite_movie_iterate (SwfdecActor *actor)
   if (movie->sprite && movie->frame == (guint) -1)
     movie->frame = 0;
 
-  swfdec_player_add_action (player, actor, SWFDEC_EVENT_ENTER, 2);
+  swfdec_actor_queue_script (actor, SWFDEC_EVENT_ENTER);
   if (movie->playing && movie->sprite != NULL) {
     if (movie->frame == movie->n_frames)
       goto_frame = 1;

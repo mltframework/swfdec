@@ -262,10 +262,10 @@ swfdec_actor_queue_script (SwfdecActor *actor, SwfdecEventType condition)
 
   switch (condition) {
     case SWFDEC_EVENT_INITIALIZE:
-      importance = 0;
+      importance = SWFDEC_PLAYER_ACTION_QUEUE_INIT;
       break;
     case SWFDEC_EVENT_CONSTRUCT:
-      importance = 1;
+      importance = SWFDEC_PLAYER_ACTION_QUEUE_CONSTRUCT;
       break;
     case SWFDEC_EVENT_LOAD:
     case SWFDEC_EVENT_ENTER:
@@ -284,7 +284,11 @@ swfdec_actor_queue_script (SwfdecActor *actor, SwfdecEventType condition)
     case SWFDEC_EVENT_DRAG_OVER:
     case SWFDEC_EVENT_DRAG_OUT:
     case SWFDEC_EVENT_KEY_PRESS:
-      importance = 2;
+      importance = SWFDEC_PLAYER_ACTION_QUEUE_NORMAL;
+      break;
+    case SWFDEC_EVENT_CHANGED:
+    case SWFDEC_EVENT_SCROLL:
+      importance = SWFDEC_PLAYER_ACTION_QUEUE_PRIORITY;
       break;
     default:
       g_return_if_reached ();

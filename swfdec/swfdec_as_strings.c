@@ -502,5 +502,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("textFieldWidth")
   SWFDEC_AS_CONSTANT_STRING ("tabChildren")
   SWFDEC_AS_CONSTANT_STRING ("tabIndex")
+  SWFDEC_AS_CONSTANT_STRING ("onChanged")
   /* add more here */
 ;

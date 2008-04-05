@@ -2025,8 +2025,10 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
       continue;
     }
     /* adapt indexes: remove deleted part, add to-be inserted text */
-    if (findex->index_ > start_index) {
+    if (findex->index_ > end_index) {
       findex->index_ = findex->index_ + start_index - end_index + len;
+    } else if (findex->index_ > start_index) {
+      findex->index_ = start_index;
     }
   }
 

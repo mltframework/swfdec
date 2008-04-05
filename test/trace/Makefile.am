@@ -758,6 +758,15 @@ EXTRA_DIST = \
 	crash-0.6.2-replaceText-8.swf \
 	crash-0.6.2-replaceText-8.swf.trace \
 	crash-0.6.2-replaceText.as \
+	crash-0.6.2-try-and-exception-on-dispose-5.swf \
+	crash-0.6.2-try-and-exception-on-dispose-5.swf.trace \
+	crash-0.6.2-try-and-exception-on-dispose-6.swf \
+	crash-0.6.2-try-and-exception-on-dispose-6.swf.trace \
+	crash-0.6.2-try-and-exception-on-dispose-7.swf \
+	crash-0.6.2-try-and-exception-on-dispose-7.swf.trace \
+	crash-0.6.2-try-and-exception-on-dispose-8.swf \
+	crash-0.6.2-try-and-exception-on-dispose-8.swf.trace \
+	crash-0.6.2-try-and-exception-on-dispose.as \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \
@@ -956,6 +965,15 @@ EXTRA_DIST = \
 	empty-stack.as \
 	empty-stack.swf \
 	empty-stack.swf.trace \
+	empty-string-text-extent-5.swf \
+	empty-string-text-extent-5.swf.trace \
+	empty-string-text-extent-6.swf \
+	empty-string-text-extent-6.swf.trace \
+	empty-string-text-extent-7.swf \
+	empty-string-text-extent-7.swf.trace \
+	empty-string-text-extent-8.swf \
+	empty-string-text-extent-8.swf.trace \
+	empty-string-text-extent.as \
 	emptymovie-frames-bytes-5.swf \
 	emptymovie-frames-bytes-5.swf.trace \
 	emptymovie-frames-bytes-6.swf \

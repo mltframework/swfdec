@@ -834,6 +834,8 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsObject *obj = swfdec_as_object_new_empty (cx);
   SwfdecAsValue val;
   const gchar *text;
+  gint height = 0, width = 0,  text_field_width = 0, text_field_height = 0;
+  gint ascent = 0, descent = 0;
   GList *item_list;
   PangoAnalysis analysis;
   PangoFontMap *fontmap;
@@ -846,57 +848,65 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FORMAT, &format, "s", &text);
 
-  fontmap = pango_cairo_font_map_get_default ();
-  pcontext =
-    pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
+  /* If the string is empty we'll just leave all the values as 0. */
+  if (text != SWFDEC_AS_STR_EMPTY){
+    fontmap = pango_cairo_font_map_get_default ();
+    pcontext =
+      pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
 
-  attrs = pango_attr_list_new ();
-  item_list = pango_itemize (pcontext, text, 0, strlen(text), attrs, NULL);
-  pango_attr_list_unref (attrs);
+    attrs = pango_attr_list_new ();
+    item_list = pango_itemize (pcontext, text, 0, strlen (text), attrs, NULL);
+    pango_attr_list_unref (attrs);
 
-  analysis = ((PangoItem *)(item_list[0].data))->analysis;
-  pango_shape (text, strlen(text), &analysis, glyph_string);
+    analysis = ((PangoItem *)(item_list[0].data))->analysis;
+    pango_shape (text, strlen (text), &analysis, glyph_string);
 
-  desc = pango_font_description_new ();
-  pango_font_description_set_family_static (desc, format->font);
-  pango_font_description_set_size (desc, format->size * PANGO_SCALE);
-  if (format->bold){
-    pango_font_description_set_weight (desc, PANGO_WEIGHT_BOLD);
+    desc = pango_font_description_new ();
+    pango_font_description_set_family_static (desc, format->font);
+    pango_font_description_set_size (desc, format->size * PANGO_SCALE);
+    if (format->bold){
+      pango_font_description_set_weight (desc, PANGO_WEIGHT_BOLD);
+    }
+    if (format->italic)
+      pango_font_description_set_style (desc, PANGO_STYLE_ITALIC);
+
+    font = pango_font_map_load_font (fontmap, pcontext, desc);
+    pango_glyph_string_extents (glyph_string, font, &ink_rect, NULL);
+
+    pango_glyph_string_free (glyph_string);
+    g_list_foreach (item_list, (GFunc) pango_item_free, NULL);
+    g_list_free (item_list);
+    pango_font_description_free (desc);
+    g_object_unref (G_OBJECT (pcontext));
+    g_object_unref (G_OBJECT (fontmap));
+    g_object_unref (G_OBJECT (font));
+
+    width = ink_rect.width / PANGO_SCALE + format->left_margin
+	+ format->right_margin;
+    height = ink_rect.height / PANGO_SCALE + format->leading;
+    ascent = PANGO_ASCENT(ink_rect) / PANGO_SCALE;
+    descent = PANGO_DESCENT (ink_rect) / PANGO_SCALE;
+    text_field_width = ink_rect.width / PANGO_SCALE + format->left_margin
+	+ format->right_margin + 4;
+    text_field_height = ink_rect.height / PANGO_SCALE + 4 + format->leading;
   }
-  if (format->italic)
-    pango_font_description_set_style (desc, PANGO_STYLE_ITALIC);
 
-  font = pango_font_map_load_font (fontmap, pcontext, desc);
-  pango_glyph_string_extents (glyph_string, font, &ink_rect, NULL);
-
-  pango_glyph_string_free (glyph_string);
-  g_list_foreach (item_list, (GFunc) pango_item_free, NULL);
-  g_list_free (item_list);
-  pango_font_description_free (desc);
-  g_object_unref (G_OBJECT (pcontext));
-  g_object_unref (G_OBJECT (fontmap));
-  g_object_unref (G_OBJECT (font));
-
-  SWFDEC_AS_VALUE_SET_INT (&val, ink_rect.width / PANGO_SCALE +
-						   format->left_margin + format->right_margin);
+  SWFDEC_AS_VALUE_SET_INT (&val, width);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_width, &val);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, (ink_rect.height / PANGO_SCALE +
-								  format->leading));
+  SWFDEC_AS_VALUE_SET_INT (&val, height);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_height, &val);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, PANGO_ASCENT(ink_rect) / PANGO_SCALE);
+  SWFDEC_AS_VALUE_SET_INT (&val, ascent);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_ascent, &val);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, PANGO_DESCENT (ink_rect) / PANGO_SCALE);
+  SWFDEC_AS_VALUE_SET_INT (&val, descent);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_descent, &val);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, ink_rect.width / PANGO_SCALE +
-						   format->left_margin + format->right_margin + 4);
+  SWFDEC_AS_VALUE_SET_INT (&val, text_field_width);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_textFieldWidth, &val);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, ink_rect.height / PANGO_SCALE + 4 +
-						   format->leading);
+  SWFDEC_AS_VALUE_SET_INT (&val, text_field_height);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_textFieldHeight, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, obj);

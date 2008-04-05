@@ -92,6 +92,10 @@ swfdec_event_type_get_name (SwfdecEventType type)
       return NULL;
     case SWFDEC_EVENT_CONSTRUCT:
       return SWFDEC_AS_STR_onConstruct;
+    case SWFDEC_EVENT_CHANGED:
+      return SWFDEC_AS_STR_onChanged;
+    case SWFDEC_EVENT_SCROLL:
+      return SWFDEC_AS_STR_onScroller;
     default:
       g_assert_not_reached ();
       return NULL;
@@ -158,7 +162,7 @@ swfdec_event_list_parse (SwfdecEventList *list, SwfdecBits *bits, int version,
   g_return_if_fail (list->refcount == 1);
   g_return_if_fail (description != NULL);
 
-  event.conditions = conditions;
+  event.conditions = conditions & SWFDEC_EVENT_MASK;
   event.key = key;
   i = g_bit_nth_lsf (conditions, -1);
   name = g_strconcat (description, ".", i < N_CONDITIONS ? 

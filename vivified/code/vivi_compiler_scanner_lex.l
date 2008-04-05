@@ -27,9 +27,6 @@ digit			[0-9]
 identifier_start	[$_a-zA-Z]
 identifier_part		[$_a-zA-Z0-9]
 
-/* r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)? */
-/* '\.[0-9]+([eE][+-][0-9]+)?' */
-
 %x			str
 %x			comment
 
@@ -180,8 +177,19 @@ identifier_part		[$_a-zA-Z0-9]
 			  lex_value.v_boolean = 0;
 			  return TOKEN_BOOLEAN; }
 
-[-+]*{digit}+		{ lex_value.type = VALUE_TYPE_NUMBER;
-			  lex_value.v_number = atoi(yytext);
+0[xX][0-9a-fA-F]+	{ lex_value.type = VALUE_TYPE_NUMBER;
+			  lex_value.v_number =
+			    g_ascii_strtoull (yytext, NULL, 16);
+			  return TOKEN_NUMBER; }
+
+([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-]?[0-9]+)? {
+			  lex_value.type = VALUE_TYPE_NUMBER;
+			  lex_value.v_number = g_ascii_strtod (yytext, NULL);
+			  return TOKEN_NUMBER; }
+
+\.[0-9]+([eE][+-]?[0-9]+)? {
+			  lex_value.type = VALUE_TYPE_NUMBER;
+			  lex_value.v_number = g_ascii_strtod (yytext, NULL);
 			  return TOKEN_NUMBER; }
 
 \"			{ string = g_string_new ("");

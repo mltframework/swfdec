@@ -233,11 +233,11 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
       scanner->next_line_terminator = FALSE;
     }
     while (scanner->next_token == TOKEN_LINE_TERMINATOR) {
-      scanner->next_line_number++;
       scanner->next_token = yylex ();
     }
-    scanner->next_value = yylval;
-    yylval.type = VALUE_TYPE_NONE;
+    scanner->next_value = lex_value;
+    scanner->next_line_number = lex_line_number;
+    lex_value.type = VALUE_TYPE_NONE;
   }
 }
 
@@ -250,8 +250,7 @@ vivi_compiler_scanner_new (FILE *file)
 
   scanner = g_object_new (VIVI_TYPE_COMPILER_SCANNER, NULL);
   scanner->file = file;
-  scanner->line_number = 1;
-  scanner->next_line_number = 1;
+  scanner->line_number = scanner->next_line_number = lex_line_number = 1;
 
   yyrestart (file);
 

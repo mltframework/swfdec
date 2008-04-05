@@ -22,6 +22,7 @@
 
 #include "vivi_compiler_scanner.h"
 
-ViviCompilerScannerValue yylval;
+ViviCompilerScannerValue lex_value;
+guint lex_line_number;
 
 #endif // _VIVI_COMPILER_SCANNER_LEX_INCLUDE_H_

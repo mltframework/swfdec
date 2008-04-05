@@ -31,15 +31,29 @@ identifier_part		[$_a-zA-Z0-9]
 /* '\.[0-9]+([eE][+-][0-9]+)?' */
 
 %x			str
+%x			comment
 
 %%
 
 			GString *string;
 
-"//"[^\r\n]*		{ return TOKEN_LINE_TERMINATOR; }
+"/*"			{ BEGIN(comment); }
+
+<comment>{
+  [^*\n]*		/* skip */
+  \n			lex_line_number++;
+  "*/"			BEGIN(INITIAL);
+  <<EOF>>		{ BEGIN(INITIAL); return TOKEN_ERROR; }
+}
+
+"//"[^\r\n]*		{ lex_line_number++;
+			  return TOKEN_LINE_TERMINATOR; }
 [ \t]			/* skip whitespace */
 <<EOF>>			{ return TOKEN_EOF; }
-[\n\r]*			{ return TOKEN_LINE_TERMINATOR; }
+\r\n			{ lex_line_number++;
+			  return TOKEN_LINE_TERMINATOR; }
+[\r\n]			{ lex_line_number++;
+			  return TOKEN_LINE_TERMINATOR; }
 
 "{"			{ return TOKEN_BRACE_LEFT; }
 "}"			{ return TOKEN_BRACE_RIGHT; }
@@ -159,14 +173,15 @@ identifier_part		[$_a-zA-Z0-9]
 "volatile"		{ return TOKEN_RESERVED_KEYWORD; }
 
 "null"			{ return TOKEN_NULL; }
-"true"			{ yylval.type = VALUE_TYPE_BOOLEAN;
-			  yylval.v_boolean = 1;
+"true"			{ lex_value.type = VALUE_TYPE_BOOLEAN;
+			  lex_value.v_boolean = 1;
 			  return TOKEN_BOOLEAN; }
-"false"			{ yylval.type = VALUE_TYPE_BOOLEAN;
-			  yylval.v_boolean = 0;
+"false"			{ lex_value.type = VALUE_TYPE_BOOLEAN;
+			  lex_value.v_boolean = 0;
 			  return TOKEN_BOOLEAN; }
-[-+]*{digit}+		{ yylval.type = VALUE_TYPE_NUMBER;
-			  yylval.v_number = atoi(yytext);
+
+[-+]*{digit}+		{ lex_value.type = VALUE_TYPE_NUMBER;
+			  lex_value.v_number = atoi(yytext);
 			  return TOKEN_NUMBER; }
 
 \"			{ string = g_string_new ("");
@@ -175,8 +190,8 @@ identifier_part		[$_a-zA-Z0-9]
 
 <str>{
   \"			{ BEGIN(INITIAL);
-  			  yylval.type = VALUE_TYPE_STRING;
-  			  yylval.v_string = g_string_free (string, FALSE);
+  			  lex_value.type = VALUE_TYPE_STRING;
+  			  lex_value.v_string = g_string_free (string, FALSE);
   			  return TOKEN_STRING; }
   \n			{ BEGIN(INITIAL);
   			  g_string_free (string, TRUE);
@@ -219,8 +234,8 @@ identifier_part		[$_a-zA-Z0-9]
 }
 
 {identifier_start}({identifier_part})* {
-  			  yylval.type = VALUE_TYPE_IDENTIFIER;
-			  yylval.v_identifier = g_strdup (yytext);
+  			  lex_value.type = VALUE_TYPE_IDENTIFIER;
+			  lex_value.v_identifier = g_strdup (yytext);
 			  return TOKEN_IDENTIFIER; }
 
 "undefined"		{ return TOKEN_UNDEFINED; }

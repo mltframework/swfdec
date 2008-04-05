@@ -56,6 +56,7 @@ static const struct {
   // special
   { TOKEN_NONE, "NONE" },
   { TOKEN_EOF, "EOF" },
+  { TOKEN_ERROR, "ERROR" },
   { TOKEN_UNKNOWN, "UNKNOWN" },
   { TOKEN_LINE_TERMINATOR, "NEW LINE" },
 

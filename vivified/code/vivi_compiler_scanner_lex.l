@@ -30,7 +30,11 @@ identifier_part		[$_a-zA-Z0-9]
 /* r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)? */
 /* '\.[0-9]+([eE][+-][0-9]+)?' */
 
+%x			str
+
 %%
+
+			GString *string;
 
 "//"[^\r\n]*		{ return TOKEN_LINE_TERMINATOR; }
 [ \t]			/* skip whitespace */
@@ -161,9 +165,54 @@ identifier_part		[$_a-zA-Z0-9]
 			  return TOKEN_BOOLEAN; }
 [-+]*{digit}+		{ yylval.v_number = atoi(yytext);
 			  return TOKEN_NUMBER; }
-("\""[^\"]*"\""|"'"[^']*"'") {
-			  yylval.v_string = g_strndup (yytext + 1, yyleng - 2);
-			  return TOKEN_STRING; }
+
+\"			{ string = g_string_new ("");
+			  BEGIN(str);
+			}
+
+<str>{
+  \"			{ BEGIN(INITIAL);
+  			  yylval.v_string = g_string_free (string, FALSE);
+  			  return TOKEN_STRING; }
+  \n			{ BEGIN(INITIAL);
+  			  g_string_free (string, TRUE);
+  			  return TOKEN_ERROR; }
+  \\0			g_string_append_c (string, '0');
+  \\[0-7]{1,3}		{ guint64 result;
+  			  result = g_ascii_strtoull (yytext + 1, NULL, 8);
+  			  if (result > 0xff) {
+  			    g_string_free (string, TRUE);
+  			    return TOKEN_ERROR;
+  			  } else {
+  			    g_string_append_c (string, result);
+  			  }
+  			}
+  \\[0-9]+		{ g_string_free (string, TRUE);
+  			  return TOKEN_ERROR; }
+  \\x[0-9a-fA-F]{1,2}	{ guint64 result;
+  			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
+  			  if (result > 0xff || result == 0) {
+  			    BEGIN(INITIAL);
+  			    g_string_free (string, TRUE);
+  			    return TOKEN_ERROR;
+  			  } else {
+  			    g_string_append_c (string, result);
+  			  }
+  			}
+  \\b			g_string_append_c (string, '\b');
+  \\f			g_string_append_c (string, '\f');
+  \\n			g_string_append_c (string, '\n');
+  \\r			g_string_append_c (string, '\r');
+  \\t			g_string_append_c (string, '\t');
+  \\v			g_string_append_c (string, '\v');
+  \\.			g_string_append_c (string, yytext[1]);
+  [^\\\n\"]+		{ char *p = yytext;
+  			  while (*p != '\0') {
+  			    g_string_append_c (string, *p);
+  			    p++;
+  			  }
+  			}
+}
 
 {identifier_start}({identifier_part})* {
 			  yylval.v_identifier = g_strdup (yytext);

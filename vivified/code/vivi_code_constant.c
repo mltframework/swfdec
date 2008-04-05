@@ -48,14 +48,32 @@ escape_string (const char *s)
   char *next;
 
   str = g_string_new ("\"");
-  while ((next = strpbrk (s, "\"\n"))) {
+  while ((next = strpbrk (s, "\"\\\b\f\n\r\t\v"))) {
     g_string_append_len (str, s, next - s);
     switch (*next) {
       case '"':
 	g_string_append (str, "\\\"");
 	break;
+      case '\\':
+	g_string_append (str, "\\\\");
+	break;
+      case '\b':
+	g_string_append (str, "\\b");
+	break;
+      case '\f':
+	g_string_append (str, "\\f");
+	break;
       case '\n':
-	g_string_append (str, "\n");
+	g_string_append (str, "\\n");
+	break;
+      case '\r':
+	g_string_append (str, "\\r");
+	break;
+      case '\t':
+	g_string_append (str, "\\t");
+	break;
+      case '\v':
+	g_string_append (str, "\\v");
 	break;
       default:
 	g_assert_not_reached ();

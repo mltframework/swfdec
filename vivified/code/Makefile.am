@@ -3,7 +3,7 @@ SUBDIRS = test
 noinst_LTLIBRARIES = libvivified-compiler-lex.la libvivified-compiler.la
 
 # we create own .la for lex generated code, so we can disable some warnings
-libvivified_compiler_lex_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) -Wno-redundant-decls -Wno-switch-default -Wno-missing-declarations -Wno-missing-prototypes -Wno-sign-compare -Wno-unused-function -Wno-missing-noreturn
+libvivified_compiler_lex_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) -Wno-switch-default -Wno-missing-declarations -Wno-missing-prototypes -Wno-sign-compare -Wno-unused-function -Wno-missing-noreturn
 libvivified_compiler_lex_la_LDFLAGS = $(SWFDEC_LIBS)
 
 libvivified_compiler_lex_la_SOURCES = \

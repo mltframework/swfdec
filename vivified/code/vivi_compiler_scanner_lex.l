@@ -22,8 +22,9 @@
 %}
 
 %option			noyywrap
+%option			nostdinit
+%option			never-interactive
 
-digit			[0-9]
 identifier_start	[$_a-zA-Z]
 identifier_part		[$_a-zA-Z0-9]
 
@@ -34,23 +35,33 @@ identifier_part		[$_a-zA-Z0-9]
 
 			GString *string;
 
-"/*"			{ BEGIN(comment); }
+<<EOF>>			{ return TOKEN_EOF; }
 
+"/*"			{ BEGIN(comment); }
 <comment>{
   [^*\n]*		/* skip */
-  \n			lex_line_number++;
-  "*/"			BEGIN(INITIAL);
-  <<EOF>>		{ BEGIN(INITIAL); return TOKEN_ERROR; }
+  \n			{ lex_line_number++; }
+  "*/"			{ BEGIN(INITIAL); }
+  <<EOF>>		{
+			  BEGIN(INITIAL);
+			  return TOKEN_ERROR;
+			}
 }
+"//"[^\r\n]*		{
+			  lex_line_number++;
+			  return TOKEN_LINE_TERMINATOR;
+			}
 
-"//"[^\r\n]*		{ lex_line_number++;
-			  return TOKEN_LINE_TERMINATOR; }
-[ \t]			/* skip whitespace */
-<<EOF>>			{ return TOKEN_EOF; }
-\r\n			{ lex_line_number++;
-			  return TOKEN_LINE_TERMINATOR; }
-[\r\n]			{ lex_line_number++;
-			  return TOKEN_LINE_TERMINATOR; }
+[ \t]			/* skip */
+
+\r\n			{
+			  lex_line_number++;
+			  return TOKEN_LINE_TERMINATOR;
+			}
+[\r\n]			{
+			  lex_line_number++;
+			  return TOKEN_LINE_TERMINATOR;
+			}
 
 "{"			{ return TOKEN_BRACE_LEFT; }
 "}"			{ return TOKEN_BRACE_RIGHT; }
@@ -170,84 +181,103 @@ identifier_part		[$_a-zA-Z0-9]
 "volatile"		{ return TOKEN_RESERVED_KEYWORD; }
 
 "null"			{ return TOKEN_NULL; }
-"true"			{ lex_value.type = VALUE_TYPE_BOOLEAN;
+"true"			{
+			  lex_value.type = VALUE_TYPE_BOOLEAN;
 			  lex_value.v_boolean = 1;
-			  return TOKEN_BOOLEAN; }
-"false"			{ lex_value.type = VALUE_TYPE_BOOLEAN;
+			  return TOKEN_BOOLEAN;
+			}
+"false"			{
+			  lex_value.type = VALUE_TYPE_BOOLEAN;
 			  lex_value.v_boolean = 0;
-			  return TOKEN_BOOLEAN; }
+			  return TOKEN_BOOLEAN;
+			}
 
-0[xX][0-9a-fA-F]+	{ lex_value.type = VALUE_TYPE_NUMBER;
+0[xX][0-9a-fA-F]+	{
+			  lex_value.type = VALUE_TYPE_NUMBER;
 			  lex_value.v_number =
 			    g_ascii_strtoull (yytext, NULL, 16);
-			  return TOKEN_NUMBER; }
+			  return TOKEN_NUMBER;
+			}
 
 ([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-]?[0-9]+)? {
 			  lex_value.type = VALUE_TYPE_NUMBER;
 			  lex_value.v_number = g_ascii_strtod (yytext, NULL);
-			  return TOKEN_NUMBER; }
+			  return TOKEN_NUMBER;
+			}
 
 \.[0-9]+([eE][+-]?[0-9]+)? {
 			  lex_value.type = VALUE_TYPE_NUMBER;
 			  lex_value.v_number = g_ascii_strtod (yytext, NULL);
-			  return TOKEN_NUMBER; }
+			  return TOKEN_NUMBER;
+			}
 
-\"			{ string = g_string_new ("");
+\"			{
+			  string = g_string_new ("");
 			  BEGIN(str);
 			}
 
 <str>{
-  \"			{ BEGIN(INITIAL);
-  			  lex_value.type = VALUE_TYPE_STRING;
-  			  lex_value.v_string = g_string_free (string, FALSE);
-  			  return TOKEN_STRING; }
-  \n			{ BEGIN(INITIAL);
-  			  g_string_free (string, TRUE);
-  			  return TOKEN_ERROR; }
-  \\0			g_string_append_c (string, '0');
-  \\[0-7]{1,3}		{ guint64 result;
-  			  result = g_ascii_strtoull (yytext + 1, NULL, 8);
-  			  if (result > 0xff) {
-  			    g_string_free (string, TRUE);
-  			    return TOKEN_ERROR;
-  			  } else {
-  			    g_string_append_c (string, result);
-  			  }
-  			}
-  \\[0-9]+		{ g_string_free (string, TRUE);
-  			  return TOKEN_ERROR; }
-  \\x[0-9a-fA-F]{2}	{ guint64 result;
-  			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
-  			  if (result == 0) {
-  			    BEGIN(INITIAL);
-  			    g_string_free (string, TRUE);
-  			    return TOKEN_ERROR;
-  			  } else {
-  			    g_string_append_c (string, result);
-  			  }
-  			}
-  \\b			g_string_append_c (string, '\b');
-  \\f			g_string_append_c (string, '\f');
-  \\n			g_string_append_c (string, '\n');
-  \\r			g_string_append_c (string, '\r');
-  \\t			g_string_append_c (string, '\t');
-  \\v			g_string_append_c (string, '\v');
-  \\.			g_string_append_c (string, yytext[1]);
-  [^\\\n\"]+		{ char *p = yytext;
-  			  while (*p != '\0') {
-  			    g_string_append_c (string, *p);
-  			    p++;
-  			  }
-  			}
+  \"			{
+			  BEGIN(INITIAL);
+			  lex_value.type = VALUE_TYPE_STRING;
+			  lex_value.v_string = g_string_free (string, FALSE);
+			  return TOKEN_STRING;
+			}
+  \n			{
+			  BEGIN(INITIAL);
+			  g_string_free (string, TRUE);
+			  return TOKEN_ERROR;
+			}
+  \\0			{ g_string_append_c (string, '0'); }
+  \\[0-7]{1,3}		{
+			  guint64 result;
+			  result = g_ascii_strtoull (yytext + 1, NULL, 8);
+			  if (result > 0xff || result == 0) {
+			    BEGIN(INITIAL);
+			    g_string_free (string, TRUE);
+			    return TOKEN_ERROR;
+			  } else {
+			    g_string_append_c (string, result);
+			  }
+			}
+  \\[0-9]+		{
+			  g_string_free (string, TRUE);
+			  return TOKEN_ERROR;
+			}
+  \\x[0-9a-fA-F]{2}	{
+			  guint64 result;
+			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
+			  if (result == 0) {
+			    BEGIN(INITIAL);
+			    g_string_free (string, TRUE);
+			    return TOKEN_ERROR;
+			  } else {
+			    g_string_append_c (string, result);
+			  }
+			}
+  \\b			{ g_string_append_c (string, '\b'); }
+  \\f			{ g_string_append_c (string, '\f'); }
+  \\n			{ g_string_append_c (string, '\n'); }
+  \\r			{ g_string_append_c (string, '\r'); }
+  \\t			{ g_string_append_c (string, '\t'); }
+  \\v			{ g_string_append_c (string, '\v'); }
+  \\.			{ g_string_append_c (string, yytext[1]); }
+  [^\\\n\"]+		{
+			  char *p;
+			  for (p = yytext; *p != '\0'; p++) {
+			    g_string_append_c (string, *p);
+			  }
+			}
 }
 
 {identifier_start}({identifier_part})* {
   			  lex_value.type = VALUE_TYPE_IDENTIFIER;
 			  lex_value.v_identifier = g_strdup (yytext);
-			  return TOKEN_IDENTIFIER; }
+			  return TOKEN_IDENTIFIER;
+			}
 
 "undefined"		{ return TOKEN_UNDEFINED; }
 
-.			{ printf("Unknown character [%c]\n",yytext[0]);
-			  return TOKEN_UNKNOWN; }
+.			{ return TOKEN_ERROR; }
+
 %%

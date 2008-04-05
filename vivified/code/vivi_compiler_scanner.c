@@ -60,74 +60,74 @@ static const struct {
   { TOKEN_LINE_TERMINATOR, "NEW LINE" },
 
   // comparision
-  { TOKEN_BRACE_LEFT, "'{'", },
-  { TOKEN_BRACE_RIGHT, "'}'", },
-  { TOKEN_BRACKET_LEFT, "'['", },
-  { TOKEN_BRACKET_RIGHT, "']'", },
-  { TOKEN_PARENTHESIS_LEFT, "'('", },
-  { TOKEN_PARENTHESIS_RIGHT, "')'", },
+  { TOKEN_BRACE_LEFT, "{", },
+  { TOKEN_BRACE_RIGHT, "}", },
+  { TOKEN_BRACKET_LEFT, "[", },
+  { TOKEN_BRACKET_RIGHT, "]", },
+  { TOKEN_PARENTHESIS_LEFT, "(", },
+  { TOKEN_PARENTHESIS_RIGHT, ")", },
 
   // punctuation
-  { TOKEN_DOT, "'.'", },
-  { TOKEN_SEMICOLON, "';'" },
-  { TOKEN_COMMA, "','" },
+  { TOKEN_DOT, ".", },
+  { TOKEN_SEMICOLON, ";" },
+  { TOKEN_COMMA, "," },
 
   // comparision
-  { TOKEN_LESS_THAN, "'<'" },
-  { TOKEN_GREATER_THAN, "'>'" },
-  { TOKEN_LESS_THAN_OR_EQUAL, "'<='" },
-  { TOKEN_EQUAL_OR_GREATER_THAN, "'=>'" },
+  { TOKEN_LESS_THAN, "<" },
+  { TOKEN_GREATER_THAN, ">" },
+  { TOKEN_LESS_THAN_OR_EQUAL, "<=" },
+  { TOKEN_EQUAL_OR_GREATER_THAN, "=>" },
 
   // equality
-  { TOKEN_EQUAL, "'='" },
-  { TOKEN_NOT_EQUAL, "'!='" },
-  { TOKEN_STRICT_EQUAL, "'==='" },
-  { TOKEN_NOT_STRICT_EQUAL, "'!=='" },
+  { TOKEN_EQUAL, "=" },
+  { TOKEN_NOT_EQUAL, "!=" },
+  { TOKEN_STRICT_EQUAL, "===" },
+  { TOKEN_NOT_STRICT_EQUAL, "!==" },
 
   // operator
-  { TOKEN_PLUS, "'+'" },
-  { TOKEN_MINUS, "'-'" },
-  { TOKEN_MULTIPLY, "'*'" },
-  { TOKEN_DIVIDE, "'/'" },
-  { TOKEN_REMAINDER, "'%'" },
+  { TOKEN_PLUS, "+" },
+  { TOKEN_MINUS, "-" },
+  { TOKEN_MULTIPLY, "*" },
+  { TOKEN_DIVIDE, "/" },
+  { TOKEN_REMAINDER, "%" },
 
   // shift
-  { TOKEN_SHIFT_LEFT, "'<<'" },
-  { TOKEN_SHIFT_RIGHT, "'>>'" },
-  { TOKEN_SHIFT_RIGHT_UNSIGNED, "'>>>'" },
+  { TOKEN_SHIFT_LEFT, "<<" },
+  { TOKEN_SHIFT_RIGHT, ">>" },
+  { TOKEN_SHIFT_RIGHT_UNSIGNED, ">>>" },
 
   // bitwise
-  { TOKEN_BITWISE_AND, "'&'" },
-  { TOKEN_BITWISE_OR, "'|'" },
-  { TOKEN_BITWISE_XOR, "'^'" },
+  { TOKEN_BITWISE_AND, "&" },
+  { TOKEN_BITWISE_OR, "|" },
+  { TOKEN_BITWISE_XOR, "^" },
   
   // unary/postfix
-  { TOKEN_LOGICAL_NOT, "'!'" },
-  { TOKEN_BITWISE_NOT, "'~'" },
-  { TOKEN_INCREASE, "'++'" },
-  { TOKEN_DESCREASE, "'--'" },
+  { TOKEN_LOGICAL_NOT, "!" },
+  { TOKEN_BITWISE_NOT, "~" },
+  { TOKEN_INCREASE, "++" },
+  { TOKEN_DESCREASE, "--" },
 
   // conditional
-  { TOKEN_QUESTION_MARK, "'?'" },
-  { TOKEN_COLON, "':'" },
+  { TOKEN_QUESTION_MARK, "?" },
+  { TOKEN_COLON, ":" },
 
   // logical
-  { TOKEN_LOGICAL_AND, "'&&'" },
-  { TOKEN_LOGICAL_OR, "'||'" },
+  { TOKEN_LOGICAL_AND, "&&" },
+  { TOKEN_LOGICAL_OR, "||" },
 
   // assign
-  { TOKEN_ASSIGN, "'='" },
-  { TOKEN_ASSIGN_MULTIPLY, "'*='" },
-  { TOKEN_ASSIGN_DIVIDE, "'/='" },
-  { TOKEN_ASSIGN_REMAINDER, "'%='" },
-  { TOKEN_ASSIGN_ADD, "'+='" },
-  { TOKEN_ASSIGN_MINUS, "'-='" },
-  { TOKEN_ASSIGN_SHIFT_LEFT, "'<<='" },
-  { TOKEN_ASSIGN_SHIFT_RIGHT, "'>>='" },
-  { TOKEN_ASSIGN_SHIFT_RIGHT_ZERO, "'>>>='" },
-  { TOKEN_ASSIGN_BITWISE_AND, "'&='" },
-  { TOKEN_ASSIGN_BITWISE_XOR, "'^='" },
-  { TOKEN_ASSIGN_BITWISE_OR, "'|='" },
+  { TOKEN_ASSIGN, "=" },
+  { TOKEN_ASSIGN_MULTIPLY, "*=" },
+  { TOKEN_ASSIGN_DIVIDE, "/=" },
+  { TOKEN_ASSIGN_REMAINDER, "%=" },
+  { TOKEN_ASSIGN_ADD, "+=" },
+  { TOKEN_ASSIGN_MINUS, "-=" },
+  { TOKEN_ASSIGN_SHIFT_LEFT, "<<=" },
+  { TOKEN_ASSIGN_SHIFT_RIGHT, ">>=" },
+  { TOKEN_ASSIGN_SHIFT_RIGHT_ZERO, ">>>=" },
+  { TOKEN_ASSIGN_BITWISE_AND, "&=" },
+  { TOKEN_ASSIGN_BITWISE_XOR, "^=" },
+  { TOKEN_ASSIGN_BITWISE_OR, "|=" },
 
   // values
   { TOKEN_NULL, "NULL" },
@@ -137,31 +137,31 @@ static const struct {
   { TOKEN_IDENTIFIER, "IDENTIFIER" },
 
   // keywords
-  { TOKEN_BREAK, "'break'" },
-  { TOKEN_CASE, "'case'" },
-  { TOKEN_CATCH, "'catch'" },
-  { TOKEN_CONTINUE, "'continue'" },
-  { TOKEN_DEFAULT, "'default'" },
-  { TOKEN_DELETE, "'delete'" },
-  { TOKEN_DO, "'do'" },
-  { TOKEN_ELSE, "'else'" },
-  { TOKEN_FINALLY, "'finally'" },
-  { TOKEN_FOR, "'for'" },
-  { TOKEN_FUNCTION, "'function'" },
-  { TOKEN_IF, "'if'" },
-  { TOKEN_IN, "'in'" },
-  { TOKEN_INSTANCEOF, "'instanceof'" },
-  { TOKEN_NEW, "'new'" },
-  { TOKEN_RETURN, "'return'" },
-  { TOKEN_SWITCH, "'switch'" },
-  { TOKEN_THIS, "'this'" },
-  { TOKEN_THROW, "'throw'" },
-  { TOKEN_TRY, "'try'" },
-  { TOKEN_TYPEOF, "'typeof'" },
-  { TOKEN_VAR, "'var'" },
-  { TOKEN_VOID, "'void'" },
-  { TOKEN_WHILE, "'while'" },
-  { TOKEN_WITH, "'with'" },
+  { TOKEN_BREAK, "break" },
+  { TOKEN_CASE, "case" },
+  { TOKEN_CATCH, "catch" },
+  { TOKEN_CONTINUE, "continue" },
+  { TOKEN_DEFAULT, "default" },
+  { TOKEN_DELETE, "delete" },
+  { TOKEN_DO, "do" },
+  { TOKEN_ELSE, "else" },
+  { TOKEN_FINALLY, "finally" },
+  { TOKEN_FOR, "for" },
+  { TOKEN_FUNCTION, "function" },
+  { TOKEN_IF, "if" },
+  { TOKEN_IN, "in" },
+  { TOKEN_INSTANCEOF, "instanceof" },
+  { TOKEN_NEW, "new" },
+  { TOKEN_RETURN, "return" },
+  { TOKEN_SWITCH, "switch" },
+  { TOKEN_THIS, "this" },
+  { TOKEN_THROW, "throw" },
+  { TOKEN_TRY, "try" },
+  { TOKEN_TYPEOF, "typeof" },
+  { TOKEN_VAR, "var" },
+  { TOKEN_VOID, "void" },
+  { TOKEN_WHILE, "while" },
+  { TOKEN_WITH, "with" },
 
   // reserved keywords
   { TOKEN_RESERVED_KEYWORD, "RESERVED KEYWORD" },
@@ -190,6 +190,7 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
 
   scanner->token = scanner->next_token;
   scanner->value = scanner->next_value;
+  scanner->line_number = scanner->next_line_number;
   scanner->line_terminator = scanner->next_line_terminator;
 
   if (scanner->file == NULL) {
@@ -199,9 +200,12 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
     scanner->next_token = yylex ();
     if (scanner->next_token == TOKEN_LINE_TERMINATOR) {
       scanner->next_line_terminator = TRUE;
-      scanner->next_token = yylex ();
     } else {
       scanner->next_line_terminator = FALSE;
+    }
+    while (scanner->next_token == TOKEN_LINE_TERMINATOR) {
+      scanner->next_line_number++;
+      scanner->next_token = yylex ();
     }
     scanner->next_value = yylval;
   }
@@ -216,9 +220,10 @@ vivi_compiler_scanner_new (FILE *file)
 
   scanner = g_object_new (VIVI_TYPE_COMPILER_SCANNER, NULL);
   scanner->file = file;
+  scanner->line_number = 1;
+  scanner->next_line_number = 1;
 
   yyrestart (file);
-  yyout = stdout;
 
   vivi_compiler_scanner_advance (scanner);
 
@@ -248,7 +253,7 @@ vivi_compiler_scanner_cur_line (ViviCompilerScanner *scanner)
 {
   g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), 0);
 
-  return yylineno;
+  return scanner->line_number;
 }
 
 guint

@@ -1645,7 +1645,8 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 	  if (pre_statement != NULL)
 	    g_object_unref (pre_statement);
 	  g_object_unref (condition);
-	  g_object_unref (condition_statement);
+	  if (condition_statement != NULL)
+	    g_object_unref (condition_statement);
 	  return FAIL (TOKEN_SEMICOLON);
 	}
       }
@@ -1655,7 +1656,8 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 	if (pre_statement != NULL)
 	  g_object_unref (pre_statement);
 	g_object_unref (condition);
-	g_object_unref (condition_statement);
+	if (condition_statement != NULL)
+	  g_object_unref (condition_statement);
 	return FAIL_CHILD (status);
       }
       g_object_unref (pre_value);
@@ -1695,7 +1697,8 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
       if (pre_statement != NULL)
 	g_object_unref (pre_statement);
       g_object_unref (condition);
-      g_object_unref (condition_statement);
+      if (condition_statement != NULL)
+	g_object_unref (condition_statement);
       g_object_unref (post_statement);
       return FAIL (TOKEN_PARENTHESIS_RIGHT);
     }
@@ -1705,7 +1708,8 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
       if (pre_statement != NULL)
 	g_object_unref (pre_statement);
       g_object_unref (condition);
-      g_object_unref (condition_statement);
+      if (condition_statement != NULL)
+	g_object_unref (condition_statement);
       g_object_unref (post_statement);
       return FAIL_CHILD (status);
     }

@@ -171,9 +171,12 @@ struct _ViviCompilerScanner
 
   ViviCompilerScannerToken	token;
   ViviCompilerScannerToken	next_token;
+  guint				line_number;
   gboolean			line_terminator;
+
   ViviCompilerScannerValue	value;
   ViviCompilerScannerValue	next_value;
+  guint				next_line_number;
   gboolean			next_line_terminator;
 
   ViviCompilerScannerToken	expected;

@@ -7,17 +7,16 @@
 digit			[0-9]
 identifier_start	[$_a-zA-Z]
 identifier_part		[$_a-zA-Z0-9]
-line_terminator		[\n\r]
 
 /* r'([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-][0-9]+)? */
 /* '\.[0-9]+([eE][+-][0-9]+)?' */
 
 %%
 
-"//".*{line_terminator}	/* skip single line comments */
+"//"[^\r\n]*		{ return TOKEN_LINE_TERMINATOR; }
 [ \t]			/* skip whitespace */
 <<EOF>>			{ return TOKEN_EOF; }
-[\n\r]			{ return TOKEN_LINE_TERMINATOR; }
+[\n\r]*			{ return TOKEN_LINE_TERMINATOR; }
 
 "{"			{ return TOKEN_BRACE_LEFT; }
 "}"			{ return TOKEN_BRACE_RIGHT; }

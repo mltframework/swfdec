@@ -27,6 +27,7 @@
 
 #include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeConstant, vivi_code_constant, VIVI_TYPE_CODE_VALUE)
 
@@ -118,6 +119,44 @@ vivi_code_constant_print (ViviCodeToken *token, ViviCodePrinter *printer)
   }
 }
 
+static void
+vivi_code_constant_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeConstant *constant = VIVI_CODE_CONSTANT (token);
+
+  vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_PUSH);
+
+  switch (constant->value.type) {
+    case SWFDEC_AS_TYPE_UNDEFINED:
+      vivi_code_compiler_write_u8 (compiler, 3);
+      break;
+    case SWFDEC_AS_TYPE_NULL:
+      vivi_code_compiler_write_u8 (compiler, 2);
+      break;
+    case SWFDEC_AS_TYPE_BOOLEAN:
+      vivi_code_compiler_write_u8 (compiler, 5);
+      vivi_code_compiler_write_u8 (compiler,
+	  SWFDEC_AS_VALUE_GET_BOOLEAN (&constant->value));
+      break;
+    case SWFDEC_AS_TYPE_NUMBER:
+      vivi_code_compiler_write_u8 (compiler, 6);
+      vivi_code_compiler_write_double (compiler,
+	  SWFDEC_AS_VALUE_GET_NUMBER (&constant->value));
+      break;
+    case SWFDEC_AS_TYPE_STRING:
+      vivi_code_compiler_write_u8 (compiler, 0);
+      vivi_code_compiler_write_string (compiler,
+	  SWFDEC_AS_VALUE_GET_STRING (&constant->value));
+      break;
+    case SWFDEC_AS_TYPE_INT:
+    case SWFDEC_AS_TYPE_OBJECT:
+    default:
+      g_assert_not_reached ();
+  }
+
+  vivi_code_compiler_end_action (compiler);
+}
+
 static gboolean
 vivi_code_constant_is_constant (ViviCodeValue *value)
 {
@@ -134,6 +173,7 @@ vivi_code_constant_class_init (ViviCodeConstantClass *klass)
   object_class->dispose = vivi_code_constant_dispose;
 
   token_class->print = vivi_code_constant_print;
+  token_class->compile = vivi_code_constant_compile;
 
   value_class->is_constant = vivi_code_constant_is_constant;
 }

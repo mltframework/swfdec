@@ -28,6 +28,7 @@
 #include "vivi_code_comment.h"
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeBlock, vivi_code_block, VIVI_TYPE_CODE_STATEMENT)
 
@@ -89,6 +90,18 @@ vivi_code_block_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_block_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeBlock *block = VIVI_CODE_BLOCK (token);
+  guint i;
+
+  for (i = 0; i < block->statements->len; i++) {
+    vivi_code_compiler_compile_token (compiler,
+	VIVI_CODE_TOKEN (g_ptr_array_index (block->statements, i)));
+  }
+}
+
+static void
 vivi_code_block_class_init (ViviCodeBlockClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -98,6 +111,7 @@ vivi_code_block_class_init (ViviCodeBlockClass *klass)
   object_class->dispose = vivi_code_block_dispose;
 
   token_class->print = vivi_code_block_print;
+  token_class->compile = vivi_code_block_compile;
 
   statement_class->optimize = vivi_code_block_optimize;
   statement_class->needs_braces = vivi_code_block_needs_braces;

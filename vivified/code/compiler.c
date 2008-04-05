@@ -25,6 +25,7 @@
 
 #include "vivi_compiler.h"
 #include "vivi_code_text_printer.h"
+#include "vivi_code_compiler.h"
 
 int
 main (int argc, char *argv[])
@@ -53,9 +54,20 @@ main (int argc, char *argv[])
   if (statement == NULL) {
     g_printerr ("Compilation failed\n");
   } else {
-    ViviCodePrinter *printer = vivi_code_text_printer_new ();
+    ViviCodePrinter *printer;
+    ViviCodeCompiler *compiler;
+    SwfdecBuffer *buffer;
+
+    printer = vivi_code_text_printer_new ();
     vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (statement));
     g_object_unref (printer);
+
+    compiler = vivi_code_compiler_new ();
+    vivi_code_compiler_compile_token (compiler, VIVI_CODE_TOKEN (statement));
+    buffer = vivi_code_compiler_get_data (compiler);
+    g_object_unref (compiler);
+
+    swfdec_buffer_unref (buffer);
   }
 
   g_object_unref (player);

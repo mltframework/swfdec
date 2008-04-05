@@ -21,6 +21,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_block.c \
 	vivi_code_break.c \
 	vivi_code_comment.c \
+	vivi_code_compiler.c \
 	vivi_code_constant.c \
 	vivi_code_continue.c \
 	vivi_code_function.c \
@@ -52,7 +53,8 @@ libvivified_compiler_la_SOURCES = \
 	vivi_decompiler_duplicate.c \
 	vivi_decompiler_state.c \
 	vivi_decompiler_unknown.c \
-	vivi_decompiler.c
+	vivi_decompiler.c \
+	../../tools/swfdec_out.c
 
 noinst_HEADERS = \
 	vivi_code_assignment.h \
@@ -60,6 +62,7 @@ noinst_HEADERS = \
 	vivi_code_block.h \
 	vivi_code_break.h \
 	vivi_code_comment.h \
+	vivi_code_compiler.h \
 	vivi_code_constant.h \
 	vivi_code_continue.h \
 	vivi_code_function.h \
@@ -94,6 +97,7 @@ noinst_HEADERS = \
 	vivi_decompiler_duplicate.h \
 	vivi_decompiler_state.h
 	vivi_decompiler_unknown.h \
+	../../tools/swfdec_out.h \
 	vivified-compiler.h
 
 noinst_PROGRAMS = vivi-decompile vivi-compile

@@ -1368,6 +1368,8 @@ parse_expression (ParseData *data, ViviCodeValue **value,
     if (!check_token (data, TOKEN_COMMA))
       break;
 
+    g_object_unref (*value);
+
     status = parse_assignment_expression (data, value, &statement_one);
     if (status != STATUS_OK) {
       g_object_unref (*value);
@@ -1844,10 +1846,10 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
     last = *statement;
   }
 
-  if (VIVI_IS_CODE_ASSIGNMENT (last)) {
+  if (VIVI_IS_CODE_ASSIGNMENT (last) && VIVI_IS_CODE_GET (value)) {
     ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (last);
 
-    if (assignment->from == NULL && assignment->name == value) {
+    if (assignment->from == NULL && assignment->name == VIVI_CODE_GET (value)->name) {
       g_object_unref (value);
       return STATUS_OK;
     }

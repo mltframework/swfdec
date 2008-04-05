@@ -159,11 +159,14 @@ identifier_part		[$_a-zA-Z0-9]
 "volatile"		{ return TOKEN_RESERVED_KEYWORD; }
 
 "null"			{ return TOKEN_NULL; }
-"true"			{ yylval.v_boolean = 1;
+"true"			{ yylval.type = VALUE_TYPE_BOOLEAN;
+			  yylval.v_boolean = 1;
 			  return TOKEN_BOOLEAN; }
-"false"			{ yylval.v_boolean = 0;
+"false"			{ yylval.type = VALUE_TYPE_BOOLEAN;
+			  yylval.v_boolean = 0;
 			  return TOKEN_BOOLEAN; }
-[-+]*{digit}+		{ yylval.v_number = atoi(yytext);
+[-+]*{digit}+		{ yylval.type = VALUE_TYPE_NUMBER;
+			  yylval.v_number = atoi(yytext);
 			  return TOKEN_NUMBER; }
 
 \"			{ string = g_string_new ("");
@@ -172,6 +175,7 @@ identifier_part		[$_a-zA-Z0-9]
 
 <str>{
   \"			{ BEGIN(INITIAL);
+  			  yylval.type = VALUE_TYPE_STRING;
   			  yylval.v_string = g_string_free (string, FALSE);
   			  return TOKEN_STRING; }
   \n			{ BEGIN(INITIAL);
@@ -215,6 +219,7 @@ identifier_part		[$_a-zA-Z0-9]
 }
 
 {identifier_start}({identifier_part})* {
+  			  yylval.type = VALUE_TYPE_IDENTIFIER;
 			  yylval.v_identifier = g_strdup (yytext);
 			  return TOKEN_IDENTIFIER; }
 

@@ -52,11 +52,13 @@ main (int argc, char *argv[])
 
   if (statement == NULL) {
     g_printerr ("Compilation failed\n");
-    return -1;
   } else {
     ViviCodePrinter *printer = vivi_code_text_printer_new ();
     vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (statement));
     g_object_unref (printer);
-    return 0;
   }
+
+  g_object_unref (player);
+
+  return (statement == NULL ? -1 : 0);
 }

@@ -29,9 +29,35 @@
 G_DEFINE_TYPE (ViviCompilerScanner, vivi_compiler_scanner, G_TYPE_OBJECT)
 
 static void
+vivi_compiler_scanner_free_type_value (ViviCompilerScannerValue *value)
+{
+  switch (value->type) {
+    case VALUE_TYPE_STRING:
+      g_free (value->v_string);
+      break;
+    case VALUE_TYPE_IDENTIFIER:
+      g_free (value->v_identifier);
+      break;
+    case VALUE_TYPE_NONE:
+    case VALUE_TYPE_BOOLEAN:
+    case VALUE_TYPE_NUMBER:
+      /* nothing */
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  value->type = VALUE_TYPE_NONE;
+}
+
+static void
 vivi_compiler_scanner_dispose (GObject *object)
 {
-  //ViviCompilerScanner *scanner = VIVI_COMPILER_SCANNER (object);
+  ViviCompilerScanner *scanner = VIVI_COMPILER_SCANNER (object);
+
+  vivi_compiler_scanner_free_type_value (&scanner->value);
+  vivi_compiler_scanner_free_type_value (&scanner->next_value);
 
   G_OBJECT_CLASS (vivi_compiler_scanner_parent_class)->dispose (object);
 }
@@ -189,6 +215,8 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
 {
   g_return_if_fail (VIVI_IS_COMPILER_SCANNER (scanner));
 
+  vivi_compiler_scanner_free_type_value (&scanner->value);
+
   scanner->token = scanner->next_token;
   scanner->value = scanner->next_value;
   scanner->line_number = scanner->next_line_number;
@@ -209,6 +237,7 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
       scanner->next_token = yylex ();
     }
     scanner->next_value = yylval;
+    yylval.type = VALUE_TYPE_NONE;
   }
 }
 

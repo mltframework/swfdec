@@ -125,18 +125,19 @@ void
 vivi_code_compiler_end_action (ViviCodeCompiler *compiler)
 {
   SwfdecBuffer *buffer;
-  gsize length;
 
   g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
   g_return_if_fail (compiler->action != NULL);
 
   g_print ("END ACTION %i\n", compiler->action->id);
 
-  swfdec_out_put_u32 (compiler->data, compiler->action->id);
-  length = swfdec_out_get_bits (compiler->action->data);
   buffer = swfdec_out_close (compiler->action->data);
-  if (length > 0) {
-    swfdec_out_put_u16 (compiler->data, length / 8);
+
+  g_assert (compiler->action->id & 0x80 || buffer->length == 0);
+
+  swfdec_out_put_u8 (compiler->data, compiler->action->id);
+  if (compiler->action->id & 0x80) {
+    swfdec_out_put_u16 (compiler->data, buffer->length);
     swfdec_out_put_buffer (compiler->data, buffer);
   }
   swfdec_buffer_unref (buffer);
@@ -155,6 +156,8 @@ vivi_code_compiler_end_action (ViviCodeCompiler *compiler)
 void vivi_code_compiler_write_u8 (ViviCodeCompiler *compiler, guint value)
 {
   g_print ("write_u8 %i\n", value);
+
+  swfdec_out_put_u8 (compiler->action->data, value);
 }
 
 void
@@ -167,4 +170,6 @@ void
 vivi_code_compiler_write_string (ViviCodeCompiler *compiler, const char *value)
 {
   g_print ("write_string %s\n", value);
+
+  swfdec_out_put_string (compiler->action->data, value);
 }

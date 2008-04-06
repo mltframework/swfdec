@@ -1389,6 +1389,48 @@ static ParseStatus
 parse_statement (ParseData *data, ViviCodeStatement **statement);
 
 static ParseStatus
+parse_trace_statement (ParseData *data, ViviCodeStatement **statement)
+{
+  ViviCodeValue *value;
+  ViviCodeStatement *expression_statement;
+  ParseStatus status;
+
+  *statement = NULL;
+
+  if (!check_token (data, TOKEN_TRACE))
+    return CANCEL (TOKEN_TRACE);
+
+  if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
+    return FAIL (TOKEN_PARENTHESIS_LEFT);
+
+  status = parse_expression (data, &value, &expression_statement);
+  if (status != STATUS_OK)
+    return FAIL_CHILD (status);
+
+  if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+    g_object_unref (value);
+    if (expression_statement != NULL)
+      g_object_unref (expression_statement);
+    return FAIL (TOKEN_PARENTHESIS_RIGHT);
+  }
+
+  if (!check_token (data, TOKEN_SEMICOLON)) {
+    g_object_unref (value);
+    if (expression_statement != NULL)
+      g_object_unref (expression_statement);
+    return FAIL (TOKEN_PARENTHESIS_RIGHT);
+  }
+
+  *statement = vivi_code_trace_new (value);
+  g_object_unref (value);
+
+  *statement =
+    vivi_compiler_join_statements (expression_statement, *statement);
+
+  return STATUS_OK;
+}
+
+static ParseStatus
 parse_continue_or_break_statement (ParseData *data,
     ViviCodeStatement **statement, ViviCompilerScannerToken token)
 {
@@ -1947,6 +1989,7 @@ parse_statement (ParseData *data, ViviCodeStatement **statement)
     //parse_switch_statement,
     parse_throw_statement,
     //parse_try_statement,
+    parse_trace_statement,
     NULL
   };
 

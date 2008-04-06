@@ -180,6 +180,9 @@ identifier_part		[$_a-zA-Z0-9]
 "transient"		{ return TOKEN_RESERVED_KEYWORD; }
 "volatile"		{ return TOKEN_RESERVED_KEYWORD; }
 
+"undefined"		{ return TOKEN_UNDEFINED; }
+"trace"			{ return TOKEN_TRACE; }
+
 "null"			{ return TOKEN_NULL; }
 "true"			{
 			  lex_value.type = VALUE_TYPE_BOOLEAN;
@@ -275,8 +278,6 @@ identifier_part		[$_a-zA-Z0-9]
 			  lex_value.v_identifier = g_strdup (yytext);
 			  return TOKEN_IDENTIFIER;
 			}
-
-"undefined"		{ return TOKEN_UNDEFINED; }
 
 .			{ return TOKEN_ERROR; }
 

@@ -193,6 +193,10 @@ static const struct {
   // reserved keywords
   { TOKEN_RESERVED_KEYWORD, "RESERVED KEYWORD" },
 
+  // ActionScript specific
+  { TOKEN_UNDEFINED, "undefined" },
+  { TOKEN_TRACE, "trace" },
+
   { TOKEN_LAST, NULL }
 };
 

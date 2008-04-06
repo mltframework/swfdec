@@ -219,6 +219,16 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition)
   } else if (condition == SWFDEC_EVENT_ENTER) {
     if (SWFDEC_MOVIE (actor)->state >= SWFDEC_MOVIE_STATE_REMOVED)
       return;
+  } else if (condition == SWFDEC_EVENT_SCROLL || condition == SWFDEC_EVENT_CHANGED) {
+    SwfdecAsValue argv[2];
+
+    SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
+    SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (actor));
+    swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
+    swfdec_as_object_call (SWFDEC_AS_OBJECT (actor),
+	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);
+    swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
+    return;
   }
 
   swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
@@ -284,11 +294,9 @@ swfdec_actor_queue_script (SwfdecActor *actor, SwfdecEventType condition)
     case SWFDEC_EVENT_DRAG_OVER:
     case SWFDEC_EVENT_DRAG_OUT:
     case SWFDEC_EVENT_KEY_PRESS:
-      importance = SWFDEC_PLAYER_ACTION_QUEUE_NORMAL;
-      break;
     case SWFDEC_EVENT_CHANGED:
     case SWFDEC_EVENT_SCROLL:
-      importance = SWFDEC_PLAYER_ACTION_QUEUE_PRIORITY;
+      importance = SWFDEC_PLAYER_ACTION_QUEUE_NORMAL;
       break;
     default:
       g_return_if_reached ();

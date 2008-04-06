@@ -118,6 +118,7 @@ struct _SwfdecTextFieldMovie {
   const char *		style_sheet_input; /* saved input, so it can be used to apply stylesheet again */
 
   gboolean		scroll_changed; /* if any of the scroll attributes have changed and we haven't fired the event yet */
+  guint			changed;	/* number of onChanged events we have to emit */
   int			scroll;
   int			scroll_max;
   int			scroll_bottom;

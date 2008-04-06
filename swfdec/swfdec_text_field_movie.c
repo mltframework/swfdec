@@ -1364,18 +1364,12 @@ swfdec_text_field_movie_iterate (SwfdecActor *actor)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
 
+  while (text->changed) {
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_CHANGED);
+    text->changed--;
+  }
   if (text->scroll_changed) {
-    SwfdecAsValue argv[2];
-
-    SWFDEC_FIXME ("I'm pretty sure this is swfdec_player_add_action()'d");
-    SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
-    SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (text));
-    swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (text),
-	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);
-    swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
-
-    /* FIXME: unset this before or after emitting the event? */
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_SCROLL);
     text->scroll_changed = FALSE;
   }
 }
@@ -1619,6 +1613,12 @@ swfdec_text_field_movie_focus_out (SwfdecActor *actor)
 }
 
 static void
+swfdec_text_field_movie_changed (SwfdecTextFieldMovie *text)
+{
+  text->changed++;
+}
+
+static void
 swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint character)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
@@ -1654,17 +1654,23 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
       if (swfdec_text_field_movie_has_cursor (text)) {
 	start = BACKWARD (text, start);
       }
-      swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-      swfdec_text_field_movie_replace_text (text, start, end, "");
-      swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+      if (start != end) {
+	swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_field_movie_replace_text (text, start, end, "");
+	swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_field_movie_changed (text);
+      }
       return;
     case SWFDEC_KEY_DELETE:
       if (swfdec_text_field_movie_has_cursor (text)) {
 	end = FORWARD (text, end);
       }
-      swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-      swfdec_text_field_movie_replace_text (text, start, end, "");
-      swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+      if (start != end) {
+	swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_field_movie_replace_text (text, start, end, "");
+	swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_field_movie_changed (text);
+      }
       return;
     default:
       break;
@@ -1673,10 +1679,13 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   if (character == 0)
     return;
   len = g_unichar_to_utf8 (character, insert);
-  insert[len] = 0;
-  swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-  swfdec_text_field_movie_replace_text (text, start, end, insert);
-  swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+  if (len) {
+    insert[len] = 0;
+    swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
+    swfdec_text_field_movie_replace_text (text, start, end, insert);
+    swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+    swfdec_text_field_movie_changed (text);
+  }
 }
 
 static void

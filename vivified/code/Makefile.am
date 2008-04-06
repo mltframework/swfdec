@@ -53,8 +53,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_decompiler_duplicate.c \
 	vivi_decompiler_state.c \
 	vivi_decompiler_unknown.c \
-	vivi_decompiler.c \
-	../../tools/swfdec_out.c
+	vivi_decompiler.c
 
 noinst_HEADERS = \
 	vivi_code_assignment.h \
@@ -97,7 +96,6 @@ noinst_HEADERS = \
 	vivi_decompiler_duplicate.h \
 	vivi_decompiler_state.h
 	vivi_decompiler_unknown.h \
-	../../tools/swfdec_out.h \
 	vivified-compiler.h
 
 noinst_PROGRAMS = vivi-decompile vivi-compile

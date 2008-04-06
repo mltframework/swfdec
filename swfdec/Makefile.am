@@ -47,6 +47,7 @@ libswfdec_source_files = \
 	swfdec_bitmap_filter.c \
 	swfdec_bits.c \
 	swfdec_blur_filter.c \
+	swfdec_bots.c \
 	swfdec_buffer.c \
 	swfdec_button.c \
 	swfdec_button_movie.c \
@@ -226,6 +227,7 @@ noinst_HEADERS = \
 	swfdec_audio_flv.h \
 	swfdec_audio_stream.h \
 	swfdec_bits.h \
+	swfdec_bots.h \
 	swfdec_button.h \
 	swfdec_button_movie.h \
 	swfdec_cache.h \

@@ -22,11 +22,10 @@
 
 #include <swfdec/swfdec.h>
 #include <swfdec/swfdec_as_interpret.h>
+#include <swfdec/swfdec_bots.h>
 
 #include <vivified/code/vivi_code_token.h>
 #include <vivified/code/vivi_code_value.h>
-
-#include <tools/swfdec_out.h>
 
 G_BEGIN_DECLS
 
@@ -42,14 +41,14 @@ typedef struct _ViviCodeCompilerClass ViviCodeCompilerClass;
 
 typedef struct {
   SwfdecAsAction	id;
-  SwfdecOut		*data;
+  SwfdecBots		*data;
 } ViviCodeCompilerAction;
 
 struct _ViviCodeCompiler
 {
   GObject			object;
 
-  SwfdecOut			*data;
+  SwfdecBots			*data;
 
   ViviCodeCompilerAction	*action;
   GSList			*actions;	// ViviCodeCompilerAction

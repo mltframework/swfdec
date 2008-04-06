@@ -36,7 +36,7 @@ main (int argc, char *argv[])
   ViviCodeStatement *statement;
   //ViviCodePrinter *printer;
   ViviCodeCompiler *compiler;
-  SwfdecOut *out;
+  SwfdecBots *bots;
   SwfdecBuffer *buffer;
   unsigned char *length_ptr;
   SwfdecRect rect = { 0, 0, 2000, 3000 };
@@ -69,25 +69,25 @@ main (int argc, char *argv[])
   g_object_unref (printer);*/
 
 
-  out = swfdec_out_open ();
+  bots = swfdec_bots_open ();
 
 
   // header
 
   // magic
-  swfdec_out_put_u8 (out, 'F');
-  swfdec_out_put_u8 (out, 'W');
-  swfdec_out_put_u8 (out, 'S');
+  swfdec_bots_put_u8 (bots, 'F');
+  swfdec_bots_put_u8 (bots, 'W');
+  swfdec_bots_put_u8 (bots, 'S');
   // version
-  swfdec_out_put_u8 (out, 8);
+  swfdec_bots_put_u8 (bots, 8);
   // length
-  swfdec_out_put_u32 (out, 0);
+  swfdec_bots_put_u32 (bots, 0);
   // frame size
-  swfdec_out_put_rect (out, &rect);
+  swfdec_bots_put_rect (bots, &rect);
   // frame rate
-  swfdec_out_put_u16 (out, 15 * 256);
+  swfdec_bots_put_u16 (bots, 15 * 256);
   // frame count
-  swfdec_out_put_u16 (out, 1);
+  swfdec_bots_put_u16 (bots, 1);
 
 
   // tags
@@ -99,23 +99,23 @@ main (int argc, char *argv[])
   buffer = vivi_code_compiler_get_data (compiler);
   g_object_unref (compiler);
 
-  swfdec_out_put_u16 (out, GUINT16_TO_LE ((12 << 6) + 0x3F));
-  swfdec_out_put_u32 (out, buffer->length + 1);
-  swfdec_out_put_buffer (out, buffer);
+  swfdec_bots_put_u16 (bots, GUINT16_TO_LE ((12 << 6) + 0x3F));
+  swfdec_bots_put_u32 (bots, buffer->length + 1);
+  swfdec_bots_put_buffer (bots, buffer);
   swfdec_buffer_unref (buffer);
   // end action
-  swfdec_out_put_u8 (out, 0);
+  swfdec_bots_put_u8 (bots, 0);
 
   // showframe tag
-  swfdec_out_put_u16 (out, GUINT16_TO_LE (1 << 6));
+  swfdec_bots_put_u16 (bots, GUINT16_TO_LE (1 << 6));
 
   // end tag
-  swfdec_out_put_u16 (out, 0);
+  swfdec_bots_put_u16 (bots, 0);
 
 
   // write it
 
-  buffer = swfdec_out_close (out);
+  buffer = swfdec_bots_close (bots);
 
   // fix length
   length_ptr = buffer->data + 4;
@@ -126,7 +126,7 @@ main (int argc, char *argv[])
   g_free (target_name);
 
   if (fwrite (buffer->data, buffer->length, 1, target) != 1) {
-    g_printerr ("Failed to write the output file\n");
+    g_printerr ("Failed to write the botsput file\n");
     fclose (target);
     swfdec_buffer_unref (buffer);
     g_object_unref (player);

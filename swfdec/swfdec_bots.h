@@ -27,9 +27,9 @@
 G_BEGIN_DECLS
 
 
-typedef struct _SwfdecOut SwfdecOut;
+typedef struct _SwfdecBots SwfdecBots;
 
-struct _SwfdecOut {
+struct _SwfdecBots {
   unsigned char *	data;
   unsigned char *	ptr;
   unsigned int		idx;
@@ -39,47 +39,47 @@ struct _SwfdecOut {
 #define SWFDEC_OUT_INITIAL (32)
 #define SWFDEC_OUT_STEP (32)
 
-SwfdecOut *	swfdec_out_open			(void);
-SwfdecBuffer *	swfdec_out_close		(SwfdecOut *		out);
+SwfdecBots *	swfdec_bots_open			(void);
+SwfdecBuffer *	swfdec_bots_close		(SwfdecBots *		bots);
 
-unsigned int	swfdec_out_get_bits		(SwfdecOut *		out);
-unsigned int	swfdec_out_left	  		(SwfdecOut *		out);
-void		swfdec_out_ensure_bits		(SwfdecOut *		out,
+unsigned int	swfdec_bots_get_bits		(SwfdecBots *		bots);
+unsigned int	swfdec_bots_left	  		(SwfdecBots *		bots);
+void		swfdec_bots_ensure_bits		(SwfdecBots *		bots,
 						 unsigned int		bits);
-void		swfdec_out_prepare_bytes	(SwfdecOut *		out,
+void		swfdec_bots_prepare_bytes	(SwfdecBots *		bots,
 						 unsigned int		bytes);
 
-void		swfdec_out_put_bit		(SwfdecOut *		out,
+void		swfdec_bots_put_bit		(SwfdecBots *		bots,
 						 gboolean		bit);
-void		swfdec_out_put_bits		(SwfdecOut *		out,
+void		swfdec_bots_put_bits		(SwfdecBots *		bots,
 						 guint	  		bits,
 						 guint			n_bits);
-void		swfdec_out_put_sbits		(SwfdecOut *		out,
+void		swfdec_bots_put_sbits		(SwfdecBots *		bots,
 						 int	  		bits,
 						 guint	  		n_bits);
-void		swfdec_out_put_data		(SwfdecOut *		out,
+void		swfdec_bots_put_data		(SwfdecBots *		bots,
 						 const guint8 *		data,
 						 guint			length);
-void		swfdec_out_put_buffer		(SwfdecOut *		out,
+void		swfdec_bots_put_buffer		(SwfdecBots *		bots,
 						 SwfdecBuffer *		buffer);
-void		swfdec_out_put_u8		(SwfdecOut *		out,
+void		swfdec_bots_put_u8		(SwfdecBots *		bots,
 						 guint	  		i);
-void		swfdec_out_put_u16		(SwfdecOut *		out,
+void		swfdec_bots_put_u16		(SwfdecBots *		bots,
 						 guint			i);
-void		swfdec_out_put_u32		(SwfdecOut *		out,
+void		swfdec_bots_put_u32		(SwfdecBots *		bots,
 						 guint			i);
-void		swfdec_out_put_string		(SwfdecOut *		out,
+void		swfdec_bots_put_string		(SwfdecBots *		bots,
 						 const char *		s);
 
-void		swfdec_out_put_rgb		(SwfdecOut *		out,
+void		swfdec_bots_put_rgb		(SwfdecBots *		bots,
 						 SwfdecColor		color);
-void		swfdec_out_put_rgba		(SwfdecOut *		out,
+void		swfdec_bots_put_rgba		(SwfdecBots *		bots,
 						 SwfdecColor		color);
-void		swfdec_out_put_rect		(SwfdecOut *		out,
+void		swfdec_bots_put_rect		(SwfdecBots *		bots,
 						 const SwfdecRect *	rect);
-void		swfdec_out_put_matrix		(SwfdecOut *		out,
+void		swfdec_bots_put_matrix		(SwfdecBots *		bots,
 						 const cairo_matrix_t *	matrix);
-void		swfdec_out_put_color_transform	(SwfdecOut *		out,
+void		swfdec_bots_put_color_transform	(SwfdecBots *		bots,
 						 const SwfdecColorTransform *trans);
 
 

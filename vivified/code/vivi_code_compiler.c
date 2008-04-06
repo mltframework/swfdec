@@ -117,8 +117,6 @@ vivi_code_compiler_add_action (ViviCodeCompiler *compiler,
   compiler->action = g_new0 (ViviCodeCompilerAction, 1);
   compiler->action->id = action;
   compiler->action->data = swfdec_out_open ();
-
-  g_print ("ADD ACTION %i\n", action);
 }
 
 void
@@ -128,8 +126,6 @@ vivi_code_compiler_end_action (ViviCodeCompiler *compiler)
 
   g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
   g_return_if_fail (compiler->action != NULL);
-
-  g_print ("END ACTION %i\n", compiler->action->id);
 
   buffer = swfdec_out_close (compiler->action->data);
 
@@ -155,7 +151,8 @@ vivi_code_compiler_end_action (ViviCodeCompiler *compiler)
 
 void vivi_code_compiler_write_u8 (ViviCodeCompiler *compiler, guint value)
 {
-  g_print ("write_u8 %i\n", value);
+  g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
+  g_return_if_fail (compiler->action != NULL);
 
   swfdec_out_put_u8 (compiler->action->data, value);
 }
@@ -163,13 +160,14 @@ void vivi_code_compiler_write_u8 (ViviCodeCompiler *compiler, guint value)
 void
 vivi_code_compiler_write_double (ViviCodeCompiler *compiler, double value)
 {
-  g_print ("write_double %g\n", value);
+  // TODO
 }
 
 void
 vivi_code_compiler_write_string (ViviCodeCompiler *compiler, const char *value)
 {
-  g_print ("write_string %s\n", value);
+  g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
+  g_return_if_fail (compiler->action != NULL);
 
   swfdec_out_put_string (compiler->action->data, value);
 }

@@ -34,7 +34,7 @@ main (int argc, char *argv[])
   char *target_name;
   FILE *source, *target;
   ViviCodeStatement *statement;
-  ViviCodePrinter *printer;
+  //ViviCodePrinter *printer;
   ViviCodeCompiler *compiler;
   SwfdecOut *out;
   SwfdecBuffer *buffer;
@@ -64,9 +64,9 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  printer = vivi_code_text_printer_new ();
+  /*printer = vivi_code_text_printer_new ();
   vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (statement));
-  g_object_unref (printer);
+  g_object_unref (printer);*/
 
 
   out = swfdec_out_open ();

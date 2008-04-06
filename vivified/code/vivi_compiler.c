@@ -168,6 +168,33 @@ check_token (ParseData *data, ViviCompilerScannerToken token)
   return TRUE;
 }
 
+static gboolean
+check_automatic_semicolon (ParseData *data)
+{
+  if (check_token (data, TOKEN_SEMICOLON))
+    return TRUE;
+  if (check_line_terminator (data))
+    return TRUE;
+
+  vivi_compiler_scanner_peek_next_token (data->scanner);
+  if (data->scanner->next_token == TOKEN_BRACE_LEFT ||
+      data->scanner->next_token == TOKEN_EOF)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+check_restricted_semicolon (ParseData *data)
+{
+  if (check_token (data, TOKEN_SEMICOLON))
+    return TRUE;
+  if (check_line_terminator (data))
+    return TRUE;
+
+  return FALSE;
+}
+
 static void
 free_value_list (ViviCodeValue **list)
 {
@@ -939,15 +966,8 @@ parse_postfix_expression (ParseData *data, ViviCodeValue **value,
   if (status != STATUS_OK)
     return status;
 
-  if (check_line_terminator (data)) {
-    g_object_unref (*value);
-    *value = NULL;
-    if (*statement != NULL) {
-      g_object_unref (*statement);
-      *statement = NULL;
-    }
-    return FAIL_LINE_TERMINATOR_OR (TOKEN_INCREASE, TOKEN_DESCREASE);
-  }
+  if (check_line_terminator (data))
+    return status;
 
   if (check_token (data, TOKEN_INCREASE)) {
     operator = "+";
@@ -1414,11 +1434,11 @@ parse_trace_statement (ParseData *data, ViviCodeStatement **statement)
     return FAIL (TOKEN_PARENTHESIS_RIGHT);
   }
 
-  if (!check_token (data, TOKEN_SEMICOLON)) {
+  if (!check_automatic_semicolon (data)) {
     g_object_unref (value);
     if (expression_statement != NULL)
       g_object_unref (expression_statement);
-    return FAIL (TOKEN_PARENTHESIS_RIGHT);
+    return FAIL (TOKEN_SEMICOLON);
   }
 
   *statement = vivi_code_trace_new (value);
@@ -1439,10 +1459,7 @@ parse_continue_or_break_statement (ParseData *data,
   if (!check_token (data, token))
     return CANCEL (token);
 
-  if (check_line_terminator (data))
-    return FAIL_LINE_TERMINATOR_OR (TOKEN_SEMICOLON, ERROR_TOKEN_IDENTIFIER);
-
-  if (!check_token (data, TOKEN_SEMICOLON)) {
+  if (!check_restricted_semicolon (data)) {
     ParseStatus status;
     ViviCodeValue *identifier;
 
@@ -1454,7 +1471,7 @@ parse_continue_or_break_statement (ParseData *data,
 
     vivi_compiler_add_goto (data, VIVI_COMPILER_GOTO_NAME (*statement));
 
-    if (!check_token (data, TOKEN_SEMICOLON)) {
+    if (!check_automatic_semicolon (data)) {
       g_object_unref (*statement);
       *statement = NULL;
       return FAIL (TOKEN_SEMICOLON);
@@ -1503,7 +1520,7 @@ parse_throw_statement (ParseData *data, ViviCodeStatement **statement)
   *statement =
     vivi_compiler_join_statements (expression_statement, *statement);
 
-  if (!check_token (data, TOKEN_SEMICOLON)) {
+  if (!check_automatic_semicolon (data)) {
     g_object_unref (*statement);
     *statement = NULL;
     return FAIL (TOKEN_SEMICOLON);
@@ -1520,12 +1537,9 @@ parse_return_statement (ParseData *data, ViviCodeStatement **statement)
   if (!check_token (data, TOKEN_RETURN))
     return CANCEL (TOKEN_RETURN);
 
-  if (check_line_terminator (data))
-    return FAIL_LINE_TERMINATOR_OR (TOKEN_SEMICOLON, TOKEN_IDENTIFIER);
-
   *statement = vivi_code_return_new ();
 
-  if (!check_token (data, TOKEN_SEMICOLON)) {
+  if (!check_restricted_semicolon (data)) {
     ParseStatus status;
     ViviCodeValue *value;
     ViviCodeStatement *expression_statement;
@@ -1543,7 +1557,7 @@ parse_return_statement (ParseData *data, ViviCodeStatement **statement)
     *statement =
       vivi_compiler_join_statements (expression_statement, *statement);
 
-    if (!check_token (data, TOKEN_SEMICOLON)) {
+    if (!check_automatic_semicolon (data)) {
       g_object_unref (*statement);
       *statement = NULL;
       return FAIL (TOKEN_SEMICOLON);
@@ -1594,7 +1608,7 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
       return FAIL (TOKEN_PARENTHESIS_LEFT);
     }
 
-    if (!check_token (data, TOKEN_SEMICOLON)) {
+    if (!check_automatic_semicolon (data)) {
       g_object_unref (loop_statement);
       g_object_unref (condition);
       if (condition_statement != NULL)
@@ -1868,7 +1882,7 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
     }
   }
 
-  if (!check_token (data, TOKEN_SEMICOLON)) {
+  if (!check_automatic_semicolon (data)) {
     g_object_unref (value);
     if (*statement != NULL) {
       g_object_unref (*statement);
@@ -1961,7 +1975,7 @@ parse_variable_statement (ParseData *data, ViviCodeStatement **statement)
   if (status != STATUS_OK)
     return FAIL_CHILD (status);
 
-  if (!check_token (data, TOKEN_SEMICOLON)) {
+  if (!check_automatic_semicolon (data)) {
     g_object_unref (*statement);
     *statement = NULL;
     return FAIL (TOKEN_SEMICOLON);

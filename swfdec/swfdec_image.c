@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,7 @@
 
 #include "jpeg.h"
 #include "swfdec_image.h"
-#include "swfdec_cache.h"
+#include "swfdec_cached_image.h"
 #include "swfdec_debug.h"
 #include "swfdec_swf_decoder.h"
 
@@ -41,18 +41,7 @@ static void swfdec_image_colormap_decode (SwfdecImage * image,
     unsigned char *dest,
     unsigned char *src, unsigned char *colormap, int colormap_len);
 
-G_DEFINE_TYPE (SwfdecImage, swfdec_image, SWFDEC_TYPE_CACHED)
-
-static void
-swfdec_image_unload (SwfdecCached *cached)
-{
-  SwfdecImage *image = SWFDEC_IMAGE (cached);
-
-  if (image->surface) {
-    cairo_surface_destroy (image->surface);
-    image->surface = NULL;
-  }
-}
+G_DEFINE_TYPE (SwfdecImage, swfdec_image, SWFDEC_TYPE_CHARACTER)
 
 static void
 swfdec_image_dispose (GObject *object)
@@ -69,19 +58,14 @@ swfdec_image_dispose (GObject *object)
   }
 
   G_OBJECT_CLASS (swfdec_image_parent_class)->dispose (object);
-
-  g_assert (image->surface == NULL);
 }
 
 static void
 swfdec_image_class_init (SwfdecImageClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  SwfdecCachedClass *cached_class = SWFDEC_CACHED_CLASS (g_class);
 
   object_class->dispose = swfdec_image_dispose;
-
-  cached_class->unload = swfdec_image_unload;
 }
 
 static void
@@ -167,7 +151,7 @@ swfdec_jpeg_decode_argb (unsigned char *data1, int length1,
   return ret;
 }
 
-static void
+static SwfdecCachedImage * 
 swfdec_image_jpeg_load (SwfdecImage *image)
 {
   gboolean ret;
@@ -186,15 +170,13 @@ swfdec_image_jpeg_load (SwfdecImage *image)
   }
 
   if (!ret)
-    return;
-
-  swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  image->surface = cairo_image_surface_create_for_data (data, CAIRO_FORMAT_RGB24,
-      image->width, image->height, image->width * 4);
-  cairo_surface_set_user_data (image->surface, &key, data, g_free);
+    return NULL;
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
+
+  return swfdec_cached_image_new (data, CAIRO_FORMAT_RGB24, image->width, 
+      image->height, 4 * image->width);
 }
 
 int
@@ -217,7 +199,7 @@ tag_func_define_bits_jpeg_2 (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-static void
+static SwfdecCachedImage *
 swfdec_image_jpeg2_load (SwfdecImage *image)
 {
   gboolean ret;
@@ -227,15 +209,13 @@ swfdec_image_jpeg2_load (SwfdecImage *image)
       NULL, 0,
       (void *)&data, &image->width, &image->height);
   if (!ret)
-    return;
-
-  swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
-  image->surface = cairo_image_surface_create_for_data (data, CAIRO_FORMAT_RGB24,
-      image->width, image->height, image->width * 4);
-  cairo_surface_set_user_data (image->surface, &key, data, g_free);
+    return NULL;
 
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
+
+  return swfdec_cached_image_new (data, CAIRO_FORMAT_RGB24, image->width, 
+      image->height, 4 * image->width);
 }
 
 int
@@ -258,7 +238,7 @@ tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
-static void
+static SwfdecCachedImage *
 swfdec_image_jpeg3_load (SwfdecImage *image)
 {
   SwfdecBits bits;
@@ -272,7 +252,7 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   jpeg_length = swfdec_bits_get_u32 (&bits);
   buffer = swfdec_bits_get_buffer (&bits, jpeg_length);
   if (buffer == NULL)
-    return;
+    return NULL;
 
   ret = swfdec_jpeg_decode_argb (buffer->data, buffer->length,
       NULL, 0,
@@ -280,9 +260,7 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   swfdec_buffer_unref (buffer);
 
   if (!ret)
-    return;
-
-  swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
+    return NULL;
 
   buffer = swfdec_bits_decompress (&bits, -1, image->width * image->height);
   if (buffer) {
@@ -295,9 +273,8 @@ swfdec_image_jpeg3_load (SwfdecImage *image)
   SWFDEC_LOG ("  width = %d", image->width);
   SWFDEC_LOG ("  height = %d", image->height);
 
-  image->surface = cairo_image_surface_create_for_data (data,
-      CAIRO_FORMAT_ARGB32, image->width, image->height, image->width * 4);
-  cairo_surface_set_user_data (image->surface, &key, data, g_free);
+  return swfdec_cached_image_new (data, CAIRO_FORMAT_RGB24, image->width, 
+      image->height, 4 * image->width);
 }
 
 static void
@@ -317,7 +294,7 @@ merge_alpha (SwfdecImage * image, unsigned char *image_data,
   }
 }
 
-static void
+static SwfdecCachedImage *
 swfdec_image_lossless_load (SwfdecImage *image)
 {
   int format;
@@ -347,8 +324,7 @@ swfdec_image_lossless_load (SwfdecImage *image)
   SWFDEC_LOG ("color_table_size = %d", color_table_size);
 
   if (image->width == 0 || image->height == 0)
-    return;
-  swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
+    return NULL;
 
   if (format == 3) {
     SwfdecBuffer *buffer;
@@ -467,22 +443,16 @@ swfdec_image_lossless_load (SwfdecImage *image)
 	p++;
       }
     }
-    image->surface = cairo_image_surface_create_for_data (data, 
-	have_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
-	image->width, image->height, image->width * 4);
-    cairo_surface_set_user_data (image->surface, &key, buffer, 
-	(cairo_destroy_func_t) swfdec_buffer_unref);
-    return;
+    data = g_memdup (buffer->data, buffer->length);
   } else {
     SWFDEC_ERROR ("unknown lossless image format %u", format);
-    return;
+    return NULL;
   }
 
 out:
-  image->surface = cairo_image_surface_create_for_data (data, 
+  return swfdec_cached_image_new (data,
       have_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
       image->width, image->height, image->width * 4);
-  cairo_surface_set_user_data (image->surface, &key, data, g_free);
 }
 
 int
@@ -576,59 +546,67 @@ swfdec_image_png_read (void *bitsp, unsigned char *data, unsigned int length)
   return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static SwfdecCachedImage *
 swfdec_image_png_load (SwfdecImage *image)
 {
   SwfdecBits bits;
+  cairo_surface_t *surface;
+  SwfdecCachedImage *cached;
 
   swfdec_bits_init (&bits, image->raw_data);
-  image->surface = cairo_image_surface_create_from_png_stream (
+  surface = cairo_image_surface_create_from_png_stream (
       swfdec_image_png_read, &bits);
-  image->width = cairo_image_surface_get_width (image->surface);
-  image->height = cairo_image_surface_get_height (image->surface);
-  swfdec_cached_load (SWFDEC_CACHED (image), image->height *
-      cairo_image_surface_get_stride (image->surface));
+  image->width = cairo_image_surface_get_width (surface);
+  image->height = cairo_image_surface_get_height (surface);
+  cached = swfdec_cached_image_new_for_surface (surface,
+      image->height * cairo_image_surface_get_stride (surface));
+  cairo_surface_destroy (surface);
+  return cached;
 }
 
 cairo_surface_t *
 swfdec_image_create_surface (SwfdecImage *image)
 {
+  SwfdecCachedImage *cached;
+  cairo_surface_t *surface;
+
   if (image->raw_data == NULL)
     return NULL;
 
-  if (image->surface == NULL) {
+  if (TRUE) {
     switch (image->type) {
       case SWFDEC_IMAGE_TYPE_JPEG:
-	swfdec_image_jpeg_load (image);
+	cached = swfdec_image_jpeg_load (image);
 	break;
       case SWFDEC_IMAGE_TYPE_JPEG2:
-	swfdec_image_jpeg2_load (image);
+	cached = swfdec_image_jpeg2_load (image);
 	break;
       case SWFDEC_IMAGE_TYPE_JPEG3:
-	swfdec_image_jpeg3_load (image);
+	cached = swfdec_image_jpeg3_load (image);
 	break;
       case SWFDEC_IMAGE_TYPE_LOSSLESS:
-	swfdec_image_lossless_load (image);
+	cached = swfdec_image_lossless_load (image);
 	break;
       case SWFDEC_IMAGE_TYPE_LOSSLESS2:
-	swfdec_image_lossless_load (image);
+	cached = swfdec_image_lossless_load (image);
 	break;
       case SWFDEC_IMAGE_TYPE_PNG:
-	swfdec_image_png_load (image);
+	cached = swfdec_image_png_load (image);
 	break;
       case SWFDEC_IMAGE_TYPE_UNKNOWN:
       default:
 	g_assert_not_reached ();
 	break;
     }
-    if (image->surface == NULL) {
+    if (cached == NULL) {
       SWFDEC_WARNING ("failed to decode image");
       return NULL;
     }
-  } else {
-    swfdec_cached_use (SWFDEC_CACHED (image));
   }
-  return cairo_surface_reference (image->surface);
+
+  surface = swfdec_cached_image_get_surface (cached);
+  g_object_unref (cached);
+  return surface;
 }
 
 cairo_surface_t *

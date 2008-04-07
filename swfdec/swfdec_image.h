@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,10 +23,11 @@
 #define _SWFDEC_IMAGE_H_
 
 #include <cairo.h>
-#include <swfdec/swfdec_cached.h>
+#include <swfdec/swfdec_character.h>
 #include <swfdec/swfdec_decoder.h>
 
 G_BEGIN_DECLS
+
 //typedef struct _SwfdecImage SwfdecImage;
 typedef struct _SwfdecImageClass SwfdecImageClass;
 
@@ -48,11 +49,10 @@ typedef enum {
 } SwfdecImageType;
 
 struct _SwfdecImage {
-  SwfdecCached		cached;
+  SwfdecCharacter	character;
 
   int			width;		/* width of image or 0 if not known yet */
   int			height;		/* height of image or 0 if not known yet */
-  cairo_surface_t *	surface;	/* surface when cache loaded or NULL */
 
   SwfdecImageType	type;
   SwfdecBuffer *	jpegtables;
@@ -60,8 +60,7 @@ struct _SwfdecImage {
 };
 
 struct _SwfdecImageClass {
-  SwfdecCachedClass	cached_class;
-
+  SwfdecCharacterClass	character_class;
 };
 
 GType			swfdec_image_get_type		(void);

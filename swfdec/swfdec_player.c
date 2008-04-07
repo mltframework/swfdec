@@ -728,7 +728,7 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       g_value_set_uint (value, swfdec_player_get_background_color (player));
       break;
     case PROP_CACHE_SIZE:
-      g_value_set_ulong (value, swfdec_cache_get_size (priv->cache));
+      g_value_set_ulong (value, swfdec_cache_get_max_cache_size (priv->cache));
       break;
     case PROP_INITIALIZED:
       g_value_set_boolean (value, swfdec_player_is_initialized (player));
@@ -875,7 +875,7 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       swfdec_player_set_background_color (player, g_value_get_uint (value));
       break;
     case PROP_CACHE_SIZE:
-      swfdec_cache_set_size (priv->cache, g_value_get_ulong (value));
+      swfdec_cache_set_max_cache_size (priv->cache, g_value_get_ulong (value));
       break;
     case PROP_WIDTH:
       swfdec_player_set_size (player, g_value_get_int (value), priv->stage_height);
@@ -1010,7 +1010,7 @@ swfdec_player_dispose (GObject *object)
   g_assert (priv->timeouts == NULL);
   g_list_free (priv->intervals);
   priv->intervals = NULL;
-  swfdec_cache_unref (priv->cache);
+  g_object_unref (priv->cache);
   if (priv->system) {
     g_object_unref (priv->system);
     priv->system = NULL;
@@ -2188,7 +2188,7 @@ swfdec_player_init (SwfdecPlayer *player)
     priv->actions[i] = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
   }
   priv->external_actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerExternalAction, 8);
-  priv->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
+  priv->cache = swfdec_cache_new (16 * 1024 * 1024);
   priv->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
   priv->socket_type = SWFDEC_TYPE_SOCKET;
 

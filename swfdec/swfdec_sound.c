@@ -33,24 +33,15 @@
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
 
-G_DEFINE_TYPE (SwfdecSound, swfdec_sound, SWFDEC_TYPE_CACHED)
-
-static void
-swfdec_sound_unload (SwfdecCached *cached)
-{
-  SwfdecSound * sound = SWFDEC_SOUND (cached);
-
-  if (sound->decoded) {
-    swfdec_buffer_unref (sound->decoded);
-    sound->decoded = NULL;
-  }
-}
+G_DEFINE_TYPE (SwfdecSound, swfdec_sound, SWFDEC_TYPE_CHARACTER)
 
 static void
 swfdec_sound_dispose (GObject *object)
 {
   SwfdecSound * sound = SWFDEC_SOUND (object);
 
+  if (sound->decoded)
+    swfdec_buffer_unref (sound->decoded);
   if (sound->encoded)
     swfdec_buffer_unref (sound->encoded);
 
@@ -61,11 +52,8 @@ static void
 swfdec_sound_class_init (SwfdecSoundClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  SwfdecCachedClass *cached_class = SWFDEC_CACHED_CLASS (g_class);
 
   object_class->dispose = swfdec_sound_dispose;
-
-  cached_class->unload = swfdec_sound_unload;
 }
 
 static void
@@ -177,7 +165,6 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   g_return_val_if_fail (format != NULL, NULL);
 
   if (sound->decoded) {
-    swfdec_cached_use (SWFDEC_CACHED (sound));
     *format = sound->decoded_format;
     return sound->decoded;
   }
@@ -201,7 +188,6 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
     SWFDEC_ERROR ("decoding didn't produce any data, bailing");
     return NULL;
   }
-  swfdec_cached_load (SWFDEC_CACHED (sound), depth);
   tmp = swfdec_buffer_queue_pull (queue, depth);
   swfdec_buffer_queue_unref (queue);
 

@@ -53,6 +53,7 @@ libswfdec_source_files = \
 	swfdec_button_movie_as.c \
 	swfdec_cache.c \
 	swfdec_cached.c \
+	swfdec_cached_image.c \
 	swfdec_camera.c \
 	swfdec_character.c \
 	swfdec_codec_adpcm.c \
@@ -230,6 +231,7 @@ noinst_HEADERS = \
 	swfdec_button_movie.h \
 	swfdec_cache.h \
 	swfdec_cached.h \
+	swfdec_cached_image.h \
 	swfdec_character.h \
 	swfdec_codec_audio.h \
 	swfdec_codec_video.h \

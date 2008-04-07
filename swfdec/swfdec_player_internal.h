@@ -23,6 +23,7 @@
 #include <swfdec/swfdec_player.h>
 #include <swfdec/swfdec_audio.h>
 #include <swfdec/swfdec_audio_internal.h>
+#include <swfdec/swfdec_cache.h>
 #include <swfdec/swfdec_event.h>
 #include <swfdec/swfdec_function_list.h>
 #include <swfdec/swfdec_loader.h>

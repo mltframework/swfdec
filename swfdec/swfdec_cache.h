@@ -20,8 +20,6 @@
 #ifndef _SWFDEC_CACHE_H_
 #define _SWFDEC_CACHE_H_
 
-#include <cairo.h>
-#include <swfdec/swfdec_cache.h>
 #include <swfdec/swfdec_cached.h>
 
 G_BEGIN_DECLS

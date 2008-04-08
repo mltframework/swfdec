@@ -192,8 +192,12 @@ swfdec_renderer_class_init (SwfdecRendererClass *klass)
 static void
 swfdec_renderer_init (SwfdecRenderer *renderer)
 {
-  renderer->priv = G_TYPE_INSTANCE_GET_PRIVATE (renderer, SWFDEC_TYPE_RENDERER, SwfdecRendererPrivate);
-  renderer->priv->cache = swfdec_cache_new (8 * 1024 * 1024);
+  SwfdecRendererPrivate *priv;
+
+  renderer->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (renderer, SWFDEC_TYPE_RENDERER, SwfdecRendererPrivate);
+  
+  priv->cache = swfdec_cache_new (8 * 1024 * 1024);
+  priv->cache_lookup = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 /*** INTERNAL API ***/

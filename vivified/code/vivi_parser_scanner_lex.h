@@ -21,9 +21,9 @@
 #define yyHEADER_H 1
 #define yyIN_HEADER 1
 
-#line 6 "vivi_compiler_scanner_lex.h"
+#line 6 "vivi_parser_scanner_lex.h"
 
-#line 8 "vivi_compiler_scanner_lex.h"
+#line 8 "vivi_parser_scanner_lex.h"
 
 #define  YY_INT_ALIGNED short int
 
@@ -307,9 +307,9 @@ extern int yylex (void);
 #undef YY_DECL
 #endif
 
-#line 148 "vivi_compiler_scanner_lex.l"
+#line 148 "vivi_parser_scanner_lex.l"
 
 
-#line 295 "vivi_compiler_scanner_lex.h"
+#line 295 "vivi_parser_scanner_lex.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

@@ -17,8 +17,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _VIVI_COMPILER_SCANNER_H_
-#define _VIVI_COMPILER_SCANNER_H_
+#ifndef _VIVI_PARSER_SCANNER_H_
+#define _VIVI_PARSER_SCANNER_H_
 
 #include <stdio.h>
 #include <swfdec/swfdec.h>
@@ -146,7 +146,7 @@ typedef enum {
   TOKEN_TRACE,
 
   TOKEN_LAST
-} ViviCompilerScannerToken;
+} ViviParserScannerToken;
 
 typedef enum {
   VALUE_TYPE_NONE,
@@ -154,62 +154,62 @@ typedef enum {
   VALUE_TYPE_NUMBER,
   VALUE_TYPE_STRING,
   VALUE_TYPE_IDENTIFIER
-} ViviCompilerScannerValueType;
+} ViviParserScannerValueType;
 
 typedef struct {
-  ViviCompilerScannerValueType	type;
+  ViviParserScannerValueType	type;
   union {
     gboolean	v_boolean;
     double	v_number;
     char *	v_string;
     char *	v_identifier;
   };
-} ViviCompilerScannerValue;
+} ViviParserScannerValue;
 
-typedef struct _ViviCompilerScanner ViviCompilerScanner;
-typedef struct _ViviCompilerScannerClass ViviCompilerScannerClass;
+typedef struct _ViviParserScanner ViviParserScanner;
+typedef struct _ViviParserScannerClass ViviParserScannerClass;
 
-#define VIVI_TYPE_COMPILER_SCANNER                    (vivi_compiler_scanner_get_type())
-#define VIVI_IS_COMPILER_SCANNER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_COMPILER_SCANNER))
-#define VIVI_IS_COMPILER_SCANNER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_COMPILER_SCANNER))
-#define VIVI_COMPILER_SCANNER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_COMPILER_SCANNER, ViviCompilerScanner))
-#define VIVI_COMPILER_SCANNER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_COMPILER_SCANNER, ViviCompilerScannerClass))
-#define VIVI_COMPILER_SCANNER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_COMPILER_SCANNER, ViviCompilerScannerClass))
+#define VIVI_TYPE_PARSER_SCANNER                    (vivi_parser_scanner_get_type())
+#define VIVI_IS_PARSER_SCANNER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_PARSER_SCANNER))
+#define VIVI_IS_PARSER_SCANNER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_PARSER_SCANNER))
+#define VIVI_PARSER_SCANNER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_PARSER_SCANNER, ViviParserScanner))
+#define VIVI_PARSER_SCANNER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_PARSER_SCANNER, ViviParserScannerClass))
+#define VIVI_PARSER_SCANNER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_PARSER_SCANNER, ViviParserScannerClass))
 
-struct _ViviCompilerScanner
+struct _ViviParserScanner
 {
   GObject			object;
 
   FILE *			file;
 
-  ViviCompilerScannerToken	token;
-  ViviCompilerScannerToken	next_token;
+  ViviParserScannerToken	token;
+  ViviParserScannerToken	next_token;
   guint				line_number;
   gboolean			line_terminator;
 
-  ViviCompilerScannerValue	value;
-  ViviCompilerScannerValue	next_value;
+  ViviParserScannerValue	value;
+  ViviParserScannerValue	next_value;
   guint				next_line_number;
   gboolean			next_line_terminator;
 
-  ViviCompilerScannerToken	expected;
+  ViviParserScannerToken	expected;
 };
 
-struct _ViviCompilerScannerClass
+struct _ViviParserScannerClass
 {
   GObjectClass		object_class;
 };
 
-GType				vivi_compiler_scanner_get_type   	(void);
+GType				vivi_parser_scanner_get_type   	(void);
 
-ViviCompilerScanner *		vivi_compiler_scanner_new		(FILE *		file);
-ViviCompilerScannerToken	vivi_compiler_scanner_get_next_token	(ViviCompilerScanner *	scanner);
-ViviCompilerScannerToken	vivi_compiler_scanner_peek_next_token	(ViviCompilerScanner *	scanner);
+ViviParserScanner *		vivi_parser_scanner_new		(FILE *		file);
+ViviParserScannerToken	vivi_parser_scanner_get_next_token	(ViviParserScanner *	scanner);
+ViviParserScannerToken	vivi_parser_scanner_peek_next_token	(ViviParserScanner *	scanner);
 
-const char *			vivi_compiler_scanner_token_name	(ViviCompilerScannerToken token);
-guint				vivi_compiler_scanner_cur_line		(ViviCompilerScanner *scanner);
-guint				vivi_compiler_scanner_cur_column	(ViviCompilerScanner *scanner);
-char *				vivi_compiler_scanner_get_line		(ViviCompilerScanner *scanner);
+const char *			vivi_parser_scanner_token_name	(ViviParserScannerToken token);
+guint				vivi_parser_scanner_cur_line	(ViviParserScanner *scanner);
+guint				vivi_parser_scanner_cur_column	(ViviParserScanner *scanner);
+char *				vivi_parser_scanner_get_line	(ViviParserScanner *scanner);
 
 
 G_END_DECLS

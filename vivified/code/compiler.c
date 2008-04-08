@@ -23,7 +23,7 @@
 
 #include <swfdec/swfdec.h>
 
-#include "vivi_compiler.h"
+#include "vivi_parser.h"
 #include "vivi_code_text_printer.h"
 #include "vivi_code_compiler.h"
 
@@ -54,7 +54,7 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  statement = vivi_compile_file (source, argv[1]);
+  statement = vivi_parse_file (source, argv[1]);
 
   fclose (source);
 

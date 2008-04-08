@@ -18,7 +18,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include "vivi_compiler_scanner_lex_include.h"
+#include "vivi_parser_scanner_lex_include.h"
 %}
 
 %option			noyywrap
@@ -39,13 +39,13 @@ identifier_part		[$_a-zA-Z0-9]
 
 "/*"			{ BEGIN(comment); }
 <comment>{
-  [^*\n]*		/* skip */
-  \n			{ lex_line_number++; }
-  "*/"			{ BEGIN(INITIAL); }
   <<EOF>>		{
 			  BEGIN(INITIAL);
 			  return TOKEN_ERROR;
 			}
+  [^*\n]*		/* skip */
+  \n			{ lex_line_number++; }
+  "*/"			{ BEGIN(INITIAL); }
 }
 "//"[^\r\n]*		{
 			  lex_line_number++;

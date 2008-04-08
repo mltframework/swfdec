@@ -17,12 +17,20 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _VIVI_COMPILER_SCANNER_LEX_INCLUDE_H_
-#define _VIVI_COMPILER_SCANNER_LEX_INCLUDE_H_
+#ifndef _VIVI_DECOMPILER_H_
+#define _VIVI_DECOMPILER_H_
 
-#include "vivi_compiler_scanner.h"
+#include <stdio.h>
 
-ViviCompilerScannerValue lex_value;
-guint lex_line_number;
+#include <swfdec/swfdec.h>
+#include <vivified/code/vivi_code_statement.h>
 
-#endif // _VIVI_COMPILER_SCANNER_LEX_INCLUDE_H_
+G_BEGIN_DECLS
+
+
+ViviCodeStatement *	vivi_parse_file			(FILE *		file,
+							 const char *	input_name);
+
+
+G_END_DECLS
+#endif

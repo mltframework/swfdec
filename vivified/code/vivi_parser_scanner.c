@@ -21,15 +21,15 @@
 #include "config.h"
 #endif
 
-#include "vivi_compiler_scanner.h"
+#include "vivi_parser_scanner.h"
 
-#include "vivi_compiler_scanner_lex.h"
-#include "vivi_compiler_scanner_lex_include.h"
+#include "vivi_parser_scanner_lex.h"
+#include "vivi_parser_scanner_lex_include.h"
 
-G_DEFINE_TYPE (ViviCompilerScanner, vivi_compiler_scanner, G_TYPE_OBJECT)
+G_DEFINE_TYPE (ViviParserScanner, vivi_parser_scanner, G_TYPE_OBJECT)
 
 static void
-vivi_compiler_scanner_free_type_value (ViviCompilerScannerValue *value)
+vivi_parser_scanner_free_type_value (ViviParserScannerValue *value)
 {
   switch (value->type) {
     case VALUE_TYPE_STRING:
@@ -52,31 +52,31 @@ vivi_compiler_scanner_free_type_value (ViviCompilerScannerValue *value)
 }
 
 static void
-vivi_compiler_scanner_dispose (GObject *object)
+vivi_parser_scanner_dispose (GObject *object)
 {
-  ViviCompilerScanner *scanner = VIVI_COMPILER_SCANNER (object);
+  ViviParserScanner *scanner = VIVI_PARSER_SCANNER (object);
 
-  vivi_compiler_scanner_free_type_value (&scanner->value);
-  vivi_compiler_scanner_free_type_value (&scanner->next_value);
+  vivi_parser_scanner_free_type_value (&scanner->value);
+  vivi_parser_scanner_free_type_value (&scanner->next_value);
 
-  G_OBJECT_CLASS (vivi_compiler_scanner_parent_class)->dispose (object);
+  G_OBJECT_CLASS (vivi_parser_scanner_parent_class)->dispose (object);
 }
 
 static void
-vivi_compiler_scanner_class_init (ViviCompilerScannerClass *klass)
+vivi_parser_scanner_class_init (ViviParserScannerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->dispose = vivi_compiler_scanner_dispose;
+  object_class->dispose = vivi_parser_scanner_dispose;
 }
 
 static void
-vivi_compiler_scanner_init (ViviCompilerScanner *token)
+vivi_parser_scanner_init (ViviParserScanner *token)
 {
 }
 
 static const struct {
-  ViviCompilerScannerToken	token;
+  ViviParserScannerToken	token;
   const char *			name;
 } token_names[] = {
   // special
@@ -200,7 +200,7 @@ static const struct {
   { TOKEN_LAST, NULL }
 };
 
-const char *vivi_compiler_scanner_token_name (ViviCompilerScannerToken token)
+const char *vivi_parser_scanner_token_name (ViviParserScannerToken token)
 {
   int i;
 
@@ -215,11 +215,11 @@ const char *vivi_compiler_scanner_token_name (ViviCompilerScannerToken token)
 }
 
 static void
-vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
+vivi_parser_scanner_advance (ViviParserScanner *scanner)
 {
-  g_return_if_fail (VIVI_IS_COMPILER_SCANNER (scanner));
+  g_return_if_fail (VIVI_IS_PARSER_SCANNER (scanner));
 
-  vivi_compiler_scanner_free_type_value (&scanner->value);
+  vivi_parser_scanner_free_type_value (&scanner->value);
 
   scanner->token = scanner->next_token;
   scanner->value = scanner->next_value;
@@ -245,54 +245,54 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
   }
 }
 
-ViviCompilerScanner *
-vivi_compiler_scanner_new (FILE *file)
+ViviParserScanner *
+vivi_parser_scanner_new (FILE *file)
 {
-  ViviCompilerScanner *scanner;
+  ViviParserScanner *scanner;
 
   g_return_val_if_fail (file != NULL, NULL);
 
-  scanner = g_object_new (VIVI_TYPE_COMPILER_SCANNER, NULL);
+  scanner = g_object_new (VIVI_TYPE_PARSER_SCANNER, NULL);
   scanner->file = file;
   scanner->line_number = scanner->next_line_number = lex_line_number = 1;
 
   yyrestart (file);
 
-  vivi_compiler_scanner_advance (scanner);
+  vivi_parser_scanner_advance (scanner);
 
   return scanner;
 }
 
-ViviCompilerScannerToken
-vivi_compiler_scanner_get_next_token (ViviCompilerScanner *scanner)
+ViviParserScannerToken
+vivi_parser_scanner_get_next_token (ViviParserScanner *scanner)
 {
-  g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), TOKEN_EOF);
+  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), TOKEN_EOF);
 
-  vivi_compiler_scanner_advance (scanner);
+  vivi_parser_scanner_advance (scanner);
 
   return scanner->token;
 }
 
-ViviCompilerScannerToken
-vivi_compiler_scanner_peek_next_token (ViviCompilerScanner *scanner)
+ViviParserScannerToken
+vivi_parser_scanner_peek_next_token (ViviParserScanner *scanner)
 {
-  g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), TOKEN_EOF);
+  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), TOKEN_EOF);
 
   return scanner->next_token;
 }
 
 guint
-vivi_compiler_scanner_cur_line (ViviCompilerScanner *scanner)
+vivi_parser_scanner_cur_line (ViviParserScanner *scanner)
 {
-  g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), 0);
+  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), 0);
 
   return scanner->line_number;
 }
 
 guint
-vivi_compiler_scanner_cur_column (ViviCompilerScanner *scanner)
+vivi_parser_scanner_cur_column (ViviParserScanner *scanner)
 {
-  g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), 0);
+  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), 0);
 
   // TODO
 
@@ -300,9 +300,9 @@ vivi_compiler_scanner_cur_column (ViviCompilerScanner *scanner)
 }
 
 char *
-vivi_compiler_scanner_get_line (ViviCompilerScanner *scanner)
+vivi_parser_scanner_get_line (ViviParserScanner *scanner)
 {
-  g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), 0);
+  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), 0);
 
   // TODO
 

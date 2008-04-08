@@ -122,7 +122,7 @@ swfdec_cache_init (SwfdecCache *cache)
 SwfdecCache *
 swfdec_cache_new (gsize max_size)
 {
-  return g_object_new (SWFDEC_TYPE_CACHE, "max-cache-size", max_size);
+  return g_object_new (SWFDEC_TYPE_CACHE, "max-cache-size", max_size, NULL);
 }
 
 gsize

@@ -2030,6 +2030,7 @@ parse_function_definition (ParseData *data, ViviCodeValue **function,
   ParseStatus status;
   ViviCodeValue **arguments;
   ViviCodeStatement *body;
+  guint i;
 
   *function = NULL;
   *identifier = NULL;
@@ -2098,10 +2099,18 @@ parse_function_definition (ParseData *data, ViviCodeValue **function,
   }
 
   *function = vivi_code_function_new ();
-  vivi_code_function_set_body (VIVI_CODE_FUNCTION (*function), body);
-  if (arguments != NULL)
+  if (body != NULL) {
+    vivi_code_function_set_body (VIVI_CODE_FUNCTION (*function), body);
+    g_object_unref (body);
+  }
+  if (arguments != NULL) {
+    for (i = 0; arguments[i] != NULL; i++) {
+      vivi_code_function_add_argument (VIVI_CODE_FUNCTION (*function),
+	  vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (
+	      VIVI_CODE_GET (arguments[i])->name)));
+    }
     free_value_list (arguments);
-  g_object_unref (body);
+  }
 
   return STATUS_OK;
 }

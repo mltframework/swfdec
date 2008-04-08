@@ -228,7 +228,7 @@ export_graphic (SwfdecGraphic *graphic, const char *filename)
 static gboolean
 export_image (SwfdecImage *image, const char *filename)
 {
-  cairo_surface_t *surface = swfdec_image_create_surface (image);
+  cairo_surface_t *surface = swfdec_image_create_surface (image, NULL);
 
   if (surface == NULL)
     return FALSE;

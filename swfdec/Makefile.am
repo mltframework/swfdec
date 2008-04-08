@@ -54,6 +54,7 @@ libswfdec_source_files = \
 	swfdec_button_movie_as.c \
 	swfdec_cache.c \
 	swfdec_cached.c \
+	swfdec_cached_image.c \
 	swfdec_camera.c \
 	swfdec_character.c \
 	swfdec_codec_adpcm.c \
@@ -117,6 +118,7 @@ libswfdec_source_files = \
 	swfdec_policy_file.c \
 	swfdec_rect.c \
 	swfdec_rectangle.c \
+	swfdec_renderer.c \
 	swfdec_resource.c \
 	swfdec_ringbuffer.c \
 	swfdec_sandbox.c \
@@ -195,6 +197,7 @@ public_headers = \
 	swfdec_player.h \
 	swfdec_player_scripting.h \
 	swfdec_rectangle.h \
+	swfdec_renderer.h \
 	swfdec_script.h \
 	swfdec_socket.h \
 	swfdec_stream.h \
@@ -232,6 +235,7 @@ noinst_HEADERS = \
 	swfdec_button_movie.h \
 	swfdec_cache.h \
 	swfdec_cached.h \
+	swfdec_cached_image.h \
 	swfdec_character.h \
 	swfdec_codec_audio.h \
 	swfdec_codec_video.h \

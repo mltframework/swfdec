@@ -29,6 +29,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_path.h"
+#include "swfdec_renderer_internal.h"
 
 #define MAX_ALIGN 10
 
@@ -113,7 +114,8 @@ swfdec_stroke_paint (SwfdecDraw *draw, cairo_t *cr, const SwfdecColorTransform *
     cairo_append_path (cr, &draw->path);
 
   if (stroke->pattern) {
-    cairo_pattern_t *pattern = swfdec_pattern_get_pattern (stroke->pattern, trans);
+    cairo_pattern_t *pattern = swfdec_pattern_get_pattern (stroke->pattern, 
+	swfdec_renderer_get (cr), trans);
     cairo_set_source (cr, pattern);
     cairo_pattern_destroy (pattern);
   } else {

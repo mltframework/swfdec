@@ -65,7 +65,7 @@ swfdec_image_get_size (SwfdecImage *image, guint *w, guint *h)
 {
   cairo_surface_t *surface;
 
-  surface = swfdec_image_create_surface (image);
+  surface = swfdec_image_create_surface (image, NULL);
   if (surface == NULL)
     return FALSE;
 

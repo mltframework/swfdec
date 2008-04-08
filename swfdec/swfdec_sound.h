@@ -22,7 +22,7 @@
 #ifndef _SWFDEC_SOUND_H_
 #define _SWFDEC_SOUND_H_
 
-#include <swfdec/swfdec_cached.h>
+#include <swfdec/swfdec_character.h>
 #include <swfdec/swfdec_codec_audio.h>
 #include <swfdec/swfdec_swf_decoder.h>
 #include <swfdec/swfdec_types.h>
@@ -61,7 +61,7 @@ struct _SwfdecSoundChunk
 
 struct _SwfdecSound
 {
-  SwfdecCached		cached;
+  SwfdecCharacter	character;
 
   guint			codec;			/* codec in use */
   SwfdecAudioFormat	format;	        	/* channel/rate/width information for codec */
@@ -75,7 +75,7 @@ struct _SwfdecSound
 
 struct _SwfdecSoundClass
 {
-  SwfdecCachedClass	cached_class;
+  SwfdecCharacterClass	character_class;
 };
 
 GType swfdec_sound_get_type (void);

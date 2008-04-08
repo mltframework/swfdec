@@ -552,8 +552,12 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
-  if (cr == NULL)
-    cr = text->cr;
+  if (cr == NULL) {
+    cr = cairo_create (swfdec_renderer_get_surface (
+	  SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)->priv->renderer));
+  } else {
+    cairo_reference (cr);
+  }
 
   if (paragraphs == NULL) {
     paragraphs_free = swfdec_text_field_movie_get_paragraphs (text, NULL);
@@ -766,6 +770,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
   if (num != NULL)
     *num = layouts->len;
+  cairo_destroy (cr);
 
   return (SwfdecLayout *) (void *) g_array_free (layouts, FALSE);
 }
@@ -1246,11 +1251,6 @@ swfdec_text_field_movie_dispose (GObject *object)
   g_string_free (text->input, TRUE);
   text->input = NULL;
 
-  cairo_destroy (text->cr);
-  text->cr = NULL;
-  cairo_surface_destroy (text->surface);
-  text->surface = NULL;
-
   G_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->dispose (object);
 }
 
@@ -1729,9 +1729,6 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 static void
 swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
 {
-  text->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
-  text->cr = cairo_create (text->surface);
-
   text->input = g_string_new ("");
   text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;

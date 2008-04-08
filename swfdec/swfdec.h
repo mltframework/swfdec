@@ -40,6 +40,7 @@
 #include <swfdec/swfdec_player.h>
 #include <swfdec/swfdec_player_scripting.h>
 #include <swfdec/swfdec_rectangle.h>
+#include <swfdec/swfdec_renderer.h>
 #include <swfdec/swfdec_socket.h>
 #include <swfdec/swfdec_stream.h>
 #include <swfdec/swfdec_system.h>

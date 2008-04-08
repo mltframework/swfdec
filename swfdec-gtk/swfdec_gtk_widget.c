@@ -31,7 +31,7 @@ struct _SwfdecGtkWidgetPrivate
   SwfdecPlayer *	player;		/* the video we play */
 
   gboolean		renderer_set;	/* TRUE if a special renderer has been set */
-  cairo_surface_type_t	renderer;	/* the renderer that was set */
+  cairo_surface_type_t	renderer_type;	/* the renderer that was set */
   gboolean		interactive;	/* TRUE if this widget propagates keyboard and mouse events */
 };
 
@@ -231,7 +231,7 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
     return FALSE;
 
   if (!priv->renderer_set ||
-      (surface = swfdec_gtk_widget_create_renderer (priv->renderer, 
+      (surface = swfdec_gtk_widget_create_renderer (priv->renderer_type, 
 	      event->area.width, event->area.height)) == NULL) {
     cr = gdk_cairo_create (gtkwidget->window);
   } else {
@@ -272,7 +272,7 @@ swfdec_gtk_widget_get_property (GObject *object, guint param_id, GValue *value,
       g_value_set_boolean (value, priv->renderer_set);
       break;
     case PROP_RENDERER:
-      g_value_set_uint (value, priv->renderer);
+      g_value_set_uint (value, priv->renderer_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -299,7 +299,7 @@ swfdec_gtk_widget_set_property (GObject *object, guint param_id, const GValue *v
       gtk_widget_queue_draw (GTK_WIDGET (widget));
       break;
     case PROP_RENDERER:
-      priv->renderer = g_value_get_uint (value);
+      priv->renderer_type = g_value_get_uint (value);
       if (priv->renderer_set)
 	gtk_widget_queue_draw (GTK_WIDGET (widget));
       break;
@@ -493,7 +493,7 @@ swfdec_gtk_widget_init (SwfdecGtkWidget * widget)
   priv = widget->priv = G_TYPE_INSTANCE_GET_PRIVATE (widget, SWFDEC_TYPE_GTK_WIDGET, SwfdecGtkWidgetPrivate);
 
   priv->interactive = TRUE;
-  priv->renderer = CAIRO_SURFACE_TYPE_IMAGE;
+  priv->renderer_type = CAIRO_SURFACE_TYPE_IMAGE;
 
   GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_FOCUS);
 }
@@ -649,7 +649,7 @@ swfdec_gtk_widget_set_renderer (SwfdecGtkWidget *widget, cairo_surface_type_t re
 {
   g_return_if_fail (SWFDEC_IS_GTK_WIDGET (widget));
 
-  widget->priv->renderer = renderer;
+  widget->priv->renderer_type = renderer;
   if (widget->priv->renderer_set == FALSE) {
     widget->priv->renderer_set = TRUE;
     g_object_notify (G_OBJECT (widget), "renderer-set");
@@ -690,7 +690,7 @@ swfdec_gtk_widget_get_renderer (SwfdecGtkWidget *widget)
 {
   g_return_val_if_fail (SWFDEC_IS_GTK_WIDGET (widget), CAIRO_SURFACE_TYPE_IMAGE);
 
-  return widget->priv->renderer;
+  return widget->priv->renderer_type;
 }
 
 /**

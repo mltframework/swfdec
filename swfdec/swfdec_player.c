@@ -2846,11 +2846,37 @@ swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *i
  * @width: width of area to render or 0 for full width
  * @height: height of area to render or 0 for full height
  *
- * Renders the given area of the current frame to @cr.
+ * Renders the given area of the current frame to @cr using the player's
+ * renderer.
  **/
 void
 swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, 
     double x, double y, double width, double height)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (cr != NULL);
+  g_return_if_fail (width >= 0.0);
+  g_return_if_fail (height >= 0.0);
+
+  swfdec_player_render_with_renderer (player, cr, player->priv->renderer,
+      x, y, width, height);
+}
+
+/**
+ * swfdec_player_render:
+ * @player: a #SwfdecPlayer
+ * @cr: #cairo_t to render to
+ * @renderer: Renderer to use for rendering
+ * @x: x coordinate of top left position to render
+ * @y: y coordinate of top left position to render
+ * @width: width of area to render or 0 for full width
+ * @height: height of area to render or 0 for full height
+ *
+ * Renders the given area of the current frame to @cr.
+ **/
+void
+swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr, 
+    SwfdecRenderer *renderer, double x, double y, double width, double height)
 {
   static const SwfdecColorTransform trans = { FALSE, 256, 0, 256, 0, 256, 0, 256, 0 };
   SwfdecPlayerPrivate *priv;
@@ -2859,6 +2885,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (cr != NULL);
+  g_return_if_fail (SWFDEC_IS_RENDERER (renderer));
   g_return_if_fail (width >= 0.0);
   g_return_if_fail (height >= 0.0);
 
@@ -2871,6 +2898,8 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
     width = priv->stage_width;
   if (height == 0.0)
     height = priv->stage_height;
+
+  swfdec_renderer_attach (renderer, cr);
   /* clip the area */
   cairo_save (cr);
   cairo_rectangle (cr, x, y, width, height);

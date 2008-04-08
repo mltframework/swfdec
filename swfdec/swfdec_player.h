@@ -153,12 +153,19 @@ SwfdecRenderer *swfdec_player_get_renderer	(SwfdecPlayer *		player);
 void		swfdec_player_set_renderer	(SwfdecPlayer *		player,
 						 SwfdecRenderer *	renderer);
 					 
-void		swfdec_player_render		(SwfdecPlayer *	player,
-						 cairo_t *	cr,
-						 double		x,
-						 double		y,
-						 double		width,
-						 double		height);
+void		swfdec_player_render		(SwfdecPlayer *		player,
+						 cairo_t *		cr,
+						 double			x,
+						 double			y,
+						 double			width,
+						 double			height);
+void		swfdec_player_render_with_renderer (SwfdecPlayer *	player,
+						 cairo_t *		cr,
+						 SwfdecRenderer *	renderer,
+						 double			x,
+						 double			y,
+						 double			width,
+						 double			height);
 gulong		swfdec_player_advance		(SwfdecPlayer *	player,
 						 gulong		msecs);
 gboolean	swfdec_player_mouse_move	(SwfdecPlayer *	player, 

@@ -135,11 +135,6 @@ struct _SwfdecTextFieldMovie {
   gsize			cursor_start;		/* index of cursor (aka insertion point) in ->input */
   gsize			cursor_end;		/* end of cursor, either equal to cursor_start or if text selected smaller or bigger */
   guint			character_pressed;
-
-  // FIXME: Temporary using image surface, until there is a way to get cairo_t
-  // outside the rendering functions
-  cairo_surface_t *	surface;
-  cairo_t *		cr;
 };
 
 struct _SwfdecTextFieldMovieClass {

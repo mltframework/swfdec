@@ -705,8 +705,10 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
   source = swfdec_image_lookup_surface (image, renderer, &mask);
   if (source == NULL) {
     source = swfdec_image_create_surface (image, NULL);
+    if (source == NULL)
+      return NULL;
     if (renderer) {
-      cached = swfdec_cached_image_new (surface, image->width * image->height * 4);
+      cached = swfdec_cached_image_new (source, image->width * image->height * 4);
       swfdec_cached_image_set_color_transform (cached, &mask);
       swfdec_renderer_add_cache (renderer, image, SWFDEC_CACHED (cached));
       g_object_unref (cached);

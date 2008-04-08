@@ -40,18 +40,18 @@ typedef struct _ViviCodeCompilerClass ViviCodeCompilerClass;
 #define VIVI_CODE_COMPILER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_CODE_COMPILER, ViviCodeCompilerClass))
 
 typedef struct {
-  SwfdecAsAction	id;
-  SwfdecBots		*data;
+  SwfdecAsAction		id;
+  SwfdecBots *			data;
+  GSList *			parent;
 } ViviCodeCompilerAction;
 
 struct _ViviCodeCompiler
 {
   GObject			object;
 
-  SwfdecBots			*data;
-
-  ViviCodeCompilerAction	*action;
-  GSList			*actions;	// ViviCodeCompilerAction
+  GSList *			actions;
+  GSList *			current;
+  ViviCodeCompilerAction *	action;
 };
 
 struct _ViviCodeCompilerClass
@@ -70,11 +70,17 @@ void		vivi_code_compiler_compile_token	(ViviCodeCompiler *	compiler,
 void		vivi_code_compiler_compile_value	(ViviCodeCompiler *	compiler,
 							 ViviCodeValue *	value);
 
-void		vivi_code_compiler_add_action		(ViviCodeCompiler *	compiler,
+gsize		vivi_code_compiler_tail_size		(ViviCodeCompiler *	compiler);
+
+void		vivi_code_compiler_begin_action		(ViviCodeCompiler *	compiler,
 							 SwfdecAsAction		action);
 void		vivi_code_compiler_end_action		(ViviCodeCompiler *	compiler);
+void		vivi_code_compiler_write_empty_action	(ViviCodeCompiler *	compiler,
+							 SwfdecAsAction		action);
 
 void		vivi_code_compiler_write_u8		(ViviCodeCompiler *	compiler, guint value);
+void		vivi_code_compiler_write_u16		(ViviCodeCompiler *	compiler, guint value);
+void		vivi_code_compiler_write_s16		(ViviCodeCompiler *	compiler, guint value);
 void		vivi_code_compiler_write_double		(ViviCodeCompiler *	compiler, double value);
 void		vivi_code_compiler_write_string		(ViviCodeCompiler *	compiler, const char *value);
 

@@ -46,6 +46,15 @@ struct _SwfdecRenderer {
 struct _SwfdecRendererClass
 {
   GObjectClass		object_class;
+
+  cairo_surface_t *	(* create_similar)		(SwfdecRenderer *	renderer,
+							 cairo_surface_t *	surface);
+  cairo_surface_t *	(* create_for_data)		(SwfdecRenderer *	renderer,
+							 guint8 *		data,
+							 cairo_format_t		format,
+							 guint			width,
+							 guint			height,
+							 guint			rowstride);
 };
 
 GType			swfdec_renderer_get_type	(void);

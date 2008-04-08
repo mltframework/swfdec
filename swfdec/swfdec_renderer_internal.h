@@ -41,6 +41,15 @@ SwfdecCached *		swfdec_renderer_get_cache	(SwfdecRenderer *	renderer,
 							 SwfdecRendererSearchFunc func,
 							 gpointer		data);
 
+cairo_surface_t *	swfdec_renderer_create_similar	(SwfdecRenderer *	renderer,
+							 cairo_surface_t *	surface);
+cairo_surface_t *	swfdec_renderer_create_for_data	(SwfdecRenderer *	renderer,
+							 guint8 *		data,
+							 cairo_format_t		format,
+							 guint			width,
+							 guint			height,
+							 guint			rowstride);
+
 
 G_END_DECLS
 #endif

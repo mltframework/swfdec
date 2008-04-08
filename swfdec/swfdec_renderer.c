@@ -132,6 +132,43 @@ swfdec_renderer_set_property (GObject *object, guint param_id, const GValue *val
   }
 }
 
+static cairo_surface_t *
+swfdec_renderer_do_create_similar (SwfdecRenderer *renderer, cairo_surface_t *surface)
+{
+  SwfdecRendererPrivate *priv;
+  cairo_surface_t *result;
+  cairo_t *cr;
+
+  priv = renderer->priv;
+  if (cairo_surface_get_type (priv->surface) == CAIRO_SURFACE_TYPE_IMAGE)
+    return surface;
+
+  result = cairo_surface_create_similar (priv->surface,
+      cairo_surface_get_content (surface),
+      cairo_image_surface_get_width (surface),
+      cairo_image_surface_get_height (surface));
+  cr = cairo_create (result);
+
+  cairo_set_source_surface (cr, surface, 0, 0);
+  cairo_paint (cr);
+
+  cairo_destroy (cr);
+  cairo_surface_destroy (surface);
+  return result;
+}
+
+static cairo_surface_t *
+swfdec_renderer_do_create_for_data (SwfdecRenderer *renderer, guint8 *data,
+    cairo_format_t format, guint width, guint height, guint rowstride)
+{
+  static const cairo_user_data_key_t key;
+  cairo_surface_t *surface;
+
+  surface = cairo_image_surface_create_for_data (data, format, width, height, rowstride);
+  cairo_surface_set_user_data (surface, &key, data, g_free);
+  return swfdec_renderer_create_similar (renderer, surface);
+}
+
 static void
 swfdec_renderer_class_init (SwfdecRendererClass *klass)
 {
@@ -147,6 +184,9 @@ swfdec_renderer_class_init (SwfdecRendererClass *klass)
   g_object_class_install_property (object_class, PROP_SURFACE,
       g_param_spec_pointer ("surface", "surface", "cairo surface in use by this renderer",
 	  G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+  klass->create_similar = swfdec_renderer_do_create_similar;
+  klass->create_for_data = swfdec_renderer_do_create_for_data;
 }
 
 static void
@@ -245,6 +285,48 @@ swfdec_renderer_get (cairo_t *cr)
   g_return_val_if_fail (cr != NULL, NULL);
 
   return cairo_get_user_data (cr, &cr_key);
+}
+
+/**
+ * swfdec_renderer_create_similar:
+ * @renderer: a renderer
+ * @surface: an image surface; this function takes ownership of the passed-in image.
+ *
+ * Creates a surface with the same contents and size as the given image 
+ * @surface, but optimized for use in @renderer. You should use this function 
+ * before caching a surface.
+ *
+ * Returns: A surface with the same contents as @surface. You own a reference to the 
+ *          returned surface.
+ **/
+cairo_surface_t *
+swfdec_renderer_create_similar (SwfdecRenderer *renderer, cairo_surface_t *surface)
+{
+  SwfdecRendererClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_RENDERER (renderer), NULL);
+  g_return_val_if_fail (surface != NULL, NULL);
+  g_return_val_if_fail (cairo_surface_get_type (surface) == CAIRO_SURFACE_TYPE_IMAGE, NULL);
+
+  klass = SWFDEC_RENDERER_GET_CLASS (renderer);
+  return klass->create_similar (renderer, surface);
+}
+
+/* FIXME: get data parameter const */
+cairo_surface_t *
+swfdec_renderer_create_for_data (SwfdecRenderer *renderer, guint8 *data,
+    cairo_format_t format, guint width, guint height, guint rowstride)
+{
+  SwfdecRendererClass *klass;
+
+  g_return_val_if_fail (SWFDEC_IS_RENDERER (renderer), NULL);
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
+  g_return_val_if_fail (rowstride > 0, NULL);
+
+  klass = SWFDEC_RENDERER_GET_CLASS (renderer);
+  return klass->create_for_data (renderer, data, format, width, height, rowstride);
 }
 
 /*** PUBLIC API ***/

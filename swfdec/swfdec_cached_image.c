@@ -54,33 +54,7 @@ swfdec_cached_image_init (SwfdecCachedImage *cached)
 }
 
 SwfdecCachedImage *
-swfdec_cached_image_new (guint8 *image_data, cairo_format_t format,
-    guint width, guint height, guint rowstride)
-{
-  SwfdecCachedImage *image;
-  static const cairo_user_data_key_t key;
-  gulong size;
-
-  g_return_val_if_fail (image_data != NULL, NULL);
-  g_return_val_if_fail (width > 0, NULL);
-  g_return_val_if_fail (height > 0, NULL);
-  g_return_val_if_fail (rowstride > 0, NULL);
-
-  /* FIXME: sizeof (cairo_surface_t) */
-  size = sizeof (SwfdecCachedImage) + height * rowstride;
-  image = g_object_new (SWFDEC_TYPE_CACHED_IMAGE, "size", size, NULL);
-  image->surface = cairo_image_surface_create_for_data (image_data, format,
-      width, height, rowstride);
-  if (cairo_surface_set_user_data (image->surface, &key, image_data, g_free) != CAIRO_STATUS_SUCCESS) {
-    /* guess we should abort here due to OOM? */
-    g_warning ("failed to register data free function");
-  }
-
-  return image;
-}
-
-SwfdecCachedImage *
-swfdec_cached_image_new_for_surface (cairo_surface_t *surface, gsize size)
+swfdec_cached_image_new (cairo_surface_t *surface, gsize size)
 {
   SwfdecCachedImage *image;
 
@@ -100,5 +74,25 @@ swfdec_cached_image_get_surface (SwfdecCachedImage *image)
   g_return_val_if_fail (SWFDEC_IS_CACHED_IMAGE (image), NULL);
 
   return cairo_surface_reference (image->surface);
+}
+
+void
+swfdec_cached_image_get_color_transform (SwfdecCachedImage *image,
+    SwfdecColorTransform *trans)
+{
+  g_return_if_fail (SWFDEC_IS_CACHED_IMAGE (image));
+  g_return_if_fail (trans != NULL);
+
+  *trans = image->trans;
+}
+
+void
+swfdec_cached_image_set_color_transform (SwfdecCachedImage *image,
+    const SwfdecColorTransform *trans)
+{
+  g_return_if_fail (SWFDEC_IS_CACHED_IMAGE (image));
+  g_return_if_fail (trans != NULL);
+
+  image->trans = *trans;
 }
 

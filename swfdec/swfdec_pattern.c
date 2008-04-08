@@ -212,10 +212,11 @@ static cairo_pattern_t *
 swfdec_image_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransform *trans)
 {
   SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pat);
+  SwfdecRenderer *renderer = NULL;
   cairo_pattern_t *pattern;
   cairo_surface_t *surface;
   
-  surface = swfdec_image_create_surface_transformed (image->image, trans);
+  surface = swfdec_image_create_surface_transformed (image->image, renderer, trans);
   if (surface == NULL)
     return NULL;
   pattern = cairo_pattern_create_for_surface (surface);
@@ -524,7 +525,7 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
   if (SWFDEC_IS_IMAGE_PATTERN (pattern)) {
     SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pattern);
     if (image->image->width == 0)
-      cairo_surface_destroy (swfdec_image_create_surface (image->image));
+      cairo_surface_destroy (swfdec_image_create_surface (image->image, NULL));
     return g_strdup_printf ("%ux%u image %u (%s, %s)", image->image->width,
 	image->image->height, SWFDEC_CHARACTER (image->image)->id,
 	image->extend == CAIRO_EXTEND_REPEAT ? "repeat" : "no repeat",

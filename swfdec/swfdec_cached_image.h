@@ -51,18 +51,17 @@ struct _SwfdecCachedImageClass
 
 GType			swfdec_cached_image_get_type	(void);
 
-SwfdecCachedImage *	swfdec_cached_image_new		(guint8 *		image_data,
-							 cairo_format_t		format,
-							 guint			width,
-							 guint			height,
-							 guint			rowstride);
-SwfdecCachedImage *	swfdec_cached_image_new_for_surface
-							(cairo_surface_t *	surface,
+SwfdecCachedImage *	swfdec_cached_image_new		(cairo_surface_t *	surface,
 							 gsize			size);
 
 
 cairo_surface_t *	swfdec_cached_image_get_surface	(SwfdecCachedImage *	image);
-
+void			swfdec_cached_image_get_color_transform
+							(SwfdecCachedImage *	image,
+							 SwfdecColorTransform *	trans);
+void			swfdec_cached_image_set_color_transform
+							(SwfdecCachedImage *	image,
+							 const SwfdecColorTransform *trans);
 
 G_END_DECLS
 #endif

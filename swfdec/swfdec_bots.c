@@ -64,7 +64,7 @@ swfdec_bots_close (SwfdecBots *bots)
   return buffer;
 }
 
-unsigned int
+gsize
 swfdec_bots_get_bits (SwfdecBots *bots)
 {
   g_return_val_if_fail (bots != NULL, 0);
@@ -72,7 +72,17 @@ swfdec_bots_get_bits (SwfdecBots *bots)
   return (bots->ptr - bots->data) * 8 + bots->idx;
 }
 
-unsigned int
+gsize
+swfdec_bots_get_bytes (SwfdecBots *bots)
+{
+  g_return_val_if_fail (bots != NULL, 0);
+
+  g_assert (bots->idx == 0);
+
+  return swfdec_bots_get_bits (bots) / 8;
+}
+
+gsize
 swfdec_bots_left (SwfdecBots *bots)
 {
   g_return_val_if_fail (bots != NULL, 0);
@@ -130,6 +140,20 @@ swfdec_bots_put_buffer (SwfdecBots *bots, SwfdecBuffer *buffer)
 }
 
 void
+swfdec_bots_put_bots (SwfdecBots *bots, SwfdecBots *other)
+{
+  gsize bytes;
+
+  g_return_if_fail (bots != NULL);
+  g_return_if_fail (other != NULL);
+
+  bytes = swfdec_bots_get_bytes (other);
+  swfdec_bots_prepare_bytes (bots, bytes);
+  memcpy (bots->ptr, other->data, bytes);
+  bots->ptr += bytes;
+}
+
+void
 swfdec_bots_put_u8 (SwfdecBots *bots, guint i)
 {
   g_return_if_fail (i <= G_MAXUINT8);
@@ -146,6 +170,16 @@ swfdec_bots_put_u16 (SwfdecBots *bots, guint i)
 
   swfdec_bots_prepare_bytes (bots, 2);
   *(guint16 *)bots->ptr = GUINT16_TO_LE (i);
+  bots->ptr += 2;
+}
+
+void
+swfdec_bots_put_s16 (SwfdecBots *bots, int i)
+{
+  g_return_if_fail (i >= G_MININT16 && i <= G_MAXINT16);
+
+  swfdec_bots_prepare_bytes (bots, 2);
+  *(guint16 *)bots->ptr = GINT16_TO_LE (i);
   bots->ptr += 2;
 }
 
@@ -215,6 +249,29 @@ swfdec_bots_put_string (SwfdecBots *bots, const char *s)
   swfdec_bots_prepare_bytes (bots, len);
   memcpy (bots->ptr, s, len);
   bots->ptr += len;
+}
+
+ /* If little endian x86 byte order is 0 1 2 3 4 5 6 7 and PPC32 byte order is
+ * 7 6 5 4 3 2 1 0, then Flash uses 4 5 6 7 0 1 2 3. */
+void
+swfdec_bots_put_double (SwfdecBots *bots, double value)
+{
+  union {
+    guint32 i[2];
+    double d;
+  } conv;
+
+  swfdec_bots_ensure_bits (bots, 8);
+
+  conv.d = value;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  swfdec_bots_put_u32 (bots, conv.i[1]);
+  swfdec_bots_put_u32 (bots, conv.i[0]);
+#else
+  swfdec_bots_put_u32 (bots, GUINT32_TO_LE (conv.i[0]));
+  swfdec_bots_put_u32 (bots, GUINT32_TO_LE (conv.i[1]));
+#endif
 }
 
 static guint

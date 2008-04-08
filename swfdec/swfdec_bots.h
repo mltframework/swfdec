@@ -42,8 +42,9 @@ struct _SwfdecBots {
 SwfdecBots *	swfdec_bots_open			(void);
 SwfdecBuffer *	swfdec_bots_close		(SwfdecBots *		bots);
 
-unsigned int	swfdec_bots_get_bits		(SwfdecBots *		bots);
-unsigned int	swfdec_bots_left	  		(SwfdecBots *		bots);
+gsize		swfdec_bots_get_bits		(SwfdecBots *		bots);
+gsize		swfdec_bots_get_bytes		(SwfdecBots *		bots);
+gsize		swfdec_bots_left		(SwfdecBots *		bots);
 void		swfdec_bots_ensure_bits		(SwfdecBots *		bots,
 						 unsigned int		bits);
 void		swfdec_bots_prepare_bytes	(SwfdecBots *		bots,
@@ -62,14 +63,20 @@ void		swfdec_bots_put_data		(SwfdecBots *		bots,
 						 guint			length);
 void		swfdec_bots_put_buffer		(SwfdecBots *		bots,
 						 SwfdecBuffer *		buffer);
+void		swfdec_bots_put_bots		(SwfdecBots *		bots,
+						 SwfdecBots *		other);
 void		swfdec_bots_put_u8		(SwfdecBots *		bots,
 						 guint	  		i);
 void		swfdec_bots_put_u16		(SwfdecBots *		bots,
 						 guint			i);
+void		swfdec_bots_put_s16		(SwfdecBots *		bots,
+						 gint			i);
 void		swfdec_bots_put_u32		(SwfdecBots *		bots,
 						 guint			i);
 void		swfdec_bots_put_string		(SwfdecBots *		bots,
 						 const char *		s);
+void		swfdec_bots_put_double		(SwfdecBots *		bots,
+						 double			value);
 
 void		swfdec_bots_put_rgb		(SwfdecBots *		bots,
 						 SwfdecColor		color);

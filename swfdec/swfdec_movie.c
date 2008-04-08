@@ -40,6 +40,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
+#include "swfdec_renderer_internal.h"
 #include "swfdec_resource.h"
 #include "swfdec_system.h"
 #include "swfdec_text_field_movie.h"
@@ -1163,8 +1164,9 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
 
   /* if the movie loaded an image, draw it here now */
   if (movie->image) {
+    SwfdecRenderer *renderer = swfdec_renderer_get (cr);
     cairo_surface_t *surface = swfdec_image_create_surface_transformed (movie->image,
-	ctrans);
+	renderer, ctrans);
     if (surface) {
       static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
       cairo_pattern_t *pattern = cairo_pattern_create_for_surface (surface);

@@ -459,9 +459,6 @@ swfdec_swf_decoder_create_character (SwfdecSwfDecoder * s, guint id, GType type)
   result = g_object_new (type, NULL);
   result->id = id;
   g_hash_table_insert (s->characters, GUINT_TO_POINTER (id), result);
-  if (SWFDEC_IS_CACHED (result)) {
-    swfdec_cached_set_cache (SWFDEC_CACHED (result), SWFDEC_DECODER (s)->player->priv->cache);
-  }
 
   return result;
 }

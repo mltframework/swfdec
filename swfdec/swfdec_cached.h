@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (c) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (c) 2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +20,7 @@
 #ifndef _SWFDEC_CACHED_H_
 #define _SWFDEC_CACHED_H_
 
-#include <cairo.h>
-#include <swfdec/swfdec_cache.h>
-#include <swfdec/swfdec_character.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
@@ -38,27 +36,27 @@ typedef struct _SwfdecCachedClass SwfdecCachedClass;
 
 
 struct _SwfdecCached {
-  SwfdecCharacter	character;
+  GObject		object;
 
-  SwfdecCache *		cache;		/* cache to use for cached */
-  SwfdecCacheHandle	handle;		/* handle to unload surface */
+  gsize			size;
 };
 
 struct _SwfdecCachedClass
 {
-  SwfdecCharacterClass	character_class;
+  GObjectClass		object_class;
 
-  void			(* unload)			(SwfdecCached *	cached);
+  /* signals */
+  void			(* use)				(SwfdecCached *	cached);
+  void			(* unuse)			(SwfdecCached *	cached);
 };
 
 GType			swfdec_cached_get_type		(void);
 
-void			swfdec_cached_load		(SwfdecCached *	cached,
-							 guint		size);
+gsize			swfdec_cached_get_size		(SwfdecCached *	cached);
+
+/* for subclasses */
 void			swfdec_cached_use		(SwfdecCached *	cached);
-void			swfdec_cached_unload		(SwfdecCached *	cached);
-void			swfdec_cached_set_cache		(SwfdecCached *	cached,
-							 SwfdecCache *	cache);
+void			swfdec_cached_unuse		(SwfdecCached *	cached);
 
 
 G_END_DECLS

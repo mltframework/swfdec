@@ -316,7 +316,7 @@ get_image_type_name (SwfdecImageType type)
 static void
 dump_image (SwfdecImage *image)
 {
-  cairo_surface_destroy (swfdec_image_create_surface (image));
+  cairo_surface_destroy (swfdec_image_create_surface (image, NULL));
   g_print ("  %s %u x %u\n", get_image_type_name (image->type),
       image->width, image->height);
 }

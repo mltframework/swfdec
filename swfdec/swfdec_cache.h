@@ -1,6 +1,5 @@
 /* Swfdec
- * Copyright (C) 2005 David Schleef <ds@schleef.org>
- *		 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (c) 2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,43 +20,51 @@
 #ifndef _SWFDEC_CACHE_H_
 #define _SWFDEC_CACHE_H_
 
-#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_cached.h>
 
 G_BEGIN_DECLS
 
-//typedef struct _SwfdecCache SwfdecCache;
-//typedef struct _SwfdecCacheHandle SwfdecCacheHandle;
+typedef struct _SwfdecCache SwfdecCache;
+typedef struct _SwfdecCacheClass SwfdecCacheClass;
+
+#define SWFDEC_TYPE_CACHE                    (swfdec_cache_get_type())
+#define SWFDEC_IS_CACHE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_CACHE))
+#define SWFDEC_IS_CACHE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_CACHE))
+#define SWFDEC_CACHE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_CACHE, SwfdecCache))
+#define SWFDEC_CACHE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_CACHE, SwfdecCacheClass))
+#define SWFDEC_CACHE_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_CACHE, SwfdecCacheClass))
+
 
 struct _SwfdecCache {
-  guint		refcount;		/* reference count */
-  gulong	max_size;		/* max size of cache */
-  gulong	usage;			/* current size of cache */
+  GObject		object;
 
-  GQueue *	queue;			/* queue of loaded SwfdecCacheHandle, sorted by most recently used */
+  gsize			max_size;	/* maximum amount of data allowed in cache, before starting to purge */
+  gsize			size;		/* current amount of data in cache */
+
+  GQueue *		queue;		/* queue of SwfdecCached, most recently used first */
 };
 
-struct _SwfdecCacheHandle {
-  gulong	size;	          	/* size of this item */
-
-  GDestroyNotify	unload;		/* function called when unloading this handle */
+struct _SwfdecCacheClass
+{
+  GObjectClass		object_class;
 };
 
-SwfdecCache *	swfdec_cache_new		(gulong			max_size);
-void		swfdec_cache_ref		(SwfdecCache *		cache);
-void		swfdec_cache_unref		(SwfdecCache *		cache);
+GType			swfdec_cache_get_type		(void);
 
-gulong		swfdec_cache_get_size		(SwfdecCache *		cache);
-void		swfdec_cache_set_size		(SwfdecCache *		cache,
-						 gulong			max_usage);
-gulong		swfdec_cache_get_usage	  	(SwfdecCache *		cache);
-void		swfdec_cache_shrink		(SwfdecCache *		cache,
-						 gulong			max_usage);
-void		swfdec_cache_add_handle		(SwfdecCache *	  	cache,
-						 const SwfdecCacheHandle *handle);
-void		swfdec_cache_remove_handle    	(SwfdecCache *	  	cache,
-						 const SwfdecCacheHandle *handle);
+SwfdecCache *		swfdec_cache_new		(gsize		max_size);
+
+gsize			swfdec_cache_get_cache_size   	(SwfdecCache *	cache);
+gsize			swfdec_cache_get_max_cache_size	(SwfdecCache *	cache);
+void			swfdec_cache_set_max_cache_size	(SwfdecCache *	cache,
+							 gsize		max_size);
+
+void			swfdec_cache_shrink             (SwfdecCache *	cache,
+							 gsize		size);
+
+void			swfdec_cache_add		(SwfdecCache *	cache,
+							 SwfdecCached *	cached);
+
 
 
 G_END_DECLS
-
 #endif

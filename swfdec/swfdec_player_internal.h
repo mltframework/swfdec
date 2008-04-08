@@ -23,6 +23,7 @@
 #include <swfdec/swfdec_player.h>
 #include <swfdec/swfdec_audio.h>
 #include <swfdec/swfdec_audio_internal.h>
+#include <swfdec/swfdec_cache.h>
 #include <swfdec/swfdec_event.h>
 #include <swfdec/swfdec_function_list.h>
 #include <swfdec/swfdec_loader.h>
@@ -76,6 +77,7 @@ struct _SwfdecPlayerPrivate
   char *		variables;		/* variables to set on the player */
   SwfdecURL *		url;			/* url or NULL if not set yet */
   SwfdecURL *		base_url;	      	/* base url or NULL if not set yet */
+  SwfdecRenderer *	renderer;		/* the renderer to use */
   SwfdecPlayerScripting *scripting;		/* scripting object */
   GHashTable *		scripting_callbacks;	/* GC string => SwfdecAsFunction mapping of script callbacks */
   GType			loader_type;		/* type to use for creating sockets */

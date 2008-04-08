@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,17 +25,51 @@
 #include "swfdec_debug.h"
 
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecCached, swfdec_cached, SWFDEC_TYPE_CHARACTER)
+G_DEFINE_ABSTRACT_TYPE (SwfdecCached, swfdec_cached, G_TYPE_OBJECT)
+
+enum {
+  PROP_0,
+  PROP_SIZE
+};
+
+enum {
+  USE,
+  UNUSE,
+  LAST_SIGNAL
+};
+
+guint signals[LAST_SIGNAL] = { 0, };
 
 static void
-swfdec_cached_dispose (GObject *object)
+swfdec_cached_get_property (GObject *object, guint param_id, GValue *value,
+    GParamSpec *pspec)
 {
-  SwfdecCached * cached = SWFDEC_CACHED (object);
+  SwfdecCached *cached = SWFDEC_CACHED (object);
 
-  swfdec_cached_unload (cached);
-  swfdec_cached_set_cache (cached, NULL);
+  switch (param_id) {
+    case PROP_SIZE:
+      g_value_set_ulong (value, cached->size);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
+}
 
-  G_OBJECT_CLASS (swfdec_cached_parent_class)->dispose (object);
+static void
+swfdec_cached_set_property (GObject *object, guint param_id, const GValue *value,
+    GParamSpec *pspec)
+{
+  SwfdecCached *cached = SWFDEC_CACHED (object);
+
+  switch (param_id) {
+    case PROP_SIZE:
+      cached->size = g_value_get_ulong (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -43,81 +77,49 @@ swfdec_cached_class_init (SwfdecCachedClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
 
-  object_class->dispose = swfdec_cached_dispose;
+  object_class->get_property = swfdec_cached_get_property;
+  object_class->set_property = swfdec_cached_set_property;
+
+  /* FIXME: should be g_param_spec_size(), but no such thing exists */
+  g_object_class_install_property (object_class, PROP_SIZE,
+      g_param_spec_ulong ("size", "size", "size of this object in bytes",
+	  0, G_MAXULONG, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+  signals[USE] = g_signal_new ("use", G_TYPE_FROM_CLASS (g_class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
+  signals[UNUSE] = g_signal_new ("unuse", G_TYPE_FROM_CLASS (g_class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
 }
 
 static void
 swfdec_cached_init (SwfdecCached * cached)
 {
-}
-
-void
-swfdec_cached_set_cache (SwfdecCached *cached, SwfdecCache *cache)
-{
-  g_return_if_fail (SWFDEC_IS_CACHED (cached));
-
-  if (cached->cache) {
-    if (cached->handle.unload)
-      swfdec_cache_remove_handle (cached->cache, &cached->handle);
-    swfdec_cache_unref (cached->cache);
-  }
-  cached->cache = cache;
-  if (cache) {
-    swfdec_cache_ref (cache);
-    if (cached->handle.unload)
-      swfdec_cache_add_handle (cached->cache, &cached->handle);
-  }
-}
-
-static void
-swfdec_cached_unload_func (gpointer data)
-{
-  SwfdecCached *cached = SWFDEC_CACHED ((void *) ((guint8 *) data - G_STRUCT_OFFSET (SwfdecCached, handle)));
-
-  cached->handle.unload = NULL;
-  swfdec_cached_unload (cached);
-}
-
-void
-swfdec_cached_load (SwfdecCached *cached, guint size)
-{
-  g_return_if_fail (SWFDEC_IS_CACHED (cached));
-  g_return_if_fail (cached->handle.unload == NULL);
-  g_return_if_fail (size > 0);
-
-  cached->handle.unload = swfdec_cached_unload_func;
-  cached->handle.size = size;
-  if (cached->cache)
-    swfdec_cache_add_handle (cached->cache, &cached->handle);
+  cached->size = sizeof (SwfdecCached);
 }
 
 void
 swfdec_cached_use (SwfdecCached *cached)
 {
   g_return_if_fail (SWFDEC_IS_CACHED (cached));
-  g_return_if_fail (cached->handle.unload != NULL);
 
-  if (cached->cache)
-    swfdec_cache_add_handle (cached->cache, &cached->handle);
+  g_signal_emit (cached, signals[USE], 0);
 }
 
 void
-swfdec_cached_unload (SwfdecCached *cached)
+swfdec_cached_unuse (SwfdecCached *cached)
 {
   g_return_if_fail (SWFDEC_IS_CACHED (cached));
 
-  if (cached->handle.unload) {
-    if (cached->cache)
-      swfdec_cache_remove_handle (cached->cache, &cached->handle);
-    cached->handle.unload = NULL;
-  }
-  if (cached->handle.size) {
-    SwfdecCachedClass *klass;
+  g_signal_emit (cached, signals[UNUSE], 0);
+}
 
-    klass = SWFDEC_CACHED_GET_CLASS (cached);
-    cached->handle.size = 0;
-    g_return_if_fail (klass->unload != NULL);
-    klass->unload (cached);
-  }
+gsize
+swfdec_cached_get_size (SwfdecCached *cached)
+{
+  g_return_val_if_fail (SWFDEC_IS_CACHED (cached), 0);
+
+  return cached->size;
 }
 

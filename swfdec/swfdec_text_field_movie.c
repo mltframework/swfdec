@@ -552,8 +552,12 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
-  if (cr == NULL)
-    cr = text->cr;
+  if (cr == NULL) {
+    cr = cairo_create (swfdec_renderer_get_surface (
+	  SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)->priv->renderer));
+  } else {
+    cairo_reference (cr);
+  }
 
   if (paragraphs == NULL) {
     paragraphs_free = swfdec_text_field_movie_get_paragraphs (text, NULL);
@@ -766,6 +770,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 
   if (num != NULL)
     *num = layouts->len;
+  cairo_destroy (cr);
 
   return (SwfdecLayout *) (void *) g_array_free (layouts, FALSE);
 }
@@ -1246,11 +1251,6 @@ swfdec_text_field_movie_dispose (GObject *object)
   g_string_free (text->input, TRUE);
   text->input = NULL;
 
-  cairo_destroy (text->cr);
-  text->cr = NULL;
-  cairo_surface_destroy (text->surface);
-  text->surface = NULL;
-
   G_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->dispose (object);
 }
 
@@ -1364,18 +1364,12 @@ swfdec_text_field_movie_iterate (SwfdecActor *actor)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
 
+  while (text->changed) {
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_CHANGED);
+    text->changed--;
+  }
   if (text->scroll_changed) {
-    SwfdecAsValue argv[2];
-
-    SWFDEC_FIXME ("I'm pretty sure this is swfdec_player_add_action()'d");
-    SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
-    SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (text));
-    swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (text),
-	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);
-    swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
-
-    /* FIXME: unset this before or after emitting the event? */
+    swfdec_actor_queue_script (actor, SWFDEC_EVENT_SCROLL);
     text->scroll_changed = FALSE;
   }
 }
@@ -1619,6 +1613,12 @@ swfdec_text_field_movie_focus_out (SwfdecActor *actor)
 }
 
 static void
+swfdec_text_field_movie_changed (SwfdecTextFieldMovie *text)
+{
+  text->changed++;
+}
+
+static void
 swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint character)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
@@ -1654,17 +1654,23 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
       if (swfdec_text_field_movie_has_cursor (text)) {
 	start = BACKWARD (text, start);
       }
-      swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-      swfdec_text_field_movie_replace_text (text, start, end, "");
-      swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+      if (start != end) {
+	swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_field_movie_replace_text (text, start, end, "");
+	swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_field_movie_changed (text);
+      }
       return;
     case SWFDEC_KEY_DELETE:
       if (swfdec_text_field_movie_has_cursor (text)) {
 	end = FORWARD (text, end);
       }
-      swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-      swfdec_text_field_movie_replace_text (text, start, end, "");
-      swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+      if (start != end) {
+	swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_field_movie_replace_text (text, start, end, "");
+	swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_field_movie_changed (text);
+      }
       return;
     default:
       break;
@@ -1673,10 +1679,13 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   if (character == 0)
     return;
   len = g_unichar_to_utf8 (character, insert);
-  insert[len] = 0;
-  swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-  swfdec_text_field_movie_replace_text (text, start, end, insert);
-  swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+  if (len) {
+    insert[len] = 0;
+    swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
+    swfdec_text_field_movie_replace_text (text, start, end, insert);
+    swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+    swfdec_text_field_movie_changed (text);
+  }
 }
 
 static void
@@ -1720,9 +1729,6 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 static void
 swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
 {
-  text->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
-  text->cr = cairo_create (text->surface);
-
   text->input = g_string_new ("");
   text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;

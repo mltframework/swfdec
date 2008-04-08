@@ -44,6 +44,7 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
+#include "swfdec_renderer_internal.h"
 #include "swfdec_resource.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
@@ -664,7 +665,8 @@ enum {
   PROP_URL,
   PROP_VARIABLES,
   PROP_START_TIME,
-  PROP_FOCUS
+  PROP_FOCUS,
+  PROP_RENDERER
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -728,7 +730,7 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       g_value_set_uint (value, swfdec_player_get_background_color (player));
       break;
     case PROP_CACHE_SIZE:
-      g_value_set_ulong (value, swfdec_cache_get_size (priv->cache));
+      g_value_set_ulong (value, swfdec_cache_get_max_cache_size (priv->cache));
       break;
     case PROP_INITIALIZED:
       g_value_set_boolean (value, swfdec_player_is_initialized (player));
@@ -786,6 +788,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_FOCUS:
       g_value_set_boolean (value, priv->has_focus);
+      break;
+    case PROP_RENDERER:
+      g_value_set_object (value, priv->renderer);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -875,7 +880,7 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       swfdec_player_set_background_color (player, g_value_get_uint (value));
       break;
     case PROP_CACHE_SIZE:
-      swfdec_cache_set_size (priv->cache, g_value_get_ulong (value));
+      swfdec_cache_set_max_cache_size (priv->cache, g_value_get_ulong (value));
       break;
     case PROP_WIDTH:
       swfdec_player_set_size (player, g_value_get_int (value), priv->stage_height);
@@ -930,6 +935,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_FOCUS:
       swfdec_player_set_focus (player, g_value_get_boolean (value));
+      break;
+    case PROP_RENDERER:
+      swfdec_player_set_renderer (player, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -1010,7 +1018,7 @@ swfdec_player_dispose (GObject *object)
   g_assert (priv->timeouts == NULL);
   g_list_free (priv->intervals);
   priv->intervals = NULL;
-  swfdec_cache_unref (priv->cache);
+  g_object_unref (priv->cache);
   if (priv->system) {
     g_object_unref (priv->system);
     priv->system = NULL;
@@ -1964,7 +1972,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 	  -1, G_MAXLONG, -1, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_CACHE_SIZE,
       g_param_spec_ulong ("cache-size", "cache size", "maximum cache size in bytes",
-	  0, G_MAXUINT, 50 * 1024 * 1024, G_PARAM_READWRITE));
+	  0, G_MAXULONG, 50 * 1024 * 1024, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
       g_param_spec_uint ("background-color", "background color", "ARGB color used to draw the background",
 	  0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READWRITE));
@@ -2010,6 +2018,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_FOCUS,
       g_param_spec_boolean ("focus", "focus", "TRUE if the player has keyboard focus",
 	  TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_RENDERER,
+      g_param_spec_object ("renderer", "renderer", "the renderer used by this player",
+	  SWFDEC_TYPE_RENDERER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -2188,7 +2199,7 @@ swfdec_player_init (SwfdecPlayer *player)
     priv->actions[i] = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
   }
   priv->external_actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerExternalAction, 8);
-  priv->cache = swfdec_cache_new (50 * 1024 * 1024); /* 100 MB */
+  priv->cache = swfdec_cache_new (16 * 1024 * 1024);
   priv->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
   priv->socket_type = SWFDEC_TYPE_SOCKET;
 
@@ -2835,11 +2846,37 @@ swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *i
  * @width: width of area to render or 0 for full width
  * @height: height of area to render or 0 for full height
  *
- * Renders the given area of the current frame to @cr.
+ * Renders the given area of the current frame to @cr using the player's
+ * renderer.
  **/
 void
 swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, 
     double x, double y, double width, double height)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (cr != NULL);
+  g_return_if_fail (width >= 0.0);
+  g_return_if_fail (height >= 0.0);
+
+  swfdec_player_render_with_renderer (player, cr, player->priv->renderer,
+      x, y, width, height);
+}
+
+/**
+ * swfdec_player_render:
+ * @player: a #SwfdecPlayer
+ * @cr: #cairo_t to render to
+ * @renderer: Renderer to use for rendering
+ * @x: x coordinate of top left position to render
+ * @y: y coordinate of top left position to render
+ * @width: width of area to render or 0 for full width
+ * @height: height of area to render or 0 for full height
+ *
+ * Renders the given area of the current frame to @cr.
+ **/
+void
+swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr, 
+    SwfdecRenderer *renderer, double x, double y, double width, double height)
 {
   static const SwfdecColorTransform trans = { FALSE, 256, 0, 256, 0, 256, 0, 256, 0 };
   SwfdecPlayerPrivate *priv;
@@ -2848,6 +2885,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (cr != NULL);
+  g_return_if_fail (SWFDEC_IS_RENDERER (renderer));
   g_return_if_fail (width >= 0.0);
   g_return_if_fail (height >= 0.0);
 
@@ -2860,6 +2898,8 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
     width = priv->stage_width;
   if (height == 0.0)
     height = priv->stage_height;
+
+  swfdec_renderer_attach (renderer, cr);
   /* clip the area */
   cairo_save (cr);
   cairo_rectangle (cr, x, y, width, height);
@@ -3392,6 +3432,52 @@ swfdec_player_set_focus	(SwfdecPlayer *player, gboolean	focus)
   priv->has_focus = focus;
   swfdec_player_add_external_action (player, player, swfdec_player_update_focus, NULL);
   g_object_notify (G_OBJECT (player), "focus");
+}
+
+/**
+ * swfdec_player_get_renderer:
+ * @player: a player
+ *
+ * Gets the current renderer in use. See swfdec_player_set_renderer() for 
+ * details.
+ *
+ * Returns: the current #SwfdecRenderer in use.
+ **/
+SwfdecRenderer *
+swfdec_player_get_renderer (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  return player->priv->renderer;
+}
+
+/**
+ * swfdec_player_set_renderer:
+ * @player: a player
+ * @renderer: the renderer to use
+ *
+ * Sets the renderer to be used by the @player. Setting the correct renderer is 
+ * mostly relevant for TextField flash objects with native fonts, as the 
+ * renderer provides those. It can also be very relevant for performance 
+ * reasons. See the #SwfdecRenderer documentation for details.
+ **/
+void
+swfdec_player_set_renderer (SwfdecPlayer *player, SwfdecRenderer *renderer)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+  if (renderer) {
+    g_object_ref (renderer);
+  } else {
+    renderer = swfdec_renderer_new_default (player);
+  }
+  if (priv->renderer)
+    g_object_unref (renderer);
+  priv->renderer = renderer;
+  g_object_notify (G_OBJECT (player), "renderer");
 }
 
 /**

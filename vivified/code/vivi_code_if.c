@@ -22,8 +22,9 @@
 #endif
 
 #include "vivi_code_if.h"
-#include "vivi_code_printer.h"
 #include "vivi_code_unary.h"
+#include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeIf, vivi_code_if, VIVI_TYPE_CODE_STATEMENT)
 
@@ -125,6 +126,34 @@ vivi_code_if_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_if_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeIf *stmt = VIVI_CODE_IF (token);
+
+  vivi_code_compiler_compile_value (compiler, stmt->condition);
+
+  vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_IF);
+
+  if (stmt->else_statement) {
+    vivi_code_compiler_compile_token (compiler,
+	VIVI_CODE_TOKEN (stmt->else_statement));
+  }
+
+  vivi_code_compiler_write_s16 (compiler,
+      vivi_code_compiler_tail_size (compiler) + 4); // else_statement + jump
+  vivi_code_compiler_end_action (compiler);
+
+  vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_JUMP);
+
+  vivi_code_compiler_compile_token (compiler,
+      VIVI_CODE_TOKEN (stmt->if_statement));
+
+  vivi_code_compiler_write_s16 (compiler,
+      vivi_code_compiler_tail_size (compiler)); // if_statement
+  vivi_code_compiler_end_action (compiler);
+}
+
+static void
 vivi_code_if_class_init (ViviCodeIfClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -134,6 +163,7 @@ vivi_code_if_class_init (ViviCodeIfClass *klass)
   object_class->dispose = vivi_code_if_dispose;
 
   token_class->print = vivi_code_if_print;
+  token_class->compile = vivi_code_if_compile;
 
   statement_class->optimize = vivi_code_if_optimize;
   statement_class->needs_braces = vivi_code_if_needs_braces;

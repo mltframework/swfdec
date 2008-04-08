@@ -23,6 +23,7 @@
 
 #include "vivi_code_continue.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeContinue, vivi_code_continue, VIVI_TYPE_CODE_STATEMENT)
 
@@ -34,11 +35,18 @@ vivi_code_continue_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_continue_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  g_printerr ("Implement continue\n");
+}
+
+static void
 vivi_code_continue_class_init (ViviCodeContinueClass *klass)
 {
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
 
   token_class->print = vivi_code_continue_print;
+  token_class->compile = vivi_code_continue_compile;
 }
 
 static void

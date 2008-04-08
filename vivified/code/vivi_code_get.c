@@ -77,18 +77,19 @@ static void
 vivi_code_get_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeGet *get = VIVI_CODE_GET (token);
-
-  if (get->from) {
-    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_GET_MEMBER);
-  } else {
-    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_GET_VARIABLE);
-  }
+  SwfdecAsAction action;
 
   vivi_code_compiler_compile_value (compiler, get->name);
   if (get->from)
     vivi_code_compiler_compile_value (compiler, get->from);
 
-  vivi_code_compiler_end_action (compiler);
+  if (get->from) {
+    action = SWFDEC_AS_ACTION_GET_MEMBER;
+  } else {
+    action = SWFDEC_AS_ACTION_GET_VARIABLE;
+  }
+
+  vivi_code_compiler_write_empty_action (compiler, action);
 }
 
 static gboolean

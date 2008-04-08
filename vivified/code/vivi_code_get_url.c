@@ -23,6 +23,7 @@
 
 #include "vivi_code_get_url.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeGetUrl, vivi_code_get_url, VIVI_TYPE_CODE_STATEMENT)
 
@@ -61,6 +62,28 @@ vivi_code_get_url_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_get_url_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeGetUrl *url = VIVI_CODE_GET_URL (token);
+  guint bits;
+
+  vivi_code_compiler_compile_value (compiler, url->target);
+  vivi_code_compiler_compile_value (compiler, url->url);
+
+  vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_GET_URL2);
+
+  bits = url->method;
+  if (url->internal)
+    bits |= 64;
+  if (url->variables)
+    bits |= 128;
+
+  vivi_code_compiler_write_u8 (compiler, bits);
+
+  vivi_code_compiler_end_action (compiler);
+}
+
+static void
 vivi_code_get_url_class_init (ViviCodeGetUrlClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -69,6 +92,7 @@ vivi_code_get_url_class_init (ViviCodeGetUrlClass *klass)
   object_class->dispose = vivi_code_get_url_dispose;
 
   token_class->print = vivi_code_get_url_print;
+  token_class->compile = vivi_code_get_url_compile;
 }
 
 static void

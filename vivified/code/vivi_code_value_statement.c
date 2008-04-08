@@ -23,6 +23,7 @@
 
 #include "vivi_code_value_statement.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeValueStatement, vivi_code_value_statement, VIVI_TYPE_CODE_STATEMENT)
 
@@ -47,6 +48,17 @@ vivi_code_value_statement_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_value_statement_compile (ViviCodeToken *token,
+    ViviCodeCompiler *compiler)
+{
+  ViviCodeValueStatement *stmt = VIVI_CODE_VALUE_STATEMENT (token);
+
+  vivi_code_compiler_compile_value (compiler, stmt->value);
+
+  vivi_code_compiler_write_empty_action (compiler, SWFDEC_AS_ACTION_POP);
+}
+
+static void
 vivi_code_value_statement_class_init (ViviCodeValueStatementClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -55,6 +67,7 @@ vivi_code_value_statement_class_init (ViviCodeValueStatementClass *klass)
   object_class->dispose = vivi_code_value_statement_dispose;
 
   token_class->print = vivi_code_value_statement_print;
+  token_class->compile = vivi_code_value_statement_compile;
 }
 
 static void

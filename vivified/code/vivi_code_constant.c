@@ -124,7 +124,7 @@ vivi_code_constant_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeConstant *constant = VIVI_CODE_CONSTANT (token);
 
-  vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_PUSH);
+  vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_PUSH);
 
   switch (constant->value.type) {
     case SWFDEC_AS_TYPE_UNDEFINED:

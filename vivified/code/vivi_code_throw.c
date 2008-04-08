@@ -23,6 +23,7 @@
 
 #include "vivi_code_throw.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeThrow, vivi_code_throw, VIVI_TYPE_CODE_STATEMENT)
 
@@ -54,6 +55,18 @@ vivi_code_throw_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_throw_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeThrow *throw_ = VIVI_CODE_THROW (token);
+
+  g_return_if_fail (throw_->value != NULL);
+
+  vivi_code_compiler_compile_value (compiler, throw_->value);
+
+  vivi_code_compiler_write_empty_action (compiler, SWFDEC_AS_ACTION_THROW);
+}
+
+static void
 vivi_code_throw_class_init (ViviCodeThrowClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -62,6 +75,7 @@ vivi_code_throw_class_init (ViviCodeThrowClass *klass)
   object_class->dispose = vivi_code_throw_dispose;
 
   token_class->print = vivi_code_throw_print;
+  token_class->compile = vivi_code_throw_compile;
 }
 
 static void

@@ -24,6 +24,7 @@
 
 #include "vivi_compiler_empty_statement.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCompilerEmptyStatement, vivi_compiler_empty_statement, VIVI_TYPE_CODE_STATEMENT)
 
@@ -42,6 +43,13 @@ vivi_compiler_empty_statement_print (ViviCodeToken *token,
 }
 
 static void
+vivi_compiler_empty_statement_compile (ViviCodeToken *token,
+    ViviCodeCompiler *compile)
+{
+  /* nothing */
+}
+
+static void
 vivi_compiler_empty_statement_class_init (
     ViviCompilerEmptyStatementClass *klass)
 {
@@ -49,6 +57,7 @@ vivi_compiler_empty_statement_class_init (
   ViviCodeStatementClass *statement_class = VIVI_CODE_STATEMENT_CLASS (klass);
 
   token_class->print = vivi_compiler_empty_statement_print;
+  token_class->compile = vivi_compiler_empty_statement_compile;
 
   statement_class->optimize = vivi_compiler_empty_statement_optimize;
 }

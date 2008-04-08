@@ -95,14 +95,11 @@ static void
 vivi_code_assignment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
+  SwfdecAsAction action;
 
-  if (assignment->local) {
-    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_DEFINE_LOCAL);
-  } else if (assignment->from) {
-    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_SET_MEMBER);
-  } else {
-    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_SET_VARIABLE);
-  }
+  vivi_code_compiler_compile_value (compiler, assignment->name);
+  if (assignment->from && !assignment->local)
+    vivi_code_compiler_compile_value (compiler, assignment->from);
 
   if (assignment->local && assignment->from) {
     ViviCodeValue *get =
@@ -113,11 +110,15 @@ vivi_code_assignment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
     vivi_code_compiler_compile_value (compiler, assignment->value);
   }
 
-  vivi_code_compiler_compile_value (compiler, assignment->name);
-  if (assignment->from && !assignment->local)
-    vivi_code_compiler_compile_value (compiler, assignment->from);
 
-  vivi_code_compiler_end_action (compiler);
+  if (assignment->local) {
+    action = SWFDEC_AS_ACTION_DEFINE_LOCAL;
+  } else if (assignment->from) {
+    action = SWFDEC_AS_ACTION_SET_MEMBER;
+  } else {
+    action = SWFDEC_AS_ACTION_SET_VARIABLE;
+  }
+  vivi_code_compiler_write_empty_action (compiler, action);
 }
 
 static void

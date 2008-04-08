@@ -23,6 +23,7 @@
 
 #include "vivi_code_return.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeReturn, vivi_code_return, VIVI_TYPE_CODE_STATEMENT)
 
@@ -54,6 +55,16 @@ vivi_code_return_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_return_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeReturn *ret = VIVI_CODE_RETURN (token);
+
+  vivi_code_compiler_compile_value (compiler, ret->value);
+
+  vivi_code_compiler_write_empty_action (compiler, SWFDEC_AS_ACTION_RETURN);
+}
+
+static void
 vivi_code_return_class_init (ViviCodeReturnClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -62,6 +73,7 @@ vivi_code_return_class_init (ViviCodeReturnClass *klass)
   object_class->dispose = vivi_code_return_dispose;
 
   token_class->print = vivi_code_return_print;
+  token_class->compile = vivi_code_return_compile;
 }
 
 static void

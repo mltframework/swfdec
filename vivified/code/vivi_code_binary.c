@@ -25,6 +25,7 @@
 
 #include "vivi_code_binary.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 static struct {
   const char *		operation;
@@ -84,6 +85,20 @@ vivi_code_binary_print (ViviCodeToken *token, ViviCodePrinter*printer)
       operation_table[binary->operation_index].precedence);
 }
 
+static void
+vivi_code_binary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
+
+  g_assert (operation_table[binary->operation_index].bytecode != 0);
+
+  vivi_code_compiler_compile_value (compiler, binary->left);
+  vivi_code_compiler_compile_value (compiler, binary->right);
+
+  vivi_code_compiler_write_empty_action (compiler,
+      operation_table[binary->operation_index].bytecode);
+}
+
 static gboolean
 vivi_code_binary_is_constant (ViviCodeValue *value)
 {
@@ -103,6 +118,7 @@ vivi_code_binary_class_init (ViviCodeBinaryClass *klass)
   object_class->dispose = vivi_code_binary_dispose;
 
   token_class->print = vivi_code_binary_print;
+  token_class->compile = vivi_code_binary_compile;
 
   value_class->is_constant = vivi_code_binary_is_constant;
 }

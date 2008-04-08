@@ -53,11 +53,9 @@ vivi_code_trace_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeTrace *trace = VIVI_CODE_TRACE (token);
 
-  vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_TRACE);
-
   vivi_code_compiler_compile_value (compiler, trace->value);
 
-  vivi_code_compiler_end_action (compiler);
+  vivi_code_compiler_write_empty_action (compiler, SWFDEC_AS_ACTION_TRACE);
 }
 
 static void

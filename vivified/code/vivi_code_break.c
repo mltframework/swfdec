@@ -23,6 +23,7 @@
 
 #include "vivi_code_break.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeBreak, vivi_code_break, VIVI_TYPE_CODE_STATEMENT)
 
@@ -34,11 +35,18 @@ vivi_code_break_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_break_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  g_printerr ("Implement break\n");
+}
+
+static void
 vivi_code_break_class_init (ViviCodeBreakClass *klass)
 {
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
 
   token_class->print = vivi_code_break_print;
+  token_class->compile = vivi_code_break_compile;
 }
 
 static void

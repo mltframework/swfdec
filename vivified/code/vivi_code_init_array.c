@@ -25,6 +25,7 @@
 #include "vivi_code_init_array.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeInitArray, vivi_code_init_array, VIVI_TYPE_CODE_VALUE)
 
@@ -78,6 +79,25 @@ vivi_code_init_array_print (ViviCodeToken *token, ViviCodePrinter *printer)
   vivi_code_printer_print (printer, "]");
 }
 
+static void
+vivi_code_init_array_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeInitArray *array = VIVI_CODE_INIT_ARRAY (token);
+  ViviCodeValue *count;
+  guint i;
+
+  for (i = 0; i < array->variables->len; i++) {
+    vivi_code_compiler_compile_value (compiler,
+	VIVI_CODE_VALUE (g_ptr_array_index (array->variables, i)));
+  }
+  count = vivi_code_constant_new_number (array->variables->len);
+  vivi_code_compiler_compile_value (compiler, count);
+  g_object_unref (count);
+
+  vivi_code_compiler_write_empty_action (compiler,
+      SWFDEC_AS_ACTION_INIT_ARRAY);
+}
+
 static gboolean
 vivi_code_init_array_is_constant (ViviCodeValue *value)
 {
@@ -95,6 +115,7 @@ vivi_code_init_array_class_init (ViviCodeInitArrayClass *klass)
   object_class->dispose = vivi_code_init_array_dispose;
 
   token_class->print = vivi_code_init_array_print;
+  token_class->compile = vivi_code_init_array_compile;
 
   value_class->is_constant = vivi_code_init_array_is_constant;
   value_class->optimize = vivi_code_init_array_optimize;

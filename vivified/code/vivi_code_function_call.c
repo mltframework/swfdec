@@ -24,6 +24,7 @@
 #include "vivi_code_function_call.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeFunctionCall, vivi_code_function_call, VIVI_TYPE_CODE_VALUE)
 
@@ -119,6 +120,45 @@ vivi_code_function_call_print (ViviCodeToken *token, ViviCodePrinter*printer)
   vivi_code_printer_print (printer, ")");
 }
 
+static void
+vivi_code_function_call_compile (ViviCodeToken *token,
+    ViviCodeCompiler *compiler)
+{
+  ViviCodeFunctionCall *call = VIVI_CODE_FUNCTION_CALL (token);
+  SwfdecAsAction action;
+  ViviCodeValue *count;
+  guint i;
+
+  for (i = 0; i < call->arguments->len; i++) {
+    vivi_code_compiler_compile_value (compiler,
+	g_ptr_array_index (call->arguments, i));
+  }
+  count = vivi_code_constant_new_number (call->arguments->len);
+  vivi_code_compiler_compile_value (compiler, count);
+  g_object_unref (count);
+
+  vivi_code_compiler_compile_value (compiler, call->name);
+
+  if (call->value)
+    vivi_code_compiler_compile_value (compiler, call->value);
+
+  if (call->construct) {
+    if (call->value) {
+      action = SWFDEC_AS_ACTION_NEW_METHOD;
+    } else {
+      action = SWFDEC_AS_ACTION_NEW_OBJECT;
+    }
+  } else {
+    if (call->value) {
+      action = SWFDEC_AS_ACTION_CALL_METHOD;
+    } else {
+      action = SWFDEC_AS_ACTION_CALL_FUNCTION;
+    }
+  }
+
+  vivi_code_compiler_write_empty_action (compiler, action);
+}
+
 static gboolean
 vivi_code_function_call_is_constant (ViviCodeValue *value)
 {
@@ -135,6 +175,7 @@ vivi_code_function_call_class_init (ViviCodeFunctionCallClass *klass)
   object_class->dispose = vivi_code_function_call_dispose;
 
   token_class->print = vivi_code_function_call_print;
+  token_class->compile = vivi_code_function_call_compile;
 
   value_class->is_constant = vivi_code_function_call_is_constant;
   value_class->optimize = vivi_code_function_call_optimize;

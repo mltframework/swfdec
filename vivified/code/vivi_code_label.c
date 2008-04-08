@@ -23,6 +23,7 @@
 
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_STATEMENT)
 
@@ -48,6 +49,12 @@ vivi_code_label_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_label_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  // TODO: save the position
+}
+
+static void
 vivi_code_label_class_init (ViviCodeLabelClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -56,6 +63,7 @@ vivi_code_label_class_init (ViviCodeLabelClass *klass)
   object_class->dispose = vivi_code_label_dispose;
 
   token_class->print = vivi_code_label_print;
+  token_class->compile = vivi_code_label_compile;
 }
 
 static void

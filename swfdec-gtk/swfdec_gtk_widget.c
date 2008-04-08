@@ -33,6 +33,7 @@ struct _SwfdecGtkWidgetPrivate
   gboolean		renderer_set;	/* TRUE if a special renderer has been set */
   cairo_surface_type_t	renderer_type;	/* the renderer that was set */
   gboolean		interactive;	/* TRUE if this widget propagates keyboard and mouse events */
+  SwfdecRenderer *	renderer;	/* renderer in use */
 };
 
 enum {
@@ -316,6 +317,8 @@ swfdec_gtk_widget_dispose (GObject *object)
 
   swfdec_gtk_widget_set_player (widget, NULL);
 
+  g_assert (widget->priv->renderer == NULL);
+
   G_OBJECT_CLASS (swfdec_gtk_widget_parent_class)->dispose (object);
 }
 
@@ -407,6 +410,32 @@ swfdec_gtk_widget_update_cursor (SwfdecGtkWidget *widget)
 }
 
 static void
+swfdec_gtk_widget_update_renderer (SwfdecGtkWidget *widget)
+{
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+  gboolean needs_renderer;
+
+  needs_renderer = GTK_WIDGET_REALIZED (widget) &&
+    priv->player != NULL;
+
+  if (priv->renderer != NULL) {
+    swfdec_player_set_renderer (priv->player, NULL);
+    g_object_unref (priv->renderer);
+    priv->renderer = NULL;
+  }
+  if (needs_renderer) {
+    cairo_t *cr = gdk_cairo_create (GTK_WIDGET (widget)->window);
+
+    if (priv->renderer_set)
+      g_printerr ("FIXME: create the right renderer\n");
+    priv->renderer = swfdec_renderer_new_for_player (
+	cairo_get_target (cr), priv->player);
+    swfdec_player_set_renderer (priv->player, priv->renderer);
+    cairo_destroy (cr);
+  }
+}
+
+static void
 swfdec_gtk_widget_realize (GtkWidget *widget)
 {
   GdkWindowAttr attributes;
@@ -442,6 +471,15 @@ swfdec_gtk_widget_realize (GtkWidget *widget)
   if (SWFDEC_GTK_WIDGET (widget)->priv->player) {
     swfdec_gtk_widget_update_cursor (SWFDEC_GTK_WIDGET (widget));
   }
+  swfdec_gtk_widget_update_renderer (SWFDEC_GTK_WIDGET (widget));
+}
+
+static void
+swfdec_gtk_widget_unrealize (GtkWidget *widget)
+{
+  GTK_WIDGET_CLASS (swfdec_gtk_widget_parent_class)->unrealize (widget);
+
+  swfdec_gtk_widget_update_renderer (SWFDEC_GTK_WIDGET (widget));
 }
 
 static void
@@ -469,6 +507,7 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
 	  0, G_MAXUINT, CAIRO_SURFACE_TYPE_IMAGE, G_PARAM_READWRITE));
 
   widget_class->realize = swfdec_gtk_widget_realize;
+  widget_class->unrealize = swfdec_gtk_widget_unrealize;
   widget_class->size_request = swfdec_gtk_widget_size_request;
   widget_class->size_allocate = swfdec_gtk_widget_size_allocate;
   widget_class->expose_event = swfdec_gtk_widget_expose;
@@ -561,6 +600,7 @@ swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
   priv->player = player;
   gtk_widget_queue_resize (GTK_WIDGET (widget));
   g_object_notify (G_OBJECT (widget), "player");
+  swfdec_gtk_widget_update_renderer (widget);
 }
 
 /**
@@ -655,6 +695,7 @@ swfdec_gtk_widget_set_renderer (SwfdecGtkWidget *widget, cairo_surface_type_t re
     g_object_notify (G_OBJECT (widget), "renderer-set");
   }
   g_object_notify (G_OBJECT (widget), "renderer");
+  swfdec_gtk_widget_update_renderer (widget);
 }
 
 /**
@@ -673,6 +714,7 @@ swfdec_gtk_widget_unset_renderer (SwfdecGtkWidget *widget)
     return;
   widget->priv->renderer_set = FALSE;
   g_object_notify (G_OBJECT (widget), "renderer-set");
+  swfdec_gtk_widget_update_renderer (widget);
 }
 
 /**

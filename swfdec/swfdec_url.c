@@ -525,19 +525,18 @@ swfdec_url_is_local (const SwfdecURL *url)
 }
 
 /**
- * swfdec_url_equal:
+ * swfdec_url_host_equal:
  * @a: a #SwfdecURL
  * @b: a #SwfdecURL
  *
- * Compares the 2 given URLs for equality. 2 URLs are considered equal, when
- * they point to the same resource. This function is intended to be 
- * used together with swfdec_url_hash() in a #GHashtable.
- *
- * Returns: %TRUE if the 2 given urls point to the same resource, %FALSE 
+ * Compares the 2 given URLs for equality, ignoring path. 2 URLs are
+ * considered to have equal hosts when they have the same protocol,
+ * host, and port.
+ * Returns: %TRUE if the 2 given urls point to the same host, %FALSE
  *          otherwise.
  **/
 gboolean
-swfdec_url_equal (gconstpointer a, gconstpointer b)
+swfdec_url_host_equal (gconstpointer a, gconstpointer b)
 {
   const SwfdecURL *urla = a;
   const SwfdecURL *urlb = b;
@@ -555,6 +554,30 @@ swfdec_url_equal (gconstpointer a, gconstpointer b)
   }
 
   if (urla->port != urlb->port)
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
+ * swfdec_url_equal:
+ * @a: a #SwfdecURL
+ * @b: a #SwfdecURL
+ *
+ * Compares the 2 given URLs for equality. 2 URLs are considered equal, when
+ * they point to the same resource. This function is intended to be
+ * used together with swfdec_url_hash() in a #GHashtable.
+ *
+ * Returns: %TRUE if the 2 given urls point to the same resource, %FALSE
+ *          otherwise.
+ **/
+gboolean
+swfdec_url_equal (gconstpointer a, gconstpointer b)
+{
+  const SwfdecURL *urla = a;
+  const SwfdecURL *urlb = b;
+
+  if (!swfdec_url_host_equal (urla, urlb))
     return FALSE;
 
   if (urla->path == NULL) {

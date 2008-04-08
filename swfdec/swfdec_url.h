@@ -57,6 +57,8 @@ gboolean		swfdec_url_is_parent		(const SwfdecURL *	parent,
 							 const SwfdecURL *	child);
 gboolean		swfdec_url_is_local		(const SwfdecURL *	url);
 
+gboolean		swfdec_url_host_equal		(gconstpointer		a,
+							 gconstpointer		b);
 gboolean		swfdec_url_equal		(gconstpointer		a,
 							 gconstpointer		b);
 guint			swfdec_url_hash			(gconstpointer		url);

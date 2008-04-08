@@ -77,6 +77,7 @@ struct _SwfdecPlayerPrivate
   char *		variables;		/* variables to set on the player */
   SwfdecURL *		url;			/* url or NULL if not set yet */
   SwfdecURL *		base_url;	      	/* base url or NULL if not set yet */
+  SwfdecRenderer *	renderer;		/* the renderer to use */
   SwfdecPlayerScripting *scripting;		/* scripting object */
   GHashTable *		scripting_callbacks;	/* GC string => SwfdecAsFunction mapping of script callbacks */
   GType			loader_type;		/* type to use for creating sockets */

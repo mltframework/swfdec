@@ -59,6 +59,7 @@ GType swfdec_time_val_get_type  (void);
 
 /* forward declarations */
 typedef struct _SwfdecPlayerScripting SwfdecPlayerScripting;
+typedef struct _SwfdecRenderer SwfdecRenderer;
 
 typedef struct _SwfdecPlayer SwfdecPlayer;
 typedef struct _SwfdecPlayerPrivate SwfdecPlayerPrivate;
@@ -148,6 +149,9 @@ void		swfdec_player_set_scripting	(SwfdecPlayer *		player,
 gboolean	swfdec_player_get_focus		(SwfdecPlayer *		player);
 void		swfdec_player_set_focus		(SwfdecPlayer *		player,
 						 gboolean		focus);
+SwfdecRenderer *swfdec_player_get_renderer	(SwfdecPlayer *		player);
+void		swfdec_player_set_renderer	(SwfdecPlayer *		player,
+						 SwfdecRenderer *	renderer);
 					 
 void		swfdec_player_render		(SwfdecPlayer *	player,
 						 cairo_t *	cr,

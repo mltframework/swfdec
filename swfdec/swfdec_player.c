@@ -44,6 +44,7 @@
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
 #include "swfdec_movie.h"
+#include "swfdec_renderer_internal.h"
 #include "swfdec_resource.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
@@ -664,7 +665,8 @@ enum {
   PROP_URL,
   PROP_VARIABLES,
   PROP_START_TIME,
-  PROP_FOCUS
+  PROP_FOCUS,
+  PROP_RENDERER
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -786,6 +788,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_FOCUS:
       g_value_set_boolean (value, priv->has_focus);
+      break;
+    case PROP_RENDERER:
+      g_value_set_object (value, priv->renderer);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -930,6 +935,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_FOCUS:
       swfdec_player_set_focus (player, g_value_get_boolean (value));
+      break;
+    case PROP_RENDERER:
+      swfdec_player_set_renderer (player, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -2010,6 +2018,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_FOCUS,
       g_param_spec_boolean ("focus", "focus", "TRUE if the player has keyboard focus",
 	  TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_RENDERER,
+      g_param_spec_object ("renderer", "renderer", "the renderer used by this player",
+	  SWFDEC_TYPE_RENDERER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -3392,6 +3403,52 @@ swfdec_player_set_focus	(SwfdecPlayer *player, gboolean	focus)
   priv->has_focus = focus;
   swfdec_player_add_external_action (player, player, swfdec_player_update_focus, NULL);
   g_object_notify (G_OBJECT (player), "focus");
+}
+
+/**
+ * swfdec_player_get_renderer:
+ * @player: a player
+ *
+ * Gets the current renderer in use. See swfdec_player_set_renderer() for 
+ * details.
+ *
+ * Returns: the current #SwfdecRenderer in use.
+ **/
+SwfdecRenderer *
+swfdec_player_get_renderer (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  return player->priv->renderer;
+}
+
+/**
+ * swfdec_player_set_renderer:
+ * @player: a player
+ * @renderer: the renderer to use
+ *
+ * Sets the renderer to be used by the @player. Setting the correct renderer is 
+ * mostly relevant for TextField flash objects with native fonts, as the 
+ * renderer provides those. It can also be very relevant for performance 
+ * reasons. See the #SwfdecRenderer documentation for details.
+ **/
+void
+swfdec_player_set_renderer (SwfdecPlayer *player, SwfdecRenderer *renderer)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+  if (renderer) {
+    g_object_ref (renderer);
+  } else {
+    renderer = swfdec_renderer_new_default (player);
+  }
+  if (priv->renderer)
+    g_object_unref (renderer);
+  priv->renderer = renderer;
+  g_object_notify (G_OBJECT (player), "renderer");
 }
 
 /**

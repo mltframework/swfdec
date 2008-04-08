@@ -117,6 +117,7 @@ libswfdec_source_files = \
 	swfdec_policy_file.c \
 	swfdec_rect.c \
 	swfdec_rectangle.c \
+	swfdec_renderer.c \
 	swfdec_resource.c \
 	swfdec_ringbuffer.c \
 	swfdec_sandbox.c \
@@ -195,6 +196,7 @@ public_headers = \
 	swfdec_player.h \
 	swfdec_player_scripting.h \
 	swfdec_rectangle.h \
+	swfdec_renderer.h \
 	swfdec_script.h \
 	swfdec_socket.h \
 	swfdec_stream.h \

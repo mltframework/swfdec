@@ -30,7 +30,9 @@ typedef enum {
   // special
   TOKEN_NONE = 0,
   TOKEN_EOF,
+  TOKEN_ERROR,
   TOKEN_UNKNOWN,
+  TOKEN_LINE_TERMINATOR,
 
   // comparision
   TOKEN_BRACE_LEFT,
@@ -139,14 +141,29 @@ typedef enum {
   // reserved keywords
   TOKEN_RESERVED_KEYWORD,
 
+  // ActionScript specific
+  TOKEN_UNDEFINED,
+  TOKEN_TRACE,
+
   TOKEN_LAST
 } ViviCompilerScannerToken;
 
-typedef union {
-  gboolean	v_boolean;
-  double	v_number;
-  char *	v_string;
-  char *	v_identifier;
+typedef enum {
+  VALUE_TYPE_NONE,
+  VALUE_TYPE_BOOLEAN,
+  VALUE_TYPE_NUMBER,
+  VALUE_TYPE_STRING,
+  VALUE_TYPE_IDENTIFIER
+} ViviCompilerScannerValueType;
+
+typedef struct {
+  ViviCompilerScannerValueType	type;
+  union {
+    gboolean	v_boolean;
+    double	v_number;
+    char *	v_string;
+    char *	v_identifier;
+  };
 } ViviCompilerScannerValue;
 
 typedef struct _ViviCompilerScanner ViviCompilerScanner;
@@ -167,8 +184,13 @@ struct _ViviCompilerScanner
 
   ViviCompilerScannerToken	token;
   ViviCompilerScannerToken	next_token;
+  guint				line_number;
+  gboolean			line_terminator;
+
   ViviCompilerScannerValue	value;
   ViviCompilerScannerValue	next_value;
+  guint				next_line_number;
+  gboolean			next_line_terminator;
 
   ViviCompilerScannerToken	expected;
 };
@@ -185,13 +207,9 @@ ViviCompilerScannerToken	vivi_compiler_scanner_get_next_token	(ViviCompilerScann
 ViviCompilerScannerToken	vivi_compiler_scanner_peek_next_token	(ViviCompilerScanner *	scanner);
 
 const char *			vivi_compiler_scanner_token_name	(ViviCompilerScannerToken token);
-
 guint				vivi_compiler_scanner_cur_line		(ViviCompilerScanner *scanner);
-
-void				vivi_compiler_scanner_unexp_token	(ViviCompilerScanner *	scanner,
-									 ViviCompilerScannerToken expected);
-void				vivi_compiler_scanner_unexp_token_custom (ViviCompilerScanner *	scanner,
-									 const char *		expected);
+guint				vivi_compiler_scanner_cur_column	(ViviCompilerScanner *scanner);
+char *				vivi_compiler_scanner_get_line		(ViviCompilerScanner *scanner);
 
 
 G_END_DECLS

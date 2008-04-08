@@ -25,6 +25,7 @@
 #include "vivi_code_constant.h"
 #include "vivi_code_get.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeAssignment, vivi_code_assignment, VIVI_TYPE_CODE_STATEMENT)
 
@@ -91,6 +92,35 @@ finalize:
 }
 
 static void
+vivi_code_assignment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
+
+  if (assignment->local) {
+    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_DEFINE_LOCAL);
+  } else if (assignment->from) {
+    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_SET_MEMBER);
+  } else {
+    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_SET_VARIABLE);
+  }
+
+  if (assignment->local && assignment->from) {
+    ViviCodeValue *get =
+      vivi_code_get_new (assignment->from, assignment->value);
+    vivi_code_compiler_compile_value (compiler, get);
+    g_object_unref (get);
+  } else {
+    vivi_code_compiler_compile_value (compiler, assignment->value);
+  }
+
+  vivi_code_compiler_compile_value (compiler, assignment->name);
+  if (assignment->from && !assignment->local)
+    vivi_code_compiler_compile_value (compiler, assignment->from);
+
+  vivi_code_compiler_end_action (compiler);
+}
+
+static void
 vivi_code_assignment_class_init (ViviCodeAssignmentClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -99,6 +129,7 @@ vivi_code_assignment_class_init (ViviCodeAssignmentClass *klass)
   object_class->dispose = vivi_code_assignment_dispose;
 
   token_class->print = vivi_code_assignment_print;
+  token_class->compile = vivi_code_assignment_compile;
 }
 
 static void

@@ -3,7 +3,7 @@ SUBDIRS = test
 noinst_LTLIBRARIES = libvivified-compiler-lex.la libvivified-compiler.la
 
 # we create own .la for lex generated code, so we can disable some warnings
-libvivified_compiler_lex_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) -Wno-redundant-decls -Wno-switch-default -Wno-missing-declarations -Wno-missing-prototypes -Wno-sign-compare -Wno-unused-function -Wno-missing-noreturn
+libvivified_compiler_lex_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) -Wno-switch-default -Wno-missing-declarations -Wno-missing-prototypes -Wno-sign-compare -Wno-unused-function -Wno-missing-noreturn
 libvivified_compiler_lex_la_LDFLAGS = $(SWFDEC_LIBS)
 
 libvivified_compiler_lex_la_SOURCES = \
@@ -21,6 +21,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_block.c \
 	vivi_code_break.c \
 	vivi_code_comment.c \
+	vivi_code_compiler.c \
 	vivi_code_constant.c \
 	vivi_code_continue.c \
 	vivi_code_function.c \
@@ -29,6 +30,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_get_url.c \
 	vivi_code_goto.c \
 	vivi_code_if.c \
+	vivi_code_init_array.c \
 	vivi_code_init_object.c \
 	vivi_code_label.c \
 	vivi_code_loop.c \
@@ -36,6 +38,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_return.c \
 	vivi_code_statement.c \
 	vivi_code_text_printer.c \
+	vivi_code_throw.c \
 	vivi_code_token.c \
 	vivi_code_trace.c \
 	vivi_code_unary.c \
@@ -44,6 +47,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_compiler.c \
 	vivi_compiler_empty_statement.c \
 	vivi_compiler_get_temporary.c \
+	vivi_compiler_goto_name.c \
 	vivi_compiler_scanner.c \
 	vivi_decompiler_block.c \
 	vivi_decompiler_duplicate.c \
@@ -57,6 +61,7 @@ noinst_HEADERS = \
 	vivi_code_block.h \
 	vivi_code_break.h \
 	vivi_code_comment.h \
+	vivi_code_compiler.h \
 	vivi_code_constant.h \
 	vivi_code_continue.h \
 	vivi_code_function.h \
@@ -65,6 +70,7 @@ noinst_HEADERS = \
 	vivi_code_get_url.h \
 	vivi_code_goto.h \
 	vivi_code_if.h \
+	vivi_code_init_array.h \
 	vivi_code_init_object.h \
 	vivi_code_label.h \
 	vivi_code_loop.h \
@@ -72,6 +78,7 @@ noinst_HEADERS = \
 	vivi_code_return.h \
 	vivi_code_statement.h \
 	vivi_code_text_printer.h \
+	vivi_code_throw.h \
 	vivi_code_token.h \
 	vivi_code_trace.h \
 	vivi_code_unary.h \
@@ -80,6 +87,7 @@ noinst_HEADERS = \
 	vivi_compiler.h \
 	vivi_compiler_empty_statement.h \
 	vivi_compiler_get_temporary.h \
+	vivi_compiler_goto_name.h \
 	vivi_compiler_scanner.h \
 	vivi_compiler_scanner_lex.h \
 	vivi_compiler_scanner_lex_include.h \

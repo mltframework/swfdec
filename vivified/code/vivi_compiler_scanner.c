@@ -1,5 +1,5 @@
 /* Vivified
- * Copyright (C) Pekka Lampila <pekka.lampila@iki.fi>
+ * Copyright (C) 2008 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,9 +29,35 @@
 G_DEFINE_TYPE (ViviCompilerScanner, vivi_compiler_scanner, G_TYPE_OBJECT)
 
 static void
+vivi_compiler_scanner_free_type_value (ViviCompilerScannerValue *value)
+{
+  switch (value->type) {
+    case VALUE_TYPE_STRING:
+      g_free (value->v_string);
+      break;
+    case VALUE_TYPE_IDENTIFIER:
+      g_free (value->v_identifier);
+      break;
+    case VALUE_TYPE_NONE:
+    case VALUE_TYPE_BOOLEAN:
+    case VALUE_TYPE_NUMBER:
+      /* nothing */
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  value->type = VALUE_TYPE_NONE;
+}
+
+static void
 vivi_compiler_scanner_dispose (GObject *object)
 {
-  //ViviCompilerScanner *scanner = VIVI_COMPILER_SCANNER (object);
+  ViviCompilerScanner *scanner = VIVI_COMPILER_SCANNER (object);
+
+  vivi_compiler_scanner_free_type_value (&scanner->value);
+  vivi_compiler_scanner_free_type_value (&scanner->next_value);
 
   G_OBJECT_CLASS (vivi_compiler_scanner_parent_class)->dispose (object);
 }
@@ -56,7 +82,9 @@ static const struct {
   // special
   { TOKEN_NONE, "NONE" },
   { TOKEN_EOF, "EOF" },
+  { TOKEN_ERROR, "ERROR" },
   { TOKEN_UNKNOWN, "UNKNOWN" },
+  { TOKEN_LINE_TERMINATOR, "NEW LINE" },
 
   // comparision
   { TOKEN_BRACE_LEFT, "{", },
@@ -165,6 +193,10 @@ static const struct {
   // reserved keywords
   { TOKEN_RESERVED_KEYWORD, "RESERVED KEYWORD" },
 
+  // ActionScript specific
+  { TOKEN_UNDEFINED, "undefined" },
+  { TOKEN_TRACE, "trace" },
+
   { TOKEN_LAST, NULL }
 };
 
@@ -187,15 +219,29 @@ vivi_compiler_scanner_advance (ViviCompilerScanner *scanner)
 {
   g_return_if_fail (VIVI_IS_COMPILER_SCANNER (scanner));
 
+  vivi_compiler_scanner_free_type_value (&scanner->value);
+
   scanner->token = scanner->next_token;
   scanner->value = scanner->next_value;
+  scanner->line_number = scanner->next_line_number;
+  scanner->line_terminator = scanner->next_line_terminator;
 
   if (scanner->file == NULL) {
     scanner->next_token = TOKEN_EOF;
     scanner->next_value.v_string = NULL;
   } else {
     scanner->next_token = yylex ();
-    scanner->next_value = yylval;
+    if (scanner->next_token == TOKEN_LINE_TERMINATOR) {
+      scanner->next_line_terminator = TRUE;
+    } else {
+      scanner->next_line_terminator = FALSE;
+    }
+    while (scanner->next_token == TOKEN_LINE_TERMINATOR) {
+      scanner->next_token = yylex ();
+    }
+    scanner->next_value = lex_value;
+    scanner->next_line_number = lex_line_number;
+    lex_value.type = VALUE_TYPE_NONE;
   }
 }
 
@@ -208,9 +254,9 @@ vivi_compiler_scanner_new (FILE *file)
 
   scanner = g_object_new (VIVI_TYPE_COMPILER_SCANNER, NULL);
   scanner->file = file;
+  scanner->line_number = scanner->next_line_number = lex_line_number = 1;
 
   yyrestart (file);
-  yyout = stdout;
 
   vivi_compiler_scanner_advance (scanner);
 
@@ -240,30 +286,25 @@ vivi_compiler_scanner_cur_line (ViviCompilerScanner *scanner)
 {
   g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), 0);
 
-  return yylineno;
+  return scanner->line_number;
 }
 
-static void
-vivi_compiler_scanner_print_unexp_token_message (ViviCompilerScanner *scanner,
-    const char *unexpected, const char *expected)
+guint
+vivi_compiler_scanner_cur_column (ViviCompilerScanner *scanner)
 {
-  g_printerr ("%i: Unexpected token %s expected %s\n",
-      vivi_compiler_scanner_cur_line (scanner), unexpected, expected);
+  g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), 0);
+
+  // TODO
+
+  return 0;
 }
 
-void
-vivi_compiler_scanner_unexp_token (ViviCompilerScanner *scanner,
-    ViviCompilerScannerToken expected)
+char *
+vivi_compiler_scanner_get_line (ViviCompilerScanner *scanner)
 {
-  vivi_compiler_scanner_print_unexp_token_message (scanner,
-      vivi_compiler_scanner_token_name (scanner->token),
-      vivi_compiler_scanner_token_name (expected));
-}
+  g_return_val_if_fail (VIVI_IS_COMPILER_SCANNER (scanner), 0);
 
-void
-vivi_compiler_scanner_unexp_token_custom (ViviCompilerScanner *scanner,
-    const char *expected)
-{
-  vivi_compiler_scanner_print_unexp_token_message (scanner,
-      vivi_compiler_scanner_token_name (scanner->token), expected);
+  // TODO
+
+  return g_strdup ("");
 }

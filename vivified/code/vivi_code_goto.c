@@ -31,7 +31,8 @@ vivi_code_goto_dispose (GObject *object)
 {
   ViviCodeGoto *gotoo = VIVI_CODE_GOTO (object);
 
-  g_object_unref (gotoo->label);
+  if (gotoo->label)
+    g_object_unref (gotoo->label);
 
   G_OBJECT_CLASS (vivi_code_goto_parent_class)->dispose (object);
 }

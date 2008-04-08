@@ -24,6 +24,7 @@
 #include "vivi_code_get.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeGet, vivi_code_get, VIVI_TYPE_CODE_VALUE)
 
@@ -72,6 +73,24 @@ vivi_code_get_print (ViviCodeToken *token, ViviCodePrinter*printer)
   g_free (varname);
 }
 
+static void
+vivi_code_get_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeGet *get = VIVI_CODE_GET (token);
+
+  if (get->from) {
+    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_GET_MEMBER);
+  } else {
+    vivi_code_compiler_add_action (compiler, SWFDEC_AS_ACTION_GET_VARIABLE);
+  }
+
+  vivi_code_compiler_compile_value (compiler, get->name);
+  if (get->from)
+    vivi_code_compiler_compile_value (compiler, get->from);
+
+  vivi_code_compiler_end_action (compiler);
+}
+
 static gboolean
 vivi_code_get_is_constant (ViviCodeValue *value)
 {
@@ -88,6 +107,7 @@ vivi_code_get_class_init (ViviCodeGetClass *klass)
   object_class->dispose = vivi_code_get_dispose;
 
   token_class->print = vivi_code_get_print;
+  token_class->compile = vivi_code_get_compile;
 
   value_class->is_constant = vivi_code_get_is_constant;
 }

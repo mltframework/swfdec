@@ -33,7 +33,7 @@ identifier_part		[$_a-zA-Z0-9]
 
 %%
 
-			GString *string;
+			GString *string = NULL;
 
 <<EOF>>			{ return TOKEN_EOF; }
 

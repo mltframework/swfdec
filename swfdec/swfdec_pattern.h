@@ -52,6 +52,7 @@ struct _SwfdecPatternClass
 
   /* create a cairo pattern for the given values */
   cairo_pattern_t *	(* get_pattern)		(SwfdecPattern *		pattern,
+						 SwfdecRenderer *		renderer,
 						 const SwfdecColorTransform *	trans);
 };
 
@@ -66,6 +67,7 @@ SwfdecDraw *	swfdec_pattern_parse_morph    	(SwfdecBits *			bits,
 						 SwfdecSwfDecoder *		dec);
 
 cairo_pattern_t *swfdec_pattern_get_pattern	(SwfdecPattern *		pattern, 
+						 SwfdecRenderer *		renderer,
 						 const SwfdecColorTransform *	trans);
 
 /* debug */

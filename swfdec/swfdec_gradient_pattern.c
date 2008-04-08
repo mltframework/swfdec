@@ -54,7 +54,8 @@ swfdec_gradient_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio
 }
 
 static cairo_pattern_t *
-swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransform *trans)
+swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
+    const SwfdecColorTransform *trans)
 {
   guint i, ratio;
   cairo_pattern_t *pattern;

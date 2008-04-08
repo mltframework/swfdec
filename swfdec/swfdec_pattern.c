@@ -31,6 +31,7 @@
 #include "swfdec_gradient_pattern.h"
 #include "swfdec_image.h"
 #include "swfdec_path.h"
+#include "swfdec_renderer_internal.h"
 #include "swfdec_stroke.h"
 
 /*** PATTERN ***/
@@ -48,7 +49,8 @@ swfdec_pattern_paint (SwfdecDraw *draw, cairo_t *cr, const SwfdecColorTransform 
 {
   cairo_pattern_t *pattern;
 
-  pattern = swfdec_pattern_get_pattern (SWFDEC_PATTERN (draw), trans);
+  pattern = swfdec_pattern_get_pattern (SWFDEC_PATTERN (draw), swfdec_renderer_get (cr),
+      trans);
   if (pattern == NULL)
     return;
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
@@ -143,7 +145,8 @@ swfdec_color_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
 }
 
 static cairo_pattern_t *
-swfdec_color_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransform *trans)
+swfdec_color_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
+    const SwfdecColorTransform *trans)
 {
   SwfdecColor color = SWFDEC_COLOR_PATTERN (pat)->start_color;
 
@@ -209,10 +212,10 @@ swfdec_image_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
 }
 
 static cairo_pattern_t *
-swfdec_image_pattern_get_pattern (SwfdecPattern *pat, const SwfdecColorTransform *trans)
+swfdec_image_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
+    const SwfdecColorTransform *trans)
 {
   SwfdecImagePattern *image = SWFDEC_IMAGE_PATTERN (pat);
-  SwfdecRenderer *renderer = NULL;
   cairo_pattern_t *pattern;
   cairo_surface_t *surface;
   
@@ -546,15 +549,17 @@ swfdec_pattern_to_string (SwfdecPattern *pattern)
 }
 
 cairo_pattern_t *
-swfdec_pattern_get_pattern (SwfdecPattern *pattern, const SwfdecColorTransform *trans)
+swfdec_pattern_get_pattern (SwfdecPattern *pattern, SwfdecRenderer *renderer,
+    const SwfdecColorTransform *trans)
 {
   SwfdecPatternClass *klass;
 
   g_return_val_if_fail (SWFDEC_IS_PATTERN (pattern), NULL);
+  g_return_val_if_fail (SWFDEC_IS_RENDERER (renderer), NULL);
   g_return_val_if_fail (trans != NULL, NULL);
 
   klass = SWFDEC_PATTERN_GET_CLASS (pattern);
   g_assert (klass->get_pattern);
-  return klass->get_pattern (pattern, trans);
+  return klass->get_pattern (pattern, renderer, trans);
 }
 

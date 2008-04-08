@@ -140,7 +140,7 @@ vivi_code_if_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   }
 
   vivi_code_compiler_write_s16 (compiler,
-      vivi_code_compiler_tail_size (compiler) + 4); // else_statement + jump
+      vivi_code_compiler_tail_size (compiler) + 5); // else_statement + jump
   vivi_code_compiler_end_action (compiler);
 
   vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_JUMP);

@@ -119,14 +119,21 @@ swfdec_playback_stream_close (Stream *stream)
 
   /* If we have created a PA stream, defer freeing until we drain it. */
   if (stream->pa != NULL) {
+    pa_operation *o;
+
     stream->no_more = 1;
-    pa_operation_unref (pa_stream_drain (stream->pa,
-					 stream_drain_complete,
-					 stream));
-  } else {
-    g_object_unref (stream->audio);
-    g_free (stream);
+
+    o = pa_stream_drain (stream->pa, stream_drain_complete, stream);
+    if (o != NULL) {
+      pa_operation_unref (o);
+      return;
+    } else {
+      g_printerr("PA stream drain failed: %s\n",
+		 pa_strerror(pa_context_errno(stream->sound->pa)));
+    }
   }
+  g_object_unref (stream->audio);
+  g_free (stream);
 }
 
 static void

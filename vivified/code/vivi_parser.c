@@ -79,12 +79,6 @@ static const struct {
   { TOKEN_LAST, NULL }
 };
 
-typedef enum {
-  STATUS_CANCEL = -1,
-  STATUS_OK = 0,
-  STATUS_FAIL = 1
-} ParseStatus;
-
 typedef struct {
   GSList			*labels;
   GSList			*gotos;
@@ -92,37 +86,28 @@ typedef struct {
 
 typedef struct {
   ViviParserScanner *		scanner;
-  gboolean			unexpected_line_terminator;
-  guint				expected[2];
-  char *			custom_error;
+
+  guint				error_count;
+
+  char *			cancel_error;
 
   GSList *			levels; // ParseLevel, earlier levels
   ParseLevel *			level;  // current level
 } ParseData;
 
-#define FAIL_OR(x, y) (data->expected[0] = (x), data->expected[1] = (y), STATUS_FAIL)
-#define FAIL_LINE_TERMINATOR_OR(x, y) (data->unexpected_line_terminator = TRUE, FAIL_OR(x,y))
-#define FAIL_LINE_TERMINATOR(x) FAIL_LINE_TERMINATOR_OR(x,TOKEN_NONE)
-#define FAIL(x) FAIL_OR(x,TOKEN_NONE)
-#define FAIL_CHILD(x) STATUS_FAIL
-#define FAIL_CUSTOM(x) (data->custom_error = (x), STATUS_FAIL)
-#define CANCEL_OR(x, y) (data->expected[0] = (x), data->expected[1] = (y), STATUS_CANCEL)
-#define CANCEL(x) CANCEL_OR(x, TOKEN_NONE)
-#define CANCEL_CUSTOM(x) (data->custom_error = (x), STATUS_CANCEL)
+typedef gboolean (*ParseValueFunction) (ParseData *data, ViviCodeValue **value);
+typedef gboolean (*ParseValueStatementFunction) (ParseData *data, ViviCodeValue **value, ViviCodeStatement **statement);
+typedef gboolean (*ParseStatementFunction) (ParseData *data, ViviCodeStatement **statement);
 
-typedef ParseStatus (*ParseValueFunction) (ParseData *data, ViviCodeValue **value);
-typedef ParseStatus (*ParseValueStatementFunction) (ParseData *data, ViviCodeValue **value, ViviCodeStatement **statement);
-typedef ParseStatus (*ParseStatementFunction) (ParseData *data, ViviCodeStatement **statement);
-
-static ParseStatus
+static gboolean
 parse_statement_list (ParseData *data, ParseStatementFunction function, ViviCodeStatement **statement, guint separator);
 
-static ParseStatus
+static gboolean
 parse_value_statement_list (ParseData *data,
     ParseValueStatementFunction function, ViviCodeValue ***list,
     ViviCodeStatement **statement, guint separator);
 
-static ParseStatus
+static gboolean
 parse_value_list (ParseData *data, ParseValueFunction function,
     ViviCodeValue ***list, guint separator);
 
@@ -148,6 +133,65 @@ vivi_parser_token_name (guint token)
     g_assert (name != NULL);
 
     return name;
+  }
+}
+
+static void
+vivi_parser_error (ParseData *data, const char *format, ...)
+{
+  va_list args;
+  char *message;
+
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (format != NULL);
+
+  va_start (args, format);
+  message = g_strdup_vprintf (format, args);
+  va_end (args);
+
+  g_printerr (":error: %s\n", message);
+
+  g_free (message);
+
+  data->error_count++;
+}
+
+static void
+vivi_parser_cancel (ParseData *data, const char *format, ...)
+{
+  va_list args;
+  char *message;
+
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (format != NULL);
+
+  va_start (args, format);
+  message = g_strdup_vprintf (format, args);
+  va_end (args);
+
+  if (data->cancel_error != NULL)
+    g_free (data->cancel_error);
+  data->cancel_error = message;
+}
+
+static char *
+vivi_parser_unexpected_token (ParseData *data, guint expected,
+    guint unexpected1, guint unexpected2)
+{
+  return g_strdup_printf ("Expected %s before %s or %s\n",
+      vivi_parser_token_name (expected), vivi_parser_token_name (unexpected1),
+      vivi_parser_token_name (unexpected2));
+}
+
+static void
+vivi_parser_fail_child (ParseData *data)
+{
+  if (data->cancel_error != NULL) {
+    vivi_parser_error (data, "%s", data->cancel_error);
+    g_free (data->cancel_error);
+    data->cancel_error = NULL;
+  } else {
+    g_assert (data->error_count > 0);
   }
 }
 
@@ -346,14 +390,13 @@ vivi_parser_find_label (ParseData *data, const char *name)
   return NULL;
 }
 
-static ParseStatus
-vivi_parser_end_level (ParseData *data, gboolean fail)
+static void
+vivi_parser_end_level (ParseData *data)
 {
   GSList *iter;
-  char *custom_error = NULL;
 
-  g_return_val_if_fail (data != NULL, STATUS_FAIL);
-  g_return_val_if_fail (data->level != NULL, STATUS_FAIL);
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (data->level != NULL);
 
   for (iter = data->level->gotos; iter != NULL; iter = iter->next) {
     ViviCompilerGotoName *goto_;
@@ -366,11 +409,8 @@ vivi_parser_end_level (ParseData *data, gboolean fail)
     if (label != NULL) {
       vivi_compiler_goto_name_set_label (goto_, label);
     } else {
-      if (custom_error == NULL) {
-	custom_error =
-	  g_strdup_printf ("Label named '%s' doesn't exist in this block",
-	      vivi_compiler_goto_name_get_name (goto_));
-      }
+      vivi_parser_error (data, "Label named '%s' doesn't exist in this block",
+	  vivi_compiler_goto_name_get_name (goto_));
     }
 
     g_object_unref (goto_);
@@ -389,16 +429,6 @@ vivi_parser_end_level (ParseData *data, gboolean fail)
     data->levels = g_slist_delete_link (data->levels, data->levels);
   } else {
     data->level = NULL;
-  }
-
-  if (custom_error != NULL) {
-    if (fail) {
-      return FAIL_CUSTOM (custom_error);
-    } else {
-      return STATUS_FAIL;
-    }
-  } else {
-    return STATUS_OK;
   }
 }
 
@@ -437,72 +467,80 @@ vivi_parser_add_label (ParseData *data, ViviCodeLabel *label)
 // values
 
 /* ActionScript specific */
-static ParseStatus
+static gboolean
 parse_undefined_literal (ParseData *data, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (!check_token (data, TOKEN_UNDEFINED))
-    return CANCEL (TOKEN_UNDEFINED);
+  if (!check_token (data, TOKEN_UNDEFINED)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_UNDEFINED);
+    return FALSE;
+  }
 
   *value = vivi_code_constant_new_undefined ();
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_null_literal (ParseData *data, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (!check_token (data, TOKEN_NULL))
-    return CANCEL (TOKEN_NULL);
+  if (!check_token (data, TOKEN_NULL)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_NULL);
+    return FALSE;
+  }
 
   *value = vivi_code_constant_new_null ();
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_boolean_literal (ParseData *data, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (!check_token (data, TOKEN_BOOLEAN))
-    return CANCEL (TOKEN_BOOLEAN);
+  if (!check_token (data, TOKEN_BOOLEAN)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_BOOLEAN);
+    return FALSE;
+  }
 
   *value = vivi_code_constant_new_boolean (data->scanner->value.v_boolean);
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_numeric_literal (ParseData *data, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (!check_token (data, TOKEN_NUMBER))
-    return CANCEL (TOKEN_NUMBER);
+  if (!check_token (data, TOKEN_NUMBER)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_NUMBER);
+    return FALSE;
+  }
 
   *value = vivi_code_constant_new_number (data->scanner->value.v_number);
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_string_literal (ParseData *data, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (!check_token (data, TOKEN_STRING))
-    return CANCEL (TOKEN_STRING);
+  if (!check_token (data, TOKEN_STRING)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_STRING);
+    return FALSE;
+  }
 
   *value = vivi_code_constant_new_string (data->scanner->value.v_string);
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_literal (ParseData *data, ViviCodeValue **value)
 {
-  ParseStatus status;
-  int i;
-  ParseValueFunction functions[] = {
+  static const ParseValueFunction functions[] = {
     parse_undefined_literal,
     parse_null_literal,
     parse_boolean_literal,
@@ -510,71 +548,74 @@ parse_literal (ParseData *data, ViviCodeValue **value)
     parse_string_literal,
     NULL
   };
+  guint i;
 
   *value = NULL;
 
   for (i = 0; functions[i] != NULL; i++) {
-    status = functions[i] (data, value);
-    if (status != STATUS_CANCEL)
-      return status;
+    if (functions[i] (data, value))
+      return TRUE;
   }
 
-  return CANCEL (ERROR_TOKEN_LITERAL);
+  vivi_parser_cancel_unexpected (data, ERROR_TOKEN_LITERAL);
+  return FALSE;
 }
 
-static ParseStatus
+static gboolean
 parse_identifier (ParseData *data, ViviCodeValue **value)
 {
   *value = NULL;
 
-  if (!check_token (data, TOKEN_IDENTIFIER))
-    return CANCEL (TOKEN_IDENTIFIER);
+  if (!check_token (data, TOKEN_IDENTIFIER)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_IDENTIFIER);
+    return FALSE;
+  }
 
   *value = vivi_code_get_new_name (data->scanner->value.v_identifier);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_property_name (ParseData *data, ViviCodeValue **value)
 {
-  ParseStatus status;
-  int i;
-  ParseValueFunction functions[] = {
+  static const ParseValueFunction functions[] = {
     parse_identifier,
     parse_string_literal,
     parse_numeric_literal,
     NULL
   };
+  guint i;
 
   *value = NULL;
 
   for (i = 0; functions[i] != NULL; i++) {
-    status = functions[i] (data, value);
-    if (status != STATUS_CANCEL)
-      return status;
+    if (functions[i] (data, value))
+      return TRUE;
   }
 
-  return CANCEL (ERROR_TOKEN_PROPERTY_NAME);
+  vivi_parser_cancel_unexpected (data, ERROR_TOKEN_PROPERTY_NAME);
+  return FALSE;
 }
 
-static ParseStatus
+static gboolean
 parse_assignment_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement);
 
-static ParseStatus
+static gboolean
 parse_array_literal (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
   ViviCodeValue *member;
   ViviCodeStatement *statement_new;
-  ParseStatus status;
 
   *value = NULL;
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_BRACKET_LEFT))
-    return CANCEL (TOKEN_BRACKET_LEFT);
+  if (!check_token (data, TOKEN_BRACKET_LEFT)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_BRACKET_LEFT);
+    return FALSE;
+  }
 
   *value = vivi_code_init_array_new ();
 
@@ -586,16 +627,7 @@ parse_array_literal (ParseData *data, ViviCodeValue **value,
     } else if (check_token (data, TOKEN_COMMA)) {
       vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (*value),
 	 vivi_code_constant_new_undefined ());
-    } else {
-      status = parse_assignment_expression (data, &member, &statement_new);
-      if (status != STATUS_OK) {
-	if (*statement != NULL) {
-	  g_object_unref (*statement);
-	  *statement = NULL;
-	}
-	return FAIL_CHILD (status);
-      }
-
+    } else if (parse_assignment_expression (data, &member, &statement_new)) {
       *statement = vivi_parser_join_statements (*statement, statement_new);
 
       vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (*value),
@@ -604,27 +636,34 @@ parse_array_literal (ParseData *data, ViviCodeValue **value,
 
       if (!check_token (data, TOKEN_COMMA)) {
 	if (!check_token (data, TOKEN_BRACKET_RIGHT)) {
-	  return FAIL_OR (TOKEN_BRACKET_RIGHT, TOKEN_COMMA);
+	  vivi_parser_error_unexpected (data, TOKEN_BRACKET_RIGHT,
+	      TOKEN_COMMA);
 	}
 	break;
       }
+    } else {
+      vivi_parser_error_unexpected (data, TOKEN_BRACKET_RIGHT, TOKEN_COMMA,
+	  ERROR_TOKEN_ASSIGNMENT_EXPRESSION);
+      break;
     }
   }
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_object_literal (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
 
   *value = NULL;
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_BRACE_LEFT))
-    return CANCEL (TOKEN_BRACE_LEFT);
+  if (!check_token (data, TOKEN_BRACE_LEFT)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_BRACE_LEFT);
+    return FALSE;
+  }
 
   *value = vivi_code_init_object_new ();
 
@@ -633,38 +672,14 @@ parse_object_literal (ParseData *data, ViviCodeValue **value,
       ViviCodeValue *property, *initializer;
       ViviCodeStatement *statement_new;
 
-      status = parse_property_name (data, &property);
-      if (status != STATUS_OK) {
-	g_object_unref (*value);
-	*value = NULL;
-	if (*statement != NULL) {
-	  g_object_unref (*statement);
-	  *statement = NULL;
-	}
-	return FAIL_CHILD (status);
-      }
+      if (!parse_property_name (data, &property))
+	vivi_parser_error_child_value (data, &property);
 
-      if (!check_token (data, TOKEN_COLON)) {
-	g_object_unref (*value);
-	*value = NULL;
-	if (*statement != NULL) {
-	  g_object_unref (*statement);
-	  *statement = NULL;
-	}
-	return FAIL (TOKEN_COLON);
-      }
+      if (!check_token (data, TOKEN_COLON))
+	vivi_parser_error_unexpected (data, TOKEN_COLON);
 
-      status = parse_assignment_expression (data, &initializer,
-	  &statement_new);
-      if (status != STATUS_OK) {
-	g_object_unref (*value);
-	*value = NULL;
-	if (*statement != NULL) {
-	  g_object_unref (*statement);
-	  *statement = NULL;
-	}
-	return FAIL_CHILD (status);
-      }
+      if (!parse_assignment_expression (data, &initializer, &statement_new))
+	vivi_parser_error_child_value (data, &initializer);
 
       *statement = vivi_parser_join_statements (*statement, statement_new);
 
@@ -673,40 +688,31 @@ parse_object_literal (ParseData *data, ViviCodeValue **value,
     } while (check_token (data, TOKEN_COMMA));
   }
 
-  if (!check_token (data, TOKEN_BRACE_RIGHT)) {
-    g_object_unref (*value);
-    *value = NULL;
-    if (*statement != NULL) {
-      g_object_unref (*statement);
-      *statement = NULL;
-    }
-    return FAIL (TOKEN_BRACE_RIGHT);
-  }
+  if (!check_token (data, TOKEN_BRACE_RIGHT))
+    vivi_parser_error_unexpected (data, TOKEN_BRACE_RIGHT);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
 // misc
 
-static ParseStatus
+static gboolean
 parse_variable_declaration (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
   ViviCodeValue *identifier, *value;
   ViviCodeStatement *assignment, *statement_right;
 
   *statement = NULL;
 
-  status = parse_identifier (data, &identifier);
-  if (status != STATUS_OK)
-    return status;
+  if (!parse_identifier (data, &identifier)) {
+    vivi_parser_cancel_unexpected (data, ERROR_TOKEN_IDENTIFIER);
+    return FALSE;
+  }
 
   if (check_token (data, TOKEN_ASSIGN)) {
-    status = parse_assignment_expression (data, &value, &statement_right);
-    if (status != STATUS_OK) {
-      g_object_unref (identifier);
-      return FAIL_CHILD (status);
-    }
+    if (!parse_assignment_expression (data, &value, &statement_right))
+      vivi_parser_error_child_value (data, value);
   } else {
     value = vivi_code_constant_new_undefined ();
     statement_right = NULL;
@@ -717,74 +723,60 @@ parse_variable_declaration (ParseData *data, ViviCodeStatement **statement)
 
   *statement = vivi_parser_join_statements (statement_right, assignment);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
 // expression
 
-static ParseStatus
+static gboolean
 parse_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement);
 
-static ParseStatus
+static gboolean
 parse_primary_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
-  int i;
-  ParseValueFunction functions[] = {
-    parse_identifier,
-    parse_literal,
-    NULL
-  };
-
   *value = NULL;
   *statement = NULL;
 
   if (check_token (data, TOKEN_THIS)) {
     *value = vivi_code_get_new_name ("this");
-    return STATUS_OK;
+    return TRUE;
   }
 
   if (check_token (data, TOKEN_PARENTHESIS_LEFT)) {
-    status = parse_expression (data, value, statement);
-    if (status != STATUS_OK)
-      return FAIL_CHILD (status);
-    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-      g_object_unref (*value);
-      *value = NULL;
-      return FAIL (TOKEN_PARENTHESIS_RIGHT);
-    }
-    return STATUS_OK;
+    if (!parse_expression (data, value, statement))
+      vivi_parser_error_child_value (data, value);
+    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT))
+      vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_RIGHT);
+    return TRUE;
   }
 
+  if (parse_object_literal (data, value, statement))
+    return TRUE;
 
-  status = parse_object_literal (data, value, statement);
-  if (status != STATUS_CANCEL)
-    return status;
+  if (parse_array_literal (data, value, statement))
+    return TRUE;
 
-  status = parse_array_literal (data, value, statement);
-  if (status != STATUS_CANCEL)
-    return status;
+  if (parse_identifier (data, value))
+    return TRUE;
 
-  for (i = 0; functions[i] != NULL; i++) {
-    status = functions[i] (data, value);
-    if (status != STATUS_CANCEL)
-      return status;
-  }
+  if (parse_literal (data, value))
+    return TRUE;
 
-  return CANCEL (ERROR_TOKEN_PRIMARY_EXPRESSION);
+  vivi_parser_cancel_unexpected (ERROR_TOKEN_PRIMARY_EXPRESSION);
+  return FALSE;
 }
 
-static ParseStatus
+static gboolean
 parse_function_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement);
 
-static ParseStatus
+static gboolean
 parse_member_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
   ViviCodeValue *member;
   ViviCodeStatement *statement_member;
 
@@ -793,70 +785,53 @@ parse_member_expression (ParseData *data, ViviCodeValue **value,
 
   // TODO: new MemberExpression Arguments
 
-  status = parse_primary_expression (data, value, statement);
-  if (status == STATUS_CANCEL)
-    status = parse_function_expression (data, value, statement);
+  if (!parse_primary_expression (data, value, statement)) {
+    if (!parse_function_expression (data, value, statement)) {
+      vivi_parser_cancel_unexpected (data, ERROR_PRIMARY_EXPRESSION,
+	  ERROR_FUNCTION_EXPRESSION);
+      return FALSE;
+    }
+  }
 
-  if (status != STATUS_OK)
-    return status;
-
-  do {
+   while (TRUE) {
     ViviCodeValue *tmp;
 
     if (check_token (data, TOKEN_BRACKET_LEFT)) {
-      status = parse_expression (data, &member, &statement_member);
-      if (status != STATUS_OK) {
-	g_object_unref (*value);
-	*value = NULL;
-	if (*statement != NULL) {
-	  g_object_unref (*statement);
-	  *statement = NULL;
-	}
-	return FAIL_CHILD (status);
-      }
+      if (!parse_expression (data, &member, &statement_member))
+	vivi_parser_error_child_value (data, &member);
 
-      *statement =
-	vivi_parser_join_statements (*statement, statement_member);
+      *statement = vivi_parser_join_statements (*statement, statement_member);
 
-      if (!check_token (data, TOKEN_BRACKET_RIGHT)) {
-	g_object_unref (*value);
-	*value = NULL;
-	if (*statement != NULL) {
-	  g_object_unref (*statement);
-	  *statement = NULL;
-	}
-	return FAIL (TOKEN_BRACKET_RIGHT);
-      }
+      if (!check_token (data, TOKEN_BRACKET_RIGHT))
+	vivi_parser_error_unexpected (data, TOKEN_BRACKET_RIGHT);
     } else if (check_token (data, TOKEN_DOT)) {
-      status = parse_identifier (data, &member);
-      if (status != STATUS_OK)
-	return FAIL_CHILD (status);
+      if (!parse_identifier (data, &member))
+	vivi_parser_error_child_value (data, &member);
     } else {
-      return STATUS_OK;
+      return TRUE;
     }
 
     tmp = *value;
     *value = vivi_parser_get_new (tmp, member);
     g_object_unref (tmp);
     g_object_unref (member);
-  } while (TRUE);
+  }
 
   g_assert_not_reached ();
 }
 
-static ParseStatus
+static gboolean
 parse_new_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
 
   *value = NULL;
   *statement = NULL;
 
   if (check_token (data, TOKEN_NEW)) {
-    status = parse_new_expression (data, value, statement);
-    if (status != STATUS_OK)
-      return FAIL_CHILD (status);
+    if (!parse_new_expression (data, value, statement))
+      vivi_parser_error_child_value (data, value);
     if (!VIVI_IS_CODE_FUNCTION_CALL (*value)) {
       ViviCodeValue *tmp = VIVI_CODE_VALUE (*value);
       *value = vivi_parser_function_call_new (tmp);
@@ -864,29 +839,27 @@ parse_new_expression (ParseData *data, ViviCodeValue **value,
     }
     vivi_code_function_call_set_construct (VIVI_CODE_FUNCTION_CALL (*value),
 	TRUE);
-    return STATUS_OK;
+    return TRUE;
   } else {
     return parse_member_expression (data, value, statement);
   }
 }
 
-static ParseStatus
+static gboolean
 parse_left_hand_side_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
-  int i;
   ViviCodeValue *name;
   ViviCodeValue **arguments;
   ViviCodeStatement *argument_statement;
+  guint i;
 
   *value = NULL;
   *statement = NULL;
 
   if (check_token (data, TOKEN_NEW)) {
-    status = parse_new_expression (data, value, statement);
-    if (status != STATUS_OK)
-      return FAIL_CHILD (status);
+    if (!parse_new_expression (data, value, statement))
+      vivi_parser_error_child_value (data, value);
     if (!VIVI_IS_CODE_FUNCTION_CALL (*value)) {
       ViviCodeValue *tmp = VIVI_CODE_VALUE (*value);
       *value = vivi_parser_function_call_new (tmp);
@@ -894,12 +867,13 @@ parse_left_hand_side_expression (ParseData *data, ViviCodeValue **value,
     }
     vivi_code_function_call_set_construct (VIVI_CODE_FUNCTION_CALL (*value),
 	TRUE);
-    return STATUS_OK;
+    return TRUE;
   }
 
-  status = parse_member_expression (data, value, statement);
-  if (status != STATUS_OK)
-    return status;
+  if (!parse_member_expression (data, value, statement)) {
+    vivi_parser_cancel_unexpected (data, ERROR_TOKEN_MEMBER_EXPRESSION);
+    return FALSE;
+  }
 
   while (TRUE) {
     // TODO: member expressions?
@@ -907,30 +881,17 @@ parse_left_hand_side_expression (ParseData *data, ViviCodeValue **value,
       break;
 
     if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-      status = parse_value_statement_list (data, parse_assignment_expression,
-	  &arguments, &argument_statement, TOKEN_COMMA);
-      if (status != STATUS_OK) {
-	g_object_unref (*value);
-	*value = NULL;
-	if (*statement != NULL) {
-	  g_object_unref (*statement);
-	  *statement = NULL;
-	}
-	return FAIL_CHILD (status);
+      if (!parse_value_statement_list (data, parse_assignment_expression,
+	    &arguments, &argument_statement, TOKEN_COMMA)) {
+	// TODO
+	arguments = NULL;
       }
 
       *statement =
 	vivi_parser_join_statements (*statement, argument_statement);
 
-      if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-	g_object_unref (*value);
-	*value = NULL;
-	if (*statement != NULL) {
-	  g_object_unref (*statement);
-	  *statement = NULL;
-	}
-	return FAIL (TOKEN_PARENTHESIS_RIGHT);
-      }
+      if (!check_token (data, TOKEN_PARENTHESIS_RIGHT))
+	vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_RIGHT);
     } else {
       arguments = NULL;
     }
@@ -948,43 +909,39 @@ parse_left_hand_side_expression (ParseData *data, ViviCodeValue **value,
     }
   }
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_postfix_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
   ViviCodeValue *operation, *one, *temporary;
   const char *operator;
 
   *value = NULL;
   *statement = NULL;
 
-  status = parse_left_hand_side_expression (data, value, statement);
-  if (status != STATUS_OK)
-    return status;
+  if (!parse_left_hand_side_expression (data, value, statement)) {
+    vivi_parser_cancel_unexpected (data, ERROR_TOKEN_POSTFIX_EXPRESSION);
+    return FALSE;
+  }
 
   if (check_line_terminator (data))
-    return status;
+    return TRUE;
 
   if (check_token (data, TOKEN_INCREASE)) {
     operator = "+";
   } else if (check_token (data, TOKEN_DESCREASE)) {
     operator = "-";
   } else {
-    return STATUS_OK;
+    return TRUE;
   }
 
+  // FIXME: Correct?
   if (!vivi_parser_value_is_left_hand_side (*value)) {
-    g_object_unref (*value);
-    *value = NULL;
-    if (*statement != NULL) {
-      g_object_unref (*statement);
-      *statement = NULL;
-    }
-    return CANCEL_CUSTOM (g_strdup ("INCREASE/DECREASE not allowed here"));
+    vivi_parser_error (
+	"Invalid left-hand side expression for INCREASE/DECREASE");
   }
 
   one = vivi_code_constant_new_number (1);
@@ -1001,14 +958,14 @@ parse_postfix_expression (ParseData *data, ViviCodeValue **value,
   g_object_unref (*value);
   *value = temporary;
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_unary_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
   ViviCodeValue *tmp, *one;
   const char *operator;
 
@@ -1028,12 +985,15 @@ parse_unary_expression (ParseData *data, ViviCodeValue **value,
       if (!operator) operator = "-";
 
       vivi_parser_scanner_get_next_token (data->scanner);
-      status = parse_unary_expression (data, value, statement);
-      if (status != STATUS_OK)
-	return FAIL_CHILD (status);
 
-      if (!vivi_parser_value_is_left_hand_side (*value))
-	return CANCEL_CUSTOM (g_strdup ("INCREASE/DECREASE not allowed here"));
+      if (!parse_unary_expression (data, value, statement))
+	vivi_parser_error_child_value (data, value);
+
+      // FIXME: Correct?
+      if (!vivi_parser_value_is_left_hand_side (*value)) {
+	vivi_parser_error (
+	    "Invalid left-hand side expression for INCREASE/DECREASE");
+      }
 
       one = vivi_code_constant_new_number (1);
       tmp = vivi_code_binary_new_name (*value, one, operator);
@@ -1043,19 +1003,21 @@ parse_unary_expression (ParseData *data, ViviCodeValue **value,
 	  vivi_parser_assignment_new (*value, tmp));
       g_object_unref (tmp);
 
-      return STATUS_OK;
+      return TRUE;
     /*case TOKEN_PLUS:
     case TOKEN_MINUS:
     case TOKEN_BITWISE_NOT:*/
     case TOKEN_LOGICAL_NOT:
       vivi_parser_scanner_get_next_token (data->scanner);
-      status = parse_unary_expression (data, value, statement);
-      if (status != STATUS_OK)
-	return FAIL_CHILD (status);
+
+      if (!parse_unary_expression (data, value, statement))
+	vivi_parser_error_child_value (data, value);
+
       tmp = VIVI_CODE_VALUE (*value);
       *value = vivi_code_unary_new (tmp, '!');
       g_object_unref (tmp);
-      return STATUS_OK;
+
+      return TRUE;
     default:
       return parse_postfix_expression (data, value, statement);
   }
@@ -1067,31 +1029,27 @@ typedef enum {
   PASS_LOGICAL_AND
 } ParseOperatorPass;
 
-static ParseStatus
+static gboolean
 parse_operator_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement, const ViviParserScannerToken *tokens,
     ParseOperatorPass pass, ParseValueStatementFunction next_parse_function)
 {
-  ParseStatus status;
-  int i;
   ViviCodeValue *left, *right;
   ViviCodeStatement *statement_right;
+  guint i;
 
   *value = NULL;
   *statement = NULL;
 
-  status = next_parse_function (data, value, statement);
-  if (status != STATUS_OK)
-    return status;
+  if (!next_parse_function (data, value, statement)) {
+    // FIXME: token?
+    return FALSE;
+  }
 
-  for (i = 0; tokens[i] != STATUS_OK; i++) {
+  for (i = 0; tokens[i] != TRUE; i++) {
     while (check_token (data, tokens[i])) {
-      status = next_parse_function (data, &right, &statement_right);
-      if (status != STATUS_OK) {
-	g_object_unref (*value);
-	*value = NULL;
-	return FAIL_CHILD (status);
-      }
+      if (!next_parse_function (data, &right, &statement_right))
+	vivi_parser_error_child_value (data, &right);
 
       if (statement_right != NULL) {
 	ViviCodeStatement *tmp;
@@ -1116,8 +1074,7 @@ parse_operator_expression (ParseData *data, ViviCodeValue **value,
 	    g_assert_not_reached ();
 	}
 
-	*statement =
-	  vivi_parser_join_statements (*statement, statement_right);
+	*statement = vivi_parser_join_statements (*statement, statement_right);
       }
 
       left = VIVI_CODE_VALUE (*value);
@@ -1128,10 +1085,10 @@ parse_operator_expression (ParseData *data, ViviCodeValue **value,
     };
   }
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_multiplicative_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1142,7 +1099,7 @@ parse_multiplicative_expression (ParseData *data, ViviCodeValue **value,
       PASS_ALWAYS, parse_unary_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_additive_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1153,7 +1110,7 @@ parse_additive_expression (ParseData *data, ViviCodeValue **value,
       PASS_ALWAYS, parse_multiplicative_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_shift_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1164,7 +1121,7 @@ parse_shift_expression (ParseData *data, ViviCodeValue **value,
       PASS_ALWAYS, parse_additive_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_relational_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1176,7 +1133,7 @@ parse_relational_expression (ParseData *data, ViviCodeValue **value,
       PASS_ALWAYS, parse_shift_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_equality_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1188,7 +1145,7 @@ parse_equality_expression (ParseData *data, ViviCodeValue **value,
       PASS_ALWAYS, parse_relational_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_bitwise_and_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1199,7 +1156,7 @@ parse_bitwise_and_expression (ParseData *data, ViviCodeValue **value,
       PASS_ALWAYS, parse_equality_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_bitwise_xor_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1210,7 +1167,7 @@ parse_bitwise_xor_expression (ParseData *data, ViviCodeValue **value,
       PASS_ALWAYS, parse_bitwise_and_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_bitwise_or_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1221,7 +1178,7 @@ parse_bitwise_or_expression (ParseData *data, ViviCodeValue **value,
       PASS_ALWAYS, parse_bitwise_xor_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_logical_and_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1232,7 +1189,7 @@ parse_logical_and_expression (ParseData *data, ViviCodeValue **value,
       PASS_LOGICAL_AND, parse_bitwise_or_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_logical_or_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1243,28 +1200,26 @@ parse_logical_or_expression (ParseData *data, ViviCodeValue **value,
       PASS_LOGICAL_OR, parse_logical_and_expression);
 }
 
-static ParseStatus
+static gboolean
 parse_conditional_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
   //ViviCodeStatement *if_statement, *else_statement;
 
   *value = NULL;
 
-  status = parse_logical_or_expression (data, value, statement);
-  if (status != STATUS_OK)
-    return status;
+  if (!parse_logical_or_expression (data, value, statement))
+    return FALSE;
 
 #if 0
   if (!check_token (data, TOKEN_QUESTION_MARK)) {
     *statement = vivi_code_value_statement_new (VIVI_CODE_VALUE (value));
     g_object_unref (value);
-    return STATUS_OK;
+    return TRUE;
   }
 
   status = parse_assignment_expression (data, &if_statement);
-  if (status != STATUS_OK) {
+  if (status != TRUE) {
     g_object_unref (value);
     return FAIL_CHILD (status);
   }
@@ -1276,7 +1231,7 @@ parse_conditional_expression (ParseData *data, ViviCodeValue **value,
   }
 
   status = parse_assignment_expression (data, &else_statement);
-  if (status != STATUS_OK) {
+  if (status != TRUE) {
     g_object_unref (value);
     g_object_unref (if_statement);
     return FAIL_CHILD (status);
@@ -1291,14 +1246,13 @@ parse_conditional_expression (ParseData *data, ViviCodeValue **value,
   g_object_unref (else_statement);
 #endif
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_assignment_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
   ViviCodeValue *right;
   ViviCodeStatement *assignment, *statement_right;
   const char *operator;
@@ -1306,17 +1260,18 @@ parse_assignment_expression (ParseData *data, ViviCodeValue **value,
   *value = NULL;
   *statement = NULL;
 
-  status = parse_conditional_expression (data, value, statement);
-  if (status != STATUS_OK)
-    return status;
+  if (!parse_conditional_expression (data, value, statement)) {
+    vivi_parser_cancel_unexpected (data, ERROR_TOKEN_CONDITIONAL_EXPRESSION);
+    return FALSE;
+  }
 
   if (!vivi_parser_value_is_left_hand_side (*value))
-    return STATUS_OK;
+    return TRUE;
 
   operator = NULL;
 
   vivi_parser_scanner_peek_next_token (data->scanner);
-  switch ((int)data->scanner->next_token) {
+  switch ((guint)data->scanner->next_token) {
     case TOKEN_ASSIGN_MULTIPLY:
       if (operator == NULL) operator = "*";
     case TOKEN_ASSIGN_DIVIDE:
@@ -1341,13 +1296,9 @@ parse_assignment_expression (ParseData *data, ViviCodeValue **value,
       if (operator == NULL) operator = "^";
     case TOKEN_ASSIGN:
       vivi_parser_scanner_get_next_token (data->scanner);
-      status = parse_assignment_expression (data, &right,
-	  &statement_right);
-      if (status != STATUS_OK) {
-	g_object_unref (*value);
-	*value = NULL;
-	return FAIL_CHILD (status);
-      }
+
+      if (parse_assignment_expression (data, &right, &statement_right))
+	vivi_parser_error_child_value (data, &right);
 
       if (operator != NULL) {
 	assignment = vivi_parser_assignment_new (*value,
@@ -1360,27 +1311,26 @@ parse_assignment_expression (ParseData *data, ViviCodeValue **value,
       *statement = vivi_parser_join_statements (*statement,
 	  vivi_parser_join_statements (statement_right, assignment));
 
-      break;
+      return TRUE;
     default:
-      return STATUS_OK;
+      return TRUE;
   }
 
-
-  return STATUS_OK;
+  g_assert_not_reached ();
 }
 
-static ParseStatus
+static gboolean
 parse_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
   ViviCodeStatement *statement_one;
-  ParseStatus status;
 
   *statement = NULL;
 
-  status = parse_assignment_expression (data, value, &statement_one);
-  if (status != STATUS_OK)
-    return status;
+  if (parse_assignment_expression (data, value, &statement_one)) {
+    vivi_parser_cancel_unexpected (data, ERROR_TOKEN_ASSIGNMENT_EXPRESSION);
+    return FALSE;
+  }
 
   while (TRUE) {
     *statement = vivi_parser_join_statements (*statement, statement_one);
@@ -1390,80 +1340,70 @@ parse_expression (ParseData *data, ViviCodeValue **value,
 
     g_object_unref (*value);
 
-    status = parse_assignment_expression (data, value, &statement_one);
-    if (status != STATUS_OK) {
-      g_object_unref (*value);
-      *value = NULL;
-      g_object_unref (*statement);
-      *statement = NULL;
-      return FAIL_CHILD (status);
-    }
+    if (!parse_assignment_expression (data, value, &statement_one))
+	vivi_parser_error_child_value (data, value);
   }
 
-  return STATUS_OK;
+  return TRUE;
 }
 
 // statement
 
-static ParseStatus
+static gboolean
 parse_statement (ParseData *data, ViviCodeStatement **statement);
 
-static ParseStatus
+static gboolean
 parse_trace_statement (ParseData *data, ViviCodeStatement **statement)
 {
   ViviCodeValue *value;
   ViviCodeStatement *expression_statement;
-  ParseStatus status;
 
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_TRACE))
-    return CANCEL (TOKEN_TRACE);
+  if (!check_token (data, TOKEN_TRACE)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_TRACE);
+    return FALSE;
+  }
 
   if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
-    return FAIL (TOKEN_PARENTHESIS_LEFT);
+    vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_LEFT);
 
-  status = parse_expression (data, &value, &expression_statement);
-  if (status != STATUS_OK)
-    return FAIL_CHILD (status);
+  if (parse_expression (data, &value, &expression_statement))
+    vivi_parser_error_child_value (data, &value);
 
-  if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-    g_object_unref (value);
-    if (expression_statement != NULL)
-      g_object_unref (expression_statement);
-    return FAIL (TOKEN_PARENTHESIS_RIGHT);
-  }
+  if (!check_token (data, TOKEN_PARENTHESIS_RIGHT))
+    vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_RIGHT);
 
-  if (!check_automatic_semicolon (data)) {
-    g_object_unref (value);
-    if (expression_statement != NULL)
-      g_object_unref (expression_statement);
-    return FAIL (TOKEN_SEMICOLON);
-  }
+  if (!check_automatic_semicolon (data))
+    vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
 
   *statement = vivi_code_trace_new (value);
   g_object_unref (value);
 
-  *statement =
-    vivi_parser_join_statements (expression_statement, *statement);
+  *statement = vivi_parser_join_statements (expression_statement, *statement);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_continue_or_break_statement (ParseData *data,
     ViviCodeStatement **statement, ViviParserScannerToken token)
 {
   *statement = NULL;
 
-  if (!check_token (data, token))
-    return CANCEL (token);
+  if (!check_token (data, token)) {
+    vivi_parser_cancel_unexpected (data, token);
+    return FALSE;
+  }
 
   if (!check_restricted_semicolon (data)) {
-    ParseStatus status;
+    gboolean status;
     ViviCodeValue *identifier;
 
-    status = parse_identifier (data, &identifier);
+    if (!parse_identifier (data, &identifier))
+      vivi_parser_error_child_value (data, &identifier);
+
+    // FIXME
     *statement = vivi_compiler_goto_name_new (
 	vivi_code_constant_get_variable_name (
 	  VIVI_CODE_CONSTANT (VIVI_CODE_GET (identifier)->name)));
@@ -1471,84 +1411,80 @@ parse_continue_or_break_statement (ParseData *data,
 
     vivi_parser_add_goto (data, VIVI_COMPILER_GOTO_NAME (*statement));
 
-    if (!check_automatic_semicolon (data)) {
-      g_object_unref (*statement);
-      *statement = NULL;
-      return FAIL (TOKEN_SEMICOLON);
-    }
+    if (!check_automatic_semicolon (data))
+      vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
   } else {
     *statement = vivi_code_break_new ();
   }
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_continue_statement (ParseData *data, ViviCodeStatement **statement)
 {
   return parse_continue_or_break_statement (data, statement, TOKEN_CONTINUE);
 }
 
-static ParseStatus
+static gboolean
 parse_break_statement (ParseData *data, ViviCodeStatement **statement)
 {
   return parse_continue_or_break_statement (data, statement, TOKEN_BREAK);
 }
 
-static ParseStatus
+static gboolean
 parse_throw_statement (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
   ViviCodeValue *value;
   ViviCodeStatement *expression_statement;
 
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_THROW))
-    return CANCEL (TOKEN_THROW);
+  if (!check_token (data, TOKEN_THROW)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_THROW);
+    return FALSE;
+  }
 
   if (check_line_terminator (data))
-    return FAIL_LINE_TERMINATOR (ERROR_TOKEN_EXPRESSION);
+    vivi_parser_error_unexpected_line_terminator (data,
+	ERROR_TOKEN_EXPRESSION);
 
-  status = parse_expression (data, &value, &expression_statement);
-  if (status != STATUS_OK)
-    return FAIL_CHILD (status);
+  if (parse_expression (data, &value, &expression_statement))
+    vivi_parser_error_child_value (data, &value);
 
   *statement = vivi_code_throw_new (value);
   g_object_unref (value);
 
-  *statement =
-    vivi_parser_join_statements (expression_statement, *statement);
+  *statement = vivi_parser_join_statements (expression_statement, *statement);
 
-  if (!check_automatic_semicolon (data)) {
-    g_object_unref (*statement);
-    *statement = NULL;
-    return FAIL (TOKEN_SEMICOLON);
-  }
+  if (!check_automatic_semicolon (data))
+    vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_return_statement (ParseData *data, ViviCodeStatement **statement)
 {
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_RETURN))
-    return CANCEL (TOKEN_RETURN);
+  if (!check_token (data, TOKEN_RETURN)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_RETURN);
+    return FALSE;
+  }
 
   *statement = vivi_code_return_new ();
 
   if (!check_restricted_semicolon (data)) {
-    ParseStatus status;
+    gboolean status;
     ViviCodeValue *value;
     ViviCodeStatement *expression_statement;
 
-    status = parse_expression (data, &value, &expression_statement);
-    if (status != STATUS_OK) {
-      g_object_unref (*statement);
-      *statement = NULL;
-      return FAIL_CHILD (status);
+    if (!parse_expression (data, &value, &expression_statement)) {
+      vivi_parser_error_unexpected (data, TOKEN_SEMICOLON,
+	  ERROR_TOKEN_EXPRESSION);
+      return TRUE;
     }
 
     vivi_code_return_set_value (VIVI_CODE_RETURN (*statement), value);
@@ -1557,20 +1493,16 @@ parse_return_statement (ParseData *data, ViviCodeStatement **statement)
     *statement =
       vivi_parser_join_statements (expression_statement, *statement);
 
-    if (!check_automatic_semicolon (data)) {
-      g_object_unref (*statement);
-      *statement = NULL;
-      return FAIL (TOKEN_SEMICOLON);
-    }
+    if (!check_automatic_semicolon (data))
+      vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
   }
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
   ViviCodeValue *condition;
   ViviCodeStatement *pre_statement, *condition_statement, *loop_statement;
 
@@ -1580,78 +1512,50 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
   condition_statement = NULL;
 
   if (check_token (data, TOKEN_DO)) {
-    status = parse_statement (data, &loop_statement);
-    if (status != STATUS_OK)
-      return FAIL_CHILD (status);
+    if (!parse_statement (data, &loop_statement))
+      vivi_parser_error_child_statement (data, &loop_statement);
 
-    if (!check_token (data, TOKEN_WHILE)) {
-      g_object_unref (loop_statement);
-      return FAIL (TOKEN_WHILE);
-    }
+    if (!check_token (data, TOKEN_WHILE))
+      vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
 
-    if (!check_token (data, TOKEN_PARENTHESIS_LEFT)) {
-      g_object_unref (loop_statement);
-      return FAIL (TOKEN_PARENTHESIS_LEFT);
-    }
+    if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
+      vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_LEFT);
 
-    status = parse_expression (data, &condition, &condition_statement);
-    if (status != STATUS_OK) {
-      g_object_unref (loop_statement);
-      return FAIL_CHILD (status);
-    }
+    if (parse_expression (data, &condition, &condition_statement))
+      vivi_parser_error_child_value (data, &condition);
 
-    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-      g_object_unref (loop_statement);
-      g_object_unref (condition);
-      if (condition_statement != NULL)
-	g_object_unref (condition_statement);
-      return FAIL (TOKEN_PARENTHESIS_LEFT);
-    }
+    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT))
+      vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_RIGHT);
 
-    if (!check_automatic_semicolon (data)) {
-      g_object_unref (loop_statement);
-      g_object_unref (condition);
-      if (condition_statement != NULL)
-	g_object_unref (condition_statement);
-      return FAIL (TOKEN_PARENTHESIS_LEFT);
-    }
+    if (!check_automatic_semicolon (data))
+      vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
 
     pre_statement = g_object_ref (loop_statement);
   } else if (check_token (data, TOKEN_WHILE)) {
     if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
-      return FAIL (TOKEN_PARENTHESIS_LEFT);
+      vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_LEFT);
 
-    status = parse_expression (data, &condition, &condition_statement);
-    if (status != STATUS_OK)
-      return FAIL_CHILD (status);
+    if (parse_expression (data, &condition, &condition_statement))
+      vivi_parser_error_child_value (data, &condition);
 
-    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-      g_object_unref (condition);
-      if (condition_statement != NULL)
-	g_object_unref (condition_statement);
-      return FAIL (TOKEN_PARENTHESIS_RIGHT);
-    }
+    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT))
+      vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_RIGHT);
 
-    status = parse_statement (data, &loop_statement);
-    if (status != STATUS_OK) {
-      g_object_unref (condition);
-      if (condition_statement != NULL)
-	g_object_unref (condition_statement);
-      return FAIL_CHILD (status);
-    }
+    if (!parse_statement (data, &loop_statement))
+      vivi_parser_error_child_statement (data, &loop_statement);
   } else if (check_token (data, TOKEN_FOR)) {
     ViviCodeValue *pre_value;
     ViviCodeStatement *post_statement;
 
     if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
-      return FAIL (TOKEN_PARENTHESIS_LEFT);
+      vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_LEFT);
 
     if (check_token (data, TOKEN_VAR)) {
       // FIXME: no in
-      status = parse_statement_list (data, parse_variable_declaration,
-	  &pre_statement, TOKEN_COMMA);
-      if (status != STATUS_OK)
-	return FAIL_CHILD (status);
+      if (parse_statement_list (data, parse_variable_declaration,
+	    &pre_statement, TOKEN_COMMA)) {
+	// FIXME
+      }
       // FIXME: ugly
       // If there was only one VariableDeclaration, get the name for pre_value
       g_assert (VIVI_IS_CODE_BLOCK (pre_statement));
@@ -1667,9 +1571,8 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
     } else {
       if (!check_token (data, TOKEN_SEMICOLON)) {
 	// FIXME: no in
-	status = parse_expression (data, &pre_value, &pre_statement);
-	if (status != STATUS_OK)
-	  return FAIL_CHILD (status);
+	if (parse_expression (data, &pre_value, &pre_statement))
+	  vivi_parser_error_child_value (data, &pre_value);
       } else {
 	pre_value = NULL;
 	pre_statement = NULL;
@@ -1680,87 +1583,53 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
       if (pre_value != NULL)
 	g_object_unref (pre_value);
       if (!check_token (data, TOKEN_SEMICOLON)) {
-	status = parse_expression (data, &condition, &condition_statement);
-	if (status != STATUS_OK)
-	  return FAIL_CHILD (status);
+	if (parse_expression (data, &condition, &condition_statement))
+	  vivi_parser_error_child_value (data, &condition);
 
-	if (!check_token (data, TOKEN_SEMICOLON)) {
-	  if (pre_statement != NULL)
-	    g_object_unref (pre_statement);
-	  g_object_unref (condition);
-	  if (condition_statement != NULL)
-	    g_object_unref (condition_statement);
-	  return FAIL (TOKEN_SEMICOLON);
-	}
+	if (!check_token (data, TOKEN_SEMICOLON))
+	  vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
       }
 
-      status = parse_expression (data, &pre_value, &post_statement);
-      if (status != STATUS_OK) {
-	if (pre_statement != NULL)
-	  g_object_unref (pre_statement);
-	g_object_unref (condition);
-	if (condition_statement != NULL)
-	  g_object_unref (condition_statement);
-	return FAIL_CHILD (status);
-      }
+      if (!parse_expression (data, &pre_value, &post_statement))
+	vivi_parser_error_child_value (data, &pre_value);
       g_object_unref (pre_value);
     } else if (pre_value != NULL && check_token (data, TOKEN_IN)) {
       post_statement = NULL;
 
-      if (!vivi_parser_value_is_left_hand_side (pre_value)) {
-	g_object_unref (pre_value);
-	if (pre_statement != NULL)
-	  g_object_unref (pre_statement);
-	return FAIL_CUSTOM (g_strdup (
-	      "Invalid left hand side expression for in"));
-      }
+      // FIXME: correct?
+      if (!vivi_parser_value_is_left_hand_side (pre_value))
+	vivi_parser_error ("Invalid left-hand side expression for in");
 
       g_object_unref (pre_value);
       if (pre_statement != NULL)
 	g_object_unref (pre_statement);
-      return FAIL_CUSTOM (g_strdup (
-	    "for (... in ...) has not been implemented yet"));
+      vivi_parser_error ("for (... in ...) has not been implemented yet");
     } else {
-      ViviParserScannerToken fail_token;
-
       if (pre_value != NULL) {
-	fail_token = TOKEN_IN;
-	g_object_unref (pre_value);
+	vivi_parser_error_unexpected (data, TOKEN_SEMICOLON, TOKEN_IN);
       } else {
-	fail_token = TOKEN_NONE;
+	vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
       }
 
+      condition = vivi_code_constant_new_undefined ();
+
+      if (pre_value != NULL)
+	g_object_unref (pre_value);
       if (pre_statement != NULL)
 	g_object_unref (pre_statement);
-
-      return FAIL_OR (TOKEN_SEMICOLON, fail_token);
     }
 
-    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-      if (pre_statement != NULL)
-	g_object_unref (pre_statement);
-      g_object_unref (condition);
-      if (condition_statement != NULL)
-	g_object_unref (condition_statement);
-      g_object_unref (post_statement);
-      return FAIL (TOKEN_PARENTHESIS_RIGHT);
-    }
+    if (!check_token (data, TOKEN_PARENTHESIS_RIGHT))
+      vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_RIGHT);
 
-    status = parse_statement (data, &loop_statement);
-    if (status != STATUS_OK) {
-      if (pre_statement != NULL)
-	g_object_unref (pre_statement);
-      g_object_unref (condition);
-      if (condition_statement != NULL)
-	g_object_unref (condition_statement);
-      g_object_unref (post_statement);
-      return FAIL_CHILD (status);
-    }
+    if (!parse_statement (data, &loop_statement))
+      vivi_parser_error_child_statement (data, &loop_statement);
 
     loop_statement =
       vivi_parser_join_statements (loop_statement, post_statement);
   } else {
-    return CANCEL (ERROR_TOKEN_ITERATION_STATEMENT);
+    vivi_parser_cancel_unexpected (data, ERROR_TOKEN_ITERATION_STATEMENT);
+    return FALSE;
   }
 
   if (condition_statement != NULL) {
@@ -1779,58 +1648,37 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 
   *statement = vivi_parser_join_statements (pre_statement, *statement);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_if_statement (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
   ViviCodeValue *condition;
   ViviCodeStatement *pre_statement, *if_statement, *else_statement;
 
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_IF))
-    return CANCEL (TOKEN_IF);
+  if (!check_token (data, TOKEN_IF)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_IF);
+    return FALSE;
+  }
 
   if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
-    return FAIL (TOKEN_PARENTHESIS_LEFT);
+    vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_LEFT);
 
-  status = parse_expression (data, &condition, &pre_statement);
-  if (status != STATUS_OK)
-    return FAIL_CHILD (status);
+  if (!parse_expression (data, &condition, &pre_statement))
+    vivi_parser_error_child_value (data, &condition);
 
-  if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-    g_object_unref (condition);
-    if (pre_statement != NULL) {
-      g_object_unref (pre_statement);
-      pre_statement = NULL;
-    }
-    return FAIL (TOKEN_PARENTHESIS_RIGHT);
-  }
+  if (!check_token (data, TOKEN_PARENTHESIS_RIGHT))
+    vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_RIGHT);
 
-  status = parse_statement (data, &if_statement);
-  if (status != STATUS_OK) {
-    g_object_unref (condition);
-    if (pre_statement != NULL) {
-      g_object_unref (pre_statement);
-      pre_statement = NULL;
-    }
-    return FAIL_CHILD (status);
-  }
+  if (!parse_statement (data, &if_statement))
+    vivi_parser_error_child_statement (data, &if_statement);
 
   if (check_token (data, TOKEN_ELSE)) {
-    status = parse_statement (data, &else_statement);
-    if (status != STATUS_OK) {
-      g_object_unref (condition);
-      if (pre_statement != NULL) {
-	g_object_unref (pre_statement);
-	pre_statement = NULL;
-      }
-      g_object_unref (if_statement);
-      return FAIL_CHILD (status);
-    }
+    if (!parse_statement (data, &else_statement))
+      vivi_parser_error_child_statement (data, &else_statement);
   } else {
     else_statement = NULL;
   }
@@ -1850,13 +1698,12 @@ parse_if_statement (ParseData *data, ViviCodeStatement **statement)
 
   g_assert (*statement != NULL);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
   ViviCodeValue *value;
   ViviCodeStatement *last;
 
@@ -1864,12 +1711,13 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
 
   vivi_parser_scanner_peek_next_token (data->scanner);
   if (data->scanner->next_token == TOKEN_BRACE_LEFT ||
-      data->scanner->next_token == TOKEN_FUNCTION)
-    return CANCEL (ERROR_TOKEN_EXPRESSION_STATEMENT);
+      data->scanner->next_token == TOKEN_FUNCTION) {
+    vivi_parser_cancel_unexpected (data, ERROR_TOKEN_EXPRESSION_STATEMENT);
+    return FALSE;
+  }
 
-  status = parse_expression (data, &value, statement);
-  if (status != STATUS_OK)
-    return status;
+  if (!parse_expression (data, &value, statement))
+    return FALSE;
 
   // check for label
   if (*statement == NULL && vivi_parser_value_is_identifier (value)) {
@@ -1877,19 +1725,13 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
       *statement = vivi_code_label_new (vivi_code_constant_get_variable_name (
 	    VIVI_CODE_CONSTANT (VIVI_CODE_GET (value)->name)));
       if (!vivi_parser_add_label (data, VIVI_CODE_LABEL (*statement)))
-	return FAIL_CUSTOM (g_strdup ("Same label name used twice"));
-      return STATUS_OK;
+	vivi_parser_error ("Same label name used twice");
+      return TRUE;
     }
   }
 
-  if (!check_automatic_semicolon (data)) {
-    g_object_unref (value);
-    if (*statement != NULL) {
-      g_object_unref (*statement);
-      *statement = NULL;
-    }
-    return FAIL (TOKEN_SEMICOLON);
-  }
+  if (!check_automatic_semicolon (data))
+    vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
 
   // add a value statement, if the last statement is not an assignment with the
   // same value
@@ -1907,7 +1749,7 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
 
     if (assignment->from == NULL && assignment->name == VIVI_CODE_GET (value)->name) {
       g_object_unref (value);
-      return STATUS_OK;
+      return TRUE;
     }
   }
 
@@ -1915,81 +1757,81 @@ parse_expression_statement (ParseData *data, ViviCodeStatement **statement)
       vivi_code_value_statement_new (value));
   g_object_unref (value);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_empty_statement (ParseData *data, ViviCodeStatement **statement)
 {
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_SEMICOLON))
-    return CANCEL (TOKEN_SEMICOLON);
+  if (!check_token (data, TOKEN_SEMICOLON)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_SEMICOLON);
+    return FALSE;
+  }
 
   *statement = vivi_compiler_empty_statement_new ();
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_block (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
 
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_BRACE_LEFT))
-    return CANCEL (TOKEN_BRACE_LEFT);
+  if (!check_token (data, TOKEN_BRACE_LEFT)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_BRACE_LEFT);
+    return FALSE;
+  }
 
   vivi_parser_scanner_peek_next_token (data->scanner);
-  if (data->scanner->next_token != TOKEN_BRACE_RIGHT) {
-    status =
-      parse_statement_list (data, parse_statement, statement, STATUS_OK);
-    if (status != STATUS_OK)
-      return FAIL_CHILD (status);
+  if (!check_token (data, TOKEN_BRACE_RIGHT)) {
+    if (!parse_statement_list (data, parse_statement, statement, TRUE)) {
+      // FIXME: child token
+      vivi_parser_error_unexpected (data, TOKEN_BRACE_RIGHT,
+	  ERROR_TOKEN_STATEMENT);
+      *statement = vivi_code_block_new ();
+    }
+
+    if (!check_token (data, TOKEN_BRACE_RIGHT))
+      vivi_parser_error_unexpected (data, TOKEN_BRACE_RIGHT);
   } else {
     *statement = vivi_code_block_new ();
   }
 
-  if (!check_token (data, TOKEN_BRACE_RIGHT)) {
-    g_object_unref (*statement);
-    *statement = NULL;
-    return FAIL (TOKEN_BRACE_RIGHT);
-  }
-
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_variable_statement (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
 
   *statement = NULL;
 
-  if (!check_token (data, TOKEN_VAR))
-    return CANCEL (TOKEN_VAR);
-
-  status = parse_statement_list (data, parse_variable_declaration, statement,
-      TOKEN_COMMA);
-  if (status != STATUS_OK)
-    return FAIL_CHILD (status);
-
-  if (!check_automatic_semicolon (data)) {
-    g_object_unref (*statement);
-    *statement = NULL;
-    return FAIL (TOKEN_SEMICOLON);
+  if (!check_token (data, TOKEN_VAR)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_VAR);
+    return FALSE;
   }
 
-  return STATUS_OK;
+  if (!parse_statement_list (data, parse_variable_declaration, statement,
+	TOKEN_COMMA)) {
+    // FIXME
+  }
+
+  if (!check_automatic_semicolon (data))
+    vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
+
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_statement (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
-  int i;
-  ParseStatementFunction functions[] = {
+  static const ParseStatementFunction functions[] = {
     parse_block,
     parse_variable_statement,
     parse_empty_statement,
@@ -2006,28 +1848,28 @@ parse_statement (ParseData *data, ViviCodeStatement **statement)
     parse_trace_statement,
     NULL
   };
+  guint i;
 
   *statement = NULL;
 
   for (i = 0; functions[i] != NULL; i++) {
-    status = functions[i] (data, statement);
-    if (status != STATUS_CANCEL)
-      return status;
+    if (functions[i] (data, statement))
+      return TRUE;
   }
 
-  return CANCEL (ERROR_TOKEN_STATEMENT);
+  vivi_parser_cancel_unexpected (data, ERROR_TOKEN_STATEMENT);
+  return FALSE;
 }
 
 // function
 
-static ParseStatus
+static gboolean
 parse_source_element (ParseData *data, ViviCodeStatement **statement);
 
-static ParseStatus
+static gboolean
 parse_function_definition (ParseData *data, ViviCodeValue **function,
     ViviCodeValue **identifier, gboolean identifier_required)
 {
-  ParseStatus status;
   ViviCodeValue **arguments;
   ViviCodeStatement *body;
   guint i;
@@ -2038,65 +1880,50 @@ parse_function_definition (ParseData *data, ViviCodeValue **function,
   arguments = NULL;
   body = NULL;
 
-  if (!check_token (data, TOKEN_FUNCTION))
-    return CANCEL (TOKEN_FUNCTION);
-
-  status = parse_identifier (data, identifier);
-  if (status == STATUS_FAIL ||
-      (identifier_required && status == STATUS_CANCEL))
-    return FAIL_CHILD (status);
-
-  if (!check_token (data, TOKEN_PARENTHESIS_LEFT)) {
-    g_object_unref (*identifier);
-    return FAIL (TOKEN_PARENTHESIS_LEFT);
+  if (!check_token (data, TOKEN_FUNCTION)) {
+    vivi_parser_cancel_unexpected (data, TOKEN_FUNCTION);
+    return FALSE;
   }
 
-  status = parse_value_list (data, parse_identifier, &arguments, TOKEN_COMMA);
-  if (status == STATUS_FAIL) {
-    g_object_unref (*identifier);
-    return STATUS_FAIL;
+  if (identifier_required) {
+    if (!parse_identifier (data, identifier))
+      vivi_parser_error_child_value (data, identifier);
+
+    if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
+      vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_LEFT);
+  } else {
+    if (!check_token (data, TOKEN_PARENTHESIS_LEFT)) {
+      if (!parse_identifier (data, identifier)) {
+	// FIXME: child token
+	vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_LEFT,
+	    ERROR_TOKEN_IDENTIFIER);
+      }
+
+      if (!check_token (data, TOKEN_PARENTHESIS_LEFT))
+	vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_LEFT);
+    }
   }
 
-  if (!check_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-    g_object_unref (*identifier);
-    if (arguments != NULL)
-      free_value_list (arguments);
-    return FAIL (TOKEN_PARENTHESIS_RIGHT);
+  if (!parse_value_list (data, parse_identifier, &arguments, TOKEN_COMMA)) {
+    // FIXME
   }
 
-  if (!check_token (data, TOKEN_BRACE_LEFT)) {
-    g_object_unref (*identifier);
-    if (arguments != NULL)
-      free_value_list (arguments);
-    return FAIL (TOKEN_BRACE_LEFT);
-  }
+  if (!check_token (data, TOKEN_PARENTHESIS_RIGHT))
+    vivi_parser_error_unexpected (data, TOKEN_PARENTHESIS_RIGHT);
+
+  if (!check_token (data, TOKEN_BRACE_LEFT))
+    vivi_parser_error_unexpected (data, TOKEN_BRACE_LEFT);
 
   vivi_parser_start_level (data);
 
-  status = parse_statement_list (data, parse_source_element, &body, STATUS_OK);
-  if (status == STATUS_FAIL) {
-    vivi_parser_end_level (data, FALSE);
-    g_object_unref (*identifier);
-    if (arguments != NULL)
-      free_value_list (arguments);
-    return STATUS_FAIL;
+  if (parse_statement_list (data, parse_source_element, &body, TRUE)) {
+    // FIXME
   }
 
-  status = vivi_parser_end_level (data, TRUE);
-  if (status != STATUS_OK) {
-    g_object_unref (*identifier);
-    if (arguments != NULL)
-      free_value_list (arguments);
-    return FAIL_CHILD (status);
-  }
+  vivi_parser_end_level (data);
 
-  if (!check_token (data, TOKEN_BRACE_RIGHT)) {
-    g_object_unref (*identifier);
-    if (arguments != NULL)
-      free_value_list (arguments);
-    g_object_unref (body);
-    return FAIL (TOKEN_BRACE_RIGHT);
-  }
+  if (!check_token (data, TOKEN_BRACE_RIGHT))
+    vivi_parser_error_unexpected (data, TOKEN_BRACE_RIGHT);
 
   *function = vivi_code_function_new ();
   if (body != NULL) {
@@ -2112,111 +1939,93 @@ parse_function_definition (ParseData *data, ViviCodeValue **function,
     free_value_list (arguments);
   }
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_function_declaration (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
   ViviCodeValue *function, *identifier;
 
   *statement = NULL;
 
-  status = parse_function_definition (data, &function, &identifier, TRUE);
-  if (status != STATUS_OK)
-    return status;
+  if (!parse_function_definition (data, &function, &identifier, TRUE))
+    return FALSE;
 
   *statement = vivi_parser_assignment_new (identifier, function);
   g_object_unref (identifier);
   g_object_unref (function);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_function_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
-  ParseStatus status;
+  gboolean status;
   ViviCodeValue *identifier;
 
   *statement = NULL;
 
-  status = parse_function_definition (data, value, &identifier, FALSE);
-  if (status != STATUS_OK)
-    return status;
+  if (!parse_function_definition (data, &function, &identifier, FALSE))
+    return FALSE;
 
   if (identifier != NULL) {
     *statement = vivi_parser_assignment_new (identifier, *value);
     g_object_unref (identifier);
   }
 
-  return STATUS_OK;
+  return TRUE;
 }
 
 // top
 
-static ParseStatus
+static gboolean
 parse_source_element (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
-
   *statement = NULL;
 
-  status = parse_function_declaration (data, statement);
-  if (status == STATUS_CANCEL)
-    status = parse_statement (data, statement);
+  if (!parse_function_declaration (data, statement)) {
+    if (!parse_statement (data, statement)) {
+      // FIXME
+      vivi_parser_cancel_unexpected (data, ERROR_TOKEN_FUNCTION_DECLARATION,
+	  ERROR_TOKEN_STATEMENT);
+      return FALSE;
+    }
+  }
 
-  return status;
+  return TRUE;
 }
 
-static ParseStatus
+static void
 parse_program (ParseData *data, ViviCodeStatement **statement)
 {
-  ParseStatus status;
-
   g_assert (data->level == NULL);
   vivi_parser_start_level (data);
 
   *statement = NULL;
 
-  status =
-    parse_statement_list (data, parse_source_element, statement, STATUS_OK);
-  if (status != STATUS_OK) {
-    vivi_parser_end_level (data, FALSE);
-    return FAIL_CHILD (status);
-  }
+  if (!parse_statement_list (data, parse_source_element, statement, TRUE))
+    // FIXME
 
-  if (!check_token (data, TOKEN_EOF)) {
-    vivi_parser_end_level (data, FALSE);
-    g_object_unref (*statement);
-    *statement = NULL;
-    status = parse_statement (data, statement);
-    return FAIL_CHILD (status);
-  }
+  if (!check_token (data, TOKEN_EOF))
+    vivi_parser_error_unexpected (data, TOKEN_EOF);
 
-
-  status = vivi_parser_end_level (data, TRUE);
-  if (status != STATUS_OK) {
-    g_object_unref (*statement);
-    *statement = NULL;
-    return FAIL_CHILD (status);
-  }
+  vivi_parser_end_level (data);
 
   g_assert (data->level == NULL);
-
-  return STATUS_OK;
 }
 
 // parsing
 
-static ParseStatus
+static gboolean
 parse_statement_list (ParseData *data, ParseStatementFunction function,
     ViviCodeStatement **block, guint separator)
 {
   ViviCodeStatement *statement;
-  ParseStatus status;
+  gboolean status;
 
   g_assert (data != NULL);
   g_assert (function != NULL);
@@ -2225,7 +2034,7 @@ parse_statement_list (ParseData *data, ParseStatementFunction function,
   *block = NULL;
 
   status = function (data, &statement);
-  if (status != STATUS_OK)
+  if (status != TRUE)
     return status;
 
   *block = vivi_code_block_new ();
@@ -2234,7 +2043,7 @@ parse_statement_list (ParseData *data, ParseStatementFunction function,
     vivi_code_block_add_statement (VIVI_CODE_BLOCK (*block), statement);
     g_object_unref (statement);
 
-    if (separator != STATUS_OK && !check_token (data, separator))
+    if (separator != TRUE && !check_token (data, separator))
       break;
 
     status = function (data, &statement);
@@ -2243,12 +2052,12 @@ parse_statement_list (ParseData *data, ParseStatementFunction function,
       *block = NULL;
       return STATUS_FAIL;
     }
-  } while (status == STATUS_OK);
+  } while (status == TRUE);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_value_statement_list (ParseData *data,
     ParseValueStatementFunction function, ViviCodeValue ***list,
     ViviCodeStatement **statement, guint separator)
@@ -2256,7 +2065,7 @@ parse_value_statement_list (ParseData *data,
   GPtrArray *array;
   ViviCodeValue *value;
   ViviCodeStatement *statement_one;
-  ParseStatus status;
+  gboolean status;
 
   g_assert (data != NULL);
   g_assert (function != NULL);
@@ -2267,7 +2076,7 @@ parse_value_statement_list (ParseData *data,
   *statement = NULL;
 
   status = function (data, &value, statement);
-  if (status != STATUS_OK)
+  if (status != TRUE)
     return status;
 
   array = g_ptr_array_new ();
@@ -2279,27 +2088,27 @@ parse_value_statement_list (ParseData *data,
       break;
 
     status = function (data, &value, &statement_one);
-    if (status != STATUS_OK) {
+    if (status != TRUE) {
       if (status == STATUS_FAIL || separator != TOKEN_NONE)
 	return FAIL_CHILD (status);
     } else {
       *statement = vivi_parser_join_statements (*statement, statement_one);
     }
-  } while (status == STATUS_OK);
+  } while (status == TRUE);
   g_ptr_array_add (array, NULL);
 
   *list = (ViviCodeValue **)g_ptr_array_free (array, FALSE);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
-static ParseStatus
+static gboolean
 parse_value_list (ParseData *data, ParseValueFunction function,
     ViviCodeValue ***list, guint separator)
 {
   GPtrArray *array;
   ViviCodeValue *value;
-  ParseStatus status;
+  gboolean status;
 
   g_assert (data != NULL);
   g_assert (function != NULL);
@@ -2308,7 +2117,7 @@ parse_value_list (ParseData *data, ParseValueFunction function,
   *list = NULL;
 
   status = function (data, &value);
-  if (status != STATUS_OK)
+  if (status != TRUE)
     return status;
 
   array = g_ptr_array_new ();
@@ -2316,18 +2125,18 @@ parse_value_list (ParseData *data, ParseValueFunction function,
   do {
     g_ptr_array_add (array, value);
 
-    if (separator != STATUS_OK && !check_token (data, separator))
+    if (separator != TRUE && !check_token (data, separator))
       break;
 
     status = function (data, &value);
     if (status == STATUS_FAIL)
       return STATUS_FAIL;
-  } while (status == STATUS_OK);
+  } while (status == TRUE);
   g_ptr_array_add (array, NULL);
 
   *list = (ViviCodeValue **)g_ptr_array_free (array, FALSE);
 
-  return STATUS_OK;
+  return TRUE;
 }
 
 // public
@@ -2337,7 +2146,7 @@ vivi_parse_file (FILE *file, const char *input_name)
 {
   ParseData data;
   ViviCodeStatement *statement;
-  ParseStatus status;
+  gboolean status;
 
   g_return_val_if_fail (file != NULL, NULL);
 
@@ -2350,11 +2159,11 @@ vivi_parse_file (FILE *file, const char *input_name)
   data.level = NULL;
 
   status = parse_program (&data, &statement);
-  g_assert ((status == STATUS_OK && VIVI_IS_CODE_STATEMENT (statement)) ||
-	(status != STATUS_OK && statement == NULL));
+  g_assert ((status == TRUE && VIVI_IS_CODE_STATEMENT (statement)) ||
+	(status != TRUE && statement == NULL));
   g_assert (status >= 0);
 
-  if (status != STATUS_OK) {
+  if (status != TRUE) {
     g_printerr ("%s:%i:%i: error: ", input_name,
 	vivi_parser_scanner_cur_line (data.scanner),
 	vivi_parser_scanner_cur_column (data.scanner));

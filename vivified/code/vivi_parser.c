@@ -155,7 +155,7 @@ vivi_parser_error (ParseData *data, const char *format, ...)
   message = g_strdup_vprintf (format, args);
   va_end (args);
 
-  g_printerr (":error: %s\n", message);
+  g_printerr ("%i: error: %s\n", data->scanner->next_line_number, message);
 
   g_free (message);
 
@@ -701,6 +701,7 @@ parse_array_literal (ParseData *data, ViviCodeValue **value,
   ViviCodeStatement *statement_new;
 
   *value = vivi_code_init_array_new ();
+  *statement = NULL;
 
   parse_token (data, TOKEN_BRACKET_LEFT);
 
@@ -749,6 +750,7 @@ parse_object_literal (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
   *value = vivi_code_init_object_new ();
+  *statement = NULL;
 
   parse_token (data, TOKEN_BRACE_LEFT);
 
@@ -843,6 +845,7 @@ parse_primary_expression (ParseData *data, ViviCodeValue **value,
 
   if (try_parse_token (data, TOKEN_THIS)) {
     *value = vivi_code_get_new_name ("this");
+    *statement = NULL;
     return;
   }
 
@@ -898,6 +901,7 @@ parse_member_expression (ParseData *data, ViviCodeValue **value,
     vivi_parser_error_unexpected_or (data, ERROR_TOKEN_PRIMARY_EXPRESSION,
 	ERROR_TOKEN_FUNCTION_EXPRESSION, TOKEN_NONE);
     *value = vivi_code_constant_new_undefined ();
+    *statement = NULL;
   }
 
   while (TRUE) {

@@ -106,7 +106,7 @@ static const struct {
   { TOKEN_EQUAL_OR_GREATER_THAN, ">=" },
 
   // equality
-  { TOKEN_EQUAL, "=" },
+  { TOKEN_EQUAL, "==" },
   { TOKEN_NOT_EQUAL, "!=" },
   { TOKEN_STRICT_EQUAL, "===" },
   { TOKEN_NOT_STRICT_EQUAL, "!==" },

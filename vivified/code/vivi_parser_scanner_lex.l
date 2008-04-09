@@ -79,10 +79,10 @@ identifier_part		[$_a-zA-Z0-9]
 "<="			{ return TOKEN_LESS_THAN_OR_EQUAL; }
 ">="			{ return TOKEN_EQUAL_OR_GREATER_THAN; }
 
-"==",			{ return TOKEN_EQUAL; }
-"!=",			{ return TOKEN_NOT_EQUAL; }
-"===",			{ return TOKEN_STRICT_EQUAL; }
-"!==",			{ return TOKEN_NOT_STRICT_EQUAL; }
+"=="			{ return TOKEN_EQUAL; }
+"!="			{ return TOKEN_NOT_EQUAL; }
+"==="			{ return TOKEN_STRICT_EQUAL; }
+"!=="			{ return TOKEN_NOT_STRICT_EQUAL; }
 
 "+"			{ return TOKEN_PLUS; }
 "-"			{ return TOKEN_MINUS; }

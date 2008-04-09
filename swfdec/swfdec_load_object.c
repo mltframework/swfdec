@@ -200,8 +200,9 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
     case SWFDEC_SANDBOX_REMOTE:
       if (swfdec_url_host_equal(url, swfdec_player_get_url (player))) {
 	swfdec_load_object_load (player, TRUE, load);
-	return;
+	break;
       }
+      /* fall through */
     case SWFDEC_SANDBOX_LOCAL_NETWORK:
     case SWFDEC_SANDBOX_LOCAL_TRUSTED:
       if (swfdec_url_is_local (url)) {

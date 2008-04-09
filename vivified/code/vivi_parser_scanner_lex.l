@@ -35,22 +35,22 @@ identifier_part		[$_a-zA-Z0-9]
 
 			GString *string = NULL;
 
-<<EOF>>			{ return TOKEN_EOF; }
-
 "/*"			{ BEGIN(comment); }
 <comment>{
+  [^*\n]*		/* skip */
+  \n			{ lex_line_number++; }
+  "*/"			{ BEGIN(INITIAL); }
   <<EOF>>		{
 			  BEGIN(INITIAL);
 			  return TOKEN_ERROR;
 			}
-  [^*\n]*		/* skip */
-  \n			{ lex_line_number++; }
-  "*/"			{ BEGIN(INITIAL); }
 }
 "//"[^\r\n]*		{
 			  lex_line_number++;
 			  return TOKEN_LINE_TERMINATOR;
 			}
+
+<<EOF>>			{ return TOKEN_EOF; }
 
 [ \t]			/* skip */
 
@@ -77,7 +77,7 @@ identifier_part		[$_a-zA-Z0-9]
 "<"			{ return TOKEN_LESS_THAN; }
 ">"			{ return TOKEN_GREATER_THAN; }
 "<="			{ return TOKEN_LESS_THAN_OR_EQUAL; }
-"=>"			{ return TOKEN_EQUAL_OR_GREATER_THAN; }
+">="			{ return TOKEN_EQUAL_OR_GREATER_THAN; }
 
 "==",			{ return TOKEN_EQUAL; }
 "!=",			{ return TOKEN_NOT_EQUAL; }

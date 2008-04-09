@@ -103,7 +103,7 @@ static const struct {
   { TOKEN_LESS_THAN, "<" },
   { TOKEN_GREATER_THAN, ">" },
   { TOKEN_LESS_THAN_OR_EQUAL, "<=" },
-  { TOKEN_EQUAL_OR_GREATER_THAN, "=>" },
+  { TOKEN_EQUAL_OR_GREATER_THAN, ">=" },
 
   // equality
   { TOKEN_EQUAL, "=" },

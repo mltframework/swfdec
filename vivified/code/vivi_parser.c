@@ -562,7 +562,7 @@ parse_numeric_literal (ParseData *data, ViviCodeValue **value)
     vivi_parser_error_unexpected (data, TOKEN_NUMBER);
     *value = vivi_code_constant_new_number (0);
   } else {
-    *value = vivi_code_constant_new_number (data->scanner->value.v_boolean);
+    *value = vivi_code_constant_new_number (data->scanner->value.v_number);
   }
 }
 

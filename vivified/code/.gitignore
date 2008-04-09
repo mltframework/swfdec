@@ -11,7 +11,7 @@ Makefile.in
 *.lo
 *.loT
 
-vivi_compiler_scanner_lex.c
+vivi_parser_scanner_lex.c
 
 vivi-decompile
 vivi-compile

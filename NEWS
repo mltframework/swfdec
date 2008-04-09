@@ -1,4 +1,11 @@
 
+ 0.6.4 ("College Humor")
+
+This is a security release. Please update as soon as possible.
+- fix a security problem that allowed remote Flash files to read local files.
+- fix a rare crash in TextField.replaceText
+- fix a rare crash during cleanup
+
  0.6.2 ("Badger Badger Badger")
 
 This is the first bugfix release in the stable release series. It contains 

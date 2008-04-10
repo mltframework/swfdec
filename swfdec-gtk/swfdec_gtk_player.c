@@ -304,6 +304,7 @@ swfdec_gtk_player_set_playing (SwfdecGtkPlayer *player, gboolean playing)
   priv = player->priv;
   if (playing && priv->source == NULL) {
     priv->source = swfdec_iterate_source_new (SWFDEC_PLAYER (player), priv->speed);
+    g_source_set_priority (priv->source, GDK_PRIORITY_REDRAW - 5);
     g_source_attach (priv->source, NULL);
   } else if (!playing && priv->source != NULL) {
     g_source_destroy (priv->source);

@@ -651,7 +651,6 @@ enum {
   PROP_RATE,
   PROP_MOUSE_CURSOR,
   PROP_NEXT_EVENT,
-  PROP_BACKGROUND_COLOR,
   PROP_WIDTH,
   PROP_HEIGHT,
   PROP_ALIGNMENT,
@@ -726,9 +725,6 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
   SwfdecPlayerPrivate *priv = player->priv;
   
   switch (param_id) {
-    case PROP_BACKGROUND_COLOR:
-      g_value_set_uint (value, swfdec_player_get_background_color (player));
-      break;
     case PROP_CACHE_SIZE:
       g_value_set_ulong (value, swfdec_cache_get_max_cache_size (priv->cache));
       break;
@@ -876,9 +872,6 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
   SwfdecPlayerPrivate *priv = player->priv;
 
   switch (param_id) {
-    case PROP_BACKGROUND_COLOR:
-      swfdec_player_set_background_color (player, g_value_get_uint (value));
-      break;
     case PROP_CACHE_SIZE:
       swfdec_cache_set_max_cache_size (priv->cache, g_value_get_ulong (value));
       break;
@@ -1973,9 +1966,6 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_CACHE_SIZE,
       g_param_spec_ulong ("cache-size", "cache size", "maximum cache size in bytes",
 	  0, G_MAXULONG, 50 * 1024 * 1024, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
-      g_param_spec_uint ("background-color", "background color", "ARGB color used to draw the background",
-	  0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_WIDTH,
       g_param_spec_int ("width", "width", "current width of the movie",
 	  -1, G_MAXINT, -1, G_PARAM_READWRITE));
@@ -2203,7 +2193,6 @@ swfdec_player_init (SwfdecPlayer *player)
   }
   priv->external_actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerExternalAction, 8);
   priv->cache = swfdec_cache_new (16 * 1024 * 1024);
-  priv->bgcolor = SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF);
   priv->socket_type = SWFDEC_TYPE_SOCKET;
 
   priv->runtime = g_timer_new ();
@@ -2890,8 +2879,6 @@ swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr,
   /* convert the cairo matrix */
   cairo_translate (cr, priv->offset_x, priv->offset_y);
   cairo_scale (cr, priv->scale_x / SWFDEC_TWIPS_SCALE_FACTOR, priv->scale_y / SWFDEC_TWIPS_SCALE_FACTOR);
-  swfdec_color_set_source (cr, priv->bgcolor);
-  cairo_paint (cr);
 
   for (walk = priv->roots; walk; walk = walk->next) {
     swfdec_movie_render (walk->data, cr, &trans, &real);
@@ -3121,50 +3108,6 @@ swfdec_player_get_audio (SwfdecPlayer *	player)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
   return player->priv->audio;
-}
-
-/**
- * swfdec_player_get_background_color:
- * @player: a #SwfdecPlayer
- *
- * Gets the current background color. The color will be an ARGB-quad, with the 
- * MSB being the alpha value.
- *
- * Returns: the background color as an ARGB value
- **/
-guint
-swfdec_player_get_background_color (SwfdecPlayer *player)
-{
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF));
-
-  return player->priv->bgcolor;
-}
-
-/**
- * swfdec_player_set_background_color:
- * @player: a #SwfdecPlayer
- * @color: new color to use as background color
- *
- * Sets a new background color as an ARGB value. To get transparency, set the 
- * value to 0. To get a black beackground, use 0xFF000000.
- **/
-void
-swfdec_player_set_background_color (SwfdecPlayer *player, guint color)
-{
-  SwfdecPlayerPrivate *priv;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-
-  priv = player->priv;
-  priv->bgcolor_set = TRUE;
-  if (priv->bgcolor == color)
-    return;
-  priv->bgcolor = color;
-  g_object_notify (G_OBJECT (player), "background-color");
-  if (swfdec_player_is_initialized (player)) {
-    g_signal_emit (player, signals[INVALIDATE], 0, 0.0, 0.0, 
-	(double) priv->width, (double) priv->height);
-  }
 }
 
 /**

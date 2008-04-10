@@ -50,7 +50,7 @@ struct _SwfdecSpriteMovie
   gboolean		playing;	/* TRUE if the movie automatically advances */
 
   /* color information */
-  SwfdecColor		bg_color;	/* background color (only used on main sprite) */
+  SwfdecColor		bgcolor;	/* background color (only used on main sprite) */
 
   /* audio stream handling */
   guint			sound_frame;	/* current sound frame */

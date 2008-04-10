@@ -760,6 +760,23 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
 }
 
 static void
+swfdec_sprite_movie_render (SwfdecMovie *mov, cairo_t *cr,
+    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+{
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+
+  if (movie->bgcolor) {
+    cairo_rectangle (cr, mov->original_extents.x0, mov->original_extents.y0,
+	mov->original_extents.x1, mov->original_extents.y1);
+    swfdec_color_set_source (cr, movie->bgcolor);
+    cairo_fill (cr);
+  }
+
+  SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->render (mov,
+      cr, trans, inval);
+}
+
+static void
 swfdec_sprite_movie_mark (SwfdecAsObject *object)
 {
   GList *walk;
@@ -788,6 +805,7 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;
+  movie_class->render = swfdec_sprite_movie_render;
   
   actor_class->iterate_start = swfdec_sprite_movie_iterate;
   actor_class->iterate_end = swfdec_sprite_movie_iterate_end;

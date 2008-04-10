@@ -70,8 +70,6 @@ struct _SwfdecPlayerPrivate
   guint			height;			/* height of movie */
   GList *		roots;			/* all the root movies */
   SwfdecCache *		cache;			/* player cache */
-  gboolean		bgcolor_set;		/* TRUE if the background color has been set */
-  SwfdecColor		bgcolor;		/* background color */
   SwfdecResource *	resource;		/* initial resource loaded */
   char *		variables;		/* variables to set on the player */
   SwfdecURL *		url;			/* url or NULL if not set yet */

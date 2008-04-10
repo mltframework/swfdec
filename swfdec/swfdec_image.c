@@ -36,9 +36,6 @@
 
 static void merge_alpha (SwfdecImage * image, unsigned char *image_data,
     unsigned char *alpha);
-static void swfdec_image_colormap_decode (SwfdecImage * image,
-    unsigned char *dest,
-    unsigned char *src, unsigned char *colormap, int colormap_len);
 
 G_DEFINE_TYPE (SwfdecImage, swfdec_image, SWFDEC_TYPE_CHARACTER)
 
@@ -314,7 +311,6 @@ static cairo_surface_t *
 swfdec_image_lossless_load (SwfdecImage *image, SwfdecRenderer *renderer)
 {
   int format;
-  guint color_table_size;
   unsigned char *ptr;
   SwfdecBits bits;
   guint8 *data;
@@ -328,79 +324,65 @@ swfdec_image_lossless_load (SwfdecImage *image, SwfdecRenderer *renderer)
   SWFDEC_LOG ("  width = %d", image->width);
   image->height = swfdec_bits_get_u16 (&bits);
   SWFDEC_LOG ("  height = %d", image->height);
-  if (format == 3) {
-    color_table_size = swfdec_bits_get_u8 (&bits) + 1;
-  } else {
-    color_table_size = 0;
-  }
 
   SWFDEC_LOG ("format = %d", format);
   SWFDEC_LOG ("width = %d", image->width);
   SWFDEC_LOG ("height = %d", image->height);
-  SWFDEC_LOG ("color_table_size = %d", color_table_size);
 
   if (image->width == 0 || image->height == 0)
     return NULL;
 
   if (format == 3) {
     SwfdecBuffer *buffer;
-    unsigned char *indexed_data;
-    guint i;
+    guchar *indexed_data;
+    guint32 palette[256], *pixels;
+    guint i, j;
+    guint palette_size;
     guint rowstride = (image->width + 3) & ~3;
+
+    palette_size = swfdec_bits_get_u8 (&bits) + 1;
+    SWFDEC_LOG ("palette_size = %d", palette_size);
 
     data = g_malloc (4 * image->width * image->height);
 
     if (have_alpha) {
-      buffer = swfdec_bits_decompress (&bits, -1, color_table_size * 4 + rowstride * image->height);
+      buffer = swfdec_bits_decompress (&bits, -1, palette_size * 4 + rowstride * image->height);
       if (buffer == NULL) {
 	SWFDEC_ERROR ("failed to decompress data");
 	memset (data, 0, 4 * image->width * image->height);
 	goto out;
       }
       ptr = buffer->data;
-      for (i = 0; i < color_table_size; i++) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-	guint8 tmp = ptr[i * 4 + 0];
-        ptr[i * 4 + 0] = ptr[i * 4 + 2];
-        ptr[i * 4 + 2] = tmp;
-#else
-        guint8 tmp = ptr[i * 4 + 3];
-        ptr[i * 4 + 3] = ptr[i * 4 + 2];
-        ptr[i * 4 + 2] = ptr[i * 4 + 1];
-        ptr[i * 4 + 1] = ptr[i * 4 + 0];
-        ptr[i * 4 + 0] = tmp;
-#endif
+      for (i = 0; i < palette_size; i++) {
+	palette[i] = SWFDEC_COLOR_COMBINE (ptr[i * 4 + 0], ptr[i * 4 + 1],
+	    ptr[i * 4 + 2], ptr[i * 4 + 3]);
       }
-      indexed_data = ptr + color_table_size * 4;
+      indexed_data = ptr + palette_size * 4;
     } else {
-      buffer = swfdec_bits_decompress (&bits, -1, color_table_size * 3 + rowstride * image->height);
+      buffer = swfdec_bits_decompress (&bits, -1, palette_size * 3 + rowstride * image->height);
       if (buffer == NULL) {
 	SWFDEC_ERROR ("failed to decompress data");
 	memset (data, 0, 4 * image->width * image->height);
 	goto out;
       }
       ptr = buffer->data;
-      for (i = color_table_size - 1; i < color_table_size; i--) {
-	guint8 color[3];
-	color[0] = ptr[i * 3 + 0];
-	color[1] = ptr[i * 3 + 1];
-	color[2] = ptr[i * 3 + 2];
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-        ptr[i * 4 + 0] = color[2];
-        ptr[i * 4 + 1] = color[1];
-	ptr[i * 4 + 2] = color[0];
-        ptr[i * 4 + 3] = 255;
-#else
-        ptr[i * 4 + 0] = 255;
-        ptr[i * 4 + 1] = color[0];
-        ptr[i * 4 + 2] = color[1];
-        ptr[i * 4 + 3] = color[2];
-#endif
+      for (i = 0; i < palette_size; i++) {
+	palette[i] = SWFDEC_COLOR_COMBINE (ptr[i * 3 + 0],
+	    ptr[i * 3 + 1], ptr[i * 3 + 2], 0xFF);
       }
-      indexed_data = ptr + color_table_size * 3;
+      indexed_data = ptr + palette_size * 3;
     }
-    swfdec_image_colormap_decode (image, data, indexed_data,
-	ptr, color_table_size);
+    if (palette_size < 256)
+      memset (palette + palette_size, 0, (256 - palette_size) * 4);
+
+    pixels = (guint32 *) data;
+    for (j = 0; j < (guint) image->height; j++) {
+      for (i = 0; i < (guint) image->width; i++) {
+	*pixels = palette[indexed_data[i]];
+	pixels++;
+      }
+      indexed_data += rowstride;
+    }
 
     swfdec_buffer_unref (buffer);
   } else if (format == 4) {
@@ -509,43 +491,6 @@ tag_func_define_bits_lossless_2 (SwfdecSwfDecoder * s, guint tag)
   image->raw_data = swfdec_bits_get_buffer (bits, -1);
 
   return SWFDEC_STATUS_OK;
-}
-
-static void
-swfdec_image_colormap_decode (SwfdecImage * image,
-    unsigned char *dest,
-    unsigned char *src, unsigned char *colormap, int colormap_len)
-{
-  int c;
-  int i;
-  int j;
-  int rowstride;
-
-  rowstride = (image->width + 3) & ~0x3;
-  SWFDEC_DEBUG ("rowstride %d", rowstride);
-
-  for (j = 0; j < image->height; j++) {
-    for (i = 0; i < image->width; i++) {
-      c = src[i];
-      if (colormap_len < 256 && c == 255) {
-        dest[0] = 0;
-        dest[1] = 0;
-        dest[2] = 0;
-        dest[3] = 0;
-      } else if (c >= colormap_len) {
-        SWFDEC_ERROR ("colormap index out of range (%d>=%d) (%d,%d)",
-            c, colormap_len, i, j);
-        dest[0] = 0;
-        dest[1] = 0;
-        dest[2] = 0;
-        dest[3] = 0;
-      } else {
-	memmove (dest, &colormap[c*4], 4);
-      }
-      dest += 4;
-    }
-    src += rowstride;
-  }
 }
 
 static cairo_status_t

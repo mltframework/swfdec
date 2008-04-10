@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<swf version="7" compressed="1">
+  <Header framerate="31" frames="27">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+
+      <DefineBitsLossless objectID="1" format="3" width="9" height="11">
+        <data>
+	  <data>BHjaY2D4D4YMDP//Q2gIcNq3nYERAhjkvgHZTCDACJZjZGJmZgayZcDizCwgNt8VBBuqBsxewsIBVw8Rh5gjvmY/3HxksPDbdgDX3xLS</data>
+        </data>
+      </DefineBitsLossless>
+      <DefineShape objectID="2">
+        <bounds>
+          <Rectangle left="0" right="180" top="0" bottom="220"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+              <ClippedBitmap objectID="1">
+                <matrix>
+                  <Transform scaleX="20.00000000000000" scaleY="20.00000000000000" transX="0" transY="0"/>
+                </matrix>
+              </ClippedBitmap>
+            </fillStyles>
+            <lineStyles/>
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup fillStyle1="1"/>
+              <LineTo x="180" y="0"/>
+              <LineTo x="0" y="220"/>
+              <LineTo x="-180" y="0"/>
+              <LineTo x="0" y="-220"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape>
+      <PlaceObject2 replace="0" depth="1" objectID="2">
+	<transform>
+	  <Transform transX="500" transY="500"/>
+	</transform>
+      </PlaceObject2>
+
+      <DefineBitsLossless2 objectID="3" format="3" width="9" height="11" n_colormap="4">
+        <data>
+	  <data>eNpjYPj/n+E8w/n5DAzzGfLz8+0Z7O0ZkAEjBEDYTCAAYzMzMyPYLESwkdQjmYNkPhIAAP04B1kA</data>
+	</data>
+      </DefineBitsLossless2>
+      <DefineShape objectID="4">
+        <bounds>
+          <Rectangle left="0" right="180" top="0" bottom="220"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+              <ClippedBitmap objectID="3">
+                <matrix>
+                  <Transform scaleX="20.00000000000000" scaleY="20.00000000000000" transX="0" transY="0"/>
+                </matrix>
+              </ClippedBitmap>
+            </fillStyles>
+            <lineStyles/>
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup fillStyle1="1"/>
+              <LineTo x="180" y="0"/>
+              <LineTo x="0" y="220"/>
+              <LineTo x="-180" y="0"/>
+              <LineTo x="0" y="-220"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape>
+      <PlaceObject2 replace="0" depth="2" objectID="4">
+	<transform>
+	  <Transform transX="1000" transY="500"/>
+	</transform>
+      </PlaceObject2>
+
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

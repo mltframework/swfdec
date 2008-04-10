@@ -38,7 +38,7 @@ enum {
   LAST_SIGNAL
 };
 
-guint signals[LAST_SIGNAL] = { 0, };
+static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
 swfdec_cached_get_property (GObject *object, guint param_id, GValue *value,

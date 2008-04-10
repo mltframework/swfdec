@@ -25,6 +25,7 @@
 #include <gdk/gdkkeysyms.h>
 #include "swfdec_gtk_widget.h"
 #include "swfdec_gtk_keys.h"
+#include "swfdec_gtk_player.h"
 
 struct _SwfdecGtkWidgetPrivate
 {
@@ -618,7 +619,7 @@ swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRectangle *ex
     gdk_region_union_with_rect (priv->invalid, (GdkRectangle *) &rect[i]);
   }
   if (priv->invalidator == 0) {
-    priv->invalidator = g_idle_add_full (GDK_PRIORITY_REDRAW - 10,
+    priv->invalidator = g_idle_add_full (SWFDEC_GTK_PRIORITY_REDRAW,
 	swfdec_gtk_widget_do_invalidate, widget, NULL);
   }
 }

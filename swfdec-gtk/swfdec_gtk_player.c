@@ -81,6 +81,19 @@ enum {
  * The structure for the Swfdec Gtk player contains no public fields.
  */
 
+/**
+ * SWFDEC_GTK_PRIORITY_ITERATE:
+ *
+ * The priority used for advancing a player that is playing.
+ */
+
+/**
+ * SWFDEC_GTK_PRIORITY_REDRAW:
+ *
+ * The priority used for scheduling repaint operations resulting from advancing
+ * a player.
+ */
+
 /*** MISSING PLUGINS ***/
 
 #ifdef HAVE_GST
@@ -304,7 +317,7 @@ swfdec_gtk_player_set_playing (SwfdecGtkPlayer *player, gboolean playing)
   priv = player->priv;
   if (playing && priv->source == NULL) {
     priv->source = swfdec_iterate_source_new (SWFDEC_PLAYER (player), priv->speed);
-    g_source_set_priority (priv->source, GDK_PRIORITY_REDRAW - 5);
+    g_source_set_priority (priv->source, SWFDEC_GTK_PRIORITY_ITERATE);
     g_source_attach (priv->source, NULL);
   } else if (!playing && priv->source != NULL) {
     g_source_destroy (priv->source);

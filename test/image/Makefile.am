@@ -46,6 +46,18 @@ EXTRA_DIST = \
 	color-transform-add80-alpha.swf.png \
 	default.stas \
 	default.sts \
+	definebits-palette-5.swf \
+	definebits-palette-5.swf.org.png \
+	definebits-palette-5.swf.png \
+	definebits-palette-6.swf \
+	definebits-palette-6.swf.org.png \
+	definebits-palette-6.swf.png \
+	definebits-palette-7.swf \
+	definebits-palette-7.swf.png \
+	definebits-palette-8.swf \
+	definebits-palette-8.swf.png \
+	definebits-palette-base64.c \
+	definebits-palette.xml \
 	duplicate-depth.c \
 	duplicate-depth-5.swf \
 	duplicate-depth-5.swf.png \

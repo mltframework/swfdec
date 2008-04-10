@@ -56,7 +56,7 @@ typedef enum _SwfdecEventType {
 
 const char *		swfdec_event_type_get_name	(SwfdecEventType      type);
 
-SwfdecEventList *	swfdec_event_list_new		(SwfdecPlayer *	      player);
+SwfdecEventList *	swfdec_event_list_new		(void);
 SwfdecEventList *	swfdec_event_list_copy		(SwfdecEventList *    list);
 void			swfdec_event_list_free		(SwfdecEventList *    list);
 

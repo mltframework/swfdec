@@ -24,7 +24,6 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
-#include "swfdec_player_internal.h"
 #include "swfdec_script_internal.h"
 
 typedef struct _SwfdecEvent SwfdecEvent;
@@ -36,7 +35,6 @@ struct _SwfdecEvent {
 };
 
 struct _SwfdecEventList {
-  SwfdecPlayer *	player;
   guint			refcount;
   GArray *		events;
 };
@@ -103,14 +101,11 @@ swfdec_event_type_get_name (SwfdecEventType type)
 }
 
 SwfdecEventList *
-swfdec_event_list_new (SwfdecPlayer *player)
+swfdec_event_list_new (void)
 {
   SwfdecEventList *list;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-
   list = g_new0 (SwfdecEventList, 1);
-  list->player = player;
   list->refcount = 1;
   list->events = g_array_new (FALSE, FALSE, sizeof (SwfdecEvent));
 

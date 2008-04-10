@@ -180,7 +180,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     swfdec_bits_get_color_transform (&bits, &ctrans);
 
     if (has_filters) {
-      GSList *list = swfdec_filter_parse (SWFDEC_DECODER (s)->player, &bits);
+      GSList *list = swfdec_filter_parse (&bits);
       g_slist_free (list);
     }
     if (has_blend_mode) {
@@ -226,7 +226,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     SWFDEC_LOG (" length = %d", length);
 
     if (button->events == NULL)
-      button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
+      button->events = swfdec_event_list_new ();
     SWFDEC_LOG ("  new event for condition %u (key %u)", condition, key);
     swfdec_event_list_parse (button->events, &bits, s->version, condition, key,
 	script_name);
@@ -285,7 +285,7 @@ tag_func_define_button (SwfdecSwfDecoder * s, guint tag)
 
   if (swfdec_bits_peek_u8 (&s->b)) {
     char *script_name = g_strdup_printf ("Button%u", id);
-    button->events = swfdec_event_list_new (SWFDEC_DECODER (s)->player);
+    button->events = swfdec_event_list_new ();
     SWFDEC_LOG ("  event for button press");
     swfdec_event_list_parse (button->events, &s->b, s->version, 1 << SWFDEC_EVENT_RELEASE, 
 	0, script_name);

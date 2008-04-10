@@ -247,7 +247,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   }
 
   if (has_filter) {
-    GSList *filters = swfdec_filter_parse (player, bits);
+    GSList *filters = swfdec_filter_parse (bits);
     g_slist_free (filters);
   }
 
@@ -262,7 +262,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     int reserved, clip_event_flags, event_flags, key_code;
     char *script_name;
 
-    events = swfdec_event_list_new (player);
+    events = swfdec_event_list_new ();
     reserved = swfdec_bits_get_u16 (bits);
     clip_event_flags = swfdec_get_clipeventflags (mov, bits);
 

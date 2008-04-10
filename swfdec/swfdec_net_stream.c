@@ -269,7 +269,6 @@ swfdec_net_stream_stream_target_parse (SwfdecStreamTarget *target,
   if (ns->flvdecoder == NULL) {
     /* FIXME: add mp3 support */
     ns->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
-    SWFDEC_DECODER (ns->flvdecoder)->player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (ns)->context);
     swfdec_net_stream_onstatus (ns, SWFDEC_AS_STR_NetStream_Play_Start,
 	SWFDEC_AS_STR_status);
     swfdec_loader_set_data_type (SWFDEC_LOADER (stream), SWFDEC_LOADER_DATA_FLV);

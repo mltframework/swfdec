@@ -52,8 +52,7 @@ GType			swfdec_filter_get_type	(void);
 
 cairo_pattern_t *	swfdec_filter_apply	(SwfdecFilter *		filter,
 						 cairo_pattern_t *	pattern);
-GSList *		swfdec_filter_parse	(SwfdecPlayer *		player,
-						 SwfdecBits *		bits);
+GSList *		swfdec_filter_parse	(SwfdecBits *		bits);
 
 
 G_END_DECLS

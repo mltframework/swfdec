@@ -43,12 +43,11 @@ swfdec_decoder_init (SwfdecDecoder *decoder)
 }
 
 SwfdecDecoder *
-swfdec_decoder_new (SwfdecPlayer *player, const SwfdecBuffer *buffer)
+swfdec_decoder_new (const SwfdecBuffer *buffer)
 {
   guchar *data;
   SwfdecDecoder *retval;
   
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (buffer != NULL, NULL);
 
   if (buffer->length < SWFDEC_DECODER_DETECT_LENGTH)
@@ -63,9 +62,6 @@ swfdec_decoder_new (SwfdecPlayer *player, const SwfdecBuffer *buffer)
     retval = g_object_new (SWFDEC_TYPE_IMAGE_DECODER, NULL);
   } else {
     retval = NULL;
-  }
-  if (retval) {
-    retval->player = player;
   }
   return retval;
 }

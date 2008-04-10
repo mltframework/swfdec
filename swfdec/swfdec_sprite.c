@@ -125,6 +125,8 @@ swfdec_sprite_get_action (SwfdecSprite *sprite, guint n, guint *tag, SwfdecBuffe
 int
 tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag)
 {
+  SWFDEC_FIXME ("fix background color handling");
+#if 0
   SwfdecPlayer *player = SWFDEC_DECODER (s)->player;
   SwfdecPlayerPrivate *priv = player->priv;
   SwfdecColor color = swfdec_bits_get_color (&s->b);
@@ -143,6 +145,7 @@ tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag)
     g_array_index (priv->invalidations, SwfdecRectangle, 0) = priv->stage;
     g_object_notify (G_OBJECT (player), "background-color");
   }
+#endif
 
   return SWFDEC_STATUS_OK;
 }

@@ -267,8 +267,7 @@ swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *s
     if (swfdec_buffer_queue_get_depth (queue) < SWFDEC_DECODER_DETECT_LENGTH)
       return FALSE;
     buffer = swfdec_buffer_queue_peek (queue, 4);
-    dec =
-      swfdec_decoder_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource)->context), buffer);
+    dec = swfdec_decoder_new (buffer);
     swfdec_buffer_unref (buffer);
     if (dec == NULL) {
       SWFDEC_ERROR ("no decoder found for format");

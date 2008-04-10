@@ -54,12 +54,11 @@ swfdec_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern)
 }
 
 GSList *
-swfdec_filter_parse (SwfdecPlayer *player, SwfdecBits *bits)
+swfdec_filter_parse (SwfdecBits *bits)
 {
   GSList *filters = NULL;
   guint i, n_filters, filter_id;
 
-  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (bits != NULL, NULL);
 
   n_filters = swfdec_bits_get_u8 (bits);

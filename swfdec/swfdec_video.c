@@ -240,7 +240,7 @@ tag_func_define_video (SwfdecSwfDecoder *s, guint tag)
   SWFDEC_LOG ("  deblocking: %d", deblocking);
   SWFDEC_LOG ("  smoothing: %d", smoothing);
   SWFDEC_LOG ("  format: %d", (int) video->format);
-  swfdec_player_use_video_codec (SWFDEC_DECODER (s)->player, video->format);
+  //swfdec_player_use_video_codec (SWFDEC_DECODER (s)->player, video->format);
   return SWFDEC_STATUS_OK;
 }
 

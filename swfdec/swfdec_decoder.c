@@ -22,6 +22,9 @@
 #endif
 
 #include <string.h>
+
+#include "swfdec_codec_audio.h"
+#include "swfdec_codec_video.h"
 #include "swfdec_decoder.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
@@ -29,12 +32,29 @@
 #include "swfdec_image_decoder.h"
 #include "swfdec_swf_decoder.h"
 
+enum {
+  MISSING_PLUGINS,
+  LAST_SIGNAL
+};
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecDecoder, swfdec_decoder, G_TYPE_OBJECT)
+static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
 swfdec_decoder_class_init (SwfdecDecoderClass *klass)
 {
+  /**
+   * SwfdecDecoder::missing-plugin:
+   * @player: the #SwfdecPlayer missing plugins
+   * @details: the detail string for the missing plugins
+   *
+   * Emitted whenever a missing plugin is detected.
+   */
+  signals[MISSING_PLUGINS] = g_signal_new ("missing-plugin", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecDecoderClass, missing_plugins),
+      NULL, NULL, g_cclosure_marshal_VOID__STRING,
+      G_TYPE_NONE, 1, G_TYPE_STRING);
+
 }
 
 static void
@@ -89,5 +109,38 @@ swfdec_decoder_eof (SwfdecDecoder *decoder)
   klass = SWFDEC_DECODER_GET_CLASS (decoder);
   g_return_val_if_fail (klass->eof, SWFDEC_STATUS_ERROR);
   return klass->eof (decoder);
+}
+
+void
+swfdec_decoder_use_audio_codec (SwfdecDecoder *decoder, guint codec, 
+    SwfdecAudioFormat format)
+{
+  char *detail;
+
+  g_return_if_fail (SWFDEC_IS_DECODER (decoder));
+
+  swfdec_audio_decoder_prepare (codec, format, &detail);
+  if (detail == NULL)
+    return;
+
+  SWFDEC_INFO ("missing audio plugin: %s\n", detail);
+  g_signal_emit (decoder, signals[MISSING_PLUGINS], 0, detail);
+  g_free (detail);
+}
+
+void
+swfdec_decoder_use_video_codec (SwfdecDecoder *decoder, guint codec)
+{
+  char *detail;
+
+  g_return_if_fail (SWFDEC_IS_DECODER (decoder));
+
+  detail = swfdec_video_decoder_prepare (codec);
+  if (detail == NULL)
+    return;
+
+  SWFDEC_INFO ("missing video plugin: %s\n", detail);
+  g_signal_emit (decoder, signals[MISSING_PLUGINS], 0, detail);
+  g_free (detail);
 }
 

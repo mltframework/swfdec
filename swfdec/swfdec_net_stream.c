@@ -269,6 +269,8 @@ swfdec_net_stream_stream_target_parse (SwfdecStreamTarget *target,
   if (ns->flvdecoder == NULL) {
     /* FIXME: add mp3 support */
     ns->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
+    g_signal_connect_swapped (ns->flvdecoder, "missing-plugin", 
+	G_CALLBACK (swfdec_player_add_missing_plugin), SWFDEC_AS_OBJECT (ns)->context);
     swfdec_net_stream_onstatus (ns, SWFDEC_AS_STR_NetStream_Play_Start,
 	SWFDEC_AS_STR_status);
     swfdec_loader_set_data_type (SWFDEC_LOADER (stream), SWFDEC_LOADER_DATA_FLV);
@@ -571,6 +573,8 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
     g_object_unref (lstream);
   }
   if (stream->flvdecoder) {
+    g_signal_handlers_disconnect_by_func (stream->flvdecoder,
+	  swfdec_player_add_missing_plugin, SWFDEC_AS_OBJECT (stream)->context);
     g_object_unref (stream->flvdecoder);
     stream->flvdecoder = NULL;
   }

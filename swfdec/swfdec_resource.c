@@ -274,6 +274,8 @@ swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *s
     } else {
       glong total;
       resource->decoder = dec;
+      g_signal_connect_swapped (dec, "missing-plugin", 
+	  G_CALLBACK (swfdec_player_add_missing_plugin), SWFDEC_AS_OBJECT (resource)->context);
       total = swfdec_loader_get_size (loader);
       if (total >= 0)
 	dec->bytes_total = total;
@@ -418,6 +420,8 @@ swfdec_resource_dispose (GObject *object)
     resource->loader = NULL;
   }
   if (resource->decoder) {
+    g_signal_handlers_disconnect_by_func (resource->decoder,
+	  swfdec_player_add_missing_plugin, SWFDEC_AS_OBJECT (resource)->context);
     g_object_unref (resource->decoder);
     resource->decoder = NULL;
   }

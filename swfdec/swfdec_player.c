@@ -2165,8 +2165,11 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   /**
    * SwfdecPlayer::missing-plugins:
    * @player: the #SwfdecPlayer missing plugins
-   * @details: the details strigs for all missing plugins
+   * @details: the details strings for all missing plugins
    *
+   * Emitted whenever a plugin is detected that GStreamer cannot currently 
+   * handle because it is missing plugins to do so. You should use 
+   * gst_install_plugins_async() to install those plugins.
    */
   signals[MISSING_PLUGINS] = g_signal_new ("missing-plugins", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, missing_plugins),
@@ -2562,48 +2565,19 @@ swfdec_player_load (SwfdecPlayer *player, const char *url,
 }
 
 void
-swfdec_player_use_audio_codec (SwfdecPlayer *player, guint codec, 
-    SwfdecAudioFormat format)
+swfdec_player_add_missing_plugin (SwfdecPlayer *player, const char *detail)
 {
   SwfdecPlayerPrivate *priv;
-  char *detail;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
-
-  swfdec_audio_decoder_prepare (codec, format, &detail);
-  if (detail == NULL)
-    return;
+  g_return_if_fail (detail != NULL);
 
   priv = player->priv;
-  if (g_slist_find_custom (priv->missing_plugins, detail, (GCompareFunc) strcmp)) {
-    g_free (detail);
-    return;
-  }
-
-  SWFDEC_INFO ("missing audio plugin: %s\n", detail);
-  priv->missing_plugins = g_slist_prepend (priv->missing_plugins, detail);
-}
-
-void
-swfdec_player_use_video_codec (SwfdecPlayer *player, guint codec)
-{
-  SwfdecPlayerPrivate *priv;
-  char *detail;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-
-  detail = swfdec_video_decoder_prepare (codec);
-  if (detail == NULL)
+  if (g_slist_find_custom (priv->missing_plugins, detail, (GCompareFunc) strcmp))
     return;
 
-  priv = player->priv;
-  if (g_slist_find_custom (priv->missing_plugins, detail, (GCompareFunc) strcmp)) {
-    g_free (detail);
-    return;
-  }
-
-  SWFDEC_INFO ("missing video plugin: %s\n", detail);
-  priv->missing_plugins = g_slist_prepend (priv->missing_plugins, detail);
+  SWFDEC_INFO ("adding missing plugin: %s\n", detail);
+  priv->missing_plugins = g_slist_prepend (priv->missing_plugins, g_strdup (detail));
 }
 
 /** PUBLIC API ***/

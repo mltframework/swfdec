@@ -287,7 +287,7 @@ swfdec_image_jpeg3_load (SwfdecImage *image, SwfdecRenderer *renderer)
   SWFDEC_LOG ("  height = %d", image->height);
 
   return swfdec_image_create_surface_for_data (renderer, data, 
-      CAIRO_FORMAT_RGB24, image->width, image->height, 4 * image->width);
+      CAIRO_FORMAT_ARGB32, image->width, image->height, 4 * image->width);
 }
 
 static void

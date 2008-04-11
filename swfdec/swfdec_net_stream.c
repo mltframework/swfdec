@@ -359,12 +359,20 @@ swfdec_net_stream_video_provider_get_image (SwfdecVideoProvider *provider,
     swfdec_flv_decoder_get_video (stream->flvdecoder, 
 	stream->decoder_time, FALSE, NULL, NULL, &next);
     if (next != stream->current_time) {
+      guint key_time, key_next;
       buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, 
-	  stream->current_time, TRUE, &format, &stream->decoder_time,
-	  &next);
+	  stream->current_time, TRUE, &format, &key_time, &key_next);
+      if (key_time > stream->decoder_time) {
+	stream->decoder_time = key_time;
+	next = key_next;
+      } else {
+	buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, 
+	    next, FALSE, &format, &stream->decoder_time,
+	    &next);
+      }
     } else {
       buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, 
-	  next, TRUE, &format, &stream->decoder_time,
+	  next, FALSE, &format, &stream->decoder_time,
 	  &next);
     }
   }

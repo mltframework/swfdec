@@ -47,14 +47,16 @@ struct _SwfdecPlayback {
   GMainContext *	context;	/* context we work in */
 };
 
-typedef struct {
+typedef struct _Stream Stream;
+struct _Stream {
   SwfdecPlayback *     	sound;		/* reference to sound object */
   SwfdecAudio *		audio;		/* the audio we play back */
   snd_pcm_t *		pcm;		/* the pcm we play back to */
   GSource **		sources;	/* sources for writing data */
   guint			n_sources;	/* number of sources */
   guint			offset;		/* offset into sound */
-} Stream;
+  gboolean		(* write)	(Stream *);
+};
 
 #define ALSA_TRY(func,msg) G_STMT_START{ \
   int err = func; \
@@ -90,7 +92,7 @@ write_player (Stream *stream, const snd_pcm_channel_area_t *dst,
 }
 
 static gboolean
-try_write (Stream *stream)
+try_write_mmap (Stream *stream)
 {
   snd_pcm_sframes_t avail_result;
   snd_pcm_uframes_t offset, avail;
@@ -117,6 +119,31 @@ try_write (Stream *stream)
   return TRUE;
 }
 
+static gboolean
+try_write_so_pa_gets_it (Stream *stream)
+{
+#define STEP 1024
+  snd_pcm_sframes_t avail, step;
+  avail = snd_pcm_avail_update (stream->pcm);
+  ALSA_ERROR (avail, "snd_pcm_avail_update failed", FALSE);
+
+  while (avail > 0) {
+    gint16 data[2 * STEP] = { 0, };
+
+    step = MIN (avail, STEP);
+    swfdec_audio_render (stream->audio, data, stream->offset, step);
+    step = snd_pcm_writei (stream->pcm, data, step);
+    ALSA_ERROR (step, "snd_pcm_writei failed", FALSE);
+    avail -= step;
+    stream->offset += step;
+  }
+
+  return TRUE;
+#undef STEP
+}
+
+#define try_write(stream) ((stream)->write (stream))
+
 static void
 swfdec_playback_stream_remove_handlers (Stream *stream)
 {
@@ -141,10 +168,10 @@ handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
   state = snd_pcm_state (stream->pcm);
   if (state != SND_PCM_STATE_RUNNING) {
     swfdec_playback_stream_start (stream);
+    return TRUE;
   } else {
-    try_write (stream);
+    return try_write (stream);
   }
-  return TRUE;
 }
 
 static void
@@ -185,7 +212,9 @@ swfdec_playback_stream_start (Stream *stream)
       stream->offset = 0;
       //g_print ("offset: %u (delay: %ld)\n", sound->offset, delay);
       if (try_write (stream)) {
-	ALSA_ERROR (snd_pcm_start (stream->pcm), "error starting",);
+	if (stream->write == try_write_mmap) {
+	  ALSA_ERROR (snd_pcm_start (stream->pcm), "error starting",);
+	}
 	swfdec_playback_stream_install_handlers (stream);
       }
       break;
@@ -208,6 +237,7 @@ swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   snd_pcm_hw_params_t *hw_params;
   guint rate;
   snd_pcm_uframes_t uframes;
+  gboolean (* try_write) (Stream *);
 
   /* "default" uses dmix, and dmix ticks way slow, so this thingy here stutters */
   ALSA_ERROR (snd_pcm_open (&ret, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK),
@@ -218,7 +248,11 @@ swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
     g_printerr ("No sound format available\n");
     return;
   }
-  if (snd_pcm_hw_params_set_access (ret, hw_params, SND_PCM_ACCESS_MMAP_INTERLEAVED) < 0) {
+  if (snd_pcm_hw_params_set_access (ret, hw_params, SND_PCM_ACCESS_MMAP_INTERLEAVED) >= 0) {
+    try_write = try_write_mmap;
+  } else if (snd_pcm_hw_params_set_access (ret, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED) >= 0) {
+    try_write = try_write_so_pa_gets_it;
+  } else {
     g_printerr ("Failed setting access\n");
     goto fail;
   }
@@ -252,6 +286,7 @@ swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   }
 #endif
   stream = g_new0 (Stream, 1);
+  stream->write = try_write;
   stream->sound = sound;
   stream->audio = g_object_ref (audio);
   stream->pcm = ret;

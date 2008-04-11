@@ -21,6 +21,7 @@
 #define _SWFDEC_DECODER_H_
 
 #include <glib-object.h>
+#include <swfdec/swfdec_audio_internal.h>
 #include <swfdec/swfdec_buffer.h>
 #include <swfdec/swfdec_loader.h>
 #include <swfdec/swfdec_player.h>
@@ -58,7 +59,6 @@ struct _SwfdecDecoder
 {
   GObject		object;
 
-  SwfdecPlayer *	player;		/* FIXME: only needed to get the JS Context, I want it gone */
   SwfdecLoaderDataType	data_type;	/* type of the data we provide or UNKNOWN if not known yet */
   guint			rate;		/* rate per second in 256th */
   guint			width;		/* width of stream */
@@ -76,18 +76,26 @@ struct _SwfdecDecoderClass
   SwfdecStatus		(* parse)		(SwfdecDecoder *	decoder,
 						 SwfdecBuffer *		buffer);
   SwfdecStatus		(* eof)			(SwfdecDecoder *	decoder);
+
+  /* signals */
+  void			(* missing_plugins)	(SwfdecDecoder *	dec,
+						 const char **		details);
 };
 
 GType		swfdec_decoder_get_type		(void);
 
 #define SWFDEC_DECODER_DETECT_LENGTH 4
-SwfdecDecoder *	swfdec_decoder_new		(SwfdecPlayer *		player,
-						 const SwfdecBuffer *	buffer);
+SwfdecDecoder *	swfdec_decoder_new		(const SwfdecBuffer *	buffer);
 
 SwfdecStatus	swfdec_decoder_parse		(SwfdecDecoder *	decoder,
 						 SwfdecBuffer * 	buffer);
 SwfdecStatus	swfdec_decoder_eof		(SwfdecDecoder *	decoder);
 
+void		swfdec_decoder_use_audio_codec	(SwfdecDecoder *	decoder,
+						 guint			codec, 
+						 SwfdecAudioFormat	format);
+void		swfdec_decoder_use_video_codec	(SwfdecDecoder *	decoder,
+						 guint			codec);
 
 G_END_DECLS
 #endif

@@ -22,7 +22,6 @@
 
 #include <swfdec/swfdec_player.h>
 #include <swfdec/swfdec_audio.h>
-#include <swfdec/swfdec_audio_internal.h>
 #include <swfdec/swfdec_cache.h>
 #include <swfdec/swfdec_event.h>
 #include <swfdec/swfdec_function_list.h>
@@ -71,8 +70,6 @@ struct _SwfdecPlayerPrivate
   guint			height;			/* height of movie */
   GList *		roots;			/* all the root movies */
   SwfdecCache *		cache;			/* player cache */
-  gboolean		bgcolor_set;		/* TRUE if the background color has been set */
-  SwfdecColor		bgcolor;		/* background color */
   SwfdecResource *	resource;		/* initial resource loaded */
   char *		variables;		/* variables to set on the player */
   SwfdecURL *		url;			/* url or NULL if not set yet */
@@ -256,12 +253,9 @@ void		swfdec_player_global_to_stage	(SwfdecPlayer *		player,
 						 double *		x,
 						 double *		y);
 void		swfdec_player_update_scale	(SwfdecPlayer *		player);
+void		swfdec_player_add_missing_plugin(SwfdecPlayer *		player,
+						 const char *		detail);
 
-void		swfdec_player_use_audio_codec	(SwfdecPlayer *		player,
-						 guint			codec, 
-						 SwfdecAudioFormat	format);
-void		swfdec_player_use_video_codec	(SwfdecPlayer *		player,
-						 guint			codec);
 /* in swfdec_policy_file.c */
 gboolean	swfdec_player_allow_now		(SwfdecPlayer *		player,
 						 const SwfdecURL *	url);

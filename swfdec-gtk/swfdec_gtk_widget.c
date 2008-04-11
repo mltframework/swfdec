@@ -25,6 +25,7 @@
 #include <gdk/gdkkeysyms.h>
 #include "swfdec_gtk_widget.h"
 #include "swfdec_gtk_keys.h"
+#include "swfdec_gtk_player.h"
 
 struct _SwfdecGtkWidgetPrivate
 {
@@ -32,8 +33,10 @@ struct _SwfdecGtkWidgetPrivate
 
   gboolean		renderer_set;	/* TRUE if a special renderer has been set */
   cairo_surface_type_t	renderer_type;	/* the renderer that was set */
-  gboolean		interactive;	/* TRUE if this widget propagates keyboard and mouse events */
   SwfdecRenderer *	renderer;	/* renderer in use */
+  gboolean		interactive;	/* TRUE if this widget propagates keyboard and mouse events */
+  GdkRegion *		invalid;	/* invalid regions we didn't yet repaint */
+  guint			invalidator;	/* GSource used for invalidating window contents */
 };
 
 enum {
@@ -208,6 +211,21 @@ swfdec_gtk_widget_focus (GtkWidget *gtkwidget, GtkDirectionType direction)
   return GTK_WIDGET_CLASS (swfdec_gtk_widget_parent_class)->focus (gtkwidget, direction);
 }
 
+static void
+swfdec_gtk_widget_clear_invalidations (SwfdecGtkWidget *widget)
+{
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+
+  if (priv->invalidator) {
+    g_source_remove (priv->invalidator);
+    priv->invalidator = 0;
+    gdk_region_destroy (priv->invalid);
+    priv->invalid = gdk_region_new ();
+  } else {
+    g_assert (gdk_region_empty (priv->invalid));
+  }
+}
+
 static cairo_surface_t *
 swfdec_gtk_widget_create_renderer (cairo_surface_type_t type, int width, int height)
 {
@@ -231,6 +249,10 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   if (priv->player == NULL)
     return FALSE;
 
+  /* FIXME: This might be ugly */
+  gdk_region_union (event->region, priv->invalid);
+  gdk_window_begin_paint_region (event->window, event->region);
+
   if (!priv->renderer_set ||
       (surface = swfdec_gtk_widget_create_renderer (priv->renderer_type, 
 	      event->area.width, event->area.height)) == NULL) {
@@ -252,6 +274,8 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
     cairo_surface_destroy (surface);
   }
 
+  swfdec_gtk_widget_clear_invalidations (widget);
+  gdk_window_end_paint (event->window);
   return FALSE;
 }
 
@@ -314,10 +338,16 @@ static void
 swfdec_gtk_widget_dispose (GObject *object)
 {
   SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (object);
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
 
   swfdec_gtk_widget_set_player (widget, NULL);
 
-  g_assert (widget->priv->renderer == NULL);
+  g_assert (priv->renderer == NULL);
+  if (priv->invalid) {
+    gdk_region_destroy (priv->invalid);
+    priv->invalid = NULL;
+  }
+  g_assert (priv->invalidator == 0);
 
   G_OBJECT_CLASS (swfdec_gtk_widget_parent_class)->dispose (object);
 }
@@ -483,6 +513,26 @@ swfdec_gtk_widget_unrealize (GtkWidget *widget)
 }
 
 static void
+swfdec_gtk_widget_map (GtkWidget *gtkwidget)
+{
+  SwfdecGtkWidgetPrivate *priv = SWFDEC_GTK_WIDGET (gtkwidget)->priv;
+
+  g_assert (gdk_region_empty (priv->invalid));
+
+  GTK_WIDGET_CLASS (swfdec_gtk_widget_parent_class)->map (gtkwidget);
+}
+
+static void
+swfdec_gtk_widget_unmap (GtkWidget *gtkwidget)
+{
+  SwfdecGtkWidget *widget = SWFDEC_GTK_WIDGET (gtkwidget);
+
+  GTK_WIDGET_CLASS (swfdec_gtk_widget_parent_class)->unmap (gtkwidget);
+
+  swfdec_gtk_widget_clear_invalidations (widget);
+}
+
+static void
 swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -508,6 +558,8 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
 
   widget_class->realize = swfdec_gtk_widget_realize;
   widget_class->unrealize = swfdec_gtk_widget_unrealize;
+  widget_class->map = swfdec_gtk_widget_map;
+  widget_class->unmap = swfdec_gtk_widget_unmap;
   widget_class->size_request = swfdec_gtk_widget_size_request;
   widget_class->size_allocate = swfdec_gtk_widget_size_allocate;
   widget_class->expose_event = swfdec_gtk_widget_expose;
@@ -525,7 +577,7 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
 }
 
 static void
-swfdec_gtk_widget_init (SwfdecGtkWidget * widget)
+swfdec_gtk_widget_init (SwfdecGtkWidget *widget)
 {
   SwfdecGtkWidgetPrivate *priv;
   
@@ -533,26 +585,43 @@ swfdec_gtk_widget_init (SwfdecGtkWidget * widget)
 
   priv->interactive = TRUE;
   priv->renderer_type = CAIRO_SURFACE_TYPE_IMAGE;
+  priv->invalid = gdk_region_new ();
+
+  gtk_widget_set_double_buffered (GTK_WIDGET (widget), FALSE);
 
   GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_FOCUS);
+}
+
+static gboolean
+swfdec_gtk_widget_do_invalidate (gpointer widgetp)
+{
+  SwfdecGtkWidget *widget = widgetp;
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+
+  g_assert (GTK_WIDGET_REALIZED (widget));
+
+  gdk_window_invalidate_region (GTK_WIDGET (widget)->window, priv->invalid, FALSE);
+  swfdec_gtk_widget_clear_invalidations (widget);
+  return FALSE;
 }
 
 static void
 swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRectangle *extents,
     const SwfdecRectangle *rect, guint n_rects, SwfdecGtkWidget *widget)
 {
-  GdkRegion *region;
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
   guint i;
 
-  if (!GTK_WIDGET_REALIZED (widget))
+  if (!GTK_WIDGET_MAPPED (widget))
     return;
 
-  region = gdk_region_new ();
   for (i = 0; i < n_rects; i++) {
-    gdk_region_union_with_rect (region, (GdkRectangle *) &rect[i]);
+    gdk_region_union_with_rect (priv->invalid, (GdkRectangle *) &rect[i]);
   }
-  gdk_window_invalidate_region (GTK_WIDGET (widget)->window, region, FALSE);
-  gdk_region_destroy (region);
+  if (priv->invalidator == 0) {
+    priv->invalidator = g_idle_add_full (SWFDEC_GTK_PRIORITY_REDRAW,
+	swfdec_gtk_widget_do_invalidate, widget, NULL);
+  }
 }
 
 static void

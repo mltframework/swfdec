@@ -69,6 +69,7 @@ struct _SwfdecSprite
   guint			n_frames;	/* number of frames in this sprite */
   SwfdecScript *	init_action;	/* action to run when initializing this sprite */
   GArray *		actions;      	/* SwfdecSpriteAction in execution order */
+  SwfdecColor		bgcolor;	/* background color for this sprite */
 
   /* parse state */
   guint			parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */

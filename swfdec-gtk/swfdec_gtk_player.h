@@ -29,6 +29,9 @@ typedef struct _SwfdecGtkPlayer SwfdecGtkPlayer;
 typedef struct _SwfdecGtkPlayerPrivate SwfdecGtkPlayerPrivate;
 typedef struct _SwfdecGtkPlayerClass SwfdecGtkPlayerClass;
 
+#define SWFDEC_GTK_PRIORITY_ITERATE (GDK_PRIORITY_REDRAW + 10)
+#define SWFDEC_GTK_PRIORITY_REDRAW  (GDK_PRIORITY_REDRAW + 20)
+
 #define SWFDEC_TYPE_GTK_PLAYER                    (swfdec_gtk_player_get_type())
 #define SWFDEC_IS_GTK_PLAYER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_GTK_PLAYER))
 #define SWFDEC_IS_GTK_PLAYER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_GTK_PLAYER))

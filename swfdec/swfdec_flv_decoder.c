@@ -253,7 +253,7 @@ swfdec_flv_decoder_parse_video_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   }
   if (flv->video->len == 0) {
     g_array_append_val (flv->video, tag);
-    swfdec_player_use_video_codec (SWFDEC_DECODER (flv)->player, tag.format);
+    swfdec_decoder_use_video_codec (SWFDEC_DECODER (flv), tag.format);
     return SWFDEC_STATUS_INIT;
   } else if (g_array_index (flv->video, SwfdecFlvVideoTag, 
 	flv->video->len - 1).timestamp < tag.timestamp) {
@@ -292,7 +292,7 @@ swfdec_flv_decoder_parse_audio_tag (SwfdecFlvDecoder *flv, SwfdecBits *bits, gui
   }
   if (flv->audio->len == 0) {
     g_array_append_val (flv->audio, tag);
-    swfdec_player_use_audio_codec (SWFDEC_DECODER (flv)->player, tag.format, tag.original_format);
+    swfdec_decoder_use_audio_codec (SWFDEC_DECODER (flv), tag.format, tag.original_format);
     return SWFDEC_STATUS_INIT;
   } else if (g_array_index (flv->audio, SwfdecFlvAudioTag, 
 	flv->audio->len - 1).timestamp < tag.timestamp) {

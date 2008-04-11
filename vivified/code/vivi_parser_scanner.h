@@ -184,13 +184,21 @@ struct _ViviParserScanner
 
   ViviParserScannerToken	token;
   ViviParserScannerToken	next_token;
-  guint				line_number;
-  gboolean			line_terminator;
 
   ViviParserScannerValue	value;
   ViviParserScannerValue	next_value;
-  guint				next_line_number;
+
+  gboolean			line_terminator;
   gboolean			next_line_terminator;
+
+  guint				line_number;
+  guint				next_line_number;
+
+  guint				column;
+  guint				next_column;
+
+  gsize				position;
+  gsize				next_position;
 
   ViviParserScannerToken	expected;
 };

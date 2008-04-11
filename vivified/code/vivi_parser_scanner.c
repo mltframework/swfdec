@@ -24,7 +24,11 @@
 #include "vivi_parser_scanner.h"
 
 #include "vivi_parser_scanner_lex.h"
-#include "vivi_parser_scanner_lex_include.h"
+
+extern ViviParserScannerValue lex_value;
+extern guint lex_line_number;
+extern guint lex_column;
+extern gsize lex_position;
 
 G_DEFINE_TYPE (ViviParserScanner, vivi_parser_scanner, G_TYPE_OBJECT)
 
@@ -223,8 +227,10 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
 
   scanner->token = scanner->next_token;
   scanner->value = scanner->next_value;
-  scanner->line_number = scanner->next_line_number;
   scanner->line_terminator = scanner->next_line_terminator;
+  scanner->line_number = scanner->next_line_number;
+  scanner->column = scanner->next_column;
+  scanner->position = scanner->next_position;
 
   if (scanner->file == NULL) {
     scanner->next_token = TOKEN_EOF;
@@ -240,7 +246,11 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
       scanner->next_token = yylex ();
     }
     scanner->next_value = lex_value;
+
     scanner->next_line_number = lex_line_number;
+    scanner->next_column = lex_column;
+    scanner->next_position = lex_position;
+
     lex_value.type = VALUE_TYPE_NONE;
   }
 }
@@ -255,6 +265,8 @@ vivi_parser_scanner_new (FILE *file)
   scanner = g_object_new (VIVI_TYPE_PARSER_SCANNER, NULL);
   scanner->file = file;
   scanner->line_number = scanner->next_line_number = lex_line_number = 1;
+  scanner->column = scanner->next_column = lex_column = 0;
+  scanner->position = scanner->next_position = lex_position = 0;
 
   yyrestart (file);
 

@@ -95,7 +95,6 @@ noinst_HEADERS = \
 	vivi_parser.h \
 	vivi_parser_scanner.h \
 	vivi_parser_scanner_lex.h \
-	vivi_parser_scanner_lex_include.h \
 	vivified-compiler.h
 
 noinst_PROGRAMS = vivi-decompile vivi-compile

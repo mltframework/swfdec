@@ -34,9 +34,6 @@
 #include "swfdec_renderer_internal.h"
 #include "swfdec_swf_decoder.h"
 
-static void merge_alpha (SwfdecImage * image, unsigned char *image_data,
-    unsigned char *alpha);
-
 G_DEFINE_TYPE (SwfdecImage, swfdec_image, SWFDEC_TYPE_CHARACTER)
 
 static void
@@ -251,6 +248,23 @@ tag_func_define_bits_jpeg_3 (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
+static void
+merge_alpha (SwfdecImage * image, unsigned char *image_data,
+    unsigned char *alpha)
+{
+  int x, y;
+  unsigned char *p;
+
+  for (y = 0; y < image->height; y++) {
+    p = image_data + y * image->width * 4;
+    for (x = 0; x < image->width; x++) {
+      p[SWFDEC_COLOR_INDEX_ALPHA] = *alpha;
+      p += 4;
+      alpha++;
+    }
+  }
+}
+
 static cairo_surface_t *
 swfdec_image_jpeg3_load (SwfdecImage *image, SwfdecRenderer *renderer)
 {
@@ -287,24 +301,7 @@ swfdec_image_jpeg3_load (SwfdecImage *image, SwfdecRenderer *renderer)
   SWFDEC_LOG ("  height = %d", image->height);
 
   return swfdec_image_create_surface_for_data (renderer, data, 
-      CAIRO_FORMAT_RGB24, image->width, image->height, 4 * image->width);
-}
-
-static void
-merge_alpha (SwfdecImage * image, unsigned char *image_data,
-    unsigned char *alpha)
-{
-  int x, y;
-  unsigned char *p;
-
-  for (y = 0; y < image->height; y++) {
-    p = image_data + y * image->width * 4;
-    for (x = 0; x < image->width; x++) {
-      p[SWFDEC_COLOR_INDEX_ALPHA] = *alpha;
-      p += 4;
-      alpha++;
-    }
-  }
+      CAIRO_FORMAT_ARGB32, image->width, image->height, 4 * image->width);
 }
 
 static cairo_surface_t *

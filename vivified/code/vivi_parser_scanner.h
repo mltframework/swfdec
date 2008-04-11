@@ -153,7 +153,8 @@ typedef enum {
   VALUE_TYPE_BOOLEAN,
   VALUE_TYPE_NUMBER,
   VALUE_TYPE_STRING,
-  VALUE_TYPE_IDENTIFIER
+  VALUE_TYPE_IDENTIFIER,
+  VALUE_TYPE_ERROR
 } ViviParserScannerValueType;
 
 typedef struct {
@@ -163,8 +164,11 @@ typedef struct {
     double	v_number;
     char *	v_string;
     char *	v_identifier;
+    char *	v_error;
   };
 } ViviParserScannerValue;
+
+typedef void (*ViviParserScannerFunction) (const char *text, gpointer user_data);
 
 typedef struct _ViviParserScanner ViviParserScanner;
 typedef struct _ViviParserScannerClass ViviParserScannerClass;
@@ -181,6 +185,11 @@ struct _ViviParserScanner
   GObject			object;
 
   FILE *			file;
+
+  ViviParserScannerFunction	error_handler;
+  gpointer			error_handler_data;
+  ViviParserScannerFunction	comment_handler;
+  gpointer			comment_handler_data;
 
   ViviParserScannerToken	token;
   ViviParserScannerToken	next_token;
@@ -211,6 +220,10 @@ struct _ViviParserScannerClass
 GType				vivi_parser_scanner_get_type   	(void);
 
 ViviParserScanner *		vivi_parser_scanner_new		(FILE *		file);
+void				vivi_parser_scanner_set_error_handler (ViviParserScanner *	scanner,
+								 ViviParserScannerFunction	error_handler,
+								 gpointer			user_data);
+
 ViviParserScannerToken	vivi_parser_scanner_get_next_token	(ViviParserScanner *	scanner);
 ViviParserScannerToken	vivi_parser_scanner_peek_next_token	(ViviParserScanner *	scanner);
 

@@ -553,6 +553,14 @@ vivi_parser_duplicate_code_token (ParseData *data)
   data->positions = g_slist_prepend (data->positions, position);
 }
 
+static void
+vivi_parser_error_handler (const char *text, gpointer user_data)
+{
+  ParseData *data = user_data;
+
+  vivi_parser_error (data, text);
+}
+
 // values
 
 /* ActionScript specific */
@@ -2380,6 +2388,8 @@ vivi_parse_file (FILE *file, const char *input_name)
   g_return_val_if_fail (file != NULL, NULL);
 
   data.scanner = vivi_parser_scanner_new (file);
+  vivi_parser_scanner_set_error_handler (data.scanner,
+      vivi_parser_error_handler, &data);
   data.levels = NULL;
   data.level = NULL;
   data.error_count = 0;

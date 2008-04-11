@@ -27,6 +27,8 @@ gsize lex_position = 0;
 
 static void new_line (void);
 static void count (void);
+
+static GString *string = NULL;
 %}
 
 %option			noyywrap
@@ -41,8 +43,6 @@ identifier_part		[$_a-zA-Z0-9]
 
 %%
 
-			GString *string = NULL;
-
 "/*"			{ count (); BEGIN(comment); }
 <comment>{
   [^*\n]*		{ count (); /* skip */ }
@@ -51,9 +51,13 @@ identifier_part		[$_a-zA-Z0-9]
   <<EOF>>		{
 			  count ();
 			  BEGIN(INITIAL);
+			  lex_value.type = VALUE_TYPE_ERROR;
+			  lex_value.v_error =
+			    g_strdup ("Unterminated comment");
 			  return TOKEN_ERROR;
 			}
 }
+
 "//"[^\r\n]*		{
 			  count ();
 			  new_line ();
@@ -249,35 +253,41 @@ identifier_part		[$_a-zA-Z0-9]
 			  count ();
 			  BEGIN(INITIAL);
 			  g_string_free (string, TRUE);
+			  lex_value.type = VALUE_TYPE_ERROR;
+			  lex_value.v_error = g_strdup (
+			      "Unterminated string constant");
 			  return TOKEN_ERROR;
 			}
-  \\0			{ count (); g_string_append_c (string, '0'); }
   \\[0-7]{1,3}		{
 			  guint64 result;
 			  count ();
 			  result = g_ascii_strtoull (yytext + 1, NULL, 8);
-			  if (result > 0xff || result == 0) { count ();
-			    BEGIN(INITIAL);
-			    g_string_free (string, TRUE);
+			  if (result > 0xff || result == 0) {
+			    lex_value.type = VALUE_TYPE_ERROR;
+			    lex_value.v_error = g_strdup_printf (
+				"Invalid escape sequence %s", yytext);
 			    return TOKEN_ERROR;
-			  } else { count ();
+			  } else {
 			    g_string_append_c (string, result);
 			  }
 			}
   \\[0-9]+		{
 			  count ();
-			  g_string_free (string, TRUE);
+			  lex_value.type = VALUE_TYPE_ERROR;
+			  lex_value.v_error = g_strdup_printf (
+			      "Invalid escape sequence %s", yytext);
 			  return TOKEN_ERROR;
 			}
   \\x[0-9a-fA-F]{2}	{
 			  guint64 result;
 			  count ();
 			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
-			  if (result == 0) { count ();
-			    BEGIN(INITIAL);
-			    g_string_free (string, TRUE);
+			  if (result == 0) {
+			    lex_value.type = VALUE_TYPE_ERROR;
+			    lex_value.v_error = g_strdup_printf (
+				"Invalid escape sequence %s", yytext);
 			    return TOKEN_ERROR;
-			  } else { count ();
+			  } else {
 			    g_string_append_c (string, result);
 			  }
 			}
@@ -304,7 +314,13 @@ identifier_part		[$_a-zA-Z0-9]
 			  return TOKEN_IDENTIFIER;
 			}
 
-.			{ count (); return TOKEN_ERROR; }
+.			{
+			  count ();
+			  lex_value.type = VALUE_TYPE_ERROR;
+			  lex_value.v_error = g_strdup_printf (
+			      "Unknown character '%c'", yytext[0]);
+			  return TOKEN_ERROR;
+			}
 
 %%
 
@@ -315,6 +331,5 @@ static void new_line (void)
 
 static void count (void)
 {
-  g_print (">> %s >> %li + %i\n", yytext, lex_position, yyleng);
   lex_position += yyleng;
 }

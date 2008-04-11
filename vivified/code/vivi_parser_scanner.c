@@ -42,6 +42,9 @@ vivi_parser_scanner_free_type_value (ViviParserScannerValue *value)
     case VALUE_TYPE_IDENTIFIER:
       g_free (value->v_identifier);
       break;
+    case VALUE_TYPE_ERROR:
+      g_free (value->v_error);
+      break;
     case VALUE_TYPE_NONE:
     case VALUE_TYPE_BOOLEAN:
     case VALUE_TYPE_NUMBER:
@@ -236,17 +239,21 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
     scanner->next_token = TOKEN_EOF;
     scanner->next_value.v_string = NULL;
   } else {
-    scanner->next_token = yylex ();
-    if (scanner->next_token == TOKEN_LINE_TERMINATOR) {
-      scanner->next_line_terminator = TRUE;
-    } else {
-      scanner->next_line_terminator = FALSE;
-    }
-    while (scanner->next_token == TOKEN_LINE_TERMINATOR) {
+    do {
       scanner->next_token = yylex ();
-    }
-    scanner->next_value = lex_value;
+      if (scanner->next_token == TOKEN_LINE_TERMINATOR) {
+	scanner->next_line_terminator = TRUE;
+      } else if (scanner->next_token == TOKEN_ERROR) {
+	if (scanner->error_handler != NULL) {
+	  scanner->error_handler (lex_value.v_error,
+	      scanner->error_handler_data);
+	}
+	vivi_parser_scanner_free_type_value (&lex_value);
+      }
+    } while (scanner->next_token == TOKEN_LINE_TERMINATOR ||
+	scanner->next_token == TOKEN_ERROR);
 
+    scanner->next_value = lex_value;
     scanner->next_line_number = lex_line_number;
     scanner->next_column = lex_column;
     scanner->next_position = lex_position;
@@ -273,6 +280,14 @@ vivi_parser_scanner_new (FILE *file)
   vivi_parser_scanner_advance (scanner);
 
   return scanner;
+}
+
+void
+vivi_parser_scanner_set_error_handler (ViviParserScanner *scanner,
+    ViviParserScannerFunction error_handler, gpointer user_data)
+{
+  scanner->error_handler = error_handler;
+  scanner->error_handler_data = user_data;
 }
 
 ViviParserScannerToken

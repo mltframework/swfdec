@@ -235,6 +235,16 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
   scanner->column = scanner->next_column;
   scanner->position = scanner->next_position;
 
+  while (scanner->waiting_errors != NULL) {
+    if (scanner->error_handler != NULL) {
+      scanner->error_handler (scanner->waiting_errors->data,
+	  scanner->error_handler_data);
+      g_free (scanner->waiting_errors->data);
+    }
+    scanner->waiting_errors = g_slist_delete_link (scanner->waiting_errors,
+	scanner->waiting_errors);
+  }
+
   if (scanner->file == NULL) {
     scanner->next_token = TOKEN_EOF;
     scanner->next_value.v_string = NULL;
@@ -243,12 +253,11 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
       scanner->next_token = yylex ();
       if (scanner->next_token == TOKEN_LINE_TERMINATOR) {
 	scanner->next_line_terminator = TRUE;
-      } else if (scanner->next_token == TOKEN_ERROR) {
-	if (scanner->error_handler != NULL) {
-	  scanner->error_handler (lex_value.v_error,
-	      scanner->error_handler_data);
-	}
 	vivi_parser_scanner_free_type_value (&lex_value);
+      } else if (scanner->next_token == TOKEN_ERROR) {
+	scanner->waiting_errors = g_slist_prepend (scanner->waiting_errors,
+	    lex_value.v_error);
+	lex_value.type = VALUE_TYPE_NONE;
       }
     } while (scanner->next_token == TOKEN_LINE_TERMINATOR ||
 	scanner->next_token == TOKEN_ERROR);

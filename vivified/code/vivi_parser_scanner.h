@@ -188,8 +188,7 @@ struct _ViviParserScanner
 
   ViviParserScannerFunction	error_handler;
   gpointer			error_handler_data;
-  ViviParserScannerFunction	comment_handler;
-  gpointer			comment_handler_data;
+  GSList *			waiting_errors;
 
   ViviParserScannerToken	token;
   ViviParserScannerToken	next_token;

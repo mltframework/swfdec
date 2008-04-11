@@ -1526,7 +1526,7 @@ swfdec_movie_set_version (SwfdecMovie *movie)
   o = SWFDEC_AS_OBJECT (movie);
   cx = o->context;
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, SWFDEC_PLAYER (cx)->priv->system->version));
-  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_$version, &val);
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR__version, &val);
 }
 
 /**

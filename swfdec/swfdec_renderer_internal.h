@@ -34,6 +34,7 @@ void			swfdec_renderer_attach		(SwfdecRenderer *	renderer,
 							 cairo_t *		cr);
 SwfdecRenderer *	swfdec_renderer_get		(cairo_t *		cr);
 void			swfdec_renderer_add_cache	(SwfdecRenderer *	renderer,
+							 gboolean		replace,
 							 gpointer		key,
 							 SwfdecCached *		value);
 SwfdecCached *		swfdec_renderer_get_cache	(SwfdecRenderer *	renderer,

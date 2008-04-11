@@ -611,7 +611,7 @@ swfdec_image_create_surface (SwfdecImage *image, SwfdecRenderer *renderer)
   if (renderer) {
     /* FIXME: The size is just an educated guess */
     cached = swfdec_cached_image_new (surface, image->width * image->height * 4);
-    swfdec_renderer_add_cache (renderer, image, SWFDEC_CACHED (cached));
+    swfdec_renderer_add_cache (renderer, FALSE, image, SWFDEC_CACHED (cached));
     g_object_unref (cached);
   }
 
@@ -652,7 +652,7 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
     if (renderer) {
       cached = swfdec_cached_image_new (source, image->width * image->height * 4);
       swfdec_cached_image_set_color_transform (cached, &mask);
-      swfdec_renderer_add_cache (renderer, image, SWFDEC_CACHED (cached));
+      swfdec_renderer_add_cache (renderer, FALSE, image, SWFDEC_CACHED (cached));
       g_object_unref (cached);
     }
   }
@@ -680,7 +680,7 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
     /* FIXME: The size is just an educated guess */
     cached = swfdec_cached_image_new (surface, image->width * image->height * 4);
     swfdec_cached_image_set_color_transform (cached, trans);
-    swfdec_renderer_add_cache (renderer, image, SWFDEC_CACHED (cached));
+    swfdec_renderer_add_cache (renderer, FALSE, image, SWFDEC_CACHED (cached));
     g_object_unref (cached);
   }
   return surface;

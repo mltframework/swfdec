@@ -55,6 +55,7 @@ libswfdec_source_files = \
 	swfdec_cache.c \
 	swfdec_cached.c \
 	swfdec_cached_image.c \
+	swfdec_cached_video.c \
 	swfdec_camera.c \
 	swfdec_character.c \
 	swfdec_codec_adpcm.c \
@@ -158,6 +159,8 @@ libswfdec_source_files = \
 	swfdec_video.c \
 	swfdec_video_movie.c \
 	swfdec_video_movie_as.c \
+	swfdec_video_provider.c \
+	swfdec_video_video_provider.c \
 	swfdec_xml_node.c \
 	swfdec_xml.c \
 	swfdec_xml_socket.c
@@ -236,6 +239,7 @@ noinst_HEADERS = \
 	swfdec_cache.h \
 	swfdec_cached.h \
 	swfdec_cached_image.h \
+	swfdec_cached_video.h \
 	swfdec_character.h \
 	swfdec_codec_audio.h \
 	swfdec_codec_video.h \
@@ -294,6 +298,8 @@ noinst_HEADERS = \
 	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
+	swfdec_video_provider.h \
+	swfdec_video_video_provider.h \
 	swfdec_xml_node.h \
 	swfdec_xml.h \
 	swfdec_xml_socket.h

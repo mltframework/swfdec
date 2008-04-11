@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <cairo.h>
 #include <swfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_renderer.h>
 
 #define SWFDEC_VIDEO_CODEC_UNDEFINED 0
 #define SWFDEC_VIDEO_CODEC_H263 2
@@ -69,7 +70,10 @@ SwfdecVideoDecoder *	swfdec_video_decoder_new      	(guint			codec);
 void			swfdec_video_decoder_free	(SwfdecVideoDecoder *   decoder);
 
 cairo_surface_t *     	swfdec_video_decoder_decode	(SwfdecVideoDecoder *	decoder,
-							 SwfdecBuffer *		buffer);
+							 SwfdecRenderer *	renderer,
+							 SwfdecBuffer *		buffer,
+							 guint *      		width,
+							 guint *		height);
 
 
 G_END_DECLS

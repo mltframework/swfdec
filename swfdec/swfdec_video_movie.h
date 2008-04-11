@@ -23,6 +23,7 @@
 #include <glib-object.h>
 #include <swfdec/swfdec_movie.h>
 #include <swfdec/swfdec_video.h>
+#include <swfdec/swfdec_video_provider.h>
 
 G_BEGIN_DECLS
 
@@ -37,28 +38,12 @@ typedef struct _SwfdecVideoMovieInput SwfdecVideoMovieInput;
 #define SWFDEC_VIDEO_MOVIE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_VIDEO_MOVIE, SwfdecVideoMovie))
 #define SWFDEC_VIDEO_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_VIDEO_MOVIE, SwfdecVideoMovieClass))
 
-/* FIXME: make an interface? */
-struct _SwfdecVideoMovieInput {
-  /* connect to movie */
-  void			(* connect)	(SwfdecVideoMovieInput *input,
-					 SwfdecVideoMovie *	movie);
-  /* called when input is unset */
-  void			(* disconnect)	(SwfdecVideoMovieInput *input,
-					 SwfdecVideoMovie *	movie);
-  /* called when movie ratio changed */
-  void			(* set_ratio)	(SwfdecVideoMovieInput *input,
-					 SwfdecVideoMovie *	movie);
-  /* called to request the current image */
-  cairo_surface_t *	(* get_image)	(SwfdecVideoMovieInput *input);
-};
-
 struct _SwfdecVideoMovie {
   SwfdecMovie		movie;
 
   SwfdecVideo *		video;		/* video we play back */
-  SwfdecVideoMovieInput *input;		/* where we take the input from */
-  gboolean		needs_update;	/* TRUE if we should call set_ratio and get_image */
-  cairo_surface_t *	image;	 	/* currently displayed image */
+  SwfdecVideoProvider *	provider;	/* where we take the video from */
+  gboolean		clear;		/* do not display a video image */
 };
 
 struct _SwfdecVideoMovieClass {
@@ -67,11 +52,9 @@ struct _SwfdecVideoMovieClass {
 
 GType		swfdec_video_movie_get_type		(void);
 
-void		swfdec_video_movie_set_input		(SwfdecVideoMovie *	movie,
-							 SwfdecVideoMovieInput *input);
+void		swfdec_video_movie_set_provider		(SwfdecVideoMovie *	movie,
+							 SwfdecVideoProvider *	provider);
 void		swfdec_video_movie_clear	      	(SwfdecVideoMovie *	movie);
-/* API for SwfdecVideoMovieInput */
-void		swfdec_video_movie_new_image		(SwfdecVideoMovie *	movie);
 
 G_END_DECLS
 #endif

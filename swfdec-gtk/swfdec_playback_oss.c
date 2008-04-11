@@ -84,7 +84,6 @@ handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
       free(frag);
       return FALSE;
     }
-    g_assert(spaceinfo.fragsize == stream->fragsize);
 
     if (spaceinfo.fragments == 0)
       break;

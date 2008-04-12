@@ -1699,6 +1699,22 @@ EXTRA_DIST = \
 	movieclip-get-instance-at-depth-7.swf.trace \
 	movieclip-get-instance-at-depth-8.swf \
 	movieclip-get-instance-at-depth-8.swf.trace \
+	movieclip-lockroot.as \
+	movieclip-lockroot-5.swf \
+	movieclip-lockroot-5.swf.trace \
+	movieclip-lockroot-6.swf \
+	movieclip-lockroot-6.swf.trace \
+	movieclip-lockroot-7.swf \
+	movieclip-lockroot-7.swf.trace \
+	movieclip-lockroot-8.swf \
+	movieclip-lockroot-8.swf.trace \
+	movieclip-lockroot-loadmovie.as \
+	movieclip-lockroot-loadmovie-6.swf \
+	movieclip-lockroot-loadmovie-6.swf.trace \
+	movieclip-lockroot-loadmovie-7.swf \
+	movieclip-lockroot-loadmovie-7.swf.trace \
+	movieclip-lockroot-loadmovie-8.swf \
+	movieclip-lockroot-loadmovie-8.swf.trace \
 	movieclip-set-prototype.c \
 	movieclip-set-prototype-5.swf \
 	movieclip-set-prototype-5.swf.trace \

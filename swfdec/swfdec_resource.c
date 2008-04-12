@@ -186,6 +186,7 @@ swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resourc
   copy->xscale = mov->xscale;
   copy->yscale = mov->yscale;
   copy->rotation = mov->rotation;
+  copy->lockroot = mov->lockroot;
   /* FIXME: are events copied? If so, wouldn't that be a security issue? */
   swfdec_movie_set_static_properties (copy, &mov->original_transform,
       &mov->original_ctrans, mov->original_ratio, mov->clip_depth, 

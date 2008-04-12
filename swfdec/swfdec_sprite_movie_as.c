@@ -59,7 +59,11 @@ void
 swfdec_sprite_movie_get__lockroot (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip._lockroot (get)");
+  SwfdecMovie *movie;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, movie->lockroot);
 }
 
 SWFDEC_AS_NATIVE (900, 301, swfdec_sprite_movie_set__lockroot)
@@ -67,7 +71,12 @@ void
 swfdec_sprite_movie_set__lockroot (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip._lockroot (set)");
+  SwfdecMovie *movie;
+  gboolean lockroot;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "b", &lockroot);
+
+  movie->lockroot = lockroot;
 }
 
 SWFDEC_AS_NATIVE (900, 401, swfdec_sprite_movie_get_cacheAsBitmap)

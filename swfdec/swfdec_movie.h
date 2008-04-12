@@ -112,6 +112,7 @@ struct _SwfdecMovie {
 
   /* parenting information */
   SwfdecMovie *		parent;			/* movie that contains us or NULL for root movies */
+  gboolean		lockroot;		/* when looking for _root we should use this movie, even if it has a parent */
   SwfdecResource *	resource;     		/* the resource that created us */
 
   /* positioning - the values are applied in this order */

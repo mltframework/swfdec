@@ -985,7 +985,7 @@ swfdec_movie_get_root (SwfdecMovie *movie)
 {
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
 
-  while (movie->parent)
+  while (movie->parent && !movie->lockroot)
     movie = movie->parent;
 
   return movie;

@@ -27,8 +27,9 @@
 
 #include "vivi_parser_scanner.h"
 
+#include "vivi_code_and.h"
 #include "vivi_code_assignment.h"
-#include "vivi_code_binary.h"
+#include "vivi_code_binary_default.h"
 #include "vivi_code_block.h"
 #include "vivi_code_break.h"
 #include "vivi_code_constant.h"
@@ -42,6 +43,7 @@
 #include "vivi_code_init_array.h"
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
+#include "vivi_code_or.h"
 #include "vivi_code_play.h"
 #include "vivi_code_return.h"
 #include "vivi_code_throw.h"
@@ -1278,7 +1280,7 @@ parse_postfix_expression (ParseData *data, ViviCodeValue **value,
 {
   ViviCodeStatement *assignment;
   ViviCodeValue *operation, *one, *temporary;
-  const char *operator;
+  gboolean add;
 
   vivi_parser_start_code_token (data);
 
@@ -1290,9 +1292,9 @@ parse_postfix_expression (ParseData *data, ViviCodeValue **value,
   }
 
   if (try_parse_token (data, TOKEN_INCREASE)) {
-    operator = "+";
+    add = TRUE;
   } else if (try_parse_token (data, TOKEN_DESCREASE)) {
-    operator = "-";
+    add = FALSE;
   } else {
     vivi_parser_end_code_token (data, NULL);
     return;
@@ -1305,7 +1307,7 @@ parse_postfix_expression (ParseData *data, ViviCodeValue **value,
   }
 
   one = vivi_code_constant_new_number (1);
-  operation = vivi_code_binary_new_name (*value, one, operator);
+  operation = (add ? vivi_code_add_new : vivi_code_subtract_new) (*value, one);
   g_object_unref (one);
 
   vivi_parser_duplicate_code_token (data);
@@ -1352,9 +1354,6 @@ parse_unary_expression (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
   ViviCodeValue *tmp, *one;
-  const char *operator;
-
-  operator = NULL;
 
   vivi_parser_scanner_peek_next_token (data->scanner);
   switch ((guint)data->scanner->next_token) {
@@ -1362,11 +1361,7 @@ parse_unary_expression (ParseData *data, ViviCodeValue **value,
     case TOKEN_VOID:
     case TOKEN_TYPEOF:*/
     case TOKEN_INCREASE:
-      operator = "+";
-      // fall through
     case TOKEN_DESCREASE:
-      if (!operator) operator = "-";
-
       vivi_parser_start_code_token (data);
 
       vivi_parser_scanner_get_next_token (data->scanner);
@@ -1380,7 +1375,7 @@ parse_unary_expression (ParseData *data, ViviCodeValue **value,
       }
 
       one = vivi_code_constant_new_number (1);
-      tmp = vivi_code_binary_new_name (*value, one, operator);
+      tmp = (data->scanner->next_token == TOKEN_INCREASE ? vivi_code_add_new : vivi_code_subtract_new) (*value, one);
       g_object_unref (one);
 
       vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (tmp));
@@ -1424,7 +1419,37 @@ parse_operator_expression (ParseData *data, ViviCodeValue **value,
 {
   ViviCodeValue *left, *right;
   ViviCodeStatement *statement_right;
-  guint i;
+  guint i, j;
+  static const struct {
+    ViviParserScannerToken	token;
+    ViviCodeValue *		(* func) (ViviCodeValue *, ViviCodeValue *);
+  } table[] = {
+//    { TOKEN_, vivi_code_add_new },
+    { TOKEN_MINUS, vivi_code_subtract_new },
+    { TOKEN_MULTIPLY, vivi_code_multiply_new },
+    { TOKEN_DIVIDE, vivi_code_divide_new },
+    { TOKEN_REMAINDER, vivi_code_modulo_new },
+//    { TOKEN_, vivi_code_equals_new },
+//    { TOKEN_, vivi_code_less_new },
+//    { TOKEN_, vivi_code_logical_and_new },
+//    { TOKEN_, vivi_code_logical_or_new },
+//    { TOKEN_, vivi_code_string_equals_new },
+//    { TOKEN_, vivi_code_string_less_new },
+    { TOKEN_PLUS, vivi_code_add2_new },
+    { TOKEN_LESS_THAN, vivi_code_less2_new },
+    { TOKEN_EQUAL, vivi_code_equals2_new },
+    { TOKEN_BITWISE_AND, vivi_code_bitwise_and_new },
+    { TOKEN_BITWISE_OR, vivi_code_bitwise_or_new },
+    { TOKEN_BITWISE_XOR, vivi_code_bitwise_xor_new },
+    { TOKEN_SHIFT_LEFT, vivi_code_left_shift_new },
+    { TOKEN_SHIFT_RIGHT, vivi_code_right_shift_new },
+    { TOKEN_SHIFT_RIGHT_UNSIGNED, vivi_code_unsigned_right_shift_new },
+    { TOKEN_STRICT_EQUAL, vivi_code_strict_equals_new },
+    { TOKEN_GREATER_THAN, vivi_code_greater_new },
+//    { TOKEN_, vivi_code_string_greater_new },
+    { TOKEN_LOGICAL_AND, vivi_code_and_new },
+    { TOKEN_LOGICAL_OR, vivi_code_or_new }
+  };
 
   vivi_parser_start_code_token (data);
 
@@ -1462,15 +1487,20 @@ again:
       }
 
       left = VIVI_CODE_VALUE (*value);
-      *value = vivi_code_binary_new_name (left, VIVI_CODE_VALUE (right),
-	  vivi_parser_scanner_token_name (tokens[i]));
-      g_object_unref (left);
-      g_object_unref (right);
+      for (j = 0; j < G_N_ELEMENTS (table); j++) {
+	if (tokens[i] != table[j].token)
+	  continue;
 
-      vivi_parser_duplicate_code_token (data);
-      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
+	*value = table[j].func (left, VIVI_CODE_VALUE (right));
+	g_object_unref (left);
+	g_object_unref (right);
 
-      goto again;
+	vivi_parser_duplicate_code_token (data);
+	vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
+
+	goto again;
+      }
+      g_assert_not_reached ();
     }
   }
 
@@ -1711,7 +1741,7 @@ parse_assignment_expression (ParseData *data, ViviCodeValue **value,
 {
   ViviCodeValue *right;
   ViviCodeStatement *assignment, *statement_right;
-  const char *operator;
+  ViviCodeValue * (* func) (ViviCodeValue *, ViviCodeValue *);
 
   vivi_parser_start_code_token (data);
 
@@ -1723,53 +1753,64 @@ parse_assignment_expression (ParseData *data, ViviCodeValue **value,
     return;
   }
 
-  operator = NULL;
-
   vivi_parser_scanner_peek_next_token (data->scanner);
   switch ((guint)data->scanner->next_token) {
     case TOKEN_ASSIGN_MULTIPLY:
-      if (operator == NULL) operator = "*";
+      func = vivi_code_multiply_new;
+      break;
     case TOKEN_ASSIGN_DIVIDE:
-      if (operator == NULL) operator = "/";
+      func = vivi_code_divide_new;
+      break;
     case TOKEN_ASSIGN_REMAINDER:
-      if (operator == NULL) operator = "%";
+      func = vivi_code_modulo_new;
+      break;
     case TOKEN_ASSIGN_ADD:
-      if (operator == NULL) operator = "+";
+      func = vivi_code_add2_new;
+      break;
     case TOKEN_ASSIGN_MINUS:
-      if (operator == NULL) operator = "-";
+      func = vivi_code_subtract_new;
+      break;
     case TOKEN_ASSIGN_SHIFT_LEFT:
-      if (operator == NULL) operator = "<<";
+      func = vivi_code_left_shift_new;
+      break;
     case TOKEN_ASSIGN_SHIFT_RIGHT:
-      if (operator == NULL) operator = ">>";
+      func = vivi_code_right_shift_new;
+      break;
     case TOKEN_ASSIGN_SHIFT_RIGHT_ZERO:
-      if (operator == NULL) operator = ">>>";
+      func = vivi_code_unsigned_right_shift_new;
+      break;
     case TOKEN_ASSIGN_BITWISE_AND:
-      if (operator == NULL) operator = "&";
+      func = vivi_code_bitwise_and_new;
+      break;
     case TOKEN_ASSIGN_BITWISE_OR:
-      if (operator == NULL) operator = "|";
+      func = vivi_code_bitwise_or_new;
+      break;
     case TOKEN_ASSIGN_BITWISE_XOR:
-      if (operator == NULL) operator = "^";
+      func = vivi_code_bitwise_and_new;
+      break;
     case TOKEN_ASSIGN:
-      vivi_parser_scanner_get_next_token (data->scanner);
-
-      parse_assignment_expression (data, &right, &statement_right);
-
-      if (operator != NULL) {
-	assignment = vivi_parser_assignment_new (*value,
-	    vivi_code_binary_new_name (*value, right, operator));
-      } else {
-	assignment = vivi_parser_assignment_new (*value, right);
-      }
-      g_object_unref (right);
-
-      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (assignment));
-
-      *statement = vivi_parser_join_statements (*statement,
-	  vivi_parser_join_statements (statement_right, assignment));
+      func = NULL;
       break;
     default:
-      break;
+      return;
   }
+  
+  vivi_parser_scanner_get_next_token (data->scanner);
+
+  parse_assignment_expression (data, &right, &statement_right);
+
+  if (func != NULL) {
+    assignment = vivi_parser_assignment_new (*value,
+	func (*value, right));
+  } else {
+    assignment = vivi_parser_assignment_new (*value, right);
+  }
+  g_object_unref (right);
+
+  vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (assignment));
+
+  *statement = vivi_parser_join_statements (*statement,
+      vivi_parser_join_statements (statement_right, assignment));
 }
 
 static gboolean

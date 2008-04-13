@@ -20,6 +20,7 @@
 #ifndef _VIVI_CODE_BINARY_H_
 #define _VIVI_CODE_BINARY_H_
 
+#include <swfdec/swfdec_as_interpret.h>
 #include <vivified/code/vivi_code_value.h>
 
 G_BEGIN_DECLS
@@ -39,7 +40,6 @@ struct _ViviCodeBinary
 {
   ViviCodeValue		parent;
 
-  guint			operation_index;
   ViviCodeValue *	left;
   ViviCodeValue *	right;
 };
@@ -47,16 +47,15 @@ struct _ViviCodeBinary
 struct _ViviCodeBinaryClass
 {
   ViviCodeValueClass	value_class;
+
+  /*< private >*/
+  /* use vivi_code_default.h */
+  const char *		operator_name;
+  SwfdecAsAction	bytecode;
 };
 
 GType			vivi_code_binary_get_type   	(void);
 
-ViviCodeValue *		vivi_code_binary_new_bytecode 	(ViviCodeValue *	left,
-							 ViviCodeValue *	right,
-							 guint			code);
-ViviCodeValue *		vivi_code_binary_new_name	(ViviCodeValue *	left,
-							 ViviCodeValue *	right,
-							 const char *		name);
 
 G_END_DECLS
 #endif

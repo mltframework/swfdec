@@ -27,37 +27,6 @@
 #include "vivi_code_printer.h"
 #include "vivi_code_compiler.h"
 
-static struct {
-  const char *		operation;
-  guint			bytecode;
-  ViviPrecedence	precedence;
-} operation_table[] = {
-  { "add",	SWFDEC_AS_ACTION_ADD,		VIVI_PRECEDENCE_ADD },
-  { "-",	SWFDEC_AS_ACTION_SUBTRACT,	VIVI_PRECEDENCE_ADD },
-  { "*",	SWFDEC_AS_ACTION_MULTIPLY,	VIVI_PRECEDENCE_MULTIPLY },
-  { "/",	SWFDEC_AS_ACTION_DIVIDE,	VIVI_PRECEDENCE_MULTIPLY },
-  { "==",	SWFDEC_AS_ACTION_EQUALS,	VIVI_PRECEDENCE_EQUALITY },
-  { "<",	SWFDEC_AS_ACTION_LESS,		VIVI_PRECEDENCE_RELATIONAL },
-  { "and",	SWFDEC_AS_ACTION_AND,		VIVI_PRECEDENCE_AND },
-  { "or",	SWFDEC_AS_ACTION_OR,		VIVI_PRECEDENCE_OR },
-  { "eq",	SWFDEC_AS_ACTION_STRING_EQUALS,	VIVI_PRECEDENCE_EQUALITY },
-  { "lt",	SWFDEC_AS_ACTION_STRING_LESS,	VIVI_PRECEDENCE_RELATIONAL },
-  { "+",	SWFDEC_AS_ACTION_ADD2,		VIVI_PRECEDENCE_ADD },
-  { "<",	SWFDEC_AS_ACTION_LESS2,		VIVI_PRECEDENCE_RELATIONAL },
-  { "==",	SWFDEC_AS_ACTION_EQUALS2,	VIVI_PRECEDENCE_EQUALITY },
-  { "&",	SWFDEC_AS_ACTION_BIT_AND,	VIVI_PRECEDENCE_BINARY_AND },
-  { "|",	SWFDEC_AS_ACTION_BIT_OR,	VIVI_PRECEDENCE_BINARY_OR },
-  { "^",	SWFDEC_AS_ACTION_BIT_XOR,	VIVI_PRECEDENCE_BINARY_XOR },
-  { "<<",	SWFDEC_AS_ACTION_BIT_LSHIFT,	VIVI_PRECEDENCE_SHIFT },
-  { ">>",	SWFDEC_AS_ACTION_BIT_RSHIFT,	VIVI_PRECEDENCE_SHIFT },
-  { ">>>",	SWFDEC_AS_ACTION_BIT_URSHIFT,	VIVI_PRECEDENCE_SHIFT },
-  { "===",	SWFDEC_AS_ACTION_STRICT_EQUALS,	VIVI_PRECEDENCE_EQUALITY },
-  { ">",	SWFDEC_AS_ACTION_GREATER,	VIVI_PRECEDENCE_RELATIONAL },
-  { "gt",	SWFDEC_AS_ACTION_STRING_GREATER,VIVI_PRECEDENCE_RELATIONAL },
-  { "&&",	0,				VIVI_PRECEDENCE_AND },
-  { "||",	0,				VIVI_PRECEDENCE_OR }
-};
-
 G_DEFINE_TYPE (ViviCodeBinary, vivi_code_binary, VIVI_TYPE_CODE_VALUE)
 
 static void
@@ -75,28 +44,29 @@ static void
 vivi_code_binary_print (ViviCodeToken *token, ViviCodePrinter*printer)
 {
   ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
+  ViviCodeValue *value = VIVI_CODE_VALUE (token);
+  ViviCodeBinaryClass *klass = VIVI_CODE_BINARY_GET_CLASS (binary);
 
   vivi_code_printer_print_value (printer, binary->left, 
-      operation_table[binary->operation_index].precedence);
+      vivi_code_value_get_precedence (value));
   vivi_code_printer_print (printer, " ");
-  vivi_code_printer_print (printer, operation_table[binary->operation_index].operation);
+  vivi_code_printer_print (printer, klass->operator_name);
   vivi_code_printer_print (printer, " ");
   vivi_code_printer_print_value (printer, binary->right, 
-      operation_table[binary->operation_index].precedence);
+      vivi_code_value_get_precedence (value));
 }
 
 static void
 vivi_code_binary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
-
-  g_assert (operation_table[binary->operation_index].bytecode != 0);
+  ViviCodeBinaryClass *klass = VIVI_CODE_BINARY_GET_CLASS (binary);
 
   vivi_code_compiler_compile_value (compiler, binary->left);
   vivi_code_compiler_compile_value (compiler, binary->right);
 
-  vivi_code_compiler_write_empty_action (compiler,
-      operation_table[binary->operation_index].bytecode);
+  g_assert (klass->bytecode != 0);
+  vivi_code_compiler_write_empty_action (compiler, klass->bytecode);
 }
 
 static gboolean
@@ -126,56 +96,5 @@ vivi_code_binary_class_init (ViviCodeBinaryClass *klass)
 static void
 vivi_code_binary_init (ViviCodeBinary *binary)
 {
-}
-
-ViviCodeValue *
-vivi_code_binary_new_bytecode (ViviCodeValue *left, ViviCodeValue *right, guint code)
-{
-  ViviCodeBinary *binary;
-  guint id;
-
-  g_return_val_if_fail (VIVI_IS_CODE_VALUE (left), NULL);
-  g_return_val_if_fail (VIVI_IS_CODE_VALUE (right), NULL);
-  for (id = 0; id < G_N_ELEMENTS (operation_table); id++) {
-    if (operation_table[id].bytecode == code)
-      break;
-  }
-  g_return_val_if_fail (id < G_N_ELEMENTS (operation_table), NULL);
-
-  binary = g_object_new (VIVI_TYPE_CODE_BINARY, NULL);
-  binary->left = g_object_ref (left);
-  binary->right = g_object_ref (right);
-  binary->operation_index = id;
-
-  vivi_code_value_set_precedence (VIVI_CODE_VALUE (binary), 
-      operation_table[id].precedence);
-
-  return VIVI_CODE_VALUE (binary);
-}
-
-ViviCodeValue *
-vivi_code_binary_new_name (ViviCodeValue *left, ViviCodeValue *right, const char *name)
-{
-  ViviCodeBinary *binary;
-  guint id;
-
-  g_return_val_if_fail (VIVI_IS_CODE_VALUE (left), NULL);
-  g_return_val_if_fail (VIVI_IS_CODE_VALUE (right), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
-  for (id = 0; id < G_N_ELEMENTS (operation_table); id++) {
-    if (g_str_equal (operation_table[id].operation, name))
-      break;
-  }
-  g_return_val_if_fail (id < G_N_ELEMENTS (operation_table), NULL);
-
-  binary = g_object_new (VIVI_TYPE_CODE_BINARY, NULL);
-  binary->left = g_object_ref (left);
-  binary->right = g_object_ref (right);
-  binary->operation_index = id;
-
-  vivi_code_value_set_precedence (VIVI_CODE_VALUE (binary), 
-      operation_table[id].precedence);
-
-  return VIVI_CODE_VALUE (binary);
 }
 

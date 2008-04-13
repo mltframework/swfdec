@@ -28,8 +28,9 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_decompiler.h"
+#include "vivi_code_and.h"
 #include "vivi_code_assignment.h"
-#include "vivi_code_binary.h"
+#include "vivi_code_binary_default.h"
 #include "vivi_code_block.h"
 #include "vivi_code_break.h"
 #include "vivi_code_constant.h"
@@ -42,6 +43,7 @@
 #include "vivi_code_if.h"
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
+#include "vivi_code_or.h"
 #include "vivi_code_return.h"
 #include "vivi_code_trace.h"
 #include "vivi_code_unary.h"
@@ -402,10 +404,19 @@ vivi_decompile_binary (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
   ViviCodeValue *right, *left, *result;
+#define DEFAULT_BINARY(CapsName, underscore_name, operatore_name, bytecode, precedence) \
+    case bytecode: \
+      result = vivi_code_ ## underscore_name ## _new (left, right); \
+      break;
 
   right = vivi_decompiler_state_pop (state);
   left = vivi_decompiler_state_pop (state);
-  result = vivi_code_binary_new_bytecode (left, right, code);
+  switch (code) {
+#include "vivi_code_defaults.h"
+    default:
+      g_assert_not_reached ();
+      return FALSE;
+  }
   g_object_unref (left);
   g_object_unref (right);
   vivi_decompiler_state_push (state, result);
@@ -1062,9 +1073,9 @@ vivi_decompiler_merge_andor (GList **list)
 {
   ViviDecompilerBlock *block, *andor, *next;
   gboolean result;
-  const char *type;
   ViviCodeValue *value, *value2;
   ViviDecompilerState *state;
+  ViviCodeValue * (* func) (ViviCodeValue *, ViviCodeValue *);
 
   GList *walk;
   result = FALSE;
@@ -1087,9 +1098,9 @@ vivi_decompiler_merge_andor (GList **list)
     value = vivi_decompiler_block_get_branch_condition (block);
     if (VIVI_IS_CODE_UNARY (value)) {
       value = vivi_code_unary_get_value (VIVI_CODE_UNARY (value));
-      type = "&&";
+      func = vivi_code_and_new;
     } else {
-      type = "||";
+      func = vivi_code_or_new;
     }
     if (!VIVI_IS_DECOMPILER_DUPLICATE (value))
       continue;
@@ -1121,7 +1132,7 @@ vivi_decompiler_merge_andor (GList **list)
     DEBUG ("merging %s code for %p\n", type, vivi_decompiler_block_get_start (andor));
 
     /* update our finish state */
-    value = vivi_code_binary_new_name (value, value2, type);
+    value = func (value, value2);
     state = (ViviDecompilerState *) vivi_decompiler_block_get_end_state (block);
     g_object_unref (vivi_decompiler_state_pop (state));
     vivi_decompiler_state_push (state, value);

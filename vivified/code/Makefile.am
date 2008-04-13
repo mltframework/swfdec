@@ -16,8 +16,10 @@ libvivified_compiler_la_LIBADD = \
 	libvivified-parser-lex.la
 
 libvivified_compiler_la_SOURCES = \
+	vivi_code_and.c \
 	vivi_code_assignment.c \
 	vivi_code_binary.c \
+	vivi_code_binary_default.c \
 	vivi_code_block.c \
 	vivi_code_break.c \
 	vivi_code_comment.c \
@@ -34,6 +36,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_init_object.c \
 	vivi_code_label.c \
 	vivi_code_loop.c \
+	vivi_code_or.c \
 	vivi_code_play.c \
 	vivi_code_printer.c \
 	vivi_code_return.c \
@@ -58,14 +61,17 @@ libvivified_compiler_la_SOURCES = \
 	vivi_parser_scanner.c
 
 noinst_HEADERS = \
+	vivi_code_and.h \
 	vivi_code_assignment.h \
-	vivi_code_binary.c \
+	vivi_code_binary.h \
+	vivi_code_binary_default.h \
 	vivi_code_block.h \
 	vivi_code_break.h \
 	vivi_code_comment.h \
 	vivi_code_compiler.h \
 	vivi_code_constant.h \
 	vivi_code_continue.h \
+	vivi_code_defaults.h \
 	vivi_code_function.h \
 	vivi_code_function_call.h \
 	vivi_code_get.h \
@@ -76,6 +82,7 @@ noinst_HEADERS = \
 	vivi_code_init_object.h \
 	vivi_code_label.h \
 	vivi_code_loop.h \
+	vivi_code_or.h \
 	vivi_code_play.h \
 	vivi_code_printer.h \
 	vivi_code_return.h \

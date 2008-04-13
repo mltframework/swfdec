@@ -197,7 +197,6 @@ identifier_part		[$_a-zA-Z0-9]
 "volatile"		{ count (); return TOKEN_RESERVED_KEYWORD; }
 
 "undefined"		{ count (); return TOKEN_UNDEFINED; }
-"trace"			{ count (); return TOKEN_TRACE; }
 
 "null"			{ count (); return TOKEN_NULL; }
 "true"			{

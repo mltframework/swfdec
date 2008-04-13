@@ -34,8 +34,10 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_init_object.c \
 	vivi_code_label.c \
 	vivi_code_loop.c \
+	vivi_code_play.c \
 	vivi_code_printer.c \
 	vivi_code_return.c \
+	vivi_code_special_statement.c \
 	vivi_code_statement.c \
 	vivi_code_text_printer.c \
 	vivi_code_throw.c \
@@ -74,8 +76,10 @@ noinst_HEADERS = \
 	vivi_code_init_object.h \
 	vivi_code_label.h \
 	vivi_code_loop.h \
+	vivi_code_play.h \
 	vivi_code_printer.h \
 	vivi_code_return.h \
+	vivi_code_special_statement.h \
 	vivi_code_statement.h \
 	vivi_code_text_printer.h \
 	vivi_code_throw.h \

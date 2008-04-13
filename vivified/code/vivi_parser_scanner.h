@@ -143,7 +143,6 @@ typedef enum {
 
   // ActionScript specific
   TOKEN_UNDEFINED,
-  TOKEN_TRACE,
 
   TOKEN_LAST
 } ViviParserScannerToken;

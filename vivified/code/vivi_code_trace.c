@@ -22,10 +22,8 @@
 #endif
 
 #include "vivi_code_trace.h"
-#include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
 
-G_DEFINE_TYPE (ViviCodeTrace, vivi_code_trace, VIVI_TYPE_CODE_STATEMENT)
+G_DEFINE_TYPE (ViviCodeTrace, vivi_code_trace, VIVI_TYPE_CODE_SPECIAL_STATEMENT)
 
 static void
 vivi_code_trace_dispose (GObject *object)
@@ -37,42 +35,33 @@ vivi_code_trace_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_trace_parent_class)->dispose (object);
 }
 
-static void
-vivi_code_trace_print (ViviCodeToken *token, ViviCodePrinter *printer)
+static ViviCodeValue *
+vivi_code_trace_get_value (ViviCodeSpecialStatement *stmt)
 {
-  ViviCodeTrace *trace = VIVI_CODE_TRACE (token);
+  ViviCodeTrace *trace = VIVI_CODE_TRACE (stmt);
 
-  vivi_code_printer_print (printer, "trace (");
-  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (trace->value));
-  vivi_code_printer_print (printer, ");");
-  vivi_code_printer_new_line (printer, FALSE);
-}
-
-static void
-vivi_code_trace_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
-{
-  ViviCodeTrace *trace = VIVI_CODE_TRACE (token);
-
-  vivi_code_compiler_compile_value (compiler, trace->value);
-
-  vivi_code_compiler_write_empty_action (compiler, SWFDEC_AS_ACTION_TRACE);
+  return trace->value;
 }
 
 static void
 vivi_code_trace_class_init (ViviCodeTraceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeSpecialStatementClass *stmt_class =
+    VIVI_CODE_SPECIAL_STATEMENT_CLASS (klass);
 
   object_class->dispose = vivi_code_trace_dispose;
 
-  token_class->print = vivi_code_trace_print;
-  token_class->compile = vivi_code_trace_compile;
+  stmt_class->get_value = vivi_code_trace_get_value;
 }
 
 static void
 vivi_code_trace_init (ViviCodeTrace *token)
 {
+  ViviCodeSpecialStatement *stmt = VIVI_CODE_SPECIAL_STATEMENT (token);
+
+  stmt->name = "trace";
+  stmt->action = SWFDEC_AS_ACTION_TRACE;
 }
 
 ViviCodeStatement *

@@ -61,6 +61,7 @@ char *			vivi_code_constant_get_variable_name
 SwfdecAsValueType	vivi_code_constant_get_value_type
 							(ViviCodeConstant *	constant);
 double			vivi_code_constant_get_number	(ViviCodeConstant *	constant);
+const char *		vivi_code_constant_get_string	(ViviCodeConstant *	constant);
 
 G_END_DECLS
 #endif

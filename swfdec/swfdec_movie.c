@@ -983,10 +983,19 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
 SwfdecMovie *
 swfdec_movie_get_root (SwfdecMovie *movie)
 {
+  SwfdecMovie *real_root;
+
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
 
-  while (movie->parent && !movie->lockroot)
+  real_root = movie;
+  while (real_root->parent)
+    real_root = real_root->parent;
+
+  while (movie->parent && !(movie->lockroot &&
+	(swfdec_movie_get_version (movie) != 6 ||
+	 swfdec_movie_get_version (real_root) != 6))) {
     movie = movie->parent;
+  }
 
   return movie;
 }

@@ -203,7 +203,8 @@ swfdec_renderer_init (SwfdecRenderer *renderer)
 /*** INTERNAL API ***/
 
 void
-swfdec_renderer_add_cache (SwfdecRenderer *renderer, gpointer key, SwfdecCached *cached)
+swfdec_renderer_add_cache (SwfdecRenderer *renderer, gboolean replace,
+    gpointer key, SwfdecCached *cached)
 {
   SwfdecRendererPrivate *priv;
   GList *list;
@@ -214,6 +215,17 @@ swfdec_renderer_add_cache (SwfdecRenderer *renderer, gpointer key, SwfdecCached 
 
   priv = renderer->priv;
   list = g_hash_table_lookup (priv->cache_lookup, key);
+  if (replace) {
+    GList *walk;
+    for (walk = list; walk; walk = walk->next) {
+      if (walk->data) {
+	g_object_remove_weak_pointer (walk->data, &walk->data);
+	swfdec_cached_unuse (walk->data);
+      }
+    }
+    g_list_free (list);
+    list = NULL;
+  }
   list = g_list_prepend (list, cached);
   /* NB: empty list entries mean object was deleted */
   g_object_add_weak_pointer (G_OBJECT (cached), &list->data);

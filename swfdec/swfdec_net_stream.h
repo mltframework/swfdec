@@ -62,9 +62,9 @@ struct _SwfdecNetStream
   guint			next_time;	/* next video image at this timestamp */
   guint			format;		/* current format */
   SwfdecVideoDecoder *	decoder;	/* decoder used for decoding */
+  guint			decoder_time;	/* last timestamp the decoder decoded */
   cairo_surface_t *	surface;	/* current image */
   SwfdecTimeout		timeout;	/* timeout to advance to */
-  SwfdecVideoMovieInput	input;		/* used when attaching to a video movie */
   GList *		movies;		/* movies we're connected to */
 
   /* audio */

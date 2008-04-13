@@ -55,6 +55,7 @@ libswfdec_source_files = \
 	swfdec_cache.c \
 	swfdec_cached.c \
 	swfdec_cached_image.c \
+	swfdec_cached_video.c \
 	swfdec_camera.c \
 	swfdec_character.c \
 	swfdec_codec_adpcm.c \
@@ -158,6 +159,8 @@ libswfdec_source_files = \
 	swfdec_video.c \
 	swfdec_video_movie.c \
 	swfdec_video_movie_as.c \
+	swfdec_video_provider.c \
+	swfdec_video_video_provider.c \
 	swfdec_xml_node.c \
 	swfdec_xml.c \
 	swfdec_xml_socket.c
@@ -236,6 +239,7 @@ noinst_HEADERS = \
 	swfdec_cache.h \
 	swfdec_cached.h \
 	swfdec_cached_image.h \
+	swfdec_cached_video.h \
 	swfdec_character.h \
 	swfdec_codec_audio.h \
 	swfdec_codec_video.h \
@@ -294,6 +298,8 @@ noinst_HEADERS = \
 	swfdec_utils.h \
 	swfdec_video.h \
 	swfdec_video_movie.h \
+	swfdec_video_provider.h \
+	swfdec_video_video_provider.h \
 	swfdec_xml_node.h \
 	swfdec_xml.h \
 	swfdec_xml_socket.h
@@ -377,7 +383,7 @@ swfdec_as_strings.h: swfdec_as_strings.c
 	  && echo "extern const char swfdec_as_strings[];" \
 	  && grep "  SWFDEC_AS_CONSTANT_STRING" swfdec_as_strings.c \
 	  | sed "s/.*(\"\(.*\)\").*/\1/" \
-	  | LC_ALL="C" $(AWK) '{ if ($$0 == "") name = "EMPTY"; else if ($$0 == ",") name = "COMMA"; else if ($$0 == "/") name = "SLASH"; else name = $$0; gsub("[^a-zA-Z0-9\\$$]","_",name); print "#define SWFDEC_AS_STR_" name " &swfdec_as_strings[" x + 1 "]"; x = x + length ($$0) + 2 }' \
+	  | LC_ALL="C" $(AWK) '{ if ($$0 == "") name = "EMPTY"; else if ($$0 == ",") name = "COMMA"; else if ($$0 == "/") name = "SLASH"; else name = $$0; gsub("[^a-zA-Z0-9]","_",name); print "#define SWFDEC_AS_STR_" name " &swfdec_as_strings[" x + 1 "]"; x = x + length ($$0) + 2 }' \
 	  && echo "#endif" ) > xgen-sas \
 	&& (cmp -s xgen-sas swfdec_as_strings.h || cp xgen-sas swfdec_as_strings.h ) \
 	&& rm -f xgen-sas

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
+#include "swfdec_renderer_internal.h"
 
 static gboolean
 swfdec_video_decoder_builtin_prepare (guint codec, char **detail)
@@ -250,23 +251,30 @@ swfdec_video_codec_apply_mask (guint8 *data, guint rowstride, const guint8 *mask
 /**
  * swfdec_video_decoder_decode:
  * @decoder: a #SwfdecVideoDecoder
+ * @renderer: renderer the resulting surface should belong to
  * @buffer: buffer to decode
+ * @width: relevant width of resulting image
+ * @height: relevant height of resulting image
  *
- * Decodes the given buffer into an image surface.
+ * Decodes the given buffer into a surface. On success, the relevant area of
+ * the surface will be indicated by @width and @height.
  *
  * Returns: a new cairo image surface or %NULL on error.
  **/
 cairo_surface_t *
-swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
+swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecRenderer *renderer,
+    SwfdecBuffer *buffer, guint *width, guint *height)
 {
   SwfdecVideoImage image;
-  static const cairo_user_data_key_t key;
   cairo_surface_t *surface;
   guint8 *data;
   guint rowstride;
 
   g_return_val_if_fail (decoder != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_RENDERER (renderer), NULL);
   g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (width != NULL, NULL);
+  g_return_val_if_fail (height != NULL, NULL);
 
   if (!decoder->decode (decoder, buffer, &image)) {
     SWFDEC_ERROR ("failed to decode video");
@@ -289,17 +297,11 @@ swfdec_video_decoder_decode (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
     swfdec_video_codec_apply_mask (data, image.width * 4, image.mask, 
 	image.mask_rowstride, image.width, image.height);
   }
-  surface = cairo_image_surface_create_for_data (data, 
+  surface = swfdec_renderer_create_for_data (renderer, data,
       image.mask ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24,
       image.width, image.height, rowstride);
-  if (cairo_surface_status (surface)) {
-    SWFDEC_ERROR ("failed to create surface: %s", 
-	cairo_status_to_string (cairo_surface_status (surface)));
-    cairo_surface_destroy (surface);
-    return NULL;
-  }
-  cairo_surface_set_user_data (surface, &key, data, 
-      (cairo_destroy_func_t) g_free);
+  *width = image.width;
+  *height = image.height;
   return surface;
 }
 

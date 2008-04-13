@@ -137,7 +137,7 @@ dnl
 dnl audio backend
 dnl
 AC_ARG_WITH(audio,
-            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/oss/none@:>@],
+            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/none@:>@],
                             [audio backend to use])],,
 	    [with_audio=auto])
 
@@ -172,14 +172,6 @@ if test "$with_audio" = "auto" -o "$with_audio" = "pa"; then
       AC_MSG_WARN([no pulseaudio support])
     fi
   fi
-fi
-
-dnl Assume OSS is available if ALSA wasn't found and we're "auto".
-if test "$with_audio" = "auto" -o "$with_audio" = "oss"; then
-  with_audio="oss"
-  AUDIO_CFLAGS=
-  AUDIO_LIBS=
-  AUDIO_TYPE=oss
 fi
 
 dnl If all else fails, fall back to none.

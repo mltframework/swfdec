@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,12 +20,13 @@
 #ifndef _SWFDEC_VIDEO_H_
 #define _SWFDEC_VIDEO_H_
 
+#include <swfdec/swfdec_buffer.h>
 #include <swfdec/swfdec_graphic.h>
-#include <swfdec/swfdec_codec_video.h>
 
 G_BEGIN_DECLS
 
 typedef struct _SwfdecVideo SwfdecVideo;
+typedef struct _SwfdecVideoFrame SwfdecVideoFrame;
 typedef struct _SwfdecVideoClass SwfdecVideoClass;
 
 #define SWFDEC_TYPE_VIDEO                    (swfdec_video_get_type())
@@ -33,6 +34,11 @@ typedef struct _SwfdecVideoClass SwfdecVideoClass;
 #define SWFDEC_IS_VIDEO_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_VIDEO))
 #define SWFDEC_VIDEO(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_VIDEO, SwfdecVideo))
 #define SWFDEC_VIDEO_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_VIDEO, SwfdecVideoClass))
+
+struct _SwfdecVideoFrame {
+  guint			frame;
+  SwfdecBuffer *	buffer;
+};
 
 struct _SwfdecVideo {
   SwfdecGraphic			graphic;

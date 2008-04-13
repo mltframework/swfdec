@@ -36,17 +36,17 @@ swfdec_video_attach_video (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecVideoMovie *video;
-  SwfdecAsObject *stream;
+  SwfdecAsObject *o;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_VIDEO_MOVIE, &video, "O", &stream);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_VIDEO_MOVIE, &video, "O", &o);
 
-  if (stream == NULL || !SWFDEC_IS_NET_STREAM (stream)) {
+  if (!SWFDEC_IS_VIDEO_PROVIDER (o)) {
     SWFDEC_WARNING ("calling attachVideo without a NetStream object");
-    swfdec_video_movie_set_input (video, NULL);
+    swfdec_video_movie_set_provider (video, NULL);
     return;
   }
 
-  swfdec_video_movie_set_input (video, &SWFDEC_NET_STREAM (stream)->input);
+  swfdec_video_movie_set_provider (video, SWFDEC_VIDEO_PROVIDER (o));
 }
 
 SWFDEC_AS_NATIVE (667, 2, swfdec_video_clear)

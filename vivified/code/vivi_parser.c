@@ -537,7 +537,7 @@ vivi_parser_end_code_token (ParseData *data, ViviCodeToken *token)
   data->positions = g_slist_delete_link (data->positions, data->positions);
 
   if (token != NULL)
-    g_print (":: %li - %li\n", start, vivi_parser_get_position (data));
+    g_print (":: %i - %i\n", (int) start, (int) vivi_parser_get_position (data));
 }
 
 static void

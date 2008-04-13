@@ -137,15 +137,14 @@ dnl
 dnl audio backend
 dnl
 AC_ARG_WITH(audio,
-            [AC_HELP_STRING([--with-audio=@<:@auto/alsa/none@:>@],
+            [AC_HELP_STRING([--with-audio=@<:@auto/pulse/none@:>@],
                             [audio backend to use])],,
-	    [with_audio=auto])
+	    [with_audio=alsa])
 
 AUDIO_TYPE=
-if test "$with_audio" = "auto" -o "$with_audio" = "alsa"; then
+if test "$with_audio" = "alsa"; then
   PKG_CHECK_MODULES(ALSA, alsa >= 1.0, AUDIO_TYPE=alsa)
   if test "$AUDIO_TYPE" = "alsa"; then
-    with_audio=alsa
     AUDIO_CFLAGS=$ALSA_CFLAGS
     AUDIO_LIBS=$ALSA_LIBS
   else
@@ -159,14 +158,13 @@ fi
 
 dnl Use PA if ALSA wasn't found and we're auto and it's available.
 dnl Disabled for now until the PA backend works.
-if test "$with_audio" = "auto" -o "$with_audio" = "pa"; then
-  PKG_CHECK_MODULES(PA, libpulse-mainloop-glib, AUDIO_TYPE=pa)
-  if test "$AUDIO_TYPE" = "pa"; then
-    with_audio=pa
+if test "$with_audio" = "pulse"; then
+  PKG_CHECK_MODULES(PA, libpulse-mainloop-glib, AUDIO_TYPE="pulse")
+  if test "$AUDIO_TYPE" = "pulse"; then
     AUDIO_CFLAGS=$PA_CFLAGS
     AUDIO_LIBS=$PA_LIBS
   else
-    if test "$with_audio" = "pa"; then
+    if test "$with_audio" = "pulse"; then
       AC_MSG_ERROR([no pulseaudio support])
     else
       AC_MSG_WARN([no pulseaudio support])
@@ -175,14 +173,14 @@ if test "$with_audio" = "auto" -o "$with_audio" = "pa"; then
 fi
 
 dnl If all else fails, fall back to none.
-if test "$with_audio" = "auto" -o "$with_audio" = "none"; then
+if test "$with_audio" = "none"; then
   AUDIO_CFLAGS=
   AUDIO_LIBS=
   AUDIO_TYPE=none
 fi
 
 if test "x$AUDIO_TYPE" = "x"; then
-  AC_MSG_ERROR([desired audio support could not be used])
+  AC_MSG_ERROR([audio backend "$with_audio" could not be used])
 else
   AC_MSG_NOTICE([audio backend: $AUDIO_TYPE])
 fi

@@ -344,7 +344,7 @@ swfdec_net_stream_video_provider_get_image (SwfdecVideoProvider *provider,
 
   if (stream->decoder != NULL &&
       (stream->decoder_time >= stream->current_time)) {
-    g_object_unref (stream->decoder);
+    swfdec_video_decoder_free (stream->decoder);
     stream->decoder = NULL;
   }
   if (stream->decoder == NULL) {
@@ -707,7 +707,7 @@ swfdec_net_stream_seek (SwfdecNetStream *stream, double secs)
     return;
   }
   if (stream->decoder) {
-    g_object_unref (stream->decoder);
+    swfdec_video_decoder_free (stream->decoder);
     stream->decoder = NULL;
   }
   msecs = secs * 1000;

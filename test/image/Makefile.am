@@ -3,6 +3,15 @@ check-local: ../swfdec-test
 
 EXTRA_DIST = \
 	README \
+	background-5.swf \
+	background-5.swf.png \
+	background-6.swf \
+	background-6.swf.png \
+	background-7.swf \
+	background-7.swf.png \
+	background-8.swf \
+	background-8.swf.png \
+	background.xml \
 	bw.jpg \
 	clip-change.c \
 	clip-change-backward-5.swf \

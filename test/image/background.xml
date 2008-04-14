@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<swf version="8" compressed="1">
+  <Header framerate="30" frames="366">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <FileAttributes hasMetaData="0" useNetwork="0"/>
+      <SetBackgroundColor>
+        <color>
+          <Color red="0" green="0" blue="255"/>
+        </color>
+      </SetBackgroundColor>
+      <DefineShape2 objectID="1">
+        <bounds>
+          <Rectangle left="0" right="20" top="0" bottom="20"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+	      <Solid>
+		<color>
+		  <Color red="0" green="255" blue="0" alpha="255"/>
+		</color>
+	      </Solid>
+            </fillStyles>
+	    <lineStyles />
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup x="20" y="20" fillStyle0="1"/>
+              <LineTo x="0" y="20"/>
+              <LineTo x="20" y="0"/>
+              <LineTo x="0" y="-20"/>
+              <LineTo x="-20" y="0"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape2>
+      <DefineSprite objectID="2" frames="1">
+        <tags>
+	  <SetBackgroundColor>
+	    <color>
+	      <Color red="255" green="0" blue="0"/>
+	    </color>
+	  </SetBackgroundColor>
+	  <PlaceObject2 depth="0" objectID="1">
+            <transform>
+              <Transform transX="0" transY="0"/>
+            </transform>
+	  </PlaceObject2>
+	  <PlaceObject2 depth="1" objectID="1">
+            <transform>
+              <Transform transX="1980" transY="1980"/>
+            </transform>
+	  </PlaceObject2>
+	  <ShowFrame/>
+          <End/>
+        </tags>
+      </DefineSprite>
+      <PlaceObject2 depth="1" objectID="2" />
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

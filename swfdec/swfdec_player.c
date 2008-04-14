@@ -809,8 +809,14 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   int width, height;
   double scale_x, scale_y;
 
-  priv->stage.width = priv->stage_width >= 0 ? priv->stage_width : (int) priv->width;
-  priv->stage.height = priv->stage_height >= 0 ? priv->stage_height : (int) priv->height;
+  if (priv->fullscreen) {
+    priv->stage.width = priv->system->screen_width;
+    priv->stage.height = priv->system->screen_height;
+  } else {
+    priv->stage.width = priv->stage_width >= 0 ? priv->stage_width : (int) priv->width;
+    priv->stage.height = priv->stage_height >= 0 ? priv->stage_height : (int) priv->height;
+  }
+
   if (priv->stage.height == 0 || priv->stage.width == 0) {
     priv->scale_x = 1.0;
     priv->scale_y = 1.0;
@@ -2618,6 +2624,7 @@ swfdec_player_set_fullscreen (SwfdecPlayer *player, gboolean fullscreen)
   g_object_notify (G_OBJECT (player), "fullscreen");
   SWFDEC_AS_VALUE_SET_BOOLEAN (&val, fullscreen);
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onFullScreen, 1, &val);
+  swfdec_player_update_scale (player);
 }
 
 /** PUBLIC API ***/

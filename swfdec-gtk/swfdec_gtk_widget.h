@@ -51,6 +51,7 @@ struct _SwfdecGtkWidgetClass
 GType		swfdec_gtk_widget_get_type		(void);
 
 GtkWidget *	swfdec_gtk_widget_new			(SwfdecPlayer *		player);
+GtkWidget *	swfdec_gtk_widget_new_fullscreen	(SwfdecPlayer *		player);
 
 void		swfdec_gtk_widget_set_player		(SwfdecGtkWidget *	widget,
 							 SwfdecPlayer *		player);

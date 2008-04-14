@@ -37,12 +37,15 @@ struct _SwfdecGtkWidgetPrivate
   gboolean		interactive;	/* TRUE if this widget propagates keyboard and mouse events */
   GdkRegion *		invalid;	/* invalid regions we didn't yet repaint */
   guint			invalidator;	/* GSource used for invalidating window contents */
+  GtkWidget *		fullscreen_window;/* the window we use for displaying fullscreen */
+  gboolean		fullscreen_mode;/* TRUE if we're a fullscreen widget */
 };
 
 enum {
   PROP_0,
-  PROP_PLAYER,
+  PROP_FULLSCREEN_MODE,
   PROP_INTERACTIVE,
+  PROP_PLAYER,
   PROP_RENDERER_SET,
   PROP_RENDERER
 };
@@ -107,9 +110,10 @@ swfdec_gtk_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
   if (event->type == GDK_BUTTON_PRESS && event->button <= 32 && priv->interactive && priv->player) {
-    swfdec_player_set_allow_fullscreen (priv->player, TRUE);
-    swfdec_player_mouse_press (priv->player, event->x, event->y, event->button);
-    swfdec_player_set_allow_fullscreen (priv->player, FALSE);
+    SwfdecPlayer *player = priv->player;
+    swfdec_player_set_allow_fullscreen (player, TRUE);
+    swfdec_player_mouse_press (player, event->x, event->y, event->button);
+    swfdec_player_set_allow_fullscreen (player, FALSE);
   }
   return FALSE;
 }
@@ -121,9 +125,10 @@ swfdec_gtk_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
   if (event->button <= 32 && priv->interactive && priv->player) {
-    swfdec_player_set_allow_fullscreen (priv->player, TRUE);
-    swfdec_player_mouse_release (priv->player, event->x, event->y, event->button);
-    swfdec_player_set_allow_fullscreen (priv->player, FALSE);
+    SwfdecPlayer *player = priv->player;
+    swfdec_player_set_allow_fullscreen (player, TRUE);
+    swfdec_player_mouse_release (player, event->x, event->y, event->button);
+    swfdec_player_set_allow_fullscreen (player, FALSE);
   }
   return FALSE;
 }
@@ -164,10 +169,11 @@ swfdec_gtk_widget_key_press (GtkWidget *gtkwidget, GdkEventKey *event)
   if (priv->interactive && priv->player) {
     guint keycode = swfdec_gtk_event_to_keycode (event);
     if (keycode != 0) {
-      swfdec_player_set_allow_fullscreen (priv->player, TRUE);
-      swfdec_player_key_press (priv->player, keycode, 
+      SwfdecPlayer *player = priv->player;
+      swfdec_player_set_allow_fullscreen (player, TRUE);
+      swfdec_player_key_press (player, keycode, 
 	  gdk_keyval_to_unicode (event->keyval));
-      swfdec_player_set_allow_fullscreen (priv->player, FALSE);
+      swfdec_player_set_allow_fullscreen (player, FALSE);
     }
     return TRUE;
   }
@@ -184,10 +190,11 @@ swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
   if (priv->interactive && priv->player) {
     guint keycode = swfdec_gtk_event_to_keycode (event);
     if (keycode != 0) {
-      swfdec_player_set_allow_fullscreen (priv->player, TRUE);
-      swfdec_player_key_release (priv->player, keycode, 
+      SwfdecPlayer *player = priv->player;
+      swfdec_player_set_allow_fullscreen (player, TRUE);
+      swfdec_player_key_release (player, keycode, 
 	  gdk_keyval_to_unicode (event->keyval));
-      swfdec_player_set_allow_fullscreen (priv->player, FALSE);
+      swfdec_player_set_allow_fullscreen (player, FALSE);
     }
     return TRUE;
   }
@@ -252,9 +259,9 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   cairo_t *cr;
   cairo_surface_t *surface = NULL;
 
-  if (event->window != gtkwidget->window)
-    return FALSE;
-  if (priv->player == NULL)
+  if (event->window != gtkwidget->window ||
+      priv->player == NULL ||
+      priv->fullscreen_window != NULL)
     return FALSE;
 
   /* FIXME: This might be ugly */
@@ -321,11 +328,14 @@ swfdec_gtk_widget_set_property (GObject *object, guint param_id, const GValue *v
   SwfdecGtkWidgetPrivate *priv = widget->priv;
   
   switch (param_id) {
-    case PROP_PLAYER:
-      swfdec_gtk_widget_set_player (widget, g_value_get_object (value));
+    case PROP_FULLSCREEN_MODE:
+      priv->fullscreen_mode = g_value_get_boolean (value);
       break;
     case PROP_INTERACTIVE:
       swfdec_gtk_widget_set_interactive (widget, g_value_get_boolean (value));
+      break;
+    case PROP_PLAYER:
+      swfdec_gtk_widget_set_player (widget, g_value_get_object (value));
       break;
     case PROP_RENDERER_SET:
       priv->renderer_set = g_value_get_boolean (value);
@@ -368,7 +378,7 @@ swfdec_gtk_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation
 
   gtkwidget->allocation = *allocation;
 
-  if (priv->player && swfdec_player_is_initialized (priv->player))
+  if (priv->player && swfdec_player_is_initialized (priv->player) && !priv->fullscreen_mode)
     swfdec_player_set_size (priv->player, allocation->width, allocation->height);
   if (GTK_WIDGET_REALIZED (gtkwidget)) {
     gdk_window_move_resize (gtkwidget->window, 
@@ -384,6 +394,12 @@ swfdec_gtk_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
 
   if (priv->player == NULL) {
     req->width = req->height = 0;
+#if 0
+  } else if (priv->fullscreen_mode) {
+    GdkScreen *screen = gtk_widget_has_screen (gtkwidget) ? gtk_widget_get_screen (gtkwidget) : NULL;
+    req->width = screen ? gdk_screen_get_width (screen) : 0;
+    req->height = screen ? gdk_screen_get_height (screen) : 0;
+#endif
   } else {
     guint w, h;
     swfdec_player_get_default_size (priv->player, &w, &h);
@@ -550,12 +566,15 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
   object_class->get_property = swfdec_gtk_widget_get_property;
   object_class->set_property = swfdec_gtk_widget_set_property;
 
-  g_object_class_install_property (object_class, PROP_PLAYER,
-      g_param_spec_object ("player", "player", "player that is displayed",
-	  SWFDEC_TYPE_PLAYER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (object_class, PROP_FULLSCREEN_MODE,
+      g_param_spec_boolean ("fullscreen-mode", "fullscreen mode", "special mode for fullscreen display",
+	  FALSE, G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property (object_class, PROP_INTERACTIVE,
       g_param_spec_boolean ("interactive", "interactive", "if mouse events are processed",
 	  TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_PLAYER,
+      g_param_spec_object ("player", "player", "player that is displayed",
+	  SWFDEC_TYPE_PLAYER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, PROP_RENDERER_SET,
       g_param_spec_boolean ("renderer-set", "renderer set", "if an intermediate renderer should be used",
 	  TRUE, G_PARAM_READWRITE));
@@ -620,7 +639,8 @@ swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRectangle *ex
   SwfdecGtkWidgetPrivate *priv = widget->priv;
   guint i;
 
-  if (!GTK_WIDGET_MAPPED (widget))
+  if (!GTK_WIDGET_MAPPED (widget) ||
+      priv->fullscreen_window != NULL)
     return;
 
   for (i = 0; i < n_rects; i++) {
@@ -633,12 +653,41 @@ swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRectangle *ex
 }
 
 static void
+swfdec_gtk_widget_do_fullscreen (SwfdecGtkWidget *widget, gboolean fullscreen)
+{
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+
+  if (priv->fullscreen_mode)
+    return;
+
+  if (fullscreen && priv->fullscreen_window == NULL) {
+    GtkWidget *window, *child;
+    
+    priv->fullscreen_window = window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    child = swfdec_gtk_widget_new_fullscreen (priv->player);
+    gtk_container_add (GTK_CONTAINER (window), child);
+    gtk_widget_show_all (window);
+    gtk_window_fullscreen (GTK_WINDOW (window));
+    gtk_widget_grab_focus (child);
+    g_object_ref (window);
+  } else if (!fullscreen && priv->fullscreen_window != NULL) {
+    gtk_widget_destroy (priv->fullscreen_window);
+    g_object_unref (priv->fullscreen_window);
+    priv->fullscreen_window = NULL;
+  }
+  swfdec_gtk_widget_clear_invalidations (widget);
+  gtk_widget_queue_draw (GTK_WIDGET (widget));
+}
+
+static void
 swfdec_gtk_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecGtkWidget *widget)
 {
   if (g_str_equal (pspec->name, "mouse-cursor")) {
     swfdec_gtk_widget_update_cursor (widget);
   } else if (g_str_equal (pspec->name, "initialized")) {
     gtk_widget_queue_resize (GTK_WIDGET (widget));
+  } else if (g_str_equal (pspec->name, "fullscreen")) {
+    swfdec_gtk_widget_do_fullscreen (widget, swfdec_player_get_fullscreen (player));
   }
 }
 
@@ -654,11 +703,16 @@ swfdec_gtk_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecGtkW
 void
 swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
 {
-  SwfdecGtkWidgetPrivate *priv = widget->priv;
+  SwfdecGtkWidgetPrivate *priv;
 
   g_return_if_fail (SWFDEC_IS_GTK_WIDGET (widget));
   g_return_if_fail (player == NULL || SWFDEC_IS_PLAYER (player));
   
+  priv = widget->priv;
+  if (priv->player == player)
+    return;
+
+  swfdec_gtk_widget_clear_invalidations (widget);
   if (player) {
     g_signal_connect (player, "invalidate", G_CALLBACK (swfdec_gtk_widget_invalidate_cb), widget);
     g_signal_connect (player, "notify", G_CALLBACK (swfdec_gtk_widget_notify_cb), widget);
@@ -678,6 +732,7 @@ swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
   gtk_widget_queue_resize (GTK_WIDGET (widget));
   g_object_notify (G_OBJECT (widget), "player");
   swfdec_gtk_widget_update_renderer (widget);
+  swfdec_gtk_widget_do_fullscreen (widget, player ? swfdec_player_get_fullscreen (player) : FALSE);
 }
 
 /**
@@ -712,6 +767,29 @@ swfdec_gtk_widget_new (SwfdecPlayer *player)
   g_return_val_if_fail (player == NULL || SWFDEC_IS_PLAYER (player), NULL);
 
   widget = g_object_new (SWFDEC_TYPE_GTK_WIDGET, "player", player, NULL);
+
+  return GTK_WIDGET (widget);
+}
+
+/**
+ * swfdec_gtk_widget_new_fullscreen:
+ * @player: a #SwfdecPlayer
+ *
+ * Creates a new #SwfdecGtkWidget to display @player inside a fullscreen 
+ * window.
+ *
+ * Returns: the new widget that displays @player in fullscreen mode.
+ **/
+GtkWidget *
+swfdec_gtk_widget_new_fullscreen (SwfdecPlayer *player)
+{
+  SwfdecGtkWidget *widget;
+  
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  /* NB: We must set fullscreen mode before setting the player, or we 
+   * get inf-loops when setting the player creates fullscreen windows */
+  widget = g_object_new (SWFDEC_TYPE_GTK_WIDGET, "fullscreen-mode", TRUE, "player", player, NULL);
 
   return GTK_WIDGET (widget);
 }

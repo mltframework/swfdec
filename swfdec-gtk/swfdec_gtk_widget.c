@@ -107,7 +107,9 @@ swfdec_gtk_widget_button_press (GtkWidget *gtkwidget, GdkEventButton *event)
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
   if (event->type == GDK_BUTTON_PRESS && event->button <= 32 && priv->interactive && priv->player) {
+    swfdec_player_set_allow_fullscreen (priv->player, TRUE);
     swfdec_player_mouse_press (priv->player, event->x, event->y, event->button);
+    swfdec_player_set_allow_fullscreen (priv->player, FALSE);
   }
   return FALSE;
 }
@@ -119,7 +121,9 @@ swfdec_gtk_widget_button_release (GtkWidget *gtkwidget, GdkEventButton *event)
   SwfdecGtkWidgetPrivate *priv = widget->priv;
 
   if (event->button <= 32 && priv->interactive && priv->player) {
+    swfdec_player_set_allow_fullscreen (priv->player, TRUE);
     swfdec_player_mouse_release (priv->player, event->x, event->y, event->button);
+    swfdec_player_set_allow_fullscreen (priv->player, FALSE);
   }
   return FALSE;
 }
@@ -160,8 +164,10 @@ swfdec_gtk_widget_key_press (GtkWidget *gtkwidget, GdkEventKey *event)
   if (priv->interactive && priv->player) {
     guint keycode = swfdec_gtk_event_to_keycode (event);
     if (keycode != 0) {
+      swfdec_player_set_allow_fullscreen (priv->player, TRUE);
       swfdec_player_key_press (priv->player, keycode, 
 	  gdk_keyval_to_unicode (event->keyval));
+      swfdec_player_set_allow_fullscreen (priv->player, FALSE);
     }
     return TRUE;
   }
@@ -178,8 +184,10 @@ swfdec_gtk_widget_key_release (GtkWidget *gtkwidget, GdkEventKey *event)
   if (priv->interactive && priv->player) {
     guint keycode = swfdec_gtk_event_to_keycode (event);
     if (keycode != 0) {
+      swfdec_player_set_allow_fullscreen (priv->player, TRUE);
       swfdec_player_key_release (priv->player, keycode, 
 	  gdk_keyval_to_unicode (event->keyval));
+      swfdec_player_set_allow_fullscreen (priv->player, FALSE);
     }
     return TRUE;
   }

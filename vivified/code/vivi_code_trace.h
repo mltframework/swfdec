@@ -20,7 +20,7 @@
 #ifndef _VIVI_CODE_TRACE_H_
 #define _VIVI_CODE_TRACE_H_
 
-#include <vivified/code/vivi_code_special_statement.h>
+#include <vivified/code/vivi_code_builtin_value_statement.h>
 #include <vivified/code/vivi_code_statement.h>
 #include <vivified/code/vivi_code_value.h>
 
@@ -39,14 +39,14 @@ typedef struct _ViviCodeTraceClass ViviCodeTraceClass;
 
 struct _ViviCodeTrace
 {
-  ViviCodeSpecialStatement	statement;
+  ViviCodeBuiltinValueStatement	statement;
 
   ViviCodeValue *	value;
 };
 
 struct _ViviCodeTraceClass
 {
-  ViviCodeSpecialStatementClass	statement_class;
+  ViviCodeBuiltinValueStatementClass	statement_class;
 };
 
 GType			vivi_code_trace_get_type   	(void);

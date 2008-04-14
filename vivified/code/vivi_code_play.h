@@ -20,7 +20,7 @@
 #ifndef _VIVI_CODE_PLAY_H_
 #define _VIVI_CODE_PLAY_H_
 
-#include <vivified/code/vivi_code_special_statement.h>
+#include <vivified/code/vivi_code_builtin_statement.h>
 #include <vivified/code/vivi_code_statement.h>
 
 G_BEGIN_DECLS
@@ -38,12 +38,12 @@ typedef struct _ViviCodePlayClass ViviCodePlayClass;
 
 struct _ViviCodePlay
 {
-  ViviCodeSpecialStatement	statement;
+  ViviCodeBuiltinStatement	statement;
 };
 
 struct _ViviCodePlayClass
 {
-  ViviCodeSpecialStatementClass	statement_class;
+  ViviCodeBuiltinStatementClass	statement_class;
 };
 
 GType			vivi_code_play_get_type   	(void);

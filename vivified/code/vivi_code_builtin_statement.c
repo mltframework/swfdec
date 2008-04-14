@@ -21,61 +21,44 @@
 #include "config.h"
 #endif
 
-#include <string.h>
-
-#include "vivi_code_special_statement.h"
+#include "vivi_code_builtin_statement.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_compiler.h"
 
-G_DEFINE_ABSTRACT_TYPE (ViviCodeSpecialStatement, vivi_code_special_statement, VIVI_TYPE_CODE_STATEMENT)
+G_DEFINE_ABSTRACT_TYPE (ViviCodeBuiltinStatement, vivi_code_builtin_statement, VIVI_TYPE_CODE_STATEMENT)
 
 static void
-vivi_code_special_statement_print (ViviCodeToken *token,
+vivi_code_builtin_statement_print (ViviCodeToken *token,
     ViviCodePrinter *printer)
 {
-  ViviCodeSpecialStatement *stmt = VIVI_CODE_SPECIAL_STATEMENT (token);
-  ViviCodeSpecialStatementClass *klass =
-    VIVI_CODE_SPECIAL_STATEMENT_GET_CLASS (stmt);
+  ViviCodeBuiltinStatement *stmt = VIVI_CODE_BUILTIN_STATEMENT (token);
 
   g_assert (stmt->name != NULL);
   vivi_code_printer_print (printer, stmt->name);
-
-  vivi_code_printer_print (printer, " (");
-
-  if (klass->get_value != NULL) {
-    vivi_code_printer_print_value (printer, klass->get_value (stmt),
-	VIVI_PRECEDENCE_COMMA);
-  }
-
-  vivi_code_printer_print (printer, ");");
+  vivi_code_printer_print (printer, " ();");
   vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void
-vivi_code_special_statement_compile (ViviCodeToken *token,
+vivi_code_builtin_statement_compile (ViviCodeToken *token,
     ViviCodeCompiler *compiler)
 {
-  ViviCodeSpecialStatement *stmt = VIVI_CODE_SPECIAL_STATEMENT (token);
-  ViviCodeSpecialStatementClass *klass =
-    VIVI_CODE_SPECIAL_STATEMENT_GET_CLASS (stmt);
-
-  if (klass->get_value != NULL)
-    vivi_code_compiler_compile_value (compiler, klass->get_value (stmt));
+  ViviCodeBuiltinStatement *stmt = VIVI_CODE_BUILTIN_STATEMENT (token);
 
   g_assert (stmt->action != SWFDEC_AS_ACTION_END);
   vivi_code_compiler_write_empty_action (compiler, stmt->action);
 }
 
 static void
-vivi_code_special_statement_class_init (ViviCodeSpecialStatementClass *klass)
+vivi_code_builtin_statement_class_init (ViviCodeBuiltinStatementClass *klass)
 {
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
 
-  token_class->print = vivi_code_special_statement_print;
-  token_class->compile = vivi_code_special_statement_compile;
+  token_class->print = vivi_code_builtin_statement_print;
+  token_class->compile = vivi_code_builtin_statement_compile;
 }
 
 static void
-vivi_code_special_statement_init (ViviCodeSpecialStatement *stmt)
+vivi_code_builtin_statement_init (ViviCodeBuiltinStatement *stmt)
 {
 }

@@ -23,42 +23,17 @@
 
 #include "vivi_code_trace.h"
 
-G_DEFINE_TYPE (ViviCodeTrace, vivi_code_trace, VIVI_TYPE_CODE_SPECIAL_STATEMENT)
-
-static void
-vivi_code_trace_dispose (GObject *object)
-{
-  ViviCodeTrace *trace = VIVI_CODE_TRACE (object);
-
-  g_object_unref (trace->value);
-
-  G_OBJECT_CLASS (vivi_code_trace_parent_class)->dispose (object);
-}
-
-static ViviCodeValue *
-vivi_code_trace_get_value (ViviCodeSpecialStatement *stmt)
-{
-  ViviCodeTrace *trace = VIVI_CODE_TRACE (stmt);
-
-  return trace->value;
-}
+G_DEFINE_TYPE (ViviCodeTrace, vivi_code_trace, VIVI_TYPE_CODE_BUILTIN_VALUE_STATEMENT)
 
 static void
 vivi_code_trace_class_init (ViviCodeTraceClass *klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeSpecialStatementClass *stmt_class =
-    VIVI_CODE_SPECIAL_STATEMENT_CLASS (klass);
-
-  object_class->dispose = vivi_code_trace_dispose;
-
-  stmt_class->get_value = vivi_code_trace_get_value;
 }
 
 static void
 vivi_code_trace_init (ViviCodeTrace *token)
 {
-  ViviCodeSpecialStatement *stmt = VIVI_CODE_SPECIAL_STATEMENT (token);
+  ViviCodeBuiltinStatement *stmt = VIVI_CODE_BUILTIN_STATEMENT (token);
 
   stmt->name = "trace";
   stmt->action = SWFDEC_AS_ACTION_TRACE;
@@ -67,13 +42,14 @@ vivi_code_trace_init (ViviCodeTrace *token)
 ViviCodeStatement *
 vivi_code_trace_new (ViviCodeValue *value)
 {
-  ViviCodeTrace *trace;
+  ViviCodeBuiltinValueStatement *stmt;
 
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (value), NULL);
 
-  trace = g_object_new (VIVI_TYPE_CODE_TRACE, NULL);
-  trace->value = g_object_ref (value);
+  stmt = VIVI_CODE_BUILTIN_VALUE_STATEMENT (
+      g_object_new (VIVI_TYPE_CODE_TRACE, NULL));
+  vivi_code_builtin_value_statement_set_value (stmt, g_object_ref (value));
 
-  return VIVI_CODE_STATEMENT (trace);
+  return VIVI_CODE_STATEMENT (stmt);
 }
 

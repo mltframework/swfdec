@@ -23,7 +23,7 @@
 
 #include "vivi_code_play.h"
 
-G_DEFINE_TYPE (ViviCodePlay, vivi_code_play, VIVI_TYPE_CODE_SPECIAL_STATEMENT)
+G_DEFINE_TYPE (ViviCodePlay, vivi_code_play, VIVI_TYPE_CODE_BUILTIN_STATEMENT)
 
 static void
 vivi_code_play_class_init (ViviCodePlayClass *klass)
@@ -33,7 +33,7 @@ vivi_code_play_class_init (ViviCodePlayClass *klass)
 static void
 vivi_code_play_init (ViviCodePlay *token)
 {
-  ViviCodeSpecialStatement *stmt = VIVI_CODE_SPECIAL_STATEMENT (token);
+  ViviCodeBuiltinStatement *stmt = VIVI_CODE_BUILTIN_STATEMENT (token);
 
   stmt->name = "play";
   stmt->action = SWFDEC_AS_ACTION_PLAY;

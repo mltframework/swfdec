@@ -49,9 +49,6 @@ struct _SwfdecSpriteMovie
   guint			n_frames;	/* amount of frames */
   gboolean		playing;	/* TRUE if the movie automatically advances */
 
-  /* color information */
-  SwfdecColor		bgcolor;	/* background color (only used on main sprite) */
-
   /* audio stream handling */
   guint			sound_frame;	/* current sound frame */
   SwfdecAudio *		sound_stream;	/* stream that currently plays */

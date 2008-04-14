@@ -190,9 +190,9 @@ swfdec_stage_get_displayState (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
 
   if (priv->fullscreen)
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_normal);
-  else
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_fullScreen);
+  else
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_normal);
 }
 
 SWFDEC_AS_NATIVE (666, 12, swfdec_stage_set_displayState)

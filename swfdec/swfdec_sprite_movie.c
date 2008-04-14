@@ -764,11 +764,14 @@ swfdec_sprite_movie_render (SwfdecMovie *mov, cairo_t *cr,
     const SwfdecColorTransform *trans, const SwfdecRect *inval)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+  SwfdecResource *resource;
 
-  if (movie->bgcolor) {
-    cairo_rectangle (cr, mov->original_extents.x0, mov->original_extents.y0,
-	mov->original_extents.x1, mov->original_extents.y1);
-    swfdec_color_set_source (cr, movie->bgcolor);
+  resource = swfdec_movie_get_own_resource (mov);
+  if (resource && movie->sprite && movie->sprite->bgcolor) {
+    cairo_rectangle (cr, 0, 0, 
+	resource->decoder->width * SWFDEC_TWIPS_SCALE_FACTOR,
+	resource->decoder->height * SWFDEC_TWIPS_SCALE_FACTOR);
+    swfdec_color_set_source (cr, movie->sprite->bgcolor);
     cairo_fill (cr);
   }
 

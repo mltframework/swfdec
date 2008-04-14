@@ -226,7 +226,9 @@
  * @SWFDEC_KEY_NUM_LOCK: the num lock key
  * @SWFDEC_KEY_SEMICOLON: the semicolon key (on English keyboards)
  * @SWFDEC_KEY_EQUAL: the equal key (on English keyboards)
+ * @SWFDEC_KEY_COMMA: the comma key (on English keyboards)
  * @SWFDEC_KEY_MINUS: the minus key (on English keyboards)
+ * @SWFDEC_KEY_DOT: the dot key (on English keyboards)
  * @SWFDEC_KEY_SLASH: the slash key (on English keyboards)
  * @SWFDEC_KEY_GRAVE: the grave key (on English keyboards)
  * @SWFDEC_KEY_LEFT_BRACKET: the left bracket key (on English keyboards)

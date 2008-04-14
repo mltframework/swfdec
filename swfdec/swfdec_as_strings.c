@@ -503,5 +503,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("tabChildren")
   SWFDEC_AS_CONSTANT_STRING ("tabIndex")
   SWFDEC_AS_CONSTANT_STRING ("onChanged")
+  SWFDEC_AS_CONSTANT_STRING ("fullScreen")
+  SWFDEC_AS_CONSTANT_STRING ("onFullScreen")
   /* add more here */
 ;

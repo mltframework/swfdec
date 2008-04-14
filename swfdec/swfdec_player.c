@@ -1538,7 +1538,15 @@ swfdec_player_handle_tab (SwfdecPlayer *player, gboolean forward)
 }
 
 static void
-swfdec_player_handle_special_keys (SwfdecPlayer *player, guint key)
+swfdec_player_handle_special_keys_before (SwfdecPlayer *player, guint key)
+{
+  if (key == SWFDEC_KEY_ESCAPE) {
+    swfdec_player_set_fullscreen (player, FALSE);
+  }
+}
+
+static void
+swfdec_player_handle_special_keys_after (SwfdecPlayer *player, guint key)
 {
   if (key == SWFDEC_KEY_TAB) {
     gboolean forward = swfdec_player_is_key_pressed (player, SWFDEC_KEY_SHIFT);
@@ -1562,6 +1570,8 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
   } else {
     priv->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
   }
+  if (down)
+    swfdec_player_handle_special_keys_before (player, keycode);
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, 
       down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp, 0, NULL);
   if (priv->focus) {
@@ -1575,7 +1585,7 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
     }
   }
   if (down)
-    swfdec_player_handle_special_keys (player, keycode);
+    swfdec_player_handle_special_keys_after (player, keycode);
   swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
 
@@ -2585,6 +2595,29 @@ swfdec_player_add_missing_plugin (SwfdecPlayer *player, const char *detail)
 
   SWFDEC_INFO ("adding missing plugin: %s\n", detail);
   priv->missing_plugins = g_slist_prepend (priv->missing_plugins, g_strdup (detail));
+}
+
+void
+swfdec_player_set_fullscreen (SwfdecPlayer *player, gboolean fullscreen)
+{
+  SwfdecPlayerPrivate *priv;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+  if (priv->fullscreen == fullscreen)
+    return;
+
+  if (fullscreen && !priv->allow_fullscreen) {
+    SWFDEC_INFO ("going fullscreen not allowed");
+    return;
+  }
+
+  priv->fullscreen = fullscreen;
+  g_object_notify (G_OBJECT (player), "fullscreen");
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&val, fullscreen);
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onFullScreen, 1, &val);
 }
 
 /** PUBLIC API ***/

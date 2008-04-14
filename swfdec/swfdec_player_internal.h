@@ -223,6 +223,8 @@ void		swfdec_player_add_action_script	(SwfdecPlayer *		player,
 void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
 						 SwfdecActor *		actor);
 
+void		swfdec_player_set_fullscreen	(SwfdecPlayer *		player,
+						 gboolean		fullscreen);
 void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecActor *		drag,
 						 gboolean		center,

@@ -28,15 +28,16 @@ G_DEFINE_TYPE (ViviCodePlay, vivi_code_play, VIVI_TYPE_CODE_BUILTIN_STATEMENT)
 static void
 vivi_code_play_class_init (ViviCodePlayClass *klass)
 {
+  ViviCodeBuiltinStatementClass *stmt_class =
+    VIVI_CODE_BUILTIN_STATEMENT_CLASS (klass);
+
+  stmt_class->function_name = "play";
+  stmt_class->bytecode = SWFDEC_AS_ACTION_PLAY;
 }
 
 static void
 vivi_code_play_init (ViviCodePlay *token)
 {
-  ViviCodeBuiltinStatement *stmt = VIVI_CODE_BUILTIN_STATEMENT (token);
-
-  stmt->name = "play";
-  stmt->action = SWFDEC_AS_ACTION_PLAY;
 }
 
 ViviCodeStatement *

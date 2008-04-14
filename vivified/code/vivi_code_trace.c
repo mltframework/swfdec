@@ -28,15 +28,16 @@ G_DEFINE_TYPE (ViviCodeTrace, vivi_code_trace, VIVI_TYPE_CODE_BUILTIN_VALUE_STAT
 static void
 vivi_code_trace_class_init (ViviCodeTraceClass *klass)
 {
+  ViviCodeBuiltinStatementClass *stmt_class =
+    VIVI_CODE_BUILTIN_STATEMENT_CLASS (klass);
+
+  stmt_class->function_name = "trace";
+  stmt_class->bytecode = SWFDEC_AS_ACTION_TRACE;
 }
 
 static void
 vivi_code_trace_init (ViviCodeTrace *token)
 {
-  ViviCodeBuiltinStatement *stmt = VIVI_CODE_BUILTIN_STATEMENT (token);
-
-  stmt->name = "trace";
-  stmt->action = SWFDEC_AS_ACTION_TRACE;
 }
 
 ViviCodeStatement *

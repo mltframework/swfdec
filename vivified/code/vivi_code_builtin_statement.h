@@ -39,15 +39,15 @@ typedef struct _ViviCodeBuiltinStatementClass ViviCodeBuiltinStatementClass;
 
 struct _ViviCodeBuiltinStatement
 {
-  ViviCodeStatement	statement;
-
-  const char		*name;
-  SwfdecAsAction	action;
+  ViviCodeStatement		statement;
 };
 
 struct _ViviCodeBuiltinStatementClass
 {
   ViviCodeStatementClass	statement_class;
+
+  const char *			function_name;
+  SwfdecAsAction		bytecode;
 };
 
 GType		vivi_code_builtin_statement_get_type		(void);

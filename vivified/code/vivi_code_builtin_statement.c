@@ -31,10 +31,11 @@ static void
 vivi_code_builtin_statement_print (ViviCodeToken *token,
     ViviCodePrinter *printer)
 {
-  ViviCodeBuiltinStatement *stmt = VIVI_CODE_BUILTIN_STATEMENT (token);
+  ViviCodeBuiltinStatementClass *klass =
+    VIVI_CODE_BUILTIN_STATEMENT_CLASS (token);
 
-  g_assert (stmt->name != NULL);
-  vivi_code_printer_print (printer, stmt->name);
+  g_assert (klass->function_name != NULL);
+  vivi_code_printer_print (printer, klass->function_name);
   vivi_code_printer_print (printer, " ();");
   vivi_code_printer_new_line (printer, FALSE);
 }
@@ -43,10 +44,11 @@ static void
 vivi_code_builtin_statement_compile (ViviCodeToken *token,
     ViviCodeCompiler *compiler)
 {
-  ViviCodeBuiltinStatement *stmt = VIVI_CODE_BUILTIN_STATEMENT (token);
+  ViviCodeBuiltinStatementClass *klass =
+    VIVI_CODE_BUILTIN_STATEMENT_CLASS (token);
 
-  g_assert (stmt->action != SWFDEC_AS_ACTION_END);
-  vivi_code_compiler_write_empty_action (compiler, stmt->action);
+  g_assert (klass->bytecode != SWFDEC_AS_ACTION_END);
+  vivi_code_compiler_write_empty_action (compiler, klass->bytecode);
 }
 
 static void

@@ -1,5 +1,6 @@
 /* Vivified
  * Copyright (C) 2008 Benjamin Otte <otte@gnome.org>
+ *                    Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -50,3 +51,11 @@ DEFAULT_BINARY (Or,		or,		"||",	???,				VIVI_PRECEDENCE_AND)
 */
 
 #undef DEFAULT_BINARY
+
+#ifndef DEFAULT_BUILTIN_STATEMENT
+#define DEFAULT_BUILTIN_STATEMENT(CapsName, underscore_name, function_name, bytecode)
+#endif
+
+DEFAULT_BUILTIN_STATEMENT (GetTimer,	get_timer,	"getTimer",	SWFDEC_AS_ACTION_GET_TIME)
+
+#undef DEFAULT_BUILTIN_STATEMENT

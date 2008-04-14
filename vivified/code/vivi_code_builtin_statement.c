@@ -32,7 +32,7 @@ vivi_code_builtin_statement_print (ViviCodeToken *token,
     ViviCodePrinter *printer)
 {
   ViviCodeBuiltinStatementClass *klass =
-    VIVI_CODE_BUILTIN_STATEMENT_CLASS (token);
+    VIVI_CODE_BUILTIN_STATEMENT_GET_CLASS (token);
 
   g_assert (klass->function_name != NULL);
   vivi_code_printer_print (printer, klass->function_name);
@@ -45,7 +45,7 @@ vivi_code_builtin_statement_compile (ViviCodeToken *token,
     ViviCodeCompiler *compiler)
 {
   ViviCodeBuiltinStatementClass *klass =
-    VIVI_CODE_BUILTIN_STATEMENT_CLASS (token);
+    VIVI_CODE_BUILTIN_STATEMENT_GET_CLASS (token);
 
   g_assert (klass->bytecode != SWFDEC_AS_ACTION_END);
   vivi_code_compiler_write_empty_action (compiler, klass->bytecode);

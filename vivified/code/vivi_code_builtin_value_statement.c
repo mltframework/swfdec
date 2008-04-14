@@ -44,7 +44,7 @@ vivi_code_builtin_value_statement_print (ViviCodeToken *token,
     ViviCodePrinter *printer)
 {
   ViviCodeBuiltinStatementClass *klass =
-    VIVI_CODE_BUILTIN_STATEMENT_CLASS (token);
+    VIVI_CODE_BUILTIN_STATEMENT_GET_CLASS (token);
   ViviCodeBuiltinValueStatement *stmt =
     VIVI_CODE_BUILTIN_VALUE_STATEMENT (token);
 
@@ -64,7 +64,7 @@ vivi_code_builtin_value_statement_compile (ViviCodeToken *token,
     ViviCodeCompiler *compiler)
 {
   ViviCodeBuiltinStatementClass *klass =
-    VIVI_CODE_BUILTIN_STATEMENT_CLASS (token);
+    VIVI_CODE_BUILTIN_STATEMENT_GET_CLASS (token);
   ViviCodeBuiltinValueStatement *stmt =
     VIVI_CODE_BUILTIN_VALUE_STATEMENT (token);
 

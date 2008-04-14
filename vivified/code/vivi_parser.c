@@ -33,6 +33,7 @@
 #include "vivi_code_block.h"
 #include "vivi_code_break.h"
 #include "vivi_code_builtin_statement_default.h"
+#include "vivi_code_builtin_value_statement_default.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
 #include "vivi_code_function.h"
@@ -47,7 +48,6 @@
 #include "vivi_code_or.h"
 #include "vivi_code_return.h"
 #include "vivi_code_throw.h"
-#include "vivi_code_trace.h"
 #include "vivi_code_unary.h"
 #include "vivi_code_value_statement.h"
 #include "vivi_compiler_empty_statement.h"
@@ -973,9 +973,9 @@ static const SpecialFunction special_functions[] = {
   { FALSE, "play",               vivi_code_play_new, NULL, NULL },
   { FALSE, "prevFrame",          vivi_code_previous_frame_new, NULL, NULL },
   //{ TRUE,  "random",             NULL, vivi_code_random_new, NULL },
-  //{ FALSE, "removeMovieClip",    NULL, vivi_code_remove_movie_clip_new, NULL },
+  { FALSE, "removeMovieClip",    NULL, vivi_code_remove_movie_clip_new, NULL },
   //{ FALSE, "setProperty",        NULL, NULL, parse_set_property },
-  //{ FALSE, "setTarget",          NULL, vivi_code_set_target_new, NULL },
+  { FALSE, "setTarget",          NULL, vivi_code_set_target_new, NULL },
   //{ FALSE, "startDrag",          NULL, NULL, parse_start_drag },
   { FALSE, "stop",               vivi_code_stop_new, NULL, NULL },
   { FALSE, "stopDrag",           vivi_code_stop_drag_new,NULL,  NULL },

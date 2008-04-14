@@ -65,3 +65,16 @@ DEFAULT_BUILTIN_STATEMENT (StopSounds,		stop_sounds,	"stopSounds",		SWFDEC_AS_AC
 DEFAULT_BUILTIN_STATEMENT (ToggleQuality,	toggle_quality,	"toggleQuality",	SWFDEC_AS_ACTION_TOGGLE_QUALITY)
 
 #undef DEFAULT_BUILTIN_STATEMENT
+
+#ifndef DEFAULT_BUILTIN_VALUE_STATEMENT
+#define DEFAULT_BUILTIN_VALUE_STATEMENT(CapsName, underscore_name, function_name, bytecode)
+#endif
+
+//DEFAULT_BUILTIN_VALUE_STATEMENT (CallFrame,		call_frame,		"callFrame",		SWFDEC_AS_ACTION_CALL)
+//DEFAULT_BUILTIN_VALUE_STATEMENT (GotoAndPlay,		goto_and_play,		"gotoAndPlay",		???)
+//DEFAULT_BUILTIN_VALUE_STATEMENT (GotoAndStop,		goto_and_stop,		"gotoAndStop",		???)
+DEFAULT_BUILTIN_VALUE_STATEMENT (RemoveMovieClip,	remove_movie_clip,	"removeMovieClip",	SWFDEC_AS_ACTION_REMOVE_SPRITE)
+DEFAULT_BUILTIN_VALUE_STATEMENT (SetTarget,		set_target,		"setTarget",		SWFDEC_AS_ACTION_SET_TARGET2)
+DEFAULT_BUILTIN_VALUE_STATEMENT (Trace,			trace,			"trace",		SWFDEC_AS_ACTION_TRACE)
+
+#undef DEFAULT_BUILTIN_VALUE_STATEMENT

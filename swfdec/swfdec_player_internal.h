@@ -80,6 +80,7 @@ struct _SwfdecPlayerPrivate
   GType			loader_type;		/* type to use for creating sockets */
   GType			socket_type;		/* type to use for creating sockets */
   gboolean		has_focus;		/* TRUE if this movie is given focus */
+  gboolean		allow_fullscreen;	/* TRUE if this movie may go fullscreen */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */
@@ -107,6 +108,7 @@ struct _SwfdecPlayerPrivate
   SwfdecRectangle     	invalid_extents;      	/* extents of area that needs a redraw in global coordinates */
   GArray *		invalidations;		/* fine-grained areas in need of redraw */
   GSList *		invalid_pending;	/* pending invalidations due to invalidate_last */
+  gboolean		fullscreen;		/* TRUE if the player has gone fullscreen */
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */

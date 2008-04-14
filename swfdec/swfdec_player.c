@@ -665,7 +665,9 @@ enum {
   PROP_VARIABLES,
   PROP_START_TIME,
   PROP_FOCUS,
-  PROP_RENDERER
+  PROP_RENDERER,
+  PROP_FULLSCREEN,
+  PROP_ALLOW_FULLSCREEN
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -787,6 +789,12 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_RENDERER:
       g_value_set_object (value, priv->renderer);
+      break;
+    case PROP_FULLSCREEN:
+      g_value_set_boolean (value, priv->fullscreen);
+      break;
+    case PROP_ALLOW_FULLSCREEN:
+      g_value_set_boolean (value, priv->allow_fullscreen);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -931,6 +939,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_RENDERER:
       swfdec_player_set_renderer (player, g_value_get_object (value));
+      break;
+    case PROP_ALLOW_FULLSCREEN:
+      swfdec_player_set_allow_fullscreen (player, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -2011,6 +2022,13 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_RENDERER,
       g_param_spec_object ("renderer", "renderer", "the renderer used by this player",
 	  SWFDEC_TYPE_RENDERER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (object_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen", "fullscreen", "if the player is in fullscreen mode",
+	  FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_ALLOW_FULLSCREEN,
+      g_param_spec_boolean ("allow-fullscreen", "allow fullscreen", 
+	  "if the player is allowed to change into fullscreen mode",
+	  FALSE, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -3546,5 +3564,60 @@ swfdec_player_set_variables (SwfdecPlayer *player, const char *variables)
   g_free (priv->variables);
   priv->variables = g_strdup (variables);
   g_object_notify (G_OBJECT (player), "variables");
+}
+
+/**
+ * swfdec_player_get_fullscreen:
+ * @player: the player
+ *
+ * CHecks if the player is in fullscreen mode currently. If the player is
+ * in fullscreen mode, it assumes it occupies the whole screen. A player will
+ * only ever go into fullscreen, if you have allowed it by calling 
+ * swfdec_player_set_allow_fullscreen().
+ *
+ * Returns: %TRUE if the player is in fullscreen mode currently
+ **/
+gboolean
+swfdec_player_get_fullscreen (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+
+  return player->priv->fullscreen;
+}
+
+/**
+ * swfdec_player_get_allow_fullscreen:
+ * @player: the player
+ *
+ * Checks if the player is allowed to go fullscreen. See 
+ * swfdec_player_set_allow_fullscreen() for details.
+ *
+ * Returns: %TRUE if the player is allowed to go fullscreen
+ **/
+gboolean
+swfdec_player_get_allow_fullscreen (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+
+  return player->priv->allow_fullscreen;
+}
+
+/**
+ * swfdec_player_set_allow_fullscreen:
+ * @player: the player
+ * @allow: if the player should be allowed to go fullscreen
+ *
+ * Sets if the player is allowed to go fullscreen. If a player is allowed to go
+ * fullscreen, it may set the SwfdecPlayer::fullscreen property to %TRUE. 
+ * Players are not allowed to go fullscreen by default. Usually applications 
+ * only want to allow going fullscreen in response to mouse or keyboard events.
+ **/
+void
+swfdec_player_set_allow_fullscreen (SwfdecPlayer *player, gboolean allow)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  player->priv->allow_fullscreen = allow;
+  g_object_notify (G_OBJECT (player), "allow-fullscreen");
 }
 

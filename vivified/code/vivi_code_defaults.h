@@ -56,6 +56,10 @@ DEFAULT_BINARY (Or,		or,		"||",	???,				VIVI_PRECEDENCE_AND)
 #define DEFAULT_BUILTIN_STATEMENT(CapsName, underscore_name, function_name, bytecode)
 #endif
 
-DEFAULT_BUILTIN_STATEMENT (GetTimer,	get_timer,	"getTimer",	SWFDEC_AS_ACTION_GET_TIME)
+DEFAULT_BUILTIN_STATEMENT (NextFrame,		next_frame,	"nextFrame",		SWFDEC_AS_ACTION_NEXT_FRAME)
+DEFAULT_BUILTIN_STATEMENT (Play,		play,		"play",			SWFDEC_AS_ACTION_PLAY)
+DEFAULT_BUILTIN_STATEMENT (PreviousFrame,	previous_frame,	"prevFrame",		SWFDEC_AS_ACTION_PREVIOUS_FRAME)
+DEFAULT_BUILTIN_STATEMENT (StopSounds,		stop_sounds,	"stopSounds",		SWFDEC_AS_ACTION_STOP_SOUNDS)
+DEFAULT_BUILTIN_STATEMENT (ToggleQuality,	toggle_quality,	"toggleQuality",	SWFDEC_AS_ACTION_TOGGLE_QUALITY)
 
 #undef DEFAULT_BUILTIN_STATEMENT

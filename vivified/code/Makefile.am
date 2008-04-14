@@ -23,6 +23,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_block.c \
 	vivi_code_break.c \
 	vivi_code_builtin_statement.c \
+	vivi_code_builtin_statement_default.c \
 	vivi_code_builtin_value_statement.c \
 	vivi_code_comment.c \
 	vivi_code_compiler.c \
@@ -39,7 +40,6 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_label.c \
 	vivi_code_loop.c \
 	vivi_code_or.c \
-	vivi_code_play.c \
 	vivi_code_printer.c \
 	vivi_code_return.c \
 	vivi_code_statement.c \
@@ -69,6 +69,7 @@ noinst_HEADERS = \
 	vivi_code_block.h \
 	vivi_code_break.h \
 	vivi_code_builtin_statement.h \
+	vivi_code_builtin_statement_default.h \
 	vivi_code_builtin_value_statement.h \
 	vivi_code_comment.h \
 	vivi_code_compiler.h \
@@ -86,7 +87,6 @@ noinst_HEADERS = \
 	vivi_code_label.h \
 	vivi_code_loop.h \
 	vivi_code_or.h \
-	vivi_code_play.h \
 	vivi_code_printer.h \
 	vivi_code_return.h \
 	vivi_code_statement.h \

@@ -32,6 +32,7 @@
 #include "vivi_code_binary_default.h"
 #include "vivi_code_block.h"
 #include "vivi_code_break.h"
+#include "vivi_code_builtin_statement_default.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
 #include "vivi_code_function.h"
@@ -44,7 +45,6 @@
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
 #include "vivi_code_or.h"
-#include "vivi_code_play.h"
 #include "vivi_code_return.h"
 #include "vivi_code_throw.h"
 #include "vivi_code_trace.h"
@@ -961,17 +961,17 @@ static const SpecialFunction special_functions[] = {
   //{ FALSE, "loadMovieNum",       NULL, NULL, parse_load_movie_num },
   //{ FALSE, "loadVariables",      NULL, NULL, parse_load_variables },
   //{ FALSE, "loadVariablesNum",   NULL, NULL, parse_load_variables_num },
-  //{ FALSE, "nextFrame",          vivi_code_next_frame_new, NULL, NULL },
+  { FALSE, "nextFrame",          vivi_code_next_frame_new, NULL, NULL },
   { FALSE, "play",               vivi_code_play_new, NULL, NULL },
-  //{ FALSE, "prevFrame",          vivi_code_prev_frame_new, NULL, NULL },
+  { FALSE, "prevFrame",          vivi_code_previous_frame_new, NULL, NULL },
   //{ FALSE, "removeMovieClip",    NULL, vivi_code_remove_movie_clip_new, NULL },
   //{ FALSE, "setProperty",        NULL, NULL, parse_set_property },
   //{ FALSE, "setTarget",          NULL, vivi_code_set_target_new, NULL },
   //{ FALSE, "startDrag",          NULL, NULL, parse_start_drag },
   //{ FALSE, "stopDrag",           NULL, vivi_code_stop_drag_new, NULL },
   //{ FALSE, "stop",               NULL, vivi_code_stop_new, NULL },
-  //{ FALSE, "stopSounds",         vivi_code_stop_sounds_new, NULL, NULL },
-  //{ FALSE, "toggleQuality",      vivi_code_toggle_quality_new, NULL, NULL },
+  { FALSE, "stopSounds",         vivi_code_stop_sounds_new, NULL, NULL },
+  { FALSE, "toggleQuality",      vivi_code_toggle_quality_new, NULL, NULL },
   { FALSE, "trace",              NULL, vivi_code_trace_new, NULL }//,
   //{ TRUE,  "concat",             NULL, NULL, parse_concat },
   //{ TRUE,  "substring",          NULL, NULL, parse_substring },

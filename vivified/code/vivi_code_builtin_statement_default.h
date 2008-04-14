@@ -1,5 +1,6 @@
 /* Vivified
- * Copyright (C) 2008 Pekka Lampila <pekka.lampila@iki.fi>
+ * Copyright (C) 2008 Benjamin Otte <otte@gnome.org>
+ *               2008 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,31 +18,24 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef _VIVI_CODE_BUILTIN_STATEMENT_DEFAULT_H_
+#define _VIVI_CODE_BUILTIN_STATEMENT_DEFAULT_H_
+
+#include <vivified/code/vivi_code_builtin_statement.h>
+
+G_BEGIN_DECLS
+
+#define DEFAULT_BUILTIN_STATEMENT(CapsName, underscore_name, function_name, bytecode) \
+\
+typedef ViviCodeBuiltinStatement ViviCode ## CapsName; \
+typedef ViviCodeBuiltinStatementClass ViviCode ## CapsName ## Class; \
+\
+GType			vivi_code_ ## underscore_name ## _get_type   	(void); \
+\
+ViviCodeStatement *	vivi_code_## underscore_name ## _new		(void);
+
+#include "vivi_code_defaults.h"
+
+
+G_END_DECLS
 #endif
-
-#include "vivi_code_play.h"
-
-G_DEFINE_TYPE (ViviCodePlay, vivi_code_play, VIVI_TYPE_CODE_BUILTIN_STATEMENT)
-
-static void
-vivi_code_play_class_init (ViviCodePlayClass *klass)
-{
-  ViviCodeBuiltinStatementClass *stmt_class =
-    VIVI_CODE_BUILTIN_STATEMENT_CLASS (klass);
-
-  stmt_class->function_name = "play";
-  stmt_class->bytecode = SWFDEC_AS_ACTION_PLAY;
-}
-
-static void
-vivi_code_play_init (ViviCodePlay *token)
-{
-}
-
-ViviCodeStatement *
-vivi_code_play_new (void)
-{
-  return g_object_new (VIVI_TYPE_CODE_PLAY, NULL);
-}

@@ -136,9 +136,12 @@ void
 get_width (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
 
-  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->internal_width);
+  if (priv->scale_mode == SWFDEC_SCALE_NONE)
+    SWFDEC_AS_VALUE_SET_INT (ret, priv->internal_width);
+  else
+    SWFDEC_AS_VALUE_SET_INT (ret, priv->width);
 }
 
 SWFDEC_AS_NATIVE (666, 7, get_height)
@@ -146,9 +149,12 @@ void
 get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
 
-  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->internal_height);
+  if (priv->scale_mode == SWFDEC_SCALE_NONE)
+    SWFDEC_AS_VALUE_SET_INT (ret, priv->internal_height);
+  else
+    SWFDEC_AS_VALUE_SET_INT (ret, priv->height);
 }
 
 /* FIXME: do this smarter */

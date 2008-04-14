@@ -2623,7 +2623,14 @@ swfdec_player_set_fullscreen (SwfdecPlayer *player, gboolean fullscreen)
   priv->fullscreen = fullscreen;
   g_object_notify (G_OBJECT (player), "fullscreen");
   SWFDEC_AS_VALUE_SET_BOOLEAN (&val, fullscreen);
-  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onFullScreen, 1, &val);
+  if (SWFDEC_AS_CONTEXT (player)->global) {
+    SwfdecSandbox *sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
+    swfdec_sandbox_unuse (sandbox);
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onFullScreen, 1, &val);
+    swfdec_sandbox_use (sandbox);
+  } else {
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onFullScreen, 1, &val);
+  }
   swfdec_player_update_scale (player);
 }
 

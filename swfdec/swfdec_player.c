@@ -3457,7 +3457,7 @@ swfdec_player_set_renderer (SwfdecPlayer *player, SwfdecRenderer *renderer)
     renderer = swfdec_renderer_new_default (player);
   }
   if (priv->renderer)
-    g_object_unref (renderer);
+    g_object_unref (priv->renderer);
   priv->renderer = renderer;
   g_object_notify (G_OBJECT (player), "renderer");
 }

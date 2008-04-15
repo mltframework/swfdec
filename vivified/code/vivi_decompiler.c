@@ -1036,7 +1036,7 @@ vivi_decompiler_merge_lines (GList **list)
       continue;
     /* has no next block */
     next = vivi_decompiler_block_get_next (block);
-    if (next == NULL)
+    if (next == NULL || next == block)
       continue;
     /* The next block has multiple incoming blocks */
     if (vivi_decompiler_block_get_n_incoming (next) != 1)

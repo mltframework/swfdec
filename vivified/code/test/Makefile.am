@@ -29,6 +29,9 @@ EXTRA_DIST = \
 	if-nested.as \
 	if-nested.swf \
 	if-nested.swf.expect \
+	loop-empty.swf \
+	loop-empty.swf.expect \
+	loop-empty.xml \
 	loop-nested.as \
 	loop-nested.swf \
 	loop-nested.swf.expect \

@@ -32,6 +32,9 @@ EXTRA_DIST = \
 	loop-empty.swf \
 	loop-empty.swf.expect \
 	loop-empty.xml \
+	loop-infinite.swf \
+	loop-infinite.swf.expect \
+	loop-infinite.xml \
 	loop-nested.as \
 	loop-nested.swf \
 	loop-nested.swf.expect \

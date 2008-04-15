@@ -31,6 +31,33 @@
 #include "vivi_code_function.h"
 #include "vivi_code_text_printer.h"
 
+static SwfdecDecoder *
+swfdec_decoder_new_from_file (const char *filename, GError **error)
+{
+  SwfdecDecoder *dec;
+  SwfdecBuffer *buffer;
+
+  g_return_val_if_fail (filename != NULL, NULL);
+
+  buffer = swfdec_buffer_new_from_file (filename, error);
+  if (buffer == NULL)
+    return NULL;
+
+  dec = swfdec_decoder_new (buffer);
+  if (dec == NULL) {
+    g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_NOSYS, 
+	"file cannot be decoded by Swfdec");
+    swfdec_buffer_unref (buffer);
+    return NULL;
+  }
+
+  swfdec_decoder_parse (dec, buffer);
+  swfdec_decoder_eof (dec);
+
+  return dec;
+}
+
+
 static void
 decode_script (gpointer scriptp, gpointer unused)
 {
@@ -69,33 +96,31 @@ script_compare (gconstpointer a, gconstpointer b)
 int 
 main (int argc, char *argv[])
 {
-  SwfdecPlayer *player;
   SwfdecSwfDecoder *dec;
-  SwfdecURL *url;
   GList *scripts;
+  GError *error;
 
   if (argc < 2) {
     g_print ("%s FILENAME\n", argv[0]);
     return 1;
   }
 
-  player = swfdec_player_new (NULL);
-  url = swfdec_url_new_from_input (argv[1]);
-  swfdec_player_set_url (player, url);
-  swfdec_url_free (url);
-  /* FIXME: HACK! */
-  swfdec_player_advance (player, 0);
-  if (player->priv->roots == NULL ||
-      !SWFDEC_IS_SPRITE_MOVIE (player->priv->roots->data) ||
-      (dec = SWFDEC_SWF_DECODER (SWFDEC_MOVIE (player->priv->roots->data)->resource->decoder)) == NULL) {
-    g_printerr ("Error parsing file \"%s\"\n", argv[1]);
-    g_object_unref (player);
-    player = NULL;
+  swfdec_init ();
+
+  dec = (SwfdecSwfDecoder *) swfdec_decoder_new_from_file (argv[1], &error);
+  if (dec == NULL) {
+    g_printerr ("%s\n", error->message);
+    g_error_free (error);
+    return 1;
+  }
+  if (!SWFDEC_IS_SWF_DECODER (dec)) {
+    g_printerr ("\"%s\" is not a Flash file.\n", argv[1]);
+    g_object_unref (dec);
     return 1;
   }
 
   g_print ("/* version: %d - size: %ux%u */\n", dec->version,
-      player->priv->width, player->priv->height);
+      SWFDEC_DECODER (dec)->width, SWFDEC_DECODER (dec)->height);
   g_print ("\n");
   scripts = NULL;
   g_hash_table_foreach (dec->scripts, enqueue, &scripts);
@@ -104,7 +129,7 @@ main (int argc, char *argv[])
   g_list_foreach (scripts, decode_script, NULL);
 
   g_list_free (scripts);
-  g_object_unref (player);
+  g_object_unref (dec);
   return 0;
 }
 

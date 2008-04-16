@@ -35,6 +35,7 @@
 #include "vivi_code_builtin_statement_default.h"
 #include "vivi_code_builtin_value_call_default.h"
 #include "vivi_code_builtin_value_statement_default.h"
+#include "vivi_code_concat.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
 #include "vivi_code_function.h"
@@ -940,6 +941,29 @@ parse_url_method (ParseData *data, ViviCodeValue **value)
 }*/
 
 static void
+parse_concat (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
+{
+  ViviCodeValue *first, *second;
+  ViviCodeStatement *expression_statement;
+
+  parse_token (data, TOKEN_PARENTHESIS_LEFT);
+
+  parse_assignment_expression (data, &first, statement);
+
+  parse_token (data, TOKEN_COMMA);
+
+  parse_assignment_expression (data, &second, &expression_statement);
+  *statement = vivi_parser_join_statements (*statement, expression_statement);
+
+  parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+
+  *value = vivi_code_concat_new (first, second);
+  g_object_unref (first);
+  g_object_unref (second);
+}
+
+static void
 parse_substring (ParseData *data, ViviCodeValue **value,
     ViviCodeStatement **statement)
 {
@@ -1033,7 +1057,7 @@ typedef struct {
 
 static const BuiltinCall builtin_calls[] = {
   { "chr",         NULL, vivi_code_chr_new, NULL },
-  //{ "concat",      NULL, NULL, parse_concat },
+  { "concat",      NULL, NULL, parse_concat },
   { "eval",        NULL, vivi_code_eval_new, NULL },
   //{ "getProperty", NULL, NULL, parse_get_property },
   { "getTimer",    vivi_code_get_timer_new, NULL, NULL },

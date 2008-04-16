@@ -478,14 +478,22 @@ swfdec_gtk_widget_update_renderer (SwfdecGtkWidget *widget)
     priv->renderer = NULL;
   }
   if (needs_renderer) {
-    cairo_t *cr = gdk_cairo_create (GTK_WIDGET (widget)->window);
+    if (priv->fullscreen_mode) {
+      /* FIXME: We should really use the renderer of the app that 
+       * fullscreened us, but for now, we'll assume that app uses a
+       * similar renderer */
+      priv->renderer = swfdec_player_get_renderer (priv->player);
+      g_object_ref (priv->renderer);
+    } else {
+      cairo_t *cr = gdk_cairo_create (GTK_WIDGET (widget)->window);
 
-    if (priv->renderer_set)
-      g_printerr ("FIXME: create the right renderer\n");
-    priv->renderer = swfdec_renderer_new_for_player (
-	cairo_get_target (cr), priv->player);
-    swfdec_player_set_renderer (priv->player, priv->renderer);
-    cairo_destroy (cr);
+      if (priv->renderer_set)
+	g_printerr ("FIXME: create the right renderer\n");
+      priv->renderer = swfdec_renderer_new_for_player (
+	  cairo_get_target (cr), priv->player);
+      swfdec_player_set_renderer (priv->player, priv->renderer);
+      cairo_destroy (cr);
+    }
   }
 }
 

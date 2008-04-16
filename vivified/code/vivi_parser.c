@@ -33,12 +33,14 @@
 #include "vivi_code_block.h"
 #include "vivi_code_break.h"
 #include "vivi_code_builtin_statement_default.h"
+#include "vivi_code_builtin_value_call_default.h"
 #include "vivi_code_builtin_value_statement_default.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
 #include "vivi_code_function.h"
 #include "vivi_code_function_call.h"
 #include "vivi_code_get.h"
+#include "vivi_code_get_timer.h"
 #include "vivi_code_get_url.h"
 #include "vivi_code_goto.h"
 #include "vivi_code_if.h"
@@ -909,7 +911,7 @@ parse_variable_declaration (ParseData *data, ViviCodeStatement **statement)
   *statement = vivi_parser_join_statements (statement_right, assignment);
 }
 
-// special functions
+// builtin functions
 
 typedef void (*ParseArgumentFunction) (ParseData *data, guint position,
     ViviCodeValue **value, ViviCodeStatement **statement);
@@ -939,56 +941,68 @@ parse_url_method (ParseData *data, ViviCodeValue **value)
   }
 }*/
 
-typedef ViviCodeStatement *(*NewFunctionVoid) (void);
-typedef ViviCodeStatement *(*NewFunctionValue) (ViviCodeValue *value);
+typedef ViviCodeStatement *(*NewStatementVoid) (void);
+typedef ViviCodeStatement *(*NewStatementValue) (ViviCodeValue *value);
 
 typedef struct {
-  gboolean			return_value;
   const char *			name;
-  NewFunctionVoid		constructor_void;
-  NewFunctionValue		constructor_value;
+  NewStatementVoid		constructor_void;
+  NewStatementValue		constructor_value;
   ParseStatementFunction	parse_custom;
-} SpecialFunction;
+} BuiltinStatement;
 
-static const SpecialFunction special_functions[] = {
-  //{ FALSE, "callFrame",          NULL, vivi_code_call_frame_new, NULL },
-  //{ TRUE,  "chr",                NULL, vivi_code_chr_new, NULL },
-  //{ TRUE,  "concat",             NULL, NULL, parse_concat },
-  //{ FALSE, "duplicateMovieClip", NULL, NULL, parse_duplicate_movie_clip },
-  //{ TRUE,  "eval",               NULL, vivi_code_eval_new, NULL },
-  //{ TRUE,  "getProperty",        NULL, NULL, parse_get_property },
-  //{ TRUE,  "getTimer",           vivi_code_get_timer_new, NULL, NULL },
-  //{ FALSE, "getURL1",            NULL, NULL, parse_get_url1 },
-  //{ FALSE, "getURL",             NULL, NULL, parse_get_url },
-  //{ FALSE, "gotoAndPlay",        NULL, vivi_code_goto_and_play_new, NULL },
-  //{ FALSE, "gotoAndStop",        NULL, vivi_code_goto_and_stop_new, NULL },
-  //{ TRUE,  "int",                NULL, vivi_code_int_new, NULL },
-  //{ TRUE,  "length",             NULL, vivi_code_length_new, NULL },
-  //{ FALSE, "loadMovie",          NULL, NULL, parse_load_movie },
-  //{ FALSE, "loadMovieNum",       NULL, NULL, parse_load_movie_num },
-  //{ FALSE, "loadVariables",      NULL, NULL, parse_load_variables },
-  //{ FALSE, "loadVariablesNum",   NULL, NULL, parse_load_variables_num },
-  { FALSE, "nextFrame",          vivi_code_next_frame_new, NULL, NULL },
-  //{ TRUE,  "ord",                NULL, vivi_code_ord_new, NULL },
-  { FALSE, "play",               vivi_code_play_new, NULL, NULL },
-  { FALSE, "prevFrame",          vivi_code_previous_frame_new, NULL, NULL },
-  //{ TRUE,  "random",             NULL, vivi_code_random_new, NULL },
-  { FALSE, "removeMovieClip",    NULL, vivi_code_remove_movie_clip_new, NULL },
-  //{ FALSE, "setProperty",        NULL, NULL, parse_set_property },
-  { FALSE, "setTarget",          NULL, vivi_code_set_target_new, NULL },
-  //{ FALSE, "startDrag",          NULL, NULL, parse_start_drag },
-  { FALSE, "stop",               vivi_code_stop_new, NULL, NULL },
-  { FALSE, "stopDrag",           vivi_code_stop_drag_new,NULL,  NULL },
-  { FALSE, "stopSounds",         vivi_code_stop_sounds_new, NULL, NULL },
-  //{ TRUE,  "substring",          NULL, NULL, parse_substring },
-  //{ TRUE,  "targetPath",         NULL, vivi_code_target_path_new, NULL },
-  { FALSE, "toggleQuality",      vivi_code_toggle_quality_new, NULL, NULL },
-  { FALSE, "trace",              NULL, vivi_code_trace_new, NULL }//,
-  //{ TRUE,  "typeOf",             NULL, vivi_code_type_of_new, NULL }
+static const BuiltinStatement builtin_statements[] = {
+  //{ "callFrame",          NULL, vivi_code_call_frame_new, NULL },
+  //{ "duplicateMovieClip", NULL, NULL, parse_duplicate_movie_clip },
+  //{ "getURL1",            NULL, NULL, parse_get_url1 },
+  //{ "getURL",             NULL, NULL, parse_get_url },
+  //{ "gotoAndPlay",        NULL, vivi_code_goto_and_play_new, NULL },
+  //{ "gotoAndStop",        NULL, vivi_code_goto_and_stop_new, NULL },
+  //{ "loadMovie",          NULL, NULL, parse_load_movie },
+  //{ "loadMovieNum",       NULL, NULL, parse_load_movie_num },
+  //{ "loadVariables",      NULL, NULL, parse_load_variables },
+  //{ "loadVariablesNum",   NULL, NULL, parse_load_variables_num },
+  { "nextFrame",          vivi_code_next_frame_new, NULL, NULL },
+  { "play",               vivi_code_play_new, NULL, NULL },
+  { "prevFrame",          vivi_code_previous_frame_new, NULL, NULL },
+  { "removeMovieClip",    NULL, vivi_code_remove_movie_clip_new, NULL },
+  //{ "setProperty",        NULL, NULL, parse_set_property },
+  { "setTarget",          NULL, vivi_code_set_target_new, NULL },
+  //{ "startDrag",          NULL, NULL, parse_start_drag },
+  { "stop",               vivi_code_stop_new, NULL, NULL },
+  { "stopDrag",           vivi_code_stop_drag_new, NULL, NULL },
+  { "stopSounds",         vivi_code_stop_sounds_new, NULL, NULL },
+  { "toggleQuality",      vivi_code_toggle_quality_new, NULL, NULL },
+  { "trace",              NULL, vivi_code_trace_new, NULL }
+};
+
+typedef ViviCodeValue *(*NewCallVoid) (void);
+typedef ViviCodeValue *(*NewCallValue) (ViviCodeValue *value);
+
+typedef struct {
+  const char *			name;
+  NewCallVoid			constructor_void;
+  NewCallValue			constructor_value;
+  ParseValueStatementFunction	parse_custom;
+} BuiltinCall;
+
+static const BuiltinCall builtin_calls[] = {
+  { "chr",         NULL, vivi_code_chr_new, NULL },
+  //{ "concat",      NULL, NULL, parse_concat },
+  //{ "eval",        NULL, vivi_code_eval_new, NULL },
+  //{ "getProperty", NULL, NULL, parse_get_property },
+  { "getTimer",    vivi_code_get_timer_new, NULL, NULL },
+  { "int",         NULL, vivi_code_int_new, NULL },
+  { "length",      NULL, vivi_code_length_new, NULL },
+  { "ord",         NULL, vivi_code_ord_new, NULL },
+  { "random",      NULL, vivi_code_random_new, NULL },
+  //{ "substring",   NULL, NULL, parse_substring },
+  { "targetPath",  NULL, vivi_code_target_path_new, NULL },
+  { "typeOf",      NULL, vivi_code_type_of_new, NULL }
 };
 
 static gboolean
-peek_special_statement (ParseData *data)
+peek_builtin_call (ParseData *data)
 {
   guint i;
   const char *identifier;
@@ -1000,9 +1014,8 @@ peek_special_statement (ParseData *data)
 
   // TODO: Check that ( follows?
 
-  for (i = 0; i < G_N_ELEMENTS (special_functions); i++) {
-    if (special_functions[i].return_value == FALSE &&
-	g_ascii_strcasecmp (identifier, special_functions[i].name) == 0)
+  for (i = 0; i < G_N_ELEMENTS (builtin_calls); i++) {
+    if (g_ascii_strcasecmp (identifier, builtin_calls[i].name) == 0)
       return TRUE;
   }
 
@@ -1010,49 +1023,115 @@ peek_special_statement (ParseData *data)
 }
 
 static void
-parse_special_statement (ParseData *data, ViviCodeStatement **statement)
+parse_builtin_call (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
 {
   guint i;
   const char *identifier;
-  ViviCodeValue *value, *argument;
-  ViviCodeStatement *argument_statement;
+  ViviCodeValue *argument;
 
-  parse_identifier (data, &value);
+  parse_identifier (data, &argument);
   identifier = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (
-	VIVI_CODE_GET (value)->name));
-  g_object_unref (value);
+	VIVI_CODE_GET (argument)->name));
+  g_object_unref (argument);
 
-  for (i = 0; i < G_N_ELEMENTS (special_functions); i++) {
-    if (special_functions[i].return_value == FALSE &&
-        g_ascii_strcasecmp (identifier, special_functions[i].name) == 0)
+  for (i = 0; i < G_N_ELEMENTS (builtin_calls); i++) {
+    if (g_ascii_strcasecmp (identifier, builtin_calls[i].name) == 0)
       break;
   }
-  if (i >= G_N_ELEMENTS (special_functions)) {
-    vivi_parser_error (data, "Unknown special statement: %s", identifier);
+  if (i >= G_N_ELEMENTS (builtin_calls)) {
+    vivi_parser_error (data, "Unknown builtin call: %s", identifier);
     i = 0;
   }
 
-  if (special_functions[i].parse_custom != NULL) {
-    special_functions[i].parse_custom (data, statement);
+  if (builtin_calls[i].parse_custom != NULL) {
+    builtin_calls[i].parse_custom (data, value, statement);
     return;
   }
 //
   parse_token (data, TOKEN_PARENTHESIS_LEFT);
 
-  if (special_functions[i].constructor_value != NULL)
+  if (builtin_calls[i].constructor_value != NULL)
+    parse_assignment_expression (data, &argument, statement);
+
+  parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+
+  parse_automatic_semicolon (data);
+
+  if (builtin_calls[i].constructor_value != NULL) {
+    *value = builtin_calls[i].constructor_value (argument);
+    g_object_unref (argument);
+  } else {
+    g_assert (builtin_calls[i].constructor_void != NULL);
+    *value = builtin_calls[i].constructor_void ();
+  }
+}
+
+
+static gboolean
+peek_builtin_statement (ParseData *data)
+{
+  guint i;
+  const char *identifier;
+
+  if (!peek_token (data, TOKEN_IDENTIFIER))
+    return FALSE;
+
+  identifier = data->scanner->next_value.v_identifier;
+
+  // TODO: Check that ( follows?
+
+  for (i = 0; i < G_N_ELEMENTS (builtin_statements); i++) {
+    if (g_ascii_strcasecmp (identifier, builtin_statements[i].name) == 0)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static void
+parse_builtin_statement (ParseData *data, ViviCodeStatement **statement)
+{
+  guint i;
+  const char *identifier;
+  ViviCodeValue *argument;
+  ViviCodeStatement *argument_statement;
+
+  parse_identifier (data, &argument);
+  identifier = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (
+	VIVI_CODE_GET (argument)->name));
+  g_object_unref (argument);
+
+  for (i = 0; i < G_N_ELEMENTS (builtin_statements); i++) {
+    if (g_ascii_strcasecmp (identifier, builtin_statements[i].name) == 0)
+      break;
+  }
+  if (i >= G_N_ELEMENTS (builtin_statements)) {
+    vivi_parser_error (data, "Unknown builtin statement: %s", identifier);
+    i = 0;
+  }
+
+  if (builtin_statements[i].parse_custom != NULL) {
+    builtin_statements[i].parse_custom (data, statement);
+    return;
+  }
+//
+  parse_token (data, TOKEN_PARENTHESIS_LEFT);
+
+  if (builtin_statements[i].constructor_value != NULL)
     parse_assignment_expression (data, &argument, &argument_statement);
 
   parse_token (data, TOKEN_PARENTHESIS_RIGHT);
 
   parse_automatic_semicolon (data);
 
-  if (special_functions[i].constructor_value != NULL) {
-    *statement = special_functions[i].constructor_value (argument);
+  if (builtin_statements[i].constructor_value != NULL) {
+    *statement = builtin_statements[i].constructor_value (argument);
     g_object_unref (argument);
     *statement = vivi_parser_join_statements (argument_statement, *statement);
   } else {
-    g_assert (special_functions[i].constructor_void != NULL);
-    *statement = special_functions[i].constructor_void ();
+    g_assert (builtin_statements[i].constructor_void != NULL);
+    *statement = builtin_statements[i].constructor_void ();
   }
 }
 
@@ -1233,7 +1312,11 @@ parse_left_hand_side_expression (ParseData *data, ViviCodeValue **value,
     return;
   }
 
-  parse_member_expression (data, value, statement);
+  if (peek_builtin_call (data)) {
+    parse_builtin_call (data, value, statement);
+  } else {
+    parse_member_expression (data, value, statement);
+  }
 
   while (try_parse_token (data, TOKEN_PARENTHESIS_LEFT)) {
     if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
@@ -2256,7 +2339,7 @@ static const struct {
   PeekFunction peek;
   ParseStatementFunction parse;
 } statement_functions[] = {
-  { peek_special_statement, parse_special_statement },
+  { peek_builtin_statement, parse_builtin_statement },
   { peek_block, parse_block },
   { peek_variable_statement, parse_variable_statement },
   { peek_empty_statement, parse_empty_statement },

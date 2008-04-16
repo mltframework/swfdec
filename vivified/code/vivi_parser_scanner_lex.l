@@ -180,7 +180,7 @@ identifier_part		[$_a-zA-Z0-9]
 "goto"			{ count (); return TOKEN_RESERVED_KEYWORD; }
 "implements"		{ count (); return TOKEN_RESERVED_KEYWORD; }
 "import"		{ count (); return TOKEN_RESERVED_KEYWORD; }
-"int"			{ count (); return TOKEN_RESERVED_KEYWORD; }
+	/*"int"			{ count (); return TOKEN_RESERVED_KEYWORD; }*/
 "interface"		{ count (); return TOKEN_RESERVED_KEYWORD; }
 "long"			{ count (); return TOKEN_RESERVED_KEYWORD; }
 "native"		{ count (); return TOKEN_RESERVED_KEYWORD; }

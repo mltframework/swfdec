@@ -22,8 +22,11 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_binary_default.c \
 	vivi_code_block.c \
 	vivi_code_break.c \
+	vivi_code_builtin_call.c \
 	vivi_code_builtin_statement.c \
 	vivi_code_builtin_statement_default.c \
+	vivi_code_builtin_value_call.c \
+	vivi_code_builtin_value_call_default.c \
 	vivi_code_builtin_value_statement.c \
 	vivi_code_builtin_value_statement_default.c \
 	vivi_code_comment.c \
@@ -33,6 +36,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_function.c \
 	vivi_code_function_call.c \
 	vivi_code_get.c \
+	vivi_code_get_timer.c \
 	vivi_code_get_url.c \
 	vivi_code_goto.c \
 	vivi_code_if.c \
@@ -68,8 +72,11 @@ noinst_HEADERS = \
 	vivi_code_binary_default.h \
 	vivi_code_block.h \
 	vivi_code_break.h \
+	vivi_code_builtin_call.h \
 	vivi_code_builtin_statement.h \
 	vivi_code_builtin_statement_default.h \
+	vivi_code_builtin_value_call.h \
+	vivi_code_builtin_value_call_default.h \
 	vivi_code_builtin_value_statement.h \
 	vivi_code_builtin_value_statement_default.h \
 	vivi_code_comment.h \
@@ -80,6 +87,7 @@ noinst_HEADERS = \
 	vivi_code_function.h \
 	vivi_code_function_call.h \
 	vivi_code_get.h \
+	vivi_code_get_timer.h \
 	vivi_code_get_url.h \
 	vivi_code_goto.h \
 	vivi_code_if.h \

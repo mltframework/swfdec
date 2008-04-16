@@ -71,6 +71,15 @@ EXTRA_DIST = \
 	color-transform-add80.swf.png \
 	color-transform-add80-alpha.swf \
 	color-transform-add80-alpha.swf.png \
+	crash-0.6.4-huge-image-5.swf \
+	crash-0.6.4-huge-image-5.swf.png \
+	crash-0.6.4-huge-image-6.swf \
+	crash-0.6.4-huge-image-6.swf.png \
+	crash-0.6.4-huge-image-7.swf \
+	crash-0.6.4-huge-image-7.swf.png \
+	crash-0.6.4-huge-image-8.swf \
+	crash-0.6.4-huge-image-8.swf.png \
+	crash-0.6.4-huge-image.xml \
 	default.stas \
 	default.sts \
 	definebits-palette-5.swf \

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<swf version="7" compressed="1">
+  <Header framerate="31" frames="27">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+
+      <DefineBitsLossless objectID="1" format="5" width="62525" height="17173">
+        <data>
+	  <data>eNpjYGBgAAAABAABAA==</data>
+        </data>
+      </DefineBitsLossless>
+      <DefineShape objectID="2">
+        <bounds>
+          <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+	      <ClippedBitmap objectID="1" />
+            </fillStyles>
+            <lineStyles/>
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup fillStyle1="1"/>
+              <LineTo x="4000" y="0"/>
+              <LineTo x="0" y="3000"/>
+              <LineTo x="-4000" y="0"/>
+              <LineTo x="0" y="-3000"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape>
+      <PlaceObject2 replace="0" depth="1" objectID="2" />
+
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

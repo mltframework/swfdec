@@ -47,7 +47,7 @@ static void scanlinescale2_u8 (unsigned char *dest, unsigned char *src,
 
 
 int jpeg_decode_argb (uint8_t *data, int length, uint32_t **image,
-    int *width, int *height)
+    unsigned int *width, unsigned int *height)
 {
   JpegDecoder *dec;
   int ret;

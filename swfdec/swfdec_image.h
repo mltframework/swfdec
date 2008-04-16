@@ -51,8 +51,9 @@ typedef enum {
 struct _SwfdecImage {
   SwfdecCharacter	character;
 
-  int			width;		/* width of image or 0 if not known yet */
-  int			height;		/* height of image or 0 if not known yet */
+  /* width * height * 4 must fit into a guint */
+  guint			width;		/* width of image or 0 if not known yet */
+  guint			height;		/* height of image or 0 if not known yet */
 
   SwfdecImageType	type;
   SwfdecBuffer *	jpegtables;

@@ -267,6 +267,14 @@ swfdec_renderer_get_cache (SwfdecRenderer *renderer, gpointer key,
   return result;
 }
 
+gsize
+swfdec_renderer_get_max_cache_size (SwfdecRenderer *renderer)
+{
+  g_return_val_if_fail (SWFDEC_IS_RENDERER (renderer), 0);
+
+  return swfdec_cache_get_max_cache_size (renderer->priv->cache);
+}
+
 SwfdecRenderer *
 swfdec_renderer_new_default (SwfdecPlayer *player)
 {

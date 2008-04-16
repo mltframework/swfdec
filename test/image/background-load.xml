@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<swf version="8" compressed="1">
+  <Header framerate="30" frames="1">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <FileAttributes hasMetaData="0" useNetwork="0"/>
+      <DoAction>
+	<actions>
+	  <GetURL url="background-7.swf" target="_level1"/>
+	</actions>
+      </DoAction>
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

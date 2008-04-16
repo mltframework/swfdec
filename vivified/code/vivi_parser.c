@@ -49,6 +49,7 @@
 #include "vivi_code_loop.h"
 #include "vivi_code_or.h"
 #include "vivi_code_return.h"
+#include "vivi_code_substring.h"
 #include "vivi_code_throw.h"
 #include "vivi_code_unary.h"
 #include "vivi_code_value_statement.h"
@@ -913,9 +914,6 @@ parse_variable_declaration (ParseData *data, ViviCodeStatement **statement)
 
 // builtin functions
 
-typedef void (*ParseArgumentFunction) (ParseData *data, guint position,
-    ViviCodeValue **value, ViviCodeStatement **statement);
-
 /*static void
 parse_url_method (ParseData *data, ViviCodeValue **value)
 {
@@ -940,6 +938,35 @@ parse_url_method (ParseData *data, ViviCodeValue **value)
     *value = vivi_code_constant_new_string ("DEFAULT");
   }
 }*/
+
+static void
+parse_substring (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
+{
+  ViviCodeValue *string, *index_, *count;
+  ViviCodeStatement *expression_statement;
+
+  parse_token (data, TOKEN_PARENTHESIS_LEFT);
+
+  parse_assignment_expression (data, &string, statement);
+
+  parse_token (data, TOKEN_COMMA);
+
+  parse_assignment_expression (data, &index_, &expression_statement);
+  *statement = vivi_parser_join_statements (*statement, expression_statement);
+
+  parse_token (data, TOKEN_COMMA);
+
+  parse_assignment_expression (data, &count, &expression_statement);
+  *statement = vivi_parser_join_statements (*statement, expression_statement);
+
+  parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+
+  *value = vivi_code_substring_new (string, index_, count);
+  g_object_unref (string);
+  g_object_unref (index_);
+  g_object_unref (count);
+}
 
 typedef ViviCodeStatement *(*NewStatementVoid) (void);
 typedef ViviCodeStatement *(*NewStatementValue) (ViviCodeValue *value);
@@ -996,7 +1023,7 @@ static const BuiltinCall builtin_calls[] = {
   { "length",      NULL, vivi_code_length_new, NULL },
   { "ord",         NULL, vivi_code_ord_new, NULL },
   { "random",      NULL, vivi_code_random_new, NULL },
-  //{ "substring",   NULL, NULL, parse_substring },
+  { "substring",   NULL, NULL, parse_substring },
   { "targetPath",  NULL, vivi_code_target_path_new, NULL },
   { "typeOf",      NULL, vivi_code_type_of_new, NULL }
 };

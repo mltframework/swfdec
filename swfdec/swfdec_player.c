@@ -2276,24 +2276,31 @@ swfdec_player_stop_sounds (SwfdecPlayer *player, SwfdecAudioRemoveFunc func, gpo
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
-  SwfdecPlayerPrivate *priv = player->priv;
+  SwfdecPlayerPrivate *priv;
   SwfdecRectangle r;
   SwfdecRect tmp;
   guint i;
 
-  if (swfdec_rect_is_empty (rect))
-    return;
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  tmp = *rect;
-  swfdec_player_global_to_stage (player, &tmp.x0, &tmp.y0);
-  swfdec_player_global_to_stage (player, &tmp.x1, &tmp.y1);
-  swfdec_rectangle_init_rect (&r, &tmp);
-  /* FIXME: currently we clamp the rectangle to the visible area, it might
-   * be useful to allow out-of-bounds drawing. In that case this needs to be
-   * changed */
-  swfdec_rectangle_intersect (&r, &r, &priv->stage);
-  if (swfdec_rectangle_is_empty (&r))
-    return;
+  priv = player->priv;
+  if (rect == NULL) {
+    r = priv->stage;
+  } else {
+    if (swfdec_rect_is_empty (rect))
+      return;
+
+    tmp = *rect;
+    swfdec_player_global_to_stage (player, &tmp.x0, &tmp.y0);
+    swfdec_player_global_to_stage (player, &tmp.x1, &tmp.y1);
+    swfdec_rectangle_init_rect (&r, &tmp);
+    /* FIXME: currently we clamp the rectangle to the visible area, it might
+     * be useful to allow out-of-bounds drawing. In that case this needs to be
+     * changed */
+    swfdec_rectangle_intersect (&r, &r, &priv->stage);
+    if (swfdec_rectangle_is_empty (&r))
+      return;
+  }
 
   SWFDEC_LOG ("  invalidating %d %d  %d %d", r.x, r.y, r.width, r.height);
   /* FIXME: get region code into swfdec? */
@@ -2304,18 +2311,37 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
     if (swfdec_rectangle_contains (&r, cur)) {
       *cur = r;
       swfdec_rectangle_union (&priv->invalid_extents, &priv->invalid_extents, &r);
+      break;
     }
   }
   if (i == priv->invalidations->len) {
     g_array_append_val (priv->invalidations, r);
     swfdec_rectangle_union (&priv->invalid_extents, &priv->invalid_extents, &r);
   }
-  SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %d %d  %d %d (%u subregions)",
-      rect->x0, rect->y0, rect->x1, rect->y1,
+  SWFDEC_DEBUG ("toplevel invalidation of %d %d  %d %d - invalid region now %d %d  %d %d (%u subregions)",
+      r.x, r.y, r.width, r.height,
       priv->invalid_extents.x, priv->invalid_extents.y, 
       priv->invalid_extents.x + priv->invalid_extents.width,
       priv->invalid_extents.y + priv->invalid_extents.height,
       priv->invalidations->len);
+}
+
+void
+swfdec_player_set_background_color (SwfdecPlayer *player, SwfdecColor bgcolor)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+  if (priv->bgcolor) {
+    SWFDEC_DEBUG ("not setting background color twice");
+    return;
+  }
+
+  SWFDEC_INFO ("setting bgcolor to %08X", bgcolor);
+  priv->bgcolor = bgcolor;
+  swfdec_player_invalidate (player, NULL);
 }
 
 /**
@@ -2963,6 +2989,11 @@ swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr,
   cairo_save (cr);
   cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
+  /* paint the background */
+  if (priv->bgcolor) {
+    swfdec_color_set_source (cr, priv->bgcolor);
+    cairo_paint (cr);
+  }
   /* compute the rectangle */
   x -= priv->offset_x;
   y -= priv->offset_y;

@@ -375,6 +375,9 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
   SWFDEC_LOG ("%p: executing %uth tag %s in frame %u", movie, movie->next_action - 1, 
       swfdec_swf_decoder_get_tag_name (tag), movie->frame);
   switch (tag) {
+    case SWFDEC_TAG_SETBACKGROUNDCOLOR:
+      swfdec_player_set_background_color (player, swfdec_bits_get_color (&bits));
+      return TRUE;
     case SWFDEC_TAG_DOACTION:
       SWFDEC_LOG ("SCRIPT action");
       if (!skip_scripts) {
@@ -760,26 +763,6 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
 }
 
 static void
-swfdec_sprite_movie_render (SwfdecMovie *mov, cairo_t *cr,
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
-{
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  SwfdecResource *resource;
-
-  resource = swfdec_movie_get_own_resource (mov);
-  if (resource && movie->sprite && movie->sprite->bgcolor) {
-    cairo_rectangle (cr, 0, 0, 
-	resource->decoder->width * SWFDEC_TWIPS_SCALE_FACTOR,
-	resource->decoder->height * SWFDEC_TWIPS_SCALE_FACTOR);
-    swfdec_color_set_source (cr, movie->sprite->bgcolor);
-    cairo_fill (cr);
-  }
-
-  SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->render (mov,
-      cr, trans, inval);
-}
-
-static void
 swfdec_sprite_movie_mark (SwfdecAsObject *object)
 {
   GList *walk;
@@ -808,7 +791,6 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;
-  movie_class->render = swfdec_sprite_movie_render;
   
   actor_class->iterate_start = swfdec_sprite_movie_iterate;
   actor_class->iterate_end = swfdec_sprite_movie_iterate_end;

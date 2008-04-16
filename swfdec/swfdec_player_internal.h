@@ -95,6 +95,7 @@ struct _SwfdecPlayerPrivate
   double		scale_y;		/* cached y scale value */
   int			offset_x;		/* x offset from top left edge after scaling */
   int			offset_y;		/* y offset from top left edge after scaling */
+  SwfdecColor		bgcolor;		/* background color or 0 if unset */
 
   SwfdecFunctionList	resource_requests;	/* all external requested URIs - see swfdec_resource_request.[ch] */
   guint			unnamed_count;		/* variable used for naming unnamed movies */
@@ -223,6 +224,9 @@ void		swfdec_player_add_action_script	(SwfdecPlayer *		player,
 void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
 						 SwfdecActor *		actor);
 
+void		swfdec_player_set_background_color
+						(SwfdecPlayer *		player,
+						 SwfdecColor		bgcolor);
 void		swfdec_player_set_fullscreen	(SwfdecPlayer *		player,
 						 gboolean		fullscreen);
 void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,

@@ -367,7 +367,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_DEFINEBUTTON] = {"DefineButton", tag_func_define_button, 0},
   [SWFDEC_TAG_JPEGTABLES] = {"JPEGTables", swfdec_image_jpegtables, 0},
   [SWFDEC_TAG_SETBACKGROUNDCOLOR] =
-      {"SetBackgroundColor", tag_func_set_background_color, SWFDEC_TAG_DEFINE_SPRITE },
+      {"SetBackgroundColor", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEFONT] = {"DefineFont", tag_func_define_font, 0},
   [SWFDEC_TAG_DEFINETEXT] = {"DefineText", tag_func_define_text, 0},
   [SWFDEC_TAG_DOACTION] = {"DoAction", tag_func_do_action, SWFDEC_TAG_DEFINE_SPRITE },

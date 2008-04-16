@@ -338,6 +338,9 @@ swfdec_image_lossless_load (SwfdecImage *image)
 
   if (image->width == 0 || image->height == 0)
     return;
+  if (G_MAXUINT / 4 / image->width < (guint) image->height)
+    return;
+
   swfdec_cached_load (SWFDEC_CACHED (image), 4 * image->width * image->height);
 
   if (format == 3) {

@@ -968,6 +968,24 @@ parse_substring (ParseData *data, ViviCodeValue **value,
   g_object_unref (count);
 }
 
+static void
+parse_target_path (ParseData *data, ViviCodeValue **value,
+    ViviCodeStatement **statement)
+{
+  ViviCodeValue *identifier;
+
+  *statement = NULL;
+
+  parse_token (data, TOKEN_PARENTHESIS_LEFT);
+
+  parse_identifier (data, &identifier);
+
+  parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+
+  *value = vivi_code_target_path_new (identifier);
+  g_object_unref (identifier);
+}
+
 typedef ViviCodeStatement *(*NewStatementVoid) (void);
 typedef ViviCodeStatement *(*NewStatementValue) (ViviCodeValue *value);
 
@@ -1016,7 +1034,7 @@ typedef struct {
 static const BuiltinCall builtin_calls[] = {
   { "chr",         NULL, vivi_code_chr_new, NULL },
   //{ "concat",      NULL, NULL, parse_concat },
-  //{ "eval",        NULL, vivi_code_eval_new, NULL },
+  { "eval",        NULL, vivi_code_eval_new, NULL },
   //{ "getProperty", NULL, NULL, parse_get_property },
   { "getTimer",    vivi_code_get_timer_new, NULL, NULL },
   { "int",         NULL, vivi_code_int_new, NULL },
@@ -1024,7 +1042,7 @@ static const BuiltinCall builtin_calls[] = {
   { "ord",         NULL, vivi_code_ord_new, NULL },
   { "random",      NULL, vivi_code_random_new, NULL },
   { "substring",   NULL, NULL, parse_substring },
-  { "targetPath",  NULL, vivi_code_target_path_new, NULL },
+  { "targetPath",  NULL, NULL, parse_target_path },
   { "typeOf",      NULL, vivi_code_type_of_new, NULL }
 };
 

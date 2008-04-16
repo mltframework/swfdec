@@ -1056,8 +1056,6 @@ parse_builtin_call (ParseData *data, ViviCodeValue **value,
 
   parse_token (data, TOKEN_PARENTHESIS_RIGHT);
 
-  parse_automatic_semicolon (data);
-
   if (builtin_calls[i].constructor_value != NULL) {
     *value = builtin_calls[i].constructor_value (argument);
     g_object_unref (argument);

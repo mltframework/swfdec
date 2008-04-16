@@ -342,7 +342,7 @@ swfdec_net_stream_video_provider_get_image (SwfdecVideoProvider *provider,
     return swfdec_cached_video_get_surface (cached);
   }
 
-  if (stream->flvdecoder == NULL)
+  if (stream->flvdecoder == NULL || stream->flvdecoder->video == NULL)
     return NULL;
 
   if (stream->decoder != NULL &&

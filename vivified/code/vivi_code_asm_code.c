@@ -33,7 +33,7 @@ vivi_code_asm_code_asm_init (ViviCodeAsmInterface *iface)
 {
 }
 
-G_DEFINE_TYPE_WITH_CODE (ViviCodeAsmCode, vivi_code_asm_code, VIVI_TYPE_CODE_ASM_CODE,
+G_DEFINE_TYPE_WITH_CODE (ViviCodeAsmCode, vivi_code_asm_code, VIVI_TYPE_CODE_TOKEN,
     G_IMPLEMENT_INTERFACE (VIVI_TYPE_CODE_ASM, vivi_code_asm_code_asm_init))
 
 static void

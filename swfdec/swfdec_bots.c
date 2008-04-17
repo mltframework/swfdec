@@ -64,6 +64,15 @@ swfdec_bots_close (SwfdecBots *bots)
   return buffer;
 }
 
+void
+swfdec_bots_free (SwfdecBots *bots)
+{
+  g_return_if_fail (bots != NULL);
+
+  g_free (bots->data);
+  g_free (bots);
+}
+
 gsize
 swfdec_bots_get_bits (SwfdecBots *bots)
 {

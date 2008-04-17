@@ -39,8 +39,9 @@ struct _SwfdecBots {
 #define SWFDEC_OUT_INITIAL (32)
 #define SWFDEC_OUT_STEP (32)
 
-SwfdecBots *	swfdec_bots_open			(void);
+SwfdecBots *	swfdec_bots_open		(void);
 SwfdecBuffer *	swfdec_bots_close		(SwfdecBots *		bots);
+void		swfdec_bots_free		(SwfdecBots *		bots);
 
 gsize		swfdec_bots_get_bits		(SwfdecBots *		bots);
 gsize		swfdec_bots_get_bytes		(SwfdecBots *		bots);

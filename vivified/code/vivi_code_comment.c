@@ -22,10 +22,17 @@
 #endif
 
 #include "vivi_code_comment.h"
-#include "vivi_code_printer.h"
+#include "vivi_code_asm.h"
 #include "vivi_code_compiler.h"
+#include "vivi_code_printer.h"
 
-G_DEFINE_TYPE (ViviCodeComment, vivi_code_comment, VIVI_TYPE_CODE_STATEMENT)
+static void
+vivi_code_comment_asm_init (ViviCodeAsmInterface *iface)
+{
+}
+
+G_DEFINE_TYPE_WITH_CODE (ViviCodeComment, vivi_code_comment, VIVI_TYPE_CODE_STATEMENT,
+    G_IMPLEMENT_INTERFACE (VIVI_TYPE_CODE_ASM, vivi_code_comment_asm_init))
 
 static void
 vivi_code_comment_dispose (GObject *object)

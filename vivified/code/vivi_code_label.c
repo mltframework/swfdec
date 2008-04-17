@@ -22,10 +22,17 @@
 #endif
 
 #include "vivi_code_label.h"
-#include "vivi_code_printer.h"
+#include "vivi_code_asm.h"
 #include "vivi_code_compiler.h"
+#include "vivi_code_printer.h"
 
-G_DEFINE_TYPE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_STATEMENT)
+static void
+vivi_code_label_asm_init (ViviCodeAsmInterface *iface)
+{
+}
+
+G_DEFINE_TYPE_WITH_CODE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_LABEL,
+    G_IMPLEMENT_INTERFACE (VIVI_TYPE_CODE_ASM, vivi_code_label_asm_init))
 
 static void
 vivi_code_label_dispose (GObject *object)

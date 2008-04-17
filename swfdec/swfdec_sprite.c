@@ -137,7 +137,6 @@ swfdec_sprite_create_movie (SwfdecGraphic *graphic, gsize *size)
 
   ret->sprite = SWFDEC_SPRITE (graphic);
   ret->n_frames = ret->sprite->n_frames;
-  ret->bgcolor = ret->sprite->bgcolor;
   *size = sizeof (SwfdecSpriteMovie);
 
   return SWFDEC_MOVIE (ret);

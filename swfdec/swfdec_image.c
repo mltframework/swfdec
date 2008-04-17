@@ -29,6 +29,7 @@
 
 #include "jpeg.h"
 #include "swfdec_image.h"
+#include "swfdec_cache.h"
 #include "swfdec_cached_image.h"
 #include "swfdec_debug.h"
 #include "swfdec_renderer_internal.h"
@@ -108,6 +109,29 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
+static gboolean
+swfdec_image_validate_size (SwfdecRenderer *renderer, guint width, guint height)
+{
+  gsize size;
+
+  if (width == 0 || height == 0)
+    return FALSE;
+
+  if (renderer) {
+    size = swfdec_renderer_get_max_cache_size (renderer);
+    size = MIN (size, G_MAXUINT);
+  } else {
+    size = G_MAXUINT;
+  }
+  if (size / 4 / width < height) {
+    SWFDEC_INFO ("%ux%u image doesn't fit into %zu bytes of cache", 
+	width, height, size);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 /**
  * swfdec_jpeg_decode_argb:
  *
@@ -117,9 +141,10 @@ tag_func_define_bits_jpeg (SwfdecSwfDecoder * s, guint tag)
  * buffer.  This makes a real JPEG image out of the crap in SWF files.
  */
 static gboolean
-swfdec_jpeg_decode_argb (unsigned char *data1, int length1,
+swfdec_jpeg_decode_argb (SwfdecRenderer *renderer,
+    unsigned char *data1, int length1,
     unsigned char *data2, int length2,
-    void *outdata, int *width, int *height)
+    void *outdata, guint *width, guint *height)
 {
   gboolean ret;
 
@@ -141,6 +166,8 @@ swfdec_jpeg_decode_argb (unsigned char *data1, int length1,
     ret = FALSE;
   }
 
+  if (ret)
+    ret = swfdec_image_validate_size (renderer, *width, *height);
   return ret;
 }
 
@@ -168,12 +195,12 @@ swfdec_image_jpeg_load (SwfdecImage *image, SwfdecRenderer *renderer)
   guint8 *data;
 
   if (image->jpegtables) {
-    ret = swfdec_jpeg_decode_argb (
+    ret = swfdec_jpeg_decode_argb (renderer,
         image->jpegtables->data, image->jpegtables->length,
         image->raw_data->data, image->raw_data->length,
         (void *) &data, &image->width, &image->height);
   } else {
-    ret = swfdec_jpeg_decode_argb (
+    ret = swfdec_jpeg_decode_argb (renderer,
         image->raw_data->data, image->raw_data->length,
         NULL, 0,
         (void *)&data, &image->width, &image->height);
@@ -215,7 +242,7 @@ swfdec_image_jpeg2_load (SwfdecImage *image, SwfdecRenderer *renderer)
   gboolean ret;
   guint8 *data;
 
-  ret = swfdec_jpeg_decode_argb (image->raw_data->data, image->raw_data->length,
+  ret = swfdec_jpeg_decode_argb (renderer, image->raw_data->data, image->raw_data->length,
       NULL, 0,
       (void *)&data, &image->width, &image->height);
   if (!ret)
@@ -252,7 +279,7 @@ static void
 merge_alpha (SwfdecImage * image, unsigned char *image_data,
     unsigned char *alpha)
 {
-  int x, y;
+  unsigned int x, y;
   unsigned char *p;
 
   for (y = 0; y < image->height; y++) {
@@ -281,8 +308,8 @@ swfdec_image_jpeg3_load (SwfdecImage *image, SwfdecRenderer *renderer)
   if (buffer == NULL)
     return NULL;
 
-  ret = swfdec_jpeg_decode_argb (buffer->data, buffer->length,
-      NULL, 0,
+  ret = swfdec_jpeg_decode_argb (renderer,
+      buffer->data, buffer->length, NULL, 0,
       (void *)&data, &image->width, &image->height);
   swfdec_buffer_unref (buffer);
 
@@ -326,7 +353,7 @@ swfdec_image_lossless_load (SwfdecImage *image, SwfdecRenderer *renderer)
   SWFDEC_LOG ("width = %d", image->width);
   SWFDEC_LOG ("height = %d", image->height);
 
-  if (image->width == 0 || image->height == 0)
+  if (!swfdec_image_validate_size (renderer, image->width, image->height))
     return NULL;
 
   if (format == 3) {
@@ -383,7 +410,7 @@ swfdec_image_lossless_load (SwfdecImage *image, SwfdecRenderer *renderer)
 
     swfdec_buffer_unref (buffer);
   } else if (format == 4) {
-    int i, j;
+    guint i, j;
     guint c;
     unsigned char *idata;
     SwfdecBuffer *buffer;
@@ -420,7 +447,7 @@ swfdec_image_lossless_load (SwfdecImage *image, SwfdecRenderer *renderer)
     swfdec_buffer_unref (buffer);
   } else if (format == 5) {
     SwfdecBuffer *buffer;
-    int i, j;
+    guint i, j;
     guint32 *p;
 
     buffer = swfdec_bits_decompress (&bits, -1, 4 * image->width * image->height);
@@ -514,12 +541,18 @@ swfdec_image_png_load (SwfdecImage *image, SwfdecRenderer *renderer)
   surface = cairo_image_surface_create_from_png_stream (
       swfdec_image_png_read, &bits);
   if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS) {
+    SWFDEC_ERROR ("could not create PNG image: %s", 
+	cairo_status_to_string (cairo_surface_status (surface)));
     cairo_surface_destroy (surface);
     return NULL;
   }
 
   image->width = cairo_image_surface_get_width (surface);
   image->height = cairo_image_surface_get_height (surface);
+  if (!swfdec_image_validate_size (renderer, image->width, image->height)) {
+    cairo_surface_destroy (surface);
+    return NULL;
+  }
   if (renderer)
     surface = swfdec_renderer_create_similar (renderer, surface);
   return surface;

@@ -80,6 +80,7 @@ struct _SwfdecPlayerPrivate
   GType			loader_type;		/* type to use for creating sockets */
   GType			socket_type;		/* type to use for creating sockets */
   gboolean		has_focus;		/* TRUE if this movie is given focus */
+  gboolean		allow_fullscreen;	/* TRUE if this movie may go fullscreen */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */
@@ -94,6 +95,7 @@ struct _SwfdecPlayerPrivate
   double		scale_y;		/* cached y scale value */
   int			offset_x;		/* x offset from top left edge after scaling */
   int			offset_y;		/* y offset from top left edge after scaling */
+  SwfdecColor		bgcolor;		/* background color or 0 if unset */
 
   SwfdecFunctionList	resource_requests;	/* all external requested URIs - see swfdec_resource_request.[ch] */
   guint			unnamed_count;		/* variable used for naming unnamed movies */
@@ -107,6 +109,7 @@ struct _SwfdecPlayerPrivate
   SwfdecRectangle     	invalid_extents;      	/* extents of area that needs a redraw in global coordinates */
   GArray *		invalidations;		/* fine-grained areas in need of redraw */
   GSList *		invalid_pending;	/* pending invalidations due to invalidate_last */
+  gboolean		fullscreen;		/* TRUE if the player has gone fullscreen */
 
   /* mouse */
   gboolean		mouse_visible;	  	/* show the mouse (actionscriptable) */
@@ -221,6 +224,11 @@ void		swfdec_player_add_action_script	(SwfdecPlayer *		player,
 void		swfdec_player_remove_all_actions (SwfdecPlayer *      	player,
 						 SwfdecActor *		actor);
 
+void		swfdec_player_set_background_color
+						(SwfdecPlayer *		player,
+						 SwfdecColor		bgcolor);
+void		swfdec_player_set_fullscreen	(SwfdecPlayer *		player,
+						 gboolean		fullscreen);
 void		swfdec_player_set_drag_movie	(SwfdecPlayer *		player,
 						 SwfdecActor *		drag,
 						 gboolean		center,

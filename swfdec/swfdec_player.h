@@ -147,6 +147,12 @@ void		swfdec_player_set_focus		(SwfdecPlayer *		player,
 SwfdecRenderer *swfdec_player_get_renderer	(SwfdecPlayer *		player);
 void		swfdec_player_set_renderer	(SwfdecPlayer *		player,
 						 SwfdecRenderer *	renderer);
+gboolean	swfdec_player_get_fullscreen	(SwfdecPlayer *		player);
+gboolean	swfdec_player_get_allow_fullscreen
+						(SwfdecPlayer *		player);
+void		swfdec_player_set_allow_fullscreen
+						(SwfdecPlayer *		player,
+						 gboolean		allow);
 					 
 void		swfdec_player_render		(SwfdecPlayer *		player,
 						 cairo_t *		cr,

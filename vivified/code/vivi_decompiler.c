@@ -1036,7 +1036,7 @@ vivi_decompiler_merge_lines (GList **list)
       continue;
     /* has no next block */
     next = vivi_decompiler_block_get_next (block);
-    if (next == NULL)
+    if (next == NULL || next == block)
       continue;
     /* The next block has multiple incoming blocks */
     if (vivi_decompiler_block_get_n_incoming (next) != 1)
@@ -1343,11 +1343,12 @@ vivi_decompiler_merge_loops (GList **list)
 	 (vivi_decompiler_block_get_branch (start) &&
 	  vivi_decompiler_block_get_next (start) == end))) {
       if (vivi_decompiler_block_get_branch (start) == end) {
-	ViviCodeValue *value = vivi_code_unary_new (
-	    vivi_decompiler_block_get_branch_condition (start), '!');
-	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop),
-	    vivi_code_value_optimize (value, SWFDEC_AS_TYPE_BOOLEAN));
+	ViviCodeValue *value, *opt;
+	value = vivi_code_unary_new (vivi_decompiler_block_get_branch_condition (start), '!');
+	opt = vivi_code_value_optimize (value, SWFDEC_AS_TYPE_BOOLEAN);
 	g_object_unref (value);
+	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), opt);
+	g_object_unref (opt);
       } else {
 	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), 
 	    vivi_decompiler_block_get_branch_condition (start));
@@ -1359,6 +1360,30 @@ vivi_decompiler_merge_loops (GList **list)
 	  vivi_decompiler_block_get_next (start));
       vivi_code_block_add_statement (VIVI_CODE_BLOCK (start), VIVI_CODE_STATEMENT (loop));
       vivi_decompiler_block_set_next (start, end);
+    } else if (start == end) {
+      /* very simple for (;;) loop */
+      g_assert (contained == NULL);
+      contained = g_list_prepend (contained, start);
+      block = vivi_decompiler_block_new (vivi_decompiler_state_copy (
+	    vivi_decompiler_block_get_start_state (start)));
+      vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (loop));
+      if (vivi_decompiler_block_get_branch (start)) {
+	ViviCodeValue *value, *opt;
+	value = vivi_code_unary_new (vivi_decompiler_block_get_branch_condition (start), '!');
+	opt = vivi_code_value_optimize (value, SWFDEC_AS_TYPE_BOOLEAN);
+	g_object_unref (value);
+	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), opt);
+	g_object_unref (opt);
+	vivi_decompiler_block_set_next (block, vivi_decompiler_block_get_branch (start));
+	vivi_decompiler_block_set_branch (start, NULL, NULL);
+      }
+      vivi_decompiler_block_set_next (start, NULL);
+      for (walk2 = *list; walk2; walk2 = walk2->next) {
+	if (walk2->data == start) {
+	  walk2->data = block;
+	  break;
+	}
+      }
     } else {
       /* FIXME: for (;;) loop */
       contained = g_list_prepend (contained, start);
@@ -1380,7 +1405,6 @@ vivi_decompiler_merge_loops (GList **list)
       }
       vivi_decompiler_block_set_next (block, end);
     }
-
     /* break all connections to the outside */
     for (walk2 = contained; walk2; walk2 = walk2->next) {
       block = walk2->data;
@@ -1435,6 +1459,7 @@ vivi_decompiler_merge_loops (GList **list)
       }
     }
     body = VIVI_CODE_BLOCK (vivi_decompiler_merge_blocks (contained, loop_start));
+    /* remove all continue statements at the end */
     while ((len = vivi_code_block_get_n_statements (body))) {
       stmt = vivi_code_block_get_statement (body, len - 1);
       if (VIVI_IS_CODE_CONTINUE (stmt)) {

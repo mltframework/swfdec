@@ -22,10 +22,17 @@
 #endif
 
 #include "vivi_code_label.h"
-#include "vivi_code_printer.h"
+#include "vivi_code_asm.h"
 #include "vivi_code_compiler.h"
+#include "vivi_code_printer.h"
 
-G_DEFINE_TYPE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_STATEMENT)
+static void
+vivi_code_label_asm_init (ViviCodeAsmInterface *iface)
+{
+}
+
+G_DEFINE_TYPE_WITH_CODE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_LABEL,
+    G_IMPLEMENT_INTERFACE (VIVI_TYPE_CODE_ASM, vivi_code_label_asm_init))
 
 static void
 vivi_code_label_dispose (GObject *object)
@@ -54,16 +61,25 @@ vivi_code_label_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   // TODO: save the position
 }
 
+static gboolean
+vivi_code_label_needs_braces (ViviCodeStatement *stmt)
+{
+  return TRUE;
+}
+
 static void
 vivi_code_label_class_init (ViviCodeLabelClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeStatementClass *statement_class = VIVI_CODE_STATEMENT_CLASS (klass);
 
   object_class->dispose = vivi_code_label_dispose;
 
   token_class->print = vivi_code_label_print;
   token_class->compile = vivi_code_label_compile;
+
+  statement_class->needs_braces = vivi_code_label_needs_braces;
 }
 
 static void

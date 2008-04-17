@@ -3,6 +3,33 @@ check-local: ../swfdec-test
 
 EXTRA_DIST = \
 	README \
+	background-5.swf \
+	background-5.swf.png \
+	background-6.swf \
+	background-6.swf.png \
+	background-7.swf \
+	background-7.swf.png \
+	background-8.swf \
+	background-8.swf.png \
+	background.xml \
+	background-load-5.swf \
+	background-load-5.swf.png \
+	background-load-6.swf \
+	background-load-6.swf.png \
+	background-load-7.swf \
+	background-load-7.swf.png \
+	background-load-8.swf \
+	background-load-8.swf.png \
+	background-load.xml \
+	background-set-and-load-5.swf \
+	background-set-and-load-5.swf.png \
+	background-set-and-load-6.swf \
+	background-set-and-load-6.swf.png \
+	background-set-and-load-7.swf \
+	background-set-and-load-7.swf.png \
+	background-set-and-load-8.swf \
+	background-set-and-load-8.swf.png \
+	background-set-and-load.xml \
 	bw.jpg \
 	clip-change.c \
 	clip-change-backward-5.swf \
@@ -44,6 +71,15 @@ EXTRA_DIST = \
 	color-transform-add80.swf.png \
 	color-transform-add80-alpha.swf \
 	color-transform-add80-alpha.swf.png \
+	crash-0.6.4-huge-image-5.swf \
+	crash-0.6.4-huge-image-5.swf.png \
+	crash-0.6.4-huge-image-6.swf \
+	crash-0.6.4-huge-image-6.swf.png \
+	crash-0.6.4-huge-image-7.swf \
+	crash-0.6.4-huge-image-7.swf.png \
+	crash-0.6.4-huge-image-8.swf \
+	crash-0.6.4-huge-image-8.swf.png \
+	crash-0.6.4-huge-image.xml \
 	default.stas \
 	default.sts \
 	definebits-palette-5.swf \

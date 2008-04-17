@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include "swfdec_as_internal.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
@@ -135,9 +136,12 @@ void
 get_width (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
 
-  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->internal_width);
+  if (priv->scale_mode == SWFDEC_SCALE_NONE)
+    SWFDEC_AS_VALUE_SET_INT (ret, priv->internal_width);
+  else
+    SWFDEC_AS_VALUE_SET_INT (ret, priv->width);
 }
 
 SWFDEC_AS_NATIVE (666, 7, get_height)
@@ -145,9 +149,12 @@ void
 get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
 
-  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->internal_height);
+  if (priv->scale_mode == SWFDEC_SCALE_NONE)
+    SWFDEC_AS_VALUE_SET_INT (ret, priv->internal_height);
+  else
+    SWFDEC_AS_VALUE_SET_INT (ret, priv->height);
 }
 
 /* FIXME: do this smarter */
@@ -186,7 +193,12 @@ void
 swfdec_stage_get_displayState (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Stage.displayState (get)");
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
+
+  if (priv->fullscreen)
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_fullScreen);
+  else
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_normal);
 }
 
 SWFDEC_AS_NATIVE (666, 12, swfdec_stage_set_displayState)
@@ -194,7 +206,16 @@ void
 swfdec_stage_set_displayState (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Stage.displayState (set)");
+  SwfdecPlayer *player = SWFDEC_PLAYER (cx);
+  const char *s;
+
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+
+  if (g_ascii_strcasecmp (s, SWFDEC_AS_STR_normal) == 0) {
+    swfdec_player_set_fullscreen (player, FALSE);
+  } else if (g_ascii_strcasecmp (s, SWFDEC_AS_STR_fullScreen) == 0) {
+    swfdec_player_set_fullscreen (player, TRUE);
+  }
 }
 
 SWFDEC_AS_NATIVE (666, 100, swfdec_stage_get_fullScreenSourceRect)

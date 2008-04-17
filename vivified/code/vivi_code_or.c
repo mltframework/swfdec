@@ -33,13 +33,13 @@ vivi_code_or_class_init (ViviCodeOrClass *klass)
 
   token_class->compile = NULL; /* FIXME */
 
-  binary_class->operator_name = "&&";
+  binary_class->operator_name = "||";
 }
 
 static void
 vivi_code_or_init (ViviCodeOr *and)
 {
-  vivi_code_value_set_precedence (VIVI_CODE_VALUE (and), VIVI_PRECEDENCE_AND);
+  vivi_code_value_set_precedence (VIVI_CODE_VALUE (and), VIVI_PRECEDENCE_OR);
 }
 
 ViviCodeValue *

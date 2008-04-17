@@ -147,7 +147,7 @@ JpegDecoder *jpeg_decoder_new(void);
 void jpeg_decoder_free(JpegDecoder *dec);
 int jpeg_decoder_addbits(JpegDecoder *dec, unsigned char *data, unsigned int len);
 int jpeg_decoder_decode (JpegDecoder *dec);
-int jpeg_decoder_get_image_size(JpegDecoder *dec, int *width, int *height);
+int jpeg_decoder_get_image_size(JpegDecoder *dec, unsigned int *width, unsigned int *height);
 int jpeg_decoder_get_component_size(JpegDecoder *dec, int id,
 	int *width, int *height);
 int jpeg_decoder_get_component_subsampling(JpegDecoder *dec, int id,
@@ -157,7 +157,7 @@ int jpeg_decoder_get_component_ptr(JpegDecoder *dec, int id,
 
 uint32_t *jpeg_decoder_get_argb_image (JpegDecoder *dec);
 int jpeg_decode_argb (uint8_t *data, int length, uint32_t **image,
-    int *width, int *height);
+    unsigned int *width, unsigned int *height);
 
 void jpeg_decoder_error(JpegDecoder *dec, const char *fmt, ...);
 

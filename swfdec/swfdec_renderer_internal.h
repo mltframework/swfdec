@@ -41,6 +41,8 @@ SwfdecCached *		swfdec_renderer_get_cache	(SwfdecRenderer *	renderer,
 							 gpointer		key,
 							 SwfdecRendererSearchFunc func,
 							 gpointer		data);
+gsize			swfdec_renderer_get_max_cache_size
+							(SwfdecRenderer *	renderer);
 
 cairo_surface_t *	swfdec_renderer_create_similar	(SwfdecRenderer *	renderer,
 							 cairo_surface_t *	surface);

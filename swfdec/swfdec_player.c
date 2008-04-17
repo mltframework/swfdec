@@ -226,7 +226,9 @@
  * @SWFDEC_KEY_NUM_LOCK: the num lock key
  * @SWFDEC_KEY_SEMICOLON: the semicolon key (on English keyboards)
  * @SWFDEC_KEY_EQUAL: the equal key (on English keyboards)
+ * @SWFDEC_KEY_COMMA: the comma key (on English keyboards)
  * @SWFDEC_KEY_MINUS: the minus key (on English keyboards)
+ * @SWFDEC_KEY_DOT: the dot key (on English keyboards)
  * @SWFDEC_KEY_SLASH: the slash key (on English keyboards)
  * @SWFDEC_KEY_GRAVE: the grave key (on English keyboards)
  * @SWFDEC_KEY_LEFT_BRACKET: the left bracket key (on English keyboards)
@@ -665,7 +667,9 @@ enum {
   PROP_VARIABLES,
   PROP_START_TIME,
   PROP_FOCUS,
-  PROP_RENDERER
+  PROP_RENDERER,
+  PROP_FULLSCREEN,
+  PROP_ALLOW_FULLSCREEN
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -788,6 +792,12 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_RENDERER:
       g_value_set_object (value, priv->renderer);
       break;
+    case PROP_FULLSCREEN:
+      g_value_set_boolean (value, priv->fullscreen);
+      break;
+    case PROP_ALLOW_FULLSCREEN:
+      g_value_set_boolean (value, priv->allow_fullscreen);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -801,8 +811,14 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   int width, height;
   double scale_x, scale_y;
 
-  priv->stage.width = priv->stage_width >= 0 ? priv->stage_width : (int) priv->width;
-  priv->stage.height = priv->stage_height >= 0 ? priv->stage_height : (int) priv->height;
+  if (priv->fullscreen) {
+    priv->stage.width = priv->system->screen_width;
+    priv->stage.height = priv->system->screen_height;
+  } else {
+    priv->stage.width = priv->stage_width >= 0 ? priv->stage_width : (int) priv->width;
+    priv->stage.height = priv->stage_height >= 0 ? priv->stage_height : (int) priv->height;
+  }
+
   if (priv->stage.height == 0 || priv->stage.width == 0) {
     priv->scale_x = 1.0;
     priv->scale_y = 1.0;
@@ -931,6 +947,9 @@ swfdec_player_set_property (GObject *object, guint param_id, const GValue *value
       break;
     case PROP_RENDERER:
       swfdec_player_set_renderer (player, g_value_get_object (value));
+      break;
+    case PROP_ALLOW_FULLSCREEN:
+      swfdec_player_set_allow_fullscreen (player, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -1527,7 +1546,15 @@ swfdec_player_handle_tab (SwfdecPlayer *player, gboolean forward)
 }
 
 static void
-swfdec_player_handle_special_keys (SwfdecPlayer *player, guint key)
+swfdec_player_handle_special_keys_before (SwfdecPlayer *player, guint key)
+{
+  if (key == SWFDEC_KEY_ESCAPE) {
+    swfdec_player_set_fullscreen (player, FALSE);
+  }
+}
+
+static void
+swfdec_player_handle_special_keys_after (SwfdecPlayer *player, guint key)
 {
   if (key == SWFDEC_KEY_TAB) {
     gboolean forward = swfdec_player_is_key_pressed (player, SWFDEC_KEY_SHIFT);
@@ -1551,6 +1578,8 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
   } else {
     priv->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
   }
+  if (down)
+    swfdec_player_handle_special_keys_before (player, keycode);
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, 
       down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp, 0, NULL);
   if (priv->focus) {
@@ -1564,7 +1593,7 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
     }
   }
   if (down)
-    swfdec_player_handle_special_keys (player, keycode);
+    swfdec_player_handle_special_keys_after (player, keycode);
   swfdec_player_perform_actions (player);
   swfdec_player_unlock (player);
 
@@ -2011,6 +2040,13 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_RENDERER,
       g_param_spec_object ("renderer", "renderer", "the renderer used by this player",
 	  SWFDEC_TYPE_RENDERER, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (object_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen", "fullscreen", "if the player is in fullscreen mode",
+	  FALSE, G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_ALLOW_FULLSCREEN,
+      g_param_spec_boolean ("allow-fullscreen", "allow fullscreen", 
+	  "if the player is allowed to change into fullscreen mode",
+	  FALSE, G_PARAM_READWRITE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -2240,24 +2276,31 @@ swfdec_player_stop_sounds (SwfdecPlayer *player, SwfdecAudioRemoveFunc func, gpo
 void
 swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 {
-  SwfdecPlayerPrivate *priv = player->priv;
+  SwfdecPlayerPrivate *priv;
   SwfdecRectangle r;
   SwfdecRect tmp;
   guint i;
 
-  if (swfdec_rect_is_empty (rect))
-    return;
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
-  tmp = *rect;
-  swfdec_player_global_to_stage (player, &tmp.x0, &tmp.y0);
-  swfdec_player_global_to_stage (player, &tmp.x1, &tmp.y1);
-  swfdec_rectangle_init_rect (&r, &tmp);
-  /* FIXME: currently we clamp the rectangle to the visible area, it might
-   * be useful to allow out-of-bounds drawing. In that case this needs to be
-   * changed */
-  swfdec_rectangle_intersect (&r, &r, &priv->stage);
-  if (swfdec_rectangle_is_empty (&r))
-    return;
+  priv = player->priv;
+  if (rect == NULL) {
+    r = priv->stage;
+  } else {
+    if (swfdec_rect_is_empty (rect))
+      return;
+
+    tmp = *rect;
+    swfdec_player_global_to_stage (player, &tmp.x0, &tmp.y0);
+    swfdec_player_global_to_stage (player, &tmp.x1, &tmp.y1);
+    swfdec_rectangle_init_rect (&r, &tmp);
+    /* FIXME: currently we clamp the rectangle to the visible area, it might
+     * be useful to allow out-of-bounds drawing. In that case this needs to be
+     * changed */
+    swfdec_rectangle_intersect (&r, &r, &priv->stage);
+    if (swfdec_rectangle_is_empty (&r))
+      return;
+  }
 
   SWFDEC_LOG ("  invalidating %d %d  %d %d", r.x, r.y, r.width, r.height);
   /* FIXME: get region code into swfdec? */
@@ -2268,18 +2311,37 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
     if (swfdec_rectangle_contains (&r, cur)) {
       *cur = r;
       swfdec_rectangle_union (&priv->invalid_extents, &priv->invalid_extents, &r);
+      break;
     }
   }
   if (i == priv->invalidations->len) {
     g_array_append_val (priv->invalidations, r);
     swfdec_rectangle_union (&priv->invalid_extents, &priv->invalid_extents, &r);
   }
-  SWFDEC_DEBUG ("toplevel invalidation of %g %g  %g %g - invalid region now %d %d  %d %d (%u subregions)",
-      rect->x0, rect->y0, rect->x1, rect->y1,
+  SWFDEC_DEBUG ("toplevel invalidation of %d %d  %d %d - invalid region now %d %d  %d %d (%u subregions)",
+      r.x, r.y, r.width, r.height,
       priv->invalid_extents.x, priv->invalid_extents.y, 
       priv->invalid_extents.x + priv->invalid_extents.width,
       priv->invalid_extents.y + priv->invalid_extents.height,
       priv->invalidations->len);
+}
+
+void
+swfdec_player_set_background_color (SwfdecPlayer *player, SwfdecColor bgcolor)
+{
+  SwfdecPlayerPrivate *priv;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+  if (priv->bgcolor) {
+    SWFDEC_DEBUG ("not setting background color twice");
+    return;
+  }
+
+  SWFDEC_INFO ("setting bgcolor to %08X", bgcolor);
+  priv->bgcolor = bgcolor;
+  swfdec_player_invalidate (player, NULL);
 }
 
 /**
@@ -2567,6 +2629,66 @@ swfdec_player_add_missing_plugin (SwfdecPlayer *player, const char *detail)
 
   SWFDEC_INFO ("adding missing plugin: %s\n", detail);
   priv->missing_plugins = g_slist_prepend (priv->missing_plugins, g_strdup (detail));
+}
+
+static void
+swfdec_player_update_size (gpointer playerp, gpointer unused)
+{
+  SwfdecPlayer *player = playerp;
+  SwfdecPlayerPrivate *priv = player->priv;
+
+  if (priv->fullscreen) {
+    priv->internal_width = priv->system->screen_width;
+    priv->internal_height = priv->system->screen_height;
+  } else {
+    priv->internal_width = priv->stage_width >=0 ? (guint) priv->stage_width : priv->width;
+    priv->internal_height = priv->stage_height >=0 ? (guint) priv->stage_height : priv->height;
+  }
+
+  if (priv->scale_mode != SWFDEC_SCALE_NONE)
+    return;
+
+  /* only broadcast once */
+  if (priv->internal_width == priv->broadcasted_width &&
+      priv->internal_height == priv->broadcasted_height)
+    return;
+
+  priv->broadcasted_width = priv->internal_width;
+  priv->broadcasted_height = priv->internal_height;
+  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize, 0, NULL);
+}
+
+void
+swfdec_player_set_fullscreen (SwfdecPlayer *player, gboolean fullscreen)
+{
+  SwfdecPlayerPrivate *priv;
+  SwfdecAsValue val;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  priv = player->priv;
+  if (priv->fullscreen == fullscreen)
+    return;
+
+  if (fullscreen && !priv->allow_fullscreen) {
+    SWFDEC_INFO ("going fullscreen not allowed");
+    return;
+  }
+
+  priv->fullscreen = fullscreen;
+  g_object_notify (G_OBJECT (player), "fullscreen");
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&val, fullscreen);
+  swfdec_player_update_scale (player);
+  if (SWFDEC_AS_CONTEXT (player)->global) {
+    SwfdecSandbox *sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
+    swfdec_sandbox_unuse (sandbox);
+    swfdec_player_update_size (player, NULL);
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onFullScreen, 1, &val);
+    swfdec_sandbox_use (sandbox);
+  } else {
+    swfdec_player_update_size (player, NULL);
+    swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onFullScreen, 1, &val);
+  }
 }
 
 /** PUBLIC API ***/
@@ -2867,6 +2989,11 @@ swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr,
   cairo_save (cr);
   cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
+  /* paint the background */
+  if (priv->bgcolor) {
+    swfdec_color_set_source (cr, priv->bgcolor);
+    cairo_paint (cr);
+  }
   /* compute the rectangle */
   x -= priv->offset_x;
   y -= priv->offset_y;
@@ -3033,29 +3160,6 @@ swfdec_player_get_size (SwfdecPlayer *player, int *width, int *height)
     *width = player->priv->stage_width;
   if (height)
     *height = player->priv->stage_height;
-}
-
-static void
-swfdec_player_update_size (gpointer playerp, gpointer unused)
-{
-  SwfdecPlayer *player = playerp;
-  SwfdecPlayerPrivate *priv = player->priv;
-
-  /* FIXME: only update if not fullscreen */
-  priv->internal_width = priv->stage_width >=0 ? (guint) priv->stage_width : priv->width;
-  priv->internal_height = priv->stage_height >=0 ? (guint) priv->stage_height : priv->height;
-
-  if (priv->scale_mode != SWFDEC_SCALE_NONE)
-    return;
-
-  /* only broadcast once */
-  if (priv->internal_width == priv->broadcasted_width &&
-      priv->internal_height == priv->broadcasted_height)
-    return;
-
-  priv->broadcasted_width = priv->internal_width;
-  priv->broadcasted_height = priv->internal_height;
-  swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onResize, 0, NULL);
 }
 
 /**
@@ -3392,7 +3496,7 @@ swfdec_player_set_renderer (SwfdecPlayer *player, SwfdecRenderer *renderer)
     renderer = swfdec_renderer_new_default (player);
   }
   if (priv->renderer)
-    g_object_unref (renderer);
+    g_object_unref (priv->renderer);
   priv->renderer = renderer;
   g_object_notify (G_OBJECT (player), "renderer");
 }
@@ -3546,5 +3650,60 @@ swfdec_player_set_variables (SwfdecPlayer *player, const char *variables)
   g_free (priv->variables);
   priv->variables = g_strdup (variables);
   g_object_notify (G_OBJECT (player), "variables");
+}
+
+/**
+ * swfdec_player_get_fullscreen:
+ * @player: the player
+ *
+ * CHecks if the player is in fullscreen mode currently. If the player is
+ * in fullscreen mode, it assumes it occupies the whole screen. A player will
+ * only ever go into fullscreen, if you have allowed it by calling 
+ * swfdec_player_set_allow_fullscreen().
+ *
+ * Returns: %TRUE if the player is in fullscreen mode currently
+ **/
+gboolean
+swfdec_player_get_fullscreen (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+
+  return player->priv->fullscreen;
+}
+
+/**
+ * swfdec_player_get_allow_fullscreen:
+ * @player: the player
+ *
+ * Checks if the player is allowed to go fullscreen. See 
+ * swfdec_player_set_allow_fullscreen() for details.
+ *
+ * Returns: %TRUE if the player is allowed to go fullscreen
+ **/
+gboolean
+swfdec_player_get_allow_fullscreen (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+
+  return player->priv->allow_fullscreen;
+}
+
+/**
+ * swfdec_player_set_allow_fullscreen:
+ * @player: the player
+ * @allow: if the player should be allowed to go fullscreen
+ *
+ * Sets if the player is allowed to go fullscreen. If a player is allowed to go
+ * fullscreen, it may set the SwfdecPlayer::fullscreen property to %TRUE. 
+ * Players are not allowed to go fullscreen by default. Usually applications 
+ * only want to allow going fullscreen in response to mouse or keyboard events.
+ **/
+void
+swfdec_player_set_allow_fullscreen (SwfdecPlayer *player, gboolean allow)
+{
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+
+  player->priv->allow_fullscreen = allow;
+  g_object_notify (G_OBJECT (player), "allow-fullscreen");
 }
 

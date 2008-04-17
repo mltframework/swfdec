@@ -70,11 +70,24 @@ swfdec_video_movie_render (SwfdecMovie *mov, cairo_t *cr,
 }
 
 static void
+swfdec_video_movie_new_image (SwfdecVideoProvider *provider, SwfdecVideoMovie *movie)
+{
+  movie->clear = FALSE;
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
+}
+
+static void
 swfdec_video_movie_dispose (GObject *object)
 {
   SwfdecVideoMovie *movie = SWFDEC_VIDEO_MOVIE (object);
 
-  swfdec_video_movie_set_provider (movie, NULL);
+  if (movie->provider) {
+    g_signal_handlers_disconnect_by_func (movie->provider,
+	swfdec_video_movie_new_image, movie);
+    g_object_unref (movie->provider);
+    movie->provider = NULL;
+  }
+
   g_object_unref (movie->video);
 
   G_OBJECT_CLASS (swfdec_video_movie_parent_class)->dispose (object);
@@ -100,18 +113,32 @@ swfdec_video_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   video = SWFDEC_VIDEO_MOVIE (object);
 
   if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_width) == 0) {
+    /* FIXME: find better solution here */
+    cairo_surface_t *surface;
     if (video->provider) {
-      swfdec_video_provider_get_image (video->provider,
+      surface = swfdec_video_provider_get_image (video->provider,
 	  SWFDEC_PLAYER (object->context)->priv->renderer, &w, &h);
+    } else {
+      surface = NULL;
+    }
+    if (surface) {
+      cairo_surface_destroy (surface);
     } else {
       w = 0;
     }
     SWFDEC_AS_VALUE_SET_NUMBER (val, w);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_height) == 0) {
+    /* FIXME: find better solution here */
+    cairo_surface_t *surface;
     if (video->provider) {
-      swfdec_video_provider_get_image (video->provider,
+      surface = swfdec_video_provider_get_image (video->provider,
 	  SWFDEC_PLAYER (object->context)->priv->renderer, &w, &h);
+    } else {
+      surface = NULL;
+    }
+    if (surface) {
+      cairo_surface_destroy (surface);
     } else {
       h = 0;
     }
@@ -206,13 +233,6 @@ swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
 static void
 swfdec_video_movie_init (SwfdecVideoMovie * video_movie)
 {
-}
-
-static void
-swfdec_video_movie_new_image (SwfdecVideoProvider *provider, SwfdecVideoMovie *movie)
-{
-  movie->clear = FALSE;
-  swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
 }
 
 void

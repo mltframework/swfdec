@@ -995,12 +995,12 @@ jpeg_decoder_addbits (JpegDecoder * dec, unsigned char *data, unsigned int len)
 }
 
 int
-jpeg_decoder_get_image_size (JpegDecoder * dec, int *width, int *height)
+jpeg_decoder_get_image_size (JpegDecoder * dec, unsigned int *width, unsigned int *height)
 {
   if (width)
-    *width = dec->width;
+    *width = (unsigned) dec->width;
   if (height)
-    *height = dec->height;
+    *height = (unsigned) dec->height;
 
   return 0;
 }

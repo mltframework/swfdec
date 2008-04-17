@@ -51,6 +51,10 @@ swfdec_test_plugin_swfdec_screenshot (SwfdecTestPlugin *plugin, unsigned char *d
   surface = cairo_image_surface_create_for_data (data, CAIRO_FORMAT_ARGB32, 
       width, height, width * 4);
   cr = cairo_create (surface);
+  /* use a white background */
+  cairo_set_source_rgb (cr, 1, 1, 1);
+  cairo_paint (cr);
+
   cairo_translate (cr, -x, -y);
   swfdec_player_render (plugin->data, cr, x, y, width, height);
   cairo_destroy (cr);
@@ -135,7 +139,7 @@ swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
   plugin->finish = swfdec_test_plugin_swfdec_finish;
   plugin->data = player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
       "loader-type", SWFDEC_TYPE_FILE_LOADER, "socket-type", SWFDEC_TYPE_TEST_SWFDEC_SOCKET,
-      "max-runtime", 0, "start-time", &the_beginning,
+      "max-runtime", 0, "start-time", &the_beginning, "allow-fullscreen", TRUE,
       NULL);
 
   g_object_set_data (G_OBJECT (player), "plugin", plugin);

@@ -2868,6 +2868,11 @@ EXTRA_DIST = \
 	stage-align-7.swf.trace \
 	stage-align-8.swf \
 	stage-align-8.swf.trace \
+	stage-fullscreen-7.swf \
+	stage-fullscreen-7.swf.trace \
+	stage-fullscreen-8.swf \
+	stage-fullscreen-8.swf.trace \
+	stage-fullscreen.as \
 	stage-size.as \
 	stage-size-5.swf \
 	stage-size-5.swf.trace \

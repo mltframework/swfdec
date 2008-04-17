@@ -24,7 +24,7 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_decompiler_state.h"
-#include "vivi_code_constant.h"
+#include "vivi_code_undefined.h"
 #include "vivi_decompiler_unknown.h"
 
 struct _ViviDecompilerState {
@@ -77,7 +77,7 @@ ViviCodeValue *
 vivi_decompiler_state_pop (ViviDecompilerState *state)
 {
   if (state->stack == NULL) {
-    return VIVI_CODE_VALUE (vivi_code_constant_new_undefined ());
+    return vivi_code_undefined_new ();
   } else {
     ViviCodeValue *pop;
     pop = state->stack->data;
@@ -125,7 +125,7 @@ ViviCodeValue *
 vivi_decompiler_state_get_register (const ViviDecompilerState *state, guint reg)
 {
   if (reg >= state->n_registers || state->registers[reg] == NULL)
-    return VIVI_CODE_VALUE (vivi_code_constant_new_undefined ());
+    return vivi_code_undefined_new ();
   else
     return g_object_ref (state->registers[reg]);
 }

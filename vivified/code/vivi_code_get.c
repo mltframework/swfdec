@@ -22,9 +22,9 @@
 #endif
 
 #include "vivi_code_get.h"
-#include "vivi_code_constant.h"
-#include "vivi_code_printer.h"
 #include "vivi_code_compiler.h"
+#include "vivi_code_printer.h"
+#include "vivi_code_string.h"
 
 G_DEFINE_TYPE (ViviCodeGet, vivi_code_get, VIVI_TYPE_CODE_VALUE)
 
@@ -157,7 +157,7 @@ vivi_code_get_new_name (const char *name)
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  constant = vivi_code_constant_new_string (name);
+  constant = vivi_code_string_new (name);
   result = vivi_code_get_new (NULL, constant);
   g_object_unref (constant);
   return result;

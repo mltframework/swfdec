@@ -32,6 +32,7 @@
 #include "vivi_code_assignment.h"
 #include "vivi_code_binary_default.h"
 #include "vivi_code_block.h"
+#include "vivi_code_boolean.h"
 #include "vivi_code_break.h"
 #include "vivi_code_builtin_value_statement_default.h"
 #include "vivi_code_constant.h"
@@ -44,9 +45,13 @@
 #include "vivi_code_if.h"
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
+#include "vivi_code_number.h"
+#include "vivi_code_null.h"
 #include "vivi_code_or.h"
 #include "vivi_code_return.h"
+#include "vivi_code_string.h"
 #include "vivi_code_unary.h"
+#include "vivi_code_undefined.h"
 #include "vivi_code_value_statement.h"
 #include "vivi_decompiler_block.h"
 #include "vivi_decompiler_duplicate.h"
@@ -143,31 +148,31 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	    vivi_decompiler_block_add_error (block, state, "could not read string");
 	    return FALSE;
 	  }
-	  val = vivi_code_constant_new_string (s);
+	  val = vivi_code_string_new (s);
 	  g_free (s);
 	  break;
 	}
       case 1: /* float */
-	val = vivi_code_constant_new_number (swfdec_bits_get_float (&bits));
+	val = vivi_code_number_new (swfdec_bits_get_float (&bits));
 	break;
       case 2: /* null */
-	val = vivi_code_constant_new_null ();
+	val = vivi_code_null_new ();
 	break;
       case 3: /* undefined */
-	val = vivi_code_constant_new_undefined ();
+	val = vivi_code_undefined_new ();
 	break;
       case 4: /* register */
 	val = vivi_decompiler_state_get_register (
 	      state, swfdec_bits_get_u8 (&bits));
 	break;
       case 5: /* boolean */
-	val = vivi_code_constant_new_boolean (swfdec_bits_get_u8 (&bits) ? TRUE : FALSE);
+	val = vivi_code_boolean_new (swfdec_bits_get_u8 (&bits) ? TRUE : FALSE);
 	break;
       case 6: /* double */
-	val = vivi_code_constant_new_number (swfdec_bits_get_double (&bits));
+	val = vivi_code_number_new (swfdec_bits_get_double (&bits));
 	break;
       case 7: /* 32bit int */
-	val = vivi_code_constant_new_int ((int) swfdec_bits_get_u32 (&bits));
+	val = vivi_code_number_new ((int) swfdec_bits_get_u32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
       case 9: /* 16bit ConstantPool address */
@@ -183,7 +188,7 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 		i, swfdec_constant_pool_size (pool));
 	    return TRUE;
 	  }
-	  val = vivi_code_constant_new_string (swfdec_constant_pool_get (pool, i));
+	  val = vivi_code_string_new (swfdec_constant_pool_get (pool, i));
 	  break;
 	}
       default:
@@ -266,8 +271,7 @@ vivi_decompile_return (ViviDecompilerBlock *block, ViviDecompilerState *state,
 
   value = vivi_decompiler_state_pop (state);
   ret = vivi_code_return_new ();
-  if (!VIVI_IS_CODE_CONSTANT (value) ||
-      vivi_code_constant_get_value_type (VIVI_CODE_CONSTANT (value)) != SWFDEC_AS_TYPE_UNDEFINED)
+  if (!VIVI_IS_CODE_UNDEFINED (value))
     vivi_code_return_set_value (VIVI_CODE_RETURN (ret), value);
   g_object_unref (value);
   vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), ret);
@@ -388,7 +392,7 @@ vivi_decompile_define_local (ViviDecompilerBlock *block, ViviDecompilerState *st
   if (code == SWFDEC_AS_ACTION_DEFINE_LOCAL)
     value = vivi_decompiler_state_pop (state);
   else
-    value = vivi_code_constant_new_undefined ();
+    value = vivi_code_undefined_new ();
   name = vivi_decompiler_state_pop (state);
 
   assign = vivi_code_assignment_new (NULL, name, value);
@@ -450,9 +454,8 @@ vivi_decompile_function_call (ViviDecompilerBlock *block, ViviDecompilerState *s
   if (name)
     g_object_unref (name);
 
-  if (!VIVI_IS_CODE_CONSTANT (args) || 
-      vivi_code_constant_get_value_type (VIVI_CODE_CONSTANT (args)) != SWFDEC_AS_TYPE_NUMBER ||
-      ((count = d = vivi_code_constant_get_number (VIVI_CODE_CONSTANT (args))) != d)) {
+  if (!VIVI_IS_CODE_NUMBER (args) || 
+      ((count = d = vivi_code_number_get_value (VIVI_CODE_NUMBER (args))) != d)) {
     vivi_decompiler_block_add_error (block, state, "could not determine function argument count");
     g_object_unref (args);
     g_object_unref (call);
@@ -569,9 +572,8 @@ vivi_decompile_define_function (ViviDecompilerBlock *block, ViviDecompilerState 
      * it will contain the name this function will soon be assigned to.
      */
     value = vivi_decompiler_state_peek_nth (state, 0);
-    if (VIVI_IS_CODE_CONSTANT (value) &&
-	vivi_code_constant_get_value_type (VIVI_CODE_CONSTANT (value)) == SWFDEC_AS_TYPE_STRING)
-      name = SWFDEC_AS_VALUE_GET_STRING (&VIVI_CODE_CONSTANT (value)->value);
+    if (VIVI_IS_CODE_STRING (value))
+      name = vivi_code_string_get_value (VIVI_CODE_STRING (value));
   }
   if (name == NULL)
     name = "unnamed_function";
@@ -644,9 +646,8 @@ vivi_decompile_init_object (ViviDecompilerBlock *block, ViviDecompilerState *sta
   guint i, count;
 
   args = vivi_decompiler_state_pop (state);
-  if (!VIVI_IS_CODE_CONSTANT (args) || 
-      vivi_code_constant_get_value_type (VIVI_CODE_CONSTANT (args)) != SWFDEC_AS_TYPE_NUMBER ||
-      ((count = d = vivi_code_constant_get_number (VIVI_CODE_CONSTANT (args))) != d)) {
+  if (!VIVI_IS_CODE_NUMBER (args) || 
+      ((count = d = vivi_code_number_get_value (VIVI_CODE_NUMBER (args))) != d)) {
     vivi_decompiler_block_add_error (block, state, "could not determine init object argument count");
     g_object_unref (args);
     return FALSE;

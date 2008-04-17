@@ -18,6 +18,8 @@ libvivified_compiler_la_LIBADD = \
 libvivified_compiler_la_SOURCES = \
 	vivi_code_and.c \
 	vivi_code_asm.c \
+	vivi_code_asm_code.c \
+	vivi_code_asm_code_default.c \
 	vivi_code_assembler.c \
 	vivi_code_assignment.c \
 	vivi_code_binary.c \
@@ -65,6 +67,8 @@ libvivified_compiler_la_SOURCES = \
 noinst_HEADERS = \
 	vivi_code_and.h \
 	vivi_code_asm.h \
+	vivi_code_asm_code.h \
+	vivi_code_asm_code_default.h \
 	vivi_code_assembler.h \
 	vivi_code_assignment.h \
 	vivi_code_binary.h \

@@ -915,30 +915,122 @@ parse_variable_declaration (ParseData *data, ViviCodeStatement **statement)
 
 // builtin functions
 
-/*static void
-parse_url_method (ParseData *data, ViviCodeValue **value)
+static void
+parse_get_url2 (ParseData *data, ViviCodeStatement **statement,
+    gboolean require_two, gboolean level, gboolean internal,
+    gboolean variables)
 {
-  if (peek_identifier (data)) {
-    ViviCodeValue *identifier;
-    const char *method;
+  ViviCodeValue *url, *target;
+  ViviCodeStatement *expression_statement;
+  SwfdecLoaderRequest method;
 
-    parse_identifier (data, &identifier);
-    // FIXME
-    method = vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (
-	  VIVI_CODE_GET (identifier)->name));
-    if (g_ascii_strcasecmp (method, "GET") != 0 &&
-	g_ascii_strcasecmp (method, "POST") != 0)
-      vivi_parser_error (data, "Invalid URL method: %s\n", method);
-    g_object_unref (identifier);
-    *value = vivi_code_constant_new_string (method);
-  } else if (peek_string_literal (data)) {
-    parse_string_literal (data, value);
+  parse_token (data, TOKEN_PARENTHESIS_LEFT);
+
+  parse_assignment_expression (data, &url, statement);
+
+  if (require_two || peek_token (data, TOKEN_COMMA)) {
+    parse_token (data, TOKEN_COMMA);
+
+    // target
+    if (!level) {
+      parse_assignment_expression (data, &target, &expression_statement);
+      *statement =
+	vivi_parser_join_statements (*statement, expression_statement);
+    } else {
+      // FIXME: integer only
+      if (peek_numeric_literal (data)) {
+	char *level_name;
+	parse_numeric_literal (data, &target);
+	level_name = g_strdup_printf ("_level%i",
+	    (int)vivi_code_constant_get_number (VIVI_CODE_CONSTANT (target)));
+	g_object_unref (target);
+	target = vivi_code_constant_new_string (level_name);
+	g_free (level_name);
+      } else {
+	// TODO
+	parse_assignment_expression (data, &target, &expression_statement);
+	*statement =
+	  vivi_parser_join_statements (*statement, expression_statement);
+      }
+    }
+
+    // method
+    if (peek_token (data, TOKEN_COMMA)) {
+      parse_token (data, TOKEN_COMMA);
+
+      if (peek_identifier (data) || peek_string_literal (data)) {
+	ViviCodeValue *identifier;
+	const char *method_string;
+
+	if (peek_identifier (data)) {
+	  parse_identifier (data, &identifier);
+	  method_string = vivi_code_constant_get_variable_name (
+	      VIVI_CODE_CONSTANT (VIVI_CODE_GET (identifier)->name));
+	} else {
+	  parse_string_literal (data, &identifier);
+	  method_string = vivi_code_constant_get_variable_name (
+	      VIVI_CODE_CONSTANT (identifier));
+	}
+	// FIXME
+	if (g_ascii_strcasecmp (method_string, "GET") == 0) {
+	  method = SWFDEC_LOADER_REQUEST_GET;
+	} else if (g_ascii_strcasecmp (method_string, "POST") == 0) {
+	  method = SWFDEC_LOADER_REQUEST_POST;
+	} else {
+	  method = SWFDEC_LOADER_REQUEST_DEFAULT;
+	  // only for identifiers?
+	  vivi_parser_error (data, "Invalid URL method: %s\n", method_string);
+	}
+	g_object_unref (identifier);
+      } else {
+	vivi_parser_error_unexpected_or (data, TOKEN_IDENTIFIER, TOKEN_STRING,
+	    TOKEN_NONE);
+	method = SWFDEC_LOADER_REQUEST_DEFAULT;
+      }
+    } else {
+      method = SWFDEC_LOADER_REQUEST_DEFAULT;
+    }
   } else {
-    vivi_parser_error_unexpected_or (data, TOKEN_IDENTIFIER, TOKEN_STRING,
-	TOKEN_NONE);
-    *value = vivi_code_constant_new_string ("DEFAULT");
+    target = vivi_code_constant_new_undefined ();
+    method = SWFDEC_LOADER_REQUEST_DEFAULT;
   }
-}*/
+
+  parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+
+  *statement = vivi_code_get_url_new (target, url, method, internal, variables);
+  g_object_unref (target);
+  g_object_unref (url);
+}
+
+static void
+parse_get_url (ParseData *data, ViviCodeStatement **statement)
+{
+  parse_get_url2 (data, statement, FALSE, FALSE, FALSE, FALSE);
+}
+
+static void
+parse_load_movie (ParseData *data, ViviCodeStatement **statement)
+{
+  parse_get_url2 (data, statement, TRUE, FALSE, TRUE, FALSE);
+}
+
+static void
+parse_load_movie_num (ParseData *data, ViviCodeStatement **statement)
+{
+  parse_get_url2 (data, statement, TRUE, TRUE, TRUE, FALSE);
+}
+
+static void
+parse_load_variables (ParseData *data, ViviCodeStatement **statement)
+{
+  parse_get_url2 (data, statement, TRUE, FALSE, FALSE, TRUE);
+}
+
+static void
+parse_load_variables_num (ParseData *data, ViviCodeStatement **statement)
+{
+  parse_get_url2 (data, statement, TRUE, TRUE, FALSE, TRUE);
+}
 
 static void
 parse_concat (ParseData *data, ViviCodeValue **value,
@@ -1024,13 +1116,13 @@ static const BuiltinStatement builtin_statements[] = {
   //{ "callFrame",          NULL, vivi_code_call_frame_new, NULL },
   //{ "duplicateMovieClip", NULL, NULL, parse_duplicate_movie_clip },
   //{ "getURL1",            NULL, NULL, parse_get_url1 },
-  //{ "getURL",             NULL, NULL, parse_get_url },
+  { "getURL",             NULL, NULL, parse_get_url },
   //{ "gotoAndPlay",        NULL, vivi_code_goto_and_play_new, NULL },
   //{ "gotoAndStop",        NULL, vivi_code_goto_and_stop_new, NULL },
-  //{ "loadMovie",          NULL, NULL, parse_load_movie },
-  //{ "loadMovieNum",       NULL, NULL, parse_load_movie_num },
-  //{ "loadVariables",      NULL, NULL, parse_load_variables },
-  //{ "loadVariablesNum",   NULL, NULL, parse_load_variables_num },
+  { "loadMovie",          NULL, NULL, parse_load_movie },
+  { "loadMovieNum",       NULL, NULL, parse_load_movie_num },
+  { "loadVariables",      NULL, NULL, parse_load_variables },
+  { "loadVariablesNum",   NULL, NULL, parse_load_variables_num },
   { "nextFrame",          vivi_code_next_frame_new, NULL, NULL },
   { "play",               vivi_code_play_new, NULL, NULL },
   { "prevFrame",          vivi_code_previous_frame_new, NULL, NULL },

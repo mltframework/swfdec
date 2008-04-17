@@ -67,8 +67,8 @@ vivi_code_get_url_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   ViviCodeGetUrl *url = VIVI_CODE_GET_URL (token);
   guint bits;
 
-  vivi_code_compiler_compile_value (compiler, url->target);
   vivi_code_compiler_compile_value (compiler, url->url);
+  vivi_code_compiler_compile_value (compiler, url->target);
 
   vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_GET_URL2);
 

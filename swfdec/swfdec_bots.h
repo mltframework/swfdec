@@ -78,6 +78,8 @@ void		swfdec_bots_put_string		(SwfdecBots *		bots,
 						 const char *		s);
 void		swfdec_bots_put_double		(SwfdecBots *		bots,
 						 double			value);
+void		swfdec_bots_put_float		(SwfdecBots *		bots,
+						 float			f);
 
 void		swfdec_bots_put_rgb		(SwfdecBots *		bots,
 						 SwfdecColor		color);

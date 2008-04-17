@@ -168,7 +168,7 @@ void
 vivi_code_block_remove_statement (ViviCodeBlock *block, ViviCodeStatement *statement)
 {
   g_return_if_fail (VIVI_IS_CODE_BLOCK (block));
-  g_return_if_fail (VIVI_IS_CODE_STATEMENT (block));
+  g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
 
   if (g_ptr_array_remove (block->statements, statement))
     g_object_unref (statement);

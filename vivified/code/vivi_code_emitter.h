@@ -56,8 +56,9 @@ GType			vivi_code_emitter_get_type   	(void);
 
 ViviCodeEmitter *	vivi_code_emitter_new		(void);
 
-void			vivi_code_emitter_emit_asm	(ViviCodeEmitter *	emitter,
-							 ViviCodeAsm *		code);
+gboolean		vivi_code_emitter_emit_asm	(ViviCodeEmitter *	emitter,
+							 ViviCodeAsm *		code,
+							 GError **		error);
 
 SwfdecBots *		vivi_code_emitter_get_bots	(ViviCodeEmitter *	emitter);
 void			vivi_code_emitter_add_label	(ViviCodeEmitter *	emitter,

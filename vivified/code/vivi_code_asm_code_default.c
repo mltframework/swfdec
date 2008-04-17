@@ -24,7 +24,7 @@
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_printer.h"
 
-#define DEFAULT_ASM(CapsName, underscore_name, bytecode) \
+#define DEFAULT_ASM(CapsName, underscore_name, byte_code) \
 \
 G_DEFINE_TYPE (ViviCodeAsm ## CapsName, vivi_code_asm_ ## underscore_name, VIVI_TYPE_CODE_ASM_CODE); \
 \
@@ -38,9 +38,12 @@ vivi_code_asm_ ## underscore_name ## _print (ViviCodeToken *token, ViviCodePrint
 static void \
 vivi_code_asm_ ## underscore_name ## _class_init (ViviCodeAsm ## CapsName ## Class *klass) \
 { \
+  ViviCodeAsmCodeClass *code_class = VIVI_CODE_ASM_CODE_CLASS (klass); \
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass); \
 \
   token_class->print = vivi_code_asm_ ## underscore_name ## _print; \
+\
+  code_class->bytecode = byte_code; \
 } \
 \
 static void \

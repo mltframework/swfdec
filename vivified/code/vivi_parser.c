@@ -31,6 +31,7 @@
 #include "vivi_code_assignment.h"
 #include "vivi_code_binary_default.h"
 #include "vivi_code_block.h"
+#include "vivi_code_boolean.h"
 #include "vivi_code_break.h"
 #include "vivi_code_builtin_statement_default.h"
 #include "vivi_code_builtin_value_call_default.h"
@@ -48,11 +49,15 @@
 #include "vivi_code_init_array.h"
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
+#include "vivi_code_null.h"
+#include "vivi_code_number.h"
 #include "vivi_code_or.h"
 #include "vivi_code_return.h"
+#include "vivi_code_string.h"
 #include "vivi_code_substring.h"
 #include "vivi_code_throw.h"
 #include "vivi_code_unary.h"
+#include "vivi_code_undefined.h"
 #include "vivi_code_value_statement.h"
 #include "vivi_compiler_empty_statement.h"
 #include "vivi_compiler_get_temporary.h"
@@ -584,7 +589,7 @@ parse_undefined_literal (ParseData *data, ViviCodeValue **value)
 
   parse_token (data, TOKEN_UNDEFINED);
 
-  *value = vivi_code_constant_new_undefined ();
+  *value = vivi_code_undefined_new ();
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
 }
@@ -602,7 +607,7 @@ parse_null_literal (ParseData *data, ViviCodeValue **value)
 
   parse_token (data, TOKEN_NULL);
 
-  *value = vivi_code_constant_new_null ();
+  *value = vivi_code_null_new ();
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
 }
@@ -620,9 +625,9 @@ parse_boolean_literal (ParseData *data, ViviCodeValue **value)
 
   if (!try_parse_token (data, TOKEN_BOOLEAN)) {
     vivi_parser_error_unexpected (data, TOKEN_BOOLEAN);
-    *value = vivi_code_constant_new_boolean (0);
+    *value = vivi_code_boolean_new (0);
   } else {
-    *value = vivi_code_constant_new_boolean (data->scanner->value.v_boolean);
+    *value = vivi_code_boolean_new (data->scanner->value.v_boolean);
   }
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
@@ -641,9 +646,9 @@ parse_numeric_literal (ParseData *data, ViviCodeValue **value)
 
   if (!try_parse_token (data, TOKEN_NUMBER)) {
     vivi_parser_error_unexpected (data, TOKEN_NUMBER);
-    *value = vivi_code_constant_new_number (0);
+    *value = vivi_code_number_new (0);
   } else {
-    *value = vivi_code_constant_new_number (data->scanner->value.v_number);
+    *value = vivi_code_number_new (data->scanner->value.v_number);
   }
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
@@ -662,9 +667,9 @@ parse_string_literal (ParseData *data, ViviCodeValue **value)
 
   if (!try_parse_token (data, TOKEN_STRING)) {
     vivi_parser_error_unexpected (data, TOKEN_STRING);
-    *value = vivi_code_constant_new_string ("undefined");
+    *value = vivi_code_string_new ("undefined");
   } else {
-    *value = vivi_code_constant_new_string (data->scanner->value.v_string);
+    *value = vivi_code_string_new (data->scanner->value.v_string);
   }
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
@@ -709,7 +714,7 @@ parse_literal (ParseData *data, ViviCodeValue **value)
 
   vivi_parser_error_unexpected (data, ERROR_TOKEN_LITERAL);
   vivi_parser_start_code_token (data);
-  *value = vivi_code_constant_new_undefined ();
+  *value = vivi_code_undefined_new ();
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
 }
 
@@ -771,7 +776,7 @@ parse_property_name (ParseData *data, ViviCodeValue **value)
 
   vivi_parser_error_unexpected (data, ERROR_TOKEN_PROPERTY_NAME);
   vivi_parser_start_code_token (data);
-  *value = vivi_code_constant_new_undefined ();
+  *value = vivi_code_undefined_new ();
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
 }
 
@@ -805,11 +810,11 @@ parse_array_literal (ParseData *data, ViviCodeValue **value,
   while (TRUE) {
     if (try_parse_token (data, TOKEN_BRACKET_RIGHT)) {
       vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (*value),
-	 vivi_code_constant_new_undefined ());
+	 vivi_code_undefined_new ());
       break;
     } else if (try_parse_token (data, TOKEN_COMMA)) {
       vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (*value),
-	 vivi_code_constant_new_undefined ());
+	 vivi_code_undefined_new ());
     }
     else if (peek_assignment_expression (data))
     {
@@ -899,7 +904,7 @@ parse_variable_declaration (ParseData *data, ViviCodeStatement **statement)
   } else {
     vivi_parser_start_code_token (data);
 
-    value = vivi_code_constant_new_undefined ();
+    value = vivi_code_undefined_new ();
     statement_right = NULL;
 
     vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
@@ -942,9 +947,9 @@ parse_get_url2 (ParseData *data, ViviCodeStatement **statement,
 	char *level_name;
 	parse_numeric_literal (data, &target);
 	level_name = g_strdup_printf ("_level%i",
-	    (int)vivi_code_constant_get_number (VIVI_CODE_CONSTANT (target)));
+	    (int)vivi_code_number_get_value (VIVI_CODE_NUMBER (target)));
 	g_object_unref (target);
-	target = vivi_code_constant_new_string (level_name);
+	target = vivi_code_string_new (level_name);
 	g_free (level_name);
       } else {
 	// TODO
@@ -991,7 +996,7 @@ parse_get_url2 (ParseData *data, ViviCodeStatement **statement,
       method = SWFDEC_LOADER_REQUEST_DEFAULT;
     }
   } else {
-    target = vivi_code_constant_new_undefined ();
+    target = vivi_code_undefined_new ();
     method = SWFDEC_LOADER_REQUEST_DEFAULT;
   }
 
@@ -1368,7 +1373,7 @@ parse_primary_expression (ParseData *data, ViviCodeValue **value,
   }
 
   vivi_parser_error_unexpected (data, ERROR_TOKEN_PRIMARY_EXPRESSION);
-  *value = vivi_code_constant_new_undefined ();
+  *value = vivi_code_undefined_new ();
   *statement = NULL;
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (*value));
 }
@@ -1402,7 +1407,7 @@ parse_member_expression (ParseData *data, ViviCodeValue **value,
   } else {
     vivi_parser_error_unexpected_or (data, ERROR_TOKEN_PRIMARY_EXPRESSION,
 	ERROR_TOKEN_FUNCTION_EXPRESSION, TOKEN_NONE);
-    *value = vivi_code_constant_new_undefined ();
+    *value = vivi_code_undefined_new ();
     *statement = NULL;
 
     vivi_parser_duplicate_code_token (data);
@@ -1548,7 +1553,7 @@ parse_postfix_expression (ParseData *data, ViviCodeValue **value,
 	"Invalid left-hand side expression for INCREASE/DECREASE");
   }
 
-  one = vivi_code_constant_new_number (1);
+  one = vivi_code_number_new (1);
   operation = (add ? vivi_code_add_new : vivi_code_subtract_new) (*value, one);
   g_object_unref (one);
 
@@ -1616,7 +1621,7 @@ parse_unary_expression (ParseData *data, ViviCodeValue **value,
 	    "Invalid left-hand side expression for INCREASE/DECREASE");
       }
 
-      one = vivi_code_constant_new_number (1);
+      one = vivi_code_number_new (1);
       tmp = (data->scanner->next_token == TOKEN_INCREASE ? vivi_code_add_new : vivi_code_subtract_new) (*value, one);
       g_object_unref (one);
 
@@ -2269,7 +2274,7 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 	g_object_unref (pre_value);
 
       if (try_parse_token (data, TOKEN_SEMICOLON)) {
-	condition = vivi_code_constant_new_boolean (TRUE);
+	condition = vivi_code_boolean_new (TRUE);
 	condition_statement = NULL;
       } else {
 	parse_expression (data, &condition, &condition_statement);
@@ -2295,7 +2300,7 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 
       vivi_parser_error (data, "for (... in ...) has not been implemented yet");
 
-      condition = vivi_code_constant_new_undefined ();
+      condition = vivi_code_undefined_new ();
       condition_statement = NULL;
       post_statement = NULL;
     } else {
@@ -2306,7 +2311,7 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
 	vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
       }
 
-      condition = vivi_code_constant_new_undefined ();
+      condition = vivi_code_undefined_new ();
       condition_statement = NULL;
       post_statement = NULL;
 
@@ -2326,7 +2331,7 @@ parse_iteration_statement (ParseData *data, ViviCodeStatement **statement)
   {
     vivi_parser_error_unexpected (data, ERROR_TOKEN_ITERATION_STATEMENT);
 
-    condition = vivi_code_constant_new_undefined ();
+    condition = vivi_code_undefined_new ();
     pre_statement = NULL;
     condition_statement = NULL;
     loop_statement = vivi_compiler_empty_statement_new ();

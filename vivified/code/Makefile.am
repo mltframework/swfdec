@@ -25,6 +25,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_binary.c \
 	vivi_code_binary_default.c \
 	vivi_code_block.c \
+	vivi_code_boolean.c \
 	vivi_code_break.c \
 	vivi_code_builtin_call.c \
 	vivi_code_builtin_statement.c \
@@ -37,6 +38,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_concat.c \
 	vivi_code_constant.c \
 	vivi_code_continue.c \
+	vivi_code_emitter.c \
 	vivi_code_function.c \
 	vivi_code_function_call.c \
 	vivi_code_get.c \
@@ -48,15 +50,19 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_init_object.c \
 	vivi_code_label.c \
 	vivi_code_loop.c \
+	vivi_code_null.c \
+	vivi_code_number.c \
 	vivi_code_or.c \
 	vivi_code_printer.c \
 	vivi_code_return.c \
 	vivi_code_statement.c \
+	vivi_code_string.c \
 	vivi_code_substring.c \
 	vivi_code_text_printer.c \
 	vivi_code_throw.c \
 	vivi_code_token.c \
 	vivi_code_unary.c \
+	vivi_code_undefined.c \
 	vivi_code_value.c \
 	vivi_code_value_statement.c \
 	vivi_compiler_empty_statement.c \
@@ -80,6 +86,7 @@ noinst_HEADERS = \
 	vivi_code_binary.h \
 	vivi_code_binary_default.h \
 	vivi_code_block.h \
+	vivi_code_boolean.h \
 	vivi_code_break.h \
 	vivi_code_builtin_call.h \
 	vivi_code_builtin_statement.h \
@@ -93,6 +100,7 @@ noinst_HEADERS = \
 	vivi_code_constant.h \
 	vivi_code_continue.h \
 	vivi_code_defaults.h \
+	vivi_code_emitter.h \
 	vivi_code_function.h \
 	vivi_code_function_call.h \
 	vivi_code_get.h \
@@ -104,15 +112,19 @@ noinst_HEADERS = \
 	vivi_code_init_object.h \
 	vivi_code_label.h \
 	vivi_code_loop.h \
+	vivi_code_null.h \
+	vivi_code_number.h \
 	vivi_code_or.h \
 	vivi_code_printer.h \
 	vivi_code_return.h \
 	vivi_code_statement.h \
+	vivi_code_string.h \
 	vivi_code_substring.h \
 	vivi_code_text_printer.h \
 	vivi_code_throw.h \
 	vivi_code_token.h \
 	vivi_code_unary.h \
+	vivi_code_undefined.h \
 	vivi_code_value.h \
 	vivi_code_value_statement.h \
 	vivi_compiler_empty_statement.h \

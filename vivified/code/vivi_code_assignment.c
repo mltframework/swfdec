@@ -22,9 +22,11 @@
 #endif
 
 #include "vivi_code_assignment.h"
-#include "vivi_code_constant.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_get.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_string.h"
+#include "vivi_code_undefined.h"
 #include "vivi_code_assembler.h"
 #include "vivi_code_asm_code_default.h"
 
@@ -80,9 +82,7 @@ vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
       goto finalize;
     }
   }
-  if (!assignment->local || !VIVI_IS_CODE_CONSTANT (assignment->value) ||
-      vivi_code_constant_get_value_type (
-	VIVI_CODE_CONSTANT (assignment->value)) != SWFDEC_AS_TYPE_UNDEFINED) {
+  if (!assignment->local || !VIVI_IS_CODE_UNDEFINED (assignment->value)) {
     vivi_code_printer_print (printer, " = ");
     vivi_code_printer_print_value (printer, assignment->value, VIVI_PRECEDENCE_ASSIGNMENT);
   }
@@ -166,7 +166,7 @@ vivi_code_assignment_new_name (const char *name, ViviCodeValue *value)
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (value), NULL);
 
-  constant = vivi_code_constant_new_string (name);
+  constant = vivi_code_string_new (name);
   result = vivi_code_assignment_new (NULL, constant, value);
   g_object_unref (constant);
   return result;

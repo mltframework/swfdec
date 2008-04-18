@@ -30,11 +30,17 @@ G_BEGIN_DECLS
 #define VIVI_IS_CODE_ASM(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_ASM))
 #define VIVI_CODE_ASM_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), VIVI_TYPE_CODE_ASM, ViviCodeAsmInterface))
 
+/* forward declaration */
+typedef struct _ViviCodeEmitter ViviCodeEmitter;
+
 typedef struct _ViviCodeAsm ViviCodeAsm; /* dummy object */
 typedef struct _ViviCodeAsmInterface ViviCodeAsmInterface;
 
 struct _ViviCodeAsmInterface {
   GTypeInterface	interface;
+
+  void			(* emit)			(ViviCodeAsm *		code,
+							 ViviCodeEmitter *	emitter);
 };
 
 GType			vivi_code_asm_get_type		(void) G_GNUC_CONST;

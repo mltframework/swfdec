@@ -25,43 +25,42 @@
 #include <math.h>
 #include <string.h>
 
-#include "vivi_code_constant.h"
+#include "vivi_code_undefined.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
 
-G_DEFINE_ABSTRACT_TYPE (ViviCodeConstant, vivi_code_constant, VIVI_TYPE_CODE_VALUE)
+G_DEFINE_TYPE (ViviCodeUndefined, vivi_code_undefined, VIVI_TYPE_CODE_CONSTANT)
 
-static gboolean
-vivi_code_constant_is_constant (ViviCodeValue *value)
+static void
+vivi_code_undefined_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
-  return TRUE;
+  vivi_code_printer_print (printer, "undefined");
+}
+
+static char *
+vivi_code_undefined_get_variable_name (ViviCodeConstant *constant)
+{
+  return g_strdup ("undefined");
 }
 
 static void
-vivi_code_constant_class_init (ViviCodeConstantClass *klass)
+vivi_code_undefined_class_init (ViviCodeUndefinedClass *klass)
 {
-  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
+  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeConstantClass *constant_class = VIVI_CODE_CONSTANT_CLASS (klass);
 
-  value_class->is_constant = vivi_code_constant_is_constant;
+  token_class->print = vivi_code_undefined_print;
+
+  constant_class->get_variable_name = vivi_code_undefined_get_variable_name;
 }
 
 static void
-vivi_code_constant_init (ViviCodeConstant *constant)
+vivi_code_undefined_init (ViviCodeUndefined *undefined)
 {
-  vivi_code_value_set_precedence (VIVI_CODE_VALUE (constant), VIVI_PRECEDENCE_MAX);
 }
 
-char *
-vivi_code_constant_get_variable_name (ViviCodeConstant *constant)
+ViviCodeValue *
+vivi_code_undefined_new (void)
 {
-  ViviCodeConstantClass *klass;
-
-  g_return_val_if_fail (VIVI_IS_CODE_CONSTANT (constant), NULL);
-
-  klass = VIVI_CODE_CONSTANT_GET_CLASS (constant);
-  if (klass->get_variable_name == NULL)
-    return NULL;
-
-  return klass->get_variable_name (constant);
-};
+  return g_object_new (VIVI_TYPE_CODE_UNDEFINED, NULL);
+}
 

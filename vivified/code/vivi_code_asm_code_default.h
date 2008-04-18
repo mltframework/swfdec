@@ -17,8 +17,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _VIVI_CODE_BINARY_DEFAULT_H_
-#define _VIVI_CODE_BINARY_DEFAULT_H_
+#ifndef _VIVI_CODE_ASM_CODE_DEFAULT_H_
+#define _VIVI_CODE_ASM_CODE_DEFAULT_H_
 
 #include <vivified/code/vivi_code_asm_code.h>
 #include <vivified/code/vivi_code_asm.h>

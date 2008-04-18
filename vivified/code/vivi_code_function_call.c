@@ -22,9 +22,9 @@
 #endif
 
 #include "vivi_code_function_call.h"
-#include "vivi_code_constant.h"
-#include "vivi_code_printer.h"
 #include "vivi_code_compiler.h"
+#include "vivi_code_number.h"
+#include "vivi_code_printer.h"
 
 G_DEFINE_TYPE (ViviCodeFunctionCall, vivi_code_function_call, VIVI_TYPE_CODE_VALUE)
 
@@ -133,7 +133,7 @@ vivi_code_function_call_compile (ViviCodeToken *token,
     vivi_code_compiler_compile_value (compiler,
 	g_ptr_array_index (call->arguments, i));
   }
-  count = vivi_code_constant_new_number (call->arguments->len);
+  count = vivi_code_number_new (call->arguments->len);
   vivi_code_compiler_compile_value (compiler, count);
   g_object_unref (count);
 

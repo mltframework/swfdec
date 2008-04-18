@@ -23,9 +23,10 @@
 #endif
 
 #include "vivi_code_init_array.h"
-#include "vivi_code_constant.h"
-#include "vivi_code_printer.h"
 #include "vivi_code_compiler.h"
+#include "vivi_code_number.h"
+#include "vivi_code_printer.h"
+#include "vivi_code_undefined.h"
 
 G_DEFINE_TYPE (ViviCodeInitArray, vivi_code_init_array, VIVI_TYPE_CODE_VALUE)
 
@@ -71,9 +72,7 @@ vivi_code_init_array_print (ViviCodeToken *token, ViviCodePrinter *printer)
       vivi_code_printer_print (printer, ", ");
     /* FIXME: precedences? */
     // don't write undefined values
-    if (!VIVI_IS_CODE_CONSTANT (value) ||
-	vivi_code_constant_get_value_type (VIVI_CODE_CONSTANT (value))
-	!= SWFDEC_AS_TYPE_UNDEFINED)
+    if (!VIVI_IS_CODE_UNDEFINED (value))
       vivi_code_printer_print_value (printer, value, VIVI_PRECEDENCE_COMMA);
   }
   vivi_code_printer_print (printer, "]");
@@ -90,7 +89,7 @@ vivi_code_init_array_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
     vivi_code_compiler_compile_value (compiler,
 	VIVI_CODE_VALUE (g_ptr_array_index (array->variables, i)));
   }
-  count = vivi_code_constant_new_number (array->variables->len);
+  count = vivi_code_number_new (array->variables->len);
   vivi_code_compiler_compile_value (compiler, count);
   g_object_unref (count);
 

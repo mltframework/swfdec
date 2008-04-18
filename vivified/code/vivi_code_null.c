@@ -1,6 +1,5 @@
 /* Vivified
  * Copyright (C) 2008 Benjamin Otte <otte@gnome.org>
- *               2008 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,35 +21,46 @@
 #include "config.h"
 #endif
 
-#include "vivi_compiler_get_temporary.h"
+#include <ctype.h>
+#include <math.h>
+#include <string.h>
 
-#include "vivi_code_get.h"
+#include "vivi_code_null.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_string.h"
 
-G_DEFINE_TYPE (ViviCompilerGetTemporary, vivi_compiler_get_temporary, VIVI_TYPE_CODE_GET)
+G_DEFINE_TYPE (ViviCodeNull, vivi_code_null, VIVI_TYPE_CODE_CONSTANT)
 
 static void
-vivi_compiler_get_temporary_class_init (ViviCompilerGetTemporaryClass *klass)
+vivi_code_null_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
+  vivi_code_printer_print (printer, "null");
+}
+
+static char *
+vivi_code_null_get_variable_name (ViviCodeConstant *constant)
+{
+  return g_strdup ("null");
 }
 
 static void
-vivi_compiler_get_temporary_init (ViviCompilerGetTemporary *get)
+vivi_code_null_class_init (ViviCodeNullClass *klass)
+{
+  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeConstantClass *constant_class = VIVI_CODE_CONSTANT_CLASS (klass);
+
+  token_class->print = vivi_code_null_print;
+
+  constant_class->get_variable_name = vivi_code_null_get_variable_name;
+}
+
+static void
+vivi_code_null_init (ViviCodeNull *null)
 {
 }
 
 ViviCodeValue *
-vivi_compiler_get_temporary_new (void)
+vivi_code_null_new (void)
 {
-  static int counter = 0;
-  ViviCompilerGetTemporary *get;
-  char *name = g_strdup_printf ("$%i", ++counter);
-
-  get = g_object_new (VIVI_TYPE_COMPILER_GET_TEMPORARY, NULL);
-  VIVI_CODE_GET (get)->name = vivi_code_string_new (name);
-
-  g_free (name);
-
-  return VIVI_CODE_VALUE (get);
+  return g_object_new (VIVI_TYPE_CODE_NULL, NULL);
 }
+

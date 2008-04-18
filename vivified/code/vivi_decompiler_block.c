@@ -28,10 +28,10 @@
 #include "vivi_code_assignment.h"
 #include "vivi_code_block.h"
 #include "vivi_code_comment.h"
-#include "vivi_code_constant.h"
 #include "vivi_code_goto.h"
 #include "vivi_code_if.h"
 #include "vivi_code_label.h"
+#include "vivi_code_string.h"
 #include "vivi_decompiler_unknown.h"
 
 G_DEFINE_TYPE (ViviDecompilerBlock, vivi_decompiler_block, VIVI_TYPE_CODE_BLOCK)
@@ -330,7 +330,7 @@ vivi_decompiler_block_add_state_transition (ViviDecompilerBlock *from,
       return;
     }
     if (val_from != VIVI_CODE_VALUE (val_to)) {
-      name = vivi_code_constant_new_string (vivi_decompiler_unknown_get_name (val_to));
+      name = vivi_code_string_new (vivi_decompiler_unknown_get_name (val_to));
       vivi_code_block_add_statement (block,
 	  vivi_code_assignment_new (NULL, name, val_from));
     }

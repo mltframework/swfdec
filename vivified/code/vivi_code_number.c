@@ -1,6 +1,5 @@
 /* Vivified
  * Copyright (C) 2008 Benjamin Otte <otte@gnome.org>
- *               2008 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,35 +21,51 @@
 #include "config.h"
 #endif
 
-#include "vivi_compiler_get_temporary.h"
-
-#include "vivi_code_get.h"
+#include "vivi_code_number.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_string.h"
 
-G_DEFINE_TYPE (ViviCompilerGetTemporary, vivi_compiler_get_temporary, VIVI_TYPE_CODE_GET)
+G_DEFINE_TYPE (ViviCodeNumber, vivi_code_number, VIVI_TYPE_CODE_CONSTANT)
 
 static void
-vivi_compiler_get_temporary_class_init (ViviCompilerGetTemporaryClass *klass)
+vivi_code_number_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
+  ViviCodeNumber *number = VIVI_CODE_NUMBER (token);
+  char *s;
+
+  s = g_strdup_printf ("%g", number->value);
+  vivi_code_printer_print (printer, s);
+  g_free (s);
 }
 
 static void
-vivi_compiler_get_temporary_init (ViviCompilerGetTemporary *get)
+vivi_code_number_class_init (ViviCodeNumberClass *klass)
+{
+  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+
+  token_class->print = vivi_code_number_print;
+}
+
+static void
+vivi_code_number_init (ViviCodeNumber *number)
 {
 }
 
 ViviCodeValue *
-vivi_compiler_get_temporary_new (void)
+vivi_code_number_new (double value)
 {
-  static int counter = 0;
-  ViviCompilerGetTemporary *get;
-  char *name = g_strdup_printf ("$%i", ++counter);
+  ViviCodeNumber *number;
 
-  get = g_object_new (VIVI_TYPE_COMPILER_GET_TEMPORARY, NULL);
-  VIVI_CODE_GET (get)->name = vivi_code_string_new (name);
+  number = g_object_new (VIVI_TYPE_CODE_NUMBER, NULL);
+  number->value = value;
 
-  g_free (name);
-
-  return VIVI_CODE_VALUE (get);
+  return VIVI_CODE_VALUE (number);
 }
+
+double
+vivi_code_number_get_value (ViviCodeNumber *number)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_NUMBER (number), 0.0);
+
+  return number->value;
+}
+

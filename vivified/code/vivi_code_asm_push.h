@@ -70,13 +70,17 @@ guint			vivi_code_asm_push_get_n_values		(ViviCodeAsmPush *	push);
 ViviCodeConstantType	vivi_code_asm_push_get_value_type     	(ViviCodeAsmPush *	push,
 								 guint			i);
 const char *		vivi_code_asm_push_get_string		(ViviCodeAsmPush *	push,
-								 guint			i);
-double			vivi_code_asm_push_get_number		(ViviCodeAsmPush *	push,
-								 guint			i);
-int			vivi_code_asm_push_get_integer		(ViviCodeAsmPush *	push,
-								 guint			i);
-int			vivi_code_asm_push_get_boolean		(ViviCodeAsmPush *	push,
-								 guint			i);
+								 guint			id);
+float			vivi_code_asm_push_get_float		(ViviCodeAsmPush *	push,
+								 guint			id);
+guint			vivi_code_asm_push_get_register		(ViviCodeAsmPush *	push,
+								 guint			id);
+double			vivi_code_asm_push_get_double		(ViviCodeAsmPush *	push,
+								 guint			id);
+gboolean		vivi_code_asm_push_get_boolean		(ViviCodeAsmPush *	push,
+								 guint			id);
+guint			vivi_code_asm_push_get_pool		(ViviCodeAsmPush *	push,
+								 guint			id);
 
 void			vivi_code_asm_push_add_string		(ViviCodeAsmPush *	push,
 								 const char *		string);

@@ -26,14 +26,15 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_decompiler.h"
+#include "vivi_code_asm_code_default.h"
+#include "vivi_code_asm_push.h"
 #include "vivi_code_assembler.h"
 #include "vivi_code_comment.h"
-#include "vivi_code_asm_code_default.h"
 
-#define vivi_decompiler_warning(assembler,...) G_STMT_START { \
+#define vivi_disassembler_warning(assembler,...) G_STMT_START { \
   char *__s = g_strdup_printf (__VA_ARGS__); \
   ViviCodeStatement *comment = vivi_code_comment_new (__s); \
-  vivi_code_assembler_add_code(assembler, VIVI_CODE_ASM (comment)); \
+  vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (comment)); \
   g_object_unref (comment); \
   g_free (__s); \
 }G_STMT_END
@@ -43,9 +44,68 @@ static ViviCodeAsm * (* simple_commands[0x80]) (void) = {
 #include "vivi_code_defaults.h"
 };
 
+static void
+vivi_disassemble_push (ViviCodeAssembler *assembler, SwfdecBits *bits, guint version)
+{
+  ViviCodeAsmPush *push;
+  guint type;
+
+  push = VIVI_CODE_ASM_PUSH (vivi_code_asm_push_new ());
+  while (swfdec_bits_left (bits)) {
+    type = swfdec_bits_get_u8 (bits);
+    switch (type) {
+      case 0: /* string */
+	{
+	  char *s = swfdec_bits_get_string (bits, version);
+	  if (s == NULL) {
+	    vivi_disassembler_warning (assembler, "could not read string");
+	    goto fail;
+	  }
+	  vivi_code_asm_push_add_string (push, s);
+	  g_free (s);
+	  break;
+	}
+      case 1: /* float */
+	vivi_code_asm_push_add_float (push, swfdec_bits_get_float (bits));
+	break;
+      case 2: /* null */
+	vivi_code_asm_push_add_null (push);
+	break;
+      case 3: /* undefined */
+	vivi_code_asm_push_add_undefined (push);
+	break;
+      case 4: /* register */
+	vivi_code_asm_push_add_register (push, swfdec_bits_get_u8 (bits));
+	break;
+      case 5: /* boolean */
+	vivi_code_asm_push_add_boolean (push, swfdec_bits_get_u8 (bits));
+	break;
+      case 6: /* double */
+	vivi_code_asm_push_add_double (push, swfdec_bits_get_double (bits));
+	break;
+      case 7: /* 32bit int */
+	vivi_code_asm_push_add_integer (push, (gint32) swfdec_bits_get_u32 (bits));
+	break;
+      case 8: /* 8bit ConstantPool address */
+	vivi_code_asm_push_add_pool (push, swfdec_bits_get_u8 (bits));
+	break;
+      case 9: /* 16bit ConstantPool address */
+	vivi_code_asm_push_add_pool (push, swfdec_bits_get_u16 (bits));
+	break;
+      default:
+	vivi_disassembler_warning (assembler, "Push: type %u not implemented", type);
+	goto fail;
+    }
+  }
+
+  vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (push));
+fail:
+  g_object_unref (push);
+}
+
 
 ViviCodeStatement *
-vivi_decompile_script_asm (SwfdecScript *script)
+vivi_disassemble_script (SwfdecScript *script)
 {
   ViviCodeAssembler *assembler = VIVI_CODE_ASSEMBLER (vivi_code_assembler_new ());
   GHashTable *bytecodes;
@@ -63,26 +123,31 @@ vivi_decompile_script_asm (SwfdecScript *script)
 
   while (pc != exit) {
     if (pc < start || pc >= end) {
-      vivi_decompiler_warning (assembler, "program counter out of range");
+      vivi_disassembler_warning (assembler, "program counter out of range");
       goto error;
     }
     code = pc[0];
     if (code & 0x80) {
       if (pc + 2 >= end) {
-	vivi_decompiler_warning (assembler, "bytecode 0x%02X length value out of range", code);
+	vivi_disassembler_warning (assembler, "bytecode 0x%02X length value out of range", code);
 	goto error;
       }
       data = pc + 3;
       len = pc[1] | pc[2] << 8;
       if (data + len > end) {
-	vivi_decompiler_warning (assembler, "bytecode 0x%02X length %u out of range", code, len);
+	vivi_disassembler_warning (assembler, "bytecode 0x%02X length %u out of range", code, len);
 	goto error;
       }
       swfdec_bits_init_data (&bits, data, len);
       switch (code) {
-	default:
-	  vivi_decompiler_warning (assembler, "unknown bytecode 0x%02X", code);
+	case SWFDEC_AS_ACTION_PUSH:
+	  vivi_disassemble_push (assembler, &bits, script->version);
 	  pc = data + len;
+	  break;
+	default:
+	  vivi_disassembler_warning (assembler, "unknown bytecode 0x%02X", code);
+	  pc = data + len;
+	  break;
       }
     } else {
       if (simple_commands[code]) {
@@ -90,7 +155,7 @@ vivi_decompile_script_asm (SwfdecScript *script)
 	vivi_code_assembler_add_code (assembler, asmcode);
 	g_object_unref (asmcode);
       } else {
-	vivi_decompiler_warning (assembler, "unknown bytecode 0x%02X", code);
+	vivi_disassembler_warning (assembler, "unknown bytecode 0x%02X", code);
       }
       pc++;
     }

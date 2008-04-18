@@ -71,12 +71,12 @@ libvivified_compiler_la_SOURCES = \
 	vivi_compiler_empty_statement.c \
 	vivi_compiler_get_temporary.c \
 	vivi_compiler_goto_name.c \
-	vivi_decompiler_asm.c \
 	vivi_decompiler_block.c \
 	vivi_decompiler_duplicate.c \
 	vivi_decompiler_state.c \
 	vivi_decompiler_unknown.c \
 	vivi_decompiler.c \
+	vivi_disassembler.c \
 	vivi_parser.c \
 	vivi_parser_scanner.c
 

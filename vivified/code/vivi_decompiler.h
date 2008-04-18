@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 
 ViviCodeStatement *	vivi_decompile_script		(SwfdecScript *		script);
 
-ViviCodeStatement *	vivi_decompile_script_asm	(SwfdecScript *		script);
+ViviCodeStatement *	vivi_disassemble_script		(SwfdecScript *		script);
 
 
 G_END_DECLS

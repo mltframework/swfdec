@@ -67,7 +67,7 @@ decode_script (gpointer scriptp, gpointer use_asm)
 
   g_print ("/* %s */\n", script->name);
   if (use_asm) {
-    token = VIVI_CODE_TOKEN (vivi_decompile_script_asm (script));
+    token = VIVI_CODE_TOKEN (vivi_disassemble_script (script));
   } else {
     token = VIVI_CODE_TOKEN (vivi_code_function_new_from_script (scriptp));
   }

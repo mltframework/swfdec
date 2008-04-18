@@ -347,6 +347,21 @@ vivi_code_asm_push_get_double (ViviCodeAsmPush *push, guint id)
   return swfdec_bits_get_double (&bits);
 }
 
+int
+vivi_code_asm_push_get_integer (ViviCodeAsmPush *push, guint id)
+{
+  SwfdecBits bits;
+
+  g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), FALSE);
+  g_return_val_if_fail (id < push->offsets->len, FALSE);
+
+  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
+  swfdec_bits_skip_bytes (&bits, GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, id)));
+  g_return_val_if_fail (swfdec_bits_get_u8 (&bits) == VIVI_CODE_CONSTANT_INTEGER, FALSE);
+
+  return swfdec_bits_get_s32 (&bits);
+}
+
 gboolean
 vivi_code_asm_push_get_boolean (ViviCodeAsmPush *push, guint id)
 {

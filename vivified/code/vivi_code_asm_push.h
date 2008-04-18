@@ -77,6 +77,8 @@ guint			vivi_code_asm_push_get_register		(ViviCodeAsmPush *	push,
 								 guint			id);
 double			vivi_code_asm_push_get_double		(ViviCodeAsmPush *	push,
 								 guint			id);
+int			vivi_code_asm_push_get_integer		(ViviCodeAsmPush *	push,
+								 guint			id);
 gboolean		vivi_code_asm_push_get_boolean		(ViviCodeAsmPush *	push,
 								 guint			id);
 guint			vivi_code_asm_push_get_pool		(ViviCodeAsmPush *	push,

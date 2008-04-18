@@ -172,7 +172,7 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	val = vivi_code_number_new (swfdec_bits_get_double (&bits));
 	break;
       case 7: /* 32bit int */
-	val = vivi_code_number_new ((int) swfdec_bits_get_u32 (&bits));
+	val = vivi_code_number_new (swfdec_bits_get_s32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
       case 9: /* 16bit ConstantPool address */

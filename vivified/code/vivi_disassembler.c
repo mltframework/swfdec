@@ -84,7 +84,7 @@ vivi_disassemble_push (ViviCodeAssembler *assembler, SwfdecBits *bits, guint ver
 	vivi_code_asm_push_add_double (push, swfdec_bits_get_double (bits));
 	break;
       case 7: /* 32bit int */
-	vivi_code_asm_push_add_integer (push, (gint32) swfdec_bits_get_u32 (bits));
+	vivi_code_asm_push_add_integer (push, swfdec_bits_get_s32 (bits));
 	break;
       case 8: /* 8bit ConstantPool address */
 	vivi_code_asm_push_add_pool (push, swfdec_bits_get_u8 (bits));

@@ -93,8 +93,8 @@ vivi_disassemble_push (ViviCodeAssembler *assembler, SwfdecBits *bits, guint ver
 	vivi_code_asm_push_add_pool (push, swfdec_bits_get_u16 (bits));
 	break;
       default:
-	vivi_disassembler_warning (assembler, "Push: type %u not implemented", type);
-	goto fail;
+	vivi_disassembler_warning (assembler, "Push: unknown type %u, ignoring", type);
+	break;
     }
   }
 

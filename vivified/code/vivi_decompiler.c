@@ -192,8 +192,8 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	  break;
 	}
       default:
-	vivi_decompiler_block_add_error (block, state, "Push: type %u not implemented", type);
-	return TRUE;
+	vivi_decompiler_block_add_error (block, state, "Push: type %u unknown, skipping", type);
+	break;
     }
     vivi_decompiler_state_push (state, val);
   }

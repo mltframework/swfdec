@@ -376,8 +376,8 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	  break;
 	}
       default:
-	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return;
+	SWFDEC_ERROR ("Push: unknown type %u, skipping", type);
+	break;
     }
   }
 }
@@ -3031,8 +3031,8 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
 	g_string_append_printf (string, "Pool %u", swfdec_bits_get_u16 (&bits));
 	break;
       default:
-	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return NULL;
+	SWFDEC_ERROR ("Push: unknown type %u, skipping", type);
+	break;
     }
   }
   return g_string_free (string, FALSE);

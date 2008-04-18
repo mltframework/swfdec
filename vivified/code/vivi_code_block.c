@@ -28,7 +28,7 @@
 #include "vivi_code_comment.h"
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
 
 G_DEFINE_TYPE (ViviCodeBlock, vivi_code_block, VIVI_TYPE_CODE_STATEMENT)
 
@@ -90,14 +90,14 @@ vivi_code_block_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_block_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_block_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
   ViviCodeBlock *block = VIVI_CODE_BLOCK (token);
   guint i;
 
   for (i = 0; i < block->statements->len; i++) {
-    vivi_code_compiler_compile_token (compiler,
-	VIVI_CODE_TOKEN (g_ptr_array_index (block->statements, i)));
+    vivi_code_statement_compile (VIVI_CODE_STATEMENT (g_ptr_array_index (
+	    block->statements, i)), assembler);
   }
 }
 

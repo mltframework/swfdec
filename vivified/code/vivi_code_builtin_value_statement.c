@@ -23,7 +23,7 @@
 
 #include "vivi_code_builtin_value_statement.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
 
 G_DEFINE_ABSTRACT_TYPE (ViviCodeBuiltinValueStatement, vivi_code_builtin_value_statement, VIVI_TYPE_CODE_BUILTIN_STATEMENT)
 
@@ -61,7 +61,7 @@ vivi_code_builtin_value_statement_print (ViviCodeToken *token,
 
 static void
 vivi_code_builtin_value_statement_compile (ViviCodeToken *token,
-    ViviCodeCompiler *compiler)
+    ViviCodeAssembler *assembler)
 {
   ViviCodeBuiltinStatementClass *klass =
     VIVI_CODE_BUILTIN_STATEMENT_GET_CLASS (token);
@@ -69,10 +69,10 @@ vivi_code_builtin_value_statement_compile (ViviCodeToken *token,
     VIVI_CODE_BUILTIN_VALUE_STATEMENT (token);
 
   g_assert (stmt->value != NULL);
-  vivi_code_compiler_compile_value (compiler, stmt->value);
+  vivi_code_value_compile (stmt->value, assembler);
 
-  g_assert (klass->bytecode != SWFDEC_AS_ACTION_END);
-  vivi_code_compiler_write_empty_action (compiler, klass->bytecode);
+  g_assert (klass->asm_constructor != NULL);
+  vivi_code_assembler_add_code (assembler, klass->asm_constructor ());
 }
 
 static void

@@ -22,6 +22,7 @@
 
 #include <swfdec/swfdec_as_interpret.h>
 #include <vivified/code/vivi_code_value.h>
+#include <vivified/code/vivi_code_asm.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +52,7 @@ struct _ViviCodeBinaryClass
   /*< private >*/
   /* use vivi_code_default.h */
   const char *		operator_name;
-  SwfdecAsAction	bytecode;
+  ViviCodeAsm *		(*asm_constructor) (void);
 };
 
 GType			vivi_code_binary_get_type   	(void);

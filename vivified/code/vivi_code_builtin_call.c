@@ -23,7 +23,7 @@
 
 #include "vivi_code_builtin_call.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
 
 G_DEFINE_ABSTRACT_TYPE (ViviCodeBuiltinCall, vivi_code_builtin_call, VIVI_TYPE_CODE_VALUE)
 
@@ -40,12 +40,12 @@ vivi_code_builtin_call_print (ViviCodeToken *token, ViviCodePrinter *printer)
 
 static void
 vivi_code_builtin_call_compile (ViviCodeToken *token,
-    ViviCodeCompiler *compiler)
+    ViviCodeAssembler *assembler)
 {
   ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (token);
 
-  g_assert (klass->bytecode != SWFDEC_AS_ACTION_END);
-  vivi_code_compiler_write_empty_action (compiler, klass->bytecode);
+  g_assert (klass->asm_constructor != NULL);
+  vivi_code_assembler_add_code (assembler, klass->asm_constructor ());
 }
 
 static void

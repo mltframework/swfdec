@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-#define DEFAULT_BUILTIN_VALUE_STATEMENT(CapsName, underscore_name, function_name, bytecode) \
+#define DEFAULT_BUILTIN_VALUE_STATEMENT(CapsName, underscore_name, function_name) \
 \
 typedef ViviCodeBuiltinValueStatement ViviCode ## CapsName; \
 typedef ViviCodeBuiltinValueStatementClass ViviCode ## CapsName ## Class; \

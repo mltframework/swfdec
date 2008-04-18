@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-#define DEFAULT_BUILTIN_VALUE_CALL(CapsName, underscore_name, function_name, bytecode) \
+#define DEFAULT_BUILTIN_VALUE_CALL(CapsName, underscore_name, function_name) \
 \
 typedef ViviCodeBuiltinValueCall ViviCode ## CapsName; \
 typedef ViviCodeBuiltinValueCallClass ViviCode ## CapsName ## Class; \

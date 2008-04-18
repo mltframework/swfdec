@@ -25,7 +25,8 @@
 #include "vivi_code_constant.h"
 #include "vivi_code_get.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
+#include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeAssignment, vivi_code_assignment, VIVI_TYPE_CODE_STATEMENT)
 
@@ -92,33 +93,33 @@ finalize:
 }
 
 static void
-vivi_code_assignment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_assignment_compile (ViviCodeToken *token,
+    ViviCodeAssembler *assembler)
 {
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
-  SwfdecAsAction action;
+  ViviCodeAsm *code;
 
-  vivi_code_compiler_compile_value (compiler, assignment->name);
+  vivi_code_value_compile (assignment->name, assembler);
   if (assignment->from && !assignment->local)
-    vivi_code_compiler_compile_value (compiler, assignment->from);
+    vivi_code_value_compile (assignment->from, assembler);
 
   if (assignment->local && assignment->from) {
     ViviCodeValue *get =
       vivi_code_get_new (assignment->from, assignment->value);
-    vivi_code_compiler_compile_value (compiler, get);
+    vivi_code_value_compile (get, assembler);
     g_object_unref (get);
   } else {
-    vivi_code_compiler_compile_value (compiler, assignment->value);
+    vivi_code_value_compile (assignment->value, assembler);
   }
-
 
   if (assignment->local) {
-    action = SWFDEC_AS_ACTION_DEFINE_LOCAL;
+    code = vivi_code_asm_define_local_new ();
   } else if (assignment->from) {
-    action = SWFDEC_AS_ACTION_SET_MEMBER;
+    code = vivi_code_asm_set_member_new ();
   } else {
-    action = SWFDEC_AS_ACTION_SET_VARIABLE;
+    code = vivi_code_asm_set_variable_new ();
   }
-  vivi_code_compiler_write_empty_action (compiler, action);
+  vivi_code_assembler_add_code (assembler, code);
 }
 
 static void

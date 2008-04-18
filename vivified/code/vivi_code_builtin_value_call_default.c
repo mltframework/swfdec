@@ -23,8 +23,9 @@
 #endif
 
 #include "vivi_code_builtin_value_call_default.h"
+#include "vivi_code_asm_code_default.h"
 
-#define DEFAULT_BUILTIN_VALUE_CALL(CapsName, underscore_name, name, bc) \
+#define DEFAULT_BUILTIN_VALUE_CALL(CapsName, underscore_name, name) \
 \
 G_DEFINE_TYPE (ViviCode ## CapsName, vivi_code_ ## underscore_name, VIVI_TYPE_CODE_BUILTIN_VALUE_CALL) \
 \
@@ -34,7 +35,7 @@ vivi_code_ ## underscore_name ## _class_init (ViviCodeBuiltinValueCallClass *kla
   ViviCodeBuiltinCallClass *builtin_class = VIVI_CODE_BUILTIN_CALL_CLASS (klass); \
 \
   builtin_class->function_name = name; \
-  builtin_class->bytecode = bc; \
+  builtin_class->asm_constructor = vivi_code_asm_ ## underscore_name ## _new; \
 } \
 \
 static void \

@@ -23,7 +23,7 @@
 
 #include "vivi_code_comment.h"
 #include "vivi_code_asm.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
 #include "vivi_code_printer.h"
 
 static void
@@ -56,9 +56,9 @@ vivi_code_comment_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_comment_compile (ViviCodeToken *token, ViviCodeCompiler *compile)
+vivi_code_comment_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
-  /* nothing */
+  g_printerr ("Implement comment");
 }
 
 static void

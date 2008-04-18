@@ -23,6 +23,7 @@
 #include <swfdec/swfdec_as_interpret.h>
 
 #include <vivified/code/vivi_code_value.h>
+#include <vivified/code/vivi_code_asm.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +48,7 @@ struct _ViviCodeBuiltinCallClass
   ViviCodeValueClass		value_class;
 
   const char *			function_name;
-  SwfdecAsAction		bytecode;
+  ViviCodeAsm *			(*asm_constructor) (void);
 };
 
 GType		vivi_code_builtin_call_get_type		(void);

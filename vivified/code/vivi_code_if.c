@@ -129,28 +129,26 @@ static void
 vivi_code_if_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeIf *stmt = VIVI_CODE_IF (token);
+  ViviCodeAsmLabel *label_if, *label_else;
 
   vivi_code_compiler_compile_value (compiler, stmt->condition);
 
-  vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_IF);
+  label_if = vivi_code_asm_label_new ();
+  vivi_code_compiler_add (compiler, vivi_code_asm_if_new (label_if));
 
-  if (stmt->else_statement) {
-    vivi_code_compiler_compile_token (compiler,
-	VIVI_CODE_TOKEN (stmt->else_statement));
-  }
+  if (stmt->else_statement)
+    vivi_code_compiler_compile_statement (compiler, stmt->else_statement);
 
-  vivi_code_compiler_write_s16 (compiler,
-      vivi_code_compiler_tail_size (compiler) + 5); // else_statement + jump
-  vivi_code_compiler_end_action (compiler);
+  label_else = vivi_code_asm_label_new ();
+  vivi_code_compiler_add (compiler, vivi_code_asm_jump_new (label_else));
+  g_object_unref (label_else);
 
-  vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_JUMP);
+  vivi_code_compiler_add (compiler, label_if);
+  g_object_unref (label_if);
 
-  vivi_code_compiler_compile_token (compiler,
-      VIVI_CODE_TOKEN (stmt->if_statement));
+  vivi_code_compiler_compile_statement (compiler, stmt->if_statement);
 
-  vivi_code_compiler_write_s16 (compiler,
-      vivi_code_compiler_tail_size (compiler)); // if_statement
-  vivi_code_compiler_end_action (compiler);
+  vivi_code_compiler_add (compiler, label_else);
 }
 
 static void

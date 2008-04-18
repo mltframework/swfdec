@@ -24,8 +24,10 @@
 #include <swfdec/swfdec_as_interpret.h>
 
 #include "vivi_code_binary_default.h"
+#include "vivi_code_asm_code_default.h"
 
-#define DEFAULT_BINARY(CapsName, underscore_name, operatorname, bc, precedence) \
+
+#define DEFAULT_BINARY(CapsName, underscore_name, operatorname, precedence) \
 \
 G_DEFINE_TYPE (ViviCode ## CapsName, vivi_code_ ## underscore_name, VIVI_TYPE_CODE_BINARY) \
 \
@@ -35,7 +37,7 @@ vivi_code_ ## underscore_name ## _class_init (ViviCodeBinaryClass *klass) \
   ViviCodeBinaryClass *binary_class = VIVI_CODE_BINARY_CLASS (klass); \
 \
   binary_class->operator_name = operatorname; \
-  binary_class->bytecode = bc; \
+  binary_class->asm_constructor = vivi_code_asm_ ## underscore_name ## _new; \
 } \
 \
 static void \

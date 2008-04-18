@@ -23,18 +23,19 @@
 #endif
 
 #include "vivi_code_builtin_statement_default.h"
+#include "vivi_code_asm_code_default.h"
 
-#define DEFAULT_BUILTIN_STATEMENT(CapsName, underscore_name, name, bc) \
+#define DEFAULT_BUILTIN_STATEMENT(CapsName, underscore_name, name) \
 \
 G_DEFINE_TYPE (ViviCode ## CapsName, vivi_code_ ## underscore_name, VIVI_TYPE_CODE_BUILTIN_STATEMENT) \
 \
 static void \
 vivi_code_ ## underscore_name ## _class_init (ViviCodeBuiltinStatementClass *klass) \
 { \
-  ViviCodeBuiltinStatementClass *builtin_statement_class = VIVI_CODE_BUILTIN_STATEMENT_CLASS (klass); \
+  ViviCodeBuiltinStatementClass *builtin_class = VIVI_CODE_BUILTIN_STATEMENT_CLASS (klass); \
 \
-  builtin_statement_class->function_name = name; \
-  builtin_statement_class->bytecode = bc; \
+  builtin_class->function_name = name; \
+  builtin_class->asm_constructor = vivi_code_asm_ ## underscore_name ## _new; \
 } \
 \
 static void \

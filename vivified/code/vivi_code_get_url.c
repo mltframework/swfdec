@@ -23,7 +23,7 @@
 
 #include "vivi_code_get_url.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
 
 G_DEFINE_TYPE (ViviCodeGetUrl, vivi_code_get_url, VIVI_TYPE_CODE_STATEMENT)
 
@@ -62,25 +62,18 @@ vivi_code_get_url_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_get_url_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_get_url_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
+  g_printerr ("Implement getURL2");
+#if 0
   ViviCodeGetUrl *url = VIVI_CODE_GET_URL (token);
   guint bits;
 
-  vivi_code_compiler_compile_value (compiler, url->url);
-  vivi_code_compiler_compile_value (compiler, url->target);
+  vivi_code_value_compile (url->url, assembler);
+  vivi_code_value_compile (url->target, assembler);
 
-  vivi_code_compiler_begin_action (compiler, SWFDEC_AS_ACTION_GET_URL2);
-
-  bits = url->method;
-  if (url->internal)
-    bits |= 64;
-  if (url->variables)
-    bits |= 128;
-
-  vivi_code_compiler_write_u8 (compiler, bits);
-
-  vivi_code_compiler_end_action (compiler);
+  vivi_code_asm_get_url2_new (url->method, url->internal, url->variables);
+#endif
 }
 
 static void

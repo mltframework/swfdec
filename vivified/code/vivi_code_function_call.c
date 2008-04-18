@@ -21,8 +21,9 @@
 #include "config.h"
 #endif
 
+#include "vivi_code_assembler.h"
+#include "vivi_code_asm_code_default.h"
 #include "vivi_code_function_call.h"
-#include "vivi_code_compiler.h"
 #include "vivi_code_number.h"
 #include "vivi_code_printer.h"
 
@@ -122,41 +123,41 @@ vivi_code_function_call_print (ViviCodeToken *token, ViviCodePrinter*printer)
 
 static void
 vivi_code_function_call_compile (ViviCodeToken *token,
-    ViviCodeCompiler *compiler)
+    ViviCodeAssembler *assembler)
 {
   ViviCodeFunctionCall *call = VIVI_CODE_FUNCTION_CALL (token);
-  SwfdecAsAction action;
   ViviCodeValue *count;
+  ViviCodeAsm *code;
   guint i;
 
   for (i = 0; i < call->arguments->len; i++) {
-    vivi_code_compiler_compile_value (compiler,
-	g_ptr_array_index (call->arguments, i));
+    vivi_code_value_compile (g_ptr_array_index (call->arguments, i),
+	assembler);
   }
   count = vivi_code_number_new (call->arguments->len);
-  vivi_code_compiler_compile_value (compiler, count);
+  vivi_code_value_compile (count, assembler);
   g_object_unref (count);
 
-  vivi_code_compiler_compile_value (compiler, call->name);
+  vivi_code_value_compile (call->name, assembler);
 
   if (call->value)
-    vivi_code_compiler_compile_value (compiler, call->value);
+    vivi_code_value_compile (call->value, assembler);
 
   if (call->construct) {
     if (call->value) {
-      action = SWFDEC_AS_ACTION_NEW_METHOD;
+      code = vivi_code_asm_new_method_new ();
     } else {
-      action = SWFDEC_AS_ACTION_NEW_OBJECT;
+      code = vivi_code_asm_new_object_new ();
     }
   } else {
     if (call->value) {
-      action = SWFDEC_AS_ACTION_CALL_METHOD;
+      code = vivi_code_asm_call_method_new ();
     } else {
-      action = SWFDEC_AS_ACTION_CALL_FUNCTION;
+      code = vivi_code_asm_call_function_new ();
     }
   }
 
-  vivi_code_compiler_write_empty_action (compiler, action);
+  vivi_code_assembler_add_code (assembler, code);
 }
 
 static gboolean

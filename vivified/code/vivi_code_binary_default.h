@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-#define DEFAULT_BINARY(CapsName, underscore_name, operator_name, precedence) \
+#define DEFAULT_BINARY(CapsName, underscore_name, operator_name, bytecode, precedence) \
 \
 typedef ViviCodeBinary ViviCode ## CapsName; \
 typedef ViviCodeBinaryClass ViviCode ## CapsName ## Class; \

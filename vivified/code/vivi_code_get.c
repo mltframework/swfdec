@@ -21,8 +21,9 @@
 #include "config.h"
 #endif
 
+#include "vivi_code_asm_code_default.h"
+#include "vivi_code_assembler.h"
 #include "vivi_code_get.h"
-#include "vivi_code_compiler.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_string.h"
 
@@ -74,22 +75,22 @@ vivi_code_get_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_get_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_get_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
   ViviCodeGet *get = VIVI_CODE_GET (token);
-  SwfdecAsAction action;
+  ViviCodeAsm *code;
 
-  vivi_code_compiler_compile_value (compiler, get->name);
+  vivi_code_value_compile (get->name, assembler);
   if (get->from)
-    vivi_code_compiler_compile_value (compiler, get->from);
+    vivi_code_value_compile (get->from, assembler);
 
   if (get->from) {
-    action = SWFDEC_AS_ACTION_GET_MEMBER;
+    code = vivi_code_asm_get_member_new ();
   } else {
-    action = SWFDEC_AS_ACTION_GET_VARIABLE;
+    code = vivi_code_asm_get_variable_new ();
   }
 
-  vivi_code_compiler_write_empty_action (compiler, action);
+  vivi_code_assembler_add_code (assembler, code);
 }
 
 static gboolean

@@ -25,21 +25,21 @@
 
 #include "vivi_parser.h"
 #include "vivi_code_text_printer.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
 
 int
 main (int argc, char *argv[])
 {
   SwfdecPlayer *player;
-  char *target_name;
-  FILE *source, *target;
-  ViviCodeStatement *statement;
-  //ViviCodePrinter *printer;
-  ViviCodeCompiler *compiler;
+  //char *target_name;
+  FILE *source;//, *target;
+  ViviCodeStatement *statement, *assembler;
+  ViviCodePrinter *printer;
+  /*ViviCodeCompiler *compiler;
   SwfdecBots *bots;
   SwfdecBuffer *buffer;
   unsigned char *length_ptr;
-  SwfdecRect rect = { 0, 0, 2000, 3000 };
+  SwfdecRect rect = { 0, 0, 2000, 3000 };*/
 
   player = swfdec_player_new (NULL);
 
@@ -69,6 +69,14 @@ main (int argc, char *argv[])
   g_object_unref (printer);*/
 
 
+  assembler = vivi_code_assembler_new ();
+  vivi_code_statement_compile (statement, VIVI_CODE_ASSEMBLER (assembler));
+  printer = vivi_code_text_printer_new ();
+  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (assembler));
+  g_object_unref (printer);
+  g_object_unref (assembler);
+
+#if 0
   bots = swfdec_bots_open ();
 
 
@@ -135,7 +143,9 @@ main (int argc, char *argv[])
 
   fclose (target);
   swfdec_buffer_unref (buffer);
+#endif
 
+  g_object_unref (statement);
   g_object_unref (player);
 
   return (statement == NULL ? -1 : 0);

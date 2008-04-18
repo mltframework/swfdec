@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_token.h"
+#include "vivi_code_assembler.h"
 
 G_DEFINE_ABSTRACT_TYPE (ViviCodeToken, vivi_code_token, G_TYPE_OBJECT)
 

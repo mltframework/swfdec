@@ -27,7 +27,7 @@
 #include "vivi_code_asm_code_default.h"
 
 
-#define DEFAULT_BINARY(CapsName, underscore_name, operatorname, precedence) \
+#define DEFAULT_BINARY(CapsName, underscore_name, operatorname, bytecode, precedence) \
 \
 G_DEFINE_TYPE (ViviCode ## CapsName, vivi_code_ ## underscore_name, VIVI_TYPE_CODE_BINARY) \
 \

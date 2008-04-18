@@ -23,7 +23,7 @@
 
 #include "vivi_code_label.h"
 #include "vivi_code_asm.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
 #include "vivi_code_printer.h"
 
 static void
@@ -56,9 +56,16 @@ vivi_code_label_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_label_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_label_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
-  // TODO: save the position
+  g_printerr ("Implement label\n");
+#if 0
+  ViviCodeLabel *label = VIVI_CODE_LABEL (token);
+  ViviCodeAsm *code =
+    VIVI_CODE_ASM (vivi_code_label_new_internal_from_label (label));
+
+  vivi_code_assembler_add_code (assembler, code);
+#endif
 }
 
 static gboolean

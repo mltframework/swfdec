@@ -23,7 +23,8 @@
 
 #include "vivi_code_return.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
+#include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeReturn, vivi_code_return, VIVI_TYPE_CODE_STATEMENT)
 
@@ -55,13 +56,16 @@ vivi_code_return_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_return_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_return_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
   ViviCodeReturn *ret = VIVI_CODE_RETURN (token);
+  ViviCodeAsm *code;
 
-  vivi_code_compiler_compile_value (compiler, ret->value);
+  vivi_code_value_compile (ret->value, assembler);
 
-  vivi_code_compiler_write_empty_action (compiler, SWFDEC_AS_ACTION_RETURN);
+  code = vivi_code_asm_return_new ();
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 }
 
 static void

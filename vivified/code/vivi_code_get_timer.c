@@ -23,6 +23,7 @@
 #endif
 
 #include "vivi_code_get_timer.h"
+#include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeGetTimer, vivi_code_get_timer, VIVI_TYPE_CODE_BUILTIN_CALL)
 
@@ -33,7 +34,7 @@ vivi_code_get_timer_class_init (ViviCodeGetTimerClass *klass)
     VIVI_CODE_BUILTIN_CALL_CLASS (klass);
 
   builtin_class->function_name = "getTimer";
-  builtin_class->bytecode = SWFDEC_AS_ACTION_GET_TIME;
+  builtin_class->asm_constructor = vivi_code_asm_get_time_new;
 }
 
 static void

@@ -1131,12 +1131,12 @@ static const BuiltinStatement builtin_statements[] = {
   { "nextFrame",          vivi_code_next_frame_new, NULL, NULL },
   { "play",               vivi_code_play_new, NULL, NULL },
   { "prevFrame",          vivi_code_previous_frame_new, NULL, NULL },
-  { "removeMovieClip",    NULL, vivi_code_remove_movie_clip_new, NULL },
+  { "removeMovieClip",    NULL, vivi_code_remove_sprite_new, NULL },
   //{ "setProperty",        NULL, NULL, parse_set_property },
-  { "setTarget",          NULL, vivi_code_set_target_new, NULL },
+  { "setTarget",          NULL, vivi_code_set_target2_new, NULL },
   //{ "startDrag",          NULL, NULL, parse_start_drag },
   { "stop",               vivi_code_stop_new, NULL, NULL },
-  { "stopDrag",           vivi_code_stop_drag_new, NULL, NULL },
+  { "stopDrag",           vivi_code_end_drag_new, NULL, NULL },
   { "stopSounds",         vivi_code_stop_sounds_new, NULL, NULL },
   { "toggleQuality",      vivi_code_toggle_quality_new, NULL, NULL },
   { "trace",              NULL, vivi_code_trace_new, NULL }
@@ -1153,14 +1153,14 @@ typedef struct {
 } BuiltinCall;
 
 static const BuiltinCall builtin_calls[] = {
-  { "chr",         NULL, vivi_code_chr_new, NULL },
+  { "chr",         NULL, vivi_code_ascii_to_char_new, NULL },
   { "concat",      NULL, NULL, parse_concat },
-  { "eval",        NULL, vivi_code_eval_new, NULL },
+  { "eval",        NULL, vivi_code_get_variable_new, NULL },
   //{ "getProperty", NULL, NULL, parse_get_property },
   { "getTimer",    vivi_code_get_timer_new, NULL, NULL },
-  { "int",         NULL, vivi_code_int_new, NULL },
-  { "length",      NULL, vivi_code_length_new, NULL },
-  { "ord",         NULL, vivi_code_ord_new, NULL },
+  { "int",         NULL, vivi_code_to_integer_new, NULL },
+  { "length",      NULL, vivi_code_string_length_new, NULL },
+  { "ord",         NULL, vivi_code_char_to_ascii_new, NULL },
   { "random",      NULL, vivi_code_random_new, NULL },
   { "substring",   NULL, NULL, parse_substring },
   { "targetPath",  NULL, NULL, parse_target_path },
@@ -1685,12 +1685,12 @@ parse_operator_expression (ParseData *data, ViviCodeValue **value,
     { TOKEN_PLUS, vivi_code_add2_new },
     { TOKEN_LESS_THAN, vivi_code_less2_new },
     { TOKEN_EQUAL, vivi_code_equals2_new },
-    { TOKEN_BITWISE_AND, vivi_code_bitwise_and_new },
-    { TOKEN_BITWISE_OR, vivi_code_bitwise_or_new },
-    { TOKEN_BITWISE_XOR, vivi_code_bitwise_xor_new },
-    { TOKEN_SHIFT_LEFT, vivi_code_left_shift_new },
-    { TOKEN_SHIFT_RIGHT, vivi_code_right_shift_new },
-    { TOKEN_SHIFT_RIGHT_UNSIGNED, vivi_code_unsigned_right_shift_new },
+//    { TOKEN_BITWISE_AND, vivi_code_bitwise_and_new },
+//    { TOKEN_BITWISE_OR, vivi_code_bitwise_or_new },
+//    { TOKEN_BITWISE_XOR, vivi_code_bitwise_xor_new },
+//    { TOKEN_SHIFT_LEFT, vivi_code_left_shift_new },
+//    { TOKEN_SHIFT_RIGHT, vivi_code_right_shift_new },
+//    { TOKEN_SHIFT_RIGHT_UNSIGNED, vivi_code_unsigned_right_shift_new },
     { TOKEN_STRICT_EQUAL, vivi_code_strict_equals_new },
     { TOKEN_GREATER_THAN, vivi_code_greater_new },
 //    { TOKEN_, vivi_code_string_greater_new },
@@ -2017,24 +2017,24 @@ parse_assignment_expression (ParseData *data, ViviCodeValue **value,
     case TOKEN_ASSIGN_MINUS:
       func = vivi_code_subtract_new;
       break;
-    case TOKEN_ASSIGN_SHIFT_LEFT:
-      func = vivi_code_left_shift_new;
-      break;
-    case TOKEN_ASSIGN_SHIFT_RIGHT:
-      func = vivi_code_right_shift_new;
-      break;
-    case TOKEN_ASSIGN_SHIFT_RIGHT_ZERO:
-      func = vivi_code_unsigned_right_shift_new;
-      break;
-    case TOKEN_ASSIGN_BITWISE_AND:
-      func = vivi_code_bitwise_and_new;
-      break;
-    case TOKEN_ASSIGN_BITWISE_OR:
-      func = vivi_code_bitwise_or_new;
-      break;
-    case TOKEN_ASSIGN_BITWISE_XOR:
-      func = vivi_code_bitwise_and_new;
-      break;
+    //case TOKEN_ASSIGN_SHIFT_LEFT:
+    //  func = vivi_code_left_shift_new;
+    //  break;
+    //case TOKEN_ASSIGN_SHIFT_RIGHT:
+    //  func = vivi_code_right_shift_new;
+    //  break;
+    //case TOKEN_ASSIGN_SHIFT_RIGHT_ZERO:
+    //  func = vivi_code_unsigned_right_shift_new;
+    //  break;
+    //case TOKEN_ASSIGN_BITWISE_AND:
+    //  func = vivi_code_bitwise_and_new;
+    //  break;
+    //case TOKEN_ASSIGN_BITWISE_OR:
+    //  func = vivi_code_bitwise_or_new;
+    //  break;
+    //case TOKEN_ASSIGN_BITWISE_XOR:
+    //  func = vivi_code_bitwise_xor_new;
+    //  break;
     case TOKEN_ASSIGN:
       func = NULL;
       break;

@@ -27,7 +27,6 @@
 
 #include "vivi_code_constant.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
 
 G_DEFINE_ABSTRACT_TYPE (ViviCodeConstant, vivi_code_constant, VIVI_TYPE_CODE_VALUE)
 

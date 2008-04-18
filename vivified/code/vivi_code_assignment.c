@@ -22,7 +22,6 @@
 #endif
 
 #include "vivi_code_assignment.h"
-#include "vivi_code_compiler.h"
 #include "vivi_code_get.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_string.h"

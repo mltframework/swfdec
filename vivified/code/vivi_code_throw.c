@@ -23,7 +23,9 @@
 
 #include "vivi_code_throw.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
+#include "vivi_code_assembler.h"
+#include "vivi_code_asm.h"
+#include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeThrow, vivi_code_throw, VIVI_TYPE_CODE_STATEMENT)
 
@@ -55,15 +57,18 @@ vivi_code_throw_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_throw_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_throw_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
   ViviCodeThrow *throw_ = VIVI_CODE_THROW (token);
+  ViviCodeAsm *code;
 
   g_return_if_fail (throw_->value != NULL);
 
-  vivi_code_compiler_compile_value (compiler, throw_->value);
+  vivi_code_value_compile (throw_->value, assembler);
 
-  vivi_code_compiler_write_empty_action (compiler, SWFDEC_AS_ACTION_THROW);
+  code = vivi_code_asm_throw_new ();
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 }
 
 static void

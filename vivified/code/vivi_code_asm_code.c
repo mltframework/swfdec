@@ -25,7 +25,6 @@
 
 #include "vivi_code_asm_code.h"
 #include "vivi_code_asm.h"
-#include "vivi_code_compiler.h"
 #include "vivi_code_printer.h"
 
 static void
@@ -37,21 +36,8 @@ G_DEFINE_TYPE_WITH_CODE (ViviCodeAsmCode, vivi_code_asm_code, VIVI_TYPE_CODE_ASM
     G_IMPLEMENT_INTERFACE (VIVI_TYPE_CODE_ASM, vivi_code_asm_code_asm_init))
 
 static void
-vivi_code_asm_code_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
-{
-  ViviCodeAsmCode *code = VIVI_CODE_ASM_CODE (token);
-  SwfdecAsAction action = vivi_code_asm_code_get_action (code);
-
-  g_assert (action < 0x80);
-  vivi_code_compiler_write_empty_action (compiler, action); 
-}
-
-static void
 vivi_code_asm_code_class_init (ViviCodeAsmCodeClass *klass)
 {
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
-
-  token_class->compile = vivi_code_asm_code_compile;
 }
 
 static void

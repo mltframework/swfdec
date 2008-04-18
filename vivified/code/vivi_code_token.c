@@ -46,3 +46,16 @@ vivi_code_token_init (ViviCodeToken *token)
 {
 }
 
+
+void
+vivi_code_token_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+{
+  ViviCodeTokenClass *klass;
+
+  g_return_if_fail (VIVI_IS_CODE_TOKEN (token));
+  g_return_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler));
+
+  klass = VIVI_CODE_TOKEN_GET_CLASS (token);
+  g_return_if_fail (klass->compile);
+  klass->compile (token, assembler);
+}

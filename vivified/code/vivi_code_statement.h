@@ -50,6 +50,8 @@ struct _ViviCodeStatementClass
 
 GType			vivi_code_statement_get_type   	(void);
 
+void			vivi_code_statement_compile	(ViviCodeStatement *	statement,
+							 ViviCodeAssembler *	assembler);
 ViviCodeStatement *   	vivi_code_statement_optimize	(ViviCodeStatement *	stmt);
 gboolean		vivi_code_statement_needs_braces(ViviCodeStatement *	stmt);
 

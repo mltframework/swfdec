@@ -101,3 +101,10 @@ vivi_code_value_is_equal (ViviCodeValue *a, ViviCodeValue *b)
   return a == b;
 }
 
+void vivi_code_value_compile (ViviCodeValue *value,
+    ViviCodeAssembler *assembler)
+{
+  g_return_if_fail (VIVI_IS_CODE_VALUE (value));
+
+  vivi_code_token_compile (VIVI_CODE_TOKEN (value), assembler);
+}

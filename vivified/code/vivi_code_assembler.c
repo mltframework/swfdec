@@ -28,7 +28,6 @@
 #include "vivi_code_comment.h"
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeAssembler, vivi_code_assembler, VIVI_TYPE_CODE_STATEMENT)
 
@@ -70,18 +69,6 @@ vivi_code_assembler_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_assembler_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
-{
-  ViviCodeAssembler *assembler = VIVI_CODE_ASSEMBLER (token);
-  guint i;
-
-  for (i = 0; i < assembler->codes->len; i++) {
-    vivi_code_compiler_compile_token (compiler,
-	VIVI_CODE_TOKEN (g_ptr_array_index (assembler->codes, i)));
-  }
-}
-
-static void
 vivi_code_assembler_class_init (ViviCodeAssemblerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -91,7 +78,6 @@ vivi_code_assembler_class_init (ViviCodeAssemblerClass *klass)
   object_class->dispose = vivi_code_assembler_dispose;
 
   token_class->print = vivi_code_assembler_print;
-  token_class->compile = vivi_code_assembler_compile;
 
   code_class->optimize = vivi_code_assembler_optimize;
 }

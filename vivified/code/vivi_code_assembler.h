@@ -26,7 +26,6 @@
 G_BEGIN_DECLS
 
 
-typedef struct _ViviCodeAssembler ViviCodeAssembler;
 typedef struct _ViviCodeAssemblerClass ViviCodeAssemblerClass;
 
 #define VIVI_TYPE_CODE_ASSEMBLER                    (vivi_code_assembler_get_type())

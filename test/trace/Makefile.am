@@ -2388,6 +2388,11 @@ EXTRA_DIST = \
 	propflags-set-prototype-8.swf.trace \
 	propflags-set-prototype-9.swf \
 	propflags-set-prototype-9.swf.trace \
+	push-different-booleans.swf \
+	push-different-booleans.swf.trace \
+	push-weird.as \
+	push-weird.swf \
+	push-weird.swf.trace \
 	rectangle-construct.as \
 	rectangle-construct-5.swf \
 	rectangle-construct-5.swf.trace \

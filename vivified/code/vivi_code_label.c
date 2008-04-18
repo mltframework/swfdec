@@ -65,6 +65,7 @@ vivi_code_label_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
     VIVI_CODE_ASM (vivi_code_label_new_internal_from_label (label));
 
   vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 #endif
 }
 

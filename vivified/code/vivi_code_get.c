@@ -91,6 +91,7 @@ vivi_code_get_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
   }
 
   vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 }
 
 static gboolean

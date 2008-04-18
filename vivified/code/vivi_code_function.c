@@ -85,18 +85,20 @@ vivi_code_function_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 
   label_end = vivi_code_label_new_internal ("function_end");
 
-  function = vivi_code_asm_define_function2_new (NULL, 0, 0, label_end)
+  define_function = vivi_code_asm_define_function2_new (NULL, 0, 0, label_end)
   for (i = 0; i < function->arguments->len; i++) {
     vivi_code_asm_define_function2_add_argument (
 	g_ptr_array_index (function->arguments, i), 0);
   }
 
-  vivi_code_assembler_add_code (assembler, function);
+  vivi_code_assembler_add_code (assembler, define_function);
+  g_object_unref (define_function);
 
   if (function->body != NULL)
     vivi_code_statement_compile (function->body, assembler);
 
   vivi_code_assembler_add_code (assembler, label_end);
+  g_object_unref (label_end);
 #endif
 }
 

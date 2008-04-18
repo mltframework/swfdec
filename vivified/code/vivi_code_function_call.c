@@ -158,6 +158,7 @@ vivi_code_function_call_compile (ViviCodeToken *token,
   }
 
   vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 }
 
 static gboolean

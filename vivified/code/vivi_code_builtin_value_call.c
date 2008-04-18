@@ -62,12 +62,15 @@ vivi_code_builtin_value_call_compile (ViviCodeToken *token,
 {
   ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (token);
   ViviCodeBuiltinValueCall *call = VIVI_CODE_BUILTIN_VALUE_CALL (token);
+  ViviCodeAsm *code;
 
   g_assert (call->value != NULL);
   vivi_code_value_compile (call->value, assembler);
 
   g_assert (klass->asm_constructor != NULL);
-  vivi_code_assembler_add_code (assembler, klass->asm_constructor ());
+  code = klass->asm_constructor ();
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 }
 
 static void

@@ -39,8 +39,9 @@ struct _SwfdecBots {
 #define SWFDEC_OUT_INITIAL (32)
 #define SWFDEC_OUT_STEP (32)
 
-SwfdecBots *	swfdec_bots_open			(void);
+SwfdecBots *	swfdec_bots_open		(void);
 SwfdecBuffer *	swfdec_bots_close		(SwfdecBots *		bots);
+void		swfdec_bots_free		(SwfdecBots *		bots);
 
 gsize		swfdec_bots_get_bits		(SwfdecBots *		bots);
 gsize		swfdec_bots_get_bytes		(SwfdecBots *		bots);
@@ -77,6 +78,8 @@ void		swfdec_bots_put_string		(SwfdecBots *		bots,
 						 const char *		s);
 void		swfdec_bots_put_double		(SwfdecBots *		bots,
 						 double			value);
+void		swfdec_bots_put_float		(SwfdecBots *		bots,
+						 float			f);
 
 void		swfdec_bots_put_rgb		(SwfdecBots *		bots,
 						 SwfdecColor		color);

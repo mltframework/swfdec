@@ -78,7 +78,7 @@ vivi_code_comment_init (ViviCodeComment *token)
 {
 }
 
-ViviCodeToken *
+ViviCodeStatement *
 vivi_code_comment_new (const char *comment)
 {
   ViviCodeComment *ret;
@@ -88,6 +88,6 @@ vivi_code_comment_new (const char *comment)
   ret = g_object_new (VIVI_TYPE_CODE_COMMENT, NULL);
   ret->comment = g_strdup (comment);
 
-  return VIVI_CODE_TOKEN (ret);
+  return VIVI_CODE_STATEMENT (ret);
 }
 

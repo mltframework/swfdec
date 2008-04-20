@@ -30,6 +30,7 @@
 
 #include "vivi_code_function.h"
 #include "vivi_code_text_printer.h"
+#include "vivi_decompiler.h"
 
 static SwfdecDecoder *
 swfdec_decoder_new_from_file (const char *filename, GError **error)
@@ -57,23 +58,26 @@ swfdec_decoder_new_from_file (const char *filename, GError **error)
   return dec;
 }
 
-
 static void
-decode_script (gpointer scriptp, gpointer unused)
+decode_script (gpointer scriptp, gpointer use_asm)
 {
   SwfdecScript *script = scriptp;
-  ViviCodeValue *fun;
+  ViviCodeToken *token;
   ViviCodePrinter *printer;
 
   g_print ("/* %s */\n", script->name);
-  fun = vivi_code_function_new_from_script (scriptp);
+  if (use_asm) {
+    token = VIVI_CODE_TOKEN (vivi_disassemble_script (script));
+  } else {
+    token = VIVI_CODE_TOKEN (vivi_code_function_new_from_script (scriptp));
+  }
   printer = vivi_code_text_printer_new ();
 
-  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (fun));
+  vivi_code_printer_print_token (printer, token);
   g_print ("\n\n");
 
   g_object_unref (printer);
-  g_object_unref (fun);
+  g_object_unref (token);
 }
 
 static void
@@ -98,7 +102,25 @@ main (int argc, char *argv[])
 {
   SwfdecSwfDecoder *dec;
   GList *scripts;
-  GError *error;
+  GError *error = NULL;
+  gboolean use_asm = FALSE;
+
+  GOptionEntry options[] = {
+    { "asm", 'a', 0, G_OPTION_ARG_NONE, &use_asm, "output assembler instead of decompiled script", NULL },
+    { NULL }
+  };
+  GOptionContext *ctx;
+
+  ctx = g_option_context_new ("");
+  g_option_context_add_main_entries (ctx, options, "options");
+  g_option_context_parse (ctx, &argc, &argv, &error);
+  g_option_context_free (ctx);
+
+  if (error) {
+    g_printerr ("Error parsing command line arguments: %s\n", error->message);
+    g_error_free (error);
+    return 1;
+  }
 
   if (argc < 2) {
     g_print ("%s FILENAME\n", argv[0]);
@@ -126,7 +148,7 @@ main (int argc, char *argv[])
   g_hash_table_foreach (dec->scripts, enqueue, &scripts);
   scripts = g_list_sort (scripts, script_compare);
   
-  g_list_foreach (scripts, decode_script, NULL);
+  g_list_foreach (scripts, decode_script, GINT_TO_POINTER (use_asm));
 
   g_list_free (scripts);
   g_object_unref (dec);

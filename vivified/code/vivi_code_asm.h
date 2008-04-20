@@ -39,8 +39,9 @@ typedef struct _ViviCodeAsmInterface ViviCodeAsmInterface;
 struct _ViviCodeAsmInterface {
   GTypeInterface	interface;
 
-  void			(* emit)			(ViviCodeAsm *		code,
-							 ViviCodeEmitter *	emitter);
+  gboolean		(* emit)			(ViviCodeAsm *		code,
+							 ViviCodeEmitter *	emitter,
+							 GError **		error);
 };
 
 GType			vivi_code_asm_get_type		(void) G_GNUC_CONST;

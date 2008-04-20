@@ -39,57 +39,13 @@ vivi_code_string_dispose (GObject *object)
   G_OBJECT_CLASS (vivi_code_string_parent_class)->dispose (object);
 }
 
-static char *
-escape_string (const char *s)
-{
-  GString *str;
-  char *next;
-
-  str = g_string_new ("\"");
-  while ((next = strpbrk (s, "\"\\\b\f\n\r\t\v"))) {
-    g_string_append_len (str, s, next - s);
-    switch (*next) {
-      case '"':
-	g_string_append (str, "\\\"");
-	break;
-      case '\\':
-	g_string_append (str, "\\\\");
-	break;
-      case '\b':
-	g_string_append (str, "\\b");
-	break;
-      case '\f':
-	g_string_append (str, "\\f");
-	break;
-      case '\n':
-	g_string_append (str, "\\n");
-	break;
-      case '\r':
-	g_string_append (str, "\\r");
-	break;
-      case '\t':
-	g_string_append (str, "\\t");
-	break;
-      case '\v':
-	g_string_append (str, "\\v");
-	break;
-      default:
-	g_assert_not_reached ();
-    }
-    s = next + 1;
-  }
-  g_string_append (str, s);
-  g_string_append_c (str, '"');
-  return g_string_free (str, FALSE);
-}
-
 static void
 vivi_code_string_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeString *string = VIVI_CODE_STRING (token);
   char *s;
 
-  s = escape_string (string->value);
+  s = vivi_code_escape_string (string->value);
   vivi_code_printer_print (printer, s);
   g_free (s);
 }

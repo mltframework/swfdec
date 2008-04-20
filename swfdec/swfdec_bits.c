@@ -258,6 +258,12 @@ swfdec_bits_get_u32 (SwfdecBits * b)
   return r;
 }
 
+int
+swfdec_bits_get_s32 (SwfdecBits *b)
+{
+  return (gint32) swfdec_bits_get_u32 (b);
+}
+
 guint
 swfdec_bits_get_bu16 (SwfdecBits *b)
 {

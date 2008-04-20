@@ -58,14 +58,14 @@ vivi_code_assembler_print (ViviCodeToken *token, ViviCodePrinter *printer)
   guint i;
 
   vivi_code_printer_print (printer, "asm {");
-  vivi_code_printer_new_line (printer, TRUE);
+  vivi_code_printer_new_line (printer, FALSE);
   vivi_code_printer_push_indentation (printer);
   for (i = 0; i < assembler->codes->len; i++) {
     vivi_code_printer_print_token (printer, g_ptr_array_index (assembler->codes, i));
   }
   vivi_code_printer_pop_indentation (printer);
   vivi_code_printer_print (printer, "}");
-  vivi_code_printer_new_line (printer, TRUE);
+  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void
@@ -115,7 +115,7 @@ void
 vivi_code_assembler_insert_code (ViviCodeAssembler *assembler, guint i, ViviCodeAsm *code)
 {
   g_return_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler));
-  g_return_if_fail (VIVI_IS_CODE_ASM (assembler));
+  g_return_if_fail (VIVI_IS_CODE_ASM (code));
 
   g_object_ref (code);
   if (i >= assembler->codes->len) {

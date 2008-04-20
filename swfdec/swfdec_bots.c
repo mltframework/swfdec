@@ -64,6 +64,15 @@ swfdec_bots_close (SwfdecBots *bots)
   return buffer;
 }
 
+void
+swfdec_bots_free (SwfdecBots *bots)
+{
+  g_return_if_fail (bots != NULL);
+
+  g_free (bots->data);
+  g_free (bots);
+}
+
 gsize
 swfdec_bots_get_bits (SwfdecBots *bots)
 {
@@ -251,7 +260,21 @@ swfdec_bots_put_string (SwfdecBots *bots, const char *s)
   bots->ptr += len;
 }
 
- /* If little endian x86 byte order is 0 1 2 3 4 5 6 7 and PPC32 byte order is
+void
+swfdec_bots_put_float (SwfdecBots *bots, float f)
+{
+  union {
+    guint32 i;
+    float f;
+  } conv;
+
+  g_return_if_fail (bots != NULL);
+
+  conv.f = f;
+  swfdec_bots_put_u32 (bots, conv.i);
+}
+
+/* If little endian x86 byte order is 0 1 2 3 4 5 6 7 and PPC32 byte order is
  * 7 6 5 4 3 2 1 0, then Flash uses 4 5 6 7 0 1 2 3. */
 void
 swfdec_bots_put_double (SwfdecBots *bots, double value)

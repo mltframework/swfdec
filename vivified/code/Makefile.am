@@ -20,6 +20,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_asm.c \
 	vivi_code_asm_code.c \
 	vivi_code_asm_code_default.c \
+	vivi_code_asm_push.c \
 	vivi_code_assembler.c \
 	vivi_code_assignment.c \
 	vivi_code_binary.c \
@@ -39,6 +40,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_constant.c \
 	vivi_code_continue.c \
 	vivi_code_emitter.c \
+	vivi_code_error.c \
 	vivi_code_function.c \
 	vivi_code_function_call.c \
 	vivi_code_get.c \
@@ -73,6 +75,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_decompiler_state.c \
 	vivi_decompiler_unknown.c \
 	vivi_decompiler.c \
+	vivi_disassembler.c \
 	vivi_parser.c \
 	vivi_parser_scanner.c
 
@@ -81,6 +84,7 @@ noinst_HEADERS = \
 	vivi_code_asm.h \
 	vivi_code_asm_code.h \
 	vivi_code_asm_code_default.h \
+	vivi_code_asm_push.h \
 	vivi_code_assembler.h \
 	vivi_code_assignment.h \
 	vivi_code_binary.h \
@@ -101,6 +105,7 @@ noinst_HEADERS = \
 	vivi_code_continue.h \
 	vivi_code_defaults.h \
 	vivi_code_emitter.h \
+	vivi_code_error.h \
 	vivi_code_function.h \
 	vivi_code_function_call.h \
 	vivi_code_get.h \

@@ -49,7 +49,7 @@ struct _ViviCodeCommentClass
 
 GType			vivi_code_comment_get_type   	(void);
 
-ViviCodeToken *		vivi_code_comment_new		(const char *		comment);
+ViviCodeStatement *	vivi_code_comment_new		(const char *		comment);
 
 
 G_END_DECLS

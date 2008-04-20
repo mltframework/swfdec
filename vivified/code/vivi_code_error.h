@@ -17,19 +17,20 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _VIVI_DECOMPILER_H_
-#define _VIVI_DECOMPILER_H_
+#ifndef _VIVI_CODE_ERROR_H_
+#define _VIVI_CODE_ERROR_H_
 
-#include <swfdec/swfdec.h>
-#include <vivified/code/vivi_code_block.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 
+#define VIVI_CODE_ERROR (vivi_code_error_quark())
 
-ViviCodeStatement *	vivi_decompile_script		(SwfdecScript *		script);
+typedef enum {
+  VIVI_CODE_ERROR_SIZE
+} ViviCodeError;
 
-ViviCodeStatement *	vivi_disassemble_script		(SwfdecScript *		script);
-
+GQuark		vivi_code_error_quark	(void);
 
 G_END_DECLS
 #endif

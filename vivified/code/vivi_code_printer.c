@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "vivi_code_printer.h"
 
 G_DEFINE_ABSTRACT_TYPE (ViviCodePrinter, vivi_code_printer, G_TYPE_OBJECT)
@@ -131,3 +133,50 @@ vivi_code_printer_get_indentation (ViviCodePrinter *printer)
 
   return printer->indentation;
 }
+
+char *
+vivi_code_escape_string (const char *s)
+{
+  GString *str;
+  char *next;
+
+  g_return_val_if_fail (s != NULL, NULL);
+
+  str = g_string_new ("\"");
+  while ((next = strpbrk (s, "\"\\\b\f\n\r\t\v"))) {
+    g_string_append_len (str, s, next - s);
+    switch (*next) {
+      case '"':
+	g_string_append (str, "\\\"");
+	break;
+      case '\\':
+	g_string_append (str, "\\\\");
+	break;
+      case '\b':
+	g_string_append (str, "\\b");
+	break;
+      case '\f':
+	g_string_append (str, "\\f");
+	break;
+      case '\n':
+	g_string_append (str, "\\n");
+	break;
+      case '\r':
+	g_string_append (str, "\\r");
+	break;
+      case '\t':
+	g_string_append (str, "\\t");
+	break;
+      case '\v':
+	g_string_append (str, "\\v");
+	break;
+      default:
+	g_assert_not_reached ();
+    }
+    s = next + 1;
+  }
+  g_string_append (str, s);
+  g_string_append_c (str, '"');
+  return g_string_free (str, FALSE);
+}
+

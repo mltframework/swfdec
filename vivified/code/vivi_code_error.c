@@ -17,19 +17,14 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _VIVI_DECOMPILER_H_
-#define _VIVI_DECOMPILER_H_
-
-#include <swfdec/swfdec.h>
-#include <vivified/code/vivi_code_block.h>
-
-G_BEGIN_DECLS
-
-
-ViviCodeStatement *	vivi_decompile_script		(SwfdecScript *		script);
-
-ViviCodeStatement *	vivi_disassemble_script		(SwfdecScript *		script);
-
-
-G_END_DECLS
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include "vivi_code_error.h"
+
+GQuark
+vivi_code_error_quark (void)
+{
+  return g_quark_from_static_string ("g-io-channel-error-quark");
+}

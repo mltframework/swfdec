@@ -353,7 +353,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	break;
       case 7: /* 32bit int */
 	SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_push (cx), 
-	    (int) swfdec_bits_get_u32 (&bits));
+	    swfdec_bits_get_s32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
       case 9: /* 16bit ConstantPool address */
@@ -376,8 +376,8 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	  break;
 	}
       default:
-	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return;
+	SWFDEC_ERROR ("Push: unknown type %u, skipping", type);
+	break;
     }
   }
 }
@@ -3022,7 +3022,7 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
 	g_string_append_printf (string, "%g", swfdec_bits_get_double (&bits));
 	break;
       case 7: /* 32bit int */
-	g_string_append_printf (string, "%d", swfdec_bits_get_u32 (&bits));
+	g_string_append_printf (string, "%d", swfdec_bits_get_s32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
 	g_string_append_printf (string, "Pool %u", swfdec_bits_get_u8 (&bits));
@@ -3031,8 +3031,8 @@ swfdec_action_print_push (guint action, const guint8 *data, guint len)
 	g_string_append_printf (string, "Pool %u", swfdec_bits_get_u16 (&bits));
 	break;
       default:
-	SWFDEC_ERROR ("Push: type %u not implemented", type);
-	return NULL;
+	SWFDEC_ERROR ("Push: unknown type %u, skipping", type);
+	break;
     }
   }
   return g_string_free (string, FALSE);

@@ -32,7 +32,7 @@ static void \
 vivi_code_asm_ ## underscore_name ## _print (ViviCodeToken *token, ViviCodePrinter *printer) \
 { \
   vivi_code_printer_print (printer, G_STRINGIFY (underscore_name)); \
-  vivi_code_printer_new_line (printer, TRUE); \
+  vivi_code_printer_new_line (printer, FALSE); \
 } \
 \
 static void \

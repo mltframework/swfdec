@@ -78,5 +78,9 @@ void			vivi_code_printer_pop_indentation
 guint			vivi_code_printer_get_indentation
 							(ViviCodePrinter *	printer);
 
+
+char *			vivi_code_escape_string		(const char *		s);
+
+
 G_END_DECLS
 #endif

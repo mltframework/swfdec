@@ -60,16 +60,16 @@ vivi_code_emitter_init (ViviCodeEmitter *emit)
       g_object_unref, g_free);
 }
 
-void
-vivi_code_emitter_emit_asm (ViviCodeEmitter *emitter, ViviCodeAsm *code)
+gboolean
+vivi_code_emitter_emit_asm (ViviCodeEmitter *emitter, ViviCodeAsm *code, GError **error)
 {
   ViviCodeAsmInterface *iface;
 
-  g_return_if_fail (VIVI_IS_CODE_EMITTER (emitter));
-  g_return_if_fail (VIVI_IS_CODE_ASM (code));
+  g_return_val_if_fail (VIVI_IS_CODE_EMITTER (emitter), FALSE);
+  g_return_val_if_fail (VIVI_IS_CODE_ASM (code), FALSE);
 
   iface = VIVI_CODE_ASM_GET_INTERFACE (code);
-  iface->emit (code, emitter);
+  return iface->emit (code, emitter, error);
 }
 
 void

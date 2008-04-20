@@ -532,6 +532,8 @@ swfdec_gtk_widget_realize (GtkWidget *widget)
   gdk_rgb_find_color (gdk_drawable_get_colormap (GDK_DRAWABLE (widget->window)), &white);
   gdk_window_set_background (widget->window, &white);
 
+  widget->style = gtk_style_attach (widget->style, widget->window);
+
   if (SWFDEC_GTK_WIDGET (widget)->priv->player) {
     swfdec_gtk_widget_update_cursor (SWFDEC_GTK_WIDGET (widget));
   }
@@ -541,9 +543,6 @@ swfdec_gtk_widget_realize (GtkWidget *widget)
 static void
 swfdec_gtk_widget_unrealize (GtkWidget *widget)
 {
-  /* FIXME: We want our own window, but without styles plz - does that work in 
-   * Gtk without overriding all functions? */
-  widget->style = gtk_style_attach (widget->style, widget->window);
   GTK_WIDGET_CLASS (swfdec_gtk_widget_parent_class)->unrealize (widget);
 
   swfdec_gtk_widget_update_renderer (SWFDEC_GTK_WIDGET (widget));
@@ -567,6 +566,12 @@ swfdec_gtk_widget_unmap (GtkWidget *gtkwidget)
   GTK_WIDGET_CLASS (swfdec_gtk_widget_parent_class)->unmap (gtkwidget);
 
   swfdec_gtk_widget_clear_invalidations (widget);
+}
+
+static void
+swfdec_gtk_widget_style_set (GtkWidget *gtkwidget, GtkStyle *previous)
+{
+  /* do not set the window's background here */
 }
 
 static void
@@ -600,6 +605,7 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
   widget_class->unrealize = swfdec_gtk_widget_unrealize;
   widget_class->map = swfdec_gtk_widget_map;
   widget_class->unmap = swfdec_gtk_widget_unmap;
+  widget_class->style_set = swfdec_gtk_widget_style_set;
   widget_class->size_request = swfdec_gtk_widget_size_request;
   widget_class->size_allocate = swfdec_gtk_widget_size_allocate;
   widget_class->expose_event = swfdec_gtk_widget_expose;

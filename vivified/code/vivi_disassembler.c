@@ -107,7 +107,7 @@ vivi_disassemble_push (ViviCodeAssembler *assembler, SwfdecBits *bits, guint ver
 	vivi_code_asm_push_add_pool (push, swfdec_bits_get_u8 (bits));
 	break;
       case 9: /* 16bit ConstantPool address */
-	vivi_code_asm_push_add_pool (push, swfdec_bits_get_u16 (bits));
+	vivi_code_asm_push_add_pool_big (push, swfdec_bits_get_u16 (bits));
 	break;
       default:
 	vivi_disassembler_warning (assembler, "Push: unknown type %u, ignoring", type);

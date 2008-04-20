@@ -27,6 +27,7 @@
 
 #include "vivi_decompiler.h"
 #include "vivi_code_asm_code_default.h"
+#include "vivi_code_asm_pool.h"
 #include "vivi_code_asm_push.h"
 #include "vivi_code_assembler.h"
 #include "vivi_code_comment.h"
@@ -43,6 +44,22 @@ static ViviCodeAsm * (* simple_commands[0x80]) (void) = {
 #define DEFAULT_ASM(a,b,c) [c] = vivi_code_asm_ ## b ## _new,
 #include "vivi_code_defaults.h"
 };
+
+static void
+vivi_disassemble_pool (ViviCodeAssembler *assembler, SwfdecBits *bits, guint version)
+{
+  ViviCodeAsm *code;
+  SwfdecConstantPool *pool;
+  SwfdecBuffer *buffer;
+
+  buffer = swfdec_bits_get_buffer (bits, -1);
+  pool = swfdec_constant_pool_new (NULL, buffer, version);
+  swfdec_buffer_unref (buffer);
+  code = vivi_code_asm_pool_new (pool);
+  swfdec_constant_pool_unref (pool);
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
+}
 
 static void
 vivi_disassemble_push (ViviCodeAssembler *assembler, SwfdecBits *bits, guint version)
@@ -103,7 +120,6 @@ fail:
   g_object_unref (push);
 }
 
-
 ViviCodeStatement *
 vivi_disassemble_script (SwfdecScript *script)
 {
@@ -140,10 +156,31 @@ vivi_disassemble_script (SwfdecScript *script)
       }
       swfdec_bits_init_data (&bits, data, len);
       switch (code) {
+        case SWFDEC_AS_ACTION_CONSTANT_POOL:
+	  vivi_disassemble_pool (assembler, &bits, script->version);
+	  pc = data + len;
+	  break;
 	case SWFDEC_AS_ACTION_PUSH:
 	  vivi_disassemble_push (assembler, &bits, script->version);
 	  pc = data + len;
 	  break;
+        case SWFDEC_AS_ACTION_GOTO_FRAME:
+        case SWFDEC_AS_ACTION_GET_URL:
+        case SWFDEC_AS_ACTION_STORE_REGISTER:
+        case SWFDEC_AS_ACTION_STRICT_MODE:
+        case SWFDEC_AS_ACTION_WAIT_FOR_FRAME:
+        case SWFDEC_AS_ACTION_SET_TARGET:
+        case SWFDEC_AS_ACTION_GOTO_LABEL:
+        case SWFDEC_AS_ACTION_WAIT_FOR_FRAME2:
+        case SWFDEC_AS_ACTION_DEFINE_FUNCTION2:
+        case SWFDEC_AS_ACTION_TRY:
+        case SWFDEC_AS_ACTION_WITH:
+        case SWFDEC_AS_ACTION_JUMP:
+        case SWFDEC_AS_ACTION_GET_URL2:
+        case SWFDEC_AS_ACTION_DEFINE_FUNCTION:
+        case SWFDEC_AS_ACTION_IF:
+        case SWFDEC_AS_ACTION_CALL:
+        case SWFDEC_AS_ACTION_GOTO_FRAME2:
 	default:
 	  vivi_disassembler_warning (assembler, "unknown bytecode 0x%02X", code);
 	  pc = data + len;

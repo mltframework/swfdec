@@ -29,6 +29,7 @@
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_pool.h"
 #include "vivi_code_asm_push.h"
+#include "vivi_code_asm_store.h"
 #include "vivi_code_assembler.h"
 #include "vivi_code_comment.h"
 
@@ -46,6 +47,16 @@ static ViviCodeAsm * (* simple_commands[0x80]) (void) = {
 };
 
 static void
+vivi_disassemble_store (ViviCodeAssembler *assembler, SwfdecBits *bits)
+{
+  ViviCodeAsm *code;
+
+  code = vivi_code_asm_store_new (swfdec_bits_get_u8 (bits));
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
+}
+
+static void
 vivi_disassemble_pool (ViviCodeAssembler *assembler, SwfdecBits *bits, guint version)
 {
   ViviCodeAsm *code;
@@ -55,6 +66,10 @@ vivi_disassemble_pool (ViviCodeAssembler *assembler, SwfdecBits *bits, guint ver
   buffer = swfdec_bits_get_buffer (bits, -1);
   pool = swfdec_constant_pool_new (NULL, buffer, version);
   swfdec_buffer_unref (buffer);
+  if (pool == NULL) {
+    vivi_disassembler_warning (assembler, "invalid constant pool");
+    return;
+  }
   code = vivi_code_asm_pool_new (pool);
   swfdec_constant_pool_unref (pool);
   vivi_code_assembler_add_code (assembler, code);
@@ -164,9 +179,12 @@ vivi_disassemble_script (SwfdecScript *script)
 	  vivi_disassemble_push (assembler, &bits, script->version);
 	  pc = data + len;
 	  break;
+        case SWFDEC_AS_ACTION_STORE_REGISTER:
+	  vivi_disassemble_store (assembler, &bits);
+	  pc = data + len;
+	  break;
         case SWFDEC_AS_ACTION_GOTO_FRAME:
         case SWFDEC_AS_ACTION_GET_URL:
-        case SWFDEC_AS_ACTION_STORE_REGISTER:
         case SWFDEC_AS_ACTION_STRICT_MODE:
         case SWFDEC_AS_ACTION_WAIT_FOR_FRAME:
         case SWFDEC_AS_ACTION_SET_TARGET:

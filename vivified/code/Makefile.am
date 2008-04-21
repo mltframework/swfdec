@@ -20,6 +20,8 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_asm.c \
 	vivi_code_asm_code.c \
 	vivi_code_asm_code_default.c \
+	vivi_code_asm_if.c \
+	vivi_code_asm_jump.c \
 	vivi_code_asm_pool.c \
 	vivi_code_asm_push.c \
 	vivi_code_asm_store.c \
@@ -87,6 +89,8 @@ noinst_HEADERS = \
 	vivi_code_asm.h \
 	vivi_code_asm_code.h \
 	vivi_code_asm_code_default.h \
+	vivi_code_asm_if.h \
+	vivi_code_asm_jump.h \
 	vivi_code_asm_pool.h \
 	vivi_code_asm_push.h \
 	vivi_code_asm_store.h \

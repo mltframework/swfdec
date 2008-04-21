@@ -159,7 +159,7 @@ noinst_HEADERS = \
 	vivi_parser_scanner_lex.h \
 	vivified-compiler.h
 
-noinst_PROGRAMS = vivi-decompile vivi-compile
+noinst_PROGRAMS = vivi-decompile vivi-compile vivi-rewrite
 
 vivi_decompile_SOURCES = \
 	decompiler.c
@@ -174,3 +174,10 @@ vivi_compile_SOURCES = \
 vivi_compile_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
 vivi_compile_LDFLAGS = $(SWFDEC_LIBS)
 vivi_compile_LDADD = libvivified-compiler.la
+
+vivi_rewrite_SOURCES = \
+	rewrite.c
+
+vivi_rewrite_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
+vivi_rewrite_LDFLAGS = $(SWFDEC_LIBS) -lz
+vivi_rewrite_LDADD = libvivified-compiler.la

@@ -27,6 +27,7 @@
 
 #include "vivi_decompiler.h"
 #include "vivi_code_asm_code_default.h"
+#include "vivi_code_asm_function.h"
 #include "vivi_code_asm_if.h"
 #include "vivi_code_asm_jump.h"
 #include "vivi_code_asm_pool.h"
@@ -281,7 +282,7 @@ vivi_disassemble_script (SwfdecScript *script)
 	    ViviCodeLabel *label = vivi_disassemble_labels_get_label (labels, 
 		pc + swfdec_bits_get_s16 (&bits));
 	    ViviCodeAsm *asm_code = vivi_code_asm_jump_new (label);
-	    vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (asm_code));
+	    vivi_code_assembler_add_code (assembler, asm_code);
 	    g_object_unref (asm_code);
 	  }
 	  break;
@@ -290,8 +291,34 @@ vivi_disassemble_script (SwfdecScript *script)
 	    ViviCodeLabel *label = vivi_disassemble_labels_get_label (labels, 
 		pc + swfdec_bits_get_s16 (&bits));
 	    ViviCodeAsm *asm_code = vivi_code_asm_if_new (label);
-	    vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (asm_code));
+	    vivi_code_assembler_add_code (assembler, asm_code);
 	    g_object_unref (asm_code);
+	  }
+	  break;
+        case SWFDEC_AS_ACTION_DEFINE_FUNCTION:
+	  {
+	    char *name;
+	    ViviCodeLabel *label;
+	    ViviCodeAsm *fun;
+	    GPtrArray *args;
+	    guint i, n_args;
+
+	    name = swfdec_bits_get_string (&bits, script->version);
+	    n_args = swfdec_bits_get_u16 (&bits);
+	    args = g_ptr_array_sized_new (n_args + 1);
+	    for (i = 0; i < n_args; i++) {
+	      g_ptr_array_add (args, swfdec_bits_get_string (&bits, script->version));
+	    }
+	    g_ptr_array_add (args, NULL);
+	    label = vivi_disassemble_labels_get_label (labels, 
+		pc + swfdec_bits_get_u16 (&bits));
+	    fun = vivi_code_asm_function_new (label, 
+		name && *name ? name : NULL,
+		(char **) (n_args > 0 ? args->pdata : NULL));
+	    g_free (name);
+	    g_strfreev ((char **) g_ptr_array_free (args, FALSE));
+	    vivi_code_assembler_add_code (assembler, fun);
+	    g_object_unref (fun);
 	  }
 	  break;
         case SWFDEC_AS_ACTION_GOTO_FRAME:
@@ -305,7 +332,6 @@ vivi_disassemble_script (SwfdecScript *script)
         case SWFDEC_AS_ACTION_TRY:
         case SWFDEC_AS_ACTION_WITH:
         case SWFDEC_AS_ACTION_GET_URL2:
-        case SWFDEC_AS_ACTION_DEFINE_FUNCTION:
         case SWFDEC_AS_ACTION_CALL:
         case SWFDEC_AS_ACTION_GOTO_FRAME2:
 	default:

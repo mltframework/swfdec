@@ -20,7 +20,6 @@
 #ifndef _VIVI_CODE_ASM_POOL_H_
 #define _VIVI_CODE_ASM_POOL_H_
 
-#include <swfdec/swfdec_bots.h>
 #include <swfdec/swfdec_constant_pool.h>
 #include <vivified/code/vivi_code_asm.h>
 #include <vivified/code/vivi_code_asm_code.h>

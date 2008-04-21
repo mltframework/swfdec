@@ -28,6 +28,7 @@
 #include "vivi_decompiler.h"
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_function.h"
+#include "vivi_code_asm_function2.h"
 #include "vivi_code_asm_if.h"
 #include "vivi_code_asm_jump.h"
 #include "vivi_code_asm_pool.h"
@@ -321,6 +322,36 @@ vivi_disassemble_script (SwfdecScript *script)
 	    g_object_unref (fun);
 	  }
 	  break;
+        case SWFDEC_AS_ACTION_DEFINE_FUNCTION2:
+	  {
+	    char *name, *s;
+	    ViviCodeLabel *label;
+	    ViviCodeAsm *fun;
+	    guint i, n_args, n_regs, flags;
+
+	    name = swfdec_bits_get_string (&bits, script->version);
+	    n_args = swfdec_bits_get_u16 (&bits);
+	    n_regs = swfdec_bits_get_u8 (&bits);
+	    flags = swfdec_bits_get_u16 (&bits);
+	    /* FIXME: need a temporary label until we lookup the real one */
+	    label = VIVI_CODE_LABEL (vivi_code_label_new ("whoops"));
+	    fun = vivi_code_asm_function2_new (label, name && *name ? name : NULL, n_regs, flags);
+	    g_object_unref (label);
+	    g_free (name);
+	    for (i = 0; i < n_args; i++) {
+	      flags = swfdec_bits_get_u8 (&bits);
+	      s = swfdec_bits_get_string (&bits, script->version);
+	      vivi_code_asm_function2_add_argument (VIVI_CODE_ASM_FUNCTION2 (fun),
+		  s, flags);
+	      g_free (s);
+	    }
+	    label = vivi_disassemble_labels_get_label (labels, 
+		pc + swfdec_bits_get_u16 (&bits));
+	    vivi_code_asm_function2_set_label (VIVI_CODE_ASM_FUNCTION2 (fun), label);
+	    vivi_code_assembler_add_code (assembler, fun);
+	    g_object_unref (fun);
+	  }
+	  break;
         case SWFDEC_AS_ACTION_GOTO_FRAME:
         case SWFDEC_AS_ACTION_GET_URL:
         case SWFDEC_AS_ACTION_STRICT_MODE:
@@ -328,7 +359,6 @@ vivi_disassemble_script (SwfdecScript *script)
         case SWFDEC_AS_ACTION_SET_TARGET:
         case SWFDEC_AS_ACTION_GOTO_LABEL:
         case SWFDEC_AS_ACTION_WAIT_FOR_FRAME2:
-        case SWFDEC_AS_ACTION_DEFINE_FUNCTION2:
         case SWFDEC_AS_ACTION_TRY:
         case SWFDEC_AS_ACTION_WITH:
         case SWFDEC_AS_ACTION_GET_URL2:

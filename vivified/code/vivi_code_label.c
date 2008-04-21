@@ -31,7 +31,7 @@ vivi_code_label_asm_init (ViviCodeAsmInterface *iface)
 {
 }
 
-G_DEFINE_TYPE_WITH_CODE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_LABEL,
+G_DEFINE_TYPE_WITH_CODE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_STATEMENT,
     G_IMPLEMENT_INTERFACE (VIVI_TYPE_CODE_ASM, vivi_code_label_asm_init))
 
 static void

@@ -307,7 +307,7 @@ swfdec_swf_decoder_parse_one (SwfdecSwfDecoder *s)
 	return SWFDEC_STATUS_NEEDBITS;
 
       x = swfdec_bits_get_u16 (&bits);
-      tag = (x >> 6) & 0x3ff;
+      tag = x >> 6;
       SWFDEC_DEBUG ("tag %d %s", tag, swfdec_swf_decoder_get_tag_name (tag));
       tag_len = x & 0x3f;
       if (tag_len == 0x3f) {

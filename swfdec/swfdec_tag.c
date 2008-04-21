@@ -201,7 +201,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s, guint define_sprite_tag)
     SwfdecTagFunc func;
 
     x = swfdec_bits_get_u16 (&parse);
-    tag = (x >> 6) & 0x3ff;
+    tag = x >> 6;
     tag_len = x & 0x3f;
     if (tag_len == 0x3f) {
       tag_len = swfdec_bits_get_u32 (&parse);

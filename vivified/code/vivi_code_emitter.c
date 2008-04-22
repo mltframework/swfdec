@@ -129,6 +129,7 @@ vivi_code_emitter_finish (ViviCodeEmitter *emitter, GError **error)
     if (!later->func (emitter, buffer, later->data, error)) {
       swfdec_buffer_unref (buffer);
       buffer = NULL;
+      break;
     }
   }
   g_slist_foreach (emitter->later, (GFunc) g_free, NULL);

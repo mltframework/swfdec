@@ -180,7 +180,6 @@ vivi_code_assembler_assemble_script (ViviCodeAssembler *assembler,
   if (buffer == NULL)
     return NULL;
   script = swfdec_script_new (buffer, "compiled", version);
-  swfdec_buffer_unref (buffer);
   return script;
 }
 

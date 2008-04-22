@@ -142,7 +142,7 @@ process_buffer (SwfdecBuffer *original)
   swfdec_bots_put_u8 (full, 'W');
   swfdec_bots_put_u8 (full, 'S');
   swfdec_bots_put_u8 (full, version);
-  swfdec_bots_put_u32 (full, swfdec_bots_get_bytes (bots));
+  swfdec_bots_put_u32 (full, swfdec_bots_get_bytes (bots) + 8);
   swfdec_bots_put_bots (full, bots);
   swfdec_bots_free (bots);
   return swfdec_bots_close (full);

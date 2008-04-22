@@ -46,6 +46,8 @@ do_script (SwfdecBuffer *buffer, guint version)
   script = vivi_code_assembler_assemble_script (assembler, version, &error);
   g_object_unref (assembler);
   if (script == NULL) {
+    g_print ("error: %s\n", error->message);
+    g_error_free (error);
     return NULL;
   }
 
@@ -103,14 +105,25 @@ process_buffer (SwfdecBuffer *original)
 	  SwfdecBots *bots2 = swfdec_bots_open ();
 	  swfdec_bots_put_u16 (bots2, buffer->data[0] | buffer->data[1] << 8);
 	  sub = do_script (sub, version);
+	  if (sub == NULL) {
+	    swfdec_bots_free (bots2);
+	    swfdec_bots_free (bots);
+	    swfdec_buffer_unref (original);
+	    return NULL;
+	  }
 	  swfdec_bots_put_buffer (bots2, sub);
 	  swfdec_buffer_unref (sub);
 	  swfdec_buffer_unref (buffer);
-	  buffer = swfdec_bots_close (bots);
+	  buffer = swfdec_bots_close (bots2);
 	}
 	break;
       case SWFDEC_TAG_DOACTION:
 	buffer = do_script (buffer, version);
+	if (buffer == NULL) {
+	  swfdec_bots_free (bots);
+	  swfdec_buffer_unref (original);
+	  return NULL;
+	}
 	break;
       default:
 	break;
@@ -211,13 +224,13 @@ main (int argc, char *argv[])
   }
   buffer = buffer_decode (buffer);
   if (buffer == NULL) {
-    g_printerr ("\"%s\" is not a Flash file", argv[1]);
+    g_printerr ("\"%s\" is not a Flash file\n", argv[1]);
     return 1;
   }
 
   buffer = process_buffer (buffer);
   if (buffer == NULL) {
-    g_printerr ("\"%s\": Broken Flash file", argv[1]);
+    g_printerr ("\"%s\": Broken Flash file\n", argv[1]);
     return 1;
   }
 

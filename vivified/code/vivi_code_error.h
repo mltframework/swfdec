@@ -27,7 +27,9 @@ G_BEGIN_DECLS
 #define VIVI_CODE_ERROR (vivi_code_error_quark())
 
 typedef enum {
-  VIVI_CODE_ERROR_SIZE
+  VIVI_CODE_ERROR_SIZE,
+  VIVI_CODE_ERROR_MISSING_LABEL,
+  VIVI_CODE_ERROR_INVALID_LABEL
 } ViviCodeError;
 
 GQuark		vivi_code_error_quark	(void);

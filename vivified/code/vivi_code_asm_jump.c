@@ -32,11 +32,28 @@
 
 static gboolean
 vivi_code_asm_jump_resolve (ViviCodeEmitter *emitter, SwfdecBuffer *buffer,
-    gpointer data, GError **error)
+    gsize offset, gpointer data, GError **error)
 {
-  /* FIXME: write */
-  g_return_val_if_reached (FALSE);
+  ViviCodeAsmJump *jump = VIVI_CODE_ASM_JUMP (data);
+  gssize label_offset, diff;
+
+  label_offset = vivi_code_emitter_get_label_offset (emitter, jump->label);
+  if (label_offset < 0) {
+    g_set_error (error, VIVI_CODE_ERROR, VIVI_CODE_ERROR_MISSING_LABEL,
+	"no label \"%s\"", vivi_code_label_get_name (jump->label));
+    return FALSE;
+  }
+  diff = label_offset - offset;
+  if (diff > G_MAXINT16 || diff < G_MININT16) {
+    g_set_error (error, VIVI_CODE_ERROR, VIVI_CODE_ERROR_SIZE,
+	"branch target too far away");
+    return FALSE;
+  }
+  buffer->data[offset - 1] = diff >> 8;
+  buffer->data[offset - 2] = diff;
+  return TRUE;
 }
+
 
 static gboolean
 vivi_code_asm_jump_emit (ViviCodeAsm *code, ViviCodeEmitter *emitter, GError **error)

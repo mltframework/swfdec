@@ -33,10 +33,32 @@
 
 static gboolean
 vivi_code_asm_function2_resolve (ViviCodeEmitter *emitter, SwfdecBuffer *buffer,
-    gpointer data, GError **error)
+    gsize offset, gpointer data, GError **error)
 {
-  /* FIXME: write */
-  g_return_val_if_reached (FALSE);
+  ViviCodeAsmFunction2 *fun = VIVI_CODE_ASM_FUNCTION2 (data);
+  gssize label_offset;
+  gsize diff;
+
+  label_offset = vivi_code_emitter_get_label_offset (emitter, fun->label);
+  if (label_offset < 0) {
+    g_set_error (error, VIVI_CODE_ERROR, VIVI_CODE_ERROR_MISSING_LABEL,
+	"no label \"%s\"", vivi_code_label_get_name (fun->label));
+    return FALSE;
+  }
+  if ((gsize) label_offset < offset) {
+    g_set_error (error, VIVI_CODE_ERROR, VIVI_CODE_ERROR_INVALID_LABEL,
+	"cannot jump backwards");
+    return FALSE;
+  }
+  diff = label_offset - offset;
+  if (diff > G_MAXUINT16) {
+    g_set_error (error, VIVI_CODE_ERROR, VIVI_CODE_ERROR_SIZE,
+	"function body too big");
+    return FALSE;
+  }
+  buffer->data[offset - 1] = diff >> 8;
+  buffer->data[offset - 2] = diff;
+  return TRUE;
 }
 
 static gboolean

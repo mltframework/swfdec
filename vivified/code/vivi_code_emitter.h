@@ -29,7 +29,8 @@ G_BEGIN_DECLS
 
 
 typedef struct _ViviCodeEmitterClass ViviCodeEmitterClass;
-typedef gboolean (* ViviCodeEmitLater) (ViviCodeEmitter *emitter, SwfdecBuffer *buffer, gpointer data, GError **error);
+typedef gboolean (* ViviCodeEmitLater) (ViviCodeEmitter *emitter, SwfdecBuffer *buffer,
+    gsize offset, gpointer data, GError **error);
 
 #define VIVI_TYPE_CODE_EMITTER                    (vivi_code_emitter_get_type())
 #define VIVI_IS_CODE_EMITTER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_EMITTER))

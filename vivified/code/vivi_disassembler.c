@@ -34,6 +34,7 @@
 #include "vivi_code_asm_pool.h"
 #include "vivi_code_asm_push.h"
 #include "vivi_code_asm_store.h"
+#include "vivi_code_asm_with.h"
 #include "vivi_code_assembler.h"
 #include "vivi_code_comment.h"
 #include "vivi_code_label.h"
@@ -296,6 +297,15 @@ vivi_disassemble_script (SwfdecScript *script)
 	    g_object_unref (asm_code);
 	  }
 	  break;
+        case SWFDEC_AS_ACTION_WITH:
+	  {
+	    ViviCodeLabel *label = vivi_disassemble_labels_get_label (labels, 
+		pc + swfdec_bits_get_u16 (&bits));
+	    ViviCodeAsm *asm_code = vivi_code_asm_with_new (label);
+	    vivi_code_assembler_add_code (assembler, asm_code);
+	    g_object_unref (asm_code);
+	  }
+	  break;
         case SWFDEC_AS_ACTION_DEFINE_FUNCTION:
 	  {
 	    char *name;
@@ -360,7 +370,6 @@ vivi_disassemble_script (SwfdecScript *script)
         case SWFDEC_AS_ACTION_GOTO_LABEL:
         case SWFDEC_AS_ACTION_WAIT_FOR_FRAME2:
         case SWFDEC_AS_ACTION_TRY:
-        case SWFDEC_AS_ACTION_WITH:
         case SWFDEC_AS_ACTION_GET_URL2:
         case SWFDEC_AS_ACTION_CALL:
         case SWFDEC_AS_ACTION_GOTO_FRAME2:

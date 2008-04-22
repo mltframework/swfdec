@@ -140,11 +140,30 @@ vivi_code_emitter_finish (ViviCodeEmitter *emitter, GError **error)
   return buffer;
 }
 
+ViviCodeEmitter *
+vivi_code_emitter_new (guint version)
+{
+  ViviCodeEmitter *emit;
+
+  emit = g_object_new (VIVI_TYPE_CODE_EMITTER, NULL);
+  emit->version = version;
+
+  return emit;
+}
+
 SwfdecBots *
 vivi_code_emitter_get_bots (ViviCodeEmitter *emitter)
 {
   g_return_val_if_fail (VIVI_IS_CODE_EMITTER (emitter), NULL);
 
   return emitter->bots;
+}
+
+guint
+vivi_code_emitter_get_version (ViviCodeEmitter *emitter)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_EMITTER (emitter), 0);
+
+  return emitter->version;
 }
 

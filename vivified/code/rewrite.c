@@ -23,6 +23,39 @@
 #include <swfdec/swfdec.h>
 #include <swfdec/swfdec_bits.h>
 #include <swfdec/swfdec_bots.h>
+#include <swfdec/swfdec_script_internal.h>
+#include <swfdec/swfdec_tag.h>
+
+#include <vivified/code/vivi_code_assembler.h>
+#include <vivified/code/vivi_decompiler.h>
+
+static SwfdecBuffer *
+do_script (SwfdecBuffer *buffer, guint version)
+{
+  ViviCodeAssembler *assembler;
+  SwfdecScript *script;
+  GError *error = NULL;
+
+  script = swfdec_script_new (buffer, "script", version);
+
+  assembler = VIVI_CODE_ASSEMBLER (vivi_disassemble_script (script));
+  swfdec_script_unref (script);
+
+  /* FIXME: modify script here! */
+
+  script = vivi_code_assembler_assemble_script (assembler, version, &error);
+  g_object_unref (assembler);
+  if (script == NULL) {
+    return NULL;
+  }
+
+  /* FIXME: We want swfdec_script_get_buffer() */
+  g_assert (script->main == script->buffer->data);
+  buffer = swfdec_buffer_ref (script->buffer);
+  swfdec_script_unref (script);
+
+  return buffer;
+}
 
 static SwfdecBuffer *
 process_buffer (SwfdecBuffer *original)
@@ -64,6 +97,21 @@ process_buffer (SwfdecBuffer *original)
     }
 
     switch (tag) {
+      case SWFDEC_TAG_DOINITACTION:
+	{
+	  SwfdecBuffer *sub = swfdec_buffer_new_subbuffer (buffer, 2, buffer->length - 2);
+	  SwfdecBots *bots2 = swfdec_bots_open ();
+	  swfdec_bots_put_u16 (bots2, buffer->data[0] | buffer->data[1] << 8);
+	  sub = do_script (sub, version);
+	  swfdec_bots_put_buffer (bots2, sub);
+	  swfdec_buffer_unref (sub);
+	  swfdec_buffer_unref (buffer);
+	  buffer = swfdec_bots_close (bots);
+	}
+	break;
+      case SWFDEC_TAG_DOACTION:
+	buffer = do_script (buffer, version);
+	break;
       default:
 	break;
     }

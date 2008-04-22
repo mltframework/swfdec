@@ -42,6 +42,7 @@ struct _ViviCodeEmitter
 {
   GObject		object;
 
+  guint			version;	/* version we emit code for */
   SwfdecBots *		bots;		/* output stream */
   GHashTable *		labels;		/* ViviCodeLabel => offset + 1 */
   GSList *		later;		/* ViviCodeEmitLater/data tuples */
@@ -54,13 +55,14 @@ struct _ViviCodeEmitterClass
 
 GType			vivi_code_emitter_get_type   	(void);
 
-ViviCodeEmitter *	vivi_code_emitter_new		(void);
+ViviCodeEmitter *	vivi_code_emitter_new		(guint			version);
 
 gboolean		vivi_code_emitter_emit_asm	(ViviCodeEmitter *	emitter,
 							 ViviCodeAsm *		code,
 							 GError **		error);
 
 SwfdecBots *		vivi_code_emitter_get_bots	(ViviCodeEmitter *	emitter);
+guint			vivi_code_emitter_get_version	(ViviCodeEmitter *	emitter);
 void			vivi_code_emitter_add_label	(ViviCodeEmitter *	emitter,
 							 ViviCodeLabel *	label);
 gssize			vivi_code_emitter_get_label_offset 

@@ -62,6 +62,10 @@ void			vivi_code_assembler_insert_code  	(ViviCodeAssembler *	assembler,
 void			vivi_code_assembler_remove_code		(ViviCodeAssembler *	assembler,
 								 ViviCodeAsm *		code);
 
+SwfdecScript *		vivi_code_assembler_assemble_script	(ViviCodeAssembler *	assembler,
+								 guint			version,
+								 GError **		error);
+
 
 G_END_DECLS
 #endif

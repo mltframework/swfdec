@@ -148,10 +148,13 @@ vivi_code_asm_push_class_init (ViviCodeAsmPushClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeAsmCodeClass *code_class = VIVI_CODE_ASM_CODE_CLASS (klass);
 
   object_class->dispose = vivi_code_asm_push_dispose;
 
   token_class->print = vivi_code_asm_push_print;
+
+  code_class->bytecode = SWFDEC_AS_ACTION_STORE_REGISTER;
 }
 
 static void

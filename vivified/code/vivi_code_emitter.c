@@ -38,7 +38,7 @@ vivi_code_emitter_dispose (GObject *object)
   g_slist_foreach (emit->later, (GFunc) g_free, NULL);
   g_slist_free (emit->later);
   emit->later = NULL;
-  g_hash_table_remove_all (emit->labels);
+  g_hash_table_destroy (emit->labels);
   emit->labels = NULL;
 
   G_OBJECT_CLASS (vivi_code_emitter_parent_class)->dispose (object);
@@ -57,7 +57,7 @@ vivi_code_emitter_init (ViviCodeEmitter *emit)
 {
   emit->bots = swfdec_bots_open ();
   emit->labels = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-      g_object_unref, g_free);
+      g_object_unref, NULL);
 }
 
 gboolean
@@ -97,6 +97,7 @@ vivi_code_emitter_get_label_offset (ViviCodeEmitter *emitter, ViviCodeLabel *lab
 
 typedef struct {
   ViviCodeEmitLater	func;
+  gsize			offset;
   gpointer		data;
 } Later;
 
@@ -110,6 +111,7 @@ vivi_code_emitter_add_later (ViviCodeEmitter *emitter, ViviCodeEmitLater func, g
 
   later = g_new (Later, 1);
   later->func = func;
+  later->offset = swfdec_bots_get_bytes (emitter->bots);
   later->data = data;
   emitter->later = g_slist_prepend (emitter->later, later);
 }
@@ -126,9 +128,10 @@ vivi_code_emitter_finish (ViviCodeEmitter *emitter, GError **error)
   emitter->bots = NULL;
   for (walk = emitter->later; walk; walk = walk->next) {
     Later *later = walk->data;
-    if (!later->func (emitter, buffer, later->data, error)) {
+    if (!later->func (emitter, buffer, later->offset, later->data, error)) {
       swfdec_buffer_unref (buffer);
       buffer = NULL;
+      break;
     }
   }
   g_slist_foreach (emitter->later, (GFunc) g_free, NULL);
@@ -140,11 +143,30 @@ vivi_code_emitter_finish (ViviCodeEmitter *emitter, GError **error)
   return buffer;
 }
 
+ViviCodeEmitter *
+vivi_code_emitter_new (guint version)
+{
+  ViviCodeEmitter *emit;
+
+  emit = g_object_new (VIVI_TYPE_CODE_EMITTER, NULL);
+  emit->version = version;
+
+  return emit;
+}
+
 SwfdecBots *
 vivi_code_emitter_get_bots (ViviCodeEmitter *emitter)
 {
   g_return_val_if_fail (VIVI_IS_CODE_EMITTER (emitter), NULL);
 
   return emitter->bots;
+}
+
+guint
+vivi_code_emitter_get_version (ViviCodeEmitter *emitter)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_EMITTER (emitter), 0);
+
+  return emitter->version;
 }
 

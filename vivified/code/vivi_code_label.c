@@ -24,14 +24,26 @@
 #include "vivi_code_label.h"
 #include "vivi_code_asm.h"
 #include "vivi_code_assembler.h"
+#include "vivi_code_emitter.h"
 #include "vivi_code_printer.h"
+
+static gboolean
+vivi_code_label_emit (ViviCodeAsm *code, ViviCodeEmitter *emitter, GError **error)
+{
+  ViviCodeLabel *label = VIVI_CODE_LABEL (code);
+
+  vivi_code_emitter_add_label (emitter, label);
+
+  return TRUE;
+}
 
 static void
 vivi_code_label_asm_init (ViviCodeAsmInterface *iface)
 {
+  iface->emit = vivi_code_label_emit;
 }
 
-G_DEFINE_TYPE_WITH_CODE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_LABEL,
+G_DEFINE_TYPE_WITH_CODE (ViviCodeLabel, vivi_code_label, VIVI_TYPE_CODE_STATEMENT,
     G_IMPLEMENT_INTERFACE (VIVI_TYPE_CODE_ASM, vivi_code_label_asm_init))
 
 static void

@@ -29,7 +29,8 @@ G_BEGIN_DECLS
 
 
 typedef struct _ViviCodeEmitterClass ViviCodeEmitterClass;
-typedef gboolean (* ViviCodeEmitLater) (ViviCodeEmitter *emitter, SwfdecBuffer *buffer, gpointer data, GError **error);
+typedef gboolean (* ViviCodeEmitLater) (ViviCodeEmitter *emitter, SwfdecBuffer *buffer,
+    gsize offset, gpointer data, GError **error);
 
 #define VIVI_TYPE_CODE_EMITTER                    (vivi_code_emitter_get_type())
 #define VIVI_IS_CODE_EMITTER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_EMITTER))
@@ -42,6 +43,7 @@ struct _ViviCodeEmitter
 {
   GObject		object;
 
+  guint			version;	/* version we emit code for */
   SwfdecBots *		bots;		/* output stream */
   GHashTable *		labels;		/* ViviCodeLabel => offset + 1 */
   GSList *		later;		/* ViviCodeEmitLater/data tuples */
@@ -54,13 +56,14 @@ struct _ViviCodeEmitterClass
 
 GType			vivi_code_emitter_get_type   	(void);
 
-ViviCodeEmitter *	vivi_code_emitter_new		(void);
+ViviCodeEmitter *	vivi_code_emitter_new		(guint			version);
 
 gboolean		vivi_code_emitter_emit_asm	(ViviCodeEmitter *	emitter,
 							 ViviCodeAsm *		code,
 							 GError **		error);
 
 SwfdecBots *		vivi_code_emitter_get_bots	(ViviCodeEmitter *	emitter);
+guint			vivi_code_emitter_get_version	(ViviCodeEmitter *	emitter);
 void			vivi_code_emitter_add_label	(ViviCodeEmitter *	emitter,
 							 ViviCodeLabel *	label);
 gssize			vivi_code_emitter_get_label_offset 

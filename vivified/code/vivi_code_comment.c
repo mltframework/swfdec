@@ -26,9 +26,16 @@
 #include "vivi_code_assembler.h"
 #include "vivi_code_printer.h"
 
+static gboolean
+vivi_code_comment_emit (ViviCodeAsm *code, ViviCodeEmitter *emitter, GError **error)
+{
+  return TRUE;
+}
+
 static void
 vivi_code_comment_asm_init (ViviCodeAsmInterface *iface)
 {
+  iface->emit = vivi_code_comment_emit;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ViviCodeComment, vivi_code_comment, VIVI_TYPE_CODE_STATEMENT,

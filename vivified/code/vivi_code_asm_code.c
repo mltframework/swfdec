@@ -25,11 +25,26 @@
 
 #include "vivi_code_asm_code.h"
 #include "vivi_code_asm.h"
+#include "vivi_code_emitter.h"
 #include "vivi_code_printer.h"
+
+static gboolean
+vivi_code_asm_code_emit (ViviCodeAsm *asm_code, ViviCodeEmitter *emitter, GError **error)
+{
+  ViviCodeAsmCode *code = VIVI_CODE_ASM_CODE (asm_code);
+  ViviCodeAsmCodeClass *klass = VIVI_CODE_ASM_CODE_GET_CLASS (code);
+  SwfdecBots *bots = vivi_code_emitter_get_bots (emitter);
+
+  swfdec_bots_put_u8 (bots, klass->bytecode);
+  if (klass->bytecode & 0x80)
+    swfdec_bots_put_u16 (bots, 0);
+  return TRUE;
+}
 
 static void
 vivi_code_asm_code_asm_init (ViviCodeAsmInterface *iface)
 {
+  iface->emit = vivi_code_asm_code_emit;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ViviCodeAsmCode, vivi_code_asm_code, VIVI_TYPE_CODE_TOKEN,

@@ -502,6 +502,7 @@ swfdec_gtk_widget_realize (GtkWidget *widget)
 {
   GdkWindowAttr attributes;
   gint attributes_mask;
+  GdkColor white = { 0, 0xFFFF, 0xFFFF, 0xFFFF };
 
   GTK_WIDGET_SET_FLAGS (widget, GTK_REALIZED);
 
@@ -527,6 +528,9 @@ swfdec_gtk_widget_realize (GtkWidget *widget)
   widget->window = gdk_window_new (gtk_widget_get_parent_window (widget),
       &attributes, attributes_mask);
   gdk_window_set_user_data (widget->window, widget);
+
+  gdk_rgb_find_color (gdk_drawable_get_colormap (GDK_DRAWABLE (widget->window)), &white);
+  gdk_window_set_background (widget->window, &white);
 
   widget->style = gtk_style_attach (widget->style, widget->window);
 
@@ -565,6 +569,12 @@ swfdec_gtk_widget_unmap (GtkWidget *gtkwidget)
 }
 
 static void
+swfdec_gtk_widget_style_set (GtkWidget *gtkwidget, GtkStyle *previous)
+{
+  /* do not set the window's background here */
+}
+
+static void
 swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -595,6 +605,7 @@ swfdec_gtk_widget_class_init (SwfdecGtkWidgetClass * g_class)
   widget_class->unrealize = swfdec_gtk_widget_unrealize;
   widget_class->map = swfdec_gtk_widget_map;
   widget_class->unmap = swfdec_gtk_widget_unmap;
+  widget_class->style_set = swfdec_gtk_widget_style_set;
   widget_class->size_request = swfdec_gtk_widget_size_request;
   widget_class->size_allocate = swfdec_gtk_widget_size_allocate;
   widget_class->expose_event = swfdec_gtk_widget_expose;

@@ -242,6 +242,7 @@ void
 swfdec_bots_put_sbits (SwfdecBots *bots, int bits, guint n_bits)
 {
   g_return_if_fail (bots != NULL);
+
   swfdec_bots_put_bits (bots, bits, n_bits);
 }
 
@@ -298,23 +299,11 @@ swfdec_bots_put_double (SwfdecBots *bots, double value)
 }
 
 static guint
-swfdec_bots_bits_required (guint x)
-{
-  guint ret = 0;
-
-  while (x > 0) {
-    x >>= 1;
-    ret++;
-  }
-  return ret;
-}
-
-static guint
-swfdec_bots_sbits_required (int x)
+swfdec_bit_sstorage (long x)
 {
   if (x < 0)
-    x = !x;
-  return swfdec_bots_bits_required (x) + 1;
+    x = ~x;
+  return g_bit_storage (x) + 1;
 }
 
 void
@@ -330,12 +319,12 @@ swfdec_bots_put_rect (SwfdecBots *bots, const SwfdecRect *rect)
   y0 = rect->y0;
   x1 = rect->x1;
   y1 = rect->y1;
-  req = swfdec_bots_sbits_required (x0);
-  tmp = swfdec_bots_sbits_required (y0);
+  req = swfdec_bit_sstorage (x0);
+  tmp = swfdec_bit_sstorage (y0);
   req = MAX (req, tmp);
-  tmp = swfdec_bots_sbits_required (x1);
+  tmp = swfdec_bit_sstorage (x1);
   req = MAX (req, tmp);
-  tmp = swfdec_bots_sbits_required (y1);
+  tmp = swfdec_bit_sstorage (y1);
   req = MAX (req, tmp);
   swfdec_bots_syncbits (bots);
   swfdec_bots_put_bits (bots, req, 5);
@@ -356,8 +345,8 @@ swfdec_bots_put_matrix (SwfdecBots *bots, const cairo_matrix_t *matrix)
     swfdec_bots_put_bit (bots, 1);
     x = SWFDEC_DOUBLE_TO_FIXED (matrix->xx);
     y = SWFDEC_DOUBLE_TO_FIXED (matrix->yy);
-    xbits = swfdec_bots_sbits_required (x);
-    ybits = swfdec_bots_sbits_required (y);
+    xbits = swfdec_bit_sstorage (x);
+    ybits = swfdec_bit_sstorage (y);
     xbits = MAX (xbits, ybits);
     swfdec_bots_put_bits (bots, xbits, 5);
     swfdec_bots_put_sbits (bots, x, xbits);
@@ -369,8 +358,8 @@ swfdec_bots_put_matrix (SwfdecBots *bots, const cairo_matrix_t *matrix)
     swfdec_bots_put_bit (bots, 1);
     x = SWFDEC_DOUBLE_TO_FIXED (matrix->yx);
     y = SWFDEC_DOUBLE_TO_FIXED (matrix->xy);
-    xbits = swfdec_bots_sbits_required (x);
-    ybits = swfdec_bots_sbits_required (y);
+    xbits = swfdec_bit_sstorage (x);
+    ybits = swfdec_bit_sstorage (y);
     xbits = MAX (xbits, ybits);
     swfdec_bots_put_bits (bots, xbits, 5);
     swfdec_bots_put_sbits (bots, x, xbits);
@@ -380,8 +369,8 @@ swfdec_bots_put_matrix (SwfdecBots *bots, const cairo_matrix_t *matrix)
   }
   x = matrix->x0;
   y = matrix->y0;
-  xbits = swfdec_bots_sbits_required (x);
-  ybits = swfdec_bots_sbits_required (y);
+  xbits = swfdec_bit_sstorage (x);
+  ybits = swfdec_bit_sstorage (y);
   xbits = MAX (xbits, ybits);
   swfdec_bots_put_bits (bots, xbits, 5);
   swfdec_bots_put_sbits (bots, x, xbits);
@@ -398,24 +387,24 @@ swfdec_bots_put_color_transform (SwfdecBots *bots, const SwfdecColorTransform *t
   has_mult = trans->ra != 256 || trans->ga != 256 || trans->ba != 256 || trans->aa != 256;
   has_add = trans->rb != 0 || trans->gb != 0 || trans->bb != 0 || trans->ab != 0;
   if (has_mult) {
-    n_bits = swfdec_bots_sbits_required (trans->ra);
-    tmp = swfdec_bots_sbits_required (trans->ga);
+    n_bits = swfdec_bit_sstorage (trans->ra);
+    tmp = swfdec_bit_sstorage (trans->ga);
     n_bits = MAX (tmp, n_bits);
-    tmp = swfdec_bots_sbits_required (trans->ba);
+    tmp = swfdec_bit_sstorage (trans->ba);
     n_bits = MAX (tmp, n_bits);
-    tmp = swfdec_bots_sbits_required (trans->aa);
+    tmp = swfdec_bit_sstorage (trans->aa);
     n_bits = MAX (tmp, n_bits);
   } else {
     n_bits = 0;
   }
   if (has_add) {
-    tmp = swfdec_bots_sbits_required (trans->rb);
+    tmp = swfdec_bit_sstorage (trans->rb);
     n_bits = MAX (tmp, n_bits);
-    tmp = swfdec_bots_sbits_required (trans->gb);
+    tmp = swfdec_bit_sstorage (trans->gb);
     n_bits = MAX (tmp, n_bits);
-    tmp = swfdec_bots_sbits_required (trans->bb);
+    tmp = swfdec_bit_sstorage (trans->bb);
     n_bits = MAX (tmp, n_bits);
-    tmp = swfdec_bots_sbits_required (trans->ab);
+    tmp = swfdec_bit_sstorage (trans->ab);
     n_bits = MAX (tmp, n_bits);
   }
   if (n_bits >= (1 << 4))

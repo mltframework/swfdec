@@ -2534,6 +2534,15 @@ EXTRA_DIST = \
 	round-direction-7.swf.trace \
 	round-direction-8.swf \
 	round-direction-8.swf.trace \
+	same-argument-name-5.swf \
+	same-argument-name-5.swf.trace \
+	same-argument-name-6.swf \
+	same-argument-name-6.swf.trace \
+	same-argument-name-7.swf \
+	same-argument-name-7.swf.trace \
+	same-argument-name-8.swf \
+	same-argument-name-8.swf.trace \
+	same-argument-name.as \
 	scalemode.as \
 	scalemode-5.swf \
 	scalemode-5.swf.trace \

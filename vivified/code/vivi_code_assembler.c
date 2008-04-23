@@ -26,6 +26,7 @@
 
 #include "vivi_code_assembler.h"
 #include "vivi_code_comment.h"
+#include "vivi_code_emitter.h"
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
 
@@ -139,5 +140,32 @@ vivi_code_assembler_remove_code (ViviCodeAssembler *assembler, ViviCodeAsm *code
     g_object_unref (code);
   else
     g_return_if_reached ();
+}
+
+SwfdecScript *
+vivi_code_assembler_assemble_script (ViviCodeAssembler *assembler,
+    guint version, GError **error)
+{
+  ViviCodeEmitter *emit;
+  SwfdecBuffer *buffer;
+  SwfdecScript *script;
+  guint i;
+
+  g_return_val_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler), NULL);
+
+  emit = vivi_code_emitter_new (version);
+  for (i = 0; i < assembler->codes->len; i++) {
+    if (!vivi_code_emitter_emit_asm (emit, 
+	  g_ptr_array_index (assembler->codes, i), error)) {
+      g_object_unref (emit);
+      return NULL;
+    }
+  }
+  buffer = vivi_code_emitter_finish (emit, error);
+  g_object_unref (emit);
+  if (buffer == NULL)
+    return NULL;
+  script = swfdec_script_new (buffer, "compiled", version);
+  return script;
 }
 

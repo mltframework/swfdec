@@ -20,7 +20,14 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_asm.c \
 	vivi_code_asm_code.c \
 	vivi_code_asm_code_default.c \
+	vivi_code_asm_function.c \
+	vivi_code_asm_function2.c \
+	vivi_code_asm_if.c \
+	vivi_code_asm_jump.c \
+	vivi_code_asm_pool.c \
 	vivi_code_asm_push.c \
+	vivi_code_asm_store.c \
+	vivi_code_asm_with.c \
 	vivi_code_assembler.c \
 	vivi_code_assignment.c \
 	vivi_code_binary.c \
@@ -84,7 +91,14 @@ noinst_HEADERS = \
 	vivi_code_asm.h \
 	vivi_code_asm_code.h \
 	vivi_code_asm_code_default.h \
+	vivi_code_asm_function.h \
+	vivi_code_asm_function2.h \
+	vivi_code_asm_if.h \
+	vivi_code_asm_jump.h \
+	vivi_code_asm_pool.h \
 	vivi_code_asm_push.h \
+	vivi_code_asm_store.h \
+	vivi_code_asm_with.h \
 	vivi_code_assembler.h \
 	vivi_code_assignment.h \
 	vivi_code_binary.h \
@@ -145,7 +159,7 @@ noinst_HEADERS = \
 	vivi_parser_scanner_lex.h \
 	vivified-compiler.h
 
-noinst_PROGRAMS = vivi-decompile vivi-compile
+noinst_PROGRAMS = vivi-decompile vivi-compile vivi-rewrite
 
 vivi_decompile_SOURCES = \
 	decompiler.c
@@ -160,3 +174,10 @@ vivi_compile_SOURCES = \
 vivi_compile_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
 vivi_compile_LDFLAGS = $(SWFDEC_LIBS)
 vivi_compile_LDADD = libvivified-compiler.la
+
+vivi_rewrite_SOURCES = \
+	rewrite.c
+
+vivi_rewrite_CFLAGS =  $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
+vivi_rewrite_LDFLAGS = $(SWFDEC_LIBS) -lz
+vivi_rewrite_LDADD = libvivified-compiler.la

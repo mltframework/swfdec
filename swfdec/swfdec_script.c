@@ -122,7 +122,7 @@ swfdec_script_foreach (SwfdecScript *script, SwfdecScriptForeachFunc func, gpoin
  *
  * Creates a new script for the actionscript provided in @buffer.
  *
- * Returns: a new #SwfdecScript for executing the script i @buffer.
+ * Returns: a new #SwfdecScript for executing the script in @buffer.
  **/
 SwfdecScript *
 swfdec_script_new (SwfdecBuffer *buffer, const char *name, guint version)

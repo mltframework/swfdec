@@ -15,3 +15,4 @@ vivi_parser_scanner_lex.c
 
 vivi-decompile
 vivi-compile
+vivi-rewrite

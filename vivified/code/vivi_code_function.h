@@ -40,6 +40,7 @@ struct _ViviCodeFunction
 {
   ViviCodeValue		value;
 
+  char *		name;
   GPtrArray *		arguments;		// char *
   ViviCodeStatement *	body;
 };
@@ -51,9 +52,11 @@ struct _ViviCodeFunctionClass
 
 GType			vivi_code_function_get_type   	(void);
 
-ViviCodeValue *		vivi_code_function_new		(void);
+ViviCodeValue *		vivi_code_function_new		(const char *name);
 ViviCodeValue *		vivi_code_function_new_from_script (SwfdecScript *	script);
 
+void			vivi_code_function_set_name	(ViviCodeFunction *	function,
+							 const char *		name);
 void			vivi_code_function_set_body	(ViviCodeFunction *	function,
 							 ViviCodeStatement *	body);
 void			vivi_code_function_add_argument	(ViviCodeFunction *	function,

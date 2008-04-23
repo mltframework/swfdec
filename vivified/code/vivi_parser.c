@@ -1471,7 +1471,7 @@ static gboolean
 peek_function_expression (ParseData *data);
 
 static ViviCodeValue *
-parse_function_expression (ParseData *data, ViviCodeStatement **statement);
+parse_function_expression (ParseData *data);
 
 static gboolean
 peek_member_expression (ParseData *data)
@@ -1490,7 +1490,8 @@ parse_member_expression (ParseData *data, ViviCodeStatement **statement)
   if (peek_primary_expression (data)) {
     value = parse_primary_expression (data, statement);
   } else if (peek_function_expression (data)) {
-    value = parse_function_expression (data, statement);
+    value = parse_function_expression (data);
+    *statement = NULL;
   } else {
     vivi_parser_error_unexpected_or (data, ERROR_TOKEN_PRIMARY_EXPRESSION,
 	ERROR_TOKEN_FUNCTION_EXPRESSION, TOKEN_NONE);
@@ -2664,12 +2665,12 @@ peek_source_element (ParseData *data);
 static ViviCodeStatement *
 parse_source_element (ParseData *data);
 
-static void
-parse_function_definition (ParseData *data, ViviCodeValue **function,
-    ViviCodeValue **identifier, gboolean identifier_required)
+static ViviCodeValue *
+parse_function_definition (ParseData *data, gboolean name_required)
 {
-  ViviCodeValue **arguments;
+  ViviCodeValue *function, **arguments;
   ViviCodeStatement *body;
+  const char *name;
   guint i;
 
   arguments = NULL;
@@ -2677,21 +2678,21 @@ parse_function_definition (ParseData *data, ViviCodeValue **function,
 
   parse_token (data, TOKEN_FUNCTION);
 
-  if (identifier_required) {
-    *identifier = parse_identifier (data);
+  if (name_required) {
+    name = g_strdup (parse_identifier_value (data));
     parse_token (data, TOKEN_PARENTHESIS_LEFT);
   } else {
     if (!try_parse_token (data, TOKEN_PARENTHESIS_LEFT)) {
       if (peek_identifier (data)) {
-	*identifier = parse_identifier (data);
+	name = g_strdup (parse_identifier_value (data));
 	parse_token (data, TOKEN_PARENTHESIS_LEFT);
       } else {
 	vivi_parser_error_unexpected_or (data, TOKEN_PARENTHESIS_LEFT,
 	    ERROR_TOKEN_IDENTIFIER, TOKEN_NONE);
-	*identifier = NULL;
+	name = NULL;
       }
     } else {
-      *identifier = NULL;
+      name = NULL;
     }
   }
 
@@ -2708,19 +2709,21 @@ parse_function_definition (ParseData *data, ViviCodeValue **function,
 
   parse_token (data, TOKEN_BRACE_RIGHT);
 
-  *function = vivi_code_function_new ();
+  function = vivi_code_function_new (name);
   if (body != NULL) {
-    vivi_code_function_set_body (VIVI_CODE_FUNCTION (*function), body);
+    vivi_code_function_set_body (VIVI_CODE_FUNCTION (function), body);
     g_object_unref (body);
   }
   if (arguments != NULL) {
     for (i = 0; arguments[i] != NULL; i++) {
-      vivi_code_function_add_argument (VIVI_CODE_FUNCTION (*function),
+      vivi_code_function_add_argument (VIVI_CODE_FUNCTION (function),
 	  vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (
 	      VIVI_CODE_GET (arguments[i])->name)));
     }
     free_value_list (arguments);
   }
+
+  return function;
 }
 
 static gboolean
@@ -2733,13 +2736,10 @@ static ViviCodeStatement *
 parse_function_declaration (ParseData *data)
 {
   ViviCodeStatement *statement;
-  ViviCodeValue *function, *identifier;
+  ViviCodeValue *function;
 
-  parse_function_definition (data, &function, &identifier, TRUE);
-
-  // FIXME
-  statement = vivi_parser_assignment_new (identifier, function);
-  g_object_unref (identifier);
+  function = parse_function_definition (data, TRUE);
+  statement = vivi_code_value_statement_new (function);
   g_object_unref (function);
 
   return statement;
@@ -2752,21 +2752,9 @@ peek_function_expression (ParseData *data)
 }
 
 static ViviCodeValue *
-parse_function_expression (ParseData *data, ViviCodeStatement **statement)
+parse_function_expression (ParseData *data)
 {
-  ViviCodeValue *function, *identifier;
-
-  parse_function_definition (data, &function, &identifier, FALSE);
-
-  // FIXME
-  if (identifier != NULL) {
-    *statement = vivi_parser_assignment_new (identifier, identifier);
-    g_object_unref (identifier);
-  } else {
-    *statement = NULL;
-  }
-
-  return function;
+  return parse_function_definition (data, FALSE);
 }
 
 // top

@@ -39,6 +39,9 @@ vivi_code_function_dispose (GObject *object)
   ViviCodeFunction *function = VIVI_CODE_FUNCTION (object);
   guint i;
 
+  if (function->name != NULL)
+    g_free (function->name);
+
   if (function->body)
     g_object_unref (function->body);
 
@@ -56,7 +59,12 @@ vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
   ViviCodeFunction *function = VIVI_CODE_FUNCTION (token);
   guint i;
 
-  vivi_code_printer_print (printer, "function (");
+  vivi_code_printer_print (printer, "function ");
+  if (function->name != NULL) {
+    vivi_code_printer_print (printer, function->name);
+    vivi_code_printer_print (printer, " ");
+  }
+  vivi_code_printer_print (printer, "(");
   for (i = 0; i < function->arguments->len; i++) {
     if (i != 0)
       vivi_code_printer_print (printer, ", ");
@@ -134,9 +142,25 @@ vivi_code_function_init (ViviCodeFunction *function)
 }
 
 ViviCodeValue *
-vivi_code_function_new (void)
+vivi_code_function_new (const char *name)
 {
-  return VIVI_CODE_VALUE (g_object_new (VIVI_TYPE_CODE_FUNCTION, NULL));
+  ViviCodeValue *function;
+
+  function = VIVI_CODE_VALUE (g_object_new (VIVI_TYPE_CODE_FUNCTION, NULL));
+
+  VIVI_CODE_FUNCTION (function)->name = g_strdup (name);
+
+  return function;
+}
+
+void
+vivi_code_function_set_name (ViviCodeFunction *function, const char *name)
+{
+  g_return_if_fail (VIVI_IS_CODE_FUNCTION (function));
+
+  if (function->name != NULL)
+    g_free (function->name);
+  function->name = g_strdup (name);
 }
 
 void
@@ -167,6 +191,7 @@ vivi_code_function_new_from_script (SwfdecScript *script)
   g_return_val_if_fail (script != NULL, NULL);
 
   function = g_object_new (VIVI_TYPE_CODE_FUNCTION, NULL);
+  // TODO: set name
   function->body = vivi_decompile_script (script);
 
   for (i = 0; i < script->n_arguments; i++) {

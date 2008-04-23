@@ -193,9 +193,11 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	}
       default:
 	vivi_decompiler_block_add_error (block, state, "Push: type %u unknown, skipping", type);
+	val = NULL;
 	break;
     }
-    vivi_decompiler_state_push (state, val);
+    if (val != NULL)
+      vivi_decompiler_state_push (state, val);
   }
 
   return TRUE;

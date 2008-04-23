@@ -87,7 +87,7 @@ vivi_code_asm_push_print (ViviCodeToken *token, ViviCodePrinter*printer)
 	break;
       case VIVI_CODE_CONSTANT_FLOAT:
 	s = g_strdup_printf ("%.ff", swfdec_bits_get_float (&bits));
-	vivi_code_printer_print (printer, s2);
+	vivi_code_printer_print (printer, s);
 	g_free (s);
 	break;
       case VIVI_CODE_CONSTANT_NULL:

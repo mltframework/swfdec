@@ -23,6 +23,8 @@
 
 #include "vivi_code_boolean.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_assembler.h"
+#include "vivi_code_asm_push.h"
 
 G_DEFINE_TYPE (ViviCodeBoolean, vivi_code_boolean, VIVI_TYPE_CODE_CONSTANT)
 
@@ -32,6 +34,18 @@ vivi_code_boolean_print (ViviCodeToken *token, ViviCodePrinter *printer)
   ViviCodeBoolean *b = VIVI_CODE_BOOLEAN (token);
 
   vivi_code_printer_print (printer, b->value ? "true" : "false");
+}
+
+static void
+vivi_code_boolean_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+{
+  ViviCodeBoolean *b = VIVI_CODE_BOOLEAN (token);
+  ViviCodeAsm *code;
+
+  code = vivi_code_asm_push_new ();
+  vivi_code_asm_push_add_boolean (VIVI_CODE_ASM_PUSH (code), b->value);
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 }
 
 static char *
@@ -49,6 +63,7 @@ vivi_code_boolean_class_init (ViviCodeBooleanClass *klass)
   ViviCodeConstantClass *constant_class = VIVI_CODE_CONSTANT_CLASS (klass);
 
   token_class->print = vivi_code_boolean_print;
+  token_class->compile = vivi_code_boolean_compile;
 
   constant_class->get_variable_name = vivi_code_boolean_get_variable_name;
 }

@@ -25,6 +25,8 @@
 
 #include "vivi_code_string.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_assembler.h"
+#include "vivi_code_asm_push.h"
 
 G_DEFINE_TYPE (ViviCodeString, vivi_code_string, VIVI_TYPE_CODE_CONSTANT)
 
@@ -48,6 +50,18 @@ vivi_code_string_print (ViviCodeToken *token, ViviCodePrinter *printer)
   s = vivi_code_escape_string (string->value);
   vivi_code_printer_print (printer, s);
   g_free (s);
+}
+
+static void
+vivi_code_string_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+{
+  ViviCodeString *string = VIVI_CODE_STRING (token);
+  ViviCodeAsm *code;
+
+  code = vivi_code_asm_push_new ();
+  vivi_code_asm_push_add_string (VIVI_CODE_ASM_PUSH (code), string->value);
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 }
 
 static char *
@@ -74,6 +88,7 @@ vivi_code_string_class_init (ViviCodeStringClass *klass)
   object_class->dispose = vivi_code_string_dispose;
 
   token_class->print = vivi_code_string_print;
+  token_class->compile = vivi_code_string_compile;
 
   constant_class->get_variable_name = vivi_code_string_get_variable_name;
 }

@@ -27,6 +27,8 @@
 
 #include "vivi_code_null.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_assembler.h"
+#include "vivi_code_asm_push.h"
 
 G_DEFINE_TYPE (ViviCodeNull, vivi_code_null, VIVI_TYPE_CODE_CONSTANT)
 
@@ -34,6 +36,17 @@ static void
 vivi_code_null_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   vivi_code_printer_print (printer, "null");
+}
+
+static void
+vivi_code_null_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+{
+  ViviCodeAsm *code;
+
+  code = vivi_code_asm_push_new ();
+  vivi_code_asm_push_add_null (VIVI_CODE_ASM_PUSH (code));
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 }
 
 static char *
@@ -49,6 +62,7 @@ vivi_code_null_class_init (ViviCodeNullClass *klass)
   ViviCodeConstantClass *constant_class = VIVI_CODE_CONSTANT_CLASS (klass);
 
   token_class->print = vivi_code_null_print;
+  token_class->compile = vivi_code_null_compile;
 
   constant_class->get_variable_name = vivi_code_null_get_variable_name;
 }

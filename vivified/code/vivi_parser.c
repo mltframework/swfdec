@@ -2668,12 +2668,10 @@ parse_source_element (ParseData *data);
 static ViviCodeValue *
 parse_function_definition (ParseData *data, gboolean name_required)
 {
-  ViviCodeValue *function, **arguments;
+  ViviCodeValue *function;
   ViviCodeStatement *body;
-  const char *name;
-  guint i;
+  char *name;
 
-  arguments = NULL;
   body = NULL;
 
   parse_token (data, TOKEN_FUNCTION);
@@ -2696,7 +2694,14 @@ parse_function_definition (ParseData *data, gboolean name_required)
     }
   }
 
+  function = vivi_code_function_new (name);
+  g_free (name);
+
   if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+    do {
+      vivi_code_function_add_argument (VIVI_CODE_FUNCTION (function),
+	  parse_identifier_value (data));
+    } while (try_parse_token (data, TOKEN_COMMA));
     parse_token (data, TOKEN_PARENTHESIS_RIGHT);
   }
 
@@ -2709,18 +2714,9 @@ parse_function_definition (ParseData *data, gboolean name_required)
 
   parse_token (data, TOKEN_BRACE_RIGHT);
 
-  function = vivi_code_function_new (name);
   if (body != NULL) {
     vivi_code_function_set_body (VIVI_CODE_FUNCTION (function), body);
     g_object_unref (body);
-  }
-  if (arguments != NULL) {
-    for (i = 0; arguments[i] != NULL; i++) {
-      vivi_code_function_add_argument (VIVI_CODE_FUNCTION (function),
-	  vivi_code_constant_get_variable_name (VIVI_CODE_CONSTANT (
-	      VIVI_CODE_GET (arguments[i])->name)));
-    }
-    free_value_list (arguments);
   }
 
   return function;

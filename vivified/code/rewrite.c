@@ -52,56 +52,110 @@ assembler_lookup_pool (ViviCodeAssembler *assembler, guint i)
   return swfdec_constant_pool_get (pool, i);
 }
 
-static void
-insert_trace (ViviCodeAssembler *assembler, guint i, const char *text)
+static const char *
+get_function_name (ViviCodeAssembler *assembler, guint i)
 {
-  ViviCodeAsm *code;
+  ViviCodeAsmPush *push;
+  guint n;
 
-  code = vivi_code_asm_push_new ();
-  vivi_code_asm_push_add_string (VIVI_CODE_ASM_PUSH (code), text);
-  vivi_code_assembler_insert_code (assembler, i, code);
-  g_object_unref (code);
-  code = vivi_code_asm_trace_new ();
-  vivi_code_assembler_insert_code (assembler, i + 1, code);
-  g_object_unref (code);
+  if (i == 0)
+    return NULL;
+  if (!VIVI_IS_CODE_ASM_PUSH (vivi_code_assembler_get_code (assembler, i - 1)))
+    return NULL;
+  push = VIVI_CODE_ASM_PUSH (vivi_code_assembler_get_code (assembler, i - 1));
+  n = vivi_code_asm_push_get_n_values (push);
+  if (n > 0) {
+    ViviCodeConstantType type;
+    n--;
+    type = vivi_code_asm_push_get_value_type (push, n);
+    if (type == VIVI_CODE_CONSTANT_STRING) {
+      return vivi_code_asm_push_get_string (push, n);
+    } else if (type == VIVI_CODE_CONSTANT_CONSTANT_POOL ||
+	       type == VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG) {
+      return assembler_lookup_pool (assembler, 
+	  vivi_code_asm_push_get_pool (push, n));
+    }
+  }
+  return NULL;
 }
 
+#define INSERT_CODE(assembler, i, code) G_STMT_START { \
+  ViviCodeAsm *__code = (code); \
+  vivi_code_assembler_insert_code (assembler, i++, __code); \
+  g_object_unref (__code); \
+} G_STMT_END
+#define INSERT_PUSH_STRING(assembler, i, str) G_STMT_START { \
+  ViviCodeAsm *__push = vivi_code_asm_push_new (); \
+  vivi_code_asm_push_add_string (VIVI_CODE_ASM_PUSH (__push), str); \
+  INSERT_CODE (assembler, i, __push); \
+} G_STMT_END
 static void
 insert_function_trace (ViviCodeAssembler *assembler, const char *name)
 {
-  guint i;
+  guint i, j;
 
+  i = 0;
+  if (VIVI_IS_CODE_ASM_POOL (vivi_code_assembler_get_code (assembler, i)))
+    i++;
+  INSERT_PUSH_STRING (assembler, i, name);
+  INSERT_CODE (assembler, i, vivi_code_asm_trace_new ());
   for (i = 0; i < vivi_code_assembler_get_n_codes (assembler); i++) {
     ViviCodeAsm *code = vivi_code_assembler_get_code (assembler, i);
-    if (VIVI_IS_CODE_ASM_FUNCTION (code) ||
-	VIVI_IS_CODE_ASM_FUNCTION2 (code)) {
-      const char *function_name = NULL;
-      if (i > 0 &&
-	  VIVI_IS_CODE_ASM_PUSH (vivi_code_assembler_get_code (assembler, i - 1))) {
-	ViviCodeAsmPush *push = VIVI_CODE_ASM_PUSH (vivi_code_assembler_get_code (assembler, i - 1));
-	guint n = vivi_code_asm_push_get_n_values (push);
-	if (n > 0) {
-	  ViviCodeConstantType type;
-	  n--;
-	  type = vivi_code_asm_push_get_value_type (push, n);
-	  if (type == VIVI_CODE_CONSTANT_STRING) {
-	    function_name = vivi_code_asm_push_get_string (push, n);
-	  } else if (type == VIVI_CODE_CONSTANT_CONSTANT_POOL ||
-		     type == VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG) {
-	    function_name = assembler_lookup_pool (assembler, 
-		vivi_code_asm_push_get_pool (push, n));
-	  }
-	}
-      }
+    if (VIVI_IS_CODE_ASM_FUNCTION (code)) {
+      const char *function_name = get_function_name (assembler, i);
+      char * const *args;
       if (function_name == NULL)
 	function_name = "anonymous function";
-      insert_trace (assembler, i + 1, function_name);
+      i++;
+      INSERT_PUSH_STRING (assembler, i, function_name);
+      INSERT_PUSH_STRING (assembler, i, " (");
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      args = vivi_code_asm_function_get_arguments (VIVI_CODE_ASM_FUNCTION (code));
+      for (j = 0; args && args[j]; j++) {
+	if (j > 0) {
+	  INSERT_PUSH_STRING (assembler, i, ", ");
+	  INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+	}
+	INSERT_PUSH_STRING (assembler, i, args[j]);
+	INSERT_CODE (assembler, i, vivi_code_asm_get_variable_new ());
+	INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      }
+      INSERT_PUSH_STRING (assembler, i, ")");
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      INSERT_CODE (assembler, i, vivi_code_asm_trace_new ());
+      i--;
+    } else if (VIVI_IS_CODE_ASM_FUNCTION2 (code)) {
+      const char *function_name = get_function_name (assembler, i);
+      ViviCodeAsmFunction2 *fun = VIVI_CODE_ASM_FUNCTION2 (code);
+      if (function_name == NULL)
+	function_name = "anonymous function";
+      i++;
+      INSERT_PUSH_STRING (assembler, i, function_name);
+      INSERT_PUSH_STRING (assembler, i, " (");
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      for (j = 0; j < vivi_code_asm_function2_get_n_arguments (fun); j++) {
+	guint preload = vivi_code_asm_function2_get_argument_preload (fun, j);
+	if (j > 0) {
+	  INSERT_PUSH_STRING (assembler, i, ", ");
+	  INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+	}
+	if (preload) {
+	  ViviCodeAsm *push = vivi_code_asm_push_new ();
+	  vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), preload);
+	  INSERT_CODE (assembler, i, push);
+	} else {
+	  INSERT_PUSH_STRING (assembler, i, 
+	      vivi_code_asm_function2_get_argument_name (fun, j));
+	  INSERT_CODE (assembler, i, vivi_code_asm_get_variable_new ());
+	}
+	INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      }
+      INSERT_PUSH_STRING (assembler, i, ")");
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      INSERT_CODE (assembler, i, vivi_code_asm_trace_new ());
+      i--;
     }
   }
-  if (VIVI_IS_CODE_ASM_POOL (vivi_code_assembler_get_code (assembler, 0)))
-    insert_trace (assembler, 1, name);
-  else
-    insert_trace (assembler, 0, name);
 }
 
 /*** INFRASTRUCTURE ***/

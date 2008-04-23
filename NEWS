@@ -1,4 +1,12 @@
 
+ 0.6.6 ("Faith Fighter")
+
+Here's another bugfix release.
+- fix a crash for palettized images
+- fix a crash for oversized images
+- make ALSA devices work that don't support mmap
+- compile fix for ARM
+
  0.6.4 ("College Humor")
 
 This is a security release. Please update as soon as possible.

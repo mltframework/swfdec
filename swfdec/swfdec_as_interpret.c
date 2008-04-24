@@ -1778,7 +1778,7 @@ swfdec_action_init_array (SwfdecAsContext *cx, guint action, const guint8 *data,
   }
   if (i != n) {
     SwfdecAsValue val;
-    SWFDEC_AS_VALUE_SET_INT (&val, i);
+    SWFDEC_AS_VALUE_SET_INT (&val, n);
     swfdec_as_object_set_variable (array, SWFDEC_AS_STR_length, &val);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (cx), array);

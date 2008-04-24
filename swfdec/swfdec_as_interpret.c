@@ -85,6 +85,7 @@ swfdec_action_next_frame (SwfdecAsContext *cx, guint action, const guint8 *data,
     SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
     if (movie->frame < movie->n_frames) {
       swfdec_sprite_movie_goto (movie, movie->frame + 1);
+      movie->playing = FALSE;
     } else {
       SWFDEC_INFO ("can't execute nextFrame, already at last frame");
     }

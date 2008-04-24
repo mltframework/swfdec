@@ -1865,6 +1865,9 @@ EXTRA_DIST = \
 	newobject-paths-7.swf.trace \
 	newobject-paths-8.swf \
 	newobject-paths-8.swf.trace \
+	nextframe-stop.xml \
+	nextframe-stop.swf \
+	nextframe-stop.swf.trace \
 	number.swf \
 	number.swf.trace \
 	number-properties.as \

@@ -2399,6 +2399,15 @@ EXTRA_DIST = \
 	push-weird.as \
 	push-weird.swf \
 	push-weird.swf.trace \
+	random-negative.as \
+	random-negative-5.swf \
+	random-negative-5.swf.trace \
+	random-negative-6.swf \
+	random-negative-6.swf.trace \
+	random-negative-7.swf \
+	random-negative-7.swf.trace \
+	random-negative-8.swf \
+	random-negative-8.swf.trace \
 	rectangle-construct.as \
 	rectangle-construct-5.swf \
 	rectangle-construct-5.swf.trace \

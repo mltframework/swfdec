@@ -26,22 +26,155 @@
 #include <swfdec/swfdec_script_internal.h>
 #include <swfdec/swfdec_tag.h>
 
+#include <vivified/code/vivi_code_asm_code_default.h>
+#include <vivified/code/vivi_code_asm_function.h>
+#include <vivified/code/vivi_code_asm_function2.h>
+#include <vivified/code/vivi_code_asm_pool.h>
+#include <vivified/code/vivi_code_asm_push.h>
 #include <vivified/code/vivi_code_assembler.h>
 #include <vivified/code/vivi_decompiler.h>
 
+typedef enum {
+  REWRITE_TRACE_FUNCTION_NAME = (1 << 0)
+} RewriteOptions;
+
+static const char *
+assembler_lookup_pool (ViviCodeAssembler *assembler, guint i)
+{
+  ViviCodeAsm *code = vivi_code_assembler_get_code (assembler, 0);
+  SwfdecConstantPool *pool;
+
+  if (!VIVI_IS_CODE_ASM_POOL (code))
+    return NULL;
+  pool = vivi_code_asm_pool_get_pool (VIVI_CODE_ASM_POOL (code));
+  if (i >= swfdec_constant_pool_size (pool))
+    return NULL;
+  return swfdec_constant_pool_get (pool, i);
+}
+
+static const char *
+get_function_name (ViviCodeAssembler *assembler, guint i)
+{
+  ViviCodeAsmPush *push;
+  guint n;
+
+  if (i == 0)
+    return NULL;
+  if (!VIVI_IS_CODE_ASM_PUSH (vivi_code_assembler_get_code (assembler, i - 1)))
+    return NULL;
+  push = VIVI_CODE_ASM_PUSH (vivi_code_assembler_get_code (assembler, i - 1));
+  n = vivi_code_asm_push_get_n_values (push);
+  if (n > 0) {
+    ViviCodeConstantType type;
+    n--;
+    type = vivi_code_asm_push_get_value_type (push, n);
+    if (type == VIVI_CODE_CONSTANT_STRING) {
+      return vivi_code_asm_push_get_string (push, n);
+    } else if (type == VIVI_CODE_CONSTANT_CONSTANT_POOL ||
+	       type == VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG) {
+      return assembler_lookup_pool (assembler, 
+	  vivi_code_asm_push_get_pool (push, n));
+    }
+  }
+  return NULL;
+}
+
+#define INSERT_CODE(assembler, i, code) G_STMT_START { \
+  ViviCodeAsm *__code = (code); \
+  vivi_code_assembler_insert_code (assembler, i++, __code); \
+  g_object_unref (__code); \
+} G_STMT_END
+#define INSERT_PUSH_STRING(assembler, i, str) G_STMT_START { \
+  ViviCodeAsm *__push = vivi_code_asm_push_new (); \
+  vivi_code_asm_push_add_string (VIVI_CODE_ASM_PUSH (__push), str); \
+  INSERT_CODE (assembler, i, __push); \
+} G_STMT_END
+static void
+insert_function_trace (ViviCodeAssembler *assembler, const char *name)
+{
+  guint i, j;
+
+  i = 0;
+  if (VIVI_IS_CODE_ASM_POOL (vivi_code_assembler_get_code (assembler, i)))
+    i++;
+  INSERT_PUSH_STRING (assembler, i, name);
+  INSERT_CODE (assembler, i, vivi_code_asm_trace_new ());
+  for (i = 0; i < vivi_code_assembler_get_n_codes (assembler); i++) {
+    ViviCodeAsm *code = vivi_code_assembler_get_code (assembler, i);
+    if (VIVI_IS_CODE_ASM_FUNCTION (code)) {
+      const char *function_name = get_function_name (assembler, i);
+      char * const *args;
+      if (function_name == NULL)
+	function_name = "anonymous function";
+      i++;
+      INSERT_PUSH_STRING (assembler, i, function_name);
+      INSERT_PUSH_STRING (assembler, i, " (");
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      args = vivi_code_asm_function_get_arguments (VIVI_CODE_ASM_FUNCTION (code));
+      for (j = 0; args && args[j]; j++) {
+	if (j > 0) {
+	  INSERT_PUSH_STRING (assembler, i, ", ");
+	  INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+	}
+	INSERT_PUSH_STRING (assembler, i, args[j]);
+	INSERT_CODE (assembler, i, vivi_code_asm_get_variable_new ());
+	INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      }
+      INSERT_PUSH_STRING (assembler, i, ")");
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      INSERT_CODE (assembler, i, vivi_code_asm_trace_new ());
+      i--;
+    } else if (VIVI_IS_CODE_ASM_FUNCTION2 (code)) {
+      const char *function_name = get_function_name (assembler, i);
+      ViviCodeAsmFunction2 *fun = VIVI_CODE_ASM_FUNCTION2 (code);
+      if (function_name == NULL)
+	function_name = "anonymous function";
+      i++;
+      INSERT_PUSH_STRING (assembler, i, function_name);
+      INSERT_PUSH_STRING (assembler, i, " (");
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      for (j = 0; j < vivi_code_asm_function2_get_n_arguments (fun); j++) {
+	guint preload = vivi_code_asm_function2_get_argument_preload (fun, j);
+	if (j > 0) {
+	  INSERT_PUSH_STRING (assembler, i, ", ");
+	  INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+	}
+	if (preload) {
+	  ViviCodeAsm *push = vivi_code_asm_push_new ();
+	  vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), preload);
+	  INSERT_CODE (assembler, i, push);
+	} else {
+	  INSERT_PUSH_STRING (assembler, i, 
+	      vivi_code_asm_function2_get_argument_name (fun, j));
+	  INSERT_CODE (assembler, i, vivi_code_asm_get_variable_new ());
+	}
+	INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      }
+      INSERT_PUSH_STRING (assembler, i, ")");
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
+      INSERT_CODE (assembler, i, vivi_code_asm_trace_new ());
+      i--;
+    }
+  }
+}
+
+/*** INFRASTRUCTURE ***/
+
 static SwfdecBuffer *
-do_script (SwfdecBuffer *buffer, guint version)
+do_script (SwfdecBuffer *buffer, guint flags, const char *name, guint version)
 {
   ViviCodeAssembler *assembler;
   SwfdecScript *script;
   GError *error = NULL;
 
-  script = swfdec_script_new (buffer, "script", version);
+  script = swfdec_script_new (buffer, name, version);
 
   assembler = VIVI_CODE_ASSEMBLER (vivi_disassemble_script (script));
   swfdec_script_unref (script);
 
   /* FIXME: modify script here! */
+  if (flags & REWRITE_TRACE_FUNCTION_NAME)
+    insert_function_trace (assembler, name);
 
   script = vivi_code_assembler_assemble_script (assembler, version, &error);
   g_object_unref (assembler);
@@ -60,7 +193,7 @@ do_script (SwfdecBuffer *buffer, guint version)
 }
 
 static SwfdecBuffer *
-process_buffer (SwfdecBuffer *original)
+process_buffer (SwfdecBuffer *original, guint flags)
 {
   SwfdecRect rect;
   SwfdecBits bits;
@@ -103,8 +236,11 @@ process_buffer (SwfdecBuffer *original)
 	{
 	  SwfdecBuffer *sub = swfdec_buffer_new_subbuffer (buffer, 2, buffer->length - 2);
 	  SwfdecBots *bots2 = swfdec_bots_open ();
-	  swfdec_bots_put_u16 (bots2, buffer->data[0] | buffer->data[1] << 8);
-	  sub = do_script (sub, version);
+	  guint sprite = buffer->data[0] | buffer->data[1] << 8;
+	  char *name = g_strdup_printf ("DoInitAction %u", sprite);
+	  swfdec_bots_put_u16 (bots2, sprite);
+	  sub = do_script (sub, flags, name, version);
+	  g_free (name);
 	  if (sub == NULL) {
 	    swfdec_bots_free (bots2);
 	    swfdec_bots_free (bots);
@@ -118,7 +254,7 @@ process_buffer (SwfdecBuffer *original)
 	}
 	break;
       case SWFDEC_TAG_DOACTION:
-	buffer = do_script (buffer, version);
+	buffer = do_script (buffer, flags, "DoAction", version);
 	if (buffer == NULL) {
 	  swfdec_bots_free (bots);
 	  swfdec_buffer_unref (original);
@@ -191,9 +327,10 @@ main (int argc, char *argv[])
 {
   GError *error = NULL;
   SwfdecBuffer *buffer;
+  gboolean trace_function_names = FALSE;
 
   GOptionEntry options[] = {
-    //{ "asm", 'a', 0, G_OPTION_ARG_NONE, &use_asm, "output assembler instead of decompiled script", NULL },
+    { "trace-function-names", 'n', 0, G_OPTION_ARG_NONE, &trace_function_names, "trace names of called functions", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -228,7 +365,8 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  buffer = process_buffer (buffer);
+  buffer = process_buffer (buffer,
+      (trace_function_names ? REWRITE_TRACE_FUNCTION_NAME : 0));
   if (buffer == NULL) {
     g_printerr ("\"%s\": Broken Flash file\n", argv[1]);
     return 1;

@@ -484,11 +484,17 @@ swfdec_gtk_widget_update_renderer (SwfdecGtkWidget *widget)
        * similar renderer */
       priv->renderer = swfdec_player_get_renderer (priv->player);
       g_object_ref (priv->renderer);
+    } else if (priv->renderer_set) {
+      cairo_surface_t *surface = swfdec_gtk_widget_create_renderer (priv->renderer_type, 1, 1);
+      if (surface) {
+	priv->renderer = swfdec_renderer_new_for_player (
+	    surface, priv->player);
+	swfdec_player_set_renderer (priv->player, priv->renderer);
+	cairo_surface_destroy (surface);
+      }
     } else {
       cairo_t *cr = gdk_cairo_create (GTK_WIDGET (widget)->window);
 
-      if (priv->renderer_set)
-	g_printerr ("FIXME: create the right renderer\n");
       priv->renderer = swfdec_renderer_new_for_player (
 	  cairo_get_target (cr), priv->player);
       swfdec_player_set_renderer (priv->player, priv->renderer);

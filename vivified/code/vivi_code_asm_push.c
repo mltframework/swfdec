@@ -184,7 +184,7 @@ vivi_code_asm_push_get_value_type (ViviCodeAsmPush *push, guint i)
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0);
   g_return_val_if_fail (i < push->offsets->len, 0);
 
-  return push->contents->ptr[GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, i))];
+  return push->contents->data[GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, i))];
 }
 
 void

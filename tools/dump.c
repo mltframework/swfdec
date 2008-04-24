@@ -156,6 +156,9 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	case SWFDEC_TAG_DOINITACTION:
 	  g_print ("   %4u init action\n", j);
 	  break;
+	case SWFDEC_TAG_SETBACKGROUNDCOLOR:
+	  g_print ("   %4u background color\n", j);
+	  break;
 	default:
 	  g_assert_not_reached ();
       }

@@ -124,7 +124,7 @@ swfdec_image_validate_size (SwfdecRenderer *renderer, guint width, guint height)
     size = G_MAXUINT;
   }
   if (size / 4 / width < height) {
-    SWFDEC_INFO ("%ux%u image doesn't fit into %zu bytes of cache", 
+    SWFDEC_ERROR ("%ux%u image doesn't fit into %zu bytes of cache", 
 	width, height, size);
     return FALSE;
   }

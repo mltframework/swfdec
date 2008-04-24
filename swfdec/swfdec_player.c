@@ -2228,7 +2228,8 @@ swfdec_player_init (SwfdecPlayer *player)
     priv->actions[i] = swfdec_ring_buffer_new_for_type (SwfdecPlayerAction, 16);
   }
   priv->external_actions = swfdec_ring_buffer_new_for_type (SwfdecPlayerExternalAction, 8);
-  priv->cache = swfdec_cache_new (16 * 1024 * 1024);
+  // Big cache is required to allow images in the sizes of 3000x2000
+  priv->cache = swfdec_cache_new (32 * 1024 * 1024);
   priv->socket_type = SWFDEC_TYPE_SOCKET;
 
   priv->runtime = g_timer_new ();

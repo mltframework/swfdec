@@ -262,27 +262,20 @@ try_parse_token (ParseData *data, ViviParserScannerToken token)
   return TRUE;
 }
 
-static gboolean
-try_parse_automatic_semicolon (ParseData *data)
+static void
+parse_automatic_semicolon (ParseData *data)
 {
   if (try_parse_token (data, TOKEN_SEMICOLON))
-    return TRUE;
+    return;
   if (peek_line_terminator (data))
-    return TRUE;
+    return;
 
   vivi_parser_scanner_peek_next_token (data->scanner);
   if (data->scanner->next_token == TOKEN_BRACE_LEFT ||
       data->scanner->next_token == TOKEN_EOF)
-    return TRUE;
+    return;
 
-  return FALSE;
-}
-
-static void
-parse_automatic_semicolon (ParseData *data)
-{
-  if (!try_parse_automatic_semicolon (data))
-    vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
+  vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
 }
 
 G_GNUC_WARN_UNUSED_RESULT static gboolean
@@ -1098,6 +1091,7 @@ parse_asm_code (ParseData *data)
     if (asm_statements[i].parse != NULL) {
       return asm_statements[i].parse (data);
     } else {
+      parse_automatic_semicolon (data);
       g_assert (asm_statements[i].constructor != NULL);
       return asm_statements[i].constructor ();
     }
@@ -1130,13 +1124,11 @@ parse_asm_statement (ParseData *data)
       code = parse_asm_code (data);
       vivi_code_assembler_add_code (assembler, code);
       g_object_unref (code);
-    } while (try_parse_automatic_semicolon (data) &&
-	!peek_token (data, TOKEN_BRACE_RIGHT) &&
-	!peek_token (data, TOKEN_EOF));
+    } while (peek_token (data, TOKEN_IDENTIFIER));
 
     if (!try_parse_token (data, TOKEN_BRACE_RIGHT)) {
-      vivi_parser_error_unexpected_or (data, TOKEN_BRACE_RIGHT, TOKEN_COMMA,
-	  TOKEN_NONE);
+      vivi_parser_error_unexpected_or (data, TOKEN_BRACE_RIGHT,
+	  TOKEN_IDENTIFIER, TOKEN_NONE);
     }
   }
 

@@ -40,7 +40,7 @@ struct _ViviCodeReturn
 {
   ViviCodeStatement	statement;
 
-  ViviCodeValue *	value;
+  ViviCodeValue *	value;		/* value to return or NULL if none */
 };
 
 struct _ViviCodeReturnClass

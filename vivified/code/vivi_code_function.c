@@ -28,6 +28,7 @@
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_assembler.h"
+#include "vivi_code_asm_function2.h"
 
 #include "vivi_decompiler.h"
 
@@ -84,30 +85,27 @@ vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
 static void
 vivi_code_function_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
-  g_printerr ("Implement function");
-#if 0
   ViviCodeFunction *function = VIVI_CODE_FUNCTION (token);
   ViviCodeLabel *label_end;
-  ViviCodeAsmDefineFunction2 *function;
+  ViviCodeAsm *code;
   guint i;
 
-  label_end = vivi_code_label_new_internal ("function_end");
+  label_end = VIVI_CODE_LABEL (vivi_code_label_new_internal ("function_end"));
 
-  define_function = vivi_code_asm_define_function2_new (NULL, 0, 0, label_end)
+  code = vivi_code_asm_function2_new (label_end, function->name, 0, 0);
   for (i = 0; i < function->arguments->len; i++) {
-    vivi_code_asm_define_function2_add_argument (
+    vivi_code_asm_function2_add_argument (VIVI_CODE_ASM_FUNCTION2 (code),
 	g_ptr_array_index (function->arguments, i), 0);
   }
 
-  vivi_code_assembler_add_code (assembler, define_function);
-  g_object_unref (define_function);
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
 
   if (function->body != NULL)
     vivi_code_statement_compile (function->body, assembler);
 
-  vivi_code_assembler_add_code (assembler, label_end);
+  vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (label_end));
   g_object_unref (label_end);
-#endif
 }
 
 static gboolean

@@ -50,6 +50,7 @@ struct _ViviCodeLabelClass
 GType			vivi_code_label_get_type   	(void);
 
 ViviCodeStatement *	vivi_code_label_new		(const char *		name);
+ViviCodeStatement *	vivi_code_label_new_internal	(const char *		prefix);
 
 const char *		vivi_code_label_get_name	(ViviCodeLabel *	label);
 

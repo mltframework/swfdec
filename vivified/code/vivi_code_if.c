@@ -26,6 +26,8 @@
 #include "vivi_code_printer.h"
 #include "vivi_code_label.h"
 #include "vivi_code_assembler.h"
+#include "vivi_code_asm_if.h"
+#include "vivi_code_asm_jump.h"
 
 G_DEFINE_TYPE (ViviCodeIf, vivi_code_if, VIVI_TYPE_CODE_STATEMENT)
 
@@ -129,35 +131,32 @@ vivi_code_if_print (ViviCodeToken *token, ViviCodePrinter *printer)
 static void
 vivi_code_if_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
-  g_printerr ("Implement if\n");
-#if 0
   ViviCodeIf *stmt = VIVI_CODE_IF (token);
-  ViviCodeLabel *label_if, *label_else;
+  ViviCodeLabel *label_if, *label_end;
   ViviCodeAsm *code;
 
   vivi_code_value_compile (stmt->condition, assembler);
 
-  label_if = vivi_code_label_new_internal ("if");
-  code = vivi_code_asm_if_new (label_if)
+  label_if = VIVI_CODE_LABEL (vivi_code_label_new_internal ("if"));
+  code = vivi_code_asm_if_new (label_if);
   vivi_code_assembler_add_code (assembler, code);
   g_object_unref (code);
 
   if (stmt->else_statement)
     vivi_code_statement_compile (stmt->else_statement, assembler);
 
-  label_end = vivi_code_label_new_internal ("end");
+  label_end = VIVI_CODE_LABEL (vivi_code_label_new_internal ("end"));
   code = vivi_code_asm_jump_new (label_end);
   vivi_code_assembler_add_code (assembler, code);
   g_object_unref (code);
 
-  vivi_code_assembler_add_code (assembler, label_if);
+  vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (label_if));
   g_object_unref (label_if);
 
-  vivi_code_assembler_compile_statement (assembler, stmt->if_statement);
+  vivi_code_statement_compile (stmt->if_statement, assembler);
 
-  vivi_code_assembler_add_code (assembler, label_end);
+  vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (label_end));
   g_object_unref (label_end);
-#endif
 }
 
 static void

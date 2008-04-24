@@ -70,15 +70,12 @@ vivi_code_label_print (ViviCodeToken *token, ViviCodePrinter *printer)
 static void
 vivi_code_label_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
-  g_printerr ("Implement label\n");
-#if 0
   ViviCodeLabel *label = VIVI_CODE_LABEL (token);
-  ViviCodeAsm *code =
-    VIVI_CODE_ASM (vivi_code_label_new_internal_from_label (label));
+  ViviCodeAsm *code;
 
+  code = VIVI_CODE_ASM (vivi_code_label_new_internal (label->name));
   vivi_code_assembler_add_code (assembler, code);
   g_object_unref (code);
-#endif
 }
 
 static gboolean
@@ -118,6 +115,13 @@ vivi_code_label_new (const char *name)
   label->name = g_strdup (name);
 
   return VIVI_CODE_STATEMENT (label);
+}
+
+ViviCodeStatement *
+vivi_code_label_new_internal (const char *prefix)
+{
+  // FIXME
+  return vivi_code_label_new (prefix);
 }
 
 const char *

@@ -29,6 +29,7 @@
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_function.h"
 #include "vivi_code_asm_function2.h"
+#include "vivi_code_asm_get_url.h"
 #include "vivi_code_asm_if.h"
 #include "vivi_code_asm_jump.h"
 #include "vivi_code_asm_pool.h"
@@ -42,6 +43,7 @@
 #define vivi_disassembler_warning(assembler,...) G_STMT_START { \
   char *__s = g_strdup_printf (__VA_ARGS__); \
   ViviCodeStatement *comment = vivi_code_comment_new (__s); \
+  g_printerr ("WARNING: %s\n", __s); \
   vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (comment)); \
   g_object_unref (comment); \
   g_free (__s); \
@@ -51,6 +53,21 @@ static ViviCodeAsm * (* simple_commands[0x80]) (void) = {
 #define DEFAULT_ASM(a,b,c) [c] = vivi_code_asm_ ## b ## _new,
 #include "vivi_code_defaults.h"
 };
+
+static void
+vivi_disassemble_get_url (ViviCodeAssembler *assembler, SwfdecBits *bits, guint version)
+{
+  ViviCodeAsm *code;
+  char *url, *target;
+
+  url = swfdec_bits_get_string (bits, version);
+  target = swfdec_bits_get_string (bits, version);
+  code = vivi_code_asm_get_url_new (url, target);
+  g_free (url);
+  g_free (target);
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
+}
 
 static void
 vivi_disassemble_store (ViviCodeAssembler *assembler, SwfdecBits *bits)
@@ -362,8 +379,10 @@ vivi_disassemble_script (SwfdecScript *script)
 	    g_object_unref (fun);
 	  }
 	  break;
-        case SWFDEC_AS_ACTION_GOTO_FRAME:
         case SWFDEC_AS_ACTION_GET_URL:
+	  vivi_disassemble_get_url (assembler, &bits, script->version);
+	  break;
+        case SWFDEC_AS_ACTION_GOTO_FRAME:
         case SWFDEC_AS_ACTION_STRICT_MODE:
         case SWFDEC_AS_ACTION_WAIT_FOR_FRAME:
         case SWFDEC_AS_ACTION_SET_TARGET:

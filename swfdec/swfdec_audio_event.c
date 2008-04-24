@@ -84,18 +84,23 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
   guint offset = event->offset + start;
-  guint loop, samples, global_offset, pos, i, granularity, channels;
+  guint loop, samples, global_offset, pos, i, channels;
   gint16 *dest_end;
 
   if (event->n_samples == 0)
     return;
 
-  granularity = swfdec_audio_format_get_granularity (event->decoded_format);
   channels = swfdec_audio_format_get_channels (event->decoded_format);
 
-  global_offset = (channels - 1) * granularity * (event->loop *
-    ((event->stop_sample != 0 ? event->stop_sample : event->n_samples) -
-     event->start_sample) + event->offset - event->start_sample);
+  {
+    guint granularity =
+      swfdec_audio_format_get_granularity (event->decoded_format);
+    guint loop_length = (event->stop_sample != 0 ? event->stop_sample :
+	event->n_samples) - event->start_sample;
+
+    global_offset = channels * granularity * (event->loop * loop_length +
+      event->offset - event->start_sample);
+  }
 
   dest_end = dest;
   loop = event->loop + offset / event->n_samples;

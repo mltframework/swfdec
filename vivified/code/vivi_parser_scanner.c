@@ -248,6 +248,7 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
     scanner->next_token = TOKEN_EOF;
     scanner->next_value.v_string = NULL;
   } else {
+    scanner->next_line_terminator = FALSE;
     do {
       scanner->next_token = yylex ();
       if (scanner->next_token == TOKEN_LINE_TERMINATOR) {

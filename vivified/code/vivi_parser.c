@@ -29,6 +29,7 @@
 #include "vivi_parser_scanner.h"
 
 #include "vivi_code_and.h"
+#include "vivi_code_asm_code_default.h"
 #include "vivi_code_assignment.h"
 #include "vivi_code_binary_default.h"
 #include "vivi_code_block.h"
@@ -65,6 +66,7 @@
 #include "vivi_compiler_goto_name.h"
 
 #include "vivi_code_text_printer.h"
+#include "vivi_code_assembler.h"
 
 enum {
   ERROR_TOKEN_LITERAL = TOKEN_LAST + 1,
@@ -260,20 +262,27 @@ try_parse_token (ParseData *data, ViviParserScannerToken token)
   return TRUE;
 }
 
-static void
-parse_automatic_semicolon (ParseData *data)
+static gboolean
+try_parse_automatic_semicolon (ParseData *data)
 {
   if (try_parse_token (data, TOKEN_SEMICOLON))
-    return;
+    return TRUE;
   if (peek_line_terminator (data))
-    return;
+    return TRUE;
 
   vivi_parser_scanner_peek_next_token (data->scanner);
   if (data->scanner->next_token == TOKEN_BRACE_LEFT ||
       data->scanner->next_token == TOKEN_EOF)
-    return;
+    return TRUE;
 
-  vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
+  return FALSE;
+}
+
+static void
+parse_automatic_semicolon (ParseData *data)
+{
+  if (!try_parse_automatic_semicolon (data))
+    vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
 }
 
 G_GNUC_WARN_UNUSED_RESULT static gboolean
@@ -1013,6 +1022,125 @@ parse_variable_declaration (ParseData *data)
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (assignment));
 
   return vivi_parser_join_statements (statement_right, assignment);
+}
+
+// asm functions
+
+static ViviCodeAsm *
+parse_asm_if (ParseData *data)
+{
+  return NULL;
+}
+
+typedef ViviCodeAsm *(*AsmConstructor) (void);
+typedef ViviCodeAsm * (*ParseAsmFunction) (ParseData *data);
+
+typedef struct {
+  const char *			name;
+  AsmConstructor		constructor;
+  ParseAsmFunction		parse;
+} AsmStatement;
+
+static const AsmStatement asm_statements[] = {
+#define DEFAULT_ASM(CapsName, underscore_name, byte_code) \
+  { G_STRINGIFY (underscore_name), vivi_code_asm_ ## underscore_name ## _new, NULL },
+#include "vivi_code_defaults.h"
+#undef DEFAULT_ASM
+  { "if", NULL, parse_asm_if }
+};
+#if 0
+DEFAULT_ASM (GotoFrame, goto_frame, SWFDEC_AS_ACTION_GOTO_FRAME)
+DEFAULT_ASM (GetUrl, get_url, SWFDEC_AS_ACTION_GET_URL)
+DEFAULT_ASM (StoreRegister, store_register, SWFDEC_AS_ACTION_STORE_REGISTER)
+DEFAULT_ASM (ConstantPool, constant_pool, SWFDEC_AS_ACTION_CONSTANT_POOL)
+DEFAULT_ASM (StrictMode, strict_mode, SWFDEC_AS_ACTION_STRICT_MODE)
+DEFAULT_ASM (WaitForFrame, wait_for_frame, SWFDEC_AS_ACTION_WAIT_FOR_FRAME)
+DEFAULT_ASM (SetTarget, set_target, SWFDEC_AS_ACTION_SET_TARGET)
+DEFAULT_ASM (GotoLabel, goto_label, SWFDEC_AS_ACTION_GOTO_LABEL)
+DEFAULT_ASM (WaitForFrame2, wait_for_frame2, SWFDEC_AS_ACTION_WAIT_FOR_FRAME2)
+DEFAULT_ASM (DefineFunction2, define_function2, SWFDEC_AS_ACTION_DEFINE_FUNCTION2)
+DEFAULT_ASM (Try, try, SWFDEC_AS_ACTION_TRY)
+DEFAULT_ASM (With, with, SWFDEC_AS_ACTION_WITH)
+DEFAULT_ASM (Push, push, SWFDEC_AS_ACTION_PUSH)
+DEFAULT_ASM (Jump, jump, SWFDEC_AS_ACTION_JUMP)
+DEFAULT_ASM (GetUrl2, get_url2, SWFDEC_AS_ACTION_GET_URL2)
+DEFAULT_ASM (DefineFunction, define_function, SWFDEC_AS_ACTION_DEFINE_FUNCTION)
+DEFAULT_ASM (If, if, SWFDEC_AS_ACTION_IF)
+DEFAULT_ASM (Call, call, SWFDEC_AS_ACTION_CALL)
+DEFAULT_ASM (GotoFrame2, goto_frame2, SWFDEC_AS_ACTION_GOTO_FRAME2)
+#endif
+
+static ViviCodeAsm *
+parse_asm_code (ParseData *data)
+{
+  guint i;
+  char *identifier;
+
+  identifier = g_strdup (parse_identifier_value (data));
+
+  if (try_parse_token (data, TOKEN_COLON)) {
+    ViviCodeAsm *code = VIVI_CODE_ASM (vivi_code_label_new (identifier));
+    g_free (identifier);
+    return code;
+  } else {
+    for (i = 0; i < G_N_ELEMENTS (asm_statements); i++) {
+      if (g_ascii_strcasecmp (identifier, asm_statements[i].name) == 0)
+	break;
+    }
+    if (i >= G_N_ELEMENTS (asm_statements)) {
+      vivi_parser_error (data, "Unknown asm statement: %s", identifier);
+      // FIXME
+      vivi_parser_scanner_get_next_token (data->scanner);
+      i = 0;
+    }
+    g_free (identifier);
+
+    if (asm_statements[i].parse != NULL) {
+      return asm_statements[i].parse (data);
+    } else {
+      g_assert (asm_statements[i].constructor != NULL);
+      return asm_statements[i].constructor ();
+    }
+  }
+}
+
+static gboolean
+peek_asm_statement (ParseData *data)
+{
+  if (!peek_token (data, TOKEN_IDENTIFIER))
+    return FALSE;
+
+  return (g_ascii_strcasecmp (peek_identifier_value (data), "asm") == 0);
+}
+
+static ViviCodeStatement *
+parse_asm_statement (ParseData *data)
+{
+  ViviCodeAssembler *assembler;
+  ViviCodeAsm *code;
+
+  assembler = VIVI_CODE_ASSEMBLER (vivi_code_assembler_new ());
+
+  if (g_ascii_strcasecmp (parse_identifier_value (data), "asm") != 0)
+    vivi_parser_error (data, "Expected 'asm'");
+  parse_token (data, TOKEN_BRACE_LEFT);
+
+  if (!try_parse_token (data, TOKEN_BRACE_RIGHT)) {
+    do {
+      code = parse_asm_code (data);
+      vivi_code_assembler_add_code (assembler, code);
+      g_object_unref (code);
+    } while (try_parse_automatic_semicolon (data) &&
+	!peek_token (data, TOKEN_BRACE_RIGHT) &&
+	!peek_token (data, TOKEN_EOF));
+
+    if (!try_parse_token (data, TOKEN_BRACE_RIGHT)) {
+      vivi_parser_error_unexpected_or (data, TOKEN_BRACE_RIGHT, TOKEN_COMMA,
+	  TOKEN_NONE);
+    }
+  }
+
+  return VIVI_CODE_STATEMENT (assembler);
 }
 
 // builtin functions
@@ -2606,6 +2734,7 @@ static const struct {
   PeekFunction peek;
   ParseStatementFunction parse;
 } statement_functions[] = {
+  { peek_asm_statement, parse_asm_statement },
   { peek_builtin_statement, parse_builtin_statement },
   { peek_block, parse_block },
   { peek_variable_statement, parse_variable_statement },

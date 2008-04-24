@@ -70,6 +70,17 @@ vivi_code_assembler_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_assembler_compile (ViviCodeToken *token, ViviCodeAssembler *other)
+{
+  ViviCodeAssembler *self = VIVI_CODE_ASSEMBLER (token);
+  guint i;
+
+  for (i = 0; i < self->codes->len; i++) {
+    vivi_code_assembler_add_code (other, g_ptr_array_index (self->codes, i));
+  }
+}
+
+static void
 vivi_code_assembler_class_init (ViviCodeAssemblerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -79,6 +90,7 @@ vivi_code_assembler_class_init (ViviCodeAssemblerClass *klass)
   object_class->dispose = vivi_code_assembler_dispose;
 
   token_class->print = vivi_code_assembler_print;
+  token_class->compile = vivi_code_assembler_compile;
 
   code_class->optimize = vivi_code_assembler_optimize;
 }

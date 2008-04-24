@@ -101,6 +101,7 @@ swfdec_action_previous_frame (SwfdecAsContext *cx, guint action, const guint8 *d
     SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
     if (movie->frame > 1) {
       swfdec_sprite_movie_goto (movie, movie->frame - 1);
+      movie->playing = FALSE;
     } else {
       SWFDEC_INFO ("can't execute previousFrame, already at first frame");
     }

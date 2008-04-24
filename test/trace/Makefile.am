@@ -2229,6 +2229,9 @@ EXTRA_DIST = \
 	point-properties-8.swf.trace \
 	preload.swf \
 	preload.swf.trace \
+	previousframe-stop.xml \
+	previousframe-stop.swf \
+	previousframe-stop.swf.trace \
 	print-job-init.as \
 	print-job-init-5.swf \
 	print-job-init-5.swf.trace \

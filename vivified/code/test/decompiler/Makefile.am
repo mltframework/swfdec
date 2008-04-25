@@ -1,7 +1,7 @@
-check-local: ../vivi-decompile
+check-local: $(top_builddir)/vivified/code/vivi-decompile
 	RESULT=""; \
 	for file in $(srcdir)/*.swf; do \
-	  echo "$$file ..." && ../vivi-decompile $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
+	  echo "$$file ..." && $(top_builddir)/vivified/code/vivi-decompile $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
 	done; \
 	if test "x$$RESULT" == "x"; then \
 	  echo "OK"; \

@@ -239,9 +239,11 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
     value->line_terminator = FALSE;
     value->position = 0; /* FIXME */
     value->token = vivi_parser_scanner_lex (scanner->scanner, value);
+#if 0
     g_print ("%u:%u %c %s\n", value->line_number, value->column, 
 	value->line_terminator ? '+' : '-',
 	vivi_parser_scanner_token_name (value->token));
+#endif
     value->line_number = vivi_parser_scanner_get_lineno (scanner->scanner);
   }
 }

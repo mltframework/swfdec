@@ -184,7 +184,8 @@ replace_random (ViviCodeAssembler *assembler, guint init)
     vivi_code_statement_compile (statement, asm2);
     g_object_unref (statement);
     for (j = 0; j < vivi_code_assembler_get_n_codes (asm2); j++) {
-      INSERT_CODE (assembler, i, vivi_code_assembler_get_code (asm2, j));
+      vivi_code_assembler_insert_code (assembler, i++,
+	  vivi_code_assembler_get_code (asm2, j));
     }
     g_object_unref (asm2);
   }

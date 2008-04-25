@@ -1,4 +1,4 @@
-%{
+%top{
 /* Vivified
  * Copyright (C) 2008 Pekka Lampila <pekka.lampila@iki.fi>
  *
@@ -20,9 +20,12 @@
 
 #include "vivi_parser_scanner.h"
 
-ViviParserScannerValue lex_value;
+#define YY_DECL int yylex (ViviParserValue *value)
+extern YY_DECL;
+}
+
+%{
 guint lex_line_number = 0;
-guint lex_column = 0;
 gsize lex_position = 0;
 
 static void new_line (void);
@@ -34,6 +37,8 @@ static GString *string = NULL;
 %option			noyywrap
 %option			nostdinit
 %option			never-interactive
+%option			outfile="vivi_parser_scanner_lex.c"
+%option			header-file="vivi_parser_scanner_lex.h"
 
 identifier_start	[$_a-zA-Z]
 identifier_part		[$_a-zA-Z0-9]
@@ -51,8 +56,8 @@ identifier_part		[$_a-zA-Z0-9]
   <<EOF>>		{
 			  count ();
 			  BEGIN(INITIAL);
-			  lex_value.type = VALUE_TYPE_ERROR;
-			  lex_value.v_error =
+			  value->type = VALUE_TYPE_ERROR;
+			  value->value.v_error =
 			    g_strdup ("Unterminated comment");
 			  return TOKEN_ERROR;
 			}
@@ -201,36 +206,36 @@ identifier_part		[$_a-zA-Z0-9]
 "null"			{ count (); return TOKEN_NULL; }
 "true"			{
 			  count ();
-			  lex_value.type = VALUE_TYPE_BOOLEAN;
-			  lex_value.v_boolean = 1;
+			  value->type = VALUE_TYPE_BOOLEAN;
+			  value->value.v_boolean = 1;
 			  return TOKEN_BOOLEAN;
 			}
 "false"			{
 			  count ();
-			  lex_value.type = VALUE_TYPE_BOOLEAN;
-			  lex_value.v_boolean = 0;
+			  value->type = VALUE_TYPE_BOOLEAN;
+			  value->value.v_boolean = 0;
 			  return TOKEN_BOOLEAN;
 			}
 
 0[xX][0-9a-fA-F]+	{
 			  count ();
-			  lex_value.type = VALUE_TYPE_NUMBER;
-			  lex_value.v_number =
+			  value->type = VALUE_TYPE_NUMBER;
+			  value->value.v_number =
 			    g_ascii_strtoull (yytext, NULL, 16);
 			  return TOKEN_NUMBER;
 			}
 
 ([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-]?[0-9]+)? {
 			  count ();
-			  lex_value.type = VALUE_TYPE_NUMBER;
-			  lex_value.v_number = g_ascii_strtod (yytext, NULL);
+			  value->type = VALUE_TYPE_NUMBER;
+			  value->value.v_number = g_ascii_strtod (yytext, NULL);
 			  return TOKEN_NUMBER;
 			}
 
 \.[0-9]+([eE][+-]?[0-9]+)? {
 			  count ();
-			  lex_value.type = VALUE_TYPE_NUMBER;
-			  lex_value.v_number = g_ascii_strtod (yytext, NULL);
+			  value->type = VALUE_TYPE_NUMBER;
+			  value->value.v_number = g_ascii_strtod (yytext, NULL);
 			  return TOKEN_NUMBER;
 			}
 
@@ -244,16 +249,16 @@ identifier_part		[$_a-zA-Z0-9]
   \"			{
 			  count ();
 			  BEGIN(INITIAL);
-			  lex_value.type = VALUE_TYPE_STRING;
-			  lex_value.v_string = g_string_free (string, FALSE);
+			  value->type = VALUE_TYPE_STRING;
+			  value->value.v_string = g_string_free (string, FALSE);
 			  return TOKEN_STRING;
 			}
   \n			{
 			  count ();
 			  BEGIN(INITIAL);
 			  g_string_free (string, TRUE);
-			  lex_value.type = VALUE_TYPE_ERROR;
-			  lex_value.v_error = g_strdup (
+			  value->type = VALUE_TYPE_ERROR;
+			  value->value.v_error = g_strdup (
 			      "Unterminated string constant");
 			  return TOKEN_ERROR;
 			}
@@ -262,8 +267,8 @@ identifier_part		[$_a-zA-Z0-9]
 			  count ();
 			  result = g_ascii_strtoull (yytext + 1, NULL, 8);
 			  if (result > 0xff || result == 0) {
-			    lex_value.type = VALUE_TYPE_ERROR;
-			    lex_value.v_error = g_strdup_printf (
+			    value->type = VALUE_TYPE_ERROR;
+			    value->value.v_error = g_strdup_printf (
 				"Invalid escape sequence %s", yytext);
 			    return TOKEN_ERROR;
 			  } else {
@@ -272,8 +277,8 @@ identifier_part		[$_a-zA-Z0-9]
 			}
   \\[0-9]+		{
 			  count ();
-			  lex_value.type = VALUE_TYPE_ERROR;
-			  lex_value.v_error = g_strdup_printf (
+			  value->type = VALUE_TYPE_ERROR;
+			  value->value.v_error = g_strdup_printf (
 			      "Invalid escape sequence %s", yytext);
 			  return TOKEN_ERROR;
 			}
@@ -282,8 +287,8 @@ identifier_part		[$_a-zA-Z0-9]
 			  count ();
 			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
 			  if (result == 0) {
-			    lex_value.type = VALUE_TYPE_ERROR;
-			    lex_value.v_error = g_strdup_printf (
+			    value->type = VALUE_TYPE_ERROR;
+			    value->value.v_error = g_strdup_printf (
 				"Invalid escape sequence %s", yytext);
 			    return TOKEN_ERROR;
 			  } else {
@@ -308,15 +313,15 @@ identifier_part		[$_a-zA-Z0-9]
 
 {identifier_start}({identifier_part})* {
 			  count ();
-			  lex_value.type = VALUE_TYPE_IDENTIFIER;
-			  lex_value.v_identifier = g_strdup (yytext);
+			  value->type = VALUE_TYPE_IDENTIFIER;
+			  value->value.v_identifier = g_strdup (yytext);
 			  return TOKEN_IDENTIFIER;
 			}
 
 .			{
 			  count ();
-			  lex_value.type = VALUE_TYPE_ERROR;
-			  lex_value.v_error = g_strdup_printf (
+			  value->type = VALUE_TYPE_ERROR;
+			  value->value.v_error = g_strdup_printf (
 			      "Unknown character '%c'", yytext[0]);
 			  return TOKEN_ERROR;
 			}

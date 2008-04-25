@@ -2,12 +2,22 @@ SUBDIRS = test
 
 noinst_LTLIBRARIES = libvivified-parser-lex.la libvivified-compiler.la
 
+BUILT_SOURCES = \
+	vivi_parser_scanner_lex.c \
+	vivi_parser_scanner_lex.h
+
+vivi_parser_scanner_lex.h: vivi_parser_scanner_lex.c
+	$(LEX) vivi_parser_scanner_lex.l
+
+vivi_parser_scanner_lex.c: vivi_parser_scanner_lex.l
+	$(LEX) vivi_parser_scanner_lex.l
+
 # we create own .la for lex generated code, so we can disable some warnings
 libvivified_parser_lex_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) -Wno-switch-default -Wno-missing-declarations -Wno-missing-prototypes -Wno-sign-compare -Wno-unused-function -Wno-missing-noreturn
 libvivified_parser_lex_la_LDFLAGS = $(SWFDEC_LIBS)
 
 libvivified_parser_lex_la_SOURCES = \
-	vivi_parser_scanner_lex.l
+	vivi_parser_scanner_lex.c
 
 libvivified_compiler_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS)
 libvivified_compiler_la_LDFLAGS = $(SWFDEC_LIBS)
@@ -156,7 +166,7 @@ noinst_HEADERS = \
 	vivi_decompiler.h \
 	vivi_decompiler_block.h \
 	vivi_decompiler_duplicate.h \
-	vivi_decompiler_state.h
+	vivi_decompiler_state.h \
 	vivi_decompiler_unknown.h \
 	vivi_parser.h \
 	vivi_parser_scanner.h \

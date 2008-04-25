@@ -160,6 +160,7 @@ vivi_parser_error (ParseData *data, const char *format, ...)
 {
   va_list args;
   char *message;
+  const ViviParserValue *val;
 
   g_return_if_fail (data != NULL);
   g_return_if_fail (format != NULL);
@@ -168,7 +169,8 @@ vivi_parser_error (ParseData *data, const char *format, ...)
   message = g_strdup_vprintf (format, args);
   va_end (args);
 
-  g_printerr ("%i: error: %s\n", data->scanner->next_line_number, message);
+  val = vivi_parser_scanner_get_value (data->scanner, 1);
+  g_printerr ("%i: error: %s\n", val->line_number, message);
 
   g_free (message);
 
@@ -201,8 +203,8 @@ vivi_parser_error_unexpected_or (ParseData *data, ...)
 
   g_string_append (message, " before ");
 
-  g_string_append (message,
-      vivi_parser_token_name (data->scanner->next_token));
+  g_string_append (message, vivi_parser_token_name (
+	vivi_parser_scanner_peek_next_token (data->scanner)));
 
   vivi_parser_error (data, "%s", g_string_free (message, FALSE));
 }
@@ -230,22 +232,19 @@ vivi_parser_error_unexpected_line_terminator (ParseData *data, guint expected)
 G_GNUC_WARN_UNUSED_RESULT static gboolean
 peek_line_terminator (ParseData *data)
 {
-  vivi_parser_scanner_peek_next_token (data->scanner);
-  return data->scanner->next_line_terminator;
+  return vivi_parser_scanner_get_value (data->scanner, 1)->line_terminator;
 }
 
 G_GNUC_WARN_UNUSED_RESULT static gboolean
 peek_token (ParseData *data, ViviParserScannerToken token)
 {
-  vivi_parser_scanner_peek_next_token (data->scanner);
-  return (data->scanner->next_token == token);
+  return vivi_parser_scanner_peek_next_token (data->scanner) == token;
 }
 
 static void
 parse_token (ParseData *data, ViviParserScannerToken token)
 {
-  vivi_parser_scanner_peek_next_token (data->scanner);
-  if (data->scanner->next_token != token) {
+  if (vivi_parser_scanner_peek_next_token (data->scanner) != token) {
     vivi_parser_error_unexpected (data, token);
   } else {
     vivi_parser_scanner_get_next_token (data->scanner);
@@ -265,14 +264,15 @@ try_parse_token (ParseData *data, ViviParserScannerToken token)
 static void
 parse_automatic_semicolon (ParseData *data)
 {
+  ViviParserScannerToken token;
+
   if (try_parse_token (data, TOKEN_SEMICOLON))
     return;
   if (peek_line_terminator (data))
     return;
 
-  vivi_parser_scanner_peek_next_token (data->scanner);
-  if (data->scanner->next_token == TOKEN_BRACE_LEFT ||
-      data->scanner->next_token == TOKEN_EOF)
+  token = vivi_parser_scanner_peek_next_token (data->scanner);
+  if (token == TOKEN_BRACE_LEFT || token == TOKEN_EOF)
     return;
 
   vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
@@ -517,7 +517,7 @@ vivi_parser_add_label (ParseData *data, ViviCodeLabel *label)
 static gsize
 vivi_parser_get_position (ParseData *data)
 {
-  return data->scanner->position;
+  return vivi_parser_scanner_get_value (data->scanner, 0)->position;
 }
 
 static void
@@ -621,8 +621,10 @@ parse_null (ParseData *data)
 G_GNUC_UNUSED static gboolean
 peek_boolean_value (ParseData *data)
 {
-  if (data->scanner->next_value.type == VALUE_TYPE_BOOLEAN) {
-    return data->scanner->next_value.v_boolean;
+  const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
+
+  if (value->type == VALUE_TYPE_BOOLEAN) {
+    return value->value.v_boolean;
   } else {
     return FALSE;
   }
@@ -631,10 +633,13 @@ peek_boolean_value (ParseData *data)
 static gboolean
 parse_boolean_value (ParseData *data)
 {
+  const ViviParserValue *value;
+  
   parse_token (data, TOKEN_BOOLEAN);
 
-  if (data->scanner->value.type == VALUE_TYPE_BOOLEAN) {
-    return data->scanner->value.v_boolean;
+  value = vivi_parser_scanner_get_value (data->scanner, 0);
+  if (value->type == VALUE_TYPE_BOOLEAN) {
+    return value->value.v_boolean;
   } else {
     return FALSE;
   }
@@ -663,8 +668,10 @@ parse_boolean (ParseData *data)
 G_GNUC_UNUSED static double
 peek_numeric_value (ParseData *data)
 {
-  if (data->scanner->next_value.type == VALUE_TYPE_NUMBER) {
-    return data->scanner->next_value.v_number;
+  const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
+
+  if (value->type == VALUE_TYPE_NUMBER) {
+    return value->value.v_number;
   } else {
     return NAN;
   }
@@ -673,10 +680,13 @@ peek_numeric_value (ParseData *data)
 static double
 parse_numeric_value (ParseData *data)
 {
+  const ViviParserValue *value;
+
   parse_token (data, TOKEN_NUMBER);
 
-  if (data->scanner->value.type == VALUE_TYPE_NUMBER) {
-    return data->scanner->value.v_number;
+  value = vivi_parser_scanner_get_value (data->scanner, 0);
+  if (value->type == VALUE_TYPE_NUMBER) {
+    return value->value.v_number;
   } else {
     return NAN;
   }
@@ -705,8 +715,9 @@ parse_numeric (ParseData *data)
 G_GNUC_UNUSED static const char *
 peek_string_value (ParseData *data)
 {
-  if (data->scanner->next_value.type == VALUE_TYPE_STRING) {
-    return data->scanner->next_value.v_string;
+  const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
+  if (value->type == VALUE_TYPE_STRING) {
+    return value->value.v_string;
   } else {
     return "undefined";
   }
@@ -715,10 +726,13 @@ peek_string_value (ParseData *data)
 static const char *
 parse_string_value (ParseData *data)
 {
+  const ViviParserValue *value;
+
   parse_token (data, TOKEN_STRING);
 
-  if (data->scanner->value.type == VALUE_TYPE_STRING) {
-    return data->scanner->value.v_string;
+  value = vivi_parser_scanner_get_value (data->scanner, 0);
+  if (value->type == VALUE_TYPE_STRING) {
+    return value->value.v_string;
   } else {
     return "undefined";
   }
@@ -792,8 +806,10 @@ parse_literal (ParseData *data)
 static const char *
 peek_identifier_value (ParseData *data)
 {
-  if (data->scanner->next_value.type == VALUE_TYPE_IDENTIFIER) {
-    return data->scanner->next_value.v_identifier;
+  const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
+
+  if (value->type == VALUE_TYPE_IDENTIFIER) {
+    return value->value.v_identifier;
   } else {
     return "undefined";
   }
@@ -802,10 +818,12 @@ peek_identifier_value (ParseData *data)
 static const char *
 parse_identifier_value (ParseData *data)
 {
+  const ViviParserValue *value;
   parse_token (data, TOKEN_IDENTIFIER);
 
-  if (data->scanner->value.type == VALUE_TYPE_IDENTIFIER) {
-    return data->scanner->value.v_identifier;
+  value = vivi_parser_scanner_get_value (data->scanner, 0);
+  if (value->type == VALUE_TYPE_IDENTIFIER) {
+    return value->value.v_identifier;
   } else {
     return "undefined";
   }
@@ -1387,7 +1405,7 @@ peek_builtin_call (ParseData *data)
   if (!peek_token (data, TOKEN_IDENTIFIER))
     return FALSE;
 
-  identifier = data->scanner->next_value.v_identifier;
+  identifier = vivi_parser_scanner_get_value (data->scanner, 1)->value.v_identifier;
 
   // TODO: Check that ( follows?
 
@@ -1789,8 +1807,7 @@ parse_postfix_expression (ParseData *data, ViviCodeStatement **statement)
 static gboolean
 peek_unary_expression (ParseData *data)
 {
-  vivi_parser_scanner_peek_next_token (data->scanner);
-  switch ((guint)data->scanner->next_token) {
+  switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
     /*case TOKEN_DELETE:
     case TOKEN_VOID:
     case TOKEN_TYPEOF:*/
@@ -1813,8 +1830,7 @@ parse_unary_expression (ParseData *data, ViviCodeStatement **statement)
 {
   ViviCodeValue *value, *tmp, *one;
 
-  vivi_parser_scanner_peek_next_token (data->scanner);
-  switch ((guint)data->scanner->next_token) {
+  switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
     /*case TOKEN_DELETE:
     case TOKEN_VOID:
     case TOKEN_TYPEOF:*/
@@ -1833,7 +1849,7 @@ parse_unary_expression (ParseData *data, ViviCodeStatement **statement)
       }
 
       one = vivi_code_number_new (1);
-      tmp = (data->scanner->next_token == TOKEN_INCREASE ?
+      tmp = (vivi_parser_scanner_peek_next_token (data->scanner) == TOKEN_INCREASE ?
 	  vivi_code_add_new : vivi_code_subtract_new) (value, one);
       g_object_unref (one);
 
@@ -2205,9 +2221,7 @@ parse_assignment_expression (ParseData *data, ViviCodeStatement **statement)
     return value;
   }
 
-  vivi_parser_scanner_peek_next_token (data->scanner);
-  switch ((guint)data->scanner->next_token) {
-    case TOKEN_ASSIGN_MULTIPLY:
+  switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
       func = vivi_code_multiply_new;
       break;
     case TOKEN_ASSIGN_DIVIDE:
@@ -2911,7 +2925,7 @@ parse_program (ParseData *data)
   vivi_parser_start_level (data);
 
   parse_statement_list (data, peek_source_element, parse_source_element,
-      &statement, TOKEN_NONE);
+      &statement, TOKEN_EOF);
   parse_token (data, TOKEN_EOF);
 
   vivi_parser_end_level (data);

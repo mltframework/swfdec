@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <swfdec/swfdec.h>
+#include <swfdec/swfdec_ringbuffer.h>
 
 G_BEGIN_DECLS
 
@@ -157,15 +158,20 @@ typedef enum {
 } ViviParserScannerValueType;
 
 typedef struct {
+  ViviParserScannerToken	token;
   ViviParserScannerValueType	type;
   union {
-    gboolean	v_boolean;
-    double	v_number;
-    char *	v_string;
-    char *	v_identifier;
-    char *	v_error;
-  };
-} ViviParserScannerValue;
+    gboolean	  		v_boolean;
+    double	  		v_number;
+    char *			v_string;
+    char *			v_identifier;
+    char *			v_error;
+  }				value;
+  gboolean			line_terminator;
+  guint				line_number;
+  guint				column;
+  gsize				position;
+} ViviParserValue;
 
 typedef void (*ViviParserScannerFunction) (const char *text, gpointer user_data);
 
@@ -187,27 +193,8 @@ struct _ViviParserScanner
 
   ViviParserScannerFunction	error_handler;
   gpointer			error_handler_data;
-  GSList *			waiting_errors;
 
-  ViviParserScannerToken	token;
-  ViviParserScannerToken	next_token;
-
-  ViviParserScannerValue	value;
-  ViviParserScannerValue	next_value;
-
-  gboolean			line_terminator;
-  gboolean			next_line_terminator;
-
-  guint				line_number;
-  guint				next_line_number;
-
-  guint				column;
-  guint				next_column;
-
-  gsize				position;
-  gsize				next_position;
-
-  ViviParserScannerToken	expected;
+  SwfdecRingBuffer *		values;
 };
 
 struct _ViviParserScannerClass
@@ -222,14 +209,24 @@ void				vivi_parser_scanner_set_error_handler (ViviParserScanner *	scanner,
 								 ViviParserScannerFunction	error_handler,
 								 gpointer			user_data);
 
-ViviParserScannerToken	vivi_parser_scanner_get_next_token	(ViviParserScanner *	scanner);
-ViviParserScannerToken	vivi_parser_scanner_peek_next_token	(ViviParserScanner *	scanner);
+ViviParserScannerToken		vivi_parser_scanner_get_next_token	(ViviParserScanner *	scanner);
+ViviParserScannerToken		vivi_parser_scanner_peek_next_token	(ViviParserScanner *	scanner);
+
+const ViviParserValue *		vivi_parser_scanner_get_value 	(ViviParserScanner *	scanner,
+								 guint			i);
+
+void				vivi_parser_scanner_error	(ViviParserScanner *	scanner, 
+								 guint			line,
+								 int			column,
+								 const char *		format,
+								 ...) G_GNUC_PRINTF (4, 5);
+void				vivi_parser_scanner_errorv	(ViviParserScanner *	scanner, 
+								 guint			line,
+								 int			column,
+								 const char *		format,
+								 va_list		args);
 
 const char *			vivi_parser_scanner_token_name	(ViviParserScannerToken token);
-guint				vivi_parser_scanner_cur_line	(ViviParserScanner *scanner);
-guint				vivi_parser_scanner_cur_column	(ViviParserScanner *scanner);
-char *				vivi_parser_scanner_get_line	(ViviParserScanner *scanner);
-
 
 G_END_DECLS
 #endif

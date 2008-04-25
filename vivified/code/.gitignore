@@ -12,6 +12,7 @@ Makefile.in
 *.loT
 
 vivi_parser_scanner_lex.c
+vivi_parser_scanner_lex.h
 
 vivi-decompile
 vivi-compile

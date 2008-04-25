@@ -25,25 +25,20 @@
 
 #include "vivi_parser_scanner_lex.h"
 
-extern ViviParserScannerValue lex_value;
-extern guint lex_line_number;
-extern guint lex_column;
-extern gsize lex_position;
-
 G_DEFINE_TYPE (ViviParserScanner, vivi_parser_scanner, G_TYPE_OBJECT)
 
 static void
-vivi_parser_scanner_free_type_value (ViviParserScannerValue *value)
+vivi_parser_value_reset (ViviParserValue *value)
 {
   switch (value->type) {
     case VALUE_TYPE_STRING:
-      g_free (value->v_string);
+      g_free (value->value.v_string);
       break;
     case VALUE_TYPE_IDENTIFIER:
-      g_free (value->v_identifier);
+      g_free (value->value.v_identifier);
       break;
     case VALUE_TYPE_ERROR:
-      g_free (value->v_error);
+      g_free (value->value.v_error);
       break;
     case VALUE_TYPE_NONE:
     case VALUE_TYPE_BOOLEAN:
@@ -55,7 +50,20 @@ vivi_parser_scanner_free_type_value (ViviParserScannerValue *value)
       break;
   }
 
+  /* FIXME: do a memset 0 here? */
   value->type = VALUE_TYPE_NONE;
+}
+
+static void
+vivi_parser_scanner_pop (ViviParserScanner *scanner)
+{
+  ViviParserValue *value;
+
+  /* ensure there is a value */
+  vivi_parser_scanner_get_value (scanner, 0);
+  value = swfdec_ring_buffer_pop (scanner->values);
+
+  vivi_parser_value_reset (value);
 }
 
 static void
@@ -63,8 +71,8 @@ vivi_parser_scanner_dispose (GObject *object)
 {
   ViviParserScanner *scanner = VIVI_PARSER_SCANNER (object);
 
-  vivi_parser_scanner_free_type_value (&scanner->value);
-  vivi_parser_scanner_free_type_value (&scanner->next_value);
+  while (swfdec_ring_buffer_get_n_elements (scanner->values))
+    vivi_parser_scanner_pop (scanner);
 
   G_OBJECT_CLASS (vivi_parser_scanner_parent_class)->dispose (object);
 }
@@ -78,8 +86,9 @@ vivi_parser_scanner_class_init (ViviParserScannerClass *klass)
 }
 
 static void
-vivi_parser_scanner_init (ViviParserScanner *token)
+vivi_parser_scanner_init (ViviParserScanner *scanner)
 {
+  scanner->values = swfdec_ring_buffer_new_for_type (ViviParserValue, 4);
 }
 
 static const struct {
@@ -223,52 +232,55 @@ const char *vivi_parser_scanner_token_name (ViviParserScannerToken token)
 static void
 vivi_parser_scanner_advance (ViviParserScanner *scanner)
 {
+  ViviParserValue *value;
+
   g_return_if_fail (VIVI_IS_PARSER_SCANNER (scanner));
 
-  vivi_parser_scanner_free_type_value (&scanner->value);
-
-  scanner->token = scanner->next_token;
-  scanner->value = scanner->next_value;
-  scanner->line_terminator = scanner->next_line_terminator;
-  scanner->line_number = scanner->next_line_number;
-  scanner->column = scanner->next_column;
-  scanner->position = scanner->next_position;
-
-  while (scanner->waiting_errors != NULL) {
-    if (scanner->error_handler != NULL) {
-      scanner->error_handler (scanner->waiting_errors->data,
-	  scanner->error_handler_data);
-      g_free (scanner->waiting_errors->data);
-    }
-    scanner->waiting_errors = g_slist_delete_link (scanner->waiting_errors,
-	scanner->waiting_errors);
+  value = swfdec_ring_buffer_push (scanner->values);
+  if (value == NULL) {
+    swfdec_ring_buffer_set_size (scanner->values,
+	swfdec_ring_buffer_get_size (scanner->values) + 4);
+    value = swfdec_ring_buffer_push (scanner->values);
   }
 
   if (scanner->file == NULL) {
-    scanner->next_token = TOKEN_EOF;
-    scanner->next_value.v_string = NULL;
+    value->token = TOKEN_EOF;
+    value->type = VALUE_TYPE_NONE;
+    value->column = 0;
+    value->position = 0;
+    value->line_number = 0;
+    value->line_terminator = FALSE;
   } else {
-    scanner->next_line_terminator = FALSE;
-    do {
-      scanner->next_token = yylex ();
-      if (scanner->next_token == TOKEN_LINE_TERMINATOR) {
-	scanner->next_line_terminator = TRUE;
-	vivi_parser_scanner_free_type_value (&lex_value);
-      } else if (scanner->next_token == TOKEN_ERROR) {
-	scanner->waiting_errors = g_slist_prepend (scanner->waiting_errors,
-	    lex_value.v_error);
-	lex_value.type = VALUE_TYPE_NONE;
+    value->line_terminator = FALSE;
+    for (;;) {
+      value->token = yylex (value);
+      value->type = VALUE_TYPE_NONE;
+      g_print ("got %s\n", vivi_parser_scanner_token_name (value->token));
+      if (value->token == TOKEN_LINE_TERMINATOR) {
+	value->line_terminator = TRUE;
+	vivi_parser_value_reset (value);
+      } else if (value->token == TOKEN_ERROR) {
+	vivi_parser_scanner_error (scanner, 0, 0, "%s", value->value.v_error);
+	vivi_parser_value_reset (value);
+      } else {
+	break;
       }
-    } while (scanner->next_token == TOKEN_LINE_TERMINATOR ||
-	scanner->next_token == TOKEN_ERROR);
-
-    scanner->next_value = lex_value;
-    scanner->next_line_number = lex_line_number;
-    scanner->next_column = lex_column;
-    scanner->next_position = lex_position;
-
-    lex_value.type = VALUE_TYPE_NONE;
+    }
+    value->line_number = yylineno;
+    value->column = 0; /* FIXME */
+    value->position = 0; /* FIXME */
   }
+}
+
+const ViviParserValue *
+vivi_parser_scanner_get_value (ViviParserScanner *scanner, guint i)
+{
+  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), NULL);
+
+  while (swfdec_ring_buffer_get_n_elements (scanner->values) <= i) {
+    vivi_parser_scanner_advance (scanner);
+  }
+  return swfdec_ring_buffer_peek_nth (scanner->values, i);
 }
 
 ViviParserScanner *
@@ -280,13 +292,8 @@ vivi_parser_scanner_new (FILE *file)
 
   scanner = g_object_new (VIVI_TYPE_PARSER_SCANNER, NULL);
   scanner->file = file;
-  scanner->line_number = scanner->next_line_number = lex_line_number = 1;
-  scanner->column = scanner->next_column = lex_column = 0;
-  scanner->position = scanner->next_position = lex_position = 0;
 
   yyrestart (file);
-
-  vivi_parser_scanner_advance (scanner);
 
   return scanner;
 }
@@ -306,7 +313,7 @@ vivi_parser_scanner_get_next_token (ViviParserScanner *scanner)
 
   vivi_parser_scanner_advance (scanner);
 
-  return scanner->token;
+  return vivi_parser_scanner_get_value (scanner, 0)->token;
 }
 
 ViviParserScannerToken
@@ -314,33 +321,41 @@ vivi_parser_scanner_peek_next_token (ViviParserScanner *scanner)
 {
   g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), TOKEN_EOF);
 
-  return scanner->next_token;
+  return vivi_parser_scanner_get_value (scanner, 1)->token;
 }
 
-guint
-vivi_parser_scanner_cur_line (ViviParserScanner *scanner)
+void
+vivi_parser_scanner_error (ViviParserScanner *scanner, 
+    guint line, int column, const char *format, ...)
 {
-  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), 0);
+  va_list args;
 
-  return scanner->line_number;
+  g_return_if_fail (VIVI_IS_PARSER_SCANNER (scanner));
+  g_return_if_fail (column >= -1);
+  g_return_if_fail (format != NULL);
+
+  va_start (args, format);
+  vivi_parser_scanner_errorv (scanner, line, column, format, args);
+  va_end (args);
 }
 
-guint
-vivi_parser_scanner_cur_column (ViviParserScanner *scanner)
+void
+vivi_parser_scanner_errorv (ViviParserScanner *scanner, 
+    guint line, int column, const char *format, va_list args)
 {
-  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), 0);
+  char *message;
 
-  // TODO
+  g_return_if_fail (VIVI_IS_PARSER_SCANNER (scanner));
+  g_return_if_fail (column >= -1);
+  g_return_if_fail (format != NULL);
 
-  return 0;
-}
+  message = g_strdup_vprintf (format, args);
 
-char *
-vivi_parser_scanner_get_line (ViviParserScanner *scanner)
-{
-  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), 0);
+  if (column >= 0) {
+    g_printerr ("%u,%i: error: %s\n", line, column, message);
+  } else {
+    g_printerr ("%u: error: %s\n", line, message);
+  }
 
-  // TODO
-
-  return g_strdup ("");
+  g_free (message);
 }

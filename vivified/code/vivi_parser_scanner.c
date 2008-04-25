@@ -237,11 +237,11 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
     value->line_terminator = FALSE;
   } else {
     value->line_terminator = FALSE;
-    value->token = vivi_parser_scanner_lex (scanner->scanner, value);
-    g_print ("got %s\n", vivi_parser_scanner_token_name (value->token));
-    value->line_number = vivi_parser_scanner_get_lineno (scanner->scanner);
-    value->column = 0; /* FIXME */
     value->position = 0; /* FIXME */
+    value->token = vivi_parser_scanner_lex (scanner->scanner, value);
+    g_print ("%u:%u - %s\n", value->line_number, value->column,
+	vivi_parser_scanner_token_name (value->token));
+    value->line_number = vivi_parser_scanner_get_lineno (scanner->scanner);
   }
 }
 

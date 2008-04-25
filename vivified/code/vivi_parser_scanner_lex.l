@@ -29,6 +29,10 @@ extern YY_DECL;
 %{
 static GString *string = NULL;
 #define ERROR(...) vivi_parser_scanner_error (yyextra, yylineno, yycolumn, __VA_ARGS__)
+
+#define YY_USER_ACTION \
+  value->line_number = yylineno; \
+  value->column = yycolumn;
 %}
 
 %option			header-file="vivi_parser_scanner_lex.h"
@@ -38,6 +42,7 @@ static GString *string = NULL;
 %option			outfile="vivi_parser_scanner_lex.c"
 %option			prefix="vivi_parser_scanner_"
 %option			reentrant
+%option			yylineno
 
 identifier_start	[$_a-zA-Z]
 identifier_part		[$_a-zA-Z0-9]

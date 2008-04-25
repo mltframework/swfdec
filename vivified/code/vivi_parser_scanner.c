@@ -253,16 +253,16 @@ vivi_parser_scanner_get_value (ViviParserScanner *scanner, guint i)
 }
 
 ViviParserScanner *
-vivi_parser_scanner_new (SwfdecBuffer *buffer)
+vivi_parser_scanner_new (const guint8 *data, gsize length)
 {
   ViviParserScanner *scanner;
   ViviParserValue *value;
 
-  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (data != NULL || length == 0, NULL);
 
   scanner = g_object_new (VIVI_TYPE_PARSER_SCANNER, NULL);
 
-  vivi_parser_scanner__scan_bytes ((char *) buffer->data, buffer->length, scanner->scanner);
+  vivi_parser_scanner__scan_bytes ((const char *) data, length, scanner->scanner);
   /* seems flex is too stupid to reset the line number for buffers */
   vivi_parser_scanner_set_lineno (1, scanner->scanner);
 

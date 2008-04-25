@@ -2987,30 +2987,44 @@ parse_value_statement_list (ParseData *data, PeekFunction peek,
   *list = (ViviCodeValue **)g_ptr_array_free (array, FALSE);
 }
 
+static ViviCodeStatement *
+vivi_do_parse (const guint8 *data, gsize length)
+{
+  ParseData parse;
+  ViviCodeStatement *statement;
+
+  parse.scanner = vivi_parser_scanner_new (data, length);
+  vivi_parser_scanner_set_error_handler (parse.scanner,
+      vivi_parser_error_handler, &parse);
+  parse.levels = NULL;
+  parse.level = NULL;
+  parse.error_count = 0;
+
+  statement = parse_program (&parse);
+  if (parse.error_count != 0) {
+    g_object_unref (statement);
+    statement = NULL;
+  }
+
+  g_object_unref (parse.scanner);
+
+  return statement;
+}
+
 // public
 
 ViviCodeStatement *
 vivi_parse_buffer (SwfdecBuffer *buffer)
 {
-  ParseData data;
-  ViviCodeStatement *statement;
-
   g_return_val_if_fail (buffer != NULL, NULL);
 
-  data.scanner = vivi_parser_scanner_new (buffer);
-  vivi_parser_scanner_set_error_handler (data.scanner,
-      vivi_parser_error_handler, &data);
-  data.levels = NULL;
-  data.level = NULL;
-  data.error_count = 0;
+  return vivi_do_parse (buffer->data, buffer->length);
+}
 
-  statement = parse_program (&data);
-  if (data.error_count != 0) {
-    g_object_unref (statement);
-    statement = NULL;
-  }
+ViviCodeStatement *
+vivi_parse_string (const char *string)
+{
+  g_return_val_if_fail (string != NULL, NULL);
 
-  g_object_unref (data.scanner);
-
-  return statement;
+  return vivi_do_parse ((const guint8 *) string, strlen (string));
 }

@@ -190,7 +190,8 @@ struct _ViviParserScannerClass
 
 GType				vivi_parser_scanner_get_type   	(void);
 
-ViviParserScanner *		vivi_parser_scanner_new		(SwfdecBuffer *		buffer);
+ViviParserScanner *		vivi_parser_scanner_new		(const guint8 *		data,
+								 gsize			len);
 void				vivi_parser_scanner_set_error_handler (ViviParserScanner *	scanner,
 								 ViviParserScannerFunction	error_handler,
 								 gpointer			user_data);

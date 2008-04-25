@@ -79,13 +79,15 @@ SwfdecAsObject *swfdec_as_frame_get_variable_and_flags
 						 SwfdecAsValue *	value,
 						 guint *		flags,
 						 SwfdecAsObject **	pobject);
-#define swfdec_as_frame_set_variable(frame, variable, value) \
-  swfdec_as_frame_set_variable_and_flags (frame, variable, value, 0)
+#define swfdec_as_frame_set_variable(frame, variable, value, overwrite, local) \
+  swfdec_as_frame_set_variable_and_flags (frame, variable, value, 0, overwrite, local)
 void		swfdec_as_frame_set_variable_and_flags
 						(SwfdecAsFrame *	frame,
 						 const char *		variable,
 						 const SwfdecAsValue *	value,
-						 guint			default_flags);
+						 guint			default_flags,
+						 gboolean		overwrite,
+						 gboolean		local);
 SwfdecAsDeleteReturn
 		swfdec_as_frame_delete_variable	(SwfdecAsFrame *	frame,
 						 const char *		variable);

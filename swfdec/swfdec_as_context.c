@@ -1097,7 +1097,7 @@ swfdec_as_context_eval_set_property (SwfdecAsContext *cx,
       SWFDEC_ERROR ("no frame in eval_set?");
       return;
     }
-    swfdec_as_frame_set_variable (cx->frame, name, ret);
+    swfdec_as_frame_set_variable (cx->frame, name, ret, TRUE, FALSE);
   } else {
     swfdec_as_object_set_variable (obj, name, ret);
   }

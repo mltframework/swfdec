@@ -581,7 +581,7 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
 
 void
 swfdec_as_frame_set_variable_and_flags (SwfdecAsFrame *frame, const char *variable,
-    const SwfdecAsValue *value, guint default_flags)
+    const SwfdecAsValue *value, guint default_flags, gboolean overwrite, gboolean local)
 {
   SwfdecAsObject *pobject, *set;
   GSList *walk;
@@ -593,12 +593,24 @@ swfdec_as_frame_set_variable_and_flags (SwfdecAsFrame *frame, const char *variab
   for (walk = frame->scope_chain; walk; walk = walk->next) {
     if (swfdec_as_object_get_variable_and_flags (walk->data, variable, NULL, NULL, &pobject) &&
 	pobject == walk->data) {
+      if (!overwrite)
+	return;
       set = walk->data;
       break;
     }
   }
-  if (set == NULL)
-    set = frame->target;
+  if (set == NULL) {
+    if (local && frame->is_local) {
+      set = SWFDEC_AS_OBJECT (frame);
+    } else {
+      set = frame->target;
+    }
+  }
+
+  if (!overwrite) {
+    if (swfdec_as_object_get_variable (set, variable, NULL))
+      return;
+  }
 
   swfdec_as_object_set_variable_and_flags (set, variable, value, default_flags);
 }

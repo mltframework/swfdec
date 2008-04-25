@@ -656,7 +656,8 @@ swfdec_action_set_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
 	rest = s;
       else
 	rest = swfdec_as_context_get_string (cx, rest);
-      swfdec_as_frame_set_variable (cx->frame, rest, swfdec_as_stack_peek (cx, 1));
+      swfdec_as_frame_set_variable (cx->frame, rest,
+	  swfdec_as_stack_peek (cx, 1), TRUE, FALSE);
     }
   }
   swfdec_as_stack_pop_n (cx, 2);
@@ -1993,17 +1994,11 @@ swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data
 static void
 swfdec_action_define_local (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsObject *target;
   const char *name;
 
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
-  if (cx->frame->is_local) {
-    target = SWFDEC_AS_OBJECT (cx->frame);
-  } else {
-    target = cx->frame->target;
-  }
-  swfdec_as_object_set_variable (target, name,
-      swfdec_as_stack_peek (cx, 1));
+  swfdec_as_frame_set_variable (cx->frame, name, swfdec_as_stack_peek (cx, 1),
+      TRUE, TRUE);
   swfdec_as_stack_pop_n (cx, 2);
 }
 
@@ -2011,16 +2006,10 @@ static void
 swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue val = { 0, };
-  SwfdecAsObject *target;
   const char *name;
 
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
-  if (cx->frame->is_local) {
-    target = SWFDEC_AS_OBJECT (cx->frame);
-  } else {
-    target = cx->frame->target;
-  }
-  swfdec_as_object_set_variable (target, name, &val);
+  swfdec_as_frame_set_variable (cx->frame, name, &val, FALSE, TRUE);
   swfdec_as_stack_pop (cx);
 }
 

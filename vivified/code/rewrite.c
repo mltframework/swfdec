@@ -33,9 +33,13 @@
 #include <vivified/code/vivi_code_asm_push.h>
 #include <vivified/code/vivi_code_assembler.h>
 #include <vivified/code/vivi_decompiler.h>
+#include <vivified/code/vivi_parser.h>
 
 typedef enum {
-  REWRITE_TRACE_FUNCTION_NAME = (1 << 0)
+  REWRITE_TRACE_FUNCTION_NAME = (1 << 0),
+  REWRITE_RANDOM              = (1 << 1),
+
+  REWRITE_INIT		      =	(1 << 17)
 } RewriteOptions;
 
 static const char *
@@ -158,6 +162,46 @@ insert_function_trace (ViviCodeAssembler *assembler, const char *name)
   }
 }
 
+static void
+replace_random (ViviCodeAssembler *assembler, guint init)
+{
+  guint i = 0;
+
+  if (init) {
+    guint j;
+    ViviCodeStatement *statement;
+    ViviCodeAssembler *asm2;
+    if (VIVI_IS_CODE_ASM_POOL (vivi_code_assembler_get_code (assembler, i)))
+      i++;
+
+    statement = vivi_parse_string (
+	"ASSetPropFlags (Math, \"random\", 0, 0-1);"
+	"Math.random = function () { return 0; };"
+	"ASSetPropFlags (Math, \"random\", 7);"
+	);
+    g_assert (statement);
+    asm2 = VIVI_CODE_ASSEMBLER (vivi_code_assembler_new ());
+    vivi_code_statement_compile (statement, asm2);
+    g_object_unref (statement);
+    for (j = 0; j < vivi_code_assembler_get_n_codes (asm2); j++) {
+      INSERT_CODE (assembler, i, vivi_code_assembler_get_code (asm2, j));
+    }
+    g_object_unref (asm2);
+  }
+
+  for (; i < vivi_code_assembler_get_n_codes (assembler); i++) {
+    ViviCodeAsm *code = vivi_code_assembler_get_code (assembler, i);
+    if (VIVI_IS_CODE_ASM_RANDOM (code)) {
+      ViviCodeAsm *push = vivi_code_asm_push_new ();
+      vivi_code_assembler_remove_code (assembler, code);
+      INSERT_CODE (assembler, i, vivi_code_asm_pop_new ());
+      vivi_code_asm_push_add_integer (VIVI_CODE_ASM_PUSH (push), 0);
+      INSERT_CODE (assembler, i, push);
+      i--;
+    }
+  }
+}
+
 /*** INFRASTRUCTURE ***/
 
 static SwfdecBuffer *
@@ -172,9 +216,10 @@ do_script (SwfdecBuffer *buffer, guint flags, const char *name, guint version)
   assembler = VIVI_CODE_ASSEMBLER (vivi_disassemble_script (script));
   swfdec_script_unref (script);
 
-  /* FIXME: modify script here! */
   if (flags & REWRITE_TRACE_FUNCTION_NAME)
     insert_function_trace (assembler, name);
+  if (flags & REWRITE_RANDOM)
+    replace_random (assembler, flags & REWRITE_INIT);
 
   script = vivi_code_assembler_assemble_script (assembler, version, &error);
   g_object_unref (assembler);
@@ -200,7 +245,7 @@ process_buffer (SwfdecBuffer *original, guint flags)
   SwfdecBots *bots, *full;
   SwfdecBuffer *buffer;
   guint version, tag, len;
-  gboolean long_header;
+  gboolean long_header, needs_init = TRUE;
 
   bots = swfdec_bots_open ();
   swfdec_bits_init (&bits, original);
@@ -239,7 +284,9 @@ process_buffer (SwfdecBuffer *original, guint flags)
 	  guint sprite = buffer->data[0] | buffer->data[1] << 8;
 	  char *name = g_strdup_printf ("DoInitAction %u", sprite);
 	  swfdec_bots_put_u16 (bots2, sprite);
-	  sub = do_script (sub, flags, name, version);
+	  sub = do_script (sub, flags | (needs_init ? REWRITE_INIT : 0), name, version);
+	  /* FIXME: we should add init when there's no init actions, too */
+	  needs_init = FALSE;
 	  g_free (name);
 	  if (sub == NULL) {
 	    swfdec_bots_free (bots2);
@@ -328,9 +375,11 @@ main (int argc, char *argv[])
   GError *error = NULL;
   SwfdecBuffer *buffer;
   gboolean trace_function_names = FALSE;
+  gboolean random = FALSE;
 
   GOptionEntry options[] = {
     { "trace-function-names", 'n', 0, G_OPTION_ARG_NONE, &trace_function_names, "trace names of called functions", NULL },
+    { "no-random", 'r', 0, G_OPTION_ARG_NONE, &random, "replace all random values with 0", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -366,7 +415,8 @@ main (int argc, char *argv[])
   }
 
   buffer = process_buffer (buffer,
-      (trace_function_names ? REWRITE_TRACE_FUNCTION_NAME : 0));
+      (trace_function_names ? REWRITE_TRACE_FUNCTION_NAME : 0) |
+      (random ? REWRITE_RANDOM : 0));
   if (buffer == NULL) {
     g_printerr ("\"%s\": Broken Flash file\n", argv[1]);
     return 1;

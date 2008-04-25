@@ -36,6 +36,13 @@ ViviCodeAsm *		vivi_code_asm_ ## underscore_name ## _new	(void);
 
 #include "vivi_code_defaults.h"
 
+#define VIVI_TYPE_CODE_ASM_RANDOM                    (vivi_code_asm_random_get_type())
+#define VIVI_IS_CODE_ASM_RANDOM(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_ASM_RANDOM))
+#define VIVI_IS_CODE_ASM_RANDOM_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_CODE_ASM_RANDOM))
+#define VIVI_CODE_ASM_RANDOM(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_CODE_ASM_RANDOM, ViviCodeAsmRandom))
+#define VIVI_CODE_ASM_RANDOM_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_CODE_ASM_RANDOM, ViviCodeAsmRandomClass))
+#define VIVI_CODE_ASM_RANDOM_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_CODE_ASM_RANDOM, ViviCodeAsmRandomClass))
+
 
 G_END_DECLS
 #endif

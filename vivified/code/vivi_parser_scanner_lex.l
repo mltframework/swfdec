@@ -27,8 +27,6 @@ extern YY_DECL;
 }
 
 %{
-static GString *string = NULL;
-
 #define RESET_POSITION value->position = G_MAXSIZE
 
 #define ERROR(...) vivi_parser_scanner_error (yyextra, yylineno, yycolumn, __VA_ARGS__)
@@ -239,19 +237,18 @@ identifier_part		[$_a-zA-Z0-9]
 			}
 
 \"			{
-			  string = g_string_new ("");
+			  value->value.v_string = g_string_new ("");
 			  BEGIN(str);
 			}
 
 <str>{
   \"			{
 			  BEGIN(INITIAL);
-			  value->value.v_string = g_string_free (string, FALSE);
 			  return TOKEN_STRING;
 			}
   \n			{
 			  BEGIN(INITIAL);
-			  g_string_free (string, TRUE);
+			  g_string_free (value->value.v_string, TRUE);
 			  ERROR ("Unterminated string constant");
 			  RESET_POSITION;
 			}
@@ -261,7 +258,7 @@ identifier_part		[$_a-zA-Z0-9]
 			  if (result > 0xff || result == 0) {
 			    ERROR ("Invalid escape sequence %s", yytext);
 			  } else {
-			    g_string_append_c (string, result);
+			    g_string_append_c (value->value.v_string, result);
 			  }
 			}
   \\[0-9]+		{ ERROR ("Invalid escape sequence %s", yytext); }
@@ -271,20 +268,20 @@ identifier_part		[$_a-zA-Z0-9]
 			  if (result == 0) {
 			    ERROR ("Invalid escape sequence %s", yytext);
 			  } else {
-			    g_string_append_c (string, result);
+			    g_string_append_c (value->value.v_string, result);
 			  }
 			}
-  \\b			{ g_string_append_c (string, '\b'); }
-  \\f			{ g_string_append_c (string, '\f'); }
-  \\n			{ g_string_append_c (string, '\n'); }
-  \\r			{ g_string_append_c (string, '\r'); }
-  \\t			{ g_string_append_c (string, '\t'); }
-  \\v			{ g_string_append_c (string, '\v'); }
-  \\.			{ g_string_append_c (string, yytext[1]); }
+  \\b			{ g_string_append_c (value->value.v_string, '\b'); }
+  \\f			{ g_string_append_c (value->value.v_string, '\f'); }
+  \\n			{ g_string_append_c (value->value.v_string, '\n'); }
+  \\r			{ g_string_append_c (value->value.v_string, '\r'); }
+  \\t			{ g_string_append_c (value->value.v_string, '\t'); }
+  \\v			{ g_string_append_c (value->value.v_string, '\v'); }
+  \\.			{ g_string_append_c (value->value.v_string, yytext[1]); }
   [^\\\n\"]+		{
 			  char *p;
 			  for (p = yytext; *p != '\0'; p++) {
-			    g_string_append_c (string, *p);
+			    g_string_append_c (value->value.v_string, *p);
 			  }
 			}
 }

@@ -31,7 +31,7 @@ static void
 vivi_parser_value_reset (ViviParserValue *value)
 {
   if (value->token == TOKEN_STRING) {
-    g_free (value->value.v_string);
+    g_string_free (value->value.v_string, TRUE);
   } else if (value->token == TOKEN_IDENTIFIER) {
     g_free (value->value.v_identifier);
   }

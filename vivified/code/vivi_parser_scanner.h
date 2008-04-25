@@ -150,9 +150,8 @@ typedef struct {
   union {
     gboolean	  		v_boolean;
     double	  		v_number;
-    char *			v_string;
+    GString *			v_string;
     char *			v_identifier;
-    char *			v_error;
   }				value;
   gboolean			line_terminator;
   guint				line_number;

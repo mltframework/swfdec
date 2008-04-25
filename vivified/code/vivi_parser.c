@@ -716,7 +716,7 @@ peek_string_value (ParseData *data)
 {
   const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
   if (value->token == TOKEN_STRING) {
-    return value->value.v_string;
+    return value->value.v_string->str;
   } else {
     return "undefined";
   }
@@ -731,7 +731,7 @@ parse_string_value (ParseData *data)
 
   value = vivi_parser_scanner_get_value (data->scanner, 0);
   if (value->token == TOKEN_STRING) {
-    return value->value.v_string;
+    return value->value.v_string->str;
   } else {
     return "undefined";
   }

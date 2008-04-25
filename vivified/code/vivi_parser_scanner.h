@@ -176,8 +176,6 @@ struct _ViviParserScanner
 {
   GObject			object;
 
-  FILE *			file;
-
   ViviParserScannerFunction	error_handler;
   gpointer			error_handler_data;
 
@@ -192,7 +190,7 @@ struct _ViviParserScannerClass
 
 GType				vivi_parser_scanner_get_type   	(void);
 
-ViviParserScanner *		vivi_parser_scanner_new		(FILE *		file);
+ViviParserScanner *		vivi_parser_scanner_new		(SwfdecBuffer *		buffer);
 void				vivi_parser_scanner_set_error_handler (ViviParserScanner *	scanner,
 								 ViviParserScannerFunction	error_handler,
 								 gpointer			user_data);

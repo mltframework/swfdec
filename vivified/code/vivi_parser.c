@@ -2990,14 +2990,14 @@ parse_value_statement_list (ParseData *data, PeekFunction peek,
 // public
 
 ViviCodeStatement *
-vivi_parse_file (FILE *file, const char *input_name)
+vivi_parse_buffer (SwfdecBuffer *buffer)
 {
   ParseData data;
   ViviCodeStatement *statement;
 
-  g_return_val_if_fail (file != NULL, NULL);
+  g_return_val_if_fail (buffer != NULL, NULL);
 
-  data.scanner = vivi_parser_scanner_new (file);
+  data.scanner = vivi_parser_scanner_new (buffer);
   vivi_parser_scanner_set_error_handler (data.scanner,
       vivi_parser_error_handler, &data);
   data.levels = NULL;

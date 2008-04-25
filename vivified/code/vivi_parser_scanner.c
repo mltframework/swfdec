@@ -229,23 +229,15 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
     value = swfdec_ring_buffer_push (scanner->values);
   }
 
-  if (scanner->file == NULL) {
-    value->token = TOKEN_NONE;
-    value->column = 0;
-    value->position = 0;
-    value->line_number = 0;
-    value->line_terminator = FALSE;
-  } else {
-    value->line_terminator = FALSE;
-    value->position = 0; /* FIXME */
-    value->token = vivi_parser_scanner_lex (scanner->scanner, value);
+  value->line_terminator = FALSE;
+  value->position = 0; /* FIXME */
+  value->token = vivi_parser_scanner_lex (scanner->scanner, value);
 #if 0
-    g_print ("%u:%u %c %s\n", value->line_number, value->column, 
-	value->line_terminator ? '+' : '-',
-	vivi_parser_scanner_token_name (value->token));
+  g_print ("%u:%u %c %s\n", value->line_number, value->column, 
+      value->line_terminator ? '+' : '-',
+      vivi_parser_scanner_token_name (value->token));
 #endif
-    value->line_number = vivi_parser_scanner_get_lineno (scanner->scanner);
-  }
+  value->line_number = vivi_parser_scanner_get_lineno (scanner->scanner);
 }
 
 const ViviParserValue *
@@ -260,17 +252,17 @@ vivi_parser_scanner_get_value (ViviParserScanner *scanner, guint i)
 }
 
 ViviParserScanner *
-vivi_parser_scanner_new (FILE *file)
+vivi_parser_scanner_new (SwfdecBuffer *buffer)
 {
   ViviParserScanner *scanner;
   ViviParserValue *value;
 
-  g_return_val_if_fail (file != NULL, NULL);
+  g_return_val_if_fail (buffer != NULL, NULL);
 
   scanner = g_object_new (VIVI_TYPE_PARSER_SCANNER, NULL);
-  scanner->file = file;
 
-  vivi_parser_scanner_restart (file, scanner->scanner);
+  vivi_parser_scanner__scan_bytes ((char *) buffer->data, buffer->length, scanner->scanner);
+
   value = swfdec_ring_buffer_push (scanner->values);
   value->token = TOKEN_UNKNOWN;
   value->line_number = value->column = 0;

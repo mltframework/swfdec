@@ -30,9 +30,8 @@
 int
 main (int argc, char *argv[])
 {
-  SwfdecPlayer *player;
   //char *target_name;
-  FILE *source;//, *target;
+  SwfdecBuffer *source;
   ViviCodeStatement *statement, *assembler;
   ViviCodePrinter *printer;
   /*ViviCodeCompiler *compiler;
@@ -40,27 +39,27 @@ main (int argc, char *argv[])
   SwfdecBuffer *buffer;
   unsigned char *length_ptr;
   SwfdecRect rect = { 0, 0, 2000, 3000 };*/
+  GError *error = NULL;
 
-  player = swfdec_player_new (NULL);
+  swfdec_init ();
 
   if (argc != 2) {
     g_printerr ("Usage: %s <filename>\n", argv[0]);
     return 1;
   }
 
-  source = fopen (argv[1], "r");
+  source = swfdec_buffer_new_from_file (argv[1], &error);
   if (source == NULL) {
-    g_printerr ("Couldn't open source %s", argv[1]);
+    g_printerr ("Couldn't open: %s", error->message);
+    g_error_free (error);
     return -1;
   }
 
-  statement = vivi_parse_file (source, argv[1]);
-
-  fclose (source);
+  statement = vivi_parse_buffer (source);
+  swfdec_buffer_unref (source);
 
   if (statement == NULL) {
     g_printerr ("Compilation failed\n");
-    g_object_unref (player);
     return 1;
   }
 
@@ -146,7 +145,6 @@ main (int argc, char *argv[])
 #endif
 
   g_object_unref (statement);
-  g_object_unref (player);
 
   return (statement == NULL ? -1 : 0);
 }

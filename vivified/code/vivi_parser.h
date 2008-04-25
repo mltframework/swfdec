@@ -28,8 +28,7 @@
 G_BEGIN_DECLS
 
 
-ViviCodeStatement *	vivi_parse_file			(FILE *		file,
-							 const char *	input_name);
+ViviCodeStatement *	vivi_parse_buffer		(SwfdecBuffer *	buffer);
 
 
 G_END_DECLS

@@ -80,9 +80,9 @@ vivi_code_get_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
   ViviCodeGet *get = VIVI_CODE_GET (token);
   ViviCodeAsm *code;
 
-  vivi_code_value_compile (get->name, assembler);
   if (get->from)
     vivi_code_value_compile (get->from, assembler);
+  vivi_code_value_compile (get->name, assembler);
 
   if (get->from) {
     code = vivi_code_asm_get_member_new ();

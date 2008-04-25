@@ -130,7 +130,7 @@ vivi_code_function_call_compile (ViviCodeToken *token,
   ViviCodeAsm *code;
   guint i;
 
-  for (i = 0; i < call->arguments->len; i++) {
+  for (i = call->arguments->len - 1; i < call->arguments->len; i--) {
     vivi_code_value_compile (g_ptr_array_index (call->arguments, i),
 	assembler);
   }

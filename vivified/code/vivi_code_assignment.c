@@ -98,9 +98,9 @@ vivi_code_assignment_compile (ViviCodeToken *token,
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
   ViviCodeAsm *code;
 
-  vivi_code_value_compile (assignment->name, assembler);
   if (assignment->from && !assignment->local)
     vivi_code_value_compile (assignment->from, assembler);
+  vivi_code_value_compile (assignment->name, assembler);
 
   if (assignment->local && assignment->from) {
     ViviCodeValue *get =

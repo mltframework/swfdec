@@ -260,6 +260,7 @@ ViviParserScanner *
 vivi_parser_scanner_new (FILE *file)
 {
   ViviParserScanner *scanner;
+  ViviParserValue *value;
 
   g_return_val_if_fail (file != NULL, NULL);
 
@@ -267,6 +268,10 @@ vivi_parser_scanner_new (FILE *file)
   scanner->file = file;
 
   vivi_parser_scanner_restart (file, scanner->scanner);
+  value = swfdec_ring_buffer_push (scanner->values);
+  value->token = TOKEN_UNKNOWN;
+  value->line_number = value->column = 0;
+  value->position = 0;
 
   return scanner;
 }
@@ -284,7 +289,7 @@ vivi_parser_scanner_get_next_token (ViviParserScanner *scanner)
 {
   g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), TOKEN_NONE);
 
-  vivi_parser_scanner_advance (scanner);
+  vivi_parser_scanner_pop (scanner);
 
   return vivi_parser_scanner_get_value (scanner, 0)->token;
 }

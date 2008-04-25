@@ -30,7 +30,6 @@ G_BEGIN_DECLS
 typedef enum {
   // special
   TOKEN_NONE = 0,
-  TOKEN_EOF,
   TOKEN_ERROR,
   TOKEN_UNKNOWN,
   TOKEN_LINE_TERMINATOR,

@@ -97,7 +97,6 @@ static const struct {
 } token_names[] = {
   // special
   { TOKEN_NONE, "NONE" },
-  { TOKEN_EOF, "EOF" },
   { TOKEN_ERROR, "ERROR" },
   { TOKEN_UNKNOWN, "UNKNOWN" },
   { TOKEN_LINE_TERMINATOR, "NEW LINE" },
@@ -244,7 +243,7 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
   }
 
   if (scanner->file == NULL) {
-    value->token = TOKEN_EOF;
+    value->token = TOKEN_NONE;
     value->type = VALUE_TYPE_NONE;
     value->column = 0;
     value->position = 0;
@@ -309,7 +308,7 @@ vivi_parser_scanner_set_error_handler (ViviParserScanner *scanner,
 ViviParserScannerToken
 vivi_parser_scanner_get_next_token (ViviParserScanner *scanner)
 {
-  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), TOKEN_EOF);
+  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), TOKEN_NONE);
 
   vivi_parser_scanner_advance (scanner);
 
@@ -319,7 +318,7 @@ vivi_parser_scanner_get_next_token (ViviParserScanner *scanner)
 ViviParserScannerToken
 vivi_parser_scanner_peek_next_token (ViviParserScanner *scanner)
 {
-  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), TOKEN_EOF);
+  g_return_val_if_fail (VIVI_IS_PARSER_SCANNER (scanner), TOKEN_NONE);
 
   return vivi_parser_scanner_get_value (scanner, 1)->token;
 }

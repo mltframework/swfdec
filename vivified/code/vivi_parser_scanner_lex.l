@@ -69,7 +69,7 @@ identifier_part		[$_a-zA-Z0-9]
 			  return TOKEN_LINE_TERMINATOR;
 			}
 
-<<EOF>>			{ return TOKEN_EOF; }
+<<EOF>>			{ return TOKEN_NONE; }
 
 [ \t]			{ count (); /* skip */ }
 

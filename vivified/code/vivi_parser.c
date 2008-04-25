@@ -272,7 +272,7 @@ parse_automatic_semicolon (ParseData *data)
     return;
 
   token = vivi_parser_scanner_peek_next_token (data->scanner);
-  if (token == TOKEN_BRACE_LEFT || token == TOKEN_EOF)
+  if (token == TOKEN_BRACE_LEFT || token == TOKEN_NONE)
     return;
 
   vivi_parser_error_unexpected (data, TOKEN_SEMICOLON);
@@ -2925,8 +2925,8 @@ parse_program (ParseData *data)
   vivi_parser_start_level (data);
 
   parse_statement_list (data, peek_source_element, parse_source_element,
-      &statement, TOKEN_EOF);
-  parse_token (data, TOKEN_EOF);
+      &statement, TOKEN_NONE);
+  parse_token (data, TOKEN_NONE);
 
   vivi_parser_end_level (data);
   g_assert (data->level == NULL);

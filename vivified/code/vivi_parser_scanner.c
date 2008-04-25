@@ -304,12 +304,11 @@ vivi_parser_scanner_peek_next_token (ViviParserScanner *scanner)
 
 void
 vivi_parser_scanner_error (ViviParserScanner *scanner, 
-    guint line, int column, const char *format, ...)
+    guint line, guint column, const char *format, ...)
 {
   va_list args;
 
   g_return_if_fail (VIVI_IS_PARSER_SCANNER (scanner));
-  g_return_if_fail (column >= -1);
   g_return_if_fail (format != NULL);
 
   va_start (args, format);
@@ -319,17 +318,16 @@ vivi_parser_scanner_error (ViviParserScanner *scanner,
 
 void
 vivi_parser_scanner_errorv (ViviParserScanner *scanner, 
-    guint line, int column, const char *format, va_list args)
+    guint line, guint column, const char *format, va_list args)
 {
   char *message;
 
   g_return_if_fail (VIVI_IS_PARSER_SCANNER (scanner));
-  g_return_if_fail (column >= -1);
   g_return_if_fail (format != NULL);
 
   message = g_strdup_vprintf (format, args);
 
-  if (column >= 0) {
+  if (column > 0) {
     g_printerr ("%u,%i: error: %s\n", line, column, message);
   } else {
     g_printerr ("%u: error: %s\n", line, message);

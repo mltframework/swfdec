@@ -205,12 +205,12 @@ const ViviParserValue *		vivi_parser_scanner_get_value 	(ViviParserScanner *	sca
 
 void				vivi_parser_scanner_error	(ViviParserScanner *	scanner, 
 								 guint			line,
-								 int			column,
+								 guint			column,
 								 const char *		format,
 								 ...) G_GNUC_PRINTF (4, 5);
 void				vivi_parser_scanner_errorv	(ViviParserScanner *	scanner, 
 								 guint			line,
-								 int			column,
+								 guint			column,
 								 const char *		format,
 								 va_list		args);
 

@@ -35,6 +35,7 @@
 #include "vivi_code_asm_pool.h"
 #include "vivi_code_asm_push.h"
 #include "vivi_code_asm_store.h"
+#include "vivi_code_asm_try.h"
 #include "vivi_code_asm_with.h"
 #include "vivi_code_assembler.h"
 #include "vivi_code_comment.h"
@@ -379,6 +380,60 @@ vivi_disassemble_script (SwfdecScript *script)
 	    g_object_unref (fun);
 	  }
 	  break;
+        case SWFDEC_AS_ACTION_TRY:
+	  {
+	    gboolean has_catch, has_finally, use_register;
+	    guint flags, try_size, catch_size, finally_size, register_number;
+	    char *name;
+	    ViviCodeLabel *catch_start, *finally_start, *end_label;
+	    ViviCodeAsm *try;
+
+	    flags = swfdec_bits_get_u8 (&bits);
+
+	    has_catch = flags & (1 << 0);
+	    has_finally = flags & (1 << 1);
+	    use_register = flags & (1 << 2);
+
+	    try_size = swfdec_bits_get_u16 (&bits);
+	    catch_size = swfdec_bits_get_u16 (&bits);
+	    finally_size = swfdec_bits_get_u16 (&bits);
+	    if (use_register) {
+	      register_number = swfdec_bits_get_u8 (&bits);
+	      name = NULL; // shut up compiler warnings
+	    } else {
+	      register_number = 0;
+	      name = swfdec_bits_get_string (&bits, script->version);
+	    }
+
+	    end_label = vivi_disassemble_labels_get_label (labels,
+		pc + try_size + catch_size + finally_size);
+	    if (finally_size > 0) {
+	      finally_start = vivi_disassemble_labels_get_label (labels,
+		  pc + try_size + catch_size);
+	    } else {
+	      finally_start = end_label;
+	    }
+	    if (catch_size > 0) {
+	      catch_start = vivi_disassemble_labels_get_label (labels,
+		  pc + try_size);
+	    } else {
+	      catch_start = finally_start;
+	    }
+
+	    if (use_register) {
+	      try = vivi_code_asm_try_new_register (register_number,
+		  has_catch, has_finally, catch_start, finally_start,
+		  end_label);
+	    } else {
+	      try = vivi_code_asm_try_new_variable (name, has_catch,
+		  has_finally, catch_start, finally_start, end_label);
+	      g_free (name);
+	    }
+	    vivi_code_asm_try_set_reserved_flags (VIVI_CODE_ASM_TRY (try),
+		flags >> 3);
+	    vivi_code_assembler_add_code (assembler, try);
+	  }
+	  break;
         case SWFDEC_AS_ACTION_GET_URL:
 	  vivi_disassemble_get_url (assembler, &bits, script->version);
 	  break;
@@ -388,7 +443,6 @@ vivi_disassemble_script (SwfdecScript *script)
         case SWFDEC_AS_ACTION_SET_TARGET:
         case SWFDEC_AS_ACTION_GOTO_LABEL:
         case SWFDEC_AS_ACTION_WAIT_FOR_FRAME2:
-        case SWFDEC_AS_ACTION_TRY:
         case SWFDEC_AS_ACTION_GET_URL2:
         case SWFDEC_AS_ACTION_CALL:
         case SWFDEC_AS_ACTION_GOTO_FRAME2:

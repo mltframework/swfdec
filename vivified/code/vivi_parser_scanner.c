@@ -230,11 +230,12 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
   }
 
   value->line_terminator = FALSE;
-  value->position = 0; /* FIXME */
+  /* we set the position to "0" here so that we know if we initialized it already */
+  value->position = G_MAXSIZE; 
   value->token = vivi_parser_scanner_lex (scanner->scanner, value);
-#if 0
-  g_print ("%u:%u %c %s\n", value->line_number, value->column, 
-      value->line_terminator ? '+' : '-',
+#if 1
+  g_print ("%u:%u %5zu %c %s\n", value->line_number, value->column, 
+      value->position, value->line_terminator ? '+' : '-',
       vivi_parser_scanner_token_name (value->token));
 #endif
   value->line_number = vivi_parser_scanner_get_lineno (scanner->scanner);
@@ -262,6 +263,8 @@ vivi_parser_scanner_new (SwfdecBuffer *buffer)
   scanner = g_object_new (VIVI_TYPE_PARSER_SCANNER, NULL);
 
   vivi_parser_scanner__scan_bytes ((char *) buffer->data, buffer->length, scanner->scanner);
+  /* seems flex is too stupid to reset the line number for buffers */
+  vivi_parser_scanner_set_lineno (1, scanner->scanner);
 
   value = swfdec_ring_buffer_push (scanner->values);
   value->token = TOKEN_UNKNOWN;

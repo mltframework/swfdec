@@ -28,11 +28,23 @@ extern YY_DECL;
 
 %{
 static GString *string = NULL;
+
+#define RESET_POSITION value->position = G_MAXSIZE
+
 #define ERROR(...) vivi_parser_scanner_error (yyextra, yylineno, yycolumn, __VA_ARGS__)
 
+#define LINE_TERMINATOR G_STMT_START {\
+  value->line_terminator = TRUE; \
+  RESET_POSITION; \
+}G_STMT_END
+
 #define YY_USER_ACTION \
-  value->line_number = yylineno; \
-  value->column = yycolumn;
+  if (value->position == G_MAXSIZE) { \
+    value->line_number = yylineno; \
+    value->column = yycolumn; \
+    /* FIXME: is this supportable? */ \
+    value->position = yytext - YY_CURRENT_BUFFER_LVALUE->yy_ch_buf; \
+  }
 %}
 
 %option			header-file="vivi_parser_scanner_lex.h"
@@ -55,23 +67,31 @@ identifier_part		[$_a-zA-Z0-9]
 
 "/*"			{ BEGIN(comment); }
 <comment>{
-  "*/"			{ BEGIN(INITIAL); }
+  "*/"			{ 
+			  BEGIN(INITIAL);
+			  /* FIXME: use the comment somehow */
+			  RESET_POSITION;
+			}
   .			{ /* skip */ }
-  \n			{ value->line_terminator = TRUE; }
+  \n			{ LINE_TERMINATOR; }
   <<EOF>>		{
 			  BEGIN(INITIAL);
 			  ERROR ("Unterminated comment");
+			  RESET_POSITION;
 			}
 }
 
-"//"[^\r\n]*		{ /* skip */ }
+"//"[^\r\n]*		{ /* skip - the newline will reset the position */ }
 
-<<EOF>>			{ return TOKEN_NONE; }
+<<EOF>>			{ 
+			  /* wtf? no user action on EOF? */
+			  YY_USER_ACTION;
+			  return TOKEN_NONE;
+			}
 
-[ \t]			{ /* skip */ }
+[ \t]			{ RESET_POSITION; }
 
-\r\n			{ value->line_terminator = TRUE; }
-[\r\n]			{ value->line_terminator = TRUE; }
+[\r\n]			{ LINE_TERMINATOR; }
 
 "{"			{ return TOKEN_BRACE_LEFT; }
 "}"			{ return TOKEN_BRACE_RIGHT; }
@@ -233,6 +253,7 @@ identifier_part		[$_a-zA-Z0-9]
 			  BEGIN(INITIAL);
 			  g_string_free (string, TRUE);
 			  ERROR ("Unterminated string constant");
+			  RESET_POSITION;
 			}
   \\[0-7]{1,3}		{
 			  guint64 result;
@@ -273,7 +294,10 @@ identifier_part		[$_a-zA-Z0-9]
 			  return TOKEN_IDENTIFIER;
 			}
 
-.			{ ERROR ("Unknown character '%c'", yytext[0]); }
+.			{ 
+			  ERROR ("Unknown character '%c'", yytext[0]); 
+			  RESET_POSITION;
+			}
 
 %%
 

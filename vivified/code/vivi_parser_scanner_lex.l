@@ -39,7 +39,7 @@ extern YY_DECL;
 #define YY_USER_ACTION \
   if (value->position == G_MAXSIZE) { \
     value->line_number = yylineno; \
-    value->column = yycolumn; \
+    value->column = 0; \
     /* FIXME: is this supportable? */ \
     value->position = yytext - YY_CURRENT_BUFFER_LVALUE->yy_ch_buf; \
   }

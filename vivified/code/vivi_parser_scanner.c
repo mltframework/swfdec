@@ -62,6 +62,8 @@ vivi_parser_scanner_dispose (GObject *object)
   while (swfdec_ring_buffer_get_n_elements (scanner->values))
     vivi_parser_scanner_pop (scanner);
 
+  vivi_parser_scanner_lex_destroy (scanner->scanner);
+
   G_OBJECT_CLASS (vivi_parser_scanner_parent_class)->dispose (object);
 }
 
@@ -76,6 +78,7 @@ vivi_parser_scanner_class_init (ViviParserScannerClass *klass)
 static void
 vivi_parser_scanner_init (ViviParserScanner *scanner)
 {
+  vivi_parser_scanner_lex_init_extra (scanner, &scanner->scanner);
   scanner->values = swfdec_ring_buffer_new_for_type (ViviParserValue, 4);
 }
 
@@ -238,7 +241,7 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
   } else {
     value->line_terminator = FALSE;
     for (;;) {
-      value->token = vivi_parser_scanner_lex (value);
+      value->token = vivi_parser_scanner_lex (scanner->scanner, value);
       g_print ("got %s\n", vivi_parser_scanner_token_name (value->token));
       if (value->token == TOKEN_ERROR) {
 	vivi_parser_scanner_error (scanner, 0, 0, "%s", value->value.v_error);
@@ -247,7 +250,7 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
 	break;
       }
     }
-    value->line_number = vivi_parser_scanner_lineno;
+    value->line_number = vivi_parser_scanner_get_lineno (scanner->scanner);
     value->column = 0; /* FIXME */
     value->position = 0; /* FIXME */
   }
@@ -274,7 +277,7 @@ vivi_parser_scanner_new (FILE *file)
   scanner = g_object_new (VIVI_TYPE_PARSER_SCANNER, NULL);
   scanner->file = file;
 
-  vivi_parser_scanner_restart (file);
+  vivi_parser_scanner_restart (file, scanner->scanner);
 
   return scanner;
 }

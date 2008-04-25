@@ -20,8 +20,10 @@
 
 #include "vivi_parser_scanner.h"
 
-#define YY_DECL int vivi_parser_scanner_lex (ViviParserValue *value)
+#define YY_DECL int vivi_parser_scanner_lex (void *yyscanner, ViviParserValue *value)
 extern YY_DECL;
+
+#define YY_EXTRA_TYPE ViviParserScanner *
 }
 
 %{
@@ -34,6 +36,7 @@ static GString *string = NULL;
 %option			nostdinit
 %option			outfile="vivi_parser_scanner_lex.c"
 %option			prefix="vivi_parser_scanner_"
+%option			reentrant
 
 identifier_start	[$_a-zA-Z]
 identifier_part		[$_a-zA-Z0-9]

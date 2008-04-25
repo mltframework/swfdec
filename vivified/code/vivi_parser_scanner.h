@@ -182,6 +182,7 @@ struct _ViviParserScanner
   ViviParserScannerFunction	error_handler;
   gpointer			error_handler_data;
 
+  gpointer			scanner;
   SwfdecRingBuffer *		values;
 };
 

@@ -34,8 +34,6 @@ vivi_parser_value_reset (ViviParserValue *value)
     g_free (value->value.v_string);
   } else if (value->token == TOKEN_IDENTIFIER) {
     g_free (value->value.v_identifier);
-  } else if (value->token == TOKEN_ERROR) {
-    g_free (value->value.v_error);
   }
 
   /* FIXME: do a memset 0 here? */
@@ -88,7 +86,6 @@ static const struct {
 } token_names[] = {
   // special
   { TOKEN_NONE, "NONE" },
-  { TOKEN_ERROR, "ERROR" },
   { TOKEN_UNKNOWN, "UNKNOWN" },
 
   // comparision
@@ -240,16 +237,8 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
     value->line_terminator = FALSE;
   } else {
     value->line_terminator = FALSE;
-    for (;;) {
-      value->token = vivi_parser_scanner_lex (scanner->scanner, value);
-      g_print ("got %s\n", vivi_parser_scanner_token_name (value->token));
-      if (value->token == TOKEN_ERROR) {
-	vivi_parser_scanner_error (scanner, 0, 0, "%s", value->value.v_error);
-	vivi_parser_value_reset (value);
-      } else {
-	break;
-      }
-    }
+    value->token = vivi_parser_scanner_lex (scanner->scanner, value);
+    g_print ("got %s\n", vivi_parser_scanner_token_name (value->token));
     value->line_number = vivi_parser_scanner_get_lineno (scanner->scanner);
     value->column = 0; /* FIXME */
     value->position = 0; /* FIXME */

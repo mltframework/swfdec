@@ -28,6 +28,7 @@ extern YY_DECL;
 
 %{
 static GString *string = NULL;
+#define ERROR(...) vivi_parser_scanner_error (yyextra, yylineno, yycolumn, __VA_ARGS__)
 %}
 
 %option			header-file="vivi_parser_scanner_lex.h"
@@ -52,9 +53,7 @@ identifier_part		[$_a-zA-Z0-9]
   .			{ /* skip */ }
   <<EOF>>		{
 			  BEGIN(INITIAL);
-			  value->value.v_error =
-			    g_strdup ("Unterminated comment");
-			  return TOKEN_ERROR;
+			  ERROR ("Unterminated comment");
 			}
 }
 
@@ -226,33 +225,23 @@ identifier_part		[$_a-zA-Z0-9]
   \n			{
 			  BEGIN(INITIAL);
 			  g_string_free (string, TRUE);
-			  value->value.v_error = g_strdup (
-			      "Unterminated string constant");
-			  return TOKEN_ERROR;
+			  ERROR ("Unterminated string constant");
 			}
   \\[0-7]{1,3}		{
 			  guint64 result;
 			  result = g_ascii_strtoull (yytext + 1, NULL, 8);
 			  if (result > 0xff || result == 0) {
-			    value->value.v_error = g_strdup_printf (
-				"Invalid escape sequence %s", yytext);
-			    return TOKEN_ERROR;
+			    ERROR ("Invalid escape sequence %s", yytext);
 			  } else {
 			    g_string_append_c (string, result);
 			  }
 			}
-  \\[0-9]+		{
-			  value->value.v_error = g_strdup_printf (
-			      "Invalid escape sequence %s", yytext);
-			  return TOKEN_ERROR;
-			}
+  \\[0-9]+		{ ERROR ("Invalid escape sequence %s", yytext); }
   \\x[0-9a-fA-F]{2}	{
 			  guint64 result;
 			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
 			  if (result == 0) {
-			    value->value.v_error = g_strdup_printf (
-				"Invalid escape sequence %s", yytext);
-			    return TOKEN_ERROR;
+			    ERROR ("Invalid escape sequence %s", yytext);
 			  } else {
 			    g_string_append_c (string, result);
 			  }
@@ -277,11 +266,7 @@ identifier_part		[$_a-zA-Z0-9]
 			  return TOKEN_IDENTIFIER;
 			}
 
-.			{
-			  value->value.v_error = g_strdup_printf (
-			      "Unknown character '%c'", yytext[0]);
-			  return TOKEN_ERROR;
-			}
+.			{ ERROR ("Unknown character '%c'", yytext[0]); }
 
 %%
 

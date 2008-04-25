@@ -32,7 +32,6 @@ typedef enum {
   TOKEN_NONE = 0,
   TOKEN_ERROR,
   TOKEN_UNKNOWN,
-  TOKEN_LINE_TERMINATOR,
 
   // comparision
   TOKEN_BRACE_LEFT,

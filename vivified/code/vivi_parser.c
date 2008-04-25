@@ -224,9 +224,8 @@ vivi_parser_error_unexpected_line_terminator (ParseData *data, guint expected)
   g_return_if_fail (data != NULL);
   g_return_if_fail (expected != TOKEN_NONE);
 
-  vivi_parser_error (data, "Expected %s before %s",
-      vivi_parser_token_name (expected),
-      vivi_parser_token_name (TOKEN_LINE_TERMINATOR));
+  vivi_parser_error (data, "Expected %s before end of line",
+      vivi_parser_token_name (expected));
 }
 
 G_GNUC_WARN_UNUSED_RESULT static gboolean

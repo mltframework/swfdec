@@ -87,7 +87,6 @@ static const struct {
   { TOKEN_NONE, "NONE" },
   { TOKEN_ERROR, "ERROR" },
   { TOKEN_UNKNOWN, "UNKNOWN" },
-  { TOKEN_LINE_TERMINATOR, "NEW LINE" },
 
   // comparision
   { TOKEN_BRACE_LEFT, "{", },
@@ -241,10 +240,7 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
     for (;;) {
       value->token = yylex (value);
       g_print ("got %s\n", vivi_parser_scanner_token_name (value->token));
-      if (value->token == TOKEN_LINE_TERMINATOR) {
-	value->line_terminator = TRUE;
-	vivi_parser_value_reset (value);
-      } else if (value->token == TOKEN_ERROR) {
+      if (value->token == TOKEN_ERROR) {
 	vivi_parser_scanner_error (scanner, 0, 0, "%s", value->value.v_error);
 	vivi_parser_value_reset (value);
       } else {

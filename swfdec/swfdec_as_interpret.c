@@ -2550,6 +2550,8 @@ typedef struct {
     guint		register_number;
     char *		variable_name;
   };
+
+  SwfdecAsObject *	scope_object;
 } TryData;
 
 static void
@@ -2594,6 +2596,11 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
 
   cx = SWFDEC_AS_OBJECT (frame)->context;
 
+  g_assert (frame->scope_chain->data == try_data->scope_object);
+  frame->scope_chain =
+    g_slist_delete_link (frame->scope_chain, frame->scope_chain);
+  try_data->scope_object = NULL;
+
   if (swfdec_as_context_catch (cx, &val))
   {
     // we got an exception while in catch block:
@@ -2637,6 +2644,14 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
     // we got an exception while in try block:
     // set the exception variable
     // add new block for catch and jump to it
+    try_data->scope_object = swfdec_as_object_new_empty (cx);
+    cx->frame->scope_chain = g_slist_prepend (cx->frame->scope_chain,
+	try_data->scope_object);
+
+    swfdec_as_frame_push_block (frame, try_data->catch_start,
+	try_data->catch_start + try_data->catch_size,
+	swfdec_action_try_end_catch, try_data);
+    frame->pc = try_data->catch_start;
 
     if (try_data->use_register)
     {
@@ -2649,35 +2664,9 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
     }
     else
     {
-      // FIXME: this is duplicate of SetVariable
-      SwfdecAsObject *object;
-      const char *s, *rest;
-
-      s = swfdec_as_context_get_string (cx, try_data->variable_name);
-      if (swfdec_action_get_movie_by_path (cx, s, &object, &rest)) {
-	if (object && rest) {
-	  swfdec_as_object_set_variable (object,
-	      swfdec_as_context_get_string (cx, rest), &val);
-	} else {
-	  if (object) {
-	    rest = s;
-	  } else {
-	    rest = swfdec_as_context_get_string (cx, rest);
-	  }
-	  swfdec_as_frame_set_variable (frame, rest, &val);
-	}
-      }
-      else
-      {
-	SWFDEC_ERROR ("cannot set Error to variable %s",
-	    try_data->variable_name);
-      }
+      swfdec_as_object_set_variable (try_data->scope_object,
+	  swfdec_as_context_get_string (cx, try_data->variable_name), &val);
     }
-
-    swfdec_as_frame_push_block (frame, try_data->catch_start,
-	try_data->catch_start + try_data->catch_size,
-	swfdec_action_try_end_catch, try_data);
-    frame->pc = try_data->catch_start;
   }
   else
   {

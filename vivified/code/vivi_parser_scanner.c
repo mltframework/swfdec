@@ -233,7 +233,7 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
   /* we set the position to "0" here so that we know if we initialized it already */
   value->position = G_MAXSIZE; 
   value->token = vivi_parser_scanner_lex (scanner->scanner, value);
-#if 1
+#if 0
   g_print ("%u:%u %5zu %c %s\n", value->line_number, value->column, 
       value->position, value->line_terminator ? '+' : '-',
       vivi_parser_scanner_token_name (value->token));

@@ -3349,6 +3349,15 @@ EXTRA_DIST = \
 	tointeger-various-6.swf.trace \
 	tointeger-various-7.swf \
 	tointeger-various-7.swf.trace \
+	too-many-blocks.as \
+	too-many-blocks-5.swf \
+	too-many-blocks-5.swf.trace \
+	too-many-blocks-6.swf \
+	too-many-blocks-6.swf.trace \
+	too-many-blocks-7.swf \
+	too-many-blocks-7.swf.trace \
+	too-many-blocks-8.swf \
+	too-many-blocks-8.swf.trace \
 	totalframes.xml \
 	totalframes.swf \
 	totalframes.swf.trace \

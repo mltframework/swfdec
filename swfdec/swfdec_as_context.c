@@ -918,7 +918,7 @@ start:
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
       goto error;
     }
-    if (check_block && (pc < frame->block_start || pc >= frame->block_end)) {
+    while (check_block && (pc < frame->block_start || pc >= frame->block_end)) {
       SWFDEC_LOG ("code exited block");
       swfdec_as_frame_pop_block (frame);
       pc = frame->pc;

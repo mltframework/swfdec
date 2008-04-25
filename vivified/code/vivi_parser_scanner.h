@@ -156,8 +156,8 @@ typedef struct {
   }				value;
   gboolean			line_terminator;
   guint				line_number;
-  guint				column;
-  gsize				position;
+  guint				column;		/* FIXME: not supported by flex */
+  gsize				position;	/* FIXME: neither supported by flex nor us */
 } ViviParserValue;
 
 typedef void (*ViviParserScannerFunction) (const char *text, gpointer user_data);

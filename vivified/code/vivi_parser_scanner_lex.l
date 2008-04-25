@@ -57,6 +57,7 @@ identifier_part		[$_a-zA-Z0-9]
 <comment>{
   "*/"			{ BEGIN(INITIAL); }
   .			{ /* skip */ }
+  \n			{ value->line_terminator = TRUE; }
   <<EOF>>		{
 			  BEGIN(INITIAL);
 			  ERROR ("Unterminated comment");

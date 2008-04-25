@@ -867,6 +867,15 @@ EXTRA_DIST = \
 	definelocal-overwrite-7.swf.trace \
 	definelocal-overwrite-8.swf \
 	definelocal-overwrite-8.swf.trace \
+	definelocal-scope.as \
+	definelocal-scope-5.swf \
+	definelocal-scope-5.swf.trace \
+	definelocal-scope-6.swf \
+	definelocal-scope-6.swf.trace \
+	definelocal-scope-7.swf \
+	definelocal-scope-7.swf.trace \
+	definelocal-scope-8.swf \
+	definelocal-scope-8.swf.trace \
 	definelocal-target.as \
 	definelocal-target-5.swf \
 	definelocal-target-5.swf.trace \

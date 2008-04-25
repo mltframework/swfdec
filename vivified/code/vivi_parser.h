@@ -17,8 +17,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _VIVI_DECOMPILER_H_
-#define _VIVI_DECOMPILER_H_
+#ifndef _VIVI_PARSER_H_
+#define _VIVI_PARSER_H_
 
 #include <stdio.h>
 

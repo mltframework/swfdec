@@ -42,6 +42,7 @@ static GString *string = NULL;
 %option			outfile="vivi_parser_scanner_lex.c"
 %option			prefix="vivi_parser_scanner_"
 %option			reentrant
+%option			warn
 %option			yylineno
 
 identifier_start	[$_a-zA-Z]

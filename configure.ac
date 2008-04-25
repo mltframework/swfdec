@@ -196,7 +196,7 @@ if test "$HAVE_LIBOIL" = "no"; then
   AC_MSG_ERROR([liboil-0.3 >= $LIBOIL_VER is required to build swfdec])
 fi
 
-CAIRO_VER=1.2.0
+CAIRO_VER=1.6.0
 PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VER cairo-png >= $CAIRO_VER, HAVE_CAIRO=yes, HAVE_CAIRO=no)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_CFLAGS)

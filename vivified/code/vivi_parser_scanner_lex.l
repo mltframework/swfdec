@@ -56,7 +56,6 @@ identifier_part		[$_a-zA-Z0-9]
   <<EOF>>		{
 			  count ();
 			  BEGIN(INITIAL);
-			  value->type = VALUE_TYPE_ERROR;
 			  value->value.v_error =
 			    g_strdup ("Unterminated comment");
 			  return TOKEN_ERROR;
@@ -206,20 +205,17 @@ identifier_part		[$_a-zA-Z0-9]
 "null"			{ count (); return TOKEN_NULL; }
 "true"			{
 			  count ();
-			  value->type = VALUE_TYPE_BOOLEAN;
 			  value->value.v_boolean = 1;
 			  return TOKEN_BOOLEAN;
 			}
 "false"			{
 			  count ();
-			  value->type = VALUE_TYPE_BOOLEAN;
 			  value->value.v_boolean = 0;
 			  return TOKEN_BOOLEAN;
 			}
 
 0[xX][0-9a-fA-F]+	{
 			  count ();
-			  value->type = VALUE_TYPE_NUMBER;
 			  value->value.v_number =
 			    g_ascii_strtoull (yytext, NULL, 16);
 			  return TOKEN_NUMBER;
@@ -227,14 +223,12 @@ identifier_part		[$_a-zA-Z0-9]
 
 ([1-9][0-9]*|0)(\.[0-9]*)?([eE][+-]?[0-9]+)? {
 			  count ();
-			  value->type = VALUE_TYPE_NUMBER;
 			  value->value.v_number = g_ascii_strtod (yytext, NULL);
 			  return TOKEN_NUMBER;
 			}
 
 \.[0-9]+([eE][+-]?[0-9]+)? {
 			  count ();
-			  value->type = VALUE_TYPE_NUMBER;
 			  value->value.v_number = g_ascii_strtod (yytext, NULL);
 			  return TOKEN_NUMBER;
 			}
@@ -249,7 +243,6 @@ identifier_part		[$_a-zA-Z0-9]
   \"			{
 			  count ();
 			  BEGIN(INITIAL);
-			  value->type = VALUE_TYPE_STRING;
 			  value->value.v_string = g_string_free (string, FALSE);
 			  return TOKEN_STRING;
 			}
@@ -257,7 +250,6 @@ identifier_part		[$_a-zA-Z0-9]
 			  count ();
 			  BEGIN(INITIAL);
 			  g_string_free (string, TRUE);
-			  value->type = VALUE_TYPE_ERROR;
 			  value->value.v_error = g_strdup (
 			      "Unterminated string constant");
 			  return TOKEN_ERROR;
@@ -267,7 +259,6 @@ identifier_part		[$_a-zA-Z0-9]
 			  count ();
 			  result = g_ascii_strtoull (yytext + 1, NULL, 8);
 			  if (result > 0xff || result == 0) {
-			    value->type = VALUE_TYPE_ERROR;
 			    value->value.v_error = g_strdup_printf (
 				"Invalid escape sequence %s", yytext);
 			    return TOKEN_ERROR;
@@ -277,7 +268,6 @@ identifier_part		[$_a-zA-Z0-9]
 			}
   \\[0-9]+		{
 			  count ();
-			  value->type = VALUE_TYPE_ERROR;
 			  value->value.v_error = g_strdup_printf (
 			      "Invalid escape sequence %s", yytext);
 			  return TOKEN_ERROR;
@@ -287,7 +277,6 @@ identifier_part		[$_a-zA-Z0-9]
 			  count ();
 			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
 			  if (result == 0) {
-			    value->type = VALUE_TYPE_ERROR;
 			    value->value.v_error = g_strdup_printf (
 				"Invalid escape sequence %s", yytext);
 			    return TOKEN_ERROR;
@@ -313,14 +302,12 @@ identifier_part		[$_a-zA-Z0-9]
 
 {identifier_start}({identifier_part})* {
 			  count ();
-			  value->type = VALUE_TYPE_IDENTIFIER;
 			  value->value.v_identifier = g_strdup (yytext);
 			  return TOKEN_IDENTIFIER;
 			}
 
 .			{
 			  count ();
-			  value->type = VALUE_TYPE_ERROR;
 			  value->value.v_error = g_strdup_printf (
 			      "Unknown character '%c'", yytext[0]);
 			  return TOKEN_ERROR;

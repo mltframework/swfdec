@@ -147,18 +147,8 @@ typedef enum {
   TOKEN_LAST
 } ViviParserScannerToken;
 
-typedef enum {
-  VALUE_TYPE_NONE,
-  VALUE_TYPE_BOOLEAN,
-  VALUE_TYPE_NUMBER,
-  VALUE_TYPE_STRING,
-  VALUE_TYPE_IDENTIFIER,
-  VALUE_TYPE_ERROR
-} ViviParserScannerValueType;
-
 typedef struct {
   ViviParserScannerToken	token;
-  ViviParserScannerValueType	type;
   union {
     gboolean	  		v_boolean;
     double	  		v_number;

@@ -623,7 +623,7 @@ peek_boolean_value (ParseData *data)
 {
   const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
 
-  if (value->type == VALUE_TYPE_BOOLEAN) {
+  if (value->token == TOKEN_BOOLEAN) {
     return value->value.v_boolean;
   } else {
     return FALSE;
@@ -638,7 +638,7 @@ parse_boolean_value (ParseData *data)
   parse_token (data, TOKEN_BOOLEAN);
 
   value = vivi_parser_scanner_get_value (data->scanner, 0);
-  if (value->type == VALUE_TYPE_BOOLEAN) {
+  if (value->token == TOKEN_BOOLEAN) {
     return value->value.v_boolean;
   } else {
     return FALSE;
@@ -670,7 +670,7 @@ peek_numeric_value (ParseData *data)
 {
   const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
 
-  if (value->type == VALUE_TYPE_NUMBER) {
+  if (value->token == TOKEN_NUMBER) {
     return value->value.v_number;
   } else {
     return NAN;
@@ -685,7 +685,7 @@ parse_numeric_value (ParseData *data)
   parse_token (data, TOKEN_NUMBER);
 
   value = vivi_parser_scanner_get_value (data->scanner, 0);
-  if (value->type == VALUE_TYPE_NUMBER) {
+  if (value->token == TOKEN_NUMBER) {
     return value->value.v_number;
   } else {
     return NAN;
@@ -716,7 +716,7 @@ G_GNUC_UNUSED static const char *
 peek_string_value (ParseData *data)
 {
   const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
-  if (value->type == VALUE_TYPE_STRING) {
+  if (value->token == TOKEN_STRING) {
     return value->value.v_string;
   } else {
     return "undefined";
@@ -731,7 +731,7 @@ parse_string_value (ParseData *data)
   parse_token (data, TOKEN_STRING);
 
   value = vivi_parser_scanner_get_value (data->scanner, 0);
-  if (value->type == VALUE_TYPE_STRING) {
+  if (value->token == TOKEN_STRING) {
     return value->value.v_string;
   } else {
     return "undefined";
@@ -808,7 +808,7 @@ peek_identifier_value (ParseData *data)
 {
   const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
 
-  if (value->type == VALUE_TYPE_IDENTIFIER) {
+  if (value->token == TOKEN_IDENTIFIER) {
     return value->value.v_identifier;
   } else {
     return "undefined";
@@ -822,7 +822,7 @@ parse_identifier_value (ParseData *data)
   parse_token (data, TOKEN_IDENTIFIER);
 
   value = vivi_parser_scanner_get_value (data->scanner, 0);
-  if (value->type == VALUE_TYPE_IDENTIFIER) {
+  if (value->token == TOKEN_IDENTIFIER) {
     return value->value.v_identifier;
   } else {
     return "undefined";

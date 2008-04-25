@@ -30,28 +30,16 @@ G_DEFINE_TYPE (ViviParserScanner, vivi_parser_scanner, G_TYPE_OBJECT)
 static void
 vivi_parser_value_reset (ViviParserValue *value)
 {
-  switch (value->type) {
-    case VALUE_TYPE_STRING:
-      g_free (value->value.v_string);
-      break;
-    case VALUE_TYPE_IDENTIFIER:
-      g_free (value->value.v_identifier);
-      break;
-    case VALUE_TYPE_ERROR:
-      g_free (value->value.v_error);
-      break;
-    case VALUE_TYPE_NONE:
-    case VALUE_TYPE_BOOLEAN:
-    case VALUE_TYPE_NUMBER:
-      /* nothing */
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
+  if (value->token == TOKEN_STRING) {
+    g_free (value->value.v_string);
+  } else if (value->token == TOKEN_IDENTIFIER) {
+    g_free (value->value.v_identifier);
+  } else if (value->token == TOKEN_ERROR) {
+    g_free (value->value.v_error);
   }
 
   /* FIXME: do a memset 0 here? */
-  value->type = VALUE_TYPE_NONE;
+  value->token = TOKEN_NONE;
 }
 
 static void
@@ -244,7 +232,6 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
 
   if (scanner->file == NULL) {
     value->token = TOKEN_NONE;
-    value->type = VALUE_TYPE_NONE;
     value->column = 0;
     value->position = 0;
     value->line_number = 0;
@@ -253,7 +240,6 @@ vivi_parser_scanner_advance (ViviParserScanner *scanner)
     value->line_terminator = FALSE;
     for (;;) {
       value->token = yylex (value);
-      value->type = VALUE_TYPE_NONE;
       g_print ("got %s\n", vivi_parser_scanner_token_name (value->token));
       if (value->token == TOKEN_LINE_TERMINATOR) {
 	value->line_terminator = TRUE;

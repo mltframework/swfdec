@@ -252,13 +252,20 @@ swfdec_xml_socket_get (SwfdecAsObject *object)
 {
   SwfdecXmlSocket *xml;
 
-  if (object == NULL ||
-      xml_socket_quark == 0) {
-    SWFDEC_WARNING ("no xml socket on object");
+  if (object == NULL) {
+    SWFDEC_WARNING ("no object to get xml socket from");
+    return NULL;
+  }
+  if (xml_socket_quark == 0) {
+    SWFDEC_WARNING ("no sockets have been created yet");
     return NULL;
   }
   
   xml = g_object_get_qdata (G_OBJECT (object), xml_socket_quark);
+  if (xml == NULL) {
+    SWFDEC_WARNING ("no xml socket on object");
+    return NULL;
+  }
   if (xml->socket == NULL) {
     SWFDEC_WARNING ("xml socket not open");
     return NULL;

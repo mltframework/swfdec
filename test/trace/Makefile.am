@@ -770,6 +770,15 @@ EXTRA_DIST = \
 	crash-0.6.2-try-and-exception-on-dispose-8.swf \
 	crash-0.6.2-try-and-exception-on-dispose-8.swf.trace \
 	crash-0.6.2-try-and-exception-on-dispose.as \
+	crash-0.6.6-xmlsocket-5.swf \
+	crash-0.6.6-xmlsocket-5.swf.trace \
+	crash-0.6.6-xmlsocket-6.swf \
+	crash-0.6.6-xmlsocket-6.swf.trace \
+	crash-0.6.6-xmlsocket-7.swf \
+	crash-0.6.6-xmlsocket-7.swf.trace \
+	crash-0.6.6-xmlsocket-8.swf \
+	crash-0.6.6-xmlsocket-8.swf.trace \
+	crash-0.6.6-xmlsocket.as \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \

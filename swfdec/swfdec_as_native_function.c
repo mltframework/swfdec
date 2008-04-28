@@ -252,8 +252,8 @@ swfdec_as_native_function_set_construct_type (SwfdecAsNativeFunction *function, 
  * <listitem><para>"n": convert to number. Requires a %double pointer
  *                 </para></listitem>
  * <listitem><para>"o": convert to object. Requires a #SwfdecAsObject pointer.
- *                 If the conversion fails, this function immediately return %
- *                 FALSE.</para></listitem>
+ *                 If the conversion fails, this function immediately returns
+ *                 %FALSE.</para></listitem>
  * <listitem><para>"O": convert to object or %NULL. Requires a #SwfdecAsObject
  *                 pointer.</para></listitem>
  * <listitem><para>"s": convert to garbage-collected string. Requires a const 

@@ -1237,6 +1237,15 @@ EXTRA_DIST = \
 	get-depth-7.swf.trace \
 	get-depth-8.swf \
 	get-depth-8.swf.trace \
+	getBounds-local_to_global-5.swf \
+	getBounds-local_to_global-5.swf.trace \
+	getBounds-local_to_global-6.swf \
+	getBounds-local_to_global-6.swf.trace \
+	getBounds-local_to_global-7.swf \
+	getBounds-local_to_global-7.swf.trace \
+	getBounds-local_to_global-8.swf \
+	getBounds-local_to_global-8.swf.trace \
+	getBounds-local_to_global.as \
 	getsetproperty-target.as \
 	getsetproperty-target-5.swf \
 	getsetproperty-target-5.swf.trace \

@@ -38,6 +38,7 @@
 typedef enum {
   REWRITE_TRACE_FUNCTION_NAME = (1 << 0),
   REWRITE_RANDOM              = (1 << 1),
+  REWRITE_GETTERS	      = (1 << 2),
 
   REWRITE_INIT		      =	(1 << 17)
 } RewriteOptions;
@@ -203,6 +204,23 @@ replace_random (ViviCodeAssembler *assembler, guint init)
   }
 }
 
+static void
+rewrite_getters (ViviCodeAssembler *assembler)
+{
+  guint i;
+
+  for (i = 0; i < vivi_code_assembler_get_n_codes (assembler); i++) {
+    ViviCodeAsm *code = vivi_code_assembler_get_code (assembler, i);
+    if (VIVI_IS_CODE_ASM_GET_VARIABLE (code) ||
+	VIVI_IS_CODE_ASM_GET_MEMBER (code)) {
+      i++;
+      INSERT_CODE (assembler, i, vivi_code_asm_push_duplicate_new ());
+      INSERT_CODE (assembler, i, vivi_code_asm_trace_new ());
+      i--;
+    }
+  }
+}
+
 /*** INFRASTRUCTURE ***/
 
 static SwfdecBuffer *
@@ -221,6 +239,8 @@ do_script (SwfdecBuffer *buffer, guint flags, const char *name, guint version)
     insert_function_trace (assembler, name);
   if (flags & REWRITE_RANDOM)
     replace_random (assembler, flags & REWRITE_INIT);
+  if (flags & REWRITE_GETTERS)
+    rewrite_getters (assembler);
 
   script = vivi_code_assembler_assemble_script (assembler, version, &error);
   g_object_unref (assembler);
@@ -377,8 +397,10 @@ main (int argc, char *argv[])
   SwfdecBuffer *buffer;
   gboolean trace_function_names = FALSE;
   gboolean random = FALSE;
+  gboolean getters = FALSE;
 
   GOptionEntry options[] = {
+    { "getters", 'g', 0, G_OPTION_ARG_NONE, &getters, "trace all variable get operations", NULL },
     { "trace-function-names", 'n', 0, G_OPTION_ARG_NONE, &trace_function_names, "trace names of called functions", NULL },
     { "no-random", 'r', 0, G_OPTION_ARG_NONE, &random, "replace all random values with 0", NULL },
     { NULL }
@@ -417,7 +439,8 @@ main (int argc, char *argv[])
 
   buffer = process_buffer (buffer,
       (trace_function_names ? REWRITE_TRACE_FUNCTION_NAME : 0) |
-      (random ? REWRITE_RANDOM : 0));
+      (random ? REWRITE_RANDOM : 0) |
+      (getters ? REWRITE_GETTERS : 0));
   if (buffer == NULL) {
     g_printerr ("\"%s\": Broken Flash file\n", argv[1]);
     return 1;

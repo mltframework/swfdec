@@ -163,7 +163,7 @@ swfdec_gtk_socket_connect (SwfdecSocket *sock_, SwfdecPlayer *player,
   sock->sock = soup_socket_new (
       SOUP_SOCKET_FLAG_NONBLOCKING, TRUE,
       SOUP_SOCKET_REMOTE_ADDRESS, addr, NULL);
-  g_signal_connect (sock->sock, "disconnect", 
+  g_signal_connect (sock->sock, "disconnected", 
       G_CALLBACK (swfdec_gtk_socket_do_disconnect), socket);
   g_signal_connect (sock->sock, "readable", 
       G_CALLBACK (swfdec_gtk_socket_do_read), socket);

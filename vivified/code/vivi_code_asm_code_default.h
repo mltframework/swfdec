@@ -36,7 +36,21 @@ ViviCodeAsm *		vivi_code_asm_ ## underscore_name ## _new	(void);
 
 #include "vivi_code_defaults.h"
 
-#define VIVI_TYPE_CODE_ASM_RANDOM                    (vivi_code_asm_random_get_type())
+#define VIVI_TYPE_CODE_ASM_GET_MEMBER                    (vivi_code_asm_get_member_get_type())
+#define VIVI_IS_CODE_ASM_GET_MEMBER(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_ASM_GET_MEMBER))
+#define VIVI_IS_CODE_ASM_GET_MEMBER_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_CODE_ASM_GET_MEMBER))
+#define VIVI_CODE_ASM_GET_MEMBER(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_CODE_ASM_GET_MEMBER, ViviCodeAsmGetMember))
+#define VIVI_CODE_ASM_GET_MEMBER_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_CODE_ASM_GET_MEMBER, ViviCodeAsmGetMemberClass))
+#define VIVI_CODE_ASM_GET_MEMBER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_CODE_ASM_GET_MEMBER, ViviCodeAsmGetMemberClass))
+
+#define VIVI_TYPE_CODE_ASM_GET_VARIABLE                    (vivi_code_asm_get_variable_get_type())
+#define VIVI_IS_CODE_ASM_GET_VARIABLE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_ASM_GET_VARIABLE))
+#define VIVI_IS_CODE_ASM_GET_VARIABLE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_CODE_ASM_GET_VARIABLE))
+#define VIVI_CODE_ASM_GET_VARIABLE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_CODE_ASM_GET_VARIABLE, ViviCodeAsmGetVariable))
+#define VIVI_CODE_ASM_GET_VARIABLE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_CODE_ASM_GET_VARIABLE, ViviCodeAsmGetVariableClass))
+#define VIVI_CODE_ASM_GET_VARIABLE_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_CODE_ASM_GET_VARIABLE, ViviCodeAsmGetVariableClass))
+
+#define VIVI_TYPE_CODE_ASM_RANDOM		     (vivi_code_asm_random_get_type())
 #define VIVI_IS_CODE_ASM_RANDOM(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_ASM_RANDOM))
 #define VIVI_IS_CODE_ASM_RANDOM_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_CODE_ASM_RANDOM))
 #define VIVI_CODE_ASM_RANDOM(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_CODE_ASM_RANDOM, ViviCodeAsmRandom))

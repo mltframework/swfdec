@@ -474,6 +474,8 @@ swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
   g_return_if_fail (y != NULL);
 
   do {
+    if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
+      swfdec_movie_update (movie);
     cairo_matrix_transform_point (&movie->matrix, x, y);
   } while ((movie = movie->parent));
 }

@@ -791,7 +791,7 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsObject *obj;
   SwfdecMovie *movie;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
 
   obj= swfdec_as_object_new_empty (cx);
   if (obj== NULL)
@@ -815,7 +815,7 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     if (movie->parent)
       swfdec_movie_rect_local_to_global (movie->parent, &rect);
-    swfdec_movie_rect_global_to_local ((other != NULL ? other : movie), &rect);
+    swfdec_movie_rect_global_to_local (other, &rect);
 
     x0 = rect.x0;
     y0 = rect.y0;

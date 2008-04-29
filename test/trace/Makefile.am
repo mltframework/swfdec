@@ -779,6 +779,15 @@ EXTRA_DIST = \
 	crash-0.6.6-xmlsocket-8.swf \
 	crash-0.6.6-xmlsocket-8.swf.trace \
 	crash-0.6.6-xmlsocket.as \
+	crash-0.7.1-getTextExtent-5.swf \
+	crash-0.7.1-getTextExtent-5.swf.trace \
+	crash-0.7.1-getTextExtent-6.swf \
+	crash-0.7.1-getTextExtent-6.swf.trace \
+	crash-0.7.1-getTextExtent-7.swf \
+	crash-0.7.1-getTextExtent-7.swf.trace \
+	crash-0.7.1-getTextExtent-8.swf \
+	crash-0.7.1-getTextExtent-8.swf.trace \
+	crash-0.7.1-getTextExtent.as \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \

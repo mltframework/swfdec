@@ -862,7 +862,10 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
     pango_shape (text, strlen (text), &analysis, glyph_string);
 
     desc = pango_font_description_new ();
-    pango_font_description_set_family_static (desc, format->font);
+    if (format->font == NULL)
+      pango_font_description_set_family_static (desc, SWFDEC_AS_STR_Times_New_Roman);
+    else
+      pango_font_description_set_family_static (desc, format->font);
     pango_font_description_set_size (desc, format->size * PANGO_SCALE);
     if (format->bold){
       pango_font_description_set_weight (desc, PANGO_WEIGHT_BOLD);
@@ -878,7 +881,6 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
     g_list_free (item_list);
     pango_font_description_free (desc);
     g_object_unref (G_OBJECT (pcontext));
-    g_object_unref (G_OBJECT (fontmap));
     g_object_unref (G_OBJECT (font));
 
     width = ink_rect.width / PANGO_SCALE + format->left_margin

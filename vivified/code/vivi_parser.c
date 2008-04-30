@@ -1505,6 +1505,7 @@ static const BuiltinCall builtin_calls[] = {
   { "getTimer",    vivi_code_get_timer_new, NULL, NULL },
   { "int",         NULL, vivi_code_to_integer_new, NULL },
   { "length",      NULL, vivi_code_string_length_new, NULL },
+  { "Number",      NULL, vivi_code_to_number_new, NULL },
   { "ord",         NULL, vivi_code_char_to_ascii_new, NULL },
   { "random",      NULL, vivi_code_random_new, NULL },
   { "substring",   NULL, NULL, parse_substring },
@@ -1983,9 +1984,42 @@ parse_unary_expression (ParseData *data, ViviCodeStatement **statement)
 	  vivi_parser_assignment_new (value, tmp));
       g_object_unref (tmp);
       break;
-    /*case TOKEN_PLUS:
+    case TOKEN_PLUS:
+      vivi_parser_scanner_get_next_token (data->scanner);
+
+      value = parse_unary_expression (data, statement);
+
+      if (!VIVI_IS_CODE_NUMBER (value)) {
+	tmp = value;
+	value = vivi_code_to_number_new (tmp);
+	g_object_unref (tmp);
+      }
+      break;
     case TOKEN_MINUS:
-    case TOKEN_BITWISE_NOT:*/
+      vivi_parser_scanner_get_next_token (data->scanner);
+
+      value = parse_unary_expression (data, statement);
+
+      if (VIVI_IS_CODE_NUMBER (value)) {
+	tmp = value;
+	value = vivi_code_number_new (
+	    -vivi_code_number_get_value (VIVI_CODE_NUMBER (tmp)));
+	g_object_unref (tmp);
+      } else {
+	ViviCodeValue *number;
+
+	tmp = value;
+	value = vivi_code_to_number_new (tmp);
+	g_object_unref (tmp);
+
+	number = vivi_code_number_new (-1);
+	tmp = value;
+	value = vivi_code_multiply_new (number, tmp);
+	g_object_unref (tmp);
+	g_object_unref (number);
+      }
+      break;
+    //case TOKEN_BITWISE_NOT:
     case TOKEN_LOGICAL_NOT:
       vivi_parser_start_code_token (data);
 

@@ -324,7 +324,7 @@ mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   if (SWFDEC_AS_OBJECT (movie)->context->version < 5) {
     if (!isfinite (d))
       return;
-    SWFDEC_ERROR ("FIXME: implement correct rounding errors here");
+    SWFDEC_FIXME ("implement correct rounding errors here");
   }
   movie->modified = TRUE;
   if (movie->rotation != d) {
@@ -516,7 +516,7 @@ swfdec_movie_get_asprop_index (SwfdecMovie *movie, const char *name)
       if (swfdec_movieclip_props[i].needs_movie && !SWFDEC_IS_SPRITE_MOVIE (movie))
 	return -1;
       if (swfdec_movieclip_props[i].get == NULL) {
-	SWFDEC_ERROR ("property %s not implemented", name);
+	SWFDEC_FIXME ("property %s not implemented", name);
       }
       return i;
     }

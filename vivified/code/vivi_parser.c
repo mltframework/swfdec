@@ -620,7 +620,8 @@ parse_null (ParseData *data)
 G_GNUC_UNUSED static gboolean
 peek_boolean_value (ParseData *data)
 {
-  const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
+  const ViviParserValue *value =
+    vivi_parser_scanner_get_value (data->scanner, 1);
 
   if (value->token == TOKEN_BOOLEAN) {
     return value->value.v_boolean;
@@ -633,7 +634,7 @@ static gboolean
 parse_boolean_value (ParseData *data)
 {
   const ViviParserValue *value;
-  
+
   parse_token (data, TOKEN_BOOLEAN);
 
   value = vivi_parser_scanner_get_value (data->scanner, 0);
@@ -667,7 +668,8 @@ parse_boolean (ParseData *data)
 G_GNUC_UNUSED static double
 peek_numeric_value (ParseData *data)
 {
-  const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
+  const ViviParserValue *value =
+    vivi_parser_scanner_get_value (data->scanner, 1);
 
   if (value->token == TOKEN_NUMBER) {
     return value->value.v_number;
@@ -714,7 +716,9 @@ parse_numeric (ParseData *data)
 G_GNUC_UNUSED static const char *
 peek_string_value (ParseData *data)
 {
-  const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
+  const ViviParserValue *value =
+    vivi_parser_scanner_get_value (data->scanner, 1);
+
   if (value->token == TOKEN_STRING) {
     return value->value.v_string->str;
   } else {
@@ -805,7 +809,8 @@ parse_literal (ParseData *data)
 static const char *
 peek_identifier_value (ParseData *data)
 {
-  const ViviParserValue *value = vivi_parser_scanner_get_value (data->scanner, 1);
+  const ViviParserValue *value =
+    vivi_parser_scanner_get_value (data->scanner, 1);
 
   if (value->token == TOKEN_IDENTIFIER) {
     return value->value.v_identifier;
@@ -818,6 +823,7 @@ static const char *
 parse_identifier_value (ParseData *data)
 {
   const ViviParserValue *value;
+
   parse_token (data, TOKEN_IDENTIFIER);
 
   value = vivi_parser_scanner_get_value (data->scanner, 0);
@@ -1043,7 +1049,7 @@ parse_asm_if (ParseData *data)
 }
 
 typedef ViviCodeAsm *(*AsmConstructor) (void);
-typedef ViviCodeAsm * (*ParseAsmFunction) (ParseData *data);
+typedef ViviCodeAsm *(*ParseAsmFunction) (ParseData *data);
 
 typedef struct {
   const char *			name;
@@ -1099,8 +1105,6 @@ parse_asm_code (ParseData *data)
     }
     if (i >= G_N_ELEMENTS (asm_statements)) {
       vivi_parser_error (data, "Unknown asm statement: %s", identifier);
-      // FIXME
-      vivi_parser_scanner_get_next_token (data->scanner);
       i = 0;
     }
     g_free (identifier);
@@ -2925,7 +2929,8 @@ parse_program (ParseData *data)
 
   parse_statement_list (data, peek_source_element, parse_source_element,
       &statement, TOKEN_NONE);
-  parse_token (data, TOKEN_NONE);
+  if (!try_parse_token (data, TOKEN_NONE))
+    vivi_parser_error_unexpected (data, ERROR_TOKEN_STATEMENT);
 
   vivi_parser_end_level (data);
   g_assert (data->level == NULL);

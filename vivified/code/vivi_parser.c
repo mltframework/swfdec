@@ -1122,10 +1122,17 @@ parse_asm_code (ParseData *data)
 static gboolean
 peek_asm_statement (ParseData *data)
 {
+  const ViviParserValue *value;
+
   if (!peek_token (data, TOKEN_IDENTIFIER))
     return FALSE;
 
-  return (g_ascii_strcasecmp (peek_identifier_value (data), "asm") == 0);
+  if (g_ascii_strcasecmp (peek_identifier_value (data), "asm") != 0)
+    return FALSE;
+
+  value = vivi_parser_scanner_get_value (data->scanner, 2);
+
+  return (value->token == TOKEN_BRACE_LEFT);
 }
 
 static ViviCodeStatement *
@@ -1404,13 +1411,17 @@ peek_builtin_call (ParseData *data)
 {
   guint i;
   const char *identifier;
+  const ViviParserValue *value;
 
   if (!peek_token (data, TOKEN_IDENTIFIER))
     return FALSE;
 
   identifier = vivi_parser_scanner_get_value (data->scanner, 1)->value.v_identifier;
 
-  // TODO: Check that ( follows?
+  value = vivi_parser_scanner_get_value (data->scanner, 2);
+
+  if (value->token != TOKEN_PARENTHESIS_LEFT)
+    return FALSE;
 
   for (i = 0; i < G_N_ELEMENTS (builtin_calls); i++) {
     if (g_ascii_strcasecmp (identifier, builtin_calls[i].name) == 0)
@@ -1465,13 +1476,17 @@ peek_builtin_statement (ParseData *data)
 {
   guint i;
   const char *identifier;
+  const ViviParserValue *value;
 
   if (!peek_token (data, TOKEN_IDENTIFIER))
     return FALSE;
 
   identifier = peek_identifier_value (data);
 
-  // TODO: Check that ( follows?
+  value = vivi_parser_scanner_get_value (data->scanner, 2);
+
+  if (value->token != TOKEN_PARENTHESIS_LEFT)
+    return FALSE;
 
   for (i = 0; i < G_N_ELEMENTS (builtin_statements); i++) {
     if (g_ascii_strcasecmp (identifier, builtin_statements[i].name) == 0)

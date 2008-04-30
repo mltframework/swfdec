@@ -32,11 +32,10 @@ static void
 vivi_code_number_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeNumber *number = VIVI_CODE_NUMBER (token);
-  char *s;
+  char s[G_ASCII_DTOSTR_BUF_SIZE];
 
-  s = g_strdup_printf ("%g", number->value);
+  g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE, number->value);
   vivi_code_printer_print (printer, s);
-  g_free (s);
 }
 
 static void

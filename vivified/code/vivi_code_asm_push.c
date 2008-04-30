@@ -86,9 +86,14 @@ vivi_code_asm_push_print (ViviCodeToken *token, ViviCodePrinter*printer)
 	g_free (s2);
 	break;
       case VIVI_CODE_CONSTANT_FLOAT:
-	s = g_strdup_printf ("%.ff", swfdec_bits_get_float (&bits));
-	vivi_code_printer_print (printer, s);
-	g_free (s);
+	{
+	  s = g_malloc (G_ASCII_DTOSTR_BUF_SIZE);
+	  g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE,
+	      swfdec_bits_get_float (&bits));
+	  vivi_code_printer_print (printer, s);
+	  vivi_code_printer_print (printer, "f");
+	  g_free (s);
+	}
 	break;
       case VIVI_CODE_CONSTANT_NULL:
 	vivi_code_printer_print (printer, "null");
@@ -105,9 +110,15 @@ vivi_code_asm_push_print (ViviCodeToken *token, ViviCodePrinter*printer)
 	vivi_code_printer_print (printer, swfdec_bits_get_u8 (&bits) ? "true" : "false");
 	break;
       case VIVI_CODE_CONSTANT_DOUBLE:
-	s = g_strdup_printf ("%.g", swfdec_bits_get_double (&bits));
-	vivi_code_printer_print (printer, s);
-	g_free (s);
+	{
+	  double number = swfdec_bits_get_double (&bits);
+	  s = g_malloc (G_ASCII_DTOSTR_BUF_SIZE);
+	  g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE, number);
+	  vivi_code_printer_print (printer, s);
+	  if (number == swfdec_as_double_to_integer (number))
+	    vivi_code_printer_print (printer, "d");
+	  g_free (s);
+	}
 	break;
       case VIVI_CODE_CONSTANT_INTEGER:
 	s = g_strdup_printf ("%d", swfdec_bits_get_s32 (&bits));

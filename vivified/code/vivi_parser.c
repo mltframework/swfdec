@@ -30,6 +30,7 @@
 
 #include "vivi_code_and.h"
 #include "vivi_code_asm_code_default.h"
+#include "vivi_code_asm_push.h"
 #include "vivi_code_assignment.h"
 #include "vivi_code_binary_default.h"
 #include "vivi_code_block.h"
@@ -693,6 +694,19 @@ parse_numeric_value (ParseData *data)
   }
 }
 
+static int
+parse_integer_value (ParseData *data)
+{
+  double number = peek_numeric_value (data);
+
+  if (swfdec_as_double_to_integer (number) != number)
+    vivi_parser_error (data, "Expected integer, got double");
+
+  vivi_parser_scanner_get_next_token (data->scanner);
+
+  return swfdec_as_double_to_integer (number);
+}
+
 static gboolean
 peek_numeric (ParseData *data)
 {
@@ -1043,9 +1057,101 @@ parse_variable_declaration (ParseData *data)
 // asm functions
 
 static ViviCodeAsm *
-parse_asm_if (ParseData *data)
+parse_asm_push (ParseData *data)
 {
-  return NULL;
+  ViviCodeAsmPush *push;
+
+  push = VIVI_CODE_ASM_PUSH (vivi_code_asm_push_new ());
+
+  if (try_parse_restricted_semicolon (data)) {
+    // TODO: warning?
+    return VIVI_CODE_ASM (push);
+  }
+
+  do {
+    switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
+      case TOKEN_STRING:
+	vivi_code_asm_push_add_string (push, parse_string_value (data));
+	break;
+      case TOKEN_NUMBER:
+	{
+	  double number = parse_numeric_value (data);
+	  if (peek_token (data, TOKEN_IDENTIFIER) &&
+	      g_ascii_strcasecmp (peek_identifier_value (data), "i") == 0) {
+	    vivi_parser_scanner_get_next_token (data->scanner);
+	    // TODO: add warning if losing accuracy
+	    vivi_code_asm_push_add_integer (push,
+		swfdec_as_double_to_integer (number));
+	  } else if (peek_token (data, TOKEN_IDENTIFIER) &&
+	      g_ascii_strcasecmp (peek_identifier_value (data), "f") == 0) {
+	    vivi_parser_scanner_get_next_token (data->scanner);
+	    // TODO: add warning if losing accuracy
+	    vivi_code_asm_push_add_float (push, (float)number);
+	  } else if (peek_token (data, TOKEN_IDENTIFIER) &&
+	      g_ascii_strcasecmp (peek_identifier_value (data), "d") == 0) {
+	    vivi_parser_scanner_get_next_token (data->scanner);
+	    vivi_code_asm_push_add_double (push, number);
+	  } else {
+	    if (swfdec_as_double_to_integer (number) == number) {
+	      vivi_code_asm_push_add_integer (push,
+		  swfdec_as_double_to_integer (number));
+	    } else {
+	      vivi_code_asm_push_add_double (push, number);
+	    }
+	  }
+	}
+	break;
+      case TOKEN_BOOLEAN:
+	vivi_code_asm_push_add_boolean (push, parse_boolean_value (data));
+	break;
+      case TOKEN_NULL:
+	vivi_parser_scanner_get_next_token (data->scanner);
+	vivi_code_asm_push_add_null (push);
+	break;
+      case TOKEN_UNDEFINED:
+	vivi_parser_scanner_get_next_token (data->scanner);
+	vivi_code_asm_push_add_undefined (push);
+	break;
+      case TOKEN_IDENTIFIER:
+	{
+	  const char *identifier = parse_identifier_value (data);
+	  if (g_ascii_strcasecmp (identifier, "pool") == 0) {
+	    int number = parse_integer_value (data);
+	    if (number < 0 || number > G_MAXUINT16) {
+	      vivi_parser_error (data, "Invalid pool index: %i", number);
+	      number = 0;
+	    }
+	    if (number < 256) {
+	      vivi_code_asm_push_add_pool (push, number);
+	    } else {
+	      vivi_code_asm_push_add_pool_big (push, number);
+	    }
+	  } else if (g_ascii_strcasecmp (identifier, "reg") == 0) {
+	    int number = parse_integer_value (data);
+	    if (number < 0 || number >= 256) {
+	      vivi_parser_error (data, "Invalid register number: %i", number);
+	      number = 0;
+	    }
+	    vivi_code_asm_push_add_register (push, number);
+	  } else {
+	    vivi_parser_error (data, "Invalid identifier in push: %s",
+		identifier);
+	    vivi_code_asm_push_add_undefined (push);
+	  }
+	}
+	break;
+      default:
+	vivi_parser_error (data, "Invalid token in push: %s",
+	    vivi_parser_scanner_token_name (
+	      vivi_parser_scanner_get_next_token (data->scanner)));
+	vivi_code_asm_push_add_undefined (push);
+	break;
+    }
+  } while (try_parse_token (data, TOKEN_COMMA));
+
+  parse_automatic_semicolon (data);
+
+  return VIVI_CODE_ASM (push);
 }
 
 typedef ViviCodeAsm *(*AsmConstructor) (void);
@@ -1062,7 +1168,7 @@ static const AsmStatement asm_statements[] = {
   { G_STRINGIFY (underscore_name), vivi_code_asm_ ## underscore_name ## _new, NULL },
 #include "vivi_code_defaults.h"
 #undef DEFAULT_ASM
-  { "if", NULL, parse_asm_if }
+  { "push", NULL, parse_asm_push }
 };
 #if 0
 DEFAULT_ASM (GotoFrame, goto_frame, SWFDEC_AS_ACTION_GOTO_FRAME)

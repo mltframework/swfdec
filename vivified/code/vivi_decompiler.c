@@ -154,6 +154,8 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	}
       case 1: /* float */
 	val = vivi_code_number_new (swfdec_bits_get_float (&bits));
+	vivi_code_number_set_hint (VIVI_CODE_NUMBER (val),
+	    VIVI_CODE_NUMBER_HINT_FLOAT);
 	break;
       case 2: /* null */
 	val = vivi_code_null_new ();
@@ -170,9 +172,13 @@ vivi_decompile_push (ViviDecompilerBlock *block, ViviDecompilerState *state,
 	break;
       case 6: /* double */
 	val = vivi_code_number_new (swfdec_bits_get_double (&bits));
+	vivi_code_number_set_hint (VIVI_CODE_NUMBER (val),
+	    VIVI_CODE_NUMBER_HINT_DOUBLE);
 	break;
       case 7: /* 32bit int */
 	val = vivi_code_number_new (swfdec_bits_get_s32 (&bits));
+	vivi_code_number_set_hint (VIVI_CODE_NUMBER (val),
+	    VIVI_CODE_NUMBER_HINT_INT);
 	break;
       case 8: /* 8bit ConstantPool address */
       case 9: /* 16bit ConstantPool address */

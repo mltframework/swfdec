@@ -43,9 +43,38 @@ vivi_code_number_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 {
   ViviCodeNumber *number = VIVI_CODE_NUMBER (token);
   ViviCodeAsm *code;
+  ViviCodeNumberHint hint;
 
   code = vivi_code_asm_push_new ();
-  vivi_code_asm_push_add_double (VIVI_CODE_ASM_PUSH (code), number->value);
+
+  if (number->hint == VIVI_CODE_NUMBER_HINT_UNDEFINED) {
+    if (swfdec_as_double_to_integer (number->value) == number->value) {
+      hint = VIVI_CODE_NUMBER_HINT_INT;
+    } else {
+      hint = VIVI_CODE_NUMBER_HINT_DOUBLE;
+    }
+  } else {
+    hint = number->hint;
+  }
+
+  // FIXME: warning/error when conversion isn't accurate?
+  switch (hint) {
+    case VIVI_CODE_NUMBER_HINT_INT:
+      vivi_code_asm_push_add_integer (VIVI_CODE_ASM_PUSH (code),
+	  swfdec_as_double_to_integer (number->value));
+      break;
+    case VIVI_CODE_NUMBER_HINT_FLOAT:
+      vivi_code_asm_push_add_float (VIVI_CODE_ASM_PUSH (code),
+	  (float)number->value);
+      break;
+    case VIVI_CODE_NUMBER_HINT_DOUBLE:
+      vivi_code_asm_push_add_double (VIVI_CODE_ASM_PUSH (code), number->value);
+      break;
+    case VIVI_CODE_NUMBER_HINT_UNDEFINED:
+    default:
+      g_assert_not_reached ();
+  }
+
   vivi_code_assembler_add_code (assembler, code);
   g_object_unref (code);
 }
@@ -83,3 +112,20 @@ vivi_code_number_get_value (ViviCodeNumber *number)
   return number->value;
 }
 
+void
+vivi_code_number_set_hint (ViviCodeNumber *number, ViviCodeNumberHint hint)
+{
+  g_return_if_fail (VIVI_IS_CODE_NUMBER (number));
+  g_return_if_fail (hint <= VIVI_CODE_NUMBER_HINT_INT);
+
+  number->hint = hint;
+}
+
+ViviCodeNumberHint
+vivi_code_number_get_hint(ViviCodeNumber *number)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_NUMBER (number),
+      VIVI_CODE_NUMBER_HINT_UNDEFINED);
+
+  return number->hint;
+}

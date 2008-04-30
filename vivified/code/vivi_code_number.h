@@ -24,6 +24,12 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  VIVI_CODE_NUMBER_HINT_UNDEFINED,
+  VIVI_CODE_NUMBER_HINT_DOUBLE,
+  VIVI_CODE_NUMBER_HINT_FLOAT,
+  VIVI_CODE_NUMBER_HINT_INT
+} ViviCodeNumberHint;
 
 typedef struct _ViviCodeNumber ViviCodeNumber;
 typedef struct _ViviCodeNumberClass ViviCodeNumberClass;
@@ -40,6 +46,7 @@ struct _ViviCodeNumber
   ViviCodeConstant	constant;
 
   double		value;
+  ViviCodeNumberHint	hint;
 };
 
 struct _ViviCodeNumberClass
@@ -52,6 +59,10 @@ GType		vivi_code_number_get_type   	(void);
 ViviCodeValue *	vivi_code_number_new		(double			value);
 
 double		vivi_code_number_get_value	(ViviCodeNumber *	number);
+
+void		vivi_code_number_set_hint	(ViviCodeNumber *	number,
+						 ViviCodeNumberHint	hint);
+ViviCodeNumberHint vivi_code_number_get_hint	(ViviCodeNumber *	number);
 
 
 G_END_DECLS

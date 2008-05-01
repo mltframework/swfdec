@@ -115,6 +115,8 @@ void		swfdec_player_get_size		(SwfdecPlayer *	player,
 void		swfdec_player_set_size		(SwfdecPlayer *	player,
 						 int		width,
 						 int		height);
+guint		swfdec_player_get_background_color
+						(SwfdecPlayer *		player);
 SwfdecScaleMode	swfdec_player_get_scale_mode	(SwfdecPlayer *		player);
 void		swfdec_player_set_scale_mode	(SwfdecPlayer *		player,
 						 SwfdecScaleMode	mode);

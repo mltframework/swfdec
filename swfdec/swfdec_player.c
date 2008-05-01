@@ -653,6 +653,7 @@ enum {
   PROP_RATE,
   PROP_MOUSE_CURSOR,
   PROP_NEXT_EVENT,
+  PROP_BACKGROUND_COLOR,
   PROP_WIDTH,
   PROP_HEIGHT,
   PROP_ALIGNMENT,
@@ -749,6 +750,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_NEXT_EVENT:
       g_value_set_uint (value, swfdec_player_get_next_event (player));
+      break;
+    case PROP_BACKGROUND_COLOR:
+      g_value_set_uint (value, priv->bgcolor ? priv->bgcolor : SWFDEC_COLOR_WHITE);
       break;
     case PROP_WIDTH:
       g_value_set_int (value, priv->stage_width);
@@ -1995,6 +1999,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   g_object_class_install_property (object_class, PROP_CACHE_SIZE,
       g_param_spec_ulong ("cache-size", "cache size", "maximum cache size in bytes",
 	  0, G_MAXULONG, 50 * 1024 * 1024, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
+      g_param_spec_uint ("background-color", "background color", "ARGB color used to draw the background",
+         0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_WIDTH,
       g_param_spec_int ("width", "width", "current width of the movie",
 	  -1, G_MAXINT, -1, G_PARAM_READWRITE));
@@ -2343,6 +2350,7 @@ swfdec_player_set_background_color (SwfdecPlayer *player, SwfdecColor bgcolor)
   SWFDEC_INFO ("setting bgcolor to %08X", bgcolor);
   priv->bgcolor = bgcolor;
   swfdec_player_invalidate (player, NULL);
+  g_object_notify (G_OBJECT (player), "background-color");
 }
 
 /**
@@ -2932,8 +2940,8 @@ swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *i
  * @width: width of area to render or 0 for full width
  * @height: height of area to render or 0 for full height
  *
- * Renders the given area of the current frame to @cr using the player's
- * renderer.
+ * Renders the given area of the current frame to @cr. This function just calls 
+ * swfdec_player_render_with_renderer() using the @player's renderer.
  **/
 void
 swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, 
@@ -2949,7 +2957,7 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
 }
 
 /**
- * swfdec_player_render:
+ * swfdec_player_render_with_renderer:
  * @player: a #SwfdecPlayer
  * @cr: #cairo_t to render to
  * @renderer: Renderer to use for rendering
@@ -2990,11 +2998,6 @@ swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr,
   cairo_save (cr);
   cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
-  /* paint the background */
-  if (priv->bgcolor) {
-    swfdec_color_set_source (cr, priv->bgcolor);
-    cairo_paint (cr);
-  }
   /* compute the rectangle */
   x -= priv->offset_x;
   y -= priv->offset_y;
@@ -3213,6 +3216,28 @@ swfdec_player_get_audio (SwfdecPlayer *	player)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
   return player->priv->audio;
+}
+
+/**
+* swfdec_player_get_background_color:
+* @player: a #SwfdecPlayer
+*
+* Gets the current suggested background color. The color will be an ARGB-color, 
+* with the MSB being the alpha value. Note that Swfdec will not render the 
+* background color itself, so if you want the background to not be translucent
+* it is your job to clear the background using this color.
+*
+* Returns: the background color as an ARGB value
+*/
+guint
+swfdec_player_get_background_color (SwfdecPlayer *player)
+{
+  guint bgcolor;
+
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF));
+
+  bgcolor = player->priv->bgcolor;
+  return bgcolor ? bgcolor : SWFDEC_COLOR_WHITE;
 }
 
 /**

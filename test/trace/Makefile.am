@@ -1756,6 +1756,15 @@ EXTRA_DIST = \
 	movieclip-get-instance-at-depth-7.swf.trace \
 	movieclip-get-instance-at-depth-8.swf \
 	movieclip-get-instance-at-depth-8.swf.trace \
+	movieclip-hittest.as \
+	movieclip-hittest-5.swf \
+	movieclip-hittest-5.swf.trace \
+	movieclip-hittest-6.swf \
+	movieclip-hittest-6.swf.trace \
+	movieclip-hittest-7.swf \
+	movieclip-hittest-7.swf.trace \
+	movieclip-hittest-8.swf \
+	movieclip-hittest-8.swf.trace \
 	movieclip-hittest-target.as \
 	movieclip-hittest-target-5.swf \
 	movieclip-hittest-target-5.swf.trace \

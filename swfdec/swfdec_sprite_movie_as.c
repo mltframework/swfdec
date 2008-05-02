@@ -550,6 +550,8 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *object,
     if (shape) {
       ret = swfdec_movie_contains (movie, x, y);
     } else {
+      if (movie->cache_state >= SWFDEC_MOVIE_INVALID_EXTENTS)
+	  swfdec_movie_update (movie);
       ret = swfdec_rect_contains (&movie->original_extents, x, y);
     }
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, ret);

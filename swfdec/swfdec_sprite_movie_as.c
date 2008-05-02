@@ -545,11 +545,12 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *object,
     y = swfdec_as_value_to_number (cx, &argv[1]) * SWFDEC_TWIPS_SCALE_FACTOR;
     shape = (argc >= 3 && swfdec_as_value_to_boolean (cx, &argv[2]));
 
-    swfdec_movie_global_to_local (movie, &x, &y);
-
     if (shape) {
+      if (movie->parent)
+	swfdec_movie_global_to_local (movie->parent, &x, &y);
       ret = swfdec_movie_contains (movie, x, y);
     } else {
+      swfdec_movie_global_to_local (movie, &x, &y);
       ret = swfdec_rect_contains (&movie->original_extents, x, y);
     }
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, ret);

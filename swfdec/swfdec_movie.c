@@ -612,6 +612,8 @@ swfdec_movie_get_movie_at (SwfdecMovie *movie, double x, double y, gboolean even
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
 
   SWFDEC_LOG ("%s %p getting mouse at: %g %g", G_OBJECT_TYPE_NAME (movie), movie, x, y);
+  if (movie->cache_state >= SWFDEC_MOVIE_INVALID_EXTENTS)
+      swfdec_movie_update (movie);
   if (!swfdec_rect_contains (&movie->extents, x, y)) {
     return NULL;
   }

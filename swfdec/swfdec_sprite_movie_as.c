@@ -517,17 +517,18 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecMovie *movie;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
   
   if (argc == 1) {
     SwfdecMovie *other;
     SwfdecRect movie_rect, other_rect;
 
-    other = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx), &argv[0]);
-    if (other == NULL) {
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
+	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
       SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
       return;
     }
+    other = SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
     swfdec_movie_update (movie);
     swfdec_movie_update (other);
     movie_rect = movie->extents;

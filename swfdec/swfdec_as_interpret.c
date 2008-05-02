@@ -2634,7 +2634,7 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
     // set the exception variable
     // add new block for catch and jump to it
     try_data->scope_object = swfdec_as_object_new_empty (cx);
-    cx->frame->scope_chain = g_slist_prepend (cx->frame->scope_chain,
+    frame->scope_chain = g_slist_prepend (frame->scope_chain,
 	try_data->scope_object);
 
     swfdec_as_frame_push_block (frame, try_data->catch_start,

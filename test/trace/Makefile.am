@@ -779,6 +779,15 @@ EXTRA_DIST = \
 	crash-0.6.6-xmlsocket-8.swf \
 	crash-0.6.6-xmlsocket-8.swf.trace \
 	crash-0.6.6-xmlsocket.as \
+	crash-0.7.1-getTextExtent-5.swf \
+	crash-0.7.1-getTextExtent-5.swf.trace \
+	crash-0.7.1-getTextExtent-6.swf \
+	crash-0.7.1-getTextExtent-6.swf.trace \
+	crash-0.7.1-getTextExtent-7.swf \
+	crash-0.7.1-getTextExtent-7.swf.trace \
+	crash-0.7.1-getTextExtent-8.swf \
+	crash-0.7.1-getTextExtent-8.swf.trace \
+	crash-0.7.1-getTextExtent.as \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \
@@ -912,6 +921,15 @@ EXTRA_DIST = \
 	delete-prototypes-7.swf.trace \
 	delete-prototypes-8.swf \
 	delete-prototypes-8.swf.trace \
+	destroyed-movie-resolve-5.swf \
+	destroyed-movie-resolve-5.swf.trace \
+	destroyed-movie-resolve-6.swf \
+	destroyed-movie-resolve-6.swf.trace \
+	destroyed-movie-resolve-7.swf \
+	destroyed-movie-resolve-7.swf.trace \
+	destroyed-movie-resolve-8.swf \
+	destroyed-movie-resolve-8.swf.trace \
+	destroyed-movie-resolve.as  \
 	displacement-map-filter-properties.as \
 	displacement-map-filter-properties-5.swf \
 	displacement-map-filter-properties-5.swf.trace \

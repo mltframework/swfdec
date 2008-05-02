@@ -371,8 +371,8 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
  * @movie: #SwfdecMovie to remove
  *
  * Removes this movie from its parent. In contrast to swfdec_movie_destroy (),
- * it will definitely cause a removal from the display list, but depending on
- * movie, it might still be possible to reference it from Actionscript.
+ * it might still be possible to reference it from Actionscript, if the movie
+ * queues onUnload event handlers.
  **/
 void
 swfdec_movie_remove (SwfdecMovie *movie)
@@ -1011,6 +1011,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   movie = swfdec_movie_resolve (movie);
   if (movie == NULL)
     return FALSE;
+  object = SWFDEC_AS_OBJECT (movie);
 
   if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, orig, variable, val, flags))
     return TRUE;
@@ -1111,6 +1112,7 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
   movie = swfdec_movie_resolve (movie);
   if (movie == NULL)
     return;
+  object = SWFDEC_AS_OBJECT (movie);
 
   if (swfdec_movie_set_asprop (movie, variable, val))
     return;

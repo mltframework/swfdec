@@ -65,14 +65,11 @@ swfdec_text_format_do_mark (SwfdecAsObject *object)
 {
   SwfdecTextFormat *format = SWFDEC_TEXT_FORMAT (object);
 
-  if (format->font != NULL)
-    swfdec_as_string_mark (format->font);
   if (format->tab_stops != NULL)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (format->tab_stops));
-  if (format->target != NULL)
-    swfdec_as_string_mark (format->target);
-  if (format->url != NULL)
-    swfdec_as_string_mark (format->url);
+  swfdec_as_string_mark (format->font);
+  swfdec_as_string_mark (format->target);
+  swfdec_as_string_mark (format->url);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_text_format_parent_class)->mark (object);
 }
@@ -86,8 +83,11 @@ swfdec_text_format_class_init (SwfdecTextFormatClass *klass)
 }
 
 static void
-swfdec_text_format_init (SwfdecTextFormat *text_format)
+swfdec_text_format_init (SwfdecTextFormat *format)
 {
+  format->font = SWFDEC_AS_STR_Times_New_Roman;
+  format->target = SWFDEC_AS_STR_EMPTY;
+  format->url = SWFDEC_AS_STR_EMPTY;
 }
 
 static gboolean
@@ -149,12 +149,13 @@ swfdec_text_format_set_string (SwfdecAsObject *object,
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
-    G_STRUCT_MEMBER (const char *, format, property_offsets[property]) = NULL;
+    /* FIXME: reset to defaults here? */
     swfdec_text_format_mark_unset (format, property);
   } else {
     G_STRUCT_MEMBER (const char *, format, property_offsets[property]) = s;
     swfdec_text_format_mark_set (format, property);
   }
+  /* FIXME: figure out what to do here */
 }
 
 static void
@@ -878,7 +879,6 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
     g_list_free (item_list);
     pango_font_description_free (desc);
     g_object_unref (G_OBJECT (pcontext));
-    g_object_unref (G_OBJECT (fontmap));
     g_object_unref (G_OBJECT (font));
 
     width = ink_rect.width / PANGO_SCALE + format->left_margin
@@ -1123,10 +1123,7 @@ swfdec_text_format_set_defaults (SwfdecTextFormat *format)
 static void
 swfdec_text_format_clear (SwfdecTextFormat *format)
 {
-  format->font = NULL;
-  format->target = NULL;
   format->tab_stops = NULL;
-  format->url = NULL;
   format->values_set = 0;
 
   format->display = SWFDEC_TEXT_DISPLAY_BLOCK;

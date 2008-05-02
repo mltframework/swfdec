@@ -504,11 +504,33 @@ swfdec_gtk_widget_update_renderer (SwfdecGtkWidget *widget)
 }
 
 static void
+swfdec_gtk_widget_update_background (SwfdecGtkWidget *widget)
+{
+  GdkWindow *window = GTK_WIDGET (widget)->window;
+  GdkColor bgcolor;
+
+  if (window == NULL)
+    return;
+
+  if (widget->priv->player) {
+    guint bg = swfdec_player_get_background_color (widget->priv->player);
+    bgcolor.red = 0x101 * ((bg >> 16) & 0xFF);
+    bgcolor.green = 0x101 * ((bg >> 8) & 0xFF);
+    bgcolor.blue = 0x101 * (bg & 0xFF);
+  } else {
+    /* white */
+    bgcolor.red = bgcolor.green = bgcolor.blue = 0xFFFF;
+  }
+  gdk_rgb_find_color (gdk_drawable_get_colormap (window), &bgcolor);
+  gdk_window_set_background (window, &bgcolor);
+
+}
+
+static void
 swfdec_gtk_widget_realize (GtkWidget *widget)
 {
   GdkWindowAttr attributes;
   gint attributes_mask;
-  GdkColor white = { 0, 0xFFFF, 0xFFFF, 0xFFFF };
 
   GTK_WIDGET_SET_FLAGS (widget, GTK_REALIZED);
 
@@ -535,9 +557,7 @@ swfdec_gtk_widget_realize (GtkWidget *widget)
       &attributes, attributes_mask);
   gdk_window_set_user_data (widget->window, widget);
 
-  gdk_rgb_find_color (gdk_drawable_get_colormap (GDK_DRAWABLE (widget->window)), &white);
-  gdk_window_set_background (widget->window, &white);
-
+  swfdec_gtk_widget_update_background (SWFDEC_GTK_WIDGET (widget));
   widget->style = gtk_style_attach (widget->style, widget->window);
 
   if (SWFDEC_GTK_WIDGET (widget)->priv->player) {
@@ -713,6 +733,8 @@ swfdec_gtk_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecGtkW
     gtk_widget_queue_resize (GTK_WIDGET (widget));
   } else if (g_str_equal (pspec->name, "fullscreen")) {
     swfdec_gtk_widget_do_fullscreen (widget, swfdec_player_get_fullscreen (player));
+  } else if (g_str_equal (pspec->name, "background-color")) {
+    swfdec_gtk_widget_update_background (widget);
   }
 }
 
@@ -754,9 +776,10 @@ swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
     g_object_unref (priv->player);
   }
   priv->player = player;
-  gtk_widget_queue_resize (GTK_WIDGET (widget));
   g_object_notify (G_OBJECT (widget), "player");
+  gtk_widget_queue_resize (GTK_WIDGET (widget));
   swfdec_gtk_widget_update_renderer (widget);
+  swfdec_gtk_widget_update_background (widget);
   swfdec_gtk_widget_do_fullscreen (widget, player ? swfdec_player_get_fullscreen (player) : FALSE);
 }
 

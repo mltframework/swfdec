@@ -930,6 +930,15 @@ EXTRA_DIST = \
 	destroyed-movie-resolve-8.swf \
 	destroyed-movie-resolve-8.swf.trace \
 	destroyed-movie-resolve.as  \
+	destroyed-movie-resolve2-5.swf \
+	destroyed-movie-resolve2-5.swf.trace \
+	destroyed-movie-resolve2-6.swf \
+	destroyed-movie-resolve2-6.swf.trace \
+	destroyed-movie-resolve2-7.swf \
+	destroyed-movie-resolve2-7.swf.trace \
+	destroyed-movie-resolve2-8.swf \
+	destroyed-movie-resolve2-8.swf.trace \
+	destroyed-movie-resolve2.as  \
 	displacement-map-filter-properties.as \
 	displacement-map-filter-properties-5.swf \
 	displacement-map-filter-properties-5.swf.trace \

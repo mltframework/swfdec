@@ -1402,6 +1402,9 @@ EXTRA_DIST = \
 	goto5.swf.trace \
 	gotoframe.swf \
 	gotoframe.swf.trace \
+	gotolabel.xml \
+	gotolabel.swf \
+	gotolabel.swf.trace \
 	gradient-bevel-filter-properties.as \
 	gradient-bevel-filter-properties-5.swf \
 	gradient-bevel-filter-properties-5.swf.trace \

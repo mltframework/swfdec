@@ -108,6 +108,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   guint id;
   int reserved;
   gboolean has_font, has_color, has_max_length, has_layout, has_text;
+  gboolean has_font_class;
   SwfdecBits *b = &s->b;
 
   id = swfdec_bits_get_u16 (b);
@@ -130,7 +131,7 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   has_color = swfdec_bits_getbit (b);
   has_max_length = swfdec_bits_getbit (b);
   has_font = swfdec_bits_getbit (b);
-  reserved = swfdec_bits_getbit (b);
+  has_font_class = swfdec_bits_getbit (b);
   text->auto_size =
     (swfdec_bits_getbit (b) ? SWFDEC_AUTO_SIZE_LEFT : SWFDEC_AUTO_SIZE_NONE);
   has_layout = swfdec_bits_getbit (b);
@@ -155,6 +156,13 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     }
     text->size = swfdec_bits_get_u16 (b);
     SWFDEC_LOG ("  size = %u", text->size);
+  }
+
+  if (has_font_class) {
+    SWFDEC_FIXME ("Implement font_class for EditText");
+    if (has_font)
+      SWFDEC_FIXME ("What to do if both font and font class are defined?");
+    swfdec_bits_get_string (b, s->version);
   }
 
   if (has_color) {

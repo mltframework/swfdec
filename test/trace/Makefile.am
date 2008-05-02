@@ -1765,6 +1765,15 @@ EXTRA_DIST = \
 	movieclip-hittest-7.swf.trace \
 	movieclip-hittest-8.swf \
 	movieclip-hittest-8.swf.trace \
+	movieclip-hittest-parent.as \
+	movieclip-hittest-parent-5.swf \
+	movieclip-hittest-parent-5.swf.trace \
+	movieclip-hittest-parent-6.swf \
+	movieclip-hittest-parent-6.swf.trace \
+	movieclip-hittest-parent-7.swf \
+	movieclip-hittest-parent-7.swf.trace \
+	movieclip-hittest-parent-8.swf \
+	movieclip-hittest-parent-8.swf.trace \
 	movieclip-hittest-target.as \
 	movieclip-hittest-target-5.swf \
 	movieclip-hittest-target-5.swf.trace \

@@ -921,6 +921,15 @@ EXTRA_DIST = \
 	delete-prototypes-7.swf.trace \
 	delete-prototypes-8.swf \
 	delete-prototypes-8.swf.trace \
+	destroyed-movie-resolve-5.swf \
+	destroyed-movie-resolve-5.swf.trace \
+	destroyed-movie-resolve-6.swf \
+	destroyed-movie-resolve-6.swf.trace \
+	destroyed-movie-resolve-7.swf \
+	destroyed-movie-resolve-7.swf.trace \
+	destroyed-movie-resolve-8.swf \
+	destroyed-movie-resolve-8.swf.trace \
+	destroyed-movie-resolve.as  \
 	displacement-map-filter-properties.as \
 	displacement-map-filter-properties-5.swf \
 	displacement-map-filter-properties-5.swf.trace \

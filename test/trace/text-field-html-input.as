@@ -57,7 +57,8 @@ var texts = [
   "a<u>b</p>c",
   "a<p>b<li>c</p>d",
   "a<p>b<textformat indent='10'>c</p>d",
-  "a<p>b<font size='10'>c</p>d"
+  "a<p>b<font size='10'>c</p>d",
+  "a<tab>b\t<tab> c"
 ];
 
 for (var i = 0; i < texts.length; i++) {
@@ -79,4 +80,4 @@ for (var i = 0; i < texts.length; i++) {
   }
 }
 
-loadMovie ("FSCommand:quit", "");
+getURL ("FSCommand:quit", "");

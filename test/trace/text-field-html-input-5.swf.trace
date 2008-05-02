@@ -346,3 +346,15 @@ a<p>b<font size='10'>c</p>d
 24: a<p>b<font size='10'>c</p>d: multiline: 1 condenseWhite: 2
 undefined
 a<p>b<font size='10'>c</p>d
+25: a<tab>b	<tab> c: multiline: 0 condenseWhite: 0
+undefined
+a<tab>b	<tab> c
+25: a<tab>b	<tab> c: multiline: 1 condenseWhite: 0
+undefined
+a<tab>b	<tab> c
+25: a<tab>b	<tab> c: multiline: 0 condenseWhite: 2
+undefined
+a<tab>b	<tab> c
+25: a<tab>b	<tab> c: multiline: 1 condenseWhite: 2
+undefined
+a<tab>b	<tab> c

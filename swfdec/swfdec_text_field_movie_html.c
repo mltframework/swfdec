@@ -359,6 +359,9 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
     SwfdecAsObject *object;
     SwfdecAsValue val;
 
+    if (name_length == 3 && !g_strncasecmp (name, "tab", 3))
+      data->text = g_string_append_c (data->text, '\t');
+
     if (data->multiline) {
       if (name_length == 2 && !g_strncasecmp (name, "br", 2))
       {

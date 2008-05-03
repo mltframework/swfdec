@@ -50,6 +50,11 @@ EXTRA_DIST = \
 	definebutton.stas \
 	definebutton.sts \
 	definebutton.xml \
+	key-isdown-mouse.as \
+	key-isdown-mouse.stas \
+	key-isdown-mouse.sts \
+	key-isdown-mouse.swf \
+	key-isdown-mouse.swf.trace \
 	mouse-addProperty-relevant.as \
 	mouse-addProperty-relevant.stas \
 	mouse-addProperty-relevant.sts \

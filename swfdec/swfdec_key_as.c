@@ -70,8 +70,10 @@ swfdec_key_isDown (SwfdecAsContext *cx, SwfdecAsObject *object,
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, swfdec_player_is_mouse_pressed (player));
   } else if (id == 2) {
     SWFDEC_FIXME ("Key.isDown (2) should give status of the second mouse button");
+    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
   } else if (id == 4) {
     SWFDEC_FIXME ("Key.isDown (4) should give status of the middle mouse button");
+    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
   } else {
     if (id < 8)
       SWFDEC_FIXME ("Should Key.isDown (%i) give mouse button status?", id);

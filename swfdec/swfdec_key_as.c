@@ -63,7 +63,20 @@ swfdec_key_isDown (SwfdecAsContext *cx, SwfdecAsObject *object,
     SWFDEC_FIXME ("id %u too big for a keycode", id);
     id %= 256;
   }
-  SWFDEC_AS_VALUE_SET_BOOLEAN (retval, (player->priv->key_pressed[id / 8] & (1 << (id % 8))) ? TRUE : FALSE);
+
+  // special case for the mouse buttons, with Adobe's player these are only
+  // supported on Windows
+  if (id == 1) {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, swfdec_player_is_mouse_pressed (player));
+  } else if (id == 2) {
+    SWFDEC_FIXME ("Key.isDown (2) should give status of the second mouse button");
+  } else if (id == 4) {
+    SWFDEC_FIXME ("Key.isDown (4) should give status of the middle mouse button");
+  } else {
+    if (id < 8)
+      SWFDEC_FIXME ("Should Key.isDown (%i) give mouse button status?", id);
+    SWFDEC_AS_VALUE_SET_BOOLEAN (retval, (player->priv->key_pressed[id / 8] & (1 << (id % 8))) ? TRUE : FALSE);
+  }
 }
 
 SWFDEC_AS_NATIVE (800, 3, swfdec_key_isToggled)

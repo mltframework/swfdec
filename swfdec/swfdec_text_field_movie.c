@@ -1022,7 +1022,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       if (format && SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_COLOR))
 	swfdec_color_set_source (cr, format->attr.color | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF));
       else
-	swfdec_color_set_source (cr, text->format_new->attr.color | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF));
+	swfdec_color_set_source (cr, text->default_attributes.color | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF));
 
       /* FIXME: what's the propwer line width here? */
       cairo_set_line_width (cr, SWFDEC_DOUBLE_TO_TWIPS (0.5));
@@ -1223,6 +1223,8 @@ swfdec_text_field_movie_dispose (GObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
+  swfdec_text_attributes_reset (&text->default_attributes);
+
   if (text->asterisks != NULL) {
     g_free (text->asterisks);
     text->asterisks = NULL;
@@ -1260,12 +1262,10 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
 
   if (text->variable != NULL)
     swfdec_as_string_mark (text->variable);
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
   for (iter = text->formats; iter != NULL; iter = iter->next) {
     swfdec_as_object_mark (
 	SWFDEC_AS_OBJECT (((SwfdecFormatIndex *)(iter->data))->format));
   }
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (text->format_new));
   if (text->style_sheet != NULL)
     swfdec_as_object_mark (text->style_sheet);
   if (text->style_sheet_input != NULL)
@@ -1302,28 +1302,21 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_addListener,
       1, &val, NULL);
 
-  // format
-  text->format_new =
-    SWFDEC_TEXT_FORMAT (swfdec_text_format_new_no_properties (cx));
-  if (!text->format_new)
-    goto out;
-
   text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 0);
   text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);
 
-  swfdec_text_format_set_defaults (text->format_new);
   if (text_field) {
-    text->format_new->attr.color = text_field->color;
-    text->format_new->attr.align = text_field->align;
+    text->default_attributes.color = text_field->color;
+    text->default_attributes.align = text_field->align;
     if (text_field->font != NULL)  {
-      text->format_new->attr.font =
+      text->default_attributes.font =
 	swfdec_as_context_get_string (cx, text_field->font);
     }
-    text->format_new->attr.size = text_field->size / 20;
-    text->format_new->attr.left_margin = text_field->left_margin / 20;
-    text->format_new->attr.right_margin = text_field->right_margin / 20;
-    text->format_new->attr.indent = text_field->indent / 20;
-    text->format_new->attr.leading = text_field->leading / 20;
+    text->default_attributes.size = text_field->size / 20;
+    text->default_attributes.left_margin = text_field->left_margin / 20;
+    text->default_attributes.right_margin = text_field->right_margin / 20;
+    text->default_attributes.indent = text_field->indent / 20;
+    text->default_attributes.leading = text_field->leading / 20;
   }
 
   // text
@@ -1342,7 +1335,6 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 	swfdec_as_context_get_string (cx, text_field->variable));
   }
 
-out:
   if (needs_unuse)
     swfdec_sandbox_unuse (movie->resource->sandbox);
 }
@@ -1728,6 +1720,9 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
   text->input = g_string_new ("");
   text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;
+
+  swfdec_text_attributes_reset (&text->default_attributes);
+
 }
 
 void
@@ -2076,28 +2071,27 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
 
-  if (text->format_new == NULL) {
-    text->input = g_string_truncate (text->input, 0);
-    return;
-  }
-
   // remove old formatting info
   g_slist_foreach (text->formats, (GFunc) g_free, NULL);
   g_slist_free (text->formats);
   text->formats = NULL;
 
-  // add the default style
+  /* Flash 7 resets to default style here */
   if (html && SWFDEC_AS_OBJECT (text)->context->version < 8)
-    swfdec_text_format_set_defaults (text->format_new);
+    swfdec_text_attributes_reset (&text->default_attributes);
+
   block = g_new (SwfdecFormatIndex, 1);
   block->index_ = 0;
-  g_assert (SWFDEC_IS_TEXT_FORMAT (text->format_new));
-  block->format = swfdec_text_format_copy (text->format_new);
+  block->format = SWFDEC_TEXT_FORMAT (
+      swfdec_text_format_new_no_properties (SWFDEC_AS_OBJECT (text)->context));
   if (block->format == NULL) {
     g_free (block);
     text->input = g_string_truncate (text->input, 0);
     return;
   }
+  swfdec_text_attributes_copy (&block->format->attr, &text->default_attributes,
+      SWFDEC_TEXT_ATTRIBUTES_MASK);
+  block->format->values_set = SWFDEC_TEXT_ATTRIBUTES_MASK;
   text->formats = g_slist_prepend (text->formats, block);
 
   text->input_html = html;

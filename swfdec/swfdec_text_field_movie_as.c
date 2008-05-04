@@ -958,7 +958,7 @@ swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->format_new->attr.color);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->default_attributes.color);
 }
 
 // This doesn't work the same way as TextFormat's color setting
@@ -972,7 +972,7 @@ swfdec_text_field_movie_set_textColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  text->format_new->attr.color = swfdec_text_field_movie_int_to_color (cx, value);
+  text->default_attributes.color = swfdec_text_field_movie_int_to_color (cx, value);
 }
 
 SWFDEC_AS_NATIVE (104, 300, swfdec_text_field_movie_get_gridFitType)
@@ -1075,13 +1075,19 @@ swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
+  SwfdecTextFormat *format;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_format_init_properties (cx);
+  format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
+  if (format == NULL)
+    return;
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret,
-      SWFDEC_AS_OBJECT (swfdec_text_format_copy (text->format_new)));
+  swfdec_text_attributes_copy (&format->attr, &text->default_attributes,
+      SWFDEC_TEXT_ATTRIBUTES_MASK);
+  format->values_set = SWFDEC_TEXT_ATTRIBUTES_MASK;
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
 }
 
 SWFDEC_AS_NATIVE (104, 105, swfdec_text_field_movie_setNewTextFormat)
@@ -1091,14 +1097,15 @@ swfdec_text_field_movie_setNewTextFormat (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  SwfdecAsObject *obj;
+  SwfdecTextFormat *format;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "o", &obj);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "o", &format);
 
-  if (!SWFDEC_IS_TEXT_FORMAT (obj))
+  if (!SWFDEC_IS_TEXT_FORMAT (format))
     return;
 
-  swfdec_text_format_add (text->format_new, SWFDEC_TEXT_FORMAT (obj));
+  swfdec_text_attributes_copy (&text->default_attributes, &format->attr,
+      format->values_set);
 }
 
 SWFDEC_AS_NATIVE (104, 102, swfdec_text_field_movie_setTextFormat)

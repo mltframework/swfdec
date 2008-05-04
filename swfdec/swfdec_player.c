@@ -1568,10 +1568,52 @@ swfdec_player_handle_special_keys_after (SwfdecPlayer *player, guint key)
   }
 }
 
+static guint8
+swfdec_player_get_conditional_key (guint keycode, guint character)
+{
+  static guint special_keys[] = {
+    0,
+    SWFDEC_KEY_LEFT,
+    SWFDEC_KEY_RIGHT,
+    SWFDEC_KEY_HOME,
+    SWFDEC_KEY_END,
+    SWFDEC_KEY_INSERT,
+    SWFDEC_KEY_DELETE,
+    0,
+    SWFDEC_KEY_BACKSPACE,
+    0,
+    0,
+    0,
+    0,
+    SWFDEC_KEY_ENTER,
+    SWFDEC_KEY_UP,
+    SWFDEC_KEY_DOWN,
+    SWFDEC_KEY_PAGE_UP,
+    SWFDEC_KEY_PAGE_DOWN,
+    SWFDEC_KEY_TAB,
+    SWFDEC_KEY_ESCAPE
+  };
+  guint i;
+
+  if (keycode != 0) {
+    for (i = 0; i < G_N_ELEMENTS (special_keys); i++) {
+      if (special_keys[i] == keycode)
+	return i;
+    }
+  }
+
+  if (character >= 32 && character <= 126)
+    return character;
+
+  return 0;
+}
+
 static gboolean
 swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint character, gboolean down)
 {
   SwfdecPlayerPrivate *priv = player->priv;
+  GList *walk;
+
   g_assert (keycode < 256);
 
   if (!swfdec_player_lock (player))
@@ -1584,10 +1626,22 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
   } else {
     priv->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
   }
+
   if (down)
     swfdec_player_handle_special_keys_before (player, keycode);
+
+  if (down) {
+    guint8 cond = swfdec_player_get_conditional_key (keycode, character);
+
+    for (walk = priv->actors; walk; walk = walk->next) {
+      swfdec_actor_queue_script_with_key (walk->data, SWFDEC_EVENT_KEY_PRESS,
+	  cond);
+    }
+  }
+
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, 
       down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp, 0, NULL);
+
   if (priv->focus) {
     SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->focus);
     if (down) {

@@ -935,7 +935,7 @@ void
 swfdec_text_format_set_defaults (SwfdecTextFormat *format)
 {
   swfdec_text_attributes_reset (&format->attr);
-  format->values_set = -1;
+  format->values_set = SWFDEC_TEXT_ATTRIBUTES_MASK;
 
   if (SWFDEC_AS_OBJECT (format)->context->version < 8) {
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_KERNING);

@@ -80,7 +80,11 @@ struct _SwfdecActorClass
 GType		swfdec_actor_get_type		(void);
 
 void		swfdec_actor_execute		(SwfdecActor *		actor,
-						 SwfdecEventType	condition);
+						 SwfdecEventType	condition,
+						 guint8			key);
+void		swfdec_actor_queue_script_with_key (SwfdecActor *		actor,
+  						 SwfdecEventType	condition,
+						 guint8			key);
 void		swfdec_actor_queue_script	(SwfdecActor *		actor,
   						 SwfdecEventType	condition);
 

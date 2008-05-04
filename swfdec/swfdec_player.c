@@ -372,6 +372,7 @@ typedef struct {
   SwfdecActor *		actor;		/* the actor to trigger the action on */
   SwfdecScript *	script;		/* script to execute or NULL to trigger action */
   SwfdecEventType	event;		/* the action to trigger */
+  guint8		key;
 } SwfdecPlayerAction;
 
 typedef struct {
@@ -430,6 +431,7 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
  * @player: a #SwfdecPlayer
  * @movie: the movie on which to trigger the event
  * @type: type of the event
+ * @type: key of the event
  * @importance: importance of the event
  *
  * Adds an action to the @player. Actions are used by Flash player to solve
@@ -438,10 +440,10 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
  * is calling Actionscript code, you want to do this by using actions.
  **/
 void
-swfdec_player_add_action (SwfdecPlayer *player, SwfdecActor *actor, SwfdecEventType type,
-    guint importance)
+swfdec_player_add_action (SwfdecPlayer *player, SwfdecActor *actor,
+    SwfdecEventType type, guint8 key, guint importance)
 {
-  SwfdecPlayerAction action = { actor, NULL, type };
+  SwfdecPlayerAction action = { actor, NULL, type, key };
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (SWFDEC_IS_ACTOR (actor));
@@ -519,7 +521,7 @@ swfdec_player_do_action (SwfdecPlayer *player)
 	swfdec_as_object_run (SWFDEC_AS_OBJECT (action->actor), action->script);
 	swfdec_sandbox_unuse (sandbox);
       } else {
-	swfdec_actor_execute (action->actor, action->event);
+	swfdec_actor_execute (action->actor, action->event, action->key);
       }
       return TRUE;
     }

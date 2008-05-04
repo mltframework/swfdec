@@ -216,6 +216,7 @@ void		swfdec_player_remove_all_external_actions
 void		swfdec_player_add_action	(SwfdecPlayer *		player,
 						 SwfdecActor *		actor,
 						 SwfdecEventType	type,
+						 guint8			key,
 						 guint			importance);
 void		swfdec_player_add_action_script	(SwfdecPlayer *		player,
 						 SwfdecActor *		actor,

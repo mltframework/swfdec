@@ -73,9 +73,9 @@ typedef enum {
   SWFDEC_TEXT_ATTRIBUTE_URL,
 } SwfdecTextAttribute;
 
-#define SWFDEC_TEXT_ATTRIBUTE_SET(flags, attribute) ((flags) |= 1 << (attribute))
+#define SWFDEC_TEXT_ATTRIBUTE_SET(flags, attribute) ((flags) |= (1 << (attribute)))
 #define SWFDEC_TEXT_ATTRIBUTE_UNSET(flags, attribute) ((flags) &= ~(1 << (attribute)))
-#define SWFDEC_TEXT_ATTRIBUTE_IS_SET(flags, attribute) ((flags) & (1 << (attribute)) ? TRUE : FALSE)
+#define SWFDEC_TEXT_ATTRIBUTE_IS_SET(flags, attribute) (((flags) & (1 << (attribute))) ? TRUE : FALSE)
 
 struct _SwfdecTextAttributes {
   SwfdecTextAlign	align;

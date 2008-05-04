@@ -958,7 +958,7 @@ swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->format_new->color);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->format_new->attr.color);
 }
 
 // This doesn't work the same way as TextFormat's color setting
@@ -972,7 +972,7 @@ swfdec_text_field_movie_set_textColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  text->format_new->color = swfdec_text_field_movie_int_to_color (cx, value);
+  text->format_new->attr.color = swfdec_text_field_movie_int_to_color (cx, value);
 }
 
 SWFDEC_AS_NATIVE (104, 300, swfdec_text_field_movie_get_gridFitType)

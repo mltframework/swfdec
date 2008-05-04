@@ -666,6 +666,9 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
   g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
   g_return_val_if_fail (renderer == NULL || SWFDEC_IS_RENDERER (renderer), NULL);
   g_return_val_if_fail (trans != NULL, NULL);
+  /* The mask flag is used for caching image surfaces.
+   * Instead of masking with images, code should use color patterns */
+  g_return_val_if_fail (!swfdec_color_transform_is_mask (trans), NULL);
 
   surface = swfdec_image_lookup_surface (image, renderer, trans);
   if (surface)

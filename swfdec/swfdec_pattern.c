@@ -219,6 +219,8 @@ swfdec_image_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
   cairo_pattern_t *pattern;
   cairo_surface_t *surface;
   
+  if (swfdec_color_transform_is_mask (trans))
+    return cairo_pattern_create_rgb (0, 0, 0);
   surface = swfdec_image_create_surface_transformed (image->image, renderer, trans);
   if (surface == NULL)
     return NULL;

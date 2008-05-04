@@ -1182,18 +1182,26 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
   /* if the movie loaded an image, draw it here now */
   if (movie->image) {
     SwfdecRenderer *renderer = swfdec_renderer_get (cr);
-    cairo_surface_t *surface = swfdec_image_create_surface_transformed (movie->image,
+    cairo_surface_t *surface;
+    cairo_pattern_t *pattern;
+    
+    if (swfdec_color_transform_is_mask (ctrans))
+      surface = NULL;
+    else
+      surface = swfdec_image_create_surface_transformed (movie->image,
 	renderer, ctrans);
     if (surface) {
       static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
-      cairo_pattern_t *pattern = cairo_pattern_create_for_surface (surface);
+      pattern = cairo_pattern_create_for_surface (surface);
       SWFDEC_LOG ("rendering loaded image");
       cairo_pattern_set_matrix (pattern, &matrix);
-      cairo_set_source (cr, pattern);
-      cairo_paint (cr);
-      cairo_pattern_destroy (pattern);
-      cairo_surface_destroy (surface);
+    } else {
+      pattern = cairo_pattern_create_rgb (1.0, 0.0, 0.0);
     }
+    cairo_set_source (cr, pattern);
+    cairo_paint (cr);
+    cairo_pattern_destroy (pattern);
+    cairo_surface_destroy (surface);
   }
 
   /* draw the children movies */

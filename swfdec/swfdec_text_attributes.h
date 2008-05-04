@@ -21,10 +21,8 @@
 #ifndef _SWFDEC_TEXT_ATTRIBUTES_H_
 #define _SWFDEC_TEXT_ATTRIBUTES_H_
 
-#include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_as_array.h>
-#include <swfdec/swfdec_types.h>
-#include <swfdec/swfdec_script.h>
+#include <glib.h>
+#include <swfdec/swfdec_color.h>
 
 G_BEGIN_DECLS
 

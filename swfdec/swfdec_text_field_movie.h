@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 #include <swfdec/swfdec_actor.h>
 #include <swfdec/swfdec_text_field.h>
 #include <swfdec/swfdec_style_sheet.h>
+#include <swfdec/swfdec_text_buffer.h>
 #include <swfdec/swfdec_text_format.h>
 
 G_BEGIN_DECLS
@@ -79,11 +80,6 @@ typedef struct {
   GSList *		attrs;		// PangoAttribute
 } SwfdecParagraph;
 
-typedef struct {
-  guint			index_;
-  SwfdecTextFormat *	format;
-} SwfdecFormatIndex;
-
 struct _SwfdecTextFieldMovie {
   SwfdecActor		actor;
 
@@ -102,7 +98,7 @@ struct _SwfdecTextFieldMovie {
   gboolean		border;
   gboolean		background;
  
-  GString *		input;
+  SwfdecTextBuffer *	text;		/* the text + formatting */
   char *		asterisks;	/* bunch of asterisks that we display when password mode is enabled */
   guint			asterisks_length;
   gboolean		input_html;	/* whether orginal input was given as HTML */
@@ -110,7 +106,6 @@ struct _SwfdecTextFieldMovie {
   const char *		variable;
 
   SwfdecTextAttributes	default_attributes;
-  GSList *		formats;
 
   gboolean		condense_white;
 
@@ -132,8 +127,6 @@ struct _SwfdecTextFieldMovie {
   SwfdecColor		background_color;
 
   gboolean		mouse_pressed;
-  gsize			cursor_start;		/* index of cursor (aka insertion point) in ->input */
-  gsize			cursor_end;		/* end of cursor, either equal to cursor_start or if text selected smaller or bigger */
   guint			character_pressed;
 };
 
@@ -152,13 +145,6 @@ void		swfdec_text_field_movie_get_text_size	(SwfdecTextFieldMovie *	text,
 gboolean	swfdec_text_field_movie_auto_size	(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie *	text,
 							 gboolean		check_limits);
-void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
-							 SwfdecTextFormat *	format,
-							 guint			start_index,
-							 guint			end_index);
-SwfdecTextFormat *swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *	text,
-							 guint			start_index,
-							 guint			end_index);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);

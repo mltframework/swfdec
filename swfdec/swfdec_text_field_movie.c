@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -41,45 +41,6 @@ G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_ACTOR)
 
 #define EXTRA_MARGIN 2
 #define BULLET_MARGIN 36
-
-/*** CURSOR API ***/
-
-static gsize
-swfdec_text_field_movie_get_cursor (SwfdecTextFieldMovie *text)
-{
-  return text->cursor_start;
-}
-
-static gboolean
-swfdec_text_field_movie_has_cursor (SwfdecTextFieldMovie *text)
-{
-  return text->cursor_start == text->cursor_end;
-}
-#define swfdec_text_field_movie_has_selection(text) (!swfdec_text_field_movie_has_cursor (text))
-
-static void
-swfdec_text_field_movie_get_selection (SwfdecTextFieldMovie *text, gsize *start, gsize *end)
-{
-  if (start)
-    *start = MIN (text->cursor_start, text->cursor_end);
-  if (end)
-    *end = MAX (text->cursor_start, text->cursor_end);
-}
-
-static void
-swfdec_text_field_movie_set_cursor (SwfdecTextFieldMovie *text, gsize start, gsize end)
-{
-  g_return_if_fail (start <= text->input->len);
-  g_return_if_fail (end <= text->input->len);
-
-  if (text->cursor_start == start &&
-      text->cursor_end == end)
-    return;
-
-  text->cursor_start = start;
-  text->cursor_end = end;
-  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-}
 
 /*** VFUNCS ***/
 
@@ -138,7 +99,7 @@ swfdec_text_paragraph_add_attribute (SwfdecParagraph *paragraph,
 
 static void
 swfdec_text_paragraph_add_block (SwfdecParagraph *paragraph, int index_,
-    SwfdecTextFormat *format)
+    const SwfdecTextAttributes *attr)
 {
   guint i;
   SwfdecBlock *block;
@@ -147,7 +108,7 @@ swfdec_text_paragraph_add_block (SwfdecParagraph *paragraph, int index_,
 
   block->index_ = index_;
 
-  switch (format->attr.align) {
+  switch (attr->align) {
     case SWFDEC_TEXT_ALIGN_LEFT:
       block->align = PANGO_ALIGN_LEFT;
       block->justify = FALSE;
@@ -167,16 +128,16 @@ swfdec_text_paragraph_add_block (SwfdecParagraph *paragraph, int index_,
     default:
       g_assert_not_reached ();
   }
-  block->leading = format->attr.leading * 20 * PANGO_SCALE;
-  block->block_indent = format->attr.block_indent * 20;
-  block->left_margin = format->attr.left_margin * 20;
-  block->right_margin = format->attr.right_margin * 20;
+  block->leading = attr->leading * 20 * PANGO_SCALE;
+  block->block_indent = attr->block_indent * 20;
+  block->left_margin = attr->left_margin * 20;
+  block->right_margin = attr->right_margin * 20;
 
-  if (format->attr.n_tab_stops != 0) {
-    block->tab_stops = pango_tab_array_new (format->attr.n_tab_stops, TRUE);
-    for (i = 0; i < format->attr.n_tab_stops; i++) {
+  if (attr->n_tab_stops != 0) {
+    block->tab_stops = pango_tab_array_new (attr->n_tab_stops, TRUE);
+    for (i = 0; i < attr->n_tab_stops; i++) {
       pango_tab_array_set_tab (block->tab_stops, i, PANGO_TAB_LEFT,
-	  format->attr.tab_stops[i] * 20);
+	  attr->tab_stops[i] * 20);
     }
   } else {
     block->tab_stops = NULL;
@@ -189,21 +150,23 @@ static void
 swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
     SwfdecParagraph *paragraph, guint start_index, guint length)
 {
-  SwfdecTextFormat *format, *format_prev;
   guint index_;
-  GSList *iter;
+  SwfdecTextBufferIter *iter;
   PangoAttribute *attr_bold, *attr_color, *attr_font, *attr_italic,
 		 *attr_letter_spacing, *attr_size, *attr_underline;
+  const char *string;
+  const SwfdecTextAttributes *attr, *attr_prev;
   // TODO: kerning, display
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_assert (paragraph != NULL);
-  g_assert (start_index + length <= text->input->len);
+  g_assert (start_index + length <= swfdec_text_buffer_get_length (text->text));
 
+  string = swfdec_text_buffer_get_text (text->text);
   paragraph->index_ = start_index;
   paragraph->length = length;
-  if (text->input->str[start_index + length - 1] == '\n' ||
-      text->input->str[start_index + length - 1] == '\r') {
+  if (string[start_index + length - 1] == '\n' ||
+      string[start_index + length - 1] == '\r') {
     paragraph->newline = TRUE;
   } else {
     paragraph->newline = FALSE;
@@ -212,135 +175,130 @@ swfdec_text_field_movie_generate_paragraph (SwfdecTextFieldMovie *text,
   paragraph->blocks = NULL;
   paragraph->attrs = NULL;
 
-  g_assert (text->formats != NULL);
-  for (iter = text->formats; iter->next != NULL &&
-      ((SwfdecFormatIndex *)(iter->next->data))->index_ <= start_index;
-      iter = iter->next);
+  iter = swfdec_text_buffer_get_iter (text->text, start_index);
+  attr = swfdec_text_buffer_iter_get_attributes (text->text, iter);
 
   index_ = start_index;
-  format = ((SwfdecFormatIndex *)(iter->data))->format;
 
   // Paragraph formats
-  paragraph->bullet = format->attr.bullet;
-  paragraph->indent = format->attr.indent * 20 * PANGO_SCALE;
+  paragraph->bullet = attr->bullet;
+  paragraph->indent = attr->indent * 20 * PANGO_SCALE;
 
   // Add new block
-  swfdec_text_paragraph_add_block (paragraph, 0, format);
+  swfdec_text_paragraph_add_block (paragraph, 0, attr);
 
   // Open attributes
   attr_bold = pango_attr_weight_new (
-      (format->attr.bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
+      (attr->bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
   attr_bold->start_index = 0;
 
-  attr_color = pango_attr_foreground_new (SWFDEC_COLOR_R (format->attr.color) * 255,
-      SWFDEC_COLOR_G (format->attr.color) * 255,
-      SWFDEC_COLOR_B (format->attr.color) * 255);
+  attr_color = pango_attr_foreground_new (SWFDEC_COLOR_R (attr->color) * 255,
+      SWFDEC_COLOR_G (attr->color) * 255,
+      SWFDEC_COLOR_B (attr->color) * 255);
   attr_color->start_index = 0;
 
   // FIXME: embed fonts
-  attr_font = pango_attr_family_new (format->attr.font);
+  attr_font = pango_attr_family_new (attr->font);
   attr_font->start_index = 0;
 
   attr_italic = pango_attr_style_new (
-      (format->attr.italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
+      (attr->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
   attr_italic->start_index = 0;
 
   attr_letter_spacing = pango_attr_letter_spacing_new (
-      format->attr.letter_spacing * 20 * PANGO_SCALE);
+      attr->letter_spacing * 20 * PANGO_SCALE);
   attr_letter_spacing->start_index = 0;
 
   attr_size =
-    pango_attr_size_new_absolute (MAX (format->attr.size, 1) * 20 * PANGO_SCALE);
+    pango_attr_size_new_absolute (MAX (attr->size, 1) * 20 * PANGO_SCALE);
   attr_size->start_index = 0;
 
   attr_underline = pango_attr_underline_new (
-      (format->attr.underline ? PANGO_UNDERLINE_SINGLE : PANGO_UNDERLINE_NONE));
+      (attr->underline ? PANGO_UNDERLINE_SINGLE : PANGO_UNDERLINE_NONE));
   attr_underline->start_index = 0;
 
-  for (iter = iter->next;
-      iter != NULL &&
-      ((SwfdecFormatIndex *)(iter->data))->index_ < start_index + length;
-      iter = iter->next)
+  for (iter = swfdec_text_buffer_iter_next (text->text, iter);
+      iter != NULL && swfdec_text_buffer_iter_get_start (text->text, iter) < start_index + length;
+      iter = swfdec_text_buffer_iter_next (text->text, iter))
   {
-    format_prev = format;
-    index_ = ((SwfdecFormatIndex *)(iter->data))->index_;
-    format = ((SwfdecFormatIndex *)(iter->data))->format;
+    attr_prev = attr;
+    index_ = swfdec_text_buffer_iter_get_start (text->text, iter);
+    attr = swfdec_text_buffer_iter_get_attributes (text->text, iter);
 
     // Add new block if necessary
-    if (format_prev->attr.align != format->attr.align ||
-       format_prev->attr.bullet != format->attr.bullet ||
-       format_prev->attr.indent != format->attr.indent ||
-       format_prev->attr.leading != format->attr.leading ||
-       format_prev->attr.block_indent != format->attr.block_indent ||
-       format_prev->attr.left_margin != format->attr.left_margin)
+    if (attr_prev->align != attr->align ||
+       attr_prev->bullet != attr->bullet ||
+       attr_prev->indent != attr->indent ||
+       attr_prev->leading != attr->leading ||
+       attr_prev->block_indent != attr->block_indent ||
+       attr_prev->left_margin != attr->left_margin)
     {
-      swfdec_text_paragraph_add_block (paragraph, index_ - start_index,
-	  format);
+      swfdec_text_paragraph_add_block (paragraph, index_ - start_index, attr);
     }
 
     // Change attributes if necessary
-    if (format_prev->attr.bold != format->attr.bold) {
+    if (attr_prev->bold != attr->bold) {
       attr_bold->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_bold);
 
       attr_bold = pango_attr_weight_new (
-	  (format->attr.bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
+	  (attr->bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL));
       attr_bold->start_index = index_ - start_index;
     }
 
-    if (format_prev->attr.color != format->attr.color) {
+    if (attr_prev->color != attr->color) {
       attr_color->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_color);
 
       attr_color = pango_attr_foreground_new (
-	  SWFDEC_COLOR_R (format->attr.color) * 255,
-	  SWFDEC_COLOR_G (format->attr.color) * 255,
-	  SWFDEC_COLOR_B (format->attr.color) * 255);
+	  SWFDEC_COLOR_R (attr->color) * 255,
+	  SWFDEC_COLOR_G (attr->color) * 255,
+	  SWFDEC_COLOR_B (attr->color) * 255);
       attr_color->start_index = index_ - start_index;
     }
 
-    if (format_prev->attr.font != format->attr.font) {
+    if (attr_prev->font != attr->font) {
       attr_font->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_font);
 
       // FIXME: embed fonts
-      attr_font = pango_attr_family_new (format->attr.font);
+      attr_font = pango_attr_family_new (attr->font);
       attr_font->start_index = index_ - start_index;
     }
 
-    if (format_prev->attr.italic != format->attr.italic) {
+    if (attr_prev->italic != attr->italic) {
       attr_italic->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_italic);
 
       attr_italic = pango_attr_style_new (
-	  (format->attr.italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
+	  (attr->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL));
       attr_italic->start_index = index_ - start_index;
     }
 
-    if (format_prev->attr.letter_spacing != format->attr.letter_spacing) {
+    if (attr_prev->letter_spacing != attr->letter_spacing) {
       attr_letter_spacing->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_letter_spacing);
 
       attr_letter_spacing = pango_attr_letter_spacing_new (
-	  format->attr.letter_spacing * 20 * PANGO_SCALE);
+	  attr->letter_spacing * 20 * PANGO_SCALE);
       attr_letter_spacing->start_index = index_ - start_index;
     }
 
-    if (format_prev->attr.size != format->attr.size) {
+    if (attr_prev->size != attr->size) {
       attr_size->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_size);
 
       attr_size = pango_attr_size_new_absolute (
-	  MAX (1, format->attr.size) * 20 * PANGO_SCALE);
+	  MAX (1, attr->size) * 20 * PANGO_SCALE);
       attr_size->start_index = index_ - start_index;
     }
 
-    if (format_prev->attr.underline != format->attr.underline) {
+    if (attr_prev->underline != attr->underline) {
       attr_underline->end_index = index_ - start_index;
       swfdec_text_paragraph_add_attribute (paragraph, attr_underline);
 
       attr_underline = pango_attr_underline_new (
-	  (format->attr.underline ? PANGO_UNDERLINE_SINGLE : PANGO_UNDERLINE_NONE));
+	  (attr->underline ? PANGO_UNDERLINE_SINGLE : PANGO_UNDERLINE_NONE));
       attr_underline->start_index = index_ - start_index;
     }
   }
@@ -383,7 +341,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
 {
   GArray *paragraphs;
   SwfdecParagraph paragraph;
-  const char *p, *end;
+  const char *p, *end, *string;
   guint max_length;
 
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
@@ -391,7 +349,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
   paragraphs = g_array_new (TRUE, TRUE, sizeof (SwfdecParagraph));
 
   max_length = 0;
-  p = text->input->str;
+  p = string = swfdec_text_buffer_get_text (text->text);
   while (*p != '\0')
   {
     end = strpbrk (p, "\r\n");
@@ -405,7 +363,7 @@ swfdec_text_field_movie_get_paragraphs (SwfdecTextFieldMovie *text, int *num)
       max_length = end - p;
 
     swfdec_text_field_movie_generate_paragraph (text, &paragraph,
-	p - text->input->str, end - p);
+	p - string, end - p);
     paragraphs = g_array_append_val (paragraphs, paragraph);
 
     p = end;
@@ -563,7 +521,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
   }
 
   layouts = g_array_new (TRUE, TRUE, sizeof (SwfdecLayout));
-  swfdec_text_field_movie_get_selection (text, &cursor_start, &cursor_end);
+  swfdec_text_buffer_get_selection (text->text, &cursor_start, &cursor_end);
 
   for (i = 0; paragraphs[i].blocks != NULL; i++)
   {
@@ -646,7 +604,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
       // add background for selection
       layout.index_ = paragraphs[i].index_ + block->index_ + skip;
       layout.index_end = layout.index_ + length;
-      if (swfdec_text_field_movie_has_selection (text) &&
+      if (cursor_start != cursor_end &&
 	  layout.index_ < cursor_end) {
 	SwfdecColor color;
 	PangoAttribute *attr_fg, *attr_bg;
@@ -703,7 +661,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	    block->index_ - skip);
       } else {
 	pango_layout_set_text (playout,
-	    text->input->str + paragraphs[i].index_ + block->index_ + skip,
+	    swfdec_text_buffer_get_text (text->text) + paragraphs[i].index_ + block->index_ + skip,
 	    paragraphs[i].length - block->index_ - skip);
       }
 
@@ -719,7 +677,7 @@ swfdec_text_field_movie_get_layouts (SwfdecTextFieldMovie *text, int *num,
 	  line = pango_layout_get_line_readonly (playout, line_num);
 	  skip_new = line->start_index + line->length - (length - skip);
 	  pango_layout_set_text (playout,
-	      text->input->str + paragraphs[i].index_ + block->index_ + skip,
+	      swfdec_text_buffer_get_text (text->text) + paragraphs[i].index_ + block->index_ + skip,
 	      length - skip + skip_new);
 	  skip = skip_new;
 	}
@@ -923,8 +881,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       MIN (text->scroll, text->scroll_max), NULL, &i, &skip);
 
   if (text->editable && swfdec_text_field_movie_has_focus (text) &&
-      swfdec_text_field_movie_has_cursor (text))
-    cursor = swfdec_text_field_movie_get_cursor (text);
+      !swfdec_text_buffer_has_selection (text->text))
+    cursor = swfdec_text_buffer_get_cursor (text->text);
   else
     cursor = G_MAXSIZE;
 
@@ -1009,22 +967,21 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     } while (pango_layout_iter_next_line (iter_line));
 
     if (layouts[i].index_ <= cursor && 
-	(layouts[i].index_end > cursor || (layouts[i].index_end == cursor && cursor == text->input->len)) &&
+	(layouts[i].index_end > cursor || (layouts[i].index_end == cursor && cursor == swfdec_text_buffer_get_length (text->text))) &&
 	(line == NULL || layouts[i].index_ + line->start_index >= cursor)) {
-      SwfdecTextFormat *format = ((SwfdecFormatIndex *) g_slist_last (text->formats))->format;
+      const SwfdecTextAttributes *attr = swfdec_text_buffer_get_attributes (text->text,
+	  swfdec_text_buffer_get_length (text->text));
       PangoRectangle cursor_rect;
 
       pango_layout_get_cursor_pos (layouts[i].layout, 
-	  swfdec_text_field_movie_get_cursor (text) - layouts[i].index_,
+	  swfdec_text_buffer_get_cursor (text->text) - layouts[i].index_,
 	  &cursor_rect, NULL);
 
       cairo_save (cr);
-      if (format && SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_COLOR))
-	swfdec_color_set_source (cr, format->attr.color | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF));
-      else
-	swfdec_color_set_source (cr, text->default_attributes.color | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF));
+      /* FIXME: or default attributes? */
+      swfdec_color_set_source (cr, attr->color | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF));
 
-      /* FIXME: what's the propwer line width here? */
+      /* FIXME: what's the proper line width here? */
       cairo_set_line_width (cr, SWFDEC_DOUBLE_TO_TWIPS (0.5));
       cairo_move_to (cr, x + layout->offset_x + rect.x, y - skipped);
       cairo_rel_move_to (cr, (double) cursor_rect.x / PANGO_SCALE, (double) cursor_rect.y / PANGO_SCALE);
@@ -1219,7 +1176,6 @@ static void
 swfdec_text_field_movie_dispose (GObject *object)
 {
   SwfdecTextFieldMovie *text;
-  GSList *iter;
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
@@ -1239,15 +1195,12 @@ swfdec_text_field_movie_dispose (GObject *object)
     text->style_sheet = NULL;
   }
 
-  for (iter = text->formats; iter != NULL; iter = iter->next) {
-    g_free (text->formats->data);
-    text->formats->data = NULL;
+  if (text->text) {
+    g_signal_handlers_disconnect_matched (text->text, G_SIGNAL_MATCH_DATA,
+	0, 0, NULL, NULL, text);
+    g_object_unref (text->text);
+    text->text = NULL;
   }
-  g_slist_free (text->formats);
-  text->formats = NULL;
-
-  g_string_free (text->input, TRUE);
-  text->input = NULL;
 
   G_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->dispose (object);
 }
@@ -1256,16 +1209,13 @@ static void
 swfdec_text_field_movie_mark (SwfdecAsObject *object)
 {
   SwfdecTextFieldMovie *text;
-  GSList *iter;
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
   if (text->variable != NULL)
     swfdec_as_string_mark (text->variable);
-  for (iter = text->formats; iter != NULL; iter = iter->next) {
-    swfdec_as_object_mark (
-	SWFDEC_AS_OBJECT (((SwfdecFormatIndex *)(iter->data))->format));
-  }
+
+  swfdec_text_buffer_mark (text->text);
   if (text->style_sheet != NULL)
     swfdec_as_object_mark (text->style_sheet);
   if (text->style_sheet_input != NULL)
@@ -1378,41 +1328,20 @@ swfdec_text_field_movie_contains (SwfdecMovie *movie, double x, double y,
   return movie;
 }
 
-static SwfdecTextFormat *
-swfdec_text_field_movie_format_for_index (SwfdecTextFieldMovie *text,
-    guint index_)
-{
-  GSList *iter;
-
-  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), NULL);
-  g_return_val_if_fail (index_ <= text->input->len, NULL);
-
-  if (text->formats == NULL)
-    return NULL;
-
-  // get current format
-  for (iter = text->formats; iter != NULL && iter->next != NULL &&
-      ((SwfdecFormatIndex *)iter->next->data)->index_ < index_;
-      iter = iter->next);
-
-  return ((SwfdecFormatIndex *)iter->data)->format;
-}
-
 static void
 swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
     guint index_)
 {
-  SwfdecTextFormat *format;
+  const SwfdecTextAttributes *attr;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (index_ <= text->input->len);
+  g_return_if_fail (index_ <= swfdec_text_buffer_get_length (text->text));
 
-  format = swfdec_text_field_movie_format_for_index (text, index_);
+  attr = swfdec_text_buffer_get_attributes (text->text, index_);
 
-  if (format != NULL && format->attr.url != NULL &&
-      format->attr.url != SWFDEC_AS_STR_EMPTY) {
+  if (attr->url != SWFDEC_AS_STR_EMPTY) {
     swfdec_player_launch (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context),
-	SWFDEC_LOADER_REQUEST_DEFAULT, format->attr.url, format->attr.target, NULL);
+	SWFDEC_LOADER_REQUEST_DEFAULT, attr->url, attr->target, NULL);
   }
 }
 
@@ -1472,18 +1401,17 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
   guint index_;
-  SwfdecTextFormat *format;
+  const SwfdecTextAttributes *attr;
 
   swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
   if (swfdec_text_field_movie_xy_to_index (text, x, y, &index_, NULL)) {
-    format = swfdec_text_field_movie_format_for_index (text, index_);
+    attr = swfdec_text_buffer_get_attributes (text->text, index_);
   } else {
-    format = NULL;
+    attr = NULL;
   }
 
-  if (format != NULL && format->attr.url != NULL &&
-      format->attr.url != SWFDEC_AS_STR_EMPTY) {
+  if (attr != NULL && attr->url != SWFDEC_AS_STR_EMPTY) {
     return SWFDEC_MOUSE_CURSOR_CLICK;
   } else if (text->editable || text->selectable) {
     return SWFDEC_MOUSE_CURSOR_TEXT;
@@ -1519,9 +1447,9 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
 
   text->mouse_pressed = TRUE;
-  if (!before && index_ < text->input->len)
+  if (!before && index_ < swfdec_text_buffer_get_length (text->text))
     index_++;
-  swfdec_text_field_movie_set_cursor (text, index_, index_);
+  swfdec_text_buffer_set_cursor (text->text, index_, index_);
 
   if (direct) {
     text->character_pressed = index_;
@@ -1547,10 +1475,10 @@ swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
 
   direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
 
-  if (!before && index_ < text->input->len)
+  if (!before && index_ < swfdec_text_buffer_get_length (text->text))
     index_++;
 
-  swfdec_text_field_movie_set_cursor (text, swfdec_text_field_movie_get_cursor (text), index_);
+  swfdec_text_buffer_set_cursor (text->text, swfdec_text_buffer_get_cursor (text->text), index_);
 }
 
 static void
@@ -1613,50 +1541,48 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   char insert[7];
   guint len;
   gsize start, end;
-#define BACKWARD(text, _index) ((_index) == 0 ? 0 : (gsize) (g_utf8_prev_char ((text)->input->str + (_index)) - (text)->input->str))
-#define FORWARD(text, _index) ((_index) == (text)->input->len ? (_index) : (gsize) (g_utf8_next_char ((text)->input->str + (_index)) - (text)->input->str))
+  const char *string;
+#define BACKWARD(text, _index) ((_index) == 0 ? 0 : (gsize) (g_utf8_prev_char ((text) + (_index)) - (text)))
+#define FORWARD(text, _index) ((text)[0] == 0 ? (_index) : (gsize) (g_utf8_next_char ((text) + (_index)) - (text)))
 
   if (!text->editable)
     return;
 
-  swfdec_text_field_movie_get_selection (text, &start, &end);
+  string = swfdec_text_buffer_get_text (text->text);
+  swfdec_text_buffer_get_selection (text->text, &start, &end);
 
   switch (keycode) {
     case SWFDEC_KEY_LEFT:
-      if (swfdec_text_field_movie_has_cursor (text)) {
-	start = BACKWARD (text, start);
-	swfdec_text_field_movie_set_cursor (text, start, start);
+      if (swfdec_text_buffer_has_selection (text->text)) {
+	swfdec_text_buffer_set_cursor (text->text, start, start);
       } else {
-	swfdec_text_field_movie_set_cursor (text, start, start);
+	start = BACKWARD (string, start);
+	swfdec_text_buffer_set_cursor (text->text, start, start);
       }
       return;
     case SWFDEC_KEY_RIGHT:
-      if (swfdec_text_field_movie_has_cursor (text)) {
-	start = FORWARD (text, start);
-	swfdec_text_field_movie_set_cursor (text, start, start);
+      if (swfdec_text_buffer_has_selection (text->text)) {
+	swfdec_text_buffer_set_cursor (text->text, end, end);
       } else {
-	swfdec_text_field_movie_set_cursor (text, end, end);
+	start = FORWARD (string, start);
+	swfdec_text_buffer_set_cursor (text->text, start, start);
       }
       return;
     case SWFDEC_KEY_BACKSPACE:
-      if (swfdec_text_field_movie_has_cursor (text)) {
-	start = BACKWARD (text, start);
+      if (!swfdec_text_buffer_has_selection (text->text)) {
+	start = BACKWARD (string, start);
       }
       if (start != end) {
-	swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-	swfdec_text_field_movie_replace_text (text, start, end, "");
-	swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_buffer_delete_text (text->text, start, end - start);
 	swfdec_text_field_movie_changed (text);
       }
       return;
     case SWFDEC_KEY_DELETE:
-      if (swfdec_text_field_movie_has_cursor (text)) {
-	end = FORWARD (text, end);
+      if (!swfdec_text_buffer_has_selection (text->text)) {
+	end = FORWARD (string, end);
       }
       if (start != end) {
-	swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-	swfdec_text_field_movie_replace_text (text, start, end, "");
-	swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+	swfdec_text_buffer_delete_text (text->text, start, end - start);
 	swfdec_text_field_movie_changed (text);
       }
       return;
@@ -1669,9 +1595,9 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   len = g_unichar_to_utf8 (character, insert);
   if (len) {
     insert[len] = 0;
-    swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
-    swfdec_text_field_movie_replace_text (text, start, end, insert);
-    swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
+    if (start != end)
+      swfdec_text_buffer_delete_text (text->text, start, end - start);
+    swfdec_text_buffer_insert_text (text->text, start, insert);
     swfdec_text_field_movie_changed (text);
   }
 }
@@ -1715,136 +1641,23 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 }
 
 static void
+swfdec_text_field_movie_cursor_changed (SwfdecTextBuffer *buffer, 
+    gulong start, gulong end, SwfdecTextFieldMovie *text)
+{
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
+  /* FIXME: update selection */
+}
+
+static void
 swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
 {
-  text->input = g_string_new ("");
+  text->text = swfdec_text_buffer_new ();
+  g_signal_connect (text->text, "cursor-changed", 
+      G_CALLBACK (swfdec_text_field_movie_cursor_changed), text);
   text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;
 
   swfdec_text_attributes_reset (&text->default_attributes);
-
-}
-
-void
-swfdec_text_field_movie_set_text_format (SwfdecTextFieldMovie *text,
-    SwfdecTextFormat *format, guint start_index, guint end_index)
-{
-  SwfdecFormatIndex *findex, *findex_new, *findex_prev;
-  guint findex_end_index;
-  GSList *iter, *next;
-
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (SWFDEC_IS_TEXT_FORMAT (format));
-  g_return_if_fail (start_index < end_index);
-  g_return_if_fail (end_index <= text->input->len);
-
-  g_assert (text->formats != NULL);
-  g_assert (text->formats->data != NULL);
-  g_assert (((SwfdecFormatIndex *)text->formats->data)->index_ == 0);
-
-  findex = NULL;
-  for (iter = text->formats; iter != NULL &&
-      ((SwfdecFormatIndex *)iter->data)->index_ < end_index;
-      iter = next)
-  {
-    findex_prev = findex;
-    next = iter->next;
-    findex = iter->data;
-    if (iter->next != NULL) {
-      findex_end_index =
-	((SwfdecFormatIndex *)iter->next->data)->index_;
-    } else {
-      findex_end_index = text->input->len;
-    }
-
-    if (findex_end_index <= start_index)
-      continue;
-
-    if (swfdec_text_format_equal_or_undefined (findex->format, format))
-      continue;
-
-    if (findex_end_index > end_index) {
-      findex_new = g_new (SwfdecFormatIndex, 1);
-      findex_new->index_ = end_index;
-      findex_new->format = swfdec_text_format_copy (findex->format);
-      if (findex_new->format == NULL) {
-	g_free (findex_new);
-	break;
-      }
-
-      iter = g_slist_insert (iter, findex_new, 1);
-    }
-
-    if (findex->index_ < start_index) {
-      findex_new = g_new (SwfdecFormatIndex, 1);
-      findex_new->index_ = start_index;
-      findex_new->format = swfdec_text_format_copy (findex->format);
-      if (findex_new->format == NULL) {
-	g_free (findex_new);
-	break;
-      }
-      swfdec_text_format_add (findex_new->format, format);
-
-      iter = g_slist_insert (iter, findex_new, 1);
-      findex = findex_new;
-    } else {
-      swfdec_text_format_add (findex->format, format);
-
-      // if current format now equals previous one, remove current
-      if (findex_prev != NULL &&
-	  swfdec_text_format_equal (findex->format, findex_prev->format)) {
-	text->formats = g_slist_remove (text->formats, findex);
-	findex = findex_prev;
-      }
-    }
-
-    // if current format now equals the next one, remove current
-    if (findex_end_index <= end_index && next != NULL &&
-	swfdec_text_format_equal (findex->format,
-	  ((SwfdecFormatIndex *)next->data)->format))
-    {
-      ((SwfdecFormatIndex *)next->data)->index_ = findex->index_;
-      text->formats = g_slist_remove (text->formats, findex);
-      findex = findex_prev;
-    }
-  }
-}
-
-SwfdecTextFormat *
-swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *text,
-    guint start_index, guint end_index)
-{
-  SwfdecTextFormat *format;
-  GSList *iter;
-
-  g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_assert (start_index < end_index);
-  g_assert (end_index <= text->input->len);
-
-  g_assert (text->formats != NULL);
-  g_assert (text->formats->data != NULL);
-  g_assert (((SwfdecFormatIndex *)text->formats->data)->index_ == 0);
-
-  format = NULL;
-  for (iter = text->formats; iter != NULL &&
-      ((SwfdecFormatIndex *)iter->data)->index_ < end_index;
-      iter = iter->next)
-  {
-    if (iter->next != NULL &&
-	((SwfdecFormatIndex *)iter->next->data)->index_ <= start_index)
-      continue;
-
-    if (format == NULL) {
-      swfdec_text_format_init_properties (SWFDEC_AS_OBJECT (text)->context);
-      format =
-	swfdec_text_format_copy (((SwfdecFormatIndex *)iter->data)->format);
-    } else {
-      swfdec_text_format_remove_different (format,
-	  ((SwfdecFormatIndex *)iter->data)->format);
-    }
-  }
-
-  return format;
 }
 
 static void
@@ -1966,7 +1779,7 @@ swfdec_text_field_movie_get_text (SwfdecTextFieldMovie *text)
 {
   char *str, *p;
 
-  str = g_strdup (text->input->str);
+  str = g_strdup (swfdec_text_buffer_get_text (text->text));
 
   // if input was orginally html, remove all \r
   if (text->input_html) {
@@ -1989,13 +1802,8 @@ void
 swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
     guint start_index, guint end_index, const char *str)
 {
-  SwfdecFormatIndex *findex;
-  GSList *iter;
-  gboolean first;
-  gsize len;
-
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (end_index <= text->input->len);
+  g_return_if_fail (end_index <= swfdec_text_buffer_get_length (text->text));
   g_return_if_fail (start_index <= end_index);
   g_return_if_fail (str != NULL);
 
@@ -2004,57 +1812,21 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   if (text->style_sheet_input)
     return;
 
-  len = strlen (str);
-  first = TRUE;
-  iter = text->formats; 
-  while (iter) {
-    findex = iter->data;
-    iter = iter->next;
+  if (end_index > start_index)
+    swfdec_text_buffer_delete_text (text->text, start_index, end_index - start_index);
 
-    /* remove formats of deleted text */
-    if (findex->index_ >= start_index &&
-	(end_index == text->input->len ||
-	 (iter != NULL &&
-	  ((SwfdecFormatIndex *) iter->data)->index_ <= end_index)) &&
-	text->formats->next != NULL) {
-      text->formats = g_slist_remove (text->formats, findex);
-      g_free (findex);
-      continue;
-    }
-    /* adapt indexes: remove deleted part, add to-be inserted text */
-    if (findex->index_ > end_index) {
-      findex->index_ = findex->index_ + start_index - end_index + len;
-    } else if (findex->index_ > start_index) {
-      findex->index_ = start_index;
-    }
-  }
-
-  if (end_index == text->input->len && text->input->len > 0) {
+  if (start_index == swfdec_text_buffer_get_length (text->text) &&
+      start_index > 0) {
+    const SwfdecTextAttributes *attr = swfdec_text_buffer_get_attributes (text->text, 0);
     if (SWFDEC_AS_OBJECT (text)->context->version < 8) {
       SWFDEC_FIXME ("replaceText to the end of the TextField might use wrong text format on version 7");
     }
-    findex = g_new0 (SwfdecFormatIndex, 1);
-    findex->index_ = start_index;
-    findex->format = swfdec_text_format_copy (
-	((SwfdecFormatIndex *)text->formats->data)->format);
-    text->formats = g_slist_append (text->formats, findex);
-  }
-
-  text->input = g_string_erase (text->input, start_index,
-      end_index - start_index);
-  text->input = g_string_insert (text->input, start_index, str);
-
-  if (text->cursor_start >= start_index) {
-    if (text->cursor_start <= end_index)
-      text->cursor_start = start_index + len;
-    else
-      text->cursor_start += end_index - start_index + len;
-  }
-  if (text->cursor_end >= start_index) {
-    if (text->cursor_end <= end_index)
-      text->cursor_end = start_index + len;
-    else
-      text->cursor_end += end_index - start_index + len;
+    swfdec_text_buffer_insert_text (text->text, start_index, str);
+    swfdec_text_buffer_set_attributes (text->text, start_index, 
+	swfdec_text_buffer_get_length (text->text) - start_index, attr, 
+	SWFDEC_TEXT_ATTRIBUTES_MASK);
+  } else {
+    swfdec_text_buffer_insert_text (text->text, start_index, str);
   }
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
@@ -2066,33 +1838,20 @@ void
 swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     gboolean html)
 {
-  SwfdecFormatIndex *block;
+  gsize length;
 
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
-
-  // remove old formatting info
-  g_slist_foreach (text->formats, (GFunc) g_free, NULL);
-  g_slist_free (text->formats);
-  text->formats = NULL;
 
   /* Flash 7 resets to default style here */
   if (html && SWFDEC_AS_OBJECT (text)->context->version < 8)
     swfdec_text_attributes_reset (&text->default_attributes);
 
-  block = g_new (SwfdecFormatIndex, 1);
-  block->index_ = 0;
-  block->format = SWFDEC_TEXT_FORMAT (
-      swfdec_text_format_new_no_properties (SWFDEC_AS_OBJECT (text)->context));
-  if (block->format == NULL) {
-    g_free (block);
-    text->input = g_string_truncate (text->input, 0);
-    return;
-  }
-  swfdec_text_attributes_copy (&block->format->attr, &text->default_attributes,
+  length = swfdec_text_buffer_get_length (text->text);
+  if (length)
+    swfdec_text_buffer_delete_text (text->text, 0, length);
+  swfdec_text_buffer_set_attributes (text->text, 0, 0, &text->default_attributes,
       SWFDEC_TEXT_ATTRIBUTES_MASK);
-  block->format->values_set = SWFDEC_TEXT_ATTRIBUTES_MASK;
-  text->formats = g_slist_prepend (text->formats, block);
 
   text->input_html = html;
 
@@ -2108,7 +1867,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     if (html) {
       swfdec_text_field_movie_html_parse (text, str);
     } else {
-      text->input = g_string_assign (text->input, str);
+      swfdec_text_buffer_insert_text (text->text, 0, str);
     }
   }
 

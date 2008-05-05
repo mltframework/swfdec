@@ -55,6 +55,7 @@ swfdec_text_buffer_format_free (SwfdecTextBufferFormat *format)
 /*** OBJECT ***/
 
 enum {
+  TEXT_CHANGED,
   CURSOR_CHANGED,
   LAST_SIGNAL
 };
@@ -84,6 +85,9 @@ swfdec_text_buffer_class_init (SwfdecTextBufferClass *klass)
 
   object_class->dispose = swfdec_text_buffer_dispose;
 
+  signals[TEXT_CHANGED] = g_signal_new ("text-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
   signals[CURSOR_CHANGED] = g_signal_new ("cursor-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__ULONG_ULONG,
       G_TYPE_NONE, 2, G_TYPE_ULONG, G_TYPE_ULONG);
@@ -156,6 +160,8 @@ swfdec_text_buffer_insert_text (SwfdecTextBuffer *buffer,
   g_return_if_fail (text != NULL);
 
   len = strlen (text);
+  if (len == 0)
+    return;
   g_string_insert_len (buffer->text, pos, text, len);
   iter = g_sequence_get_end_iter (buffer->attributes);
   for (;;) {
@@ -171,7 +177,11 @@ swfdec_text_buffer_insert_text (SwfdecTextBuffer *buffer,
     buffer->cursor_start += len;
   if (buffer->cursor_end >= pos)
     buffer->cursor_end += len;
-  /* FIXME: emit cursor-changed signal? */
+
+  g_signal_emit (buffer, signals[TEXT_CHANGED], 0);
+  g_signal_emit (buffer, signals[CURSOR_CHANGED], 0,
+      (gulong) MIN (buffer->cursor_start, buffer->cursor_end),
+      (gulong) MAX (buffer->cursor_start, buffer->cursor_end));
 }
 
 /* removes duplicates in the range [iter, end) */
@@ -236,7 +246,11 @@ swfdec_text_buffer_delete_text (SwfdecTextBuffer *buffer,
     buffer->cursor_end -= length;
   else if (buffer->cursor_end > pos)
     buffer->cursor_end = pos;
-  /* FIXME: emit cursor-changed signal? */
+
+  g_signal_emit (buffer, signals[TEXT_CHANGED], 0);
+  g_signal_emit (buffer, signals[CURSOR_CHANGED], 0,
+      (gulong) MIN (buffer->cursor_start, buffer->cursor_end),
+      (gulong) MAX (buffer->cursor_start, buffer->cursor_end));
 }
 
 const char *
@@ -352,6 +366,8 @@ swfdec_text_buffer_set_attributes (SwfdecTextBuffer *buffer, gsize start,
   }
   swfdec_text_attributes_copy (&format->attr, attr, mask);
   swfdec_text_buffer_remove_duplicates (start_iter, iter);
+
+  g_signal_emit (buffer, signals[TEXT_CHANGED], 0);
 }
 
 /*** ITERATOR ***/
@@ -441,7 +457,7 @@ swfdec_text_buffer_set_cursor (SwfdecTextBuffer *buffer, gsize start, gsize end)
 
   buffer->cursor_start = start;
   buffer->cursor_end = end;
-  g_signal_emit (buffer, signals[CURSOR_CHANGED],
+  g_signal_emit (buffer, signals[CURSOR_CHANGED], 0,
       (gulong) MIN (buffer->cursor_start, buffer->cursor_end),
       (gulong) MAX (buffer->cursor_start, buffer->cursor_end));
 }

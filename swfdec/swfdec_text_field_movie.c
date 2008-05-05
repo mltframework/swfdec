@@ -1529,12 +1529,6 @@ swfdec_text_field_movie_focus_out (SwfdecActor *actor)
 }
 
 static void
-swfdec_text_field_movie_changed (SwfdecTextFieldMovie *text)
-{
-  text->changed++;
-}
-
-static void
 swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint character)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
@@ -1543,7 +1537,7 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
   gsize start, end;
   const char *string;
 #define BACKWARD(text, _index) ((_index) == 0 ? 0 : (gsize) (g_utf8_prev_char ((text) + (_index)) - (text)))
-#define FORWARD(text, _index) ((text)[0] == 0 ? (_index) : (gsize) (g_utf8_next_char ((text) + (_index)) - (text)))
+#define FORWARD(text, _index) ((text)[_index] == 0 ? (_index) : (gsize) (g_utf8_next_char ((text) + (_index)) - (text)))
 
   if (!text->editable)
     return;
@@ -1574,7 +1568,6 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
       }
       if (start != end) {
 	swfdec_text_buffer_delete_text (text->text, start, end - start);
-	swfdec_text_field_movie_changed (text);
       }
       return;
     case SWFDEC_KEY_DELETE:
@@ -1583,7 +1576,6 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
       }
       if (start != end) {
 	swfdec_text_buffer_delete_text (text->text, start, end - start);
-	swfdec_text_field_movie_changed (text);
       }
       return;
     default:
@@ -1598,7 +1590,6 @@ swfdec_text_field_movie_key_press (SwfdecActor *actor, guint keycode, guint char
     if (start != end)
       swfdec_text_buffer_delete_text (text->text, start, end - start);
     swfdec_text_buffer_insert_text (text->text, start, insert);
-    swfdec_text_field_movie_changed (text);
   }
 }
 
@@ -1641,6 +1632,14 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 }
 
 static void
+swfdec_text_field_movie_text_changed (SwfdecTextBuffer *buffer, 
+    SwfdecTextFieldMovie *text)
+{
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
+  text->changed++;
+}
+
+static void
 swfdec_text_field_movie_cursor_changed (SwfdecTextBuffer *buffer, 
     gulong start, gulong end, SwfdecTextFieldMovie *text)
 {
@@ -1654,6 +1653,8 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
   text->text = swfdec_text_buffer_new ();
   g_signal_connect (text->text, "cursor-changed", 
       G_CALLBACK (swfdec_text_field_movie_cursor_changed), text);
+  g_signal_connect (text->text, "text-changed", 
+      G_CALLBACK (swfdec_text_field_movie_text_changed), text);
   text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;
 

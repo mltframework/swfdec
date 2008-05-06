@@ -1008,8 +1008,9 @@ static gboolean
 swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     const char *variable, SwfdecAsValue *val, guint *flags)
 {
-  SwfdecMovie *movie = SWFDEC_MOVIE (object);
-
+  SwfdecMovie *movie, *ret;
+  
+  movie = SWFDEC_MOVIE (object);
   movie = swfdec_movie_resolve (movie);
   if (movie == NULL)
     return FALSE;
@@ -1030,9 +1031,12 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     return TRUE;
   }
   
-  movie = swfdec_movie_get_by_name (movie, variable, FALSE);
-  if (movie) {
-    SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie));
+  ret = swfdec_movie_get_by_name (movie, variable, FALSE);
+  if (ret) {
+    if (!SWFDEC_IS_ACTOR (ret) ||
+	(swfdec_movie_get_version (movie) <= 5 && SWFDEC_IS_TEXT_FIELD_MOVIE (ret)))
+      ret = movie;
+    SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (ret));
     *flags = 0;
     return TRUE;
   }

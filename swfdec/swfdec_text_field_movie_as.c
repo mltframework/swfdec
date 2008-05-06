@@ -1384,7 +1384,8 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
       SWFDEC_AS_STR___constructor__, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
-  swfdec_as_function_call (fun, SWFDEC_AS_OBJECT (movie), 0, NULL, rval);
+  swfdec_as_function_call (fun, SWFDEC_AS_OBJECT (movie), 0, NULL, 
+      cx->version > 7 ? rval : NULL);
   cx->frame->construct = TRUE;
   swfdec_as_context_run (cx);
 }

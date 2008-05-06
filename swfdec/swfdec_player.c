@@ -3007,8 +3007,6 @@ swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr,
   real.y1 = ceil (real.y1);
   SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
       real.x0, real.y0, real.x1, real.y1);
-  g_print ("=== %p: START RENDER, area %g %g  %g %g ===\n", player, 
-      real.x0, real.y0, real.x1, real.y1);
   /* convert the cairo matrix */
   cairo_transform (cr, &priv->global_to_stage);
 

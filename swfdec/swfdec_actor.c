@@ -187,7 +187,8 @@ swfdec_sprite_movie_set_constructor (SwfdecSpriteMovie *movie)
 }
 
 void
-swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition)
+swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
+    guint8 key)
 {
   SwfdecAsObject *thisp;
   const char *name;
@@ -233,7 +234,7 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition)
 
   swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
   if (actor->events) {
-    swfdec_event_list_execute (actor->events, thisp, condition, 0);
+    swfdec_event_list_execute (actor->events, thisp, condition, key);
   }
   /* FIXME: how do we compute the version correctly here? */
   if (version > 5) {
@@ -248,14 +249,16 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition)
 }
 
 /**
- * swfdec_actor_queue_script:
+ * swfdec_actor_queue_script_with_key:
  * @movie: a #SwfdecMovie
  * @condition: the event that should happen
+ * @key: the key for this event
  *
- * Queues execution of all scripts associated with the given event.
+ * Queues execution of all scripts associated with the given event and key.
  **/
 void
-swfdec_actor_queue_script (SwfdecActor *actor, SwfdecEventType condition)
+swfdec_actor_queue_script_with_key (SwfdecActor *actor,
+    SwfdecEventType condition, guint8 key)
 {
   SwfdecPlayer *player;
   guint importance;
@@ -303,7 +306,20 @@ swfdec_actor_queue_script (SwfdecActor *actor, SwfdecEventType condition)
   }
 
   player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context);
-  swfdec_player_add_action (player, actor, condition, importance);
+  swfdec_player_add_action (player, actor, condition, key, importance);
+}
+
+/**
+ * swfdec_actor_queue_script:
+ * @movie: a #SwfdecMovie
+ * @condition: the event that should happen
+ *
+ * Queues execution of all scripts associated with the given event.
+ **/
+void
+swfdec_actor_queue_script (SwfdecActor *actor, SwfdecEventType condition)
+{
+  swfdec_actor_queue_script_with_key (actor, condition, 0);
 }
 
 /**

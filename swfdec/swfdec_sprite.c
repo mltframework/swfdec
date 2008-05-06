@@ -44,7 +44,8 @@ swfdec_sprite_dispose (GObject *object)
 
   if (sprite->frames) {
     for (i = 0; i < sprite->n_frames; i++) {
-      g_free (sprite->frames[i].label);
+      g_slist_foreach (sprite->frames[i].labels, (GFunc) g_free, NULL);
+      g_slist_free (sprite->frames[i].labels);
       if (sprite->frames[i].sound_head)
 	g_object_unref (sprite->frames[i].sound_head);
       if (sprite->frames[i].sound_block) {
@@ -190,10 +191,12 @@ swfdec_sprite_get_frame (SwfdecSprite *sprite, const char *label)
 
   for (i = 0; i < SWFDEC_SPRITE (sprite)->n_frames; i++) {
     SwfdecSpriteFrame *frame = &sprite->frames[i];
-    if (frame->label == NULL)
-      continue;
-    if (g_str_equal (frame->label, label))
-      return i;
+    GSList *iter;
+
+    for (iter = frame->labels; iter != NULL; iter = iter->next) {
+      if (g_str_equal (iter->data, label))
+	return i;
+    }
   }
   return -1;
 }

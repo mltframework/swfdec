@@ -372,6 +372,7 @@ typedef struct {
   SwfdecActor *		actor;		/* the actor to trigger the action on */
   SwfdecScript *	script;		/* script to execute or NULL to trigger action */
   SwfdecEventType	event;		/* the action to trigger */
+  guint8		key;
 } SwfdecPlayerAction;
 
 typedef struct {
@@ -430,6 +431,7 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
  * @player: a #SwfdecPlayer
  * @movie: the movie on which to trigger the event
  * @type: type of the event
+ * @type: key of the event
  * @importance: importance of the event
  *
  * Adds an action to the @player. Actions are used by Flash player to solve
@@ -438,10 +440,10 @@ swfdec_player_do_add_action (SwfdecPlayer *player, guint importance, SwfdecPlaye
  * is calling Actionscript code, you want to do this by using actions.
  **/
 void
-swfdec_player_add_action (SwfdecPlayer *player, SwfdecActor *actor, SwfdecEventType type,
-    guint importance)
+swfdec_player_add_action (SwfdecPlayer *player, SwfdecActor *actor,
+    SwfdecEventType type, guint8 key, guint importance)
 {
-  SwfdecPlayerAction action = { actor, NULL, type };
+  SwfdecPlayerAction action = { actor, NULL, type, key };
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (SWFDEC_IS_ACTOR (actor));
@@ -519,7 +521,7 @@ swfdec_player_do_action (SwfdecPlayer *player)
 	swfdec_as_object_run (SWFDEC_AS_OBJECT (action->actor), action->script);
 	swfdec_sandbox_unuse (sandbox);
       } else {
-	swfdec_actor_execute (action->actor, action->event);
+	swfdec_actor_execute (action->actor, action->event, action->key);
       }
       return TRUE;
     }
@@ -1571,10 +1573,52 @@ swfdec_player_handle_special_keys_after (SwfdecPlayer *player, guint key)
   }
 }
 
+static guint8
+swfdec_player_get_conditional_key (guint keycode, guint character)
+{
+  static guint special_keys[] = {
+    0,
+    SWFDEC_KEY_LEFT,
+    SWFDEC_KEY_RIGHT,
+    SWFDEC_KEY_HOME,
+    SWFDEC_KEY_END,
+    SWFDEC_KEY_INSERT,
+    SWFDEC_KEY_DELETE,
+    0,
+    SWFDEC_KEY_BACKSPACE,
+    0,
+    0,
+    0,
+    0,
+    SWFDEC_KEY_ENTER,
+    SWFDEC_KEY_UP,
+    SWFDEC_KEY_DOWN,
+    SWFDEC_KEY_PAGE_UP,
+    SWFDEC_KEY_PAGE_DOWN,
+    SWFDEC_KEY_TAB,
+    SWFDEC_KEY_ESCAPE
+  };
+  guint i;
+
+  if (keycode != 0) {
+    for (i = 0; i < G_N_ELEMENTS (special_keys); i++) {
+      if (special_keys[i] == keycode)
+	return i;
+    }
+  }
+
+  if (character >= 32 && character <= 126)
+    return character;
+
+  return 0;
+}
+
 static gboolean
 swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint character, gboolean down)
 {
   SwfdecPlayerPrivate *priv = player->priv;
+  GList *walk;
+
   g_assert (keycode < 256);
 
   if (!swfdec_player_lock (player))
@@ -1587,10 +1631,22 @@ swfdec_player_do_handle_key (SwfdecPlayer *player, guint keycode, guint characte
   } else {
     priv->key_pressed[keycode / 8] &= ~(1 << keycode % 8);
   }
+
   if (down)
     swfdec_player_handle_special_keys_before (player, keycode);
+
+  if (down) {
+    guint8 cond = swfdec_player_get_conditional_key (keycode, character);
+
+    for (walk = priv->actors; walk; walk = walk->next) {
+      swfdec_actor_queue_script_with_key (walk->data, SWFDEC_EVENT_KEY_PRESS,
+	  cond);
+    }
+  }
+
   swfdec_player_broadcast (player, SWFDEC_AS_STR_Key, 
       down ? SWFDEC_AS_STR_onKeyDown : SWFDEC_AS_STR_onKeyUp, 0, NULL);
+
   if (priv->focus) {
     SwfdecActorClass *klass = SWFDEC_ACTOR_GET_CLASS (priv->focus);
     if (down) {

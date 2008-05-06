@@ -1536,7 +1536,7 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
     SwfdecActor *actor = SWFDEC_ACTOR (copy);
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_INITIALIZE);
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
-    swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT);
+    swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT, 0);
   }
   swfdec_movie_initialize (copy);
   swfdec_sandbox_use (sandbox);

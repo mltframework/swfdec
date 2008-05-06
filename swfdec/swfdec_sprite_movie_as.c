@@ -690,7 +690,7 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
     swfdec_sandbox_unuse (sandbox);
     swfdec_movie_initialize (movie);
-    swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT);
+    swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT, 0);
     swfdec_sandbox_use (sandbox);
   } else {
     swfdec_movie_initialize (movie);

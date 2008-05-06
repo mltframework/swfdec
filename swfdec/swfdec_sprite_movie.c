@@ -284,7 +284,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 
       SWFDEC_INFO ("clip event with flags 0x%X, key code %d", event_flags, key_code);
 #define SWFDEC_UNIMPLEMENTED_EVENTS \
-  ((1<< SWFDEC_EVENT_DATA) | (1<<SWFDEC_EVENT_KEY_PRESS))
+  ((1<< SWFDEC_EVENT_DATA))
       if (event_flags & SWFDEC_UNIMPLEMENTED_EVENTS) {
 	SWFDEC_ERROR ("using non-implemented clip events %u", event_flags & SWFDEC_UNIMPLEMENTED_EVENTS);
       }

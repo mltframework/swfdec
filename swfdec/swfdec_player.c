@@ -824,10 +824,10 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   }
 
   if (priv->stage.height == 0 || priv->stage.width == 0) {
-    priv->scale_x = 1.0;
-    priv->scale_y = 1.0;
-    priv->offset_x = 0;
-    priv->offset_y = 0;
+    cairo_matrix_init_scale (&priv->stage_to_global, 
+	SWFDEC_TWIPS_SCALE_FACTOR, SWFDEC_TWIPS_SCALE_FACTOR);
+    priv->global_to_stage = priv->stage_to_global;
+    cairo_matrix_invert (&priv->global_to_stage);
     return;
   }
   if (priv->width == 0 || priv->height == 0) {
@@ -839,42 +839,47 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   }
   switch (priv->scale_mode) {
     case SWFDEC_SCALE_SHOW_ALL:
-      priv->scale_x = MIN (scale_x, scale_y);
-      priv->scale_y = priv->scale_x;
+      scale_x = MIN (scale_x, scale_y);
+      scale_y = scale_x;
       break;
     case SWFDEC_SCALE_NO_BORDER:
-      priv->scale_x = MAX (scale_x, scale_y);
-      priv->scale_y = priv->scale_x;
+      scale_x = MAX (scale_x, scale_y);
+      scale_y = scale_x;
       break;
     case SWFDEC_SCALE_EXACT_FIT:
-      priv->scale_x = scale_x;
-      priv->scale_y = scale_y;
       break;
     case SWFDEC_SCALE_NONE:
-      priv->scale_x = 1.0;
-      priv->scale_y = 1.0;
+      scale_x = 1.0;
+      scale_y = 1.0;
       break;
     default:
       g_assert_not_reached ();
   }
-  width = priv->stage.width - ceil (priv->width * priv->scale_x);
-  height = priv->stage.height - ceil (priv->height * priv->scale_y);
+  width = priv->stage.width - ceil (priv->width * scale_x);
+  height = priv->stage.height - ceil (priv->height * scale_y);
   if (priv->align_flags & SWFDEC_ALIGN_FLAG_LEFT) {
-    priv->offset_x = 0;
+    width = 0;
   } else if (priv->align_flags & SWFDEC_ALIGN_FLAG_RIGHT) {
-    priv->offset_x = width;
+    width = width;
   } else {
-    priv->offset_x = width / 2;
+    width = width / 2;
   }
   if (priv->align_flags & SWFDEC_ALIGN_FLAG_TOP) {
-    priv->offset_y = 0;
+    height = 0;
   } else if (priv->align_flags & SWFDEC_ALIGN_FLAG_BOTTOM) {
-    priv->offset_y = height;
+    height = height;
   } else {
-    priv->offset_y = height / 2;
+    height = height / 2;
   }
   SWFDEC_LOG ("coordinate translation is %g * x + %d - %g * y + %d", 
-      priv->scale_x, priv->offset_x, priv->scale_y, priv->offset_y);
+      scale_x, width, scale_y, height);
+  cairo_matrix_init_translate (&priv->global_to_stage, width, height);
+  cairo_matrix_scale (&priv->global_to_stage, SWFDEC_TWIPS_TO_DOUBLE (scale_x),
+      SWFDEC_TWIPS_TO_DOUBLE (scale_y));
+  priv->stage_to_global = priv->global_to_stage;
+  if (cairo_matrix_invert (&priv->stage_to_global)) {
+    g_assert_not_reached ();
+  }
 #if 0
   /* FIXME: make this emit the signal at the right time */
   priv->invalid.x0 = 0;
@@ -1629,27 +1634,21 @@ swfdec_player_do_handle_mouse (SwfdecPlayer *player,
 void
 swfdec_player_global_to_stage (SwfdecPlayer *player, double *x, double *y)
 {
-  SwfdecPlayerPrivate *priv = player->priv;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (x != NULL);
   g_return_if_fail (y != NULL);
 
-  *x = *x / SWFDEC_TWIPS_SCALE_FACTOR * priv->scale_x + priv->offset_x;
-  *y = *y / SWFDEC_TWIPS_SCALE_FACTOR * priv->scale_y + priv->offset_y;
+  cairo_matrix_transform_point (&player->priv->global_to_stage, x, y);
 }
 
 void
 swfdec_player_stage_to_global (SwfdecPlayer *player, double *x, double *y)
 {
-  SwfdecPlayerPrivate *priv = player->priv;
-
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (x != NULL);
   g_return_if_fail (y != NULL);
 
-  *x = (*x - priv->offset_x) / priv->scale_x * SWFDEC_TWIPS_SCALE_FACTOR;
-  *y = (*y - priv->offset_y) / priv->scale_y * SWFDEC_TWIPS_SCALE_FACTOR;
+  cairo_matrix_transform_point (&player->priv->stage_to_global, x, y);
 }
 
 static void
@@ -2298,9 +2297,7 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
     if (swfdec_rect_is_empty (rect))
       return;
 
-    tmp = *rect;
-    swfdec_player_global_to_stage (player, &tmp.x0, &tmp.y0);
-    swfdec_player_global_to_stage (player, &tmp.x1, &tmp.y1);
+    swfdec_rect_transform (&tmp, rect, &priv->global_to_stage);
     swfdec_rectangle_init_rect (&r, &tmp);
     /* FIXME: currently we clamp the rectangle to the visible area, it might
      * be useful to allow out-of-bounds drawing. In that case this needs to be
@@ -2905,7 +2902,7 @@ swfdec_player_key_release (SwfdecPlayer *player, guint keycode, guint character)
 }
 
 static void
-swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr, SwfdecRect *inval)
+swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr)
 {
 #define LINE_WIDTH (3.0)
   SwfdecPlayerPrivate *priv;
@@ -2999,24 +2996,28 @@ swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr,
   cairo_rectangle (cr, x, y, width, height);
   cairo_clip (cr);
   /* compute the rectangle */
-  x -= priv->offset_x;
-  y -= priv->offset_y;
-  real.x0 = floor (x * SWFDEC_TWIPS_SCALE_FACTOR) / priv->scale_x;
-  real.y0 = floor (y * SWFDEC_TWIPS_SCALE_FACTOR) / priv->scale_y;
-  real.x1 = ceil ((x + width) * SWFDEC_TWIPS_SCALE_FACTOR) / priv->scale_x;
-  real.y1 = ceil ((y + height) * SWFDEC_TWIPS_SCALE_FACTOR) / priv->scale_y;
+  real.x0 = x;
+  real.y0 = y;
+  real.x1 = x + width;
+  real.y1 = y + height;
+  swfdec_rect_transform (&real, &real, &priv->stage_to_global);
+  real.x0 = floor (real.x0);
+  real.y0 = floor (real.y0);
+  real.x1 = ceil (real.x1);
+  real.y1 = ceil (real.y1);
   SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
       real.x0, real.y0, real.x1, real.y1);
+  g_print ("=== %p: START RENDER, area %g %g  %g %g ===\n", player, 
+      real.x0, real.y0, real.x1, real.y1);
   /* convert the cairo matrix */
-  cairo_translate (cr, priv->offset_x, priv->offset_y);
-  cairo_scale (cr, priv->scale_x / SWFDEC_TWIPS_SCALE_FACTOR, priv->scale_y / SWFDEC_TWIPS_SCALE_FACTOR);
+  cairo_transform (cr, &priv->global_to_stage);
 
   for (walk = priv->roots; walk; walk = walk->next) {
     swfdec_movie_render (walk->data, cr, &trans, &real);
   }
   cairo_restore (cr);
   /* NB: we render the focusrect after restoring, so the focusrect doesn't scale */
-  swfdec_player_render_focusrect (player, cr, &real);
+  swfdec_player_render_focusrect (player, cr);
 
   SWFDEC_INFO ("=== %p: END RENDER ===", player);
 }

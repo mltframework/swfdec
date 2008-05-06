@@ -91,10 +91,8 @@ struct _SwfdecPlayerPrivate
   SwfdecRectangle     	stage;			/* size of the stage set by user */
   guint			align_flags;		/* SwfdecAlignFlag */
   SwfdecScaleMode	scale_mode;		/* scale mode */
-  double		scale_x;		/* cached x scale value */
-  double		scale_y;		/* cached y scale value */
-  int			offset_x;		/* x offset from top left edge after scaling */
-  int			offset_y;		/* y offset from top left edge after scaling */
+  cairo_matrix_t	stage_to_global;	/* matrix to go from stage to global */
+  cairo_matrix_t	global_to_stage;	/* matrix to go from stage to global */
   SwfdecColor		bgcolor;		/* background color or 0 if unset */
 
   SwfdecFunctionList	resource_requests;	/* all external requested URIs - see swfdec_resource_request.[ch] */

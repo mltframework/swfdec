@@ -788,6 +788,15 @@ EXTRA_DIST = \
 	crash-0.7.1-getTextExtent-8.swf \
 	crash-0.7.1-getTextExtent-8.swf.trace \
 	crash-0.7.1-getTextExtent.as \
+	createTextField-returnvalue-5.swf \
+	createTextField-returnvalue-5.swf.trace \
+	createTextField-returnvalue-6.swf \
+	createTextField-returnvalue-6.swf.trace \
+	createTextField-returnvalue-7.swf \
+	createTextField-returnvalue-7.swf.trace \
+	createTextField-returnvalue-8.swf \
+	createTextField-returnvalue-8.swf.trace \
+	createTextField-returnvalue.as \
 	currentframe.swf \
 	currentframe.swf.trace \
 	dangling-compare.as \

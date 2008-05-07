@@ -1,0 +1,10 @@
+asm {
+  next_frame
+  play
+  previous_frame
+  stop
+  end_drag
+  stop_sounds
+  toggle_quality
+  end
+}

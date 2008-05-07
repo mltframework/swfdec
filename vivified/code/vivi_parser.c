@@ -3079,6 +3079,10 @@ parse_program (ParseData *data)
 {
   ViviCodeStatement *statement;
 
+  // empty file
+  if (peek_token (data, TOKEN_NONE))
+    return vivi_code_block_new ();
+
   g_assert (data->level == NULL);
   vivi_parser_start_level (data);
 

@@ -29,6 +29,7 @@
 
 #include "swfdec_movie.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
@@ -45,7 +46,7 @@
 #include "swfdec_system.h"
 #include "swfdec_text_field_movie.h"
 #include "swfdec_utils.h"
-#include "swfdec_as_internal.h"
+#include "swfdec_video_movie.h"
 
 /*** MOVIE ***/
 
@@ -1033,7 +1034,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   
   ret = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (ret) {
-    if (!SWFDEC_IS_ACTOR (ret) ||
+    if ((!SWFDEC_IS_ACTOR (ret) && !SWFDEC_IS_VIDEO_MOVIE (ret)) ||
 	(swfdec_movie_get_version (movie) <= 5 && SWFDEC_IS_TEXT_FIELD_MOVIE (ret)))
       ret = movie;
     SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (ret));

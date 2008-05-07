@@ -1,0 +1,13 @@
+Check if mouse presses show up as in Key.isDown and Key.getCode
+1: false
+2: false
+code: 0
+1: true
+2: false
+code: 0
+1: false
+2: false
+code: 0
+1: false
+2: false
+code: 0

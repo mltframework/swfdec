@@ -168,6 +168,7 @@ main (int argc, char *argv[])
 
   assembler = vivi_code_assembler_new ();
   vivi_code_statement_compile (statement, VIVI_CODE_ASSEMBLER (assembler));
+  vivi_code_assembler_pool (VIVI_CODE_ASSEMBLER (assembler));
   script = vivi_code_assembler_assemble_script (
       VIVI_CODE_ASSEMBLER (assembler), version, NULL);
   g_object_unref (assembler);

@@ -182,7 +182,7 @@ vivi_code_asm_push_new (void)
 }
 
 guint
-vivi_code_asm_push_get_n_values (ViviCodeAsmPush *push)
+vivi_code_asm_push_get_n_values (const ViviCodeAsmPush *push)
 {
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0);
   
@@ -190,7 +190,7 @@ vivi_code_asm_push_get_n_values (ViviCodeAsmPush *push)
 }
 
 ViviCodeConstantType
-vivi_code_asm_push_get_value_type (ViviCodeAsmPush *push, guint i)
+vivi_code_asm_push_get_value_type (const ViviCodeAsmPush *push, guint i)
 {
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0);
   g_return_val_if_fail (i < push->offsets->len, 0);
@@ -301,8 +301,60 @@ vivi_code_asm_push_add_pool_big (ViviCodeAsmPush *push, guint id)
   swfdec_bots_put_u16 (push->contents, id);
 }
 
+void
+vivi_code_asm_push_copy_value (ViviCodeAsmPush *push,
+    const ViviCodeAsmPush *other, guint id)
+{
+  g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
+  g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (other));
+  g_return_if_fail (id <= G_MAXUINT16);
+
+  switch (vivi_code_asm_push_get_value_type (other, id)) {
+    case VIVI_CODE_CONSTANT_STRING:
+      vivi_code_asm_push_add_string (push,
+	  vivi_code_asm_push_get_string (other, id));
+      break;
+    case VIVI_CODE_CONSTANT_FLOAT:
+      vivi_code_asm_push_add_float (push,
+	  vivi_code_asm_push_get_float (other, id));
+      break;
+    case VIVI_CODE_CONSTANT_NULL:
+      vivi_code_asm_push_add_null (push);
+      break;
+    case VIVI_CODE_CONSTANT_UNDEFINED:
+      vivi_code_asm_push_add_undefined (push);
+      break;
+    case VIVI_CODE_CONSTANT_REGISTER:
+      vivi_code_asm_push_add_register (push,
+	  vivi_code_asm_push_get_register (other, id));
+      break;
+    case VIVI_CODE_CONSTANT_BOOLEAN:
+      vivi_code_asm_push_add_boolean (push,
+	  vivi_code_asm_push_get_boolean (other, id));
+      break;
+    case VIVI_CODE_CONSTANT_DOUBLE:
+      vivi_code_asm_push_add_double (push,
+	  vivi_code_asm_push_get_double (other, id));
+      break;
+    case VIVI_CODE_CONSTANT_INTEGER:
+      vivi_code_asm_push_add_integer (push,
+	  vivi_code_asm_push_get_integer (other, id));
+      break;
+    case VIVI_CODE_CONSTANT_CONSTANT_POOL:
+      vivi_code_asm_push_add_pool (push,
+	  vivi_code_asm_push_get_pool (other, id));
+      break;
+    case VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG:
+      vivi_code_asm_push_add_pool_big (push,
+	  vivi_code_asm_push_get_pool (other, id));
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+}
+
 const char *
-vivi_code_asm_push_get_string (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_string (const ViviCodeAsmPush *push, guint id)
 {
   SwfdecBits bits;
 
@@ -317,7 +369,7 @@ vivi_code_asm_push_get_string (ViviCodeAsmPush *push, guint id)
 }
 
 float
-vivi_code_asm_push_get_float (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_float (const ViviCodeAsmPush *push, guint id)
 {
   SwfdecBits bits;
 
@@ -332,7 +384,7 @@ vivi_code_asm_push_get_float (ViviCodeAsmPush *push, guint id)
 }
 
 guint
-vivi_code_asm_push_get_register (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_register (const ViviCodeAsmPush *push, guint id)
 {
   SwfdecBits bits;
 
@@ -347,7 +399,7 @@ vivi_code_asm_push_get_register (ViviCodeAsmPush *push, guint id)
 }
 
 double
-vivi_code_asm_push_get_double (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_double (const ViviCodeAsmPush *push, guint id)
 {
   SwfdecBits bits;
 
@@ -362,7 +414,7 @@ vivi_code_asm_push_get_double (ViviCodeAsmPush *push, guint id)
 }
 
 int
-vivi_code_asm_push_get_integer (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_integer (const ViviCodeAsmPush *push, guint id)
 {
   SwfdecBits bits;
 
@@ -377,7 +429,7 @@ vivi_code_asm_push_get_integer (ViviCodeAsmPush *push, guint id)
 }
 
 gboolean
-vivi_code_asm_push_get_boolean (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_boolean (const ViviCodeAsmPush *push, guint id)
 {
   SwfdecBits bits;
 
@@ -392,7 +444,7 @@ vivi_code_asm_push_get_boolean (ViviCodeAsmPush *push, guint id)
 }
 
 guint
-vivi_code_asm_push_get_pool (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_pool (const ViviCodeAsmPush *push, guint id)
 {
   SwfdecBits bits;
   guint type;

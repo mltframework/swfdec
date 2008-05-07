@@ -66,22 +66,22 @@ GType			vivi_code_asm_push_get_type	  	(void);
 
 ViviCodeAsm *		vivi_code_asm_push_new			(void);
 
-guint			vivi_code_asm_push_get_n_values		(ViviCodeAsmPush *	push);
-ViviCodeConstantType	vivi_code_asm_push_get_value_type     	(ViviCodeAsmPush *	push,
+guint			vivi_code_asm_push_get_n_values		(const ViviCodeAsmPush *	push);
+ViviCodeConstantType	vivi_code_asm_push_get_value_type	(const ViviCodeAsmPush *	push,
 								 guint			i);
-const char *		vivi_code_asm_push_get_string		(ViviCodeAsmPush *	push,
+const char *		vivi_code_asm_push_get_string		(const ViviCodeAsmPush *	push,
 								 guint			id);
-float			vivi_code_asm_push_get_float		(ViviCodeAsmPush *	push,
+float			vivi_code_asm_push_get_float		(const ViviCodeAsmPush *	push,
 								 guint			id);
-guint			vivi_code_asm_push_get_register		(ViviCodeAsmPush *	push,
+guint			vivi_code_asm_push_get_register		(const ViviCodeAsmPush *	push,
 								 guint			id);
-double			vivi_code_asm_push_get_double		(ViviCodeAsmPush *	push,
+double			vivi_code_asm_push_get_double		(const ViviCodeAsmPush *	push,
 								 guint			id);
-int			vivi_code_asm_push_get_integer		(ViviCodeAsmPush *	push,
+int			vivi_code_asm_push_get_integer		(const ViviCodeAsmPush *	push,
 								 guint			id);
-gboolean		vivi_code_asm_push_get_boolean		(ViviCodeAsmPush *	push,
+gboolean		vivi_code_asm_push_get_boolean		(const ViviCodeAsmPush *	push,
 								 guint			id);
-guint			vivi_code_asm_push_get_pool		(ViviCodeAsmPush *	push,
+guint			vivi_code_asm_push_get_pool		(const ViviCodeAsmPush *	push,
 								 guint			id);
 
 void			vivi_code_asm_push_add_string		(ViviCodeAsmPush *	push,
@@ -102,6 +102,9 @@ void			vivi_code_asm_push_add_pool		(ViviCodeAsmPush *	push,
 								 guint			id);
 void			vivi_code_asm_push_add_pool_big		(ViviCodeAsmPush *	push,
 								 guint			id);
+void			vivi_code_asm_push_copy_value		(ViviCodeAsmPush *	push,
+								 const ViviCodeAsmPush *other,
+								 guint id);
 
 
 G_END_DECLS

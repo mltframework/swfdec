@@ -29,6 +29,8 @@
 #include "vivi_code_emitter.h"
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
+#include "vivi_code_asm_pool.h"
+#include "vivi_code_asm_push.h"
 
 G_DEFINE_TYPE (ViviCodeAssembler, vivi_code_assembler, VIVI_TYPE_CODE_STATEMENT)
 
@@ -152,6 +154,116 @@ vivi_code_assembler_remove_code (ViviCodeAssembler *assembler, ViviCodeAsm *code
     g_object_unref (code);
   else
     g_return_if_reached ();
+}
+
+gboolean
+vivi_code_assembler_pool (ViviCodeAssembler *assembler)
+{
+  guint i, j, num;
+  gsize length;
+  GSList *list, *iter;
+  SwfdecBots *bots;
+  SwfdecBuffer *buffer;
+  SwfdecConstantPool *pool;
+  ViviCodeAsm *code;
+
+  // create the pool
+  list = NULL;
+  length = 0;
+  num = 0;
+  for (i = 0; i < assembler->codes->len; i++) {
+    // if there is already a pool, don't touch anything
+    if (VIVI_IS_CODE_ASM_POOL (g_ptr_array_index (assembler->codes, i))) {
+      g_slist_foreach (list, (GFunc)g_free, NULL);
+      g_slist_free (list);
+      return FALSE;
+    }
+
+    if (VIVI_IS_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i))) {
+      ViviCodeAsmPush *push =
+	VIVI_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i));
+      for (j = 0; j < vivi_code_asm_push_get_n_values (push); j++) {
+	ViviCodeConstantType type =
+	  vivi_code_asm_push_get_value_type (push, j);
+
+	// if there already is something that triest to access a pool,
+	// don't touch anything
+	if (type == VIVI_CODE_CONSTANT_CONSTANT_POOL ||
+	    type == VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG) {
+	  g_slist_foreach (list, (GFunc)g_free, NULL);
+	  g_slist_free (list);
+	  return FALSE;
+	}
+
+	if (type == VIVI_CODE_CONSTANT_STRING) {
+	  const char *str = vivi_code_asm_push_get_string (push, j);
+	  if (!g_slist_find_custom (list, str, (GCompareFunc)strcmp) &&
+	      length + strlen (str) + 1 < G_MAXUINT16) {
+	    list = g_slist_prepend (list, g_strdup (str));
+	    length += strlen (str) + 1;
+	    num++;
+	  }
+	}
+      }
+    }
+  }
+
+  bots = swfdec_bots_open ();
+  swfdec_bots_put_u16 (bots, num);
+  for (iter = list; iter != NULL; iter = iter->next) {
+    swfdec_bots_put_string (bots, iter->data);
+  }
+  buffer = swfdec_bots_close (bots);
+
+  // FIXME: version
+  pool = swfdec_constant_pool_new (NULL, buffer, 8);
+  g_assert (pool != NULL);
+  code = vivi_code_asm_pool_new (pool);
+  g_assert (code != NULL);
+  swfdec_constant_pool_unref (pool);
+  swfdec_buffer_unref (buffer);
+
+  vivi_code_assembler_insert_code (assembler, 0, code);
+  g_object_unref (code);
+
+  // change the pushes
+  for (i = 0; i < assembler->codes->len; i++) {
+    if (VIVI_IS_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i))) {
+      ViviCodeAsmPush *old =
+	VIVI_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i));
+      ViviCodeAsmPush *push = VIVI_CODE_ASM_PUSH (vivi_code_asm_push_new ());
+
+      for (j = 0; j < vivi_code_asm_push_get_n_values (old); j++) {
+	if (vivi_code_asm_push_get_value_type (old, j) ==
+	    VIVI_CODE_CONSTANT_STRING) {
+	  const char *str = vivi_code_asm_push_get_string (old, j);
+	  int k = 0;
+
+	  for (iter = list; iter != NULL; iter = iter->next) {
+	    if (strcmp (iter->data, str) == 0)
+	      break;
+	    k++;
+	  }
+	  if (iter != NULL) {
+	    vivi_code_asm_push_add_pool (push, k);
+	  } else {
+	    vivi_code_asm_push_copy_value (push, old, j);
+	  }
+	} else {
+	  vivi_code_asm_push_copy_value (push, old, j);
+	}
+      }
+
+      vivi_code_assembler_remove_code (assembler, VIVI_CODE_ASM (old));
+      vivi_code_assembler_insert_code (assembler, i, VIVI_CODE_ASM (push));
+      g_object_unref (push);
+    }
+  }
+
+  g_slist_foreach (list, (GFunc)g_free, NULL);
+  g_slist_free (list);
+
+  return TRUE;
 }
 
 SwfdecScript *

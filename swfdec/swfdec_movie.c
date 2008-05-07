@@ -29,6 +29,7 @@
 
 #include "swfdec_movie.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
@@ -45,7 +46,7 @@
 #include "swfdec_system.h"
 #include "swfdec_text_field_movie.h"
 #include "swfdec_utils.h"
-#include "swfdec_as_internal.h"
+#include "swfdec_video_movie.h"
 
 /*** MOVIE ***/
 
@@ -216,10 +217,18 @@ swfdec_movie_update_extents (SwfdecMovie *movie)
   }
 }
 
-static void
-swfdec_movie_update_matrix (SwfdecMovie *movie)
+void
+swfdec_movie_begin_update_matrix (SwfdecMovie *movie)
+{
+  swfdec_movie_invalidate_next (movie);
+}
+
+void
+swfdec_movie_end_update_matrix (SwfdecMovie *movie)
 {
   double d, e;
+
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
 
   /* we operate on x0 and y0 when setting movie._x and movie._y */
   if (movie->modified) {
@@ -254,9 +263,6 @@ swfdec_movie_do_update (SwfdecMovie *movie)
   }
 
   switch (movie->cache_state) {
-    case SWFDEC_MOVIE_INVALID_MATRIX:
-      swfdec_movie_update_matrix (movie);
-      /* fall through */
     case SWFDEC_MOVIE_INVALID_EXTENTS:
       swfdec_movie_update_extents (movie);
       /* fall through */
@@ -474,8 +480,6 @@ swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
   g_return_if_fail (y != NULL);
 
   do {
-    if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
-      swfdec_movie_update (movie);
     cairo_matrix_transform_point (&movie->matrix, x, y);
   } while ((movie = movie->parent));
 }
@@ -508,8 +512,6 @@ swfdec_movie_global_to_local_matrix (SwfdecMovie *movie, cairo_matrix_t *matrix)
 
   cairo_matrix_init_identity (matrix);
   while (movie) {
-    if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
-      swfdec_movie_update (movie);
     cairo_matrix_multiply (matrix, &movie->inverse_matrix, matrix);
     movie = movie->parent;
   }
@@ -523,8 +525,6 @@ swfdec_movie_local_to_global_matrix (SwfdecMovie *movie, cairo_matrix_t *matrix)
 
   cairo_matrix_init_identity (matrix);
   while (movie) {
-    if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
-      swfdec_movie_update (movie);
     cairo_matrix_multiply (matrix, matrix, &movie->matrix);
     movie = movie->parent;
   }
@@ -540,8 +540,6 @@ swfdec_movie_global_to_local (SwfdecMovie *movie, double *x, double *y)
   if (movie->parent) {
     swfdec_movie_global_to_local (movie->parent, x, y);
   }
-  if (movie->cache_state >= SWFDEC_MOVIE_INVALID_MATRIX)
-    swfdec_movie_update (movie);
   cairo_matrix_transform_point (&movie->inverse_matrix, x, y);
 }
 
@@ -1033,7 +1031,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   
   ret = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (ret) {
-    if (!SWFDEC_IS_ACTOR (ret) ||
+    if ((!SWFDEC_IS_ACTOR (ret) && !SWFDEC_IS_VIDEO_MOVIE (ret)) ||
 	(swfdec_movie_get_version (movie) <= 5 && SWFDEC_IS_TEXT_FIELD_MOVIE (ret)))
       ret = movie;
     SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (ret));
@@ -1451,13 +1449,14 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
     return;
   }
   if (transform) {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->original_transform = *transform;
     movie->matrix.x0 = movie->original_transform.x0;
     movie->matrix.y0 = movie->original_transform.y0;
     movie->xscale = swfdec_matrix_get_xscale (&movie->original_transform);
     movie->yscale = swfdec_matrix_get_yscale (&movie->original_transform);
     movie->rotation = swfdec_matrix_get_rotation (&movie->original_transform);
+    swfdec_movie_end_update_matrix (movie);
   }
   if (ctrans) {
     swfdec_movie_invalidate_last (movie);

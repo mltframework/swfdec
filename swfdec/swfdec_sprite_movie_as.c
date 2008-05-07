@@ -653,9 +653,15 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
 static void
 swfdec_sprite_movie_copy_props (SwfdecMovie *target, SwfdecMovie *src)
 {
-  swfdec_movie_queue_update (target, SWFDEC_MOVIE_INVALID_MATRIX);
+  swfdec_movie_begin_update_matrix (target);
   target->matrix = src->matrix;
+  target->modified = src->modified;
+  target->xscale = src->xscale;
+  target->yscale = src->yscale;
+  target->rotation = src->rotation;
+  target->lockroot = src->lockroot;
   target->color_transform = src->color_transform;
+  swfdec_movie_end_update_matrix (target);
 }
 
 static gboolean

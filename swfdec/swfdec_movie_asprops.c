@@ -58,8 +58,9 @@ mc_x_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   movie->modified = TRUE;
   d = SWFDEC_DOUBLE_TO_TWIPS (d);
   if (d != movie->matrix.x0) {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->matrix.x0 = d;
+    swfdec_movie_end_update_matrix (movie);
   }
 }
 
@@ -86,8 +87,9 @@ mc_y_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   movie->modified = TRUE;
   d = SWFDEC_DOUBLE_TO_TWIPS (d);
   if (d != movie->matrix.y0) {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->matrix.y0 = d;
+    swfdec_movie_end_update_matrix (movie);
   }
 }
 
@@ -109,8 +111,9 @@ mc_xscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
   movie->modified = TRUE;
   if (movie->xscale != d) {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->xscale = d;
+    swfdec_movie_end_update_matrix (movie);
   }
 }
 
@@ -132,8 +135,9 @@ mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
   movie->modified = TRUE;
   if (movie->yscale != d) {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->yscale = d;
+    swfdec_movie_end_update_matrix (movie);
   }
 }
 
@@ -249,13 +253,14 @@ mc_width_set (SwfdecMovie *movie, const SwfdecAsValue *val)
     d = 100 * d / cur;
     if (d == movie->xscale)
       return;
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->xscale = d;
   } else {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->xscale = 0;
     movie->yscale = 0;
   }
+  swfdec_movie_end_update_matrix (movie);
 }
 
 static void
@@ -290,13 +295,14 @@ mc_height_set (SwfdecMovie *movie, const SwfdecAsValue *val)
     d = 100 * d / cur;
     if (d == movie->yscale)
       return;
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->yscale = d;
   } else {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->xscale = 0;
     movie->yscale = 0;
   }
+  swfdec_movie_end_update_matrix (movie);
 }
 
 static void
@@ -328,8 +334,9 @@ mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
   movie->modified = TRUE;
   if (movie->rotation != d) {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->rotation = d;
+    swfdec_movie_end_update_matrix (movie);
   }
 }
 

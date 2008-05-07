@@ -80,7 +80,6 @@ typedef enum {
   SWFDEC_MOVIE_UP_TO_DATE = 0,		/* everything OK */
   SWFDEC_MOVIE_INVALID_CHILDREN,	/* call update on children */
   SWFDEC_MOVIE_INVALID_EXTENTS,		/* recalculate extents */
-  SWFDEC_MOVIE_INVALID_MATRIX		/* matrix is invalid, recalculate */
 } SwfdecMovieCacheState;
 
 typedef void (*SwfdecMovieVariableListenerFunction) (SwfdecAsObject *object,
@@ -213,6 +212,8 @@ void		swfdec_movie_invalidate		(SwfdecMovie *		movie,
 void		swfdec_movie_queue_update	(SwfdecMovie *		movie,
 						 SwfdecMovieCacheState	state);
 void		swfdec_movie_update		(SwfdecMovie *		movie);
+void		swfdec_movie_begin_update_matrix(SwfdecMovie *		movie);
+void		swfdec_movie_end_update_matrix	(SwfdecMovie *		movie);
 void		swfdec_movie_local_to_global	(SwfdecMovie *		movie,
 						 double *		x,
 						 double *		y);

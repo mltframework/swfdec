@@ -40,44 +40,46 @@ enum {
 static guint signals[LAST_SIGNAL] = { 0, };
 
 static PangoAttribute *
-swfdec_text_attribute_create_bold (const SwfdecTextAttributes *attr)
+swfdec_text_attribute_create_bold (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
 {
   return pango_attr_weight_new (attr->bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL);
 }
 
 static PangoAttribute *
-swfdec_text_attribute_create_color (const SwfdecTextAttributes *attr)
+swfdec_text_attribute_create_color (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
 {
   return pango_attr_foreground_new (SWFDEC_COLOR_R (attr->color) * 255,
       SWFDEC_COLOR_G (attr->color) * 255, SWFDEC_COLOR_B (attr->color) * 255);
 }
 
 static PangoAttribute *
-swfdec_text_attribute_create_font (const SwfdecTextAttributes *attr)
+swfdec_text_attribute_create_font (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
 {
   return pango_attr_family_new (attr->font);
 }
 
 static PangoAttribute *
-swfdec_text_attribute_create_italic (const SwfdecTextAttributes *attr)
+swfdec_text_attribute_create_italic (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
 {
   return pango_attr_style_new (attr->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL);
 }
 
 static PangoAttribute *
-swfdec_text_attribute_create_letter_spacing (const SwfdecTextAttributes *attr)
+swfdec_text_attribute_create_letter_spacing (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
 {
   return pango_attr_letter_spacing_new (attr->letter_spacing * PANGO_SCALE);
 }
 
 static PangoAttribute *
-swfdec_text_attribute_create_size (const SwfdecTextAttributes *attr)
+swfdec_text_attribute_create_size (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
 {
-  return pango_attr_size_new_absolute (MAX (attr->size, 1) * PANGO_SCALE);
+  guint size = attr->size * layout->scale;
+  size = MAX (size, 1);
+  return pango_attr_size_new_absolute (size * PANGO_SCALE);
 }
 
 static PangoAttribute *
-swfdec_text_attribute_create_underline (const SwfdecTextAttributes *attr)
+swfdec_text_attribute_create_underline (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
 {
   return pango_attr_underline_new (attr->underline ? PANGO_UNDERLINE_SINGLE : PANGO_UNDERLINE_NONE);
 }
@@ -93,7 +95,7 @@ typedef enum {
 
 struct {
   FormatApplication   application;
-  PangoAttribute *    (* create_attribute) (const SwfdecTextAttributes *attr);
+  PangoAttribute *    (* create_attribute) (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr);
 } format_table[] = {
   /* unknown or unhandled properties */
   [SWFDEC_TEXT_ATTRIBUTE_DISPLAY] = { FORMAT_APPLY_UNKNOWN, NULL },
@@ -248,15 +250,15 @@ swfdec_text_layout_apply_line_attributes (SwfdecTextBlock *block,
 }
 
 static void
-swfdec_text_layout_apply_attributes (PangoAttrList *list, const SwfdecTextAttributes *attr,
-    guint start, guint end)
+swfdec_text_layout_apply_attributes (SwfdecTextLayout *layout, PangoAttrList *list,
+    const SwfdecTextAttributes *attr, guint start, guint end)
 {
   PangoAttribute *attribute;
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (format_table); i++) {
     if (format_table[i].create_attribute) {
-      attribute = format_table[i].create_attribute (attr);
+      attribute = format_table[i].create_attribute (layout, attr);
       attribute->start_index = start;
       attribute->end_index = end;
       pango_attr_list_change (list, attribute);
@@ -328,7 +330,7 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
 	swfdec_text_buffer_get_length (layout->text);
       start_next = MIN (start_next, end);
       
-      swfdec_text_layout_apply_attributes (list, attr, start - block->start, start_next - block->start);
+      swfdec_text_layout_apply_attributes (layout, list, attr, start - block->start, start_next - block->start);
 
       if (attr_next && new_block > start_next &&
 	  (swfdec_text_attributes_diff (attr, attr_next) & SWFDEC_TEXT_ATTRIBUTES_MASK_NEW_BLOCK))
@@ -411,6 +413,9 @@ swfdec_text_layout_ensure (SwfdecTextLayout *layout)
 static void
 swfdec_text_layout_invalidate (SwfdecTextLayout *layout)
 {
+  if (g_sequence_iter_is_end (g_sequence_get_begin_iter (layout->blocks)))
+    return;
+
   g_sequence_remove_range (g_sequence_get_begin_iter (layout->blocks),
     g_sequence_get_end_iter (layout->blocks));
   g_signal_emit (layout, signals[CHANGED], 0);
@@ -452,6 +457,7 @@ static void
 swfdec_text_layout_init (SwfdecTextLayout *layout)
 {
   layout->wrap_width = -1;
+  layout->scale = 1.0;
   layout->blocks = g_sequence_new (swfdec_text_block_free);
 }
 
@@ -489,6 +495,14 @@ swfdec_text_layout_get_wrap_width (SwfdecTextLayout *layout)
   return layout->wrap_width;
 }
 
+gboolean
+swfdec_text_layout_get_password (SwfdecTextLayout *layout)
+{
+  g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), FALSE);
+
+  return layout->password;
+}
+
 void
 swfdec_text_layout_set_password (SwfdecTextLayout *layout, gboolean password)
 {
@@ -499,6 +513,27 @@ swfdec_text_layout_set_password (SwfdecTextLayout *layout, gboolean password)
 
   swfdec_text_layout_invalidate (layout);
   layout->password = password;
+}
+
+double
+swfdec_text_layout_get_scale (SwfdecTextLayout *layout)
+{
+  g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), 1.0);
+
+  return layout->scale;
+}
+
+void
+swfdec_text_layout_set_scale (SwfdecTextLayout *layout, double scale)
+{
+  g_return_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout));
+  g_return_if_fail (scale > 0);
+
+  if (layout->scale == scale)
+    return;
+
+  swfdec_text_layout_invalidate (layout);
+  layout->scale = scale;
 }
 
 guint
@@ -517,14 +552,6 @@ swfdec_text_layout_get_n_rows (SwfdecTextLayout *layout)
 
   block = g_sequence_get (iter);
   return block->row + pango_layout_get_line_count (block->layout);
-}
-
-gboolean
-swfdec_text_layout_get_password (SwfdecTextLayout *layout)
-{
-  g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), FALSE);
-
-  return layout->password;
 }
 
 static GSequenceIter *

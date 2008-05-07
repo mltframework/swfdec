@@ -41,10 +41,11 @@ struct _SwfdecTextLayout
 {
   GObject		object;
 
-  /* constant data */
   SwfdecTextBuffer *	text;		/* the text we render */
+  /* properties */
   int			wrap_width;	/* maximum width to use */
   gboolean		password;	/* TRUE if the text should be displayed as asterisks */
+  double		scale;		/* scale factor in use */
 
   /* layout data */
   GSequence *		blocks;		/* ordered list of blocks */
@@ -65,6 +66,9 @@ int			swfdec_text_layout_get_wrap_width	(SwfdecTextLayout *	layout);
 void			swfdec_text_layout_set_password		(SwfdecTextLayout *	layout,
 								 gboolean		password);
 gboolean		swfdec_text_layout_get_password		(SwfdecTextLayout *	layout);
+void			swfdec_text_layout_set_scale		(SwfdecTextLayout *	layout,
+								 double			scale);
+double			swfdec_text_layout_get_scale		(SwfdecTextLayout *	layout);
 guint			swfdec_text_layout_get_n_rows		(SwfdecTextLayout *	layout);
 
 void			swfdec_text_layout_render		(SwfdecTextLayout *	layout,

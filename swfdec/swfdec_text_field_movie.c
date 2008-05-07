@@ -126,9 +126,11 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   if (swfdec_text_buffer_get_length (text->text) == 0)
     return;
   /* render the layout */
-  cairo_rectangle (cr, text->stage_rect.x, text->stage_rect.y, text->stage_rect.width, text->stage_rect.height);
-  cairo_clip (cr);
   cairo_translate (cr, text->stage_rect.x + BORDER_LEFT, text->stage_rect.y + BORDER_TOP);
+  cairo_rectangle (cr, 0, 0, 
+      text->stage_rect.width - BORDER_LEFT - BORDER_RIGHT, 
+      text->stage_rect.height - BORDER_TOP - BORDER_BOTTOM);
+  cairo_clip (cr);
   swfdec_text_layout_render (text->layout, cr, ctrans,
       0, text->stage_rect.height - BORDER_TOP + BORDER_BOTTOM, &text->stage_rect);
 }

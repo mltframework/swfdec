@@ -362,7 +362,7 @@ swfdec_sprite_movie_start_sound (SwfdecMovie *movie, SwfdecBits *bits)
 
 static gboolean
 swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, SwfdecBuffer *buffer,
-    gboolean skip_scripts, gboolean first_time)
+    gboolean fast_forward, gboolean first_time)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecActor *actor = SWFDEC_ACTOR (movie);
@@ -380,7 +380,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
       return TRUE;
     case SWFDEC_TAG_DOACTION:
       SWFDEC_LOG ("SCRIPT action");
-      if (!skip_scripts) {
+      if (!fast_forward) {
 	SwfdecScript *script = swfdec_swf_decoder_get_script (
 	    SWFDEC_SWF_DECODER (mov->resource->decoder), buffer->data);
 	if (script) {
@@ -412,7 +412,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
       }
       return TRUE;
     case SWFDEC_TAG_STARTSOUND:
-      swfdec_sprite_movie_start_sound (mov, &bits);
+      if (!fast_forward) swfdec_sprite_movie_start_sound (mov, &bits);
       return TRUE;
     case SWFDEC_TAG_SHOWFRAME:
       if (movie->frame < movie->n_frames) {

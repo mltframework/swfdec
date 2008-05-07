@@ -186,7 +186,7 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
 	ViviCodeConstantType type =
 	  vivi_code_asm_push_get_value_type (push, j);
 
-	// if there already is something that triest to access a pool,
+	// if there already is something that tries to access a pool,
 	// don't touch anything
 	if (type == VIVI_CODE_CONSTANT_CONSTANT_POOL ||
 	    type == VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG) {
@@ -207,6 +207,9 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
       }
     }
   }
+
+  // so we have first encountered strings first
+  list = g_slist_reverse (list);
 
   // create the pool action
   bots = swfdec_bots_open ();

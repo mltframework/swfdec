@@ -83,12 +83,14 @@ main (int argc, char *argv[])
   int rate = 15;
   char *size_string = NULL;
   SwfdecRect size_rect = { 0, 0, 2000, 3000 };
+  const char *output_filename = "out.swf";
   GError *error = NULL;
 
   GOptionEntry options[] = {
     { "version", 'v', 0, G_OPTION_ARG_INT, &version, "target version", NULL },
     { "rate", 'r', 0, G_OPTION_ARG_INT, &rate, "the frame rate of the resulting Flash file", NULL },
     { "size", 's', 0, G_OPTION_ARG_STRING, &size_string, "the size give as WxH of the resulting Flash file", NULL },
+    { "output", 'o', 0, G_OPTION_ARG_FILENAME, &output_filename, "output filename", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -104,8 +106,8 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  if (argc != 3) {
-    g_printerr ("Usage: %s INFILE OUTFILE\n", argv[0]);
+  if (argc != 2) {
+    g_printerr ("Usage: %s [OPTIONS] INFILE\n", argv[0]);
     return 1;
   }
 
@@ -179,8 +181,8 @@ main (int argc, char *argv[])
   output = create_file (script->buffer, version, rate, size_rect);
   swfdec_script_unref (script);
 
-  if (!g_file_set_contents (argv[2], (char *) output->data, output->length,
-	&error)) {
+  if (!g_file_set_contents (output_filename, (char *) output->data,
+	output->length, &error)) {
     swfdec_buffer_unref (output);
     g_printerr ("Error saving: %s\n", error->message);
     return 1;

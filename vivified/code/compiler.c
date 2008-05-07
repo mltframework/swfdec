@@ -31,17 +31,20 @@
 #include "vivi_code_assembler.h"
 
 static SwfdecBuffer *
-create_file (SwfdecBuffer *actions)
+create_file (SwfdecBuffer *actions, guint version, guint rate, SwfdecRect rect)
 {
   SwfdecBots *bots, *full;
-  SwfdecRect rect = { 0, 0, 2000, 3000 };
+
+  g_return_val_if_fail (actions != NULL, NULL);
+  g_return_val_if_fail (version <= 255, NULL);
+  g_return_val_if_fail (rate <= 255, NULL);
 
   bots = swfdec_bots_open ();
 
   // Frame size
   swfdec_bots_put_rect (bots, &rect);
   // Frame rate
-  swfdec_bots_put_u16 (bots, 15 * 256);
+  swfdec_bots_put_u16 (bots, rate * 256);
   // Frame count
   swfdec_bots_put_u16 (bots, 1);
 
@@ -62,7 +65,7 @@ create_file (SwfdecBuffer *actions)
   swfdec_bots_put_u8 (full, 'F');
   swfdec_bots_put_u8 (full, 'W');
   swfdec_bots_put_u8 (full, 'S');
-  swfdec_bots_put_u8 (full, 8);
+  swfdec_bots_put_u8 (full, version);
   swfdec_bots_put_u32 (full, swfdec_bots_get_bytes (bots) + 8);
   swfdec_bots_put_bots (full, bots);
   swfdec_bots_free (bots);
@@ -76,14 +79,75 @@ main (int argc, char *argv[])
   SwfdecBuffer *source, *output;
   ViviCodeStatement *statement, *assembler;
   SwfdecScript *script;
+  int version = 8;
+  int rate = 15;
+  char *size_string = NULL;
+  SwfdecRect size_rect = { 0, 0, 2000, 3000 };
   GError *error = NULL;
 
-  swfdec_init ();
+  GOptionEntry options[] = {
+    { "version", 'v', 0, G_OPTION_ARG_INT, &version, "target version", NULL },
+    { "rate", 'r', 0, G_OPTION_ARG_INT, &rate, "the frame rate of the resulting Flash file", NULL },
+    { "size", 's', 0, G_OPTION_ARG_STRING, &size_string, "the size give as WxH of the resulting Flash file", NULL },
+    { NULL }
+  };
+  GOptionContext *ctx;
 
-  if (argc != 3) {
-    g_printerr ("Usage: %s <input file> <output file>\n", argv[0]);
+  ctx = g_option_context_new ("");
+  g_option_context_add_main_entries (ctx, options, "options");
+  g_option_context_parse (ctx, &argc, &argv, &error);
+  g_option_context_free (ctx);
+
+  if (error) {
+    g_printerr ("Error parsing command line arguments: %s\n", error->message);
+    g_error_free (error);
     return 1;
   }
+
+  if (argc != 3) {
+    g_printerr ("Usage: %s INFILE OUTFILE\n", argv[0]);
+    return 1;
+  }
+
+  if (version < 0 || version > 255) {
+    g_printerr ("Invalid version number\n");
+    return 1;
+  }
+
+  if (rate < 0 || rate > 255) {
+    g_printerr ("Invalid frame rate\n");
+    return 1;
+  }
+
+  if (size_string != NULL) {
+    char **parts, *end;
+    guint64 width, height;
+
+    parts = g_strsplit (size_string, "x", 2);
+    if (parts[0] == NULL || parts[1] == NULL) {
+      g_printerr ("Invalid size, use <width>x<height>\n");
+      return 1;
+    }
+
+    width = g_ascii_strtoull (parts[0], &end, 10);
+    if (*end != 0) {
+      g_printerr ("Invalid size, use <width>x<height>\n");
+      return 1;
+    }
+
+    height = g_ascii_strtoull (parts[1], &end, 10);
+    if (*end != 0) {
+      g_printerr ("Invalid size, use <width>x<height>\n");
+      return 1;
+    }
+
+    // FIXME: size limit?
+
+    size_rect.x1 = 20 * width;
+    size_rect.y1 = 20 * height;
+  }
+
+  swfdec_init ();
 
   source = swfdec_buffer_new_from_file (argv[1], &error);
   if (source == NULL) {
@@ -103,7 +167,7 @@ main (int argc, char *argv[])
   assembler = vivi_code_assembler_new ();
   vivi_code_statement_compile (statement, VIVI_CODE_ASSEMBLER (assembler));
   script = vivi_code_assembler_assemble_script (
-      VIVI_CODE_ASSEMBLER (assembler), 8, NULL);
+      VIVI_CODE_ASSEMBLER (assembler), version, NULL);
   g_object_unref (assembler);
   g_object_unref (statement);
 
@@ -112,7 +176,7 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  output = create_file (script->buffer);
+  output = create_file (script->buffer, version, rate, size_rect);
   swfdec_script_unref (script);
 
   if (!g_file_set_contents (argv[2], (char *) output->data, output->length,

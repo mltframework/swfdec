@@ -357,6 +357,10 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   text->stage_rect.width = round (x) - text->stage_rect.x;
   text->stage_rect.height = round (y) - text->stage_rect.y;
   swfdec_text_layout_set_scale (text->layout, matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR);
+  if (text->word_wrap) {
+    swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
+	BORDER_LEFT - BORDER_RIGHT);
+  }
 }
 
 static void

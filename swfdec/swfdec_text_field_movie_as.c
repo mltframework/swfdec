@@ -829,6 +829,12 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   if (text->word_wrap != value) {
     text->word_wrap = value;
+    if (text->word_wrap) {
+      /* FIXME: find a proper way to use BORDER_LEFT and BORDER_RIGHT here */
+      swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 4);
+    } else {
+      swfdec_text_layout_set_wrap_width (text->layout, -1);
+    }
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
     swfdec_text_field_movie_auto_size (text);
     // special case: don't set scrolling

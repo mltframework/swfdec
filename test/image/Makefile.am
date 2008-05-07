@@ -409,6 +409,15 @@ EXTRA_DIST = \
 	text-field-empty-7.swf.png \
 	text-field-empty-8.swf \
 	text-field-empty-8.swf.png \
+	text-field-scale-negative-5.swf \
+	text-field-scale-negative-5.swf.png \
+	text-field-scale-negative-6.swf \
+	text-field-scale-negative-6.swf.png \
+	text-field-scale-negative-7.swf \
+	text-field-scale-negative-7.swf.png \
+	text-field-scale-negative-8.swf \
+	text-field-scale-negative-8.swf.png \
+	text-field-scale-negative.as \
 	text-field-scale-parents-5.swf \
 	text-field-scale-parents-5.swf.png \
 	text-field-scale-parents-6.swf \

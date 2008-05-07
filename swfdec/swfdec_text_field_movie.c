@@ -92,9 +92,6 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecColor color;
 
-  g_print ("render %d %d   %d %d\n",
-      text->stage_rect.x, text->stage_rect.y,
-      text->stage_rect.width, text->stage_rect.height);
   /* textfields don't mask */
   if (swfdec_color_transform_is_mask (ctrans) ||
       swfdec_rectangle_is_empty (&text->stage_rect))
@@ -333,7 +330,6 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   swfdec_movie_local_to_global_matrix (movie, &matrix);
   cairo_matrix_multiply (&matrix, &matrix,
       &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->priv->global_to_stage);
-  g_print ("%g %g %g %g\n", matrix.xx, matrix.yx, matrix.xy, matrix.yy);
   if (matrix.xy != 0.0 || matrix.yx != 0.0 ||
       matrix.xx <= 0.0 || matrix.yy <= 0.0) {
     swfdec_rectangle_init_empty (&text->stage_rect);
@@ -343,9 +339,7 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   translate = matrix;
   x = text->extents.x0;
   y = text->extents.y0;
-  g_print ("%g %g\n", x, y);
   cairo_matrix_transform_point (&matrix, &x, &y);
-  g_print ("%g %g\n", x, y);
   cairo_matrix_init_translate (&translate, round (x) - x, round (y) - y);
   cairo_matrix_multiply (&matrix, &matrix, &translate);
   
@@ -360,9 +354,7 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   /* FIXME: floor, ceil or round? */
   text->stage_rect.width = round (x) - text->stage_rect.x;
   text->stage_rect.height = round (y) - text->stage_rect.y;
-  g_print ("%d %d   %d %d\n",
-      text->stage_rect.x, text->stage_rect.y,
-      text->stage_rect.width, text->stage_rect.height);
+  swfdec_text_layout_set_scale (text->layout, matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR);
 }
 
 static void

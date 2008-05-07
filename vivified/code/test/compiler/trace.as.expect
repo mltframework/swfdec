@@ -2,4 +2,5 @@ asm {
   pool "Hello, world!"
   push pool 0
   trace
+  end
 }

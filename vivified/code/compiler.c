@@ -29,6 +29,7 @@
 #include "vivi_parser.h"
 #include "vivi_code_text_printer.h"
 #include "vivi_code_assembler.h"
+#include "vivi_code_asm_code_default.h"
 
 static SwfdecBuffer *
 create_file (SwfdecBuffer *actions, guint version, guint rate, SwfdecRect rect)
@@ -77,7 +78,9 @@ int
 main (int argc, char *argv[])
 {
   SwfdecBuffer *source, *output;
-  ViviCodeStatement *statement, *assembler;
+  ViviCodeStatement *statement;
+  ViviCodeAssembler *assembler;
+  ViviCodeAsm *code;
   int version = 8;
   int rate = 15;
   char *size_string = NULL;
@@ -177,10 +180,15 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  assembler = vivi_code_assembler_new ();
-  vivi_code_statement_compile (statement, VIVI_CODE_ASSEMBLER (assembler));
+  assembler = VIVI_CODE_ASSEMBLER (vivi_code_assembler_new ());
+  vivi_code_statement_compile (statement, assembler);
   g_object_unref (statement);
-  vivi_code_assembler_pool (VIVI_CODE_ASSEMBLER (assembler));
+
+  code = vivi_code_asm_end_new ();
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
+
+  vivi_code_assembler_pool (assembler);
 
   if (use_asm) {
     ViviCodePrinter *printer = vivi_code_text_printer_new ();
@@ -188,8 +196,8 @@ main (int argc, char *argv[])
     g_object_unref (printer);
     g_object_unref (assembler);
   } else {
-    SwfdecScript *script = vivi_code_assembler_assemble_script (
-	VIVI_CODE_ASSEMBLER (assembler), version, NULL);
+    SwfdecScript *script =
+      vivi_code_assembler_assemble_script (assembler, version, NULL);
     g_object_unref (assembler);
 
     if (script == NULL) {

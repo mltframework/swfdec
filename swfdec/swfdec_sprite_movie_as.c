@@ -655,6 +655,11 @@ swfdec_sprite_movie_copy_props (SwfdecMovie *target, SwfdecMovie *src)
 {
   swfdec_movie_queue_update (target, SWFDEC_MOVIE_INVALID_MATRIX);
   target->matrix = src->matrix;
+  target->modified = src->modified;
+  target->xscale = src->xscale;
+  target->yscale = src->yscale;
+  target->rotation = src->rotation;
+  target->lockroot = src->lockroot;
   target->color_transform = src->color_transform;
 }
 

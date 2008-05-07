@@ -377,7 +377,16 @@ EXTRA_DIST = \
 	text-field-autosize-7.swf.png \
 	text-field-autosize-8.swf \
 	text-field-autosize-8.swf.png \
-	text-field-border-5.swf
+	text-field-background-5.swf \
+	text-field-background-5.swf.png \
+	text-field-background-6.swf \
+	text-field-background-6.swf.png \
+	text-field-background-7.swf \
+	text-field-background-7.swf.png \
+	text-field-background-8.swf \
+	text-field-background-8.swf.png \
+	text-field-background.as \
+	text-field-border-5.swf \
 	text-field-border-5.swf.png \
 	text-field-border-6.swf \
 	text-field-border-6.swf.png \

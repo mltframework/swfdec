@@ -208,6 +208,12 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
     }
   }
 
+  if (num == 0) {
+    g_slist_foreach (list, (GFunc)g_free, NULL);
+    g_slist_free (list);
+    return TRUE;
+  }
+
   // so we have first encountered strings first
   list = g_slist_reverse (list);
 

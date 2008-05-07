@@ -22,29 +22,66 @@
 #endif
 
 #include <swfdec/swfdec.h>
+#include <swfdec/swfdec_bots.h>
+#include <swfdec/swfdec_script_internal.h>
+#include <swfdec/swfdec_tag.h>
 
 #include "vivi_parser.h"
 #include "vivi_code_text_printer.h"
 #include "vivi_code_assembler.h"
 
+static SwfdecBuffer *
+create_file (SwfdecBuffer *actions)
+{
+  SwfdecBots *bots, *full;
+  SwfdecRect rect = { 0, 0, 2000, 3000 };
+
+  bots = swfdec_bots_open ();
+
+  // Frame size
+  swfdec_bots_put_rect (bots, &rect);
+  // Frame rate
+  swfdec_bots_put_u16 (bots, 15 * 256);
+  // Frame count
+  swfdec_bots_put_u16 (bots, 1);
+
+  // DoAction
+  swfdec_bots_put_u16 (bots,
+      GUINT16_TO_LE ((SWFDEC_TAG_DOACTION << 6) + 0x3F));
+  swfdec_bots_put_u32 (bots, actions->length);
+  swfdec_bots_put_buffer (bots, actions);
+
+  // ShowFrame
+  swfdec_bots_put_u16 (bots, GUINT16_TO_LE (SWFDEC_TAG_SHOWFRAME << 6));
+
+  // End
+  swfdec_bots_put_u16 (bots, 0);
+
+  // Header
+  full = swfdec_bots_open ();
+  swfdec_bots_put_u8 (full, 'F');
+  swfdec_bots_put_u8 (full, 'W');
+  swfdec_bots_put_u8 (full, 'S');
+  swfdec_bots_put_u8 (full, 8);
+  swfdec_bots_put_u32 (full, swfdec_bots_get_bytes (bots) + 8);
+  swfdec_bots_put_bots (full, bots);
+  swfdec_bots_free (bots);
+
+  return swfdec_bots_close (full);
+}
+
 int
 main (int argc, char *argv[])
 {
-  //char *target_name;
-  SwfdecBuffer *source;
+  SwfdecBuffer *source, *output;
   ViviCodeStatement *statement, *assembler;
-  ViviCodePrinter *printer;
-  /*ViviCodeCompiler *compiler;
-  SwfdecBots *bots;
-  SwfdecBuffer *buffer;
-  unsigned char *length_ptr;
-  SwfdecRect rect = { 0, 0, 2000, 3000 };*/
+  SwfdecScript *script;
   GError *error = NULL;
 
   swfdec_init ();
 
-  if (argc != 2) {
-    g_printerr ("Usage: %s <filename>\n", argv[0]);
+  if (argc != 3) {
+    g_printerr ("Usage: %s <input file> <output file>\n", argv[0]);
     return 1;
   }
 
@@ -63,88 +100,27 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  /*printer = vivi_code_text_printer_new ();
-  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (statement));
-  g_object_unref (printer);*/
-
-
   assembler = vivi_code_assembler_new ();
   vivi_code_statement_compile (statement, VIVI_CODE_ASSEMBLER (assembler));
-  printer = vivi_code_text_printer_new ();
-  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (assembler));
-  g_object_unref (printer);
+  script = vivi_code_assembler_assemble_script (
+      VIVI_CODE_ASSEMBLER (assembler), 8, NULL);
   g_object_unref (assembler);
+  g_object_unref (statement);
 
-#if 0
-  bots = swfdec_bots_open ();
-
-
-  // header
-
-  // magic
-  swfdec_bots_put_u8 (bots, 'F');
-  swfdec_bots_put_u8 (bots, 'W');
-  swfdec_bots_put_u8 (bots, 'S');
-  // version
-  swfdec_bots_put_u8 (bots, 8);
-  // length
-  swfdec_bots_put_u32 (bots, 0);
-  // frame size
-  swfdec_bots_put_rect (bots, &rect);
-  // frame rate
-  swfdec_bots_put_u16 (bots, 15 * 256);
-  // frame count
-  swfdec_bots_put_u16 (bots, 1);
-
-
-  // tags
-
-  // doaction tag
-
-  compiler = vivi_code_compiler_new ();
-  vivi_code_compiler_compile_token (compiler, VIVI_CODE_TOKEN (statement));
-  buffer = vivi_code_compiler_get_data (compiler);
-  g_object_unref (compiler);
-
-  swfdec_bots_put_u16 (bots, GUINT16_TO_LE ((12 << 6) + 0x3F));
-  swfdec_bots_put_u32 (bots, buffer->length + 1);
-  swfdec_bots_put_buffer (bots, buffer);
-  swfdec_buffer_unref (buffer);
-  // end action
-  swfdec_bots_put_u8 (bots, 0);
-
-  // showframe tag
-  swfdec_bots_put_u16 (bots, GUINT16_TO_LE (1 << 6));
-
-  // end tag
-  swfdec_bots_put_u16 (bots, 0);
-
-
-  // write it
-
-  buffer = swfdec_bots_close (bots);
-
-  // fix length
-  length_ptr = buffer->data + 4;
-  *(guint32 *)length_ptr = GUINT32_TO_LE (buffer->length);
-
-  target_name = g_strdup_printf ("%s.swf", argv[1]);
-  target = fopen (target_name, "w+");
-  g_free (target_name);
-
-  if (fwrite (buffer->data, buffer->length, 1, target) != 1) {
-    g_printerr ("Failed to write the botsput file\n");
-    fclose (target);
-    swfdec_buffer_unref (buffer);
-    g_object_unref (player);
+  if (script == NULL) {
+    g_printerr ("Script assembling failed\n");
     return 1;
   }
 
-  fclose (target);
-  swfdec_buffer_unref (buffer);
-#endif
+  output = create_file (script->buffer);
+  swfdec_script_unref (script);
 
-  g_object_unref (statement);
+  if (!g_file_set_contents (argv[2], (char *) output->data, output->length,
+	&error)) {
+    swfdec_buffer_unref (output);
+    g_printerr ("Error saving: %s\n", error->message);
+    return 1;
+  }
 
-  return (statement == NULL ? -1 : 0);
+  return 0;
 }

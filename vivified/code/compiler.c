@@ -78,12 +78,12 @@ main (int argc, char *argv[])
 {
   SwfdecBuffer *source, *output;
   ViviCodeStatement *statement, *assembler;
-  SwfdecScript *script;
   int version = 8;
   int rate = 15;
   char *size_string = NULL;
   SwfdecRect size_rect = { 0, 0, 2000, 3000 };
-  const char *output_filename = "out.swf";
+  const char *output_filename = NULL;
+  gboolean use_asm;
   GError *error = NULL;
 
   GOptionEntry options[] = {
@@ -91,6 +91,7 @@ main (int argc, char *argv[])
     { "rate", 'r', 0, G_OPTION_ARG_INT, &rate, "the frame rate of the resulting Flash file", NULL },
     { "size", 's', 0, G_OPTION_ARG_STRING, &size_string, "the size give as WxH of the resulting Flash file", NULL },
     { "output", 'o', 0, G_OPTION_ARG_FILENAME, &output_filename, "output filename", NULL },
+    { "asm", 'a', 0, G_OPTION_ARG_NONE, &use_asm, "output assembler instead of a Flash file", NULL },
     { NULL }
   };
   GOptionContext *ctx;
@@ -149,6 +150,16 @@ main (int argc, char *argv[])
     size_rect.y1 = 20 * height;
   }
 
+  if (use_asm) {
+    if (output_filename != NULL) {
+      g_printerr ("Can't use output file when using -a\n");
+      return 1;
+    }
+  } else {
+    if (output_filename == NULL)
+      output_filename = "out.swf";
+  }
+
   swfdec_init ();
 
   source = swfdec_buffer_new_from_file (argv[1], &error);
@@ -168,25 +179,33 @@ main (int argc, char *argv[])
 
   assembler = vivi_code_assembler_new ();
   vivi_code_statement_compile (statement, VIVI_CODE_ASSEMBLER (assembler));
-  vivi_code_assembler_pool (VIVI_CODE_ASSEMBLER (assembler));
-  script = vivi_code_assembler_assemble_script (
-      VIVI_CODE_ASSEMBLER (assembler), version, NULL);
-  g_object_unref (assembler);
   g_object_unref (statement);
+  vivi_code_assembler_pool (VIVI_CODE_ASSEMBLER (assembler));
 
-  if (script == NULL) {
-    g_printerr ("Script assembling failed\n");
-    return 1;
-  }
+  if (use_asm) {
+    ViviCodePrinter *printer = vivi_code_text_printer_new ();
+    vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (assembler));
+    g_object_unref (printer);
+    g_object_unref (assembler);
+  } else {
+    SwfdecScript *script = vivi_code_assembler_assemble_script (
+	VIVI_CODE_ASSEMBLER (assembler), version, NULL);
+    g_object_unref (assembler);
 
-  output = create_file (script->buffer, version, rate, size_rect);
-  swfdec_script_unref (script);
+    if (script == NULL) {
+      g_printerr ("Script assembling failed\n");
+      return 1;
+    }
 
-  if (!g_file_set_contents (output_filename, (char *) output->data,
-	output->length, &error)) {
-    swfdec_buffer_unref (output);
-    g_printerr ("Error saving: %s\n", error->message);
-    return 1;
+    output = create_file (script->buffer, version, rate, size_rect);
+    swfdec_script_unref (script);
+
+    if (!g_file_set_contents (output_filename, (char *) output->data,
+	  output->length, &error)) {
+      swfdec_buffer_unref (output);
+      g_printerr ("Error saving: %s\n", error->message);
+      return 1;
+    }
   }
 
   return 0;

@@ -426,6 +426,14 @@ EXTRA_DIST = \
 	text-field-scale-parents-7.swf.png \
 	text-field-scale-parents-8.swf \
 	text-field-scale-parents-8.swf.png \
-	text-field-scale-parents.as
-
+	text-field-scale-parents.as \
+	text-field-wordWrap-5.swf \
+	text-field-wordWrap-5.swf.png \
+	text-field-wordWrap-6.swf \
+	text-field-wordWrap-6.swf.png \
+	text-field-wordWrap-7.swf \
+	text-field-wordWrap-7.swf.png \
+	text-field-wordWrap-8.swf \
+	text-field-wordWrap-8.swf.png \
+	text-field-wordWrap.as
 

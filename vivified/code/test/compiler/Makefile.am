@@ -16,5 +16,11 @@ check-local: $(top_builddir)/vivified/code/vivi-compile
 EXTRA_DIST = \
 	builtin_statement.as \
 	builtin_statement.as.expect \
+	comment.as \
+	comment.as.expect \
+	empty.as \
+	empty.as.expect \
+	empty_statement.as \
+	empty_statement.as.expect \
 	trace.as \
 	trace.as.expect

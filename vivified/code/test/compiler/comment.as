@@ -1,0 +1,3 @@
+// Single line
+/* Multi
+line */

@@ -316,7 +316,7 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
     }
     swfdec_text_layout_apply_line_attributes (block, attr);
     if (layout->wrap_width != -1)
-      pango_layout_set_width (block->layout, block->rect.width);
+      pango_layout_set_width (block->layout, block->rect.width * PANGO_SCALE);
 
     iter = swfdec_text_buffer_get_iter (layout->text, start);
     attr = swfdec_text_buffer_iter_get_attributes (layout->text, iter);

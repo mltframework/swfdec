@@ -1879,9 +1879,10 @@ swfdec_player_update_drag_movie (SwfdecPlayer *player)
   y = CLAMP (y, priv->mouse_drag_rect.y0, priv->mouse_drag_rect.y1);
   SWFDEC_LOG ("mouse is at %g %g, originally (%g %g)", x, y, priv->mouse_x, priv->mouse_y);
   if (x != movie->matrix.x0 || y != movie->matrix.y0) {
-    swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_MATRIX);
+    swfdec_movie_begin_update_matrix (movie);
     movie->matrix.x0 = x;
     movie->matrix.y0 = y;
+    swfdec_movie_end_update_matrix (movie);
   }
 }
 

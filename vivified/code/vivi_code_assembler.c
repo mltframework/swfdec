@@ -167,7 +167,7 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
   SwfdecConstantPool *pool;
   ViviCodeAsm *code;
 
-  // create the pool
+  // collect the strings
   list = NULL;
   length = 0;
   num = 0;
@@ -208,6 +208,7 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
     }
   }
 
+  // create the pool action
   bots = swfdec_bots_open ();
   swfdec_bots_put_u16 (bots, num);
   for (iter = list; iter != NULL; iter = iter->next) {
@@ -237,7 +238,7 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
 	if (vivi_code_asm_push_get_value_type (old, j) ==
 	    VIVI_CODE_CONSTANT_STRING) {
 	  const char *str = vivi_code_asm_push_get_string (old, j);
-	  int k = 0;
+	  guint k = 0;
 
 	  for (iter = list; iter != NULL; iter = iter->next) {
 	    if (strcmp (iter->data, str) == 0)
@@ -260,6 +261,7 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
     }
   }
 
+  // done
   g_slist_foreach (list, (GFunc)g_free, NULL);
   g_slist_free (list);
 

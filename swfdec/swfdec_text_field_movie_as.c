@@ -423,12 +423,10 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  int height;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_movie_get_text_size (text, NULL, &height);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, SWFDEC_TWIPS_TO_DOUBLE (height));
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->layout_height);
 }
 
 static void
@@ -437,12 +435,10 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  int width;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  swfdec_text_field_movie_get_text_size (text, &width, NULL);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, SWFDEC_TWIPS_TO_DOUBLE (width));
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->layout_width);
 }
 
 /*
@@ -788,7 +784,7 @@ swfdec_text_field_movie_get_password (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->password);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, swfdec_text_layout_get_password (text->layout));
 }
 
 static void
@@ -803,15 +799,8 @@ swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->password != value) {
-    text->password = value;
-    if (!value && text->asterisks != NULL) {
-      g_free (text->asterisks);
-      text->asterisks = NULL;
-      text->asterisks_length = 0;
-    }
-    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-  }
+  swfdec_text_layout_set_password (text->layout, value);
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 }
 
 static void
@@ -1375,12 +1364,12 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
       SWFDEC_GRAPHIC (edittext), name);
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
   g_object_unref (edittext);
-  swfdec_movie_initialize (movie);
 
   movie->matrix.x0 = SWFDEC_DOUBLE_TO_TWIPS (x);
   movie->matrix.y0 = SWFDEC_DOUBLE_TO_TWIPS (y);
   movie->modified = TRUE;
 
+  swfdec_movie_initialize (movie);
   swfdec_movie_update (movie);
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);

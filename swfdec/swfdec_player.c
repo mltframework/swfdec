@@ -816,6 +816,7 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   SwfdecPlayerPrivate *priv = player->priv;
   int width, height;
   double scale_x, scale_y;
+  GList *walk;
 
   if (priv->fullscreen) {
     priv->stage.width = priv->system->screen_width;
@@ -889,6 +890,10 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   priv->invalid.x1 = priv->stage_width;
   priv->invalid.y1 = priv->stage_height;
 #endif
+  /* FIXME: notify textfields more gentle about the update */
+  for (walk = priv->roots; walk; walk = walk->next) {
+    g_signal_emit_by_name (walk->data, "matrix-changed");
+  }
 }
 
 static void

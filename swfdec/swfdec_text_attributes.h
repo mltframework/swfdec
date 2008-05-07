@@ -90,7 +90,7 @@ struct _SwfdecTextAttributes {
   gboolean		kerning;
   int			leading;
   int			left_margin;
-  double		letter_spacing; // number or null
+  double		letter_spacing;
   int			right_margin;
   int			size;
   guint *		tab_stops;

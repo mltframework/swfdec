@@ -50,7 +50,7 @@ swfdec_text_field_create_movie (SwfdecGraphic *graphic, gsize *size)
 
   ret->html = text->html;
   ret->editable = text->editable;
-  ret->password = text->password;
+  swfdec_text_layout_set_password (ret->layout, text->password);
   ret->max_chars = text->max_chars;
   ret->selectable = text->selectable;
   ret->embed_fonts = text->embed_fonts;

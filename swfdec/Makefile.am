@@ -153,6 +153,7 @@ libswfdec_source_files = \
 	swfdec_text_field_movie_as.c \
 	swfdec_text_field_movie_html.c \
 	swfdec_text_format.c \
+	swfdec_text_layout.c \
 	swfdec_text_renderer.c \
 	swfdec_text_snapshot.c \
 	swfdec_transform.c \
@@ -298,6 +299,7 @@ noinst_HEADERS = \
 	swfdec_text_attributes.h \
 	swfdec_text_buffer.h \
 	swfdec_text_format.h \
+	swfdec_text_layout.h \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \

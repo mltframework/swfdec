@@ -1,7 +1,7 @@
 check-local: $(top_builddir)/vivified/code/vivi-compile
 	RESULT=""; \
-	for file in $(srcdir)/*.swf; do \
-	  echo "$$file ..." && $(top_builddir)/vivified/code/vivi-compile $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
+	for file in $(srcdir)/*.as; do \
+	  echo "$$file ..." && $(top_builddir)/vivified/code/vivi-compile -a $$file | diff -u $$file.expect - || RESULT="$$RESULT $$file"; \
 	done; \
 	if test "x$$RESULT" == "x"; then \
 	  echo "OK"; \
@@ -13,5 +13,6 @@ check-local: $(top_builddir)/vivified/code/vivi-compile
 	  exit 1; \
 	fi
 
-EXTRA_DIST =
-
+EXTRA_DIST = \
+	trace.as \
+	trace.as.expect

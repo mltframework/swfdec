@@ -1,0 +1,7 @@
+asm {
+  pool "c", "b", "a", "test"
+  push pool 0, pool 1, pool 2, 3, pool 3
+  call_function
+  pop
+  end
+}

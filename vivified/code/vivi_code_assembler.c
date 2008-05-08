@@ -277,6 +277,33 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
   return TRUE;
 }
 
+void
+vivi_code_assembler_merge_push (ViviCodeAssembler *assembler)
+{
+  ViviCodeAsmPush *previous;
+  guint i, j;
+
+  previous = NULL;
+  for (i = 0; i < assembler->codes->len; i++) {
+    if (VIVI_IS_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i))) {
+      ViviCodeAsmPush *current =
+	VIVI_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i));
+
+      if (previous != NULL) {
+	for (j = 0; j < vivi_code_asm_push_get_n_values (current); j++) {
+	  vivi_code_asm_push_copy_value (previous, current, j);
+	}
+	vivi_code_assembler_remove_code (assembler, VIVI_CODE_ASM (current));
+	i--;
+      } else {
+	previous = current;
+      }
+    } else {
+      previous = NULL;
+    }
+  }
+}
+
 SwfdecScript *
 vivi_code_assembler_assemble_script (ViviCodeAssembler *assembler,
     guint version, GError **error)

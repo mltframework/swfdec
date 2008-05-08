@@ -189,6 +189,7 @@ main (int argc, char *argv[])
   g_object_unref (code);
 
   vivi_code_assembler_pool (assembler);
+  vivi_code_assembler_merge_push (assembler);
 
   if (use_asm) {
     ViviCodePrinter *printer = vivi_code_text_printer_new ();

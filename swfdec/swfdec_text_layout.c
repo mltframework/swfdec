@@ -39,10 +39,11 @@ enum {
 
 static guint signals[LAST_SIGNAL] = { 0, };
 
-static PangoAttribute *
-swfdec_text_attribute_create_bold (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
+static void
+swfdec_text_attribute_apply_bold (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr,
+    PangoFontDescription *desc)
 {
-  return pango_attr_weight_new (attr->bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL);
+  pango_font_description_set_weight (desc, attr->bold ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL);
 }
 
 static PangoAttribute *
@@ -52,16 +53,19 @@ swfdec_text_attribute_create_color (SwfdecTextLayout *layout, const SwfdecTextAt
       SWFDEC_COLOR_G (attr->color) * 255, SWFDEC_COLOR_B (attr->color) * 255);
 }
 
-static PangoAttribute *
-swfdec_text_attribute_create_font (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
+static void
+swfdec_text_attribute_apply_font (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr,
+    PangoFontDescription *desc)
 {
-  return pango_attr_family_new (attr->font);
+  /* FIXME: resolve _sans, _serif and friends */
+  pango_font_description_set_family (desc, attr->font);
 }
 
-static PangoAttribute *
-swfdec_text_attribute_create_italic (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
+static void
+swfdec_text_attribute_apply_italic (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr,
+    PangoFontDescription *desc)
 {
-  return pango_attr_style_new (attr->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL);
+  pango_font_description_set_style (desc, attr->italic ? PANGO_STYLE_ITALIC : PANGO_STYLE_NORMAL);
 }
 
 static PangoAttribute *
@@ -70,12 +74,13 @@ swfdec_text_attribute_create_letter_spacing (SwfdecTextLayout *layout, const Swf
   return pango_attr_letter_spacing_new (attr->letter_spacing * PANGO_SCALE);
 }
 
-static PangoAttribute *
-swfdec_text_attribute_create_size (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
+static void
+swfdec_text_attribute_apply_size (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr,
+    PangoFontDescription *desc)
 {
   guint size = attr->size * layout->scale;
   size = MAX (size, 1);
-  return pango_attr_size_new_absolute (size * PANGO_SCALE);
+  pango_font_description_set_absolute_size (desc, size * PANGO_SCALE);
 }
 
 static PangoAttribute *
@@ -96,29 +101,30 @@ typedef enum {
 struct {
   FormatApplication   application;
   PangoAttribute *    (* create_attribute) (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr);
+  void		      (* apply_attribute) (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr, PangoFontDescription *desc);
 } format_table[] = {
   /* unknown or unhandled properties */
-  [SWFDEC_TEXT_ATTRIBUTE_DISPLAY] = { FORMAT_APPLY_UNKNOWN, NULL },
-  [SWFDEC_TEXT_ATTRIBUTE_KERNING] = { FORMAT_APPLY_UNKNOWN, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_DISPLAY] = { FORMAT_APPLY_UNKNOWN, NULL, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_KERNING] = { FORMAT_APPLY_UNKNOWN, NULL, NULL },
   /* per-paragraph options */
-  [SWFDEC_TEXT_ATTRIBUTE_BULLET] = { FORMAT_APPLY_BLOCK, NULL },
-  [SWFDEC_TEXT_ATTRIBUTE_INDENT] = { FORMAT_APPLY_BLOCK, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_BULLET] = { FORMAT_APPLY_BLOCK, NULL, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_INDENT] = { FORMAT_APPLY_BLOCK, NULL, NULL },
   /* per-line options */
-  [SWFDEC_TEXT_ATTRIBUTE_ALIGN] = { FORMAT_APPLY_LINE, NULL },
-  [SWFDEC_TEXT_ATTRIBUTE_BLOCK_INDENT] = { FORMAT_APPLY_LINE, NULL },
-  [SWFDEC_TEXT_ATTRIBUTE_LEADING] = { FORMAT_APPLY_LINE, NULL },
-  [SWFDEC_TEXT_ATTRIBUTE_LEFT_MARGIN] = { FORMAT_APPLY_LINE, NULL },
-  [SWFDEC_TEXT_ATTRIBUTE_RIGHT_MARGIN] = { FORMAT_APPLY_LINE, NULL },
-  [SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS] = { FORMAT_APPLY_LINE, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_ALIGN] = { FORMAT_APPLY_LINE, NULL, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_BLOCK_INDENT] = { FORMAT_APPLY_LINE, NULL, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_LEADING] = { FORMAT_APPLY_LINE, NULL, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_LEFT_MARGIN] = { FORMAT_APPLY_LINE, NULL, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_RIGHT_MARGIN] = { FORMAT_APPLY_LINE, NULL, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS] = { FORMAT_APPLY_LINE, NULL, NULL },
   /* per-glyph options */
-  [SWFDEC_TEXT_ATTRIBUTE_BOLD] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_bold },
-  [SWFDEC_TEXT_ATTRIBUTE_COLOR] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_color },
-  [SWFDEC_TEXT_ATTRIBUTE_FONT] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_font },
-  [SWFDEC_TEXT_ATTRIBUTE_ITALIC] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_italic },
-  [SWFDEC_TEXT_ATTRIBUTE_LETTER_SPACING] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_letter_spacing },
-  [SWFDEC_TEXT_ATTRIBUTE_SIZE] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_size },
-  [SWFDEC_TEXT_ATTRIBUTE_TARGET] = { FORMAT_APPLY_GLYPH, NULL },
-  [SWFDEC_TEXT_ATTRIBUTE_UNDERLINE] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_underline },
+  [SWFDEC_TEXT_ATTRIBUTE_BOLD] = { FORMAT_APPLY_GLYPH, NULL, swfdec_text_attribute_apply_bold },
+  [SWFDEC_TEXT_ATTRIBUTE_COLOR] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_color, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_FONT] = { FORMAT_APPLY_GLYPH, NULL, swfdec_text_attribute_apply_font },
+  [SWFDEC_TEXT_ATTRIBUTE_ITALIC] = { FORMAT_APPLY_GLYPH, NULL, swfdec_text_attribute_apply_italic },
+  [SWFDEC_TEXT_ATTRIBUTE_LETTER_SPACING] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_letter_spacing, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_SIZE] = { FORMAT_APPLY_GLYPH, NULL, swfdec_text_attribute_apply_size },
+  [SWFDEC_TEXT_ATTRIBUTE_TARGET] = { FORMAT_APPLY_GLYPH, NULL, NULL },
+  [SWFDEC_TEXT_ATTRIBUTE_UNDERLINE] = { FORMAT_APPLY_GLYPH, swfdec_text_attribute_create_underline, NULL },
   [SWFDEC_TEXT_ATTRIBUTE_URL] = { FORMAT_APPLY_GLYPH, NULL }
 };
 
@@ -250,10 +256,24 @@ swfdec_text_layout_apply_line_attributes (SwfdecTextBlock *block,
 }
 
 static void
+swfdec_text_layout_apply_attributes_to_description (SwfdecTextLayout *layout, 
+    const SwfdecTextAttributes *attr, PangoFontDescription *desc)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (format_table); i++) {
+    if (format_table[i].apply_attribute) {
+      format_table[i].apply_attribute (layout, attr, desc);
+    }
+  }
+}
+
+static void
 swfdec_text_layout_apply_attributes (SwfdecTextLayout *layout, PangoAttrList *list,
     const SwfdecTextAttributes *attr, guint start, guint end)
 {
   PangoAttribute *attribute;
+  PangoFontDescription *desc;
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (format_table); i++) {
@@ -264,6 +284,13 @@ swfdec_text_layout_apply_attributes (SwfdecTextLayout *layout, PangoAttrList *li
       pango_attr_list_change (list, attribute);
     }
   }
+  desc = pango_font_description_new ();
+  swfdec_text_layout_apply_attributes_to_description (layout, attr, desc);
+  attribute = pango_attr_font_desc_new (desc);
+  pango_font_description_free (desc);
+  attribute->start_index = start;
+  attribute->end_index = end;
+  pango_attr_list_change (list, attribute);
 }
 
 static const SwfdecTextBlock *
@@ -276,6 +303,7 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
   const char *string;
   const SwfdecTextAttributes *attr, *attr_next;
   gsize new_block, start_next;
+  PangoFontDescription *desc;
   gboolean first = TRUE;
   // TODO: kerning, display
 
@@ -300,6 +328,10 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
     } else {
       block->rect.width = layout->wrap_width;
     }
+    desc = pango_font_description_new ();
+    swfdec_text_layout_apply_attributes_to_description (layout, attr, desc);
+    pango_layout_set_font_description (block->layout, desc);
+    pango_font_description_free (desc);
     g_sequence_append (layout->blocks, block);
 
     if (layout->password) {

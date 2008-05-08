@@ -71,3 +71,19 @@ vivi_code_asm_code_get_action (ViviCodeAsmCode *code)
 
   return klass->bytecode;
 }
+
+int
+vivi_code_asm_code_get_stack_add (ViviCodeAsmCode *code)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_ASM_CODE (code), -1);
+
+  return swfdec_as_actions[vivi_code_asm_code_get_action (code)].add;
+}
+
+int
+vivi_code_asm_code_get_stack_remove (ViviCodeAsmCode *code)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_ASM_CODE (code), -1);
+
+  return swfdec_as_actions[vivi_code_asm_code_get_action (code)].remove;
+}

@@ -281,15 +281,16 @@ void
 vivi_code_assembler_merge_push (ViviCodeAssembler *assembler)
 {
   ViviCodeAsmPush *previous;
-  guint i, j;
+  guint i, j, depth;
 
+  depth = 0;
   previous = NULL;
   for (i = 0; i < assembler->codes->len; i++) {
     if (VIVI_IS_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i))) {
       ViviCodeAsmPush *current =
 	VIVI_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i));
 
-      if (previous != NULL) {
+      if (previous != NULL && depth == 0) {
 	for (j = 0; j < vivi_code_asm_push_get_n_values (current); j++) {
 	  vivi_code_asm_push_copy_value (previous, current, j);
 	}
@@ -297,9 +298,23 @@ vivi_code_assembler_merge_push (ViviCodeAssembler *assembler)
 	i--;
       } else {
 	previous = current;
+	depth = 0;
       }
     } else {
-      previous = NULL;
+      if (previous != NULL) {
+	if (vivi_code_asm_code_get_stack_add (VIVI_CODE_ASM_CODE (
+		g_ptr_array_index (assembler->codes, i))) != 0) {
+	  previous = NULL;
+	} else {
+	  int remove = vivi_code_asm_code_get_stack_remove (VIVI_CODE_ASM_CODE (
+		g_ptr_array_index (assembler->codes, i)));
+	  if (remove == -1) {
+	    previous = NULL;
+	  } else {
+	    depth += remove;
+	  }
+	}
+      }
     }
   }
 }

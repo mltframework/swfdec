@@ -69,6 +69,8 @@ gboolean		swfdec_text_layout_get_password		(SwfdecTextLayout *	layout);
 void			swfdec_text_layout_set_scale		(SwfdecTextLayout *	layout,
 								 double			scale);
 double			swfdec_text_layout_get_scale		(SwfdecTextLayout *	layout);
+guint			swfdec_text_layout_get_width		(SwfdecTextLayout *	layout);
+guint			swfdec_text_layout_get_height		(SwfdecTextLayout *	layout);
 guint			swfdec_text_layout_get_n_rows		(SwfdecTextLayout *	layout);
 
 void			swfdec_text_layout_render		(SwfdecTextLayout *	layout,

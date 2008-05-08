@@ -280,7 +280,7 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
   // TODO: kerning, display
 
   string = swfdec_text_buffer_get_text (layout->text);
-  while (start != end) {
+  do {
     iter = swfdec_text_buffer_get_iter (layout->text, start);
     attr = swfdec_text_buffer_iter_get_attributes (layout->text, iter);
     new_block = end;
@@ -365,7 +365,7 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
     block->rect.height += pango_layout_get_spacing (block->layout) / PANGO_SCALE;
 
     last = block;
-  }
+  } while (start != end);
 
   return last;
 }
@@ -382,6 +382,7 @@ swfdec_text_layout_create (SwfdecTextLayout *layout)
   context = pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (map));
 
   p = string = swfdec_text_buffer_get_text (layout->text);
+  //g_print ("=====>\n %s\n<======\n", string);
   for (;;) {
     end = strpbrk (p, "\r\n");
     if (end == NULL) {
@@ -402,9 +403,6 @@ static void
 swfdec_text_layout_ensure (SwfdecTextLayout *layout)
 {
   if (!g_sequence_iter_is_end (g_sequence_get_begin_iter (layout->blocks)))
-    return;
-
-  if (swfdec_text_buffer_get_length (layout->text) == 0)
     return;
 
   swfdec_text_layout_create (layout);
@@ -433,6 +431,8 @@ swfdec_text_layout_dispose (GObject *object)
 {
   SwfdecTextLayout *layout = SWFDEC_TEXT_LAYOUT (object);
 
+  g_signal_handlers_disconnect_matched (layout->text, 
+	G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, layout);
   g_object_unref (layout->text);
   layout->text = NULL;
   g_sequence_free (layout->blocks);
@@ -470,6 +470,8 @@ swfdec_text_layout_new (SwfdecTextBuffer *buffer)
 
   layout = g_object_new (SWFDEC_TYPE_TEXT_LAYOUT, NULL);
   layout->text = g_object_ref (buffer);
+  g_signal_connect_swapped (buffer, "text-changed",
+      G_CALLBACK (swfdec_text_layout_invalidate), layout);
 
   return layout;
 }
@@ -483,8 +485,8 @@ swfdec_text_layout_set_wrap_width (SwfdecTextLayout *layout, int wrap_width)
   if (layout->wrap_width == wrap_width)
     return;
 
-  swfdec_text_layout_invalidate (layout);
   layout->wrap_width = wrap_width;
+  swfdec_text_layout_invalidate (layout);
 }
 
 int
@@ -511,8 +513,8 @@ swfdec_text_layout_set_password (SwfdecTextLayout *layout, gboolean password)
   if (layout->password == password)
     return;
 
-  swfdec_text_layout_invalidate (layout);
   layout->password = password;
+  swfdec_text_layout_invalidate (layout);
 }
 
 double
@@ -532,8 +534,66 @@ swfdec_text_layout_set_scale (SwfdecTextLayout *layout, double scale)
   if (layout->scale == scale)
     return;
 
-  swfdec_text_layout_invalidate (layout);
   layout->scale = scale;
+  swfdec_text_layout_invalidate (layout);
+}
+
+/**
+ * swfdec_text_layout_get_width:
+ * @layout: the layout
+ *
+ * Computes the width of the layout in pixels. Note that the width can still
+ * exceed the width set with swfdec_text_layout_set_wrap_width() if some
+ * words are too long. Computing the width takes a long time, so it might be
+ * useful to cache the value.
+ *
+ * Returns: The width in pixels
+ **/
+guint
+swfdec_text_layout_get_width (SwfdecTextLayout *layout)
+{
+  GSequenceIter *iter;
+  SwfdecTextBlock *block;
+  guint width = 0;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), 0);
+
+  swfdec_text_layout_ensure (layout);
+
+  for (iter = g_sequence_get_begin_iter (layout->blocks);
+       !g_sequence_iter_is_end (iter);
+       iter = g_sequence_iter_next (iter)) {
+    block = g_sequence_get (iter);
+    width = MAX (width, (guint) block->rect.x + block->rect.width);
+  }
+
+  return width;
+}
+
+/**
+ * swfdec_text_layout_get_height:
+ * @layout: the layout
+ *
+ * Computes the height of the layout in pixels. This is a fast operation.
+ *
+ * Returns: The height of the layout in pixels
+ **/
+guint
+swfdec_text_layout_get_height (SwfdecTextLayout *layout)
+{
+  GSequenceIter *iter;
+  SwfdecTextBlock *block;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), 0);
+
+  swfdec_text_layout_ensure (layout);
+
+  iter = g_sequence_iter_prev (g_sequence_get_end_iter (layout->blocks));
+  if (g_sequence_iter_is_end (iter))
+    return 0;
+
+  block = g_sequence_get (iter);
+  return block->rect.y + block->rect.height;
 }
 
 guint

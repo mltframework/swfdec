@@ -27,7 +27,7 @@
 #include "vivi_code_constant.h"
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm_function2.h"
 
 #include "vivi_decompiler.h"
@@ -83,14 +83,14 @@ vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_function_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_function_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeFunction *function = VIVI_CODE_FUNCTION (token);
   ViviCodeLabel *label_end;
   ViviCodeAsm *code;
   guint i;
 
-  label_end = VIVI_CODE_LABEL (vivi_code_label_new_internal ("function_end"));
+  label_end = vivi_code_compiler_create_label (compiler, "function_end");
 
   code = vivi_code_asm_function2_new (label_end, function->name, 0, 0);
   for (i = 0; i < function->arguments->len; i++) {
@@ -98,13 +98,13 @@ vivi_code_function_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
 	g_ptr_array_index (function->arguments, i), 0);
   }
 
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 
   if (function->body != NULL)
-    vivi_code_statement_compile (function->body, assembler);
+    vivi_code_compiler_compile_statement (compiler, function->body);
 
-  vivi_code_assembler_add_code (assembler, VIVI_CODE_ASM (label_end));
+  vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_end));
   g_object_unref (label_end);
 }
 

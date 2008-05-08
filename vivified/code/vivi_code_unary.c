@@ -23,7 +23,7 @@
 
 #include "vivi_code_unary.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm.h"
 #include "vivi_code_asm_code_default.h"
 
@@ -70,17 +70,17 @@ vivi_code_unary_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_unary_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_unary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeUnary *unary = VIVI_CODE_UNARY (token);
   ViviCodeAsm *code;
 
   g_return_if_fail (unary->operation != '!');
 
-  vivi_code_value_compile (unary->value, assembler);
+  vivi_code_compiler_compile_value (compiler, unary->value);
 
   code = vivi_code_asm_not_new ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

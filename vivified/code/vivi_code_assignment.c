@@ -26,7 +26,7 @@
 #include "vivi_code_printer.h"
 #include "vivi_code_string.h"
 #include "vivi_code_undefined.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeAssignment, vivi_code_assignment, VIVI_TYPE_CODE_STATEMENT)
@@ -92,23 +92,22 @@ finalize:
 }
 
 static void
-vivi_code_assignment_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+vivi_code_assignment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
   ViviCodeAsm *code;
 
   if (assignment->from && !assignment->local)
-    vivi_code_value_compile (assignment->from, assembler);
-  vivi_code_value_compile (assignment->name, assembler);
+    vivi_code_compiler_compile_value (compiler, assignment->from);
+  vivi_code_compiler_compile_value (compiler, assignment->name);
 
   if (assignment->local && assignment->from) {
     ViviCodeValue *get =
       vivi_code_get_new (assignment->from, assignment->value);
-    vivi_code_value_compile (get, assembler);
+    vivi_code_compiler_compile_value (compiler, get);
     g_object_unref (get);
   } else {
-    vivi_code_value_compile (assignment->value, assembler);
+    vivi_code_compiler_compile_value (compiler, assignment->value);
   }
 
   if (assignment->local) {
@@ -118,7 +117,7 @@ vivi_code_assignment_compile (ViviCodeToken *token,
   } else {
     code = vivi_code_asm_set_variable_new ();
   }
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

@@ -24,7 +24,7 @@
 
 #include "vivi_compiler_empty_statement.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCompilerEmptyStatement, vivi_compiler_empty_statement, VIVI_TYPE_CODE_STATEMENT)
 
@@ -44,7 +44,7 @@ vivi_compiler_empty_statement_print (ViviCodeToken *token,
 
 static void
 vivi_compiler_empty_statement_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+    ViviCodeCompiler *compiler)
 {
   /* nothing */
 }

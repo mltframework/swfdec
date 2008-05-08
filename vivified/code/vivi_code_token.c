@@ -22,7 +22,7 @@
 #endif
 
 #include "vivi_code_token.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_ABSTRACT_TYPE (ViviCodeToken, vivi_code_token, G_TYPE_OBJECT)
 
@@ -49,14 +49,14 @@ vivi_code_token_init (ViviCodeToken *token)
 
 
 void
-vivi_code_token_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_token_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeTokenClass *klass;
 
   g_return_if_fail (VIVI_IS_CODE_TOKEN (token));
-  g_return_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler));
+  g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
 
   klass = VIVI_CODE_TOKEN_GET_CLASS (token);
   g_return_if_fail (klass->compile);
-  klass->compile (token, assembler);
+  klass->compile (token, compiler);
 }

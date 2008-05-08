@@ -27,7 +27,7 @@
 
 #include "vivi_code_undefined.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm_push.h"
 
 G_DEFINE_TYPE (ViviCodeUndefined, vivi_code_undefined, VIVI_TYPE_CODE_CONSTANT)
@@ -39,14 +39,13 @@ vivi_code_undefined_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_undefined_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+vivi_code_undefined_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeAsm *code;
 
   code = vivi_code_asm_push_new ();
   vivi_code_asm_push_add_undefined (VIVI_CODE_ASM_PUSH (code));
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

@@ -25,7 +25,7 @@
 
 #include "vivi_code_binary.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeBinary, vivi_code_binary, VIVI_TYPE_CODE_VALUE)
 
@@ -57,18 +57,18 @@ vivi_code_binary_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_binary_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_binary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
   ViviCodeBinaryClass *klass = VIVI_CODE_BINARY_GET_CLASS (binary);
   ViviCodeAsm *code;
 
-  vivi_code_value_compile (binary->left, assembler);
-  vivi_code_value_compile (binary->right, assembler);
+  vivi_code_compiler_compile_value (compiler, binary->left);
+  vivi_code_compiler_compile_value (compiler, binary->right);
 
   g_assert (klass->asm_constructor != 0);
   code = klass->asm_constructor ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

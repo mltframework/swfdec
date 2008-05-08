@@ -23,7 +23,7 @@
 
 #include "vivi_code_concat.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeConcat, vivi_code_concat, VIVI_TYPE_CODE_VALUE)
@@ -55,16 +55,16 @@ vivi_code_concat_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_concat_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_concat_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeConcat *concat = VIVI_CODE_CONCAT (token);
   ViviCodeAsm *code;
 
-  vivi_code_value_compile (concat->first, assembler);
-  vivi_code_value_compile (concat->second, assembler);
+  vivi_code_compiler_compile_value (compiler, concat->first);
+  vivi_code_compiler_compile_value (compiler, concat->second);
 
   code = vivi_code_asm_string_add_new ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

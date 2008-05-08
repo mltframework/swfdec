@@ -23,7 +23,7 @@
 
 #include "vivi_code_get_url.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeGetUrl, vivi_code_get_url, VIVI_TYPE_CODE_STATEMENT)
 
@@ -62,7 +62,7 @@ vivi_code_get_url_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_get_url_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_get_url_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   g_printerr ("Implement getURL2");
 #if 0

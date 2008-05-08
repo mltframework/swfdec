@@ -23,7 +23,7 @@
 
 #include "vivi_code_throw.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm.h"
 #include "vivi_code_asm_code_default.h"
 
@@ -57,17 +57,17 @@ vivi_code_throw_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_throw_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_throw_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeThrow *throw_ = VIVI_CODE_THROW (token);
   ViviCodeAsm *code;
 
   g_return_if_fail (throw_->value != NULL);
 
-  vivi_code_value_compile (throw_->value, assembler);
+  vivi_code_compiler_compile_value (compiler, throw_->value);
 
   code = vivi_code_asm_throw_new ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

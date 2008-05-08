@@ -88,8 +88,5 @@ ViviPrecedence		vivi_code_value_get_precedence	(ViviCodeValue *	value);
 ViviCodeValue *		vivi_code_value_optimize	(ViviCodeValue *	value,
 							 SwfdecAsValueType	hint);
 
-void			vivi_code_value_compile		(ViviCodeValue *	value,
-							 ViviCodeAssembler *	assembler);
-
 G_END_DECLS
 #endif

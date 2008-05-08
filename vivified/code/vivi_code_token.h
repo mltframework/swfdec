@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef struct _ViviCodePrinter ViviCodePrinter;
 typedef struct _ViviCodeAssembler ViviCodeAssembler;
+typedef struct _ViviCodeCompiler ViviCodeCompiler;
 
 typedef struct _ViviCodeToken ViviCodeToken;
 typedef struct _ViviCodeTokenClass ViviCodeTokenClass;
@@ -50,13 +51,13 @@ struct _ViviCodeTokenClass
   void			(* print)			(ViviCodeToken *	token,
 							 ViviCodePrinter *	printer);
   void			(* compile)			(ViviCodeToken *	token,
-							 ViviCodeAssembler *	assembler);
+							 ViviCodeCompiler *	compiler);
 };
 
 GType			vivi_code_token_get_type   	(void);
 
 void			vivi_code_token_compile		(ViviCodeToken *	token,
-							 ViviCodeAssembler *	assembler);
+							 ViviCodeCompiler *	compiler);
 
 
 G_END_DECLS

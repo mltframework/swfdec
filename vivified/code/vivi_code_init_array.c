@@ -23,7 +23,7 @@
 #endif
 
 #include "vivi_code_asm_code_default.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_init_array.h"
 #include "vivi_code_number.h"
 #include "vivi_code_printer.h"
@@ -81,7 +81,7 @@ vivi_code_init_array_print (ViviCodeToken *token, ViviCodePrinter *printer)
 
 static void
 vivi_code_init_array_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+    ViviCodeCompiler *compiler)
 {
   ViviCodeInitArray *array = VIVI_CODE_INIT_ARRAY (token);
   ViviCodeValue *count;
@@ -89,15 +89,15 @@ vivi_code_init_array_compile (ViviCodeToken *token,
   guint i;
 
   for (i = 0; i < array->variables->len; i++) {
-    vivi_code_value_compile (VIVI_CODE_VALUE (g_ptr_array_index (
-	    array->variables, i)), assembler);
+    vivi_code_compiler_compile_value (compiler,
+	VIVI_CODE_VALUE (g_ptr_array_index (array->variables, i)));
   }
   count = vivi_code_number_new (array->variables->len);
-  vivi_code_value_compile (count, assembler);
+  vivi_code_compiler_compile_value (compiler, count);
   g_object_unref (count);
 
   code = vivi_code_asm_init_array_new ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

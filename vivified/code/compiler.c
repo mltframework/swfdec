@@ -28,6 +28,7 @@
 
 #include "vivi_parser.h"
 #include "vivi_code_text_printer.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_assembler.h"
 #include "vivi_code_asm_code_default.h"
 
@@ -79,6 +80,7 @@ main (int argc, char *argv[])
 {
   SwfdecBuffer *source, *output;
   ViviCodeStatement *statement;
+  ViviCodeCompiler *compiler;
   ViviCodeAssembler *assembler;
   ViviCodeAsm *code;
   int version = 8;
@@ -180,9 +182,13 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  assembler = VIVI_CODE_ASSEMBLER (vivi_code_assembler_new ());
-  vivi_code_statement_compile (statement, assembler);
+  compiler = vivi_code_compiler_new (version);
+  vivi_code_compiler_compile_statement (compiler, statement);
   g_object_unref (statement);
+
+  assembler = g_object_ref (vivi_code_compiler_get_assembler (compiler));
+  g_object_unref (compiler);
+  vivi_code_compiler_compile_statement (compiler, statement);
 
   code = vivi_code_asm_end_new ();
   vivi_code_assembler_add_code (assembler, code);

@@ -22,7 +22,7 @@
 #endif
 
 #include "vivi_code_asm_code_default.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_get.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_string.h"
@@ -75,14 +75,14 @@ vivi_code_get_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_get_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_get_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeGet *get = VIVI_CODE_GET (token);
   ViviCodeAsm *code;
 
   if (get->from)
-    vivi_code_value_compile (get->from, assembler);
-  vivi_code_value_compile (get->name, assembler);
+    vivi_code_compiler_compile_value (compiler, get->from);
+  vivi_code_compiler_compile_value (compiler, get->name);
 
   if (get->from) {
     code = vivi_code_asm_get_member_new ();
@@ -90,7 +90,7 @@ vivi_code_get_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
     code = vivi_code_asm_get_variable_new ();
   }
 
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

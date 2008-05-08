@@ -23,7 +23,7 @@
 
 #include "vivi_code_goto.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm_jump.h"
 
 G_DEFINE_TYPE (ViviCodeGoto, vivi_code_goto, VIVI_TYPE_CODE_STATEMENT)
@@ -51,13 +51,13 @@ vivi_code_goto_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_goto_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_goto_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeGoto *gotoo = VIVI_CODE_GOTO (token);
   ViviCodeAsm *code;
 
   code = vivi_code_asm_jump_new (gotoo->label);
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

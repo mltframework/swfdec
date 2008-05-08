@@ -23,7 +23,7 @@
 
 #include "vivi_code_value_statement.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm.h"
 #include "vivi_code_asm_code_default.h"
 
@@ -51,15 +51,15 @@ vivi_code_value_statement_print (ViviCodeToken *token, ViviCodePrinter *printer)
 
 static void
 vivi_code_value_statement_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+    ViviCodeCompiler *compiler)
 {
   ViviCodeValueStatement *stmt = VIVI_CODE_VALUE_STATEMENT (token);
   ViviCodeAsm *code;
 
-  vivi_code_value_compile (stmt->value, assembler);
+  vivi_code_compiler_compile_value (compiler, stmt->value);
 
   code = vivi_code_asm_pop_new ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

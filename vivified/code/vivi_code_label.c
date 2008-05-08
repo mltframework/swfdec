@@ -23,7 +23,7 @@
 
 #include "vivi_code_label.h"
 #include "vivi_code_asm.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_emitter.h"
 #include "vivi_code_printer.h"
 
@@ -68,13 +68,14 @@ vivi_code_label_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_label_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_label_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeLabel *label = VIVI_CODE_LABEL (token);
   ViviCodeAsm *code;
 
-  code = VIVI_CODE_ASM (vivi_code_label_new_internal (label->name));
-  vivi_code_assembler_add_code (assembler, code);
+  code =
+    VIVI_CODE_ASM (vivi_code_compiler_create_label (compiler, label->name));
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 
@@ -115,13 +116,6 @@ vivi_code_label_new (const char *name)
   label->name = g_strdup (name);
 
   return VIVI_CODE_STATEMENT (label);
-}
-
-ViviCodeStatement *
-vivi_code_label_new_internal (const char *prefix)
-{
-  // FIXME
-  return vivi_code_label_new (prefix);
 }
 
 const char *

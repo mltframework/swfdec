@@ -23,7 +23,7 @@
 
 #include "vivi_code_break.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeBreak, vivi_code_break, VIVI_TYPE_CODE_STATEMENT)
 
@@ -35,7 +35,7 @@ vivi_code_break_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_break_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_break_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   g_printerr ("Implement break\n");
 }

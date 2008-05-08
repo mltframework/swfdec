@@ -23,7 +23,7 @@
 
 #include "vivi_code_builtin_statement.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_ABSTRACT_TYPE (ViviCodeBuiltinStatement, vivi_code_builtin_statement, VIVI_TYPE_CODE_STATEMENT)
 
@@ -42,7 +42,7 @@ vivi_code_builtin_statement_print (ViviCodeToken *token,
 
 static void
 vivi_code_builtin_statement_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+    ViviCodeCompiler *compiler)
 {
   ViviCodeBuiltinStatementClass *klass =
     VIVI_CODE_BUILTIN_STATEMENT_GET_CLASS (token);
@@ -50,7 +50,7 @@ vivi_code_builtin_statement_compile (ViviCodeToken *token,
 
   g_assert (klass->asm_constructor != NULL);
   code = klass->asm_constructor ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

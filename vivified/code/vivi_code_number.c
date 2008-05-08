@@ -23,7 +23,7 @@
 
 #include "vivi_code_number.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm_push.h"
 
 G_DEFINE_TYPE (ViviCodeNumber, vivi_code_number, VIVI_TYPE_CODE_CONSTANT)
@@ -39,7 +39,7 @@ vivi_code_number_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_number_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
+vivi_code_number_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeNumber *number = VIVI_CODE_NUMBER (token);
   ViviCodeAsm *code;
@@ -75,7 +75,7 @@ vivi_code_number_compile (ViviCodeToken *token, ViviCodeAssembler *assembler)
       g_assert_not_reached ();
   }
 
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

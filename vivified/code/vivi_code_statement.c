@@ -76,11 +76,3 @@ vivi_code_statement_needs_braces (ViviCodeStatement *stmt)
     return FALSE;
   }
 }
-
-void vivi_code_statement_compile (ViviCodeStatement *statement,
-    ViviCodeAssembler *assembler)
-{
-  g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
-
-  vivi_code_token_compile (VIVI_CODE_TOKEN (statement), assembler);
-}

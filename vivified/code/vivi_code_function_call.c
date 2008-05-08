@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_function_call.h"
 #include "vivi_code_number.h"
@@ -123,7 +123,7 @@ vivi_code_function_call_print (ViviCodeToken *token, ViviCodePrinter*printer)
 
 static void
 vivi_code_function_call_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+    ViviCodeCompiler *compiler)
 {
   ViviCodeFunctionCall *call = VIVI_CODE_FUNCTION_CALL (token);
   ViviCodeValue *count;
@@ -131,17 +131,17 @@ vivi_code_function_call_compile (ViviCodeToken *token,
   guint i;
 
   for (i = call->arguments->len - 1; i < call->arguments->len; i--) {
-    vivi_code_value_compile (g_ptr_array_index (call->arguments, i),
-	assembler);
+    vivi_code_compiler_compile_value (compiler,
+	g_ptr_array_index (call->arguments, i));
   }
   count = vivi_code_number_new (call->arguments->len);
-  vivi_code_value_compile (count, assembler);
+  vivi_code_compiler_compile_value (compiler, count);
   g_object_unref (count);
 
-  vivi_code_value_compile (call->name, assembler);
+  vivi_code_compiler_compile_value (compiler, call->name);
 
   if (call->value)
-    vivi_code_value_compile (call->value, assembler);
+    vivi_code_compiler_compile_value (compiler, call->value);
 
   if (call->construct) {
     if (call->value) {
@@ -157,7 +157,7 @@ vivi_code_function_call_compile (ViviCodeToken *token,
     }
   }
 
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

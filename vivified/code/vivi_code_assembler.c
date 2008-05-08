@@ -26,6 +26,7 @@
 
 #include "vivi_code_assembler.h"
 #include "vivi_code_comment.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_emitter.h"
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
@@ -72,13 +73,15 @@ vivi_code_assembler_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_assembler_compile (ViviCodeToken *token, ViviCodeAssembler *other)
+vivi_code_assembler_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
-  ViviCodeAssembler *self = VIVI_CODE_ASSEMBLER (token);
+  ViviCodeAssembler *assembler = VIVI_CODE_ASSEMBLER (token);
   guint i;
 
-  for (i = 0; i < self->codes->len; i++) {
-    vivi_code_assembler_add_code (other, g_ptr_array_index (self->codes, i));
+  // TODO: clone?
+  for (i = 0; i < assembler->codes->len; i++) {
+    vivi_code_compiler_add_code (compiler,
+	g_ptr_array_index (assembler->codes, i));
   }
 }
 

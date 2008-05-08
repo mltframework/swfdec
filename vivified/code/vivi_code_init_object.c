@@ -24,7 +24,7 @@
 #include "vivi_code_init_object.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_number.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 #include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeInitObject, vivi_code_init_object, VIVI_TYPE_CODE_VALUE)
@@ -80,7 +80,7 @@ vivi_code_init_object_print (ViviCodeToken *token, ViviCodePrinter*printer)
 
 static void
 vivi_code_init_object_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+    ViviCodeCompiler *compiler)
 {
   ViviCodeInitObject *object = VIVI_CODE_INIT_OBJECT (token);
   ViviCodeValue *count;
@@ -89,16 +89,16 @@ vivi_code_init_object_compile (ViviCodeToken *token,
 
   for (i = 0; i < object->variables->len; i++) {
     VariableEntry *entry = &g_array_index (object->variables, VariableEntry, i);
-    vivi_code_value_compile (entry->value, assembler);
-    vivi_code_value_compile (entry->name, assembler);
+    vivi_code_compiler_compile_value (compiler, entry->value);
+    vivi_code_compiler_compile_value (compiler, entry->name);
   }
 
   count = vivi_code_number_new (object->variables->len);
-  vivi_code_value_compile (count, assembler);
+  vivi_code_compiler_compile_value (compiler, count);
   g_object_unref (count);
 
   code = vivi_code_asm_init_object_new ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 }
 

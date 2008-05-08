@@ -23,7 +23,7 @@
 
 #include "vivi_code_substring.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_assembler.h"
+#include "vivi_code_compiler.h"
 
 G_DEFINE_TYPE (ViviCodeSubstring, vivi_code_substring, VIVI_TYPE_CODE_VALUE)
 
@@ -58,20 +58,19 @@ vivi_code_substring_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_substring_compile (ViviCodeToken *token,
-    ViviCodeAssembler *assembler)
+vivi_code_substring_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   g_printerr ("Implement substring\n");
 #if 0
   ViviCodeSubstring *substring = VIVI_CODE_SUBSTRING (token);
   ViviCodeAsm *code;
 
-  vivi_code_value_compile (substring->string, assembler);
-  vivi_code_value_compile (substring->index_, assembler);
-  vivi_code_value_compile (substring->count, assembler);
+  vivi_code_value_compile (substring->string, compiler);
+  vivi_code_value_compile (substring->index_, compiler);
+  vivi_code_value_compile (substring->count, compiler);
 
   code = vivi_code_asm_string_extract_new ();
-  vivi_code_assembler_add_code (assembler, code);
+  vivi_code_compiler_add_code (compiler, code);
   g_object_unref (code);
 #endif
 }

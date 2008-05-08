@@ -31,6 +31,7 @@
 #include <vivified/code/vivi_code_asm_function2.h>
 #include <vivified/code/vivi_code_asm_pool.h>
 #include <vivified/code/vivi_code_asm_push.h>
+#include <vivified/code/vivi_code_compiler.h>
 #include <vivified/code/vivi_code_assembler.h>
 #include <vivified/code/vivi_decompiler.h>
 #include <vivified/code/vivi_parser.h>
@@ -171,6 +172,7 @@ replace_random (ViviCodeAssembler *assembler, guint init)
   if (init) {
     guint j;
     ViviCodeStatement *statement;
+    ViviCodeCompiler *compiler;
     ViviCodeAssembler *asm2;
     if (VIVI_IS_CODE_ASM_POOL (vivi_code_assembler_get_code (assembler, i)))
       i++;
@@ -181,9 +183,11 @@ replace_random (ViviCodeAssembler *assembler, guint init)
 	"ASSetPropFlags (Math, \"random\", 7);"
 	);
     g_assert (statement);
-    asm2 = VIVI_CODE_ASSEMBLER (vivi_code_assembler_new ());
-    vivi_code_statement_compile (statement, asm2);
+    compiler = vivi_code_compiler_new (7); // FIXME: version
+    vivi_code_compiler_compile_statement (compiler, statement);
     g_object_unref (statement);
+    asm2 = g_object_ref (vivi_code_compiler_get_assembler (compiler));
+    g_object_unref (compiler);
     for (j = 0; j < vivi_code_assembler_get_n_codes (asm2); j++) {
       vivi_code_assembler_insert_code (assembler, i++,
 	  vivi_code_assembler_get_code (asm2, j));

@@ -44,6 +44,8 @@ struct _SwfdecTextFieldMovie {
   SwfdecActor		actor;
 
   SwfdecRect		extents;	/* original extents (copied from graphic) */
+  double		xscale;		/* scale movie => stage in x direction */
+  double		yscale;		/* scale movie => stage in y direction */
   SwfdecRectangle	stage_rect;	/* these extents in stage coordinates */
 
   /* properties copied from textfield */

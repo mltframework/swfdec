@@ -359,6 +359,8 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   /* FIXME: floor, ceil or round? */
   text->stage_rect.width = round (x) - text->stage_rect.x;
   text->stage_rect.height = round (y) - text->stage_rect.y;
+  text->xscale = matrix.xx;
+  text->yscale = matrix.yy;
   swfdec_text_layout_set_scale (text->layout, matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR);
   if (text->word_wrap && text->stage_rect.width >= BORDER_LEFT + BORDER_RIGHT) {
     swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
@@ -977,7 +979,6 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   }
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-  swfdec_text_field_movie_auto_size (text);
   swfdec_text_field_movie_update_scroll (text, TRUE);
 }
 
@@ -1019,6 +1020,5 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   }
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-  swfdec_text_field_movie_auto_size (text);
   swfdec_text_field_movie_update_scroll (text, TRUE);
 }

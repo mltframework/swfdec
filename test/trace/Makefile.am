@@ -3296,6 +3296,15 @@ EXTRA_DIST = \
 	text-field-get-text-format-7.swf.trace \
 	text-field-get-text-format-8.swf \
 	text-field-get-text-format-8.swf.trace \
+	text-field-hscroll-5.swf \
+	text-field-hscroll-5.swf.trace \
+	text-field-hscroll-6.swf \
+	text-field-hscroll-6.swf.trace \
+	text-field-hscroll-7.swf \
+	text-field-hscroll-7.swf.trace \
+	text-field-hscroll-8.swf \
+	text-field-hscroll-8.swf.trace \
+	text-field-hscroll.as \
 	text-field-html-input.as \
 	text-field-html-input-5.swf \
 	text-field-html-input-5.swf.trace \

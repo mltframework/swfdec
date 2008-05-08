@@ -589,9 +589,6 @@ swfdec_text_layout_get_height (SwfdecTextLayout *layout)
   swfdec_text_layout_ensure (layout);
 
   iter = g_sequence_iter_prev (g_sequence_get_end_iter (layout->blocks));
-  if (g_sequence_iter_is_end (iter))
-    return 0;
-
   block = g_sequence_get (iter);
   return block->rect.y + block->rect.height;
 }
@@ -607,9 +604,6 @@ swfdec_text_layout_get_n_rows (SwfdecTextLayout *layout)
   swfdec_text_layout_ensure (layout);
 
   iter = g_sequence_iter_prev (g_sequence_get_end_iter (layout->blocks));
-  if (g_sequence_iter_is_end (iter))
-    return 0;
-
   block = g_sequence_get (iter);
   return block->row + pango_layout_get_line_count (block->layout);
 }

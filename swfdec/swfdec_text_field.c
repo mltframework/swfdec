@@ -143,6 +143,16 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
   if (text->embed_fonts)
     SWFDEC_FIXME ("Using embed fonts in TextField is not supported");
 
+  SWFDEC_LOG ("  word wrap: %u", text->word_wrap);
+  SWFDEC_LOG ("  multiline: %u", text->multiline);
+  SWFDEC_LOG ("  password: %u", text->password);
+  SWFDEC_LOG ("  editable: %u", text->editable);
+  SWFDEC_LOG ("  autosize: %u", text->auto_size);
+  SWFDEC_LOG ("  selectable: %u", text->selectable);
+  SWFDEC_LOG ("  background: %u", text->background);
+  SWFDEC_LOG ("  html: %u", text->html);
+  SWFDEC_LOG ("  embedFonts: %u", text->embed_fonts);
+
   if (has_font) {
     SwfdecCharacter *font;
 
@@ -210,8 +220,10 @@ tag_func_define_edit_text (SwfdecSwfDecoder * s, guint tag)
     text->variable = NULL;
   }
 
-  if (has_text)
+  if (has_text) {
     text->input = swfdec_bits_get_string (b, s->version);
+    SWFDEC_LOG ("  text = %s", text->input);
+  }
 
   return SWFDEC_STATUS_OK;
 }

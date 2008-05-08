@@ -293,6 +293,8 @@ swfdec_text_field_movie_dispose (GObject *object)
     text->text = NULL;
   }
   if (text->layout) {
+    g_signal_handlers_disconnect_matched (text->layout, G_SIGNAL_MATCH_DATA,
+	0, 0, NULL, NULL, text);
     g_object_unref (text->layout);
     text->layout = NULL;
   }
@@ -321,6 +323,7 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
   SWFDEC_AS_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->mark (object);
 }
 
+/* NB: This signal can happen without a locked player */
 static void
 swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
 {
@@ -357,9 +360,30 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   text->stage_rect.width = round (x) - text->stage_rect.x;
   text->stage_rect.height = round (y) - text->stage_rect.y;
   swfdec_text_layout_set_scale (text->layout, matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR);
-  if (text->word_wrap) {
+  if (text->word_wrap && text->stage_rect.width >= BORDER_LEFT + BORDER_RIGHT) {
     swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
 	BORDER_LEFT - BORDER_RIGHT);
+  }
+}
+
+/* NB: This signal can happen without a locked player */
+static void
+swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
+    SwfdecTextFieldMovie *text)
+{
+  double scale;
+  guint w, h;
+
+  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
+
+  scale = swfdec_text_layout_get_scale (layout);
+  w = swfdec_text_layout_get_width (layout) / scale;
+  h = swfdec_text_layout_get_height (layout) / scale;
+
+  if (w != text->layout_width || h != text->layout_height) {
+    text->layout_width = w;
+    text->layout_height = h;
+    //swfdec_text_field_movie_auto_size (text);
   }
 }
 
@@ -433,6 +457,7 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
     parent = parent->parent;
   }
   swfdec_text_field_movie_update_area (text);
+  swfdec_text_field_movie_layout_changed (text->layout, text);
 }
 
 static void
@@ -773,6 +798,8 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
       G_CALLBACK (swfdec_text_field_movie_text_changed), text);
 
   text->layout = swfdec_text_layout_new (text->text);
+  g_signal_connect (text->layout, "changed",
+      G_CALLBACK (swfdec_text_field_movie_layout_changed), text);
 
   text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;

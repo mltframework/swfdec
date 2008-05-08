@@ -132,94 +132,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       text->stage_rect.height - BORDER_TOP - BORDER_BOTTOM);
   cairo_clip (cr);
   swfdec_text_layout_render (text->layout, cr, ctrans,
-      0, text->stage_rect.height - BORDER_TOP + BORDER_BOTTOM, &text->stage_rect);
-}
-
-void
-swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text,
-    gboolean check_limits)
-{
-#if 0
-  SwfdecLayout *layouts;
-  int i, num, y, visible, all, height;
-  double width, width_max;
-
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-
-  layouts = swfdec_text_field_movie_get_layouts (text, &num, NULL, NULL, NULL);
-
-  width = SWFDEC_MOVIE (text)->original_extents.x1 -
-    SWFDEC_MOVIE (text)->original_extents.x0;
-  height = SWFDEC_MOVIE (text)->original_extents.y1 -
-    SWFDEC_MOVIE (text)->original_extents.y0;
-
-  width_max = width;
-  y = 0;
-  all = 0;
-  visible = 0;
-
-  for (i = num - 1; i >= 0; i--)
-  {
-    SwfdecLayout *layout = &layouts[i];
-    PangoLayoutIter *iter_line;
-    PangoRectangle rect;
-
-    if (layouts[i].width > width_max)
-      width_max = layouts[i].width;
-
-    y += layout->height;
-
-    iter_line = pango_layout_get_iter (layout->layout);
-
-    do {
-      pango_layout_iter_get_line_extents (iter_line, NULL, &rect);
-      pango_extents_to_pixels (NULL, &rect);
-
-      if (y - rect.y <= height)
-	visible++;
-
-      all++;
-    } while (pango_layout_iter_next_line (iter_line));
-
-    pango_layout_iter_free (iter_line);
-  }
-
-  swfdec_text_field_movie_free_layouts (layouts);
-  layouts = NULL;
-
-  if (text->scroll_max != all - visible + 1) {
-    text->scroll_max = all - visible + 1;
-    text->scroll_changed = TRUE;
-  }
-  if (text->hscroll_max != SWFDEC_TWIPS_TO_DOUBLE (width_max - width)) {
-    text->hscroll_max = SWFDEC_TWIPS_TO_DOUBLE (width_max - width);
-    text->scroll_changed = TRUE;
-  }
-
-  if (check_limits) {
-    if (text->scroll != CLAMP(text->scroll, 1, text->scroll_max)) {
-      text->scroll = CLAMP(text->scroll, 1, text->scroll_max);
-      text->scroll_changed = TRUE;
-    }
-    if (text->scroll_bottom != text->scroll + (visible > 0 ? visible - 1 : 0))
-    {
-      text->scroll_bottom = text->scroll + (visible > 0 ? visible - 1 : 0);
-      text->scroll_changed = TRUE;
-    }
-    if (text->hscroll != CLAMP(text->hscroll, 0, text->hscroll_max)) {
-      text->hscroll = CLAMP(text->hscroll, 0, text->hscroll_max);
-      text->scroll_changed = TRUE;
-    }
-  } else {
-    if (text->scroll_bottom < text->scroll ||
-	text->scroll_bottom > text->scroll_max + visible - 1) {
-      text->scroll_bottom = text->scroll;
-      text->scroll_changed = TRUE;
-    }
-  }
-#else
-  SWFDEC_STUB ("swfdec_text_field_movie_update_scroll");
-#endif
+      text->scroll, text->stage_rect.height - BORDER_TOP + BORDER_BOTTOM, &text->stage_rect);
 }
 
 gboolean
@@ -368,6 +281,31 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   }
 }
 
+/* NB: can be run with unlocked player */
+void
+swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text)
+{
+  guint scroll_max, lines_visible, rows, height;
+
+  height = text->stage_rect.height - BORDER_TOP - BORDER_BOTTOM;
+  rows = swfdec_text_layout_get_n_rows (text->layout);
+  scroll_max = rows - swfdec_text_layout_get_visible_rows_end (text->layout, height);
+  if (scroll_max != text->scroll_max) {
+    text->scroll_max = scroll_max;
+    text->scroll_changed = TRUE;
+  }
+  if (scroll_max < text->scroll) {
+    text->scroll = scroll_max;
+    text->scroll_changed = TRUE;
+  }
+  lines_visible = swfdec_text_layout_get_visible_rows (text->layout,
+      text->scroll, height);
+  if (lines_visible != text->lines_visible) {
+    text->lines_visible = lines_visible;
+    text->scroll_changed = TRUE;
+  }
+}
+
 /* NB: This signal can happen without a locked player */
 static void
 swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
@@ -387,6 +325,8 @@ swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
     text->layout_height = h;
     //swfdec_text_field_movie_auto_size (text);
   }
+
+  swfdec_text_field_movie_update_scroll (text);
 }
 
 static void
@@ -803,7 +743,6 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
   g_signal_connect (text->layout, "changed",
       G_CALLBACK (swfdec_text_field_movie_layout_changed), text);
 
-  text->scroll = 1;
   text->mouse_wheel_enabled = TRUE;
 
   swfdec_text_attributes_reset (&text->default_attributes);
@@ -979,7 +918,6 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   }
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-  swfdec_text_field_movie_update_scroll (text, TRUE);
 }
 
 void
@@ -1020,5 +958,4 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   }
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-  swfdec_text_field_movie_update_scroll (text, TRUE);
 }

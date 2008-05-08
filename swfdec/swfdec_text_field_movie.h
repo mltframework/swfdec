@@ -78,9 +78,10 @@ struct _SwfdecTextFieldMovie {
 
   gboolean		scroll_changed; /* if any of the scroll attributes have changed and we haven't fired the event yet */
   guint			changed;	/* number of onChanged events we have to emit */
-  int			scroll;
-  int			scroll_max;
-  int			scroll_bottom;
+  /* scroll variables */
+  guint			scroll;		/* current scroll offset in lines (0-indexed) */
+  guint			scroll_max;	/* scroll must be smaller than this value */
+  guint			lines_visible;	/* number of lines currently visible */
   int			hscroll;
   int			hscroll_max;
   gboolean		mouse_wheel_enabled;
@@ -103,9 +104,8 @@ GType		swfdec_text_field_movie_get_type		(void);
 void		swfdec_text_field_movie_set_text	(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
+void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie * text);
 gboolean	swfdec_text_field_movie_auto_size	(SwfdecTextFieldMovie *	text);
-void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie *	text,
-							 gboolean		check_limits);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);

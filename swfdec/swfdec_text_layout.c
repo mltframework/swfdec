@@ -662,6 +662,100 @@ swfdec_text_layout_find_row (SwfdecTextLayout *layout, guint row)
 }
 
 /**
+ * swfdec_text_layout_get_visible_rows:
+ * @layout: the layout
+ * @row: the first visible row
+ * @height: the height in pixels of visible text
+ *
+ * Queries the number of rows that would be rendered, if rendering were to start
+ * with @row and had to fit into @height pixels.
+ *
+ * Returns: the number of rows that would be rendered
+ **/
+guint
+swfdec_text_layout_get_visible_rows (SwfdecTextLayout *layout, guint row, guint height)
+{
+  GSequenceIter *iter;
+  SwfdecTextBlock *block;
+  PangoRectangle extents;
+  guint count = 0;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), 1);
+  g_return_val_if_fail (row < swfdec_text_layout_get_n_rows (layout), 1);
+
+  swfdec_text_layout_ensure (layout);
+
+  iter = swfdec_text_layout_find_row (layout, row); 
+  block = g_sequence_get (iter);
+  row -= block->row;
+
+  do {
+    block = g_sequence_get (iter);
+    for (;row < (guint) pango_layout_get_line_count (block->layout); row++) {
+      PangoLayoutLine *line = pango_layout_get_line_readonly (block->layout, row);
+      
+      pango_layout_line_get_pixel_extents (line, NULL, &extents);
+      if (extents.height > (int) height)
+	goto out;
+      height -= extents.height;
+      count++;
+    }
+    row = 0;
+    if ((int) height <= pango_layout_get_spacing (block->layout) / PANGO_SCALE)
+      goto out;
+    height -= pango_layout_get_spacing (block->layout) / PANGO_SCALE;
+    iter = g_sequence_iter_next (iter);
+  } while (!g_sequence_iter_is_end (iter));
+
+out:
+  return MAX (count, 1);
+}
+
+/**
+ * swfdec_text_layout_get_visible_rows_end:
+ * @layout: the layout
+ * @height: the height in pixels
+ *
+ * Computes how many rows will be visible if only the last rows would be 
+ * displayed. This is useful for computing maximal scroll offsets.
+ *
+ * Returns: The number of rows visible at the bottom.
+ **/
+guint
+swfdec_text_layout_get_visible_rows_end (SwfdecTextLayout *layout, guint height)
+{
+  GSequenceIter *iter;
+  SwfdecTextBlock *block;
+  PangoRectangle extents;
+  guint row, count = 0;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), 1);
+
+  swfdec_text_layout_ensure (layout);
+  iter = g_sequence_get_end_iter (layout->blocks);
+
+  do {
+    iter = g_sequence_iter_prev (iter);
+    block = g_sequence_get (iter);
+    if ((int) height <= pango_layout_get_spacing (block->layout) / PANGO_SCALE)
+      goto out;
+    height -= pango_layout_get_spacing (block->layout) / PANGO_SCALE;
+    for (row = pango_layout_get_line_count (block->layout); row > 0; row--) {
+      PangoLayoutLine *line = pango_layout_get_line_readonly (block->layout, row - 1);
+      
+      pango_layout_line_get_pixel_extents (line, NULL, &extents);
+      if (extents.height > (int) height) 
+	goto out;
+      height -= extents.height;
+      count++;
+    }
+  } while (!g_sequence_iter_is_begin (iter));
+
+out:
+  return MAX (count, 1);
+}
+
+/**
  * swfdec_text_layout_render:
  * @layout: the layout to render
  * @cr: the Cairo context to render to. The context will be transformed so that
@@ -694,7 +788,7 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
   iter = swfdec_text_layout_find_row (layout, row); 
   block = g_sequence_get (iter);
   row -= block->row;
-  while (!g_sequence_iter_is_end (iter)) {
+  do {
     block = g_sequence_get (iter);
     pango_cairo_update_layout (cr, block->layout);
     cairo_translate (cr, block->rect.x, 0);
@@ -713,9 +807,12 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
       height -= extents.height;
       cairo_translate (cr, 0, extents.height + extents.y);
     }
+    if ((int) height <= pango_layout_get_spacing (block->layout) / PANGO_SCALE)
+      return;
+    height -= pango_layout_get_spacing (block->layout) / PANGO_SCALE;
     cairo_translate (cr, -block->rect.x, pango_layout_get_spacing (block->layout) / PANGO_SCALE);
     row = 0;
     iter = g_sequence_iter_next (iter);
-  }
+  } while (!g_sequence_iter_is_end (iter));
 }
 

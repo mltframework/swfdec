@@ -71,7 +71,13 @@ void			swfdec_text_layout_set_scale		(SwfdecTextLayout *	layout,
 double			swfdec_text_layout_get_scale		(SwfdecTextLayout *	layout);
 guint			swfdec_text_layout_get_width		(SwfdecTextLayout *	layout);
 guint			swfdec_text_layout_get_height		(SwfdecTextLayout *	layout);
+
 guint			swfdec_text_layout_get_n_rows		(SwfdecTextLayout *	layout);
+guint			swfdec_text_layout_get_visible_rows	(SwfdecTextLayout *	layout,
+								 guint			row,
+								 guint			height);
+guint			swfdec_text_layout_get_visible_rows_end	(SwfdecTextLayout *	layout,
+								 guint			height);
 
 void			swfdec_text_layout_render		(SwfdecTextLayout *	layout,
 								 cairo_t *		cr, 

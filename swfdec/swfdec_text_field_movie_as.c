@@ -583,7 +583,7 @@ swfdec_text_field_movie_get_bottomScroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll_bottom);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll + text->lines_visible);
 }
 
 static void
@@ -641,7 +641,7 @@ swfdec_text_field_movie_get_maxscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll_max);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll_max + 1);
 }
 
 static void
@@ -680,7 +680,7 @@ swfdec_text_field_movie_do_get_scroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll + 1);
 }
 
 static void
@@ -693,11 +693,11 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  value = CLAMP (value, 1, text->scroll_max);
-  if (value != text->scroll) {
-    text->scroll_bottom += value - text->scroll;
+  value = CLAMP (value - 1, 0, (int) text->scroll_max);
+  if ((guint) value != text->scroll) {
     text->scroll = value;
     text->scroll_changed = TRUE;
+    swfdec_text_field_movie_update_scroll (text);
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   }
 }
@@ -1163,7 +1163,7 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_auto_size (text);
   // special case: update the max values, not the current values
-  swfdec_text_field_movie_update_scroll (text, FALSE);
+  // swfdec_text_field_movie_update_scroll (text, FALSE);
 }
 
 SWFDEC_AS_NATIVE (104, 101, swfdec_text_field_movie_getTextFormat)

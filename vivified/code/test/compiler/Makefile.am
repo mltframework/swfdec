@@ -24,6 +24,8 @@ EXTRA_DIST = \
 	empty.as.expect \
 	empty_statement.as \
 	empty_statement.as.expect \
+	if.as \
+	if.as.expect \
 	if_else.as \
 	if_else.as.expect \
 	trace.as \

@@ -27,6 +27,7 @@
 #include "vivi_code_compiler.h"
 #include "vivi_code_asm_if.h"
 #include "vivi_code_asm_jump.h"
+#include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeIf, vivi_code_if, VIVI_TYPE_CODE_STATEMENT)
 
@@ -136,21 +137,31 @@ vivi_code_if_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 
   vivi_code_compiler_compile_value (compiler, stmt->condition);
 
-  label_if = vivi_code_compiler_create_label (compiler, "if");
-  code = vivi_code_asm_if_new (label_if);
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  if (stmt->else_statement) {
+    label_if = vivi_code_compiler_create_label (compiler, "if");
+    code = vivi_code_asm_if_new (label_if);
+    vivi_code_compiler_add_code (compiler, code);
+    g_object_unref (code);
 
-  if (stmt->else_statement)
     vivi_code_compiler_compile_statement (compiler, stmt->else_statement);
 
-  label_end = vivi_code_compiler_create_label (compiler, "end");
-  code = vivi_code_asm_jump_new (label_end);
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+    label_end = vivi_code_compiler_create_label (compiler, "end");
+    code = vivi_code_asm_jump_new (label_end);
+    vivi_code_compiler_add_code (compiler, code);
+    g_object_unref (code);
 
-  vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_if));
-  g_object_unref (label_if);
+    vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_if));
+    g_object_unref (label_if);
+  } else {
+    code = vivi_code_asm_not_new ();
+    vivi_code_compiler_add_code (compiler, code);
+    g_object_unref (code);
+
+    label_end = vivi_code_compiler_create_label (compiler, "end");
+    code = vivi_code_asm_if_new (label_end);
+    vivi_code_compiler_add_code (compiler, code);
+    g_object_unref (code);
+  }
 
   vivi_code_compiler_compile_statement (compiler, stmt->if_statement);
 

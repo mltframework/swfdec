@@ -61,7 +61,6 @@ struct _SwfdecTextFieldMovie {
   gboolean		background;
  
   SwfdecTextBuffer *	text;		/* the text + formatting */
-  gboolean		input_html;	/* whether orginal input was given as HTML */
 
   SwfdecTextLayout *	layout;		/* the layouted text */
   guint			layout_width;	/* text width in pixels */

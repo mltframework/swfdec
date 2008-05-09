@@ -865,25 +865,33 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
 const char *
 swfdec_text_field_movie_get_text (SwfdecTextFieldMovie *text)
 {
-  char *str, *p;
+  char *ret, *p;
+  const char *org;
+  gsize filled, len;
 
-  str = g_strdup (swfdec_text_buffer_get_text (text->text));
+  org = swfdec_text_buffer_get_text (text->text);
+  len = swfdec_text_buffer_get_length (text->text);
 
-  // if input was orginally html, remove all \r
-  if (text->input_html) {
-    p = str;
-    while ((p = strchr (p, '\r')) != NULL) {
-      memmove (p, p + 1, strlen (p));
-    }
+  ret = g_new (char, len + 1);
+  /* remove all \r */
+  filled = 0;
+  while ((p = strchr (org, '\r'))) {
+    memcpy (ret + filled, org, p - org);
+    filled += p - org;
+    org = p + 1;
+    len--;
   }
+  g_assert (len >= filled);
+  memcpy (ret + filled, org, len - filled);
+  ret[len] = 0;
 
-  // change all \n to \r
-  p = str;
+  /* change all \n to \r */
+  p = ret;
   while ((p = strchr (p, '\n')) != NULL) {
     *p = '\r';
   }
 
-  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context, str);
+  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context, ret);
 }
 
 void
@@ -939,8 +947,6 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   swfdec_text_buffer_set_attributes (text->text, 0, 0, &text->default_attributes,
       SWFDEC_TEXT_ATTRIBUTES_MASK);
 
-  text->input_html = html;
-
   if (SWFDEC_AS_OBJECT (text)->context->version >= 7 &&
       text->style_sheet != NULL)
   {
@@ -953,7 +959,12 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     if (html) {
       swfdec_text_field_movie_html_parse (text, str);
     } else {
-      swfdec_text_buffer_insert_text (text->text, 0, str);
+      char *s, *p;
+      s = p = g_strdup (str);
+      while ((p = strchr (p, '\r')))
+	*p = '\n';
+      swfdec_text_buffer_insert_text (text->text, 0, s);
+      g_free (s);
     }
   }
 

@@ -24,6 +24,11 @@
 #include "vivi_code_loop.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_unary.h"
+#include "vivi_code_compiler.h"
+#include "vivi_code_label.h"
+#include "vivi_code_asm_if.h"
+#include "vivi_code_asm_jump.h"
+#include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeLoop, vivi_code_loop, VIVI_TYPE_CODE_STATEMENT)
 
@@ -71,6 +76,38 @@ vivi_code_loop_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
+vivi_code_loop_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeLoop *loop = VIVI_CODE_LOOP (token);
+  ViviCodeLabel *label_start, *label_end;
+  ViviCodeAsm *code;
+
+  label_start = vivi_code_compiler_create_label (compiler, "start");
+  vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_start));
+
+  vivi_code_compiler_compile_value (compiler, loop->condition);
+
+  code = vivi_code_asm_not_new ();
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
+
+  label_end = vivi_code_compiler_create_label (compiler, "end");
+  code = vivi_code_asm_if_new (label_end);
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
+
+  vivi_code_compiler_compile_statement (compiler, loop->statement);
+
+  code = vivi_code_asm_jump_new (label_start);
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
+  g_object_unref (label_start);
+
+  vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_end));
+  g_object_unref (label_end);
+}
+
+static void
 vivi_code_loop_class_init (ViviCodeLoopClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -79,6 +116,7 @@ vivi_code_loop_class_init (ViviCodeLoopClass *klass)
   object_class->dispose = vivi_code_loop_dispose;
 
   token_class->print = vivi_code_loop_print;
+  token_class->compile = vivi_code_loop_compile;
 }
 
 static void

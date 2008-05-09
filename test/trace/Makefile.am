@@ -2619,6 +2619,15 @@ EXTRA_DIST = \
 	removesprite-depths-6.swf.trace \
 	removesprite-depths-7.swf \
 	removesprite-depths-7.swf.trace \
+	replaceText-newline-5.swf \
+	replaceText-newline-5.swf.trace \
+	replaceText-newline-6.swf \
+	replaceText-newline-6.swf.trace \
+	replaceText-newline-7.swf \
+	replaceText-newline-7.swf.trace \
+	replaceText-newline-8.swf \
+	replaceText-newline-8.swf.trace \
+	replaceText-newline.as \
 	rewind-remove.c \
 	rewind-remove-5.swf \
 	rewind-remove-5.swf.trace \

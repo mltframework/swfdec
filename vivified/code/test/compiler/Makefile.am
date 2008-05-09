@@ -22,6 +22,8 @@ EXTRA_DIST = \
 	comment.as.expect \
 	empty.as \
 	empty.as.expect \
+	empty_block.as \
+	empty_block.as.expect \
 	empty_statement.as \
 	empty_statement.as.expect \
 	function_expression.as \

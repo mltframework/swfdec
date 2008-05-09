@@ -14,6 +14,8 @@ check-local: $(top_builddir)/vivified/code/vivi-compile
 	fi
 
 EXTRA_DIST = \
+	asm_empty.as \
+	asm_empty.as.expect \
 	builtin_statement.as \
 	builtin_statement.as.expect \
 	call_function.as \

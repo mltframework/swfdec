@@ -763,14 +763,12 @@ out:
  * @ctrans: The color transform to apply.
  * @row: index of the first row to render.
  * @height: The height in pixels of the visible area.
- * @inval: The invalid area.
  *
  * Renders the contents of the layout into the given Cairo context.
  **/
 void
 swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr, 
-    const SwfdecColorTransform *ctrans, guint row, guint height,
-    const SwfdecRectangle *inval)
+    const SwfdecColorTransform *ctrans, guint row, guint height)
 {
   GSequenceIter *iter;
   SwfdecTextBlock *block;
@@ -781,7 +779,6 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
   g_return_if_fail (cr != NULL);
   g_return_if_fail (ctrans != NULL);
   g_return_if_fail (row < swfdec_text_layout_get_n_rows (layout));
-  g_return_if_fail (inval != NULL);
   
   swfdec_text_layout_ensure (layout);
 

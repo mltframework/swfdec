@@ -92,11 +92,19 @@ ViviCodeLabel *
 vivi_code_compiler_create_label (ViviCodeCompiler *compiler,
     const char *prefix)
 {
+  char *name;
+  ViviCodeLabel *label;
+
   g_return_val_if_fail (VIVI_IS_CODE_COMPILER (compiler), NULL);
   g_return_val_if_fail (prefix != NULL, NULL);
 
-  // FIXME
-  return VIVI_CODE_LABEL (vivi_code_label_new (prefix));
+  compiler->num_labels++;
+
+  name = g_strdup_printf ("%s_%04i", prefix, compiler->num_labels);
+  label = VIVI_CODE_LABEL (vivi_code_label_new (name));
+  g_free (name);
+
+  return label;
 }
 
 ViviCodeCompiler *

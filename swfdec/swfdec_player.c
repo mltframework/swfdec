@@ -810,12 +810,55 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
   }
 }
 
+static void
+swfdec_player_emit_signals (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv = player->priv;
+  GList *walk;
+
+  /* emit invalidate signal */
+  if (!swfdec_rectangle_is_empty (&priv->invalid_extents)) {
+    g_signal_emit (player, signals[INVALIDATE], 0, &priv->invalid_extents,
+	priv->invalidations->data, priv->invalidations->len);
+    swfdec_rectangle_init_empty (&priv->invalid_extents);
+    g_array_set_size (priv->invalidations, 0);
+  }
+
+  /* emit audio-added for all added audio streams */
+  for (walk = priv->audio; walk; walk = walk->next) {
+    SwfdecAudio *audio = walk->data;
+
+    if (audio->added)
+      continue;
+    g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
+    audio->added = TRUE;
+  }
+
+  /* emit missing-plugin signal for newly discovered plugins */
+  if (priv->missing_plugins) {
+    GSList *swalk;
+    guint i = 0, n_plugins = g_slist_length (priv->missing_plugins);
+    char **details = g_new (char *, n_plugins + 1);
+
+    for (swalk = priv->missing_plugins; swalk; swalk = swalk->next) {
+      details[i++] = swalk->data;
+    }
+    details[i] = NULL;
+    g_slist_free (priv->missing_plugins);
+    priv->missing_plugins = NULL;
+    SWFDEC_INFO ("emitting missing plugins signal for %u plugins", n_plugins);
+    g_signal_emit (player, signals[MISSING_PLUGINS], 0, details);
+    g_strfreev (details);
+  }
+}
+
 void
 swfdec_player_update_scale (SwfdecPlayer *player)
 {
   SwfdecPlayerPrivate *priv = player->priv;
   int width, height;
   double scale_x, scale_y;
+  GList *walk;
 
   if (priv->fullscreen) {
     priv->stage.width = priv->system->screen_width;
@@ -882,13 +925,14 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   if (cairo_matrix_invert (&priv->stage_to_global)) {
     g_assert_not_reached ();
   }
-#if 0
-  /* FIXME: make this emit the signal at the right time */
-  priv->invalid.x0 = 0;
-  priv->invalid.y0 = 0;
-  priv->invalid.x1 = priv->stage_width;
-  priv->invalid.y1 = priv->stage_height;
-#endif
+  /* FIXME: notify textfields more gentle about the update */
+  /* FIXME: these events can cause invalidations in TextFields */
+  for (walk = priv->roots; walk; walk = walk->next) {
+    g_signal_emit_by_name (walk->data, "matrix-changed");
+  }
+  swfdec_player_invalidate (player, NULL);
+  if (!swfdec_player_is_locked (player))
+    swfdec_player_emit_signals (player);
 }
 
 static void
@@ -1381,48 +1425,6 @@ swfdec_player_do_mouse_release (SwfdecPlayer *player, guint button)
   return TRUE;
 }
 
-static void
-swfdec_player_emit_signals (SwfdecPlayer *player)
-{
-  SwfdecPlayerPrivate *priv = player->priv;
-  GList *walk;
-
-  /* emit invalidate signal */
-  if (!swfdec_rectangle_is_empty (&priv->invalid_extents)) {
-    g_signal_emit (player, signals[INVALIDATE], 0, &priv->invalid_extents,
-	priv->invalidations->data, priv->invalidations->len);
-    swfdec_rectangle_init_empty (&priv->invalid_extents);
-    g_array_set_size (priv->invalidations, 0);
-  }
-
-  /* emit audio-added for all added audio streams */
-  for (walk = priv->audio; walk; walk = walk->next) {
-    SwfdecAudio *audio = walk->data;
-
-    if (audio->added)
-      continue;
-    g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
-    audio->added = TRUE;
-  }
-
-  /* emit missing-plugin signal for newly discovered plugins */
-  if (priv->missing_plugins) {
-    GSList *swalk;
-    guint i = 0, n_plugins = g_slist_length (priv->missing_plugins);
-    char **details = g_new (char *, n_plugins + 1);
-
-    for (swalk = priv->missing_plugins; swalk; swalk = swalk->next) {
-      details[i++] = swalk->data;
-    }
-    details[i] = NULL;
-    g_slist_free (priv->missing_plugins);
-    priv->missing_plugins = NULL;
-    SWFDEC_INFO ("emitting missing plugins signal for %u plugins", n_plugins);
-    g_signal_emit (player, signals[MISSING_PLUGINS], 0, details);
-    g_strfreev (details);
-  }
-}
-
 static int
 swfdec_player_focus_sort (gconstpointer ca, gconstpointer cb)
 {
@@ -1827,10 +1829,12 @@ void
 swfdec_player_lock_soft (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_assert (!swfdec_player_is_locked (player));
   g_assert (swfdec_rectangle_is_empty (&player->priv->invalid_extents));
 
   g_object_freeze_notify (G_OBJECT (player));
   g_timer_start (player->priv->runtime);
+  player->priv->locked = TRUE;
   SWFDEC_DEBUG ("LOCKED");
 }
 
@@ -1838,6 +1842,7 @@ gboolean
 swfdec_player_lock (SwfdecPlayer *player)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_assert (!swfdec_player_is_locked (player));
   g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[0]) == 0);
   g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[1]) == 0);
   g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[2]) == 0);
@@ -1940,6 +1945,7 @@ void
 swfdec_player_unlock_soft (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_assert (swfdec_player_is_locked (player));
 
   SWFDEC_DEBUG ("UNLOCK");
   g_timer_stop (player->priv->runtime);
@@ -1948,6 +1954,7 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
   swfdec_player_update_focusrect (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);
+  player->priv->locked = FALSE;
 }
 
 void
@@ -2304,6 +2311,10 @@ swfdec_player_init (SwfdecPlayer *player)
   priv->stage_width = -1;
   priv->stage_height = -1;
   priv->has_focus = TRUE;
+
+  cairo_matrix_init_scale (&priv->stage_to_global, 
+      SWFDEC_TWIPS_SCALE_FACTOR, SWFDEC_TWIPS_SCALE_FACTOR);
+  priv->global_to_stage = priv->stage_to_global;
 }
 
 void

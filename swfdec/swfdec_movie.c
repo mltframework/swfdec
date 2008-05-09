@@ -55,6 +55,13 @@ enum {
   PROP_DEPTH
 };
 
+enum {
+  MATRIX_CHANGED,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
+
 G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_AS_OBJECT)
 
 static void
@@ -248,6 +255,8 @@ swfdec_movie_end_update_matrix (SwfdecMovie *movie)
     cairo_matrix_rotate (&movie->matrix, d * G_PI / 180);
   }
   swfdec_matrix_ensure_invertible (&movie->matrix, &movie->inverse_matrix);
+
+  g_signal_emit (movie, signals[MATRIX_CHANGED], 0);
 }
 
 static void
@@ -1182,18 +1191,26 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
   /* if the movie loaded an image, draw it here now */
   if (movie->image) {
     SwfdecRenderer *renderer = swfdec_renderer_get (cr);
-    cairo_surface_t *surface = swfdec_image_create_surface_transformed (movie->image,
+    cairo_surface_t *surface;
+    cairo_pattern_t *pattern;
+    
+    if (swfdec_color_transform_is_mask (ctrans))
+      surface = NULL;
+    else
+      surface = swfdec_image_create_surface_transformed (movie->image,
 	renderer, ctrans);
     if (surface) {
       static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
-      cairo_pattern_t *pattern = cairo_pattern_create_for_surface (surface);
+      pattern = cairo_pattern_create_for_surface (surface);
       SWFDEC_LOG ("rendering loaded image");
       cairo_pattern_set_matrix (pattern, &matrix);
-      cairo_set_source (cr, pattern);
-      cairo_paint (cr);
-      cairo_pattern_destroy (pattern);
-      cairo_surface_destroy (surface);
+    } else {
+      pattern = cairo_pattern_create_rgb (1.0, 0.0, 0.0);
     }
+    cairo_set_source (cr, pattern);
+    cairo_paint (cr);
+    cairo_pattern_destroy (pattern);
+    cairo_surface_destroy (surface);
   }
 
   /* draw the children movies */
@@ -1279,6 +1296,10 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   asobject_class->set = swfdec_movie_set_variable;
   asobject_class->foreach = swfdec_movie_foreach_variable;
   asobject_class->debug = swfdec_movie_get_debug;
+
+  signals[MATRIX_CHANGED] = g_signal_new ("matrix-changed", G_TYPE_FROM_CLASS (movie_class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
 
   g_object_class_install_property (object_class, PROP_DEPTH,
       g_param_spec_int ("depth", "depth", "z order inside the parent",

@@ -377,6 +377,24 @@ EXTRA_DIST = \
 	text-field-autosize-7.swf.png \
 	text-field-autosize-8.swf \
 	text-field-autosize-8.swf.png \
+	text-field-background-5.swf \
+	text-field-background-5.swf.png \
+	text-field-background-6.swf \
+	text-field-background-6.swf.png \
+	text-field-background-7.swf \
+	text-field-background-7.swf.png \
+	text-field-background-8.swf \
+	text-field-background-8.swf.png \
+	text-field-background.as \
+	text-field-border-5.swf \
+	text-field-border-5.swf.png \
+	text-field-border-6.swf \
+	text-field-border-6.swf.png \
+	text-field-border-7.swf \
+	text-field-border-7.swf.png \
+	text-field-border-8.swf \
+	text-field-border-8.swf.png \
+	text-field-border.as \
 	text-field-color-transform.as \
 	text-field-color-transform-6.swf \
 	text-field-color-transform-6.swf.png \
@@ -390,5 +408,32 @@ EXTRA_DIST = \
 	text-field-empty-7.swf \
 	text-field-empty-7.swf.png \
 	text-field-empty-8.swf \
-	text-field-empty-8.swf.png
+	text-field-empty-8.swf.png \
+	text-field-scale-negative-5.swf \
+	text-field-scale-negative-5.swf.png \
+	text-field-scale-negative-6.swf \
+	text-field-scale-negative-6.swf.png \
+	text-field-scale-negative-7.swf \
+	text-field-scale-negative-7.swf.png \
+	text-field-scale-negative-8.swf \
+	text-field-scale-negative-8.swf.png \
+	text-field-scale-negative.as \
+	text-field-scale-parents-5.swf \
+	text-field-scale-parents-5.swf.png \
+	text-field-scale-parents-6.swf \
+	text-field-scale-parents-6.swf.png \
+	text-field-scale-parents-7.swf \
+	text-field-scale-parents-7.swf.png \
+	text-field-scale-parents-8.swf \
+	text-field-scale-parents-8.swf.png \
+	text-field-scale-parents.as \
+	text-field-wordWrap-5.swf \
+	text-field-wordWrap-5.swf.png \
+	text-field-wordWrap-6.swf \
+	text-field-wordWrap-6.swf.png \
+	text-field-wordWrap-7.swf \
+	text-field-wordWrap-7.swf.png \
+	text-field-wordWrap-8.swf \
+	text-field-wordWrap-8.swf.png \
+	text-field-wordWrap.as
 

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -24,7 +24,9 @@
 #include <swfdec/swfdec_actor.h>
 #include <swfdec/swfdec_text_field.h>
 #include <swfdec/swfdec_style_sheet.h>
+#include <swfdec/swfdec_text_buffer.h>
 #include <swfdec/swfdec_text_format.h>
+#include <swfdec/swfdec_text_layout.h>
 
 G_BEGIN_DECLS
 
@@ -38,61 +40,17 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 #define SWFDEC_TEXT_FIELD_MOVIE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TEXT_FIELD_MOVIE, SwfdecTextFieldMovie))
 #define SWFDEC_TEXT_FIELD_MOVIE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FIELD_MOVIE, SwfdecTextFieldMovieClass))
 
-typedef struct {
-  PangoLayout *		layout;		// layout to render
-
-  guint			index_;		// byte offset where this layout's text starts in text->input->str
-  guint			index_end;	// and the offset where it ends
-
-  int			offset_x;	// x offset to apply before rendering
-
-  // dimensions for this layout, including offset_x, might be bigger than the
-  // rendering of PangoLayout needs
-  int			width;
-  int			height;
-
-  // whether the layout starts with bullet point to be rendered separately
-  gboolean		bullet;
-} SwfdecLayout;
-
-typedef struct {
-  guint			index_;
-
-  PangoAlignment	align;
-  gboolean		justify;
-  int			leading;
-  int			block_indent;
-  int			left_margin;
-  int			right_margin;
-  PangoTabArray *	tab_stops;
-} SwfdecBlock;
-
-typedef struct {
-  guint			index_;
-  guint			length;
-  gboolean		newline;	// ends in newline
-
-  gboolean		bullet;
-  int			indent;
-
-  GSList *		blocks;		// SwfdecBlock
-  GSList *		attrs;		// PangoAttribute
-} SwfdecParagraph;
-
-typedef struct {
-  guint			index_;
-  SwfdecTextFormat *	format;
-} SwfdecFormatIndex;
-
 struct _SwfdecTextFieldMovie {
   SwfdecActor		actor;
 
-  SwfdecRect		extents;	/* the extents we were assigned / calculated during autosize */
+  SwfdecRect		extents;	/* original extents (copied from graphic) */
+  double		xscale;		/* scale movie => stage in x direction */
+  double		yscale;		/* scale movie => stage in y direction */
+  SwfdecRectangle	stage_rect;	/* these extents in stage coordinates */
 
   /* properties copied from textfield */
   gboolean		html;
   gboolean		editable;
-  gboolean		password;
   int			max_chars;
   gboolean		selectable;
   gboolean		embed_fonts;
@@ -102,15 +60,16 @@ struct _SwfdecTextFieldMovie {
   gboolean		border;
   gboolean		background;
  
-  GString *		input;
-  char *		asterisks;	/* bunch of asterisks that we display when password mode is enabled */
-  guint			asterisks_length;
+  SwfdecTextBuffer *	text;		/* the text + formatting */
   gboolean		input_html;	/* whether orginal input was given as HTML */
+
+  SwfdecTextLayout *	layout;		/* the layouted text */
+  guint			layout_width;	/* text width in pixels */
+  guint			layout_height;	/* text height in pixels */
 
   const char *		variable;
 
-  SwfdecTextFormat *	format_new;
-  GSList *		formats;
+  SwfdecTextAttributes	default_attributes;
 
   gboolean		condense_white;
 
@@ -119,9 +78,10 @@ struct _SwfdecTextFieldMovie {
 
   gboolean		scroll_changed; /* if any of the scroll attributes have changed and we haven't fired the event yet */
   guint			changed;	/* number of onChanged events we have to emit */
-  int			scroll;
-  int			scroll_max;
-  int			scroll_bottom;
+  /* scroll variables */
+  guint			scroll;		/* current scroll offset in lines (0-indexed) */
+  guint			scroll_max;	/* scroll must be smaller than this value */
+  guint			lines_visible;	/* number of lines currently visible */
   int			hscroll;
   int			hscroll_max;
   gboolean		mouse_wheel_enabled;
@@ -132,8 +92,6 @@ struct _SwfdecTextFieldMovie {
   SwfdecColor		background_color;
 
   gboolean		mouse_pressed;
-  gsize			cursor_start;		/* index of cursor (aka insertion point) in ->input */
-  gsize			cursor_end;		/* end of cursor, either equal to cursor_start or if text selected smaller or bigger */
   guint			character_pressed;
 };
 
@@ -143,22 +101,11 @@ struct _SwfdecTextFieldMovieClass {
 
 GType		swfdec_text_field_movie_get_type		(void);
 
-void		swfdec_text_field_movie_set_text		(SwfdecTextFieldMovie *	movie,
+void		swfdec_text_field_movie_set_text	(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
-void		swfdec_text_field_movie_get_text_size	(SwfdecTextFieldMovie *	text,
-							 int *			width,
-							 int *			height);
+void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie * text);
 gboolean	swfdec_text_field_movie_auto_size	(SwfdecTextFieldMovie *	text);
-void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie *	text,
-							 gboolean		check_limits);
-void		swfdec_text_field_movie_set_text_format	(SwfdecTextFieldMovie *	text,
-							 SwfdecTextFormat *	format,
-							 guint			start_index,
-							 guint			end_index);
-SwfdecTextFormat *swfdec_text_field_movie_get_text_format (SwfdecTextFieldMovie *	text,
-							 guint			start_index,
-							 guint			end_index);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);
@@ -176,6 +123,7 @@ void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);
 void		swfdec_text_field_movie_html_parse	(SwfdecTextFieldMovie *	text, 
 							 const char *		str);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
+
 
 G_END_DECLS
 #endif

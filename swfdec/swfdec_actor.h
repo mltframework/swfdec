@@ -43,11 +43,15 @@ struct _SwfdecActor
   SwfdecEventList *	events;			/* events queued on this movie */
 
   SwfdecFlashBool	focusrect;		/* if we should draw a focus rectangle or not */
+  guint			needs_matrix;		/* number of movies contained that need matrix updates */
 };
 
 struct _SwfdecActorClass
 {
   SwfdecMovieClass    	movie_class;
+
+  /* matrix updates go here */
+  void			(* update_matrix)	(SwfdecActor *		actor);
 
   /* iterating */
   void			(* iterate_start)     	(SwfdecActor *		actor);

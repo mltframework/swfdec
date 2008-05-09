@@ -62,6 +62,7 @@ struct _SwfdecPlayerPrivate
 {
   SwfdecPlayer *	player;			/* backlink */
 
+  gboolean		locked;			/* guard around swfdec_player_(un)lock */
   /* global properties */
   SwfdecSystem *	system;			/* our system properties */
   gboolean		initialized;		/* if width and height are set already */
@@ -165,6 +166,7 @@ gboolean	swfdec_player_lock		(SwfdecPlayer *		player);
 void		swfdec_player_lock_soft		(SwfdecPlayer *		player);
 void		swfdec_player_unlock		(SwfdecPlayer *		player);
 void		swfdec_player_unlock_soft	(SwfdecPlayer *		player);
+#define swfdec_player_is_locked(player) ((player)->priv->locked)
 void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
 
 #define swfdec_player_root(player, data, mark_func) \

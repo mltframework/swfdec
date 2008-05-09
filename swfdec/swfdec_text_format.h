@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
 
 #include <swfdec/swfdec_as_object.h>
 #include <swfdec/swfdec_as_array.h>
+#include <swfdec/swfdec_text_attributes.h>
 #include <swfdec/swfdec_types.h>
 #include <swfdec/swfdec_script.h>
 
@@ -38,66 +39,12 @@ typedef struct _SwfdecTextFormatClass SwfdecTextFormatClass;
 #define SWFDEC_TEXT_FORMAT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TEXT_FORMAT, SwfdecTextFormatClass))
 #define SWFDEC_TEXT_FORMAT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_TEXT_FORMAT, SwfdecTextFormatClass))
 
-typedef enum {
-  SWFDEC_TEXT_ALIGN_LEFT,
-  SWFDEC_TEXT_ALIGN_RIGHT,
-  SWFDEC_TEXT_ALIGN_CENTER,
-  SWFDEC_TEXT_ALIGN_JUSTIFY
-} SwfdecTextAlign;
-
-typedef enum {
-  SWFDEC_TEXT_DISPLAY_NONE,
-  SWFDEC_TEXT_DISPLAY_INLINE,
-  SWFDEC_TEXT_DISPLAY_BLOCK,
-} SwfdecTextDisplay;
-
-typedef enum {
-  SWFDEC_TEXT_FORMAT_ALIGN = 0,
-  SWFDEC_TEXT_FORMAT_BLOCK_INDENT,
-  SWFDEC_TEXT_FORMAT_BOLD,
-  SWFDEC_TEXT_FORMAT_BULLET,
-  SWFDEC_TEXT_FORMAT_COLOR,
-  SWFDEC_TEXT_FORMAT_DISPLAY,
-  SWFDEC_TEXT_FORMAT_FONT,
-  SWFDEC_TEXT_FORMAT_INDENT,
-  SWFDEC_TEXT_FORMAT_ITALIC,
-  SWFDEC_TEXT_FORMAT_KERNING,
-  SWFDEC_TEXT_FORMAT_LEADING,
-  SWFDEC_TEXT_FORMAT_LEFT_MARGIN,
-  SWFDEC_TEXT_FORMAT_LETTER_SPACING,
-  SWFDEC_TEXT_FORMAT_RIGHT_MARGIN,
-  SWFDEC_TEXT_FORMAT_SIZE,
-  SWFDEC_TEXT_FORMAT_TAB_STOPS,
-  SWFDEC_TEXT_FORMAT_TARGET,
-  SWFDEC_TEXT_FORMAT_UNDERLINE,
-  SWFDEC_TEXT_FORMAT_URL,
-  SWFDEC_TEXT_FORMAT_TOTAL
-} SwfdecTextFormatProperty;
-
 struct _SwfdecTextFormat {
   SwfdecAsObject	object;
 
-  SwfdecTextAlign	align;
-  int			block_indent;
-  gboolean		bold;
-  gboolean		bullet;
-  SwfdecColor		color;
-  SwfdecTextDisplay	display;
-  const char *		font;
-  int			indent;
-  gboolean		italic;
-  gboolean		kerning;
-  int			leading;
-  int			left_margin;
-  double		letter_spacing; // number or null
-  int			right_margin;
-  int			size;
-  SwfdecAsArray *	tab_stops;
-  const char *		target;
-  gboolean		underline;
-  const char *		url;
+  SwfdecTextAttributes	attr;
 
-  int			values_set;
+  guint			values_set;
 };
 
 struct _SwfdecTextFormatClass {

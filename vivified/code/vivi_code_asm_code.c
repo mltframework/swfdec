@@ -42,9 +42,26 @@ vivi_code_asm_code_emit (ViviCodeAsm *asm_code, ViviCodeEmitter *emitter, GError
 }
 
 static void
+vivi_code_asm_code_get_stack_change (ViviCodeAsm *asm_code, int *add,
+    int *remove)
+{
+  ViviCodeAsmCode *code = VIVI_CODE_ASM_CODE (asm_code);
+  SwfdecAsAction action;
+
+  g_return_if_fail (add != NULL);
+  g_return_if_fail (remove != NULL);
+
+  action = vivi_code_asm_code_get_action (code);
+
+  *add = swfdec_as_actions[action].add;
+  *remove = swfdec_as_actions[action].remove;
+}
+
+static void
 vivi_code_asm_code_asm_init (ViviCodeAsmInterface *iface)
 {
   iface->emit = vivi_code_asm_code_emit;
+  iface->get_stack_change = vivi_code_asm_code_get_stack_change;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ViviCodeAsmCode, vivi_code_asm_code, VIVI_TYPE_CODE_TOKEN,
@@ -70,20 +87,4 @@ vivi_code_asm_code_get_action (ViviCodeAsmCode *code)
   klass = VIVI_CODE_ASM_CODE_GET_CLASS (code);
 
   return klass->bytecode;
-}
-
-int
-vivi_code_asm_code_get_stack_add (ViviCodeAsmCode *code)
-{
-  g_return_val_if_fail (VIVI_IS_CODE_ASM_CODE (code), -1);
-
-  return swfdec_as_actions[vivi_code_asm_code_get_action (code)].add;
-}
-
-int
-vivi_code_asm_code_get_stack_remove (ViviCodeAsmCode *code)
-{
-  g_return_val_if_fail (VIVI_IS_CODE_ASM_CODE (code), -1);
-
-  return swfdec_as_actions[vivi_code_asm_code_get_action (code)].remove;
 }

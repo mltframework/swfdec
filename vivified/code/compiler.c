@@ -82,7 +82,6 @@ main (int argc, char *argv[])
   ViviCodeStatement *statement;
   ViviCodeCompiler *compiler;
   ViviCodeAssembler *assembler;
-  ViviCodeAsm *code;
   int version = 8;
   int rate = 15;
   char *size_string = NULL;
@@ -183,19 +182,11 @@ main (int argc, char *argv[])
   }
 
   compiler = vivi_code_compiler_new (version);
-  vivi_code_compiler_compile_statement (compiler, statement);
+  vivi_code_compiler_compile_script (compiler, statement);
   g_object_unref (statement);
 
   assembler = g_object_ref (vivi_code_compiler_get_assembler (compiler));
   g_object_unref (compiler);
-  vivi_code_compiler_compile_statement (compiler, statement);
-
-  code = vivi_code_asm_end_new ();
-  vivi_code_assembler_add_code (assembler, code);
-  g_object_unref (code);
-
-  vivi_code_assembler_pool (assembler);
-  vivi_code_assembler_merge_push (assembler);
 
   if (use_asm) {
     ViviCodePrinter *printer = vivi_code_text_printer_new ();

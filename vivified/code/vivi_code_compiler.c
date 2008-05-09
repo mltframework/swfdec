@@ -22,6 +22,7 @@
 #endif
 
 #include "vivi_code_compiler.h"
+#include "vivi_code_asm_code_default.h"
 
 G_DEFINE_TYPE (ViviCodeCompiler, vivi_code_compiler, G_TYPE_OBJECT)
 
@@ -57,6 +58,25 @@ vivi_code_compiler_compile_token (ViviCodeCompiler *compiler,
   g_return_if_fail (VIVI_IS_CODE_TOKEN (token));
 
   vivi_code_token_compile (token, compiler);
+}
+
+void
+vivi_code_compiler_compile_script (ViviCodeCompiler *compiler,
+    ViviCodeStatement *statement)
+{
+  ViviCodeAsm *code;
+
+  g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
+  g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
+
+  vivi_code_compiler_compile_statement (compiler, statement);
+
+  code = vivi_code_asm_end_new ();
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
+
+  vivi_code_assembler_pool (compiler->assembler);
+  vivi_code_assembler_merge_push (compiler->assembler);
 }
 
 void

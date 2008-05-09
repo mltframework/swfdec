@@ -60,6 +60,8 @@ ViviCodeCompiler *	vivi_code_compiler_new			(guint			version);
 #define vivi_code_compiler_compile_statement(c,s) vivi_code_compiler_compile_token((c), VIVI_CODE_TOKEN((s)))
 void			vivi_code_compiler_compile_token	(ViviCodeCompiler *	compiler,
 								 ViviCodeToken *	token);
+void			vivi_code_compiler_compile_script	(ViviCodeCompiler *	compiler,
+								 ViviCodeStatement *	statement);
 
 void			vivi_code_compiler_add_code		(ViviCodeCompiler	*compiler,
 								 ViviCodeAsm		*code);

@@ -53,8 +53,6 @@ struct _ViviCodeAsmCodeClass
 GType			vivi_code_asm_code_get_type		(void);
 
 SwfdecAsAction		vivi_code_asm_code_get_action		(ViviCodeAsmCode *	code);
-int			vivi_code_asm_code_get_stack_add	(ViviCodeAsmCode *	code);
-int			vivi_code_asm_code_get_stack_remove	(ViviCodeAsmCode *	code);
 
 
 G_END_DECLS

@@ -280,11 +280,32 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
   return TRUE;
 }
 
+static void
+vivi_code_assembler_get_stack_change (ViviCodeAsm *code, int *add, int *remove)
+{
+  ViviCodeAsmInterface *iface;
+  int add_, remove_;
+
+  iface = VIVI_CODE_ASM_GET_INTERFACE (code);
+  if (iface->get_stack_change != NULL) {
+    iface->get_stack_change (code, &add_, &remove_);
+  } else {
+    add_ = 0;
+    remove_ = 0;
+  }
+
+  if (add != NULL)
+    *add = add_;
+  if (remove != NULL)
+    *remove = remove_;
+}
+
 void
 vivi_code_assembler_merge_push (ViviCodeAssembler *assembler)
 {
   ViviCodeAsmPush *previous;
   guint i, j, depth;
+  int add, remove;
 
   depth = 0;
   previous = NULL;
@@ -305,12 +326,11 @@ vivi_code_assembler_merge_push (ViviCodeAssembler *assembler)
       }
     } else {
       if (previous != NULL) {
-	if (vivi_code_asm_code_get_stack_add (VIVI_CODE_ASM_CODE (
-		g_ptr_array_index (assembler->codes, i))) != 0) {
+	vivi_code_assembler_get_stack_change (VIVI_CODE_ASM (
+		g_ptr_array_index (assembler->codes, i)), &add, &remove);
+	if (add != 0) {
 	  previous = NULL;
 	} else {
-	  int remove = vivi_code_asm_code_get_stack_remove (VIVI_CODE_ASM_CODE (
-		g_ptr_array_index (assembler->codes, i)));
 	  if (remove == -1) {
 	    previous = NULL;
 	  } else {

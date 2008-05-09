@@ -42,6 +42,9 @@ struct _ViviCodeAsmInterface {
   gboolean		(* emit)			(ViviCodeAsm *		code,
 							 ViviCodeEmitter *	emitter,
 							 GError **		error);
+  void			(* get_stack_change)		(ViviCodeAsm *		code,
+							 int *			add,
+							 int *			remove);
 };
 
 GType			vivi_code_asm_get_type		(void) G_GNUC_CONST;

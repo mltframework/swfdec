@@ -395,6 +395,15 @@ EXTRA_DIST = \
 	text-field-border-8.swf \
 	text-field-border-8.swf.png \
 	text-field-border.as \
+	text-field-border-scale-5.swf \
+	text-field-border-scale-5.swf.png \
+	text-field-border-scale-6.swf \
+	text-field-border-scale-6.swf.png \
+	text-field-border-scale-7.swf \
+	text-field-border-scale-7.swf.png \
+	text-field-border-scale-8.swf \
+	text-field-border-scale-8.swf.png \
+	text-field-border-scale.as \
 	text-field-color-transform.as \
 	text-field-color-transform-6.swf \
 	text-field-color-transform-6.swf.png \

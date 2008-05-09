@@ -123,7 +123,7 @@ void		swfdec_text_field_movie_html_parse	(SwfdecTextFieldMovie *	text,
 							 const char *		str);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
 
-gboolean	swfdec_movie_get_visible_area		(SwfdecTextFieldMovie *	text,
+gboolean	swfdec_text_field_movie_get_visible_area(SwfdecTextFieldMovie *	text,
 							 SwfdecRectangle *	rect);
 
 G_END_DECLS

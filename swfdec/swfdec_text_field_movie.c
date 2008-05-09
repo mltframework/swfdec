@@ -118,7 +118,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_stroke (cr);
   }
 
-  swfdec_movie_get_visible_area (text, &area);
+  swfdec_text_field_movie_get_visible_area (text, &area);
 
   /* render the layout */
   cairo_translate (cr, area.x, area.y);
@@ -965,7 +965,7 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
 }
 
 gboolean
-swfdec_movie_get_visible_area (SwfdecTextFieldMovie *text, SwfdecRectangle *rect)
+swfdec_text_field_movie_get_visible_area (SwfdecTextFieldMovie *text, SwfdecRectangle *rect)
 {
   int tmp;
 

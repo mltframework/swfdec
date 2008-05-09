@@ -1,0 +1,10 @@
+asm {
+  pool "test"
+  push pool 0
+  function2 function_end_0001
+  play
+
+function_end_0001:
+  set_variable
+  end
+}

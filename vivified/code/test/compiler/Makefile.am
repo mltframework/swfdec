@@ -24,6 +24,8 @@ EXTRA_DIST = \
 	empty.as.expect \
 	empty_statement.as \
 	empty_statement.as.expect \
+	function_expression.as \
+	function_expression.as.expect \
 	if.as \
 	if.as.expect \
 	if_else.as \

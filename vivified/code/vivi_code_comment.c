@@ -33,9 +33,17 @@ vivi_code_comment_emit (ViviCodeAsm *code, ViviCodeEmitter *emitter, GError **er
 }
 
 static void
+vivi_code_comment_get_stack_change (ViviCodeAsm *code, int *add, int *remove)
+{
+  *add = 0;
+  *remove = 0;
+}
+
+static void
 vivi_code_comment_asm_init (ViviCodeAsmInterface *iface)
 {
   iface->emit = vivi_code_comment_emit;
+  iface->get_stack_change = vivi_code_comment_get_stack_change;
 }
 
 G_DEFINE_TYPE_WITH_CODE (ViviCodeComment, vivi_code_comment, VIVI_TYPE_CODE_STATEMENT,

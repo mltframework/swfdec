@@ -287,12 +287,8 @@ vivi_code_assembler_get_stack_change (ViviCodeAsm *code, int *add, int *remove)
   int add_, remove_;
 
   iface = VIVI_CODE_ASM_GET_INTERFACE (code);
-  if (iface->get_stack_change != NULL) {
-    iface->get_stack_change (code, &add_, &remove_);
-  } else {
-    add_ = 0;
-    remove_ = 0;
-  }
+  g_assert (iface->get_stack_change != NULL);
+  iface->get_stack_change (code, &add_, &remove_);
 
   if (add != NULL)
     *add = add_;

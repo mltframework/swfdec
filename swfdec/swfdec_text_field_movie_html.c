@@ -447,7 +447,7 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
   if (data->condense_white && data->cx->version >= 8) {
     gsize length = swfdec_text_buffer_get_length (data->text);
     const char *s = swfdec_text_buffer_get_text (data->text);
-    if (length > 0 && g_ascii_isspace (s[length - 1]))
+    if (length == 0 || g_ascii_isspace (s[length - 1]))
       p += strspn (p, " \n\r\t");
   }
 

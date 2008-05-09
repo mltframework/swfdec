@@ -608,8 +608,8 @@ swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  value = CLAMP (value, 0, text->hscroll_max);
-  if (value != text->hscroll) {
+  value = CLAMP (value, 0, (int) swfdec_text_field_movie_get_hscroll_max (text));
+  if ((guint) value != text->hscroll) {
     text->hscroll = value;
     text->scroll_changed = TRUE;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
@@ -625,11 +625,7 @@ swfdec_text_field_movie_get_maxhscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  if (!text->word_wrap) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, text->hscroll_max);
-  } else {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, 0);
-  }
+  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_text_field_movie_get_hscroll_max (text));
 }
 
 static void

@@ -121,9 +121,9 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   swfdec_text_field_movie_get_visible_area (text, &area);
 
   /* render the layout */
-  cairo_translate (cr, area.x, area.y);
-  cairo_rectangle (cr, 0, 0, area.width, area.height);
+  cairo_rectangle (cr, area.x, area.y, area.width, area.height);
   cairo_clip (cr);
+  cairo_translate (cr, (double) area.x - text->hscroll, area.y);
   swfdec_text_layout_render (text->layout, cr, ctrans,
       text->scroll, area.height);
 }
@@ -305,7 +305,7 @@ swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
     SwfdecTextFieldMovie *text)
 {
   double scale;
-  guint w, h;
+  guint w, h, max;
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 
@@ -320,6 +320,12 @@ swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
   }
 
   swfdec_text_field_movie_update_scroll (text);
+
+  max = swfdec_text_field_movie_get_hscroll_max (text);
+  if (text->hscroll > max) {
+    text->hscroll = max;
+    text->scroll_changed = TRUE;
+  }
 }
 
 static void
@@ -990,3 +996,20 @@ swfdec_text_field_movie_get_visible_area (SwfdecTextFieldMovie *text, SwfdecRect
   rect->y = text->stage_rect.y + round (BORDER_TOP * text->yscale) - 1;
   return TRUE;
 }
+
+guint
+swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *text)
+{
+  SwfdecRectangle area;
+  guint width;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), 0);
+
+  swfdec_text_field_movie_get_visible_area (text, &area);
+  width = swfdec_text_layout_get_width (text->layout);
+  if ((guint) area.width >= width)
+    return 0;
+  else
+    return width - area.width;
+}
+

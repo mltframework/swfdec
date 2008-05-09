@@ -1,0 +1,14 @@
+asm {
+  pool "a"
+  push pool 0
+  get_variable
+  if if_0001
+  stop
+  jump end_0002
+
+if_0001:
+  play
+
+end_0002:
+  end
+}

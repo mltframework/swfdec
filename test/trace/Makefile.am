@@ -3323,6 +3323,15 @@ EXTRA_DIST = \
 	text-field-html-new-format-7.swf.trace \
 	text-field-html-new-format-8.swf \
 	text-field-html-new-format-8.swf.trace \
+	text-field-html-whitespace-tag.as \
+	text-field-html-whitespace-tag-5.swf \
+	text-field-html-whitespace-tag-5.swf.trace \
+	text-field-html-whitespace-tag-6.swf \
+	text-field-html-whitespace-tag-6.swf.trace \
+	text-field-html-whitespace-tag-7.swf \
+	text-field-html-whitespace-tag-7.swf.trace \
+	text-field-html-whitespace-tag-8.swf \
+	text-field-html-whitespace-tag-8.swf.trace \
 	text-field-init.as \
 	text-field-init-5.swf \
 	text-field-init-5.swf.trace \

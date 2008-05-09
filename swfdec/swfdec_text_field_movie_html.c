@@ -443,7 +443,8 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
   g_return_val_if_fail (p != NULL, NULL);
   g_return_val_if_fail (*p != '\0' && *p != '<', NULL);
 
-  // condense the space with previous text also, if version >= 8
+  // condense the whitespace with previous text
+  // also skip any whitespace that would be preceding first actual text
   if (data->condense_white && data->cx->version >= 8) {
     gsize length = swfdec_text_buffer_get_length (data->text);
     const char *s = swfdec_text_buffer_get_text (data->text);
@@ -451,7 +452,7 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
       p += strspn (p, " \n\r\t");
   }
 
-  // if it's only space, don't add it
+  // if it's only whitespace, don't add it
   if (data->cx->version < 8) {
     end = p + strspn (p, " \n\r\t");
     if (*end == '\0' || *end == '<')

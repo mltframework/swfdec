@@ -2733,7 +2733,16 @@ parse_iteration_statement (ParseData *data)
   vivi_code_loop_set_statement (VIVI_CODE_LOOP (statement), loop_statement);
   g_object_unref (loop_statement);
 
-  statement = vivi_parser_join_statements (pre_statement, statement);
+  // can't use join_statements here
+  // because we don't want to put statement inside pre_statement
+  if (pre_statement != NULL) {
+    ViviCodeStatement *block = vivi_code_block_new ();
+    vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), pre_statement);
+    g_object_unref (pre_statement);
+    vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), statement);
+    g_object_unref (statement);
+    statement = block;
+  }
 
   return statement;
 }

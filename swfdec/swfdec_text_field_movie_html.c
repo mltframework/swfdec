@@ -451,6 +451,13 @@ swfdec_text_field_movie_html_parse_text (ParserData *data, const char *p)
       p += strspn (p, " \n\r\t");
   }
 
+  // if it's only space, don't add it
+  if (data->cx->version < 8) {
+    end = p + strspn (p, " \n\r\t");
+    if (*end == '\0' || *end == '<')
+      return end;
+  }
+
   // get the text
   // if condense_white: all whitespace blocks are converted to a single space
   while (*p != '\0' && *p != '<') {

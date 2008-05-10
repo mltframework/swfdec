@@ -22,8 +22,43 @@
 #endif
 
 #include "vivi_code_and.h"
+#include "vivi_code_compiler.h"
+#include "vivi_code_asm_code_default.h"
+#include "vivi_code_asm_if.h"
 
 G_DEFINE_TYPE (ViviCodeAnd, vivi_code_and, VIVI_TYPE_CODE_BINARY)
+
+static void
+vivi_code_and_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
+  ViviCodeAsm *code;
+  ViviCodeLabel *label_end;
+
+  vivi_code_compiler_compile_value (compiler, binary->left);
+
+  code = vivi_code_asm_push_duplicate_new ();
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
+
+  code = vivi_code_asm_not_new ();
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
+
+  label_end = vivi_code_compiler_create_label (compiler, "and_end");
+  code = vivi_code_asm_if_new (label_end);
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
+
+  code = vivi_code_asm_pop_new ();
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
+
+  vivi_code_compiler_compile_value (compiler, binary->right);
+
+  vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_end));
+  g_object_unref (label_end);
+}
 
 static void
 vivi_code_and_class_init (ViviCodeAndClass *klass)
@@ -31,7 +66,7 @@ vivi_code_and_class_init (ViviCodeAndClass *klass)
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeBinaryClass *binary_class = VIVI_CODE_BINARY_CLASS (klass);
 
-  token_class->compile = NULL; /* FIXME */
+  token_class->compile = vivi_code_and_compile;
 
   binary_class->operator_name = "&&";
 }

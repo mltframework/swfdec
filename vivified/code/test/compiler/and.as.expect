@@ -1,0 +1,15 @@
+asm {
+  pool "a", "b"
+  push pool 0
+  get_variable
+  push_duplicate
+  not
+  if and_end_0001
+  pop
+  push pool 1
+  get_variable
+
+and_end_0001:
+  trace
+  end
+}

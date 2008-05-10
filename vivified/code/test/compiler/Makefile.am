@@ -18,6 +18,8 @@ EXTRA_DIST = \
 	asm_empty.as.expect \
 	assignment.as \
 	assignment.as.expect \
+	assignment_operator.as \
+	assignment_operator.as.expect \
 	builtin_statement.as \
 	builtin_statement.as.expect \
 	call_function.as \

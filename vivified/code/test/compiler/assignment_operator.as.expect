@@ -1,0 +1,59 @@
+asm {
+  pool "a"
+  push pool 0, pool 0
+  get_variable
+  push 1
+  multiply
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  divide
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  modulo
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  add2
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  subtract
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  bit_lshift
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  bit_rshift
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  bit_urshift
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  bit_and
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  bit_xor
+  set_variable
+  push pool 0, pool 0
+  get_variable
+  push 1
+  bit_or
+  set_variable
+  end
+}

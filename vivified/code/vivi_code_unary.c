@@ -75,7 +75,7 @@ vivi_code_unary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   ViviCodeUnary *unary = VIVI_CODE_UNARY (token);
   ViviCodeAsm *code;
 
-  g_return_if_fail (unary->operation != '!');
+  g_return_if_fail (unary->operation == '!');
 
   vivi_code_compiler_compile_value (compiler, unary->value);
 

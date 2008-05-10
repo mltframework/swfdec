@@ -2064,15 +2064,20 @@ parse_operator_expression (ParseData *data, ViviCodeStatement **statement,
 //    { TOKEN_, vivi_code_string_less_new },
     { TOKEN_PLUS, vivi_code_add2_new },
     { TOKEN_LESS_THAN, vivi_code_less2_new },
+    { TOKEN_LESS_THAN_OR_EQUAL, vivi_code_greater_new },
     { TOKEN_EQUAL, vivi_code_equals2_new },
-//    { TOKEN_BITWISE_AND, vivi_code_bitwise_and_new },
-//    { TOKEN_BITWISE_OR, vivi_code_bitwise_or_new },
-//    { TOKEN_BITWISE_XOR, vivi_code_bitwise_xor_new },
-//    { TOKEN_SHIFT_LEFT, vivi_code_left_shift_new },
-//    { TOKEN_SHIFT_RIGHT, vivi_code_right_shift_new },
-//    { TOKEN_SHIFT_RIGHT_UNSIGNED, vivi_code_unsigned_right_shift_new },
+    { TOKEN_NOT_EQUAL, vivi_code_equals2_new },
+    { TOKEN_BITWISE_AND, vivi_code_bit_and_new },
+    { TOKEN_BITWISE_OR, vivi_code_bit_or_new },
+    { TOKEN_BITWISE_XOR, vivi_code_bit_xor_new },
+    { TOKEN_SHIFT_LEFT, vivi_code_bit_lshift_new },
+    { TOKEN_SHIFT_RIGHT, vivi_code_bit_rshift_new },
+    { TOKEN_SHIFT_RIGHT_UNSIGNED, vivi_code_bit_urshift_new },
     { TOKEN_STRICT_EQUAL, vivi_code_strict_equals_new },
+    { TOKEN_NOT_STRICT_EQUAL, vivi_code_strict_equals_new },
     { TOKEN_GREATER_THAN, vivi_code_greater_new },
+    { TOKEN_EQUAL_OR_GREATER_THAN, vivi_code_less2_new },
+    { TOKEN_INSTANCEOF, vivi_code_instance_of_new },
 //    { TOKEN_, vivi_code_string_greater_new },
     { TOKEN_LOGICAL_AND, vivi_code_and_new },
     { TOKEN_LOGICAL_OR, vivi_code_or_new }
@@ -2124,6 +2129,18 @@ again:
 
 	vivi_parser_duplicate_code_token (data);
 	vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
+
+	if (tokens[i] == TOKEN_NOT_EQUAL ||
+	    tokens[i] == TOKEN_NOT_STRICT_EQUAL ||
+	    tokens[i] == TOKEN_LESS_THAN_OR_EQUAL ||
+	    tokens[i] == TOKEN_EQUAL_OR_GREATER_THAN) {
+	  left = vivi_code_unary_new (value, '!');
+	  g_object_unref (value);
+	  value = left;
+
+	  vivi_parser_duplicate_code_token (data);
+	  vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
+	}
 
 	goto again;
       }
@@ -2195,8 +2212,8 @@ static ViviCodeValue *
 parse_relational_expression (ParseData *data, ViviCodeStatement **statement)
 {
   static const ViviParserScannerToken tokens[] = { TOKEN_LESS_THAN,
-    TOKEN_GREATER_THAN, /*TOKEN_LESS_THAN_OR_EQUAL,
-    TOKEN_EQUAL_OR_GREATER_THAN, TOKEN_INSTANCEOF, TOKEN_IN,*/ TOKEN_NONE };
+    TOKEN_GREATER_THAN, TOKEN_LESS_THAN_OR_EQUAL,
+    TOKEN_EQUAL_OR_GREATER_THAN, TOKEN_INSTANCEOF, /*TOKEN_IN,*/ TOKEN_NONE };
 
   return parse_operator_expression (data, statement, tokens, PASS_ALWAYS,
       parse_shift_expression);
@@ -2212,7 +2229,7 @@ static ViviCodeValue *
 parse_equality_expression (ParseData *data, ViviCodeStatement **statement)
 {
   static const ViviParserScannerToken tokens[] = { TOKEN_EQUAL,
-    /*TOKEN_NOT_EQUAL,*/ TOKEN_STRICT_EQUAL, /*TOKEN_NOT_STRICT_EQUAL,*/
+    TOKEN_NOT_EQUAL, TOKEN_STRICT_EQUAL, TOKEN_NOT_STRICT_EQUAL,
     TOKEN_NONE };
 
   return parse_operator_expression (data, statement, tokens, PASS_ALWAYS,

@@ -2372,6 +2372,7 @@ parse_assignment_expression (ParseData *data, ViviCodeStatement **statement)
   }
 
   switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
+    case TOKEN_ASSIGN_MULTIPLY:
       func = vivi_code_multiply_new;
       break;
     case TOKEN_ASSIGN_DIVIDE:
@@ -2386,24 +2387,24 @@ parse_assignment_expression (ParseData *data, ViviCodeStatement **statement)
     case TOKEN_ASSIGN_MINUS:
       func = vivi_code_subtract_new;
       break;
-    //case TOKEN_ASSIGN_SHIFT_LEFT:
-    //  func = vivi_code_left_shift_new;
-    //  break;
-    //case TOKEN_ASSIGN_SHIFT_RIGHT:
-    //  func = vivi_code_right_shift_new;
-    //  break;
-    //case TOKEN_ASSIGN_SHIFT_RIGHT_ZERO:
-    //  func = vivi_code_unsigned_right_shift_new;
-    //  break;
-    //case TOKEN_ASSIGN_BITWISE_AND:
-    //  func = vivi_code_bitwise_and_new;
-    //  break;
-    //case TOKEN_ASSIGN_BITWISE_OR:
-    //  func = vivi_code_bitwise_or_new;
-    //  break;
-    //case TOKEN_ASSIGN_BITWISE_XOR:
-    //  func = vivi_code_bitwise_xor_new;
-    //  break;
+    case TOKEN_ASSIGN_SHIFT_LEFT:
+      func = vivi_code_bit_lshift_new;
+      break;
+    case TOKEN_ASSIGN_SHIFT_RIGHT:
+      func = vivi_code_bit_rshift_new;
+      break;
+    case TOKEN_ASSIGN_SHIFT_RIGHT_ZERO:
+      func = vivi_code_bit_urshift_new;
+      break;
+    case TOKEN_ASSIGN_BITWISE_AND:
+      func = vivi_code_bit_and_new;
+      break;
+    case TOKEN_ASSIGN_BITWISE_OR:
+      func = vivi_code_bit_or_new;
+      break;
+    case TOKEN_ASSIGN_BITWISE_XOR:
+      func = vivi_code_bit_xor_new;
+      break;
     case TOKEN_ASSIGN:
       func = NULL;
       break;

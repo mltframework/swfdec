@@ -34,6 +34,8 @@ EXTRA_DIST = \
 	if.as.expect \
 	if_else.as \
 	if_else.as.expect \
+	label.as \
+	label.as.expect \
 	trace.as \
 	trace.as.expect \
 	while.as \

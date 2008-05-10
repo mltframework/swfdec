@@ -408,14 +408,6 @@ vivi_parser_value_is_left_hand_side (ViviCodeValue *value)
   return VIVI_IS_CODE_GET (value);
 }
 
-static gboolean
-vivi_parser_value_is_identifier (ViviCodeValue *value)
-{
-  if (!VIVI_IS_CODE_GET (value))
-    return FALSE;
-  return VIVI_IS_CODE_CONSTANT (VIVI_CODE_GET (value)->name);
-}
-
 static void
 vivi_parser_start_level (ParseData *data)
 {
@@ -2807,16 +2799,6 @@ parse_expression_statement (ParseData *data)
 
   value = parse_expression (data, &statement);
 
-  // check for label
-  if (statement == NULL && vivi_parser_value_is_identifier (value) &&
-      try_parse_token (data, TOKEN_COLON))
-  {
-    statement = vivi_code_label_new (vivi_code_constant_get_variable_name (
-	  VIVI_CODE_CONSTANT (VIVI_CODE_GET (value)->name)));
-    if (!vivi_parser_add_label (data, VIVI_CODE_LABEL (statement)))
-      vivi_parser_error (data, "Same label name used twice");
-  }
-
   parse_automatic_semicolon (data);
 
   // add a value statement, if the last statement is not an assignment with the
@@ -2842,6 +2824,34 @@ parse_expression_statement (ParseData *data)
   statement = vivi_parser_join_statements (statement,
       vivi_code_value_statement_new (value));
   g_object_unref (value);
+
+  return statement;
+}
+
+static gboolean
+peek_label_statement (ParseData *data)
+{
+  const ViviParserValue *value;
+
+  if (!peek_token (data, TOKEN_IDENTIFIER))
+    return FALSE;
+
+  value = vivi_parser_scanner_get_value (data->scanner, 2);
+
+  return value->token == TOKEN_COLON;
+}
+
+static ViviCodeStatement *
+parse_label_statement (ParseData *data)
+{
+  ViviCodeStatement *statement;
+
+  statement = vivi_code_label_new (parse_identifier_value (data));
+
+  parse_token (data, TOKEN_COLON);
+
+  if (!vivi_parser_add_label (data, VIVI_CODE_LABEL (statement)))
+    vivi_parser_error (data, "Same label name used twice");
 
   return statement;
 }
@@ -2912,6 +2922,7 @@ static const struct {
   { peek_block, parse_block },
   { peek_variable_statement, parse_variable_statement },
   { peek_empty_statement, parse_empty_statement },
+  { peek_label_statement, parse_label_statement },
   { peek_expression_statement, parse_expression_statement },
   { peek_if_statement, parse_if_statement },
   { peek_iteration_statement, parse_iteration_statement },

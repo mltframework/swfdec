@@ -1,0 +1,128 @@
+asm {
+  pool "a"
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  bit_or
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  bit_xor
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  bit_and
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  equals2
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  equals2
+  not
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  strict_equals
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  strict_equals
+  not
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  less2
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  greater
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  greater
+  not
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  less2
+  not
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  instance_of
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  bit_lshift
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  bit_rshift
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  bit_urshift
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  add2
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  subtract
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  multiply
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  divide
+  trace
+  push pool 0
+  get_variable
+  push pool 0
+  get_variable
+  modulo
+  trace
+  end
+}

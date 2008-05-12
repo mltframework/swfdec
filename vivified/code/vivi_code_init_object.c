@@ -89,8 +89,8 @@ vivi_code_init_object_compile (ViviCodeToken *token,
 
   for (i = 0; i < object->variables->len; i++) {
     VariableEntry *entry = &g_array_index (object->variables, VariableEntry, i);
-    vivi_code_compiler_compile_value (compiler, entry->value);
     vivi_code_compiler_compile_value (compiler, entry->name);
+    vivi_code_compiler_compile_value (compiler, entry->value);
   }
 
   count = vivi_code_number_new (object->variables->len);

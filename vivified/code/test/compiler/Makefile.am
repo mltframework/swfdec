@@ -46,6 +46,8 @@ EXTRA_DIST = \
 	label.as.expect \
 	operator.as \
 	operator.as.expect \
+	object_literal.as \
+	object_literal.as.expect \
 	or.as \
 	or.as.expect \
 	trace.as \

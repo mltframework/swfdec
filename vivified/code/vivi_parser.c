@@ -861,44 +861,27 @@ parse_identifier (ParseData *data)
   return value;
 }
 
-static const struct {
-  PeekFunction peek;
-  ParseValueFunction parse;
-} property_name_functions[] = {
-  { peek_identifier, parse_identifier },
-  { peek_string, parse_string },
-  { peek_numeric, parse_numeric },
-  { NULL, NULL }
-};
-
-G_GNUC_UNUSED static gboolean
-peek_property_name (ParseData *data)
-{
-  guint i;
-
-  for (i = 0; property_name_functions[i].peek != NULL; i++) {
-    if (property_name_functions[i].peek (data))
-      return TRUE;
-  }
-
-  return FALSE;
-}
-
 static ViviCodeValue *
 parse_property_name (ParseData *data)
 {
   ViviCodeValue *value;
-  guint i;
 
-  for (i = 0; property_name_functions[i].peek != NULL; i++) {
-    if (property_name_functions[i].peek (data)) {
-      return property_name_functions[i].parse (data);
-    }
+  vivi_parser_start_code_token (data);
+
+  if (peek_identifier (data)) {
+    value = vivi_code_string_new (parse_identifier_value (data));
+  } else if (peek_string (data)) {
+    value = parse_string (data);
+  } else if (peek_numeric (data)) {
+    char s[G_ASCII_DTOSTR_BUF_SIZE];
+    double d = parse_numeric_value (data);
+    g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE, d);
+    value = vivi_code_string_new (s);
+  } else {
+    vivi_parser_error_unexpected (data, ERROR_TOKEN_PROPERTY_NAME);
+    value = vivi_code_string_new ("undefined");
   }
 
-  vivi_parser_error_unexpected (data, ERROR_TOKEN_PROPERTY_NAME);
-  vivi_parser_start_code_token (data);
-  value = vivi_code_string_new ("undefined");
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
 
   return value;

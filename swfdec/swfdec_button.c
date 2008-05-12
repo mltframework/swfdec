@@ -222,6 +222,8 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     key = condition >> 9;
     condition &= 0x1FF;
     condition = swfdec_button_translate_conditions (condition, button->menubutton);
+    if (key)
+      condition |= 1 << SWFDEC_EVENT_KEY_DOWN;
 
     SWFDEC_LOG (" length = %d", length);
 

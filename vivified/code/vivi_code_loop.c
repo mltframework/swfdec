@@ -82,7 +82,7 @@ vivi_code_loop_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   ViviCodeLabel *label_start, *label_end = NULL;
   ViviCodeAsm *code;
 
-  label_start = vivi_code_compiler_create_label (compiler, "start");
+  label_start = vivi_code_compiler_create_label (compiler, "loop_start");
   vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_start));
 
   if (loop->condition) {
@@ -92,7 +92,7 @@ vivi_code_loop_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
     vivi_code_compiler_add_code (compiler, code);
     g_object_unref (code);
 
-    label_end = vivi_code_compiler_create_label (compiler, "end");
+    label_end = vivi_code_compiler_create_label (compiler, "loop_end");
     code = vivi_code_asm_if_new (label_end);
     vivi_code_compiler_add_code (compiler, code);
     g_object_unref (code);

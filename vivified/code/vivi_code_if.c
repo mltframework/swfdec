@@ -138,14 +138,14 @@ vivi_code_if_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   vivi_code_compiler_compile_value (compiler, stmt->condition);
 
   if (stmt->else_statement) {
-    label_if = vivi_code_compiler_create_label (compiler, "if");
+    label_if = vivi_code_compiler_create_label (compiler, "if_true");
     code = vivi_code_asm_if_new (label_if);
     vivi_code_compiler_add_code (compiler, code);
     g_object_unref (code);
 
     vivi_code_compiler_compile_statement (compiler, stmt->else_statement);
 
-    label_end = vivi_code_compiler_create_label (compiler, "end");
+    label_end = vivi_code_compiler_create_label (compiler, "if_end");
     code = vivi_code_asm_jump_new (label_end);
     vivi_code_compiler_add_code (compiler, code);
     g_object_unref (code);
@@ -157,7 +157,7 @@ vivi_code_if_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
     vivi_code_compiler_add_code (compiler, code);
     g_object_unref (code);
 
-    label_end = vivi_code_compiler_create_label (compiler, "end");
+    label_end = vivi_code_compiler_create_label (compiler, "if_end");
     code = vivi_code_asm_if_new (label_end);
     vivi_code_compiler_add_code (compiler, code);
     g_object_unref (code);

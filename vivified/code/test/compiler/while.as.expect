@@ -1,14 +1,14 @@
 asm {
   pool "a"
 
-start_0001:
+loop_start_0001:
   push pool 0
   get_variable
   not
-  if end_0002
+  if loop_end_0002
   play
-  jump start_0001
+  jump loop_start_0001
 
-end_0002:
+loop_end_0002:
   end
 }

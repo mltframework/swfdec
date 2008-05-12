@@ -185,7 +185,7 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecAsObject *object,
   for (i = 0; i < list->events->len; i++) {
     SwfdecEvent *event = &g_array_index (list->events, SwfdecEvent, i);
     if ((event->conditions & condition) &&
-	event->key == key) {
+	(condition != 1 << SWFDEC_EVENT_KEY_DOWN || event->key == key)) {
       SWFDEC_LOG ("executing script for event %u on scriptable %p", condition, object);
       swfdec_as_object_run (object, event->script);
     }

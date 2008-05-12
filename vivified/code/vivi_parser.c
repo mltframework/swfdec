@@ -44,6 +44,7 @@
 #include "vivi_code_continue.h"
 #include "vivi_code_function.h"
 #include "vivi_code_function_call.h"
+#include "vivi_code_function_declaration.h"
 #include "vivi_code_get.h"
 #include "vivi_code_get_timer.h"
 #include "vivi_code_get_url.h"
@@ -2985,55 +2986,44 @@ parse_statement (ParseData *data)
 // function
 
 static gboolean
-peek_function_definition (ParseData *data)
-{
-  return peek_token (data, TOKEN_FUNCTION);
-}
-
-static gboolean
 peek_source_element (ParseData *data);
 
 static ViviCodeStatement *
 parse_source_element (ParseData *data);
 
-static ViviCodeValue *
-parse_function_definition (ParseData *data, gboolean name_required)
+static gboolean
+peek_function_declaration (ParseData *data)
 {
-  ViviCodeValue *function;
-  ViviCodeStatement *body;
-  char *name;
+  return peek_token (data, TOKEN_FUNCTION);
+}
 
-  body = NULL;
+static ViviCodeStatement *
+parse_function_declaration (ParseData *data)
+{
+  ViviCodeFunctionDeclaration *function;
+  ViviCodeStatement *body;
 
   parse_token (data, TOKEN_FUNCTION);
 
-  if (name_required) {
-    name = g_strdup (parse_identifier_value (data));
-    parse_token (data, TOKEN_PARENTHESIS_LEFT);
-  } else {
-    if (!try_parse_token (data, TOKEN_PARENTHESIS_LEFT)) {
-      if (peek_identifier (data)) {
-	name = g_strdup (parse_identifier_value (data));
-	parse_token (data, TOKEN_PARENTHESIS_LEFT);
-      } else {
-	vivi_parser_error_unexpected_or (data, TOKEN_PARENTHESIS_LEFT,
-	    ERROR_TOKEN_IDENTIFIER, TOKEN_NONE);
-	name = NULL;
-      }
-    } else {
-      name = NULL;
-    }
-  }
+  function = VIVI_CODE_FUNCTION_DECLARATION (
+    vivi_code_function_declaration_new (parse_identifier_value (data)));
 
-  function = vivi_code_function_new (name);
-  g_free (name);
+  parse_token (data, TOKEN_PARENTHESIS_LEFT);
 
-  if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+  if (peek_identifier (data)) {
     do {
-      vivi_code_function_add_argument (VIVI_CODE_FUNCTION (function),
+      vivi_code_function_declaration_add_argument (function,
 	  parse_identifier_value (data));
     } while (try_parse_token (data, TOKEN_COMMA));
-    parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+    if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+      vivi_parser_error_unexpected_or (data, TOKEN_PARENTHESIS_RIGHT,
+	  TOKEN_COMMA, TOKEN_NONE);
+    }
+  } else {
+    if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+      vivi_parser_error_unexpected_or (data, TOKEN_PARENTHESIS_RIGHT,
+	  TOKEN_IDENTIFIER, TOKEN_NONE);
+    }
   }
 
   parse_token (data, TOKEN_BRACE_LEFT);
@@ -3046,42 +3036,61 @@ parse_function_definition (ParseData *data, gboolean name_required)
   parse_token (data, TOKEN_BRACE_RIGHT);
 
   if (body != NULL) {
-    vivi_code_function_set_body (VIVI_CODE_FUNCTION (function), body);
+    vivi_code_function_declaration_set_body (function, body);
     g_object_unref (body);
   }
 
-  return function;
-}
-
-static gboolean
-peek_function_declaration (ParseData *data)
-{
-  return peek_function_definition (data);
-}
-
-static ViviCodeStatement *
-parse_function_declaration (ParseData *data)
-{
-  ViviCodeStatement *statement;
-  ViviCodeValue *function;
-
-  function = parse_function_definition (data, TRUE);
-  statement = vivi_code_value_statement_new (function);
-  g_object_unref (function);
-
-  return statement;
+  return VIVI_CODE_STATEMENT (function);
 }
 
 static gboolean
 peek_function_expression (ParseData *data)
 {
-  return peek_function_definition (data);
+  return peek_token (data, TOKEN_FUNCTION);
 }
 
 static ViviCodeValue *
 parse_function_expression (ParseData *data)
 {
-  return parse_function_definition (data, FALSE);
+  ViviCodeFunction *function;
+  ViviCodeStatement *body;
+
+  parse_token (data, TOKEN_FUNCTION);
+  parse_token (data, TOKEN_PARENTHESIS_LEFT);
+
+  function = VIVI_CODE_FUNCTION (vivi_code_function_new ());
+
+  if (peek_identifier (data)) {
+    do {
+      vivi_code_function_add_argument (function,
+	  parse_identifier_value (data));
+    } while (try_parse_token (data, TOKEN_COMMA));
+    if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+      vivi_parser_error_unexpected_or (data, TOKEN_PARENTHESIS_RIGHT,
+	  TOKEN_COMMA, TOKEN_NONE);
+    }
+  } else {
+    if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+      vivi_parser_error_unexpected_or (data, TOKEN_PARENTHESIS_RIGHT,
+	  TOKEN_IDENTIFIER, TOKEN_NONE);
+    }
+  }
+
+  parse_token (data, TOKEN_BRACE_LEFT);
+
+  vivi_parser_start_level (data);
+  body = parse_statement_list (data, peek_source_element, parse_source_element,
+      TOKEN_NONE);
+  vivi_parser_end_level (data);
+
+  parse_token (data, TOKEN_BRACE_RIGHT);
+
+  if (body != NULL) {
+    vivi_code_function_set_body (function, body);
+    g_object_unref (body);
+  }
+
+  return VIVI_CODE_VALUE (function);
 }
 
 // top

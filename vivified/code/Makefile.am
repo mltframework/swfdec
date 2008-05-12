@@ -63,6 +63,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_error.c \
 	vivi_code_function.c \
 	vivi_code_function_call.c \
+	vivi_code_function_declaration.c \
 	vivi_code_get.c \
 	vivi_code_get_timer.c \
 	vivi_code_get_url.c \
@@ -138,6 +139,7 @@ noinst_HEADERS = \
 	vivi_code_error.h \
 	vivi_code_function.h \
 	vivi_code_function_call.h \
+	vivi_code_function_declaration.h \
 	vivi_code_get.h \
 	vivi_code_get_timer.h \
 	vivi_code_get_url.h \

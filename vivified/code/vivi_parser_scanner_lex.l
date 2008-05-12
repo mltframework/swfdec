@@ -279,7 +279,8 @@ identifier_part		[$_a-zA-Z0-9]
 			  if (result > 0xff || result == 0) {
 			    ERROR ("Invalid escape sequence %s", yytext);
 			  } else {
-			    g_string_append_c (value->value.v_string, result);
+			    g_string_append_unichar (value->value.v_string,
+				result);
 			  }
 			}
   \\[0-9]+		{ ERROR ("Invalid escape sequence %s", yytext); }
@@ -289,7 +290,18 @@ identifier_part		[$_a-zA-Z0-9]
 			  if (result == 0) {
 			    ERROR ("Invalid escape sequence %s", yytext);
 			  } else {
-			    g_string_append_c (value->value.v_string, result);
+			    g_string_append_unichar (value->value.v_string,
+				result);
+			  }
+			}
+  \\u[0-9a-fA-F]{4}	{
+			  guint64 result;
+			  result = g_ascii_strtoull (yytext + 2, NULL, 16);
+			  if (result == 0) {
+			    ERROR ("Invalid escape sequence %s", yytext);
+			  } else {
+			    g_print (":: %lu\n", result);
+			    g_string_append_unichar (value->value.v_string, result);
 			  }
 			}
   \\b			{ g_string_append_c (value->value.v_string, '\b'); }

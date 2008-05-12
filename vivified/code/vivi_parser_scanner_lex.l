@@ -27,6 +27,8 @@ extern YY_DECL;
 }
 
 %{
+static char begin_char;
+
 #define RESET_POSITION value->position = G_MAXSIZE
 
 #define ERROR(...) vivi_parser_scanner_error (yyextra, yylineno, yycolumn, __VA_ARGS__)
@@ -237,14 +239,33 @@ identifier_part		[$_a-zA-Z0-9]
 			}
 
 \"			{
+			  begin_char = '"';
+			  value->value.v_string = g_string_new ("");
+			  BEGIN(str);
+			}
+
+\'			{
+			  begin_char = '\'';
 			  value->value.v_string = g_string_new ("");
 			  BEGIN(str);
 			}
 
 <str>{
   \"			{
-			  BEGIN(INITIAL);
-			  return TOKEN_STRING;
+			  if (begin_char == '"') {
+			    BEGIN(INITIAL);
+			    return TOKEN_STRING;
+			  } else {
+			    g_string_append_c (value->value.v_string, '"');
+			  }
+			}
+  \'			{
+			  if (begin_char == '\'') {
+			    BEGIN(INITIAL);
+			    return TOKEN_STRING;
+			  } else {
+			    g_string_append_c (value->value.v_string, '\'');
+			  }
 			}
   \n			{
 			  BEGIN(INITIAL);
@@ -278,7 +299,7 @@ identifier_part		[$_a-zA-Z0-9]
   \\t			{ g_string_append_c (value->value.v_string, '\t'); }
   \\v			{ g_string_append_c (value->value.v_string, '\v'); }
   \\.			{ g_string_append_c (value->value.v_string, yytext[1]); }
-  [^\\\n\"]+		{
+  [^\\\n\"\']+		{
 			  char *p;
 			  for (p = yytext; *p != '\0'; p++) {
 			    g_string_append_c (value->value.v_string, *p);

@@ -30,6 +30,15 @@ EXTRA_DIST = \
 	background-set-and-load-8.swf \
 	background-set-and-load-8.swf.png \
 	background-set-and-load.xml \
+	beginFill-values-5.swf \
+	beginFill-values-5.swf.png \
+	beginFill-values-6.swf \
+	beginFill-values-6.swf.png \
+	beginFill-values-7.swf \
+	beginFill-values-7.swf.png \
+	beginFill-values-8.swf \
+	beginFill-values-8.swf.png \
+	beginFill-values.as \
 	bw.jpg \
 	clip-change.c \
 	clip-change-backward-5.swf \
@@ -395,6 +404,15 @@ EXTRA_DIST = \
 	text-field-border-8.swf \
 	text-field-border-8.swf.png \
 	text-field-border.as \
+	text-field-border-scale-5.swf \
+	text-field-border-scale-5.swf.png \
+	text-field-border-scale-6.swf \
+	text-field-border-scale-6.swf.png \
+	text-field-border-scale-7.swf \
+	text-field-border-scale-7.swf.png \
+	text-field-border-scale-8.swf \
+	text-field-border-scale-8.swf.png \
+	text-field-border-scale.as \
 	text-field-color-transform.as \
 	text-field-color-transform-6.swf \
 	text-field-color-transform-6.swf.png \

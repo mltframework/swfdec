@@ -86,13 +86,15 @@ swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|ii", &color, &alpha);
   movie->draw_fill = NULL;
   
-  if (argc == 0)
-    return;
-  color = color & 0xFFFFFF;
-  if (argc <= 1) {
-    alpha = 255;
+  if (argc == 0 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
+    color = 0;
+  } else {
+    color = color & 0xFFFFFF;
+    if (argc <= 1) {
+      alpha = 255;
+    }
+    color = SWFDEC_COLOR_FROM_COLOR_ALPHA (color, alpha);
   }
-  color = SWFDEC_COLOR_FROM_COLOR_ALPHA (color, alpha);
   draw = SWFDEC_DRAW (swfdec_pattern_new_color (color));
   swfdec_path_move_to (&draw->path, movie->draw_x, movie->draw_y);
   swfdec_sprite_movie_end_fill (movie, draw);

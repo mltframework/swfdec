@@ -23,6 +23,15 @@ EXTRA_DIST = \
 	button-events-menu-7.swf.trace \
 	button-events-menu-8.swf \
 	button-events-menu-8.swf.trace \
+	button-event-with-key-5.swf \
+	button-event-with-key-5.swf.trace \
+	button-event-with-key-6.swf \
+	button-event-with-key-6.swf.trace \
+	button-event-with-key-7.swf \
+	button-event-with-key-7.swf.trace \
+	button-event-with-key-8.swf \
+	button-event-with-key-8.swf.trace \
+	button-event-with-key.c \
 	button-hittest-5.swf \
 	button-hittest-5.swf.trace \
 	button-hittest-6.swf \

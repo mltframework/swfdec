@@ -342,6 +342,15 @@ EXTRA_DIST = \
 	attachmovie-object-6.swf.trace \
 	attachmovie-object-7.swf \
 	attachmovie-object-7.swf.trace \
+	beginFill-values-5.swf \
+	beginFill-values-5.swf.trace \
+	beginFill-values-6.swf \
+	beginFill-values-6.swf.trace \
+	beginFill-values-7.swf \
+	beginFill-values-7.swf.trace \
+	beginFill-values-8.swf \
+	beginFill-values-8.swf.trace \
+	beginFill-values.as \
 	bevel-filter-properties.as \
 	bevel-filter-properties-5.swf \
 	bevel-filter-properties-5.swf.trace \
@@ -2619,6 +2628,15 @@ EXTRA_DIST = \
 	removesprite-depths-6.swf.trace \
 	removesprite-depths-7.swf \
 	removesprite-depths-7.swf.trace \
+	replaceText-newline-5.swf \
+	replaceText-newline-5.swf.trace \
+	replaceText-newline-6.swf \
+	replaceText-newline-6.swf.trace \
+	replaceText-newline-7.swf \
+	replaceText-newline-7.swf.trace \
+	replaceText-newline-8.swf \
+	replaceText-newline-8.swf.trace \
+	replaceText-newline.as \
 	rewind-remove.c \
 	rewind-remove-5.swf \
 	rewind-remove-5.swf.trace \

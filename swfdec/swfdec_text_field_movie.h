@@ -61,7 +61,6 @@ struct _SwfdecTextFieldMovie {
   gboolean		background;
  
   SwfdecTextBuffer *	text;		/* the text + formatting */
-  gboolean		input_html;	/* whether orginal input was given as HTML */
 
   SwfdecTextLayout *	layout;		/* the layouted text */
   guint			layout_width;	/* text width in pixels */
@@ -82,8 +81,7 @@ struct _SwfdecTextFieldMovie {
   guint			scroll;		/* current scroll offset in lines (0-indexed) */
   guint			scroll_max;	/* scroll must be smaller than this value */
   guint			lines_visible;	/* number of lines currently visible */
-  int			hscroll;
-  int			hscroll_max;
+  guint			hscroll;	/* horizontal scrolling offset in pixels */
   gboolean		mouse_wheel_enabled;
 
   const char *		restrict_;
@@ -116,6 +114,10 @@ void		swfdec_text_field_movie_replace_text	(SwfdecTextFieldMovie *		text,
 							 guint				end_index,
 							 const char *			str);
 
+gboolean	swfdec_text_field_movie_get_visible_area(SwfdecTextFieldMovie *	text,
+							 SwfdecRectangle *	rect);
+guint		swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *	text);
+
 /* implemented in swfdec_text_field_movie_as.c */
 void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);
 
@@ -123,7 +125,6 @@ void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);
 void		swfdec_text_field_movie_html_parse	(SwfdecTextFieldMovie *	text, 
 							 const char *		str);
 const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
-
 
 G_END_DECLS
 #endif

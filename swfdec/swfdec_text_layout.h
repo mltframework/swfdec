@@ -83,8 +83,7 @@ void			swfdec_text_layout_render		(SwfdecTextLayout *	layout,
 								 cairo_t *		cr, 
 								 const SwfdecColorTransform *ctrans,
 								 guint			row,
-								 guint			height,
-								 const SwfdecRectangle *inval);
+								 guint			height);
 
 
 G_END_DECLS

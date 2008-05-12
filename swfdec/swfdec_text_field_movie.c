@@ -39,10 +39,10 @@
 
 G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_ACTOR)
 
-#define BORDER_TOP 1
+#define BORDER_TOP 2
 #define BORDER_LEFT 2
 #define BORDER_RIGHT 2
-#define BORDER_BOTTOM 1
+#define BORDER_BOTTOM 2
 
 /*** VFUNCS ***/
 
@@ -90,6 +90,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 {
   static const cairo_matrix_t identity = { 1, 0, 0, 1, 0, 0 };
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecRectangle area;
   SwfdecColor color;
 
   /* textfields don't mask */
@@ -117,22 +118,14 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_stroke (cr);
   }
 
-  /* no more stuff to do if area too small or no text in existance */
-  if (text->stage_rect.width <= BORDER_LEFT + BORDER_RIGHT ||
-      text->stage_rect.height <= BORDER_TOP + BORDER_BOTTOM)
-    return;
+  swfdec_text_field_movie_get_visible_area (text, &area);
 
-  /* FIXME: we want to draw a cursor if there's no text, but for now... */
-  if (swfdec_text_buffer_get_length (text->text) == 0)
-    return;
   /* render the layout */
-  cairo_translate (cr, text->stage_rect.x + BORDER_LEFT, text->stage_rect.y + BORDER_TOP);
-  cairo_rectangle (cr, 0, 0, 
-      text->stage_rect.width - BORDER_LEFT - BORDER_RIGHT, 
-      text->stage_rect.height - BORDER_TOP - BORDER_BOTTOM);
+  cairo_rectangle (cr, area.x, area.y, area.width, area.height);
   cairo_clip (cr);
+  cairo_translate (cr, (double) area.x - text->hscroll, area.y);
   swfdec_text_layout_render (text->layout, cr, ctrans,
-      text->scroll, text->stage_rect.height - BORDER_TOP + BORDER_BOTTOM, &text->stage_rect);
+      text->scroll, area.height);
 }
 
 gboolean
@@ -272,9 +265,9 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   /* FIXME: floor, ceil or round? */
   text->stage_rect.width = round (x) - text->stage_rect.x;
   text->stage_rect.height = round (y) - text->stage_rect.y;
-  text->xscale = matrix.xx;
-  text->yscale = matrix.yy;
-  swfdec_text_layout_set_scale (text->layout, matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR);
+  text->xscale = matrix.xx * SWFDEC_TWIPS_SCALE_FACTOR;
+  text->yscale = matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR;
+  swfdec_text_layout_set_scale (text->layout, text->yscale);
   if (text->word_wrap && text->stage_rect.width >= BORDER_LEFT + BORDER_RIGHT) {
     swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
 	BORDER_LEFT - BORDER_RIGHT);
@@ -312,7 +305,7 @@ swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
     SwfdecTextFieldMovie *text)
 {
   double scale;
-  guint w, h;
+  guint w, h, max;
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 
@@ -327,6 +320,12 @@ swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
   }
 
   swfdec_text_field_movie_update_scroll (text);
+
+  max = swfdec_text_field_movie_get_hscroll_max (text);
+  if (text->hscroll > max) {
+    text->hscroll = max;
+    text->scroll_changed = TRUE;
+  }
 }
 
 static void
@@ -865,25 +864,33 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
 const char *
 swfdec_text_field_movie_get_text (SwfdecTextFieldMovie *text)
 {
-  char *str, *p;
+  char *ret, *p;
+  const char *org;
+  gsize filled, len;
 
-  str = g_strdup (swfdec_text_buffer_get_text (text->text));
+  org = swfdec_text_buffer_get_text (text->text);
+  len = swfdec_text_buffer_get_length (text->text);
 
-  // if input was orginally html, remove all \r
-  if (text->input_html) {
-    p = str;
-    while ((p = strchr (p, '\r')) != NULL) {
-      memmove (p, p + 1, strlen (p));
-    }
+  ret = g_new (char, len + 1);
+  /* remove all \r */
+  filled = 0;
+  while ((p = strchr (org, '\r'))) {
+    memcpy (ret + filled, org, p - org);
+    filled += p - org;
+    org = p + 1;
+    len--;
   }
+  g_assert (len >= filled);
+  memcpy (ret + filled, org, len - filled);
+  ret[len] = 0;
 
-  // change all \n to \r
-  p = str;
+  /* change all \n to \r */
+  p = ret;
   while ((p = strchr (p, '\n')) != NULL) {
     *p = '\r';
   }
 
-  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context, str);
+  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context, ret);
 }
 
 void
@@ -939,8 +946,6 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   swfdec_text_buffer_set_attributes (text->text, 0, 0, &text->default_attributes,
       SWFDEC_TEXT_ATTRIBUTES_MASK);
 
-  text->input_html = html;
-
   if (SWFDEC_AS_OBJECT (text)->context->version >= 7 &&
       text->style_sheet != NULL)
   {
@@ -953,9 +958,58 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     if (html) {
       swfdec_text_field_movie_html_parse (text, str);
     } else {
-      swfdec_text_buffer_insert_text (text->text, 0, str);
+      char *s, *p;
+      s = p = g_strdup (str);
+      while ((p = strchr (p, '\r')))
+	*p = '\n';
+      swfdec_text_buffer_insert_text (text->text, 0, s);
+      g_free (s);
     }
   }
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 }
+
+gboolean
+swfdec_text_field_movie_get_visible_area (SwfdecTextFieldMovie *text, SwfdecRectangle *rect)
+{
+  int tmp;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
+  g_return_val_if_fail (rect != NULL, FALSE);
+
+  tmp = round ((BORDER_LEFT + BORDER_RIGHT) * text->xscale);
+  if (tmp >= text->stage_rect.width) {
+    *rect = text->stage_rect;
+    return FALSE;
+  } else {
+    rect->width = text->stage_rect.width - tmp;
+  }
+  tmp = round ((BORDER_TOP + BORDER_BOTTOM) * text->yscale);
+  if (tmp >= text->stage_rect.height) {
+    *rect = text->stage_rect;
+    return FALSE;
+  } else {
+    rect->height = text->stage_rect.height - tmp;
+  }
+  rect->x = text->stage_rect.x + round (BORDER_LEFT * text->xscale);
+  rect->y = text->stage_rect.y + round (BORDER_TOP * text->yscale) - 1;
+  return TRUE;
+}
+
+guint
+swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *text)
+{
+  SwfdecRectangle area;
+  guint width;
+
+  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), 0);
+
+  swfdec_text_field_movie_get_visible_area (text, &area);
+  width = swfdec_text_layout_get_width (text->layout);
+  if ((guint) area.width >= width)
+    return 0;
+  else
+    return width - area.width;
+}
+

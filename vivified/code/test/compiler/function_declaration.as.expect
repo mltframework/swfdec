@@ -1,0 +1,7 @@
+asm {
+  function2 "test" function_end_0001
+  play
+
+function_end_0001:
+  end
+}

@@ -34,6 +34,8 @@ EXTRA_DIST = \
 	empty_block.as.expect \
 	empty_statement.as \
 	empty_statement.as.expect \
+	function_declaration.as \
+	function_declaration.as.expect \
 	function_expression.as \
 	function_expression.as.expect \
 	if.as \

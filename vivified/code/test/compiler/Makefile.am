@@ -16,6 +16,8 @@ check-local: $(top_builddir)/vivified/code/vivi-compile
 EXTRA_DIST = \
 	and.as \
 	and.as.expect \
+	array_literal.as \
+	array_literal.as.expect \
 	asm_empty.as \
 	asm_empty.as.expect \
 	assignment.as \

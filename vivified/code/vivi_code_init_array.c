@@ -88,9 +88,9 @@ vivi_code_init_array_compile (ViviCodeToken *token,
   ViviCodeAsm *code;
   guint i;
 
-  for (i = 0; i < array->variables->len; i++) {
+  for (i = array->variables->len; i > 0; i--) {
     vivi_code_compiler_compile_value (compiler,
-	VIVI_CODE_VALUE (g_ptr_array_index (array->variables, i)));
+	VIVI_CODE_VALUE (g_ptr_array_index (array->variables, i - 1)));
   }
   count = vivi_code_number_new (array->variables->len);
   vivi_code_compiler_compile_value (compiler, count);

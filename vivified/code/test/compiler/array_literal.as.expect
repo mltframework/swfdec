@@ -1,0 +1,9 @@
+asm {
+  pool "a", "b"
+  push pool 0, 3, pool 1, pool 0
+  get_variable
+  push 3
+  init_array
+  set_variable
+  end
+}

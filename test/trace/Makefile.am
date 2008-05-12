@@ -342,6 +342,15 @@ EXTRA_DIST = \
 	attachmovie-object-6.swf.trace \
 	attachmovie-object-7.swf \
 	attachmovie-object-7.swf.trace \
+	beginFill-values-5.swf \
+	beginFill-values-5.swf.trace \
+	beginFill-values-6.swf \
+	beginFill-values-6.swf.trace \
+	beginFill-values-7.swf \
+	beginFill-values-7.swf.trace \
+	beginFill-values-8.swf \
+	beginFill-values-8.swf.trace \
+	beginFill-values.as \
 	bevel-filter-properties.as \
 	bevel-filter-properties-5.swf \
 	bevel-filter-properties-5.swf.trace \

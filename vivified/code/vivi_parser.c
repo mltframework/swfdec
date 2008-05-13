@@ -50,6 +50,7 @@
 #include "vivi_code_get_url.h"
 #include "vivi_code_goto.h"
 #include "vivi_code_if.h"
+#include "vivi_code_increment.h"
 #include "vivi_code_init_array.h"
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
@@ -1900,7 +1901,7 @@ parse_postfix_expression (ParseData *data, ViviCodeStatement **statement)
   }
 
   one = vivi_code_number_new (1);
-  operation = (add ? vivi_code_add_new : vivi_code_subtract_new) (value, one);
+  operation = (add ? vivi_code_increment_new (value) : vivi_code_subtract_new (value, one));
   g_object_unref (one);
 
   vivi_parser_duplicate_code_token (data);

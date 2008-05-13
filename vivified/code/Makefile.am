@@ -69,6 +69,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_get_url.c \
 	vivi_code_goto.c \
 	vivi_code_if.c \
+	vivi_code_increment.c \
 	vivi_code_init_array.c \
 	vivi_code_init_object.c \
 	vivi_code_label.c \
@@ -145,6 +146,7 @@ noinst_HEADERS = \
 	vivi_code_get_url.h \
 	vivi_code_goto.h \
 	vivi_code_if.h \
+	vivi_code_increment.h \
 	vivi_code_init_array.h \
 	vivi_code_init_object.h \
 	vivi_code_label.h \

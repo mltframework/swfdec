@@ -20,6 +20,8 @@ EXTRA_DIST = \
 	array_literal.as.expect \
 	asm_empty.as \
 	asm_empty.as.expect \
+	asm_default.as \
+	asm_default.as.expect \
 	assignment.as \
 	assignment.as.expect \
 	assignment_operator.as \

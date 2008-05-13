@@ -46,11 +46,113 @@ G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_ACTOR)
 
 /*** VFUNCS ***/
 
+/* NB: This signal can happen without a locked player */
+static void
+swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (text);
+  cairo_matrix_t matrix, translate;
+  double x, y;
+
+  if (swfdec_player_is_locked (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)))
+    swfdec_movie_invalidate_next (movie);
+
+  /* check if we indeed want to render */
+  swfdec_movie_local_to_global_matrix (movie, &matrix);
+  cairo_matrix_multiply (&matrix, &matrix,
+      &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->priv->global_to_stage);
+  if (matrix.xy != 0.0 || matrix.yx != 0.0 ||
+      matrix.xx <= 0.0 || matrix.yy <= 0.0) {
+    swfdec_rectangle_init_empty (&text->stage_rect);
+    return;
+  }
+
+  translate = matrix;
+  x = text->extents.x0;
+  y = text->extents.y0;
+  cairo_matrix_transform_point (&matrix, &x, &y);
+  cairo_matrix_init_translate (&translate, round (x) - x, round (y) - y);
+  cairo_matrix_multiply (&matrix, &matrix, &translate);
+  
+  x = text->extents.x0;
+  y = text->extents.y0;
+  cairo_matrix_transform_point (&matrix, &x, &y);
+  text->stage_rect.x = x;
+  text->stage_rect.y = y;
+  x = text->extents.x1;
+  y = text->extents.y1;
+  cairo_matrix_transform_point (&matrix, &x, &y);
+  /* FIXME: floor, ceil or round? */
+  text->stage_rect.width = round (x) - text->stage_rect.x;
+  text->stage_rect.height = round (y) - text->stage_rect.y;
+  text->xscale = matrix.xx * SWFDEC_TWIPS_SCALE_FACTOR;
+  text->yscale = matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR;
+  swfdec_text_layout_set_scale (text->layout, text->yscale);
+  if (text->word_wrap && text->stage_rect.width >= BORDER_LEFT + BORDER_RIGHT) {
+    swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
+	BORDER_LEFT - BORDER_RIGHT);
+  }
+}
+
+static void
+swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
+{
+  SwfdecMovie *movie = SWFDEC_MOVIE (text);
+  SwfdecRectangle area;
+  double xdiff, ydiff;
+
+  if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
+    return;
+
+  swfdec_text_field_movie_get_visible_area (text, &area);
+  xdiff = (double) text->layout_width - area.width;
+  ydiff = (double) text->layout_height - area.height;
+
+  if (xdiff == 0 && ydiff == 0)
+    return;
+
+  /* FIXME: rounding */
+  xdiff *= SWFDEC_TWIPS_SCALE_FACTOR / text->xscale;
+  ydiff *= SWFDEC_TWIPS_SCALE_FACTOR / text->yscale;
+
+  text->extents.x1 += xdiff;
+  switch (text->auto_size) {
+    case SWFDEC_AUTO_SIZE_LEFT:
+      break;
+    case SWFDEC_AUTO_SIZE_RIGHT:
+      movie->matrix.x0 -= xdiff;
+      break;
+    case SWFDEC_AUTO_SIZE_CENTER:
+      movie->matrix.x0 -= xdiff / 2;
+      break;
+    case SWFDEC_AUTO_SIZE_NONE:
+    default:
+      g_assert_not_reached ();
+  }
+
+  text->extents.y1 += ydiff;
+
+  swfdec_text_field_movie_update_area (text);
+}
+
 static void
 swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+
+  /* Doing auto-size when invalidating extents is a nasty trick that is 
+   * supposed to help in calculating the correct size with the same caching
+   * algorithm as the official player. Consider the following code:
+   * text.autoSize = "left";
+   * if (foo)
+   *   y = text._width;
+   * text.autoSize = "right";
+   * If foo is set, querying width will cause the autosize to happen, which
+   * will cause text to be left-aligned. If foo is not set, autosize doesn't
+   * happen until after it's set to right-aligned.
+   */
+  swfdec_text_field_movie_auto_size (text);
 
   swfdec_rect_union (extents, extents, &text->extents);
 }
@@ -61,15 +163,18 @@ swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *ma
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecRect rect;
 
-  rect = text->extents;
+  rect.x0 = text->stage_rect.x;
+  rect.y0 = text->stage_rect.y;
+  rect.x1 = text->stage_rect.x + text->stage_rect.width;
+  rect.y1 = text->stage_rect.y + text->stage_rect.height;
 
-  // border is drawn partly outside the extents
   if (text->border) {
-    rect.x1 += SWFDEC_TWIPS_TO_DOUBLE (1);
-    rect.y1 += SWFDEC_TWIPS_TO_DOUBLE (1);
+    rect.x1++;
+    rect.y1++;
   }
 
-  swfdec_rect_transform (&rect, &rect, matrix);
+  swfdec_rect_transform (&rect, &rect,
+      &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)->priv->stage_to_global);
   swfdec_player_invalidate (
       SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
 }
@@ -128,53 +233,6 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       text->scroll, area.height);
 }
 
-gboolean
-swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
-{
-  int height, width, diff;
-
-  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
-
-  if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
-    return FALSE;
-
-  width = SWFDEC_DOUBLE_TO_TWIPS (text->layout_width + BORDER_LEFT + BORDER_RIGHT);
-  height = SWFDEC_DOUBLE_TO_TWIPS (text->layout_height + BORDER_TOP + BORDER_BOTTOM);
-
-  swfdec_movie_invalidate_next (SWFDEC_MOVIE (text));
-
-  if (!text->word_wrap && text->extents.x1 -
-      text->extents.x0 != width)
-  {
-    switch (text->auto_size) {
-      case SWFDEC_AUTO_SIZE_LEFT:
-	text->extents.x1 = text->extents.x0 + width;
-	break;
-      case SWFDEC_AUTO_SIZE_RIGHT:
-	text->extents.x0 = text->extents.x1 - width;
-	break;
-      case SWFDEC_AUTO_SIZE_CENTER:
-	diff = (text->extents.x1 - text->extents.x0) - width;
-	text->extents.x0 += floor (diff / 2.0);
-	text->extents.x1 = text->extents.x0 + width;
-	break;
-      case SWFDEC_AUTO_SIZE_NONE:
-      default:
-	g_return_val_if_reached (FALSE);
-    }
-  }
-
-  if (text->extents.y1 - text->extents.y0 != height)
-  {
-    text->extents.y1 = text->extents.y0 + height;
-  }
-
-  swfdec_movie_queue_update (SWFDEC_MOVIE (text),
-      SWFDEC_MOVIE_INVALID_EXTENTS);
-
-  return TRUE;
-}
-
 static void
 swfdec_text_field_movie_dispose (GObject *object)
 {
@@ -229,51 +287,6 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
   SWFDEC_AS_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->mark (object);
 }
 
-/* NB: This signal can happen without a locked player */
-static void
-swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
-{
-  SwfdecMovie *movie = SWFDEC_MOVIE (text);
-  cairo_matrix_t matrix, translate;
-  double x, y;
-
-  /* check if we indeed want to render */
-  swfdec_movie_local_to_global_matrix (movie, &matrix);
-  cairo_matrix_multiply (&matrix, &matrix,
-      &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->priv->global_to_stage);
-  if (matrix.xy != 0.0 || matrix.yx != 0.0 ||
-      matrix.xx <= 0.0 || matrix.yy <= 0.0) {
-    swfdec_rectangle_init_empty (&text->stage_rect);
-    return;
-  }
-
-  translate = matrix;
-  x = text->extents.x0;
-  y = text->extents.y0;
-  cairo_matrix_transform_point (&matrix, &x, &y);
-  cairo_matrix_init_translate (&translate, round (x) - x, round (y) - y);
-  cairo_matrix_multiply (&matrix, &matrix, &translate);
-  
-  x = text->extents.x0;
-  y = text->extents.y0;
-  cairo_matrix_transform_point (&matrix, &x, &y);
-  text->stage_rect.x = x;
-  text->stage_rect.y = y;
-  x = text->extents.x1;
-  y = text->extents.y1;
-  cairo_matrix_transform_point (&matrix, &x, &y);
-  /* FIXME: floor, ceil or round? */
-  text->stage_rect.width = round (x) - text->stage_rect.x;
-  text->stage_rect.height = round (y) - text->stage_rect.y;
-  text->xscale = matrix.xx * SWFDEC_TWIPS_SCALE_FACTOR;
-  text->yscale = matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR;
-  swfdec_text_layout_set_scale (text->layout, text->yscale);
-  if (text->word_wrap && text->stage_rect.width >= BORDER_LEFT + BORDER_RIGHT) {
-    swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
-	BORDER_LEFT - BORDER_RIGHT);
-  }
-}
-
 /* NB: can be run with unlocked player */
 void
 swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text)
@@ -304,19 +317,19 @@ static void
 swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
     SwfdecTextFieldMovie *text)
 {
-  double scale;
   guint w, h, max;
 
-  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
+  if (swfdec_player_is_locked (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)))
+    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 
-  scale = swfdec_text_layout_get_scale (layout);
-  w = swfdec_text_layout_get_width (layout) / scale;
-  h = swfdec_text_layout_get_height (layout) / scale;
+  w = swfdec_text_layout_get_width (layout);
+  h = swfdec_text_layout_get_height (layout);
 
   if (w != text->layout_width || h != text->layout_height) {
     text->layout_width = w;
     text->layout_height = h;
-    //swfdec_text_field_movie_auto_size (text);
+    if (text->auto_size != SWFDEC_AUTO_SIZE_NONE)
+      swfdec_movie_queue_update (SWFDEC_MOVIE (text), SWFDEC_MOVIE_INVALID_EXTENTS);
   }
 
   swfdec_text_field_movie_update_scroll (text);
@@ -923,8 +936,6 @@ swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
   } else {
     swfdec_text_buffer_insert_text (text->text, start_index, str);
   }
-
-  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 }
 
 void
@@ -966,8 +977,6 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
       g_free (s);
     }
   }
-
-  swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
 }
 
 gboolean
@@ -1006,7 +1015,7 @@ swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *text)
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), 0);
 
   swfdec_text_field_movie_get_visible_area (text, &area);
-  width = swfdec_text_layout_get_width (text->layout);
+  width = text->layout_width;
   if ((guint) area.width >= width)
     return 0;
   else

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <string.h>
 #include <pango/pangocairo.h>
 
@@ -426,7 +427,7 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->layout_height);
+  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_height / text->yscale));
 }
 
 static void
@@ -438,7 +439,7 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->layout_width);
+  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_width / text->yscale));
 }
 
 /*
@@ -766,8 +767,7 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
   }
 
   if (text->auto_size != old) {
-    swfdec_text_field_movie_auto_size (text);
-    // FIXME: fix scrolling
+    swfdec_movie_queue_update (SWFDEC_MOVIE (text), SWFDEC_MOVIE_INVALID_EXTENTS);
   }
 }
 
@@ -832,8 +832,6 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
       swfdec_text_layout_set_wrap_width (text->layout, -1);
     }
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-    swfdec_text_field_movie_auto_size (text);
-    // special case: don't set scrolling
   }
 }
 
@@ -1157,7 +1155,6 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
       &format->attr, format->values_set);
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-  swfdec_text_field_movie_auto_size (text);
   // special case: update the max values, not the current values
   // swfdec_text_field_movie_update_scroll (text, FALSE);
 }

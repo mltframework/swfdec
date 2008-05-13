@@ -54,7 +54,7 @@ swfdec_text_field_create_movie (SwfdecGraphic *graphic, gsize *size)
   ret->max_chars = text->max_chars;
   ret->selectable = text->selectable;
   ret->embed_fonts = text->embed_fonts;
-  ret->word_wrap = text->word_wrap;
+  swfdec_text_layout_set_word_wrap (ret->layout, text->word_wrap);
   ret->multiline = text->multiline;
   ret->auto_size = text->auto_size;
   ret->border = text->border;

@@ -54,7 +54,6 @@ struct _SwfdecTextFieldMovie {
   int			max_chars;
   gboolean		selectable;
   gboolean		embed_fonts;
-  gboolean		word_wrap;
   gboolean		multiline;
   SwfdecAutoSize	auto_size;
   gboolean		border;

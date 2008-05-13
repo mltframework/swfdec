@@ -427,6 +427,7 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
+  swfdec_movie_update (SWFDEC_MOVIE (text));
   SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_height / text->yscale));
 }
 
@@ -439,6 +440,7 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
+  swfdec_movie_update (SWFDEC_MOVIE (text));
   SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_width / text->yscale));
 }
 
@@ -808,7 +810,8 @@ swfdec_text_field_movie_get_wordWrap (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, text->word_wrap);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, 
+      swfdec_text_layout_get_word_wrap (text->layout));
 }
 
 static void
@@ -823,16 +826,7 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (text->word_wrap != value) {
-    text->word_wrap = value;
-    if (text->word_wrap) {
-      /* FIXME: find a proper way to use BORDER_LEFT and BORDER_RIGHT here */
-      swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 4);
-    } else {
-      swfdec_text_layout_set_wrap_width (text->layout, -1);
-    }
-    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-  }
+  swfdec_text_layout_set_word_wrap (text->layout, value);
 }
 
 /*

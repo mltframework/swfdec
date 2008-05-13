@@ -88,10 +88,8 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   text->xscale = matrix.xx * SWFDEC_TWIPS_SCALE_FACTOR;
   text->yscale = matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR;
   swfdec_text_layout_set_scale (text->layout, text->yscale);
-  if (text->word_wrap && text->stage_rect.width >= BORDER_LEFT + BORDER_RIGHT) {
-    swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
-	BORDER_LEFT - BORDER_RIGHT);
-  }
+  swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
+      BORDER_LEFT - BORDER_RIGHT);
 }
 
 static void

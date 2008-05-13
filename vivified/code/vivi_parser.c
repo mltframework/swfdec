@@ -1174,7 +1174,19 @@ parse_asm_code (ParseData *data)
   guint i;
   char *identifier;
 
-  identifier = g_strdup (parse_identifier_value (data));
+  if (try_parse_token (data, TOKEN_THROW)) {
+    identifier = g_strdup ("throw");
+  } else if (try_parse_token (data, TOKEN_IMPLEMENTS)) {
+    identifier = g_strdup ("implements");
+  } else if (try_parse_token (data, TOKEN_DELETE)) {
+    identifier = g_strdup ("delete");
+  } else if (try_parse_token (data, TOKEN_RETURN)) {
+    identifier = g_strdup ("return");
+  } else if (try_parse_token (data, TOKEN_EXTENDS)) {
+    identifier = g_strdup ("extends");
+  } else {
+    identifier = g_strdup (parse_identifier_value (data));
+  }
 
   if (try_parse_token (data, TOKEN_COLON)) {
     ViviCodeAsm *code = VIVI_CODE_ASM (vivi_code_label_new (identifier));
@@ -1234,7 +1246,12 @@ parse_asm_statement (ParseData *data)
       code = parse_asm_code (data);
       vivi_code_assembler_add_code (assembler, code);
       g_object_unref (code);
-    } while (peek_token (data, TOKEN_IDENTIFIER));
+    } while (peek_token (data, TOKEN_IDENTIFIER) ||
+	peek_token (data, TOKEN_THROW) ||
+	peek_token (data, TOKEN_IMPLEMENTS) ||
+	peek_token (data, TOKEN_DELETE) ||
+	peek_token (data, TOKEN_RETURN) ||
+	peek_token (data, TOKEN_EXTENDS));
 
     if (!try_parse_token (data, TOKEN_BRACE_RIGHT)) {
       vivi_parser_error_unexpected_or (data, TOKEN_BRACE_RIGHT,

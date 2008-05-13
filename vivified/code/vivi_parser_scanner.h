@@ -140,6 +140,8 @@ typedef enum {
   TOKEN_RESERVED_KEYWORD,
 
   // ActionScript specific
+  TOKEN_EXTENDS,
+  TOKEN_IMPLEMENTS,
   TOKEN_UNDEFINED,
 
   TOKEN_LAST

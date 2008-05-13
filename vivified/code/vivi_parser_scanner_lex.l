@@ -188,11 +188,9 @@ identifier_part		[$_a-zA-Z0-9]
 "double"		{ return TOKEN_RESERVED_KEYWORD; }
 "enum"			{ return TOKEN_RESERVED_KEYWORD; }
 "export"		{ return TOKEN_RESERVED_KEYWORD; }
-"extends"		{ return TOKEN_RESERVED_KEYWORD; }
 "final"			{ return TOKEN_RESERVED_KEYWORD; }
 "float"			{ return TOKEN_RESERVED_KEYWORD; }
 "goto"			{ return TOKEN_RESERVED_KEYWORD; }
-"implements"		{ return TOKEN_RESERVED_KEYWORD; }
 "import"		{ return TOKEN_RESERVED_KEYWORD; }
 	/*"int"			{ return TOKEN_RESERVED_KEYWORD; }*/
 "interface"		{ return TOKEN_RESERVED_KEYWORD; }
@@ -210,6 +208,8 @@ identifier_part		[$_a-zA-Z0-9]
 "transient"		{ return TOKEN_RESERVED_KEYWORD; }
 "volatile"		{ return TOKEN_RESERVED_KEYWORD; }
 
+"extends"		{ return TOKEN_EXTENDS; }
+"implements"		{ return TOKEN_IMPLEMENTS; }
 "undefined"		{ return TOKEN_UNDEFINED; }
 
 "null"			{ return TOKEN_NULL; }

@@ -196,6 +196,8 @@ static const struct {
   { TOKEN_RESERVED_KEYWORD, "RESERVED KEYWORD" },
 
   // ActionScript specific
+  { TOKEN_EXTENDS, "extends" },
+  { TOKEN_IMPLEMENTS, "implements" },
   { TOKEN_UNDEFINED, "undefined" },
 
   { TOKEN_LAST, NULL }

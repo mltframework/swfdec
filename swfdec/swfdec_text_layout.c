@@ -772,6 +772,28 @@ out:
   return MAX (count, 1);
 }
 
+static int
+swfdec_text_layout_get_line_offset (SwfdecTextLayout *layout, 
+    SwfdecTextBlock *block, PangoLayoutLine *line)
+{
+  PangoAlignment align;
+  int width, diff;
+
+  align = pango_layout_get_alignment (block->layout);
+  if (align == PANGO_ALIGN_LEFT)
+    return 0;
+
+  /* FIXME: realign lines that are too long */
+  pango_layout_get_pixel_size (block->layout, &width, NULL);
+  diff = layout->width - width;
+  if (align == PANGO_ALIGN_CENTER)
+    diff /= 2;
+  else
+    diff -= 1;
+
+  return diff;
+}
+
 /**
  * swfdec_text_layout_render:
  * @layout: the layout to render
@@ -811,15 +833,16 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
     }
     for (;row < (guint) pango_layout_get_line_count (block->layout); row++) {
       PangoLayoutLine *line = pango_layout_get_line_readonly (block->layout, row);
+      int xoffset = swfdec_text_layout_get_line_offset (layout, block, line);
       
       pango_layout_line_get_pixel_extents (line, NULL, &extents);
       if (extents.height > (int) height && !first_line)
 	return;
       first_line = FALSE;
-      cairo_translate (cr, 0, - extents.y);
+      cairo_translate (cr, xoffset, - extents.y);
       pango_cairo_show_layout_line (cr, line);
       height -= extents.height;
-      cairo_translate (cr, 0, extents.height + extents.y);
+      cairo_translate (cr, - xoffset, extents.height + extents.y);
     }
     if ((int) height <= pango_layout_get_spacing (block->layout) / PANGO_SCALE)
       return;

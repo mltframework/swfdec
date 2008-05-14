@@ -223,7 +223,10 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
   } else if (condition == SWFDEC_EVENT_SCROLL || condition == SWFDEC_EVENT_CHANGED) {
     SwfdecAsValue argv[2];
 
-    SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
+    if (condition == SWFDEC_EVENT_SCROLL)
+      SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
+    else
+      SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onChanged);
     SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (actor));
     swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
     swfdec_as_object_call (SWFDEC_AS_OBJECT (actor),

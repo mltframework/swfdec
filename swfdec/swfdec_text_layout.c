@@ -323,11 +323,7 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
       block->rect.y = 0;
       block->row = 0;
     }
-    if (layout->wrap_width == -1) {
-      block->rect.width = G_MAXINT;
-    } else {
-      block->rect.width = layout->wrap_width;
-    }
+    block->rect.width = layout->width;
     desc = pango_font_description_new ();
     swfdec_text_layout_apply_attributes_to_description (layout, attr, desc);
     pango_layout_set_font_description (block->layout, desc);
@@ -347,7 +343,7 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
       first = FALSE;
     }
     swfdec_text_layout_apply_line_attributes (block, attr);
-    if (layout->wrap_width != -1)
+    if (layout->word_wrap)
       pango_layout_set_width (block->layout, block->rect.width * PANGO_SCALE);
 
     iter = swfdec_text_buffer_get_iter (layout->text, start);
@@ -488,7 +484,7 @@ swfdec_text_layout_class_init (SwfdecTextLayoutClass *klass)
 static void
 swfdec_text_layout_init (SwfdecTextLayout *layout)
 {
-  layout->wrap_width = -1;
+  layout->width = G_MAXINT; /* G_MAXUINT causes overflow */
   layout->scale = 1.0;
   layout->blocks = g_sequence_new (swfdec_text_block_free);
 }
@@ -509,24 +505,43 @@ swfdec_text_layout_new (SwfdecTextBuffer *buffer)
 }
 
 void
-swfdec_text_layout_set_wrap_width (SwfdecTextLayout *layout, int wrap_width)
+swfdec_text_layout_set_wrap_width (SwfdecTextLayout *layout, guint width)
 {
   g_return_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout));
-  g_return_if_fail (wrap_width >= -1);
 
-  if (layout->wrap_width == wrap_width)
+  if (layout->width == width)
     return;
 
-  layout->wrap_width = wrap_width;
+  layout->width = width;
   swfdec_text_layout_invalidate (layout);
 }
 
-int
+guint
 swfdec_text_layout_get_wrap_width (SwfdecTextLayout *layout)
 {
   g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), -1);
 
-  return layout->wrap_width;
+  return layout->width;
+}
+
+void
+swfdec_text_layout_set_word_wrap (SwfdecTextLayout *layout, gboolean word_wrap)
+{
+  g_return_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout));
+
+  if (layout->word_wrap == word_wrap)
+    return;
+
+  layout->word_wrap = word_wrap;
+  swfdec_text_layout_invalidate (layout);
+}
+
+gboolean
+swfdec_text_layout_get_word_wrap (SwfdecTextLayout *layout)
+{
+  g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), -1);
+
+  return layout->word_wrap;
 }
 
 gboolean
@@ -575,7 +590,7 @@ swfdec_text_layout_set_scale (SwfdecTextLayout *layout, double scale)
  * @layout: the layout
  *
  * Computes the width of the layout in pixels. Note that the width can still
- * exceed the width set with swfdec_text_layout_set_wrap_width() if some
+ * exceed the width set with swfdec_text_layout_set_width() if some
  * words are too long. Computing the width takes a long time, so it might be
  * useful to cache the value.
  *
@@ -620,6 +635,8 @@ swfdec_text_layout_get_height (SwfdecTextLayout *layout)
 
   swfdec_text_layout_ensure (layout);
 
+  if (swfdec_text_buffer_get_length (layout->text) == 0)
+    return 0;
   iter = g_sequence_iter_prev (g_sequence_get_end_iter (layout->blocks));
   block = g_sequence_get (iter);
   return block->rect.y + block->rect.height;
@@ -755,6 +772,28 @@ out:
   return MAX (count, 1);
 }
 
+static int
+swfdec_text_layout_get_line_offset (SwfdecTextLayout *layout, 
+    SwfdecTextBlock *block, PangoLayoutLine *line)
+{
+  PangoAlignment align;
+  int width, diff;
+
+  align = pango_layout_get_alignment (block->layout);
+  if (align == PANGO_ALIGN_LEFT)
+    return 0;
+
+  /* FIXME: realign lines that are too long */
+  pango_layout_get_pixel_size (block->layout, &width, NULL);
+  diff = layout->width - width;
+  if (align == PANGO_ALIGN_CENTER)
+    diff /= 2;
+  else
+    diff -= 1;
+
+  return diff;
+}
+
 /**
  * swfdec_text_layout_render:
  * @layout: the layout to render
@@ -794,15 +833,16 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
     }
     for (;row < (guint) pango_layout_get_line_count (block->layout); row++) {
       PangoLayoutLine *line = pango_layout_get_line_readonly (block->layout, row);
+      int xoffset = swfdec_text_layout_get_line_offset (layout, block, line);
       
       pango_layout_line_get_pixel_extents (line, NULL, &extents);
       if (extents.height > (int) height && !first_line)
 	return;
       first_line = FALSE;
-      cairo_translate (cr, 0, - extents.y);
+      cairo_translate (cr, xoffset, - extents.y);
       pango_cairo_show_layout_line (cr, line);
       height -= extents.height;
-      cairo_translate (cr, 0, extents.height + extents.y);
+      cairo_translate (cr, - xoffset, extents.height + extents.y);
     }
     if ((int) height <= pango_layout_get_spacing (block->layout) / PANGO_SCALE)
       return;

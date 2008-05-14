@@ -379,6 +379,24 @@ EXTRA_DIST = \
 	replace-shape-shape-7.swf \
 	replace-shape-shape-7.swf.png \
 	swfdec.jpg \
+	text-field-align-5.swf \
+	text-field-align-5.swf.png \
+	text-field-align-6.swf \
+	text-field-align-6.swf.png \
+	text-field-align-7.swf \
+	text-field-align-7.swf.png \
+	text-field-align-8.swf \
+	text-field-align-8.swf.png \
+	text-field-align.as \
+	text-field-autoSize-5.swf \
+	text-field-autoSize-5.swf.png \
+	text-field-autoSize-6.swf \
+	text-field-autoSize-6.swf.png \
+	text-field-autoSize-7.swf \
+	text-field-autoSize-7.swf.png \
+	text-field-autoSize-8.swf \
+	text-field-autoSize-8.swf.png \
+	text-field-autoSize.as \
 	text-field-autosize.as \
 	text-field-autosize-6.swf \
 	text-field-autosize-6.swf.png \

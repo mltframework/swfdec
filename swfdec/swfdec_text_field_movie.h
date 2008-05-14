@@ -54,7 +54,6 @@ struct _SwfdecTextFieldMovie {
   int			max_chars;
   gboolean		selectable;
   gboolean		embed_fonts;
-  gboolean		word_wrap;
   gboolean		multiline;
   SwfdecAutoSize	auto_size;
   gboolean		border;
@@ -103,7 +102,6 @@ void		swfdec_text_field_movie_set_text	(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
 void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie * text);
-gboolean	swfdec_text_field_movie_auto_size	(SwfdecTextFieldMovie *	text);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *		text);
 void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
 							 const char *			value);

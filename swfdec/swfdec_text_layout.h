@@ -43,7 +43,8 @@ struct _SwfdecTextLayout
 
   SwfdecTextBuffer *	text;		/* the text we render */
   /* properties */
-  int			wrap_width;	/* maximum width to use */
+  gboolean		word_wrap;	/* TRUE if we do word wrapping */
+  guint			width;		/* width we use for alignment */
   gboolean		password;	/* TRUE if the text should be displayed as asterisks */
   double		scale;		/* scale factor in use */
 
@@ -61,8 +62,11 @@ GType			swfdec_text_layout_get_type		(void);
 SwfdecTextLayout *	swfdec_text_layout_new			(SwfdecTextBuffer *	buffer);
 
 void			swfdec_text_layout_set_wrap_width	(SwfdecTextLayout *	layout,
-								 int			wrap_width);
-int			swfdec_text_layout_get_wrap_width	(SwfdecTextLayout *	layout);
+								 guint			width);
+guint			swfdec_text_layout_get_wrap_width	(SwfdecTextLayout *	layout);
+void			swfdec_text_layout_set_word_wrap	(SwfdecTextLayout *	layout,
+								 gboolean		wrap);
+gboolean		swfdec_text_layout_get_word_wrap	(SwfdecTextLayout *	layout);
 void			swfdec_text_layout_set_password		(SwfdecTextLayout *	layout,
 								 gboolean		password);
 gboolean		swfdec_text_layout_get_password		(SwfdecTextLayout *	layout);

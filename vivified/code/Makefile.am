@@ -88,7 +88,6 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_unary.c \
 	vivi_code_undefined.c \
 	vivi_code_value.c \
-	vivi_code_value_statement.c \
 	vivi_code_variable.c \
 	vivi_compiler_empty_statement.c \
 	vivi_compiler_get_temporary.c \
@@ -166,7 +165,6 @@ noinst_HEADERS = \
 	vivi_code_unary.h \
 	vivi_code_undefined.h \
 	vivi_code_value.h \
-	vivi_code_value_statement.h \
 	vivi_code_variable.h \
 	vivi_compiler_empty_statement.h \
 	vivi_compiler_get_temporary.h \

@@ -52,7 +52,6 @@
 #include "vivi_code_string.h"
 #include "vivi_code_unary.h"
 #include "vivi_code_undefined.h"
-#include "vivi_code_value_statement.h"
 #include "vivi_code_variable.h"
 #include "vivi_decompiler_block.h"
 #include "vivi_decompiler_duplicate.h"
@@ -214,14 +213,12 @@ static gboolean
 vivi_decompile_pop (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviCodeStatement *stmt;
   ViviCodeValue *val;
-  
+
   val = vivi_decompiler_state_pop (state);
-  stmt = vivi_code_value_statement_new (val);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block),
+      VIVI_CODE_STATEMENT (val));
   g_object_unref (val);
-  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), stmt);
-  g_object_unref (stmt);
   return TRUE;
 }
 
@@ -1121,9 +1118,7 @@ vivi_decompiler_merge_andor (GList **list)
       case 1:
 	{
 	  ViviCodeStatement *stmt = vivi_code_block_get_statement (VIVI_CODE_BLOCK (andor), 0);
-	  if (!VIVI_IS_CODE_VALUE_STATEMENT (stmt))
-	    continue;
-	  if (value != vivi_code_value_statement_get_value (VIVI_CODE_VALUE_STATEMENT (stmt)))
+	  if (!VIVI_IS_CODE_VALUE (stmt))
 	    continue;
 	}
 	break;

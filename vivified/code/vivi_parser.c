@@ -63,7 +63,6 @@
 #include "vivi_code_throw.h"
 #include "vivi_code_unary.h"
 #include "vivi_code_undefined.h"
-#include "vivi_code_value_statement.h"
 #include "vivi_code_variable.h"
 #include "vivi_compiler_empty_statement.h"
 #include "vivi_compiler_get_temporary.h"
@@ -2838,8 +2837,7 @@ parse_expression_statement (ParseData *data)
   }
 
   statement = vivi_parser_join_statements (statement,
-      vivi_code_value_statement_new (value));
-  g_object_unref (value);
+      VIVI_CODE_STATEMENT (value));
 
   return statement;
 }

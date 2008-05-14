@@ -789,7 +789,6 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     return;
   }
 
-  cairo_save (cr);
   if (movie->masked_by != NULL) {
     cairo_push_group (cr);
   }
@@ -798,6 +797,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     SWFDEC_DEBUG ("pushing group for blend mode %u", movie->blend_mode);
     cairo_push_group (cr);
   }
+  cairo_save (cr);
 
   SWFDEC_LOG ("transforming movie, transform: %g %g  %g %g   %g %g",
       movie->matrix.xx, movie->matrix.yy,
@@ -830,6 +830,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
     g_warning ("error rendering with cairo: %s", cairo_status_to_string (cairo_status (cr)));
   }
+  cairo_restore (cr);
   if (group) {
     cairo_pattern_t *pattern;
 
@@ -864,7 +865,6 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_mask (cr, mask);
     cairo_pattern_destroy (mask);
   }
-  cairo_restore (cr);
 }
 
 static void

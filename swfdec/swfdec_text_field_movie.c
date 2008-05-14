@@ -118,11 +118,12 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
       x0 = 0;
       break;
     case SWFDEC_AUTO_SIZE_RIGHT:
-      x0 = x1;
+      x0 = -x1;
       x1 = 0;
       break;
     case SWFDEC_AUTO_SIZE_CENTER:
-      x0 = x1 = x1 / 2;
+      x1 = x1 / 2;
+      x0 = -x1;
       break;
     case SWFDEC_AUTO_SIZE_NONE:
     default:

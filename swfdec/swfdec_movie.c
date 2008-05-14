@@ -953,6 +953,10 @@ swfdec_movie_mark (SwfdecAsObject *object)
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
 }
 
+#define swfdec_movie_is_scriptable(mov) \
+  ((SWFDEC_IS_ACTOR (mov) || SWFDEC_IS_VIDEO_MOVIE (mov)) && \
+   (swfdec_movie_get_version (mov) > 5 || !SWFDEC_IS_TEXT_FIELD_MOVIE (mov)))
+
 /* FIXME: This function can definitely be implemented easier */
 SwfdecMovie *
 swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed)
@@ -985,8 +989,12 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
     SwfdecMovie *cur = walk->data;
     if (cur->original_name == SWFDEC_AS_STR_EMPTY && !unnamed)
       continue;
-    if (swfdec_strcmp (version, cur->name, name) == 0)
-      return cur;
+    if (swfdec_strcmp (version, cur->name, name) == 0) {
+      if (swfdec_movie_is_scriptable (cur))
+	return cur;
+      else
+	return movie;
+    }
   }
   return NULL;
 }
@@ -1040,9 +1048,6 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   
   ret = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (ret) {
-    if ((!SWFDEC_IS_ACTOR (ret) && !SWFDEC_IS_VIDEO_MOVIE (ret)) ||
-	(swfdec_movie_get_version (movie) <= 5 && SWFDEC_IS_TEXT_FIELD_MOVIE (ret)))
-      ret = movie;
     SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (ret));
     *flags = 0;
     return TRUE;

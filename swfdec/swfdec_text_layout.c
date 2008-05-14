@@ -772,6 +772,35 @@ out:
   return MAX (count, 1);
 }
 
+void
+swfdec_text_layout_get_ascent_descent (SwfdecTextLayout *layout, int *ascent, 
+    int *descent)
+{
+  SwfdecTextBlock *block;
+  GSequenceIter *iter;
+  PangoLayoutLine *line;
+  PangoRectangle rect;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout));
+  g_return_if_fail (ascent != NULL);
+  g_return_if_fail (descent != NULL);
+
+  if (swfdec_text_buffer_get_length (layout->text) == 0) {
+    *ascent = 0;
+    *descent = 0;
+    return;
+  }
+
+  swfdec_text_layout_ensure (layout);
+  iter = g_sequence_get_begin_iter (layout->blocks);
+  block = g_sequence_get (iter);
+  line = pango_layout_get_line_readonly (block->layout, 0);
+  pango_layout_line_get_pixel_extents (line, NULL, &rect);
+
+  *ascent = PANGO_ASCENT (rect) - 1; /* don't ask me... */
+  *descent = PANGO_DESCENT (rect);
+}
+
 static int
 swfdec_text_layout_get_line_offset (SwfdecTextLayout *layout, 
     SwfdecTextBlock *block, PangoLayoutLine *line)

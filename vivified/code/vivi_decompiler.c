@@ -634,7 +634,7 @@ vivi_decompile_store_register (ViviDecompilerBlock *block, ViviDecompilerState *
     g_object_unref (assign);
 
     g_object_unref (value);
-    value = vivi_code_get_new_name (name);
+    value = vivi_code_get_new_name (NULL, name);
     g_free (name);
   }
   vivi_decompiler_state_set_register (state, data[0], value);
@@ -1562,7 +1562,7 @@ vivi_decompiler_preload (ViviDecompilerState *state, SwfdecScript *script)
 
   for (i = 0; i < script->n_arguments; i++) {
     if (script->arguments[i].preload) {
-      ViviCodeValue *value = vivi_code_get_new_name (script->arguments[i].name);
+      ViviCodeValue *value = vivi_code_get_new_name (NULL, script->arguments[i].name);
       vivi_decompiler_state_set_register (state, script->arguments[i].preload, value);
       g_object_unref (value);
     }
@@ -1570,7 +1570,7 @@ vivi_decompiler_preload (ViviDecompilerState *state, SwfdecScript *script)
   reg = 1;
   for (i = 0; i < G_N_ELEMENTS (preloads); i++) {
     if (script->flags & preloads[i].flag) {
-      ViviCodeValue *value = vivi_code_get_new_name (preloads[i].name);
+      ViviCodeValue *value = vivi_code_get_new_name (NULL, preloads[i].name);
       vivi_decompiler_state_set_register (state, reg++, value);
       g_object_unref (value);
     }

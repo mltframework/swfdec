@@ -357,22 +357,6 @@ vivi_parser_assignment_new (ViviCodeValue *left, ViviCodeValue *right)
   return vivi_code_assignment_new (from, left, right);
 }
 
-static ViviCodeValue *
-vivi_parser_get_new (ViviCodeValue *from, ViviCodeValue *name)
-{
-  g_return_val_if_fail (VIVI_IS_CODE_VALUE (from), NULL);
-  g_return_val_if_fail (VIVI_IS_CODE_VALUE (name), NULL);
-
-  if (VIVI_IS_CODE_GET (name)) {
-    ViviCodeGet *get = VIVI_CODE_GET (name);
-
-    if (get->from == NULL)
-      name = g_object_ref (get->name);
-  }
-
-  return vivi_code_get_new (from, name);
-}
-
 static gboolean
 vivi_parser_value_is_left_hand_side (ViviCodeValue *value)
 {
@@ -825,7 +809,7 @@ parse_identifier (ParseData *data)
 
   vivi_parser_start_code_token (data);
 
-  value = vivi_code_get_new_name (parse_identifier_value (data));
+  value = vivi_code_get_new_name (NULL, parse_identifier_value (data));
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
 
@@ -1616,7 +1600,7 @@ parse_primary_expression (ParseData *data)
   vivi_parser_start_code_token (data);
 
   if (try_parse_token (data, TOKEN_THIS)) {
-    value = vivi_code_get_new_name ("this");
+    value = vivi_code_get_new_name (NULL, "this");
     vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
     return value;
   }
@@ -1658,7 +1642,7 @@ peek_member_expression (ParseData *data)
 static ViviCodeValue *
 parse_member_expression (ParseData *data)
 {
-  ViviCodeValue *value, *member;
+  ViviCodeValue *value;
 
   vivi_parser_start_code_token (data);
 
@@ -1679,19 +1663,20 @@ parse_member_expression (ParseData *data)
     ViviCodeValue *tmp;
 
     if (try_parse_token (data, TOKEN_BRACKET_LEFT)) {
-      member = parse_expression (data);
+      ViviCodeValue *member = parse_expression (data);
+      tmp = value;
+      value = vivi_code_get_new (tmp, member);
+      g_object_unref (tmp);
+      g_object_unref (member);
       parse_token (data, TOKEN_BRACKET_RIGHT);
     } else if (try_parse_token (data, TOKEN_DOT)) {
-      member = parse_identifier (data);
+      tmp = value;
+      value = vivi_code_get_new_name (tmp, parse_identifier_value (data));
+      g_object_unref (tmp);
     } else {
       vivi_parser_end_code_token (data, NULL);
       return value;
     }
-
-    tmp = value;
-    value = vivi_parser_get_new (tmp, member);
-    g_object_unref (tmp);
-    g_object_unref (member);
 
     vivi_parser_duplicate_code_token (data);
     vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));

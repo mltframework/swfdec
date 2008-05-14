@@ -150,14 +150,15 @@ vivi_code_get_new (ViviCodeValue *from, ViviCodeValue *name)
 }
 
 ViviCodeValue *
-vivi_code_get_new_name (const char *name)
+vivi_code_get_new_name (ViviCodeValue *from, const char *name)
 {
   ViviCodeValue *result, *constant;
 
+  g_return_val_if_fail (from == NULL || VIVI_IS_CODE_VALUE (from), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
   constant = vivi_code_string_new (name);
-  result = vivi_code_get_new (NULL, constant);
+  result = vivi_code_get_new (from, constant);
   g_object_unref (constant);
   return result;
 }

@@ -108,6 +108,8 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
     cairo_surface_destroy (stream->surface);
     stream->surface = NULL;
   }
+  if (stream->flvdecoder == NULL)
+    return;
   if (stream->flvdecoder->video) {
     buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, timestamp,
 	FALSE, &format, &stream->current_time, &stream->next_time);
@@ -142,7 +144,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
     swfdec_net_stream_update_playing (stream);
   }
   if (process_events) {
-    while (process_events_from <= stream->current_time) {
+    while (stream->flvdecoder && process_events_from <= stream->current_time) {
       SwfdecAsValue name, value;
       SwfdecBits bits;
       SwfdecBuffer *event = swfdec_flv_decoder_get_data (stream->flvdecoder, process_events_from, &process_events_from);

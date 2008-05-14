@@ -303,6 +303,8 @@ swfdec_net_stream_stream_target_close (SwfdecStreamTarget *target,
   swfdec_decoder_eof (SWFDEC_DECODER (ns->flvdecoder));
   swfdec_net_stream_onstatus (ns, SWFDEC_AS_STR_NetStream_Buffer_Flush,
       SWFDEC_AS_STR_status);
+  if (ns->flvdecoder == NULL)
+    return;
   swfdec_net_stream_video_goto (ns, ns->current_time);
   ns->buffering = FALSE;
   if (swfdec_flv_decoder_get_video_info (ns->flvdecoder, &first, &last) &&

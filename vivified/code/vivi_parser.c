@@ -50,7 +50,7 @@
 #include "vivi_code_get_url.h"
 #include "vivi_code_goto.h"
 #include "vivi_code_if.h"
-#include "vivi_code_increment.h"
+#include "vivi_code_inc_dec.h"
 #include "vivi_code_init_array.h"
 #include "vivi_code_init_object.h"
 #include "vivi_code_loop.h"
@@ -355,6 +355,25 @@ vivi_parser_assignment_new (ViviCodeValue *left, ViviCodeValue *right)
   }
 
   return vivi_code_assignment_new (from, left, right);
+}
+
+static ViviCodeValue *
+vivi_parser_inc_dec_new (ViviCodeValue *left, gboolean increment,
+    gboolean pre_assignment)
+{
+  ViviCodeValue *from, *name;
+
+  if (VIVI_IS_CODE_GET (left)) {
+    ViviCodeGet *get = VIVI_CODE_GET (left);
+
+    from = get->from;
+    name = get->name;
+  } else {
+    from = NULL;
+    name = left;
+  }
+
+  return vivi_code_inc_dec_new (from, name, increment, pre_assignment);
 }
 
 static gboolean
@@ -1763,7 +1782,7 @@ peek_postfix_expression (ParseData *data)
 static ViviCodeValue *
 parse_postfix_expression (ParseData *data)
 {
-  ViviCodeValue *assignment, *value, *operation, *one;
+  ViviCodeValue *value, *operation;
   gboolean add;
 
   vivi_parser_start_code_token (data);
@@ -1790,20 +1809,11 @@ parse_postfix_expression (ParseData *data)
 	"Invalid left-hand side expression for INCREASE/DECREASE");
   }
 
-  one = vivi_code_number_new (1);
-  operation = (add ? vivi_code_increment_new (value) : vivi_code_subtract_new (value, one));
-  g_object_unref (one);
+  operation = vivi_parser_inc_dec_new (value, add, FALSE);
 
-  vivi_parser_duplicate_code_token (data);
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (operation));
 
-  assignment = vivi_parser_assignment_new (value, operation);
-  g_object_unref (operation);
-  g_object_unref (value);
-
-  vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (assignment));
-
-  return assignment;
+  return operation;
 }
 
 static gboolean
@@ -1830,7 +1840,7 @@ peek_unary_expression (ParseData *data)
 static ViviCodeValue *
 parse_unary_expression (ParseData *data)
 {
-  ViviCodeValue *value, *tmp, *one;
+  ViviCodeValue *value, *tmp;
   gboolean increment = FALSE;
 
   switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
@@ -1852,17 +1862,11 @@ parse_unary_expression (ParseData *data)
 	    "Invalid left-hand side expression for INCREASE/DECREASE");
       }
 
-      one = vivi_code_number_new (1);
-      tmp = (increment ? vivi_code_increment_new (value) :
-	  vivi_code_subtract_new (value, one));
-      g_object_unref (one);
-
-      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (tmp));
-
-      one = vivi_parser_assignment_new (value, tmp);
+      tmp = value;
+      value = vivi_parser_inc_dec_new (tmp, increment, TRUE);
       g_object_unref (tmp);
-      g_object_unref (value);
-      value = one;
+
+      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
       break;
     case TOKEN_PLUS:
       vivi_parser_scanner_get_next_token (data->scanner);

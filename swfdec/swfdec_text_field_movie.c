@@ -97,38 +97,46 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (text);
   SwfdecRectangle area;
-  double xdiff, ydiff;
+  double x0, z0, x1, z1; /* y0 and y1 are taken by math.h */
 
   if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return;
 
   swfdec_text_field_movie_get_visible_area (text, &area);
-  xdiff = (double) text->layout_width - area.width;
-  ydiff = (double) text->layout_height - area.height;
+  x1 = (double) text->layout_width - area.width;
+  z1 = (double) text->layout_height - area.height;
 
-  if (xdiff == 0 && ydiff == 0)
+  if (x1 == 0 && z1 == 0)
     return;
 
   /* FIXME: rounding */
-  xdiff *= SWFDEC_TWIPS_SCALE_FACTOR / text->xscale;
-  ydiff *= SWFDEC_TWIPS_SCALE_FACTOR / text->yscale;
+  x1 *= SWFDEC_TWIPS_SCALE_FACTOR / text->xscale;
+  z1 *= SWFDEC_TWIPS_SCALE_FACTOR / text->yscale;
 
-  text->extents.x1 += xdiff;
   switch (text->auto_size) {
     case SWFDEC_AUTO_SIZE_LEFT:
+      x0 = 0;
       break;
     case SWFDEC_AUTO_SIZE_RIGHT:
-      movie->matrix.x0 -= xdiff;
+      x0 = x1;
+      x1 = 0;
       break;
     case SWFDEC_AUTO_SIZE_CENTER:
-      movie->matrix.x0 -= xdiff / 2;
+      x0 = x1 = x1 / 2;
       break;
     case SWFDEC_AUTO_SIZE_NONE:
     default:
       g_assert_not_reached ();
   }
+  z0 = 0;
 
-  text->extents.y1 += ydiff;
+  cairo_matrix_transform_distance (&movie->inverse_matrix, &x0, &z0);
+  text->extents.x0 += x0;
+  text->extents.y0 += z0;
+
+  cairo_matrix_transform_distance (&movie->inverse_matrix, &x1, &z1);
+  text->extents.x1 += x1;
+  text->extents.y1 += z1;
 
   swfdec_text_field_movie_update_area (text);
 }

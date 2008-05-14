@@ -29,21 +29,19 @@
 G_DEFINE_TYPE (ViviCodeAnd, vivi_code_and, VIVI_TYPE_CODE_BINARY)
 
 static void
-vivi_code_and_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_and_compile_value (ViviCodeValue *value, ViviCodeCompiler *compiler)
 {
-  ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
+  ViviCodeBinary *binary = VIVI_CODE_BINARY (value);
   ViviCodeLabel *label_end;
 
   vivi_code_compiler_compile_value (compiler, binary->left);
-
   vivi_code_compiler_take_code (compiler, vivi_code_asm_push_duplicate_new ());
-  vivi_code_compiler_take_code (compiler, vivi_code_asm_not_new ());
 
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_not_new ());
   label_end = vivi_code_compiler_create_label (compiler, "and_end");
   vivi_code_compiler_take_code (compiler, vivi_code_asm_if_new (label_end));
 
   vivi_code_compiler_take_code (compiler, vivi_code_asm_pop_new ());
-
   vivi_code_compiler_compile_value (compiler, binary->right);
 
   vivi_code_compiler_take_code (compiler, VIVI_CODE_ASM (label_end));
@@ -52,10 +50,10 @@ vivi_code_and_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 static void
 vivi_code_and_class_init (ViviCodeAndClass *klass)
 {
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
   ViviCodeBinaryClass *binary_class = VIVI_CODE_BINARY_CLASS (klass);
 
-  token_class->compile = vivi_code_and_compile;
+  value_class->compile_value = vivi_code_and_compile_value;
 
   binary_class->operator_name = "&&";
 }

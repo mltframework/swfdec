@@ -42,9 +42,9 @@ vivi_code_string_dispose (GObject *object)
 }
 
 static void
-vivi_code_string_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_string_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
-  ViviCodeString *string = VIVI_CODE_STRING (token);
+  ViviCodeString *string = VIVI_CODE_STRING (value);
   char *s;
 
   s = vivi_code_escape_string (string->value);
@@ -53,9 +53,10 @@ vivi_code_string_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_string_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_string_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
 {
-  ViviCodeString *string = VIVI_CODE_STRING (token);
+  ViviCodeString *string = VIVI_CODE_STRING (value);
   ViviCodeAsm *code;
 
   code = vivi_code_asm_push_new ();
@@ -81,13 +82,13 @@ static void
 vivi_code_string_class_init (ViviCodeStringClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
   ViviCodeConstantClass *constant_class = VIVI_CODE_CONSTANT_CLASS (klass);
 
   object_class->dispose = vivi_code_string_dispose;
 
-  token_class->print = vivi_code_string_print;
-  token_class->compile = vivi_code_string_compile;
+  value_class->print_value = vivi_code_string_print_value;
+  value_class->compile_value = vivi_code_string_compile_value;
 
   constant_class->get_variable_name = vivi_code_string_get_variable_name;
 }

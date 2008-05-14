@@ -29,9 +29,9 @@
 G_DEFINE_TYPE (ViviCodeOr, vivi_code_or, VIVI_TYPE_CODE_BINARY)
 
 static void
-vivi_code_or_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_or_compile_value (ViviCodeValue *value, ViviCodeCompiler *compiler)
 {
-  ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
+  ViviCodeBinary *binary = VIVI_CODE_BINARY (value);
   ViviCodeLabel *label_end;
 
   vivi_code_compiler_compile_value (compiler, binary->left);
@@ -48,10 +48,10 @@ vivi_code_or_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 static void
 vivi_code_or_class_init (ViviCodeOrClass *klass)
 {
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
   ViviCodeBinaryClass *binary_class = VIVI_CODE_BINARY_CLASS (klass);
 
-  token_class->compile = vivi_code_or_compile;
+  value_class->compile_value = vivi_code_or_compile_value;
 
   binary_class->operator_name = "||";
 }

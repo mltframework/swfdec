@@ -29,9 +29,9 @@
 G_DEFINE_TYPE (ViviCodeNumber, vivi_code_number, VIVI_TYPE_CODE_CONSTANT)
 
 static void
-vivi_code_number_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_number_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
-  ViviCodeNumber *number = VIVI_CODE_NUMBER (token);
+  ViviCodeNumber *number = VIVI_CODE_NUMBER (value);
   char s[G_ASCII_DTOSTR_BUF_SIZE];
 
   g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE, number->value);
@@ -39,9 +39,10 @@ vivi_code_number_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_number_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_number_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
 {
-  ViviCodeNumber *number = VIVI_CODE_NUMBER (token);
+  ViviCodeNumber *number = VIVI_CODE_NUMBER (value);
   ViviCodeAsm *code;
   ViviCodeNumberHint hint;
 
@@ -81,10 +82,10 @@ vivi_code_number_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 static void
 vivi_code_number_class_init (ViviCodeNumberClass *klass)
 {
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
-  token_class->print = vivi_code_number_print;
-  token_class->compile = vivi_code_number_compile;
+  value_class->print_value = vivi_code_number_print_value;
+  value_class->compile_value = vivi_code_number_compile_value;
 }
 
 static void

@@ -33,13 +33,13 @@
 G_DEFINE_TYPE (ViviCodeNull, vivi_code_null, VIVI_TYPE_CODE_CONSTANT)
 
 static void
-vivi_code_null_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_null_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
   vivi_code_printer_print (printer, "null");
 }
 
 static void
-vivi_code_null_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_null_compile_value (ViviCodeValue *value, ViviCodeCompiler *compiler)
 {
   ViviCodeAsm *code;
 
@@ -57,11 +57,11 @@ vivi_code_null_get_variable_name (ViviCodeConstant *constant)
 static void
 vivi_code_null_class_init (ViviCodeNullClass *klass)
 {
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
   ViviCodeConstantClass *constant_class = VIVI_CODE_CONSTANT_CLASS (klass);
 
-  token_class->print = vivi_code_null_print;
-  token_class->compile = vivi_code_null_compile;
+  value_class->print_value = vivi_code_null_print_value;
+  value_class->compile_value = vivi_code_null_compile_value;
 
   constant_class->get_variable_name = vivi_code_null_get_variable_name;
 }

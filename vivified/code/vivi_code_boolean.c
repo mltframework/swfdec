@@ -29,17 +29,18 @@
 G_DEFINE_TYPE (ViviCodeBoolean, vivi_code_boolean, VIVI_TYPE_CODE_CONSTANT)
 
 static void
-vivi_code_boolean_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_boolean_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
-  ViviCodeBoolean *b = VIVI_CODE_BOOLEAN (token);
+  ViviCodeBoolean *b = VIVI_CODE_BOOLEAN (value);
 
   vivi_code_printer_print (printer, b->value ? "true" : "false");
 }
 
 static void
-vivi_code_boolean_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_boolean_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
 {
-  ViviCodeBoolean *b = VIVI_CODE_BOOLEAN (token);
+  ViviCodeBoolean *b = VIVI_CODE_BOOLEAN (value);
   ViviCodeAsm *code;
 
   code = vivi_code_asm_push_new ();
@@ -58,11 +59,11 @@ vivi_code_boolean_get_variable_name (ViviCodeConstant *constant)
 static void
 vivi_code_boolean_class_init (ViviCodeBooleanClass *klass)
 {
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
   ViviCodeConstantClass *constant_class = VIVI_CODE_CONSTANT_CLASS (klass);
 
-  token_class->print = vivi_code_boolean_print;
-  token_class->compile = vivi_code_boolean_compile;
+  value_class->print_value = vivi_code_boolean_print_value;
+  value_class->compile_value = vivi_code_boolean_compile_value;
 
   constant_class->get_variable_name = vivi_code_boolean_get_variable_name;
 }

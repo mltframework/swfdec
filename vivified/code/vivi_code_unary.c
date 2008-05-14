@@ -56,9 +56,9 @@ vivi_code_unary_optimize (ViviCodeValue *value, SwfdecAsValueType hint)
 }
 
 static void
-vivi_code_unary_print (ViviCodeToken *token, ViviCodePrinter*printer)
+vivi_code_unary_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
-  ViviCodeUnary *unary = VIVI_CODE_UNARY (token);
+  ViviCodeUnary *unary = VIVI_CODE_UNARY (value);
   char *sign;
 
   /* FIXME: ugly! */
@@ -70,9 +70,9 @@ vivi_code_unary_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_unary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_unary_compile_value (ViviCodeValue *value, ViviCodeCompiler *compiler)
 {
-  ViviCodeUnary *unary = VIVI_CODE_UNARY (token);
+  ViviCodeUnary *unary = VIVI_CODE_UNARY (value);
 
   g_return_if_fail (unary->operation == '!');
 
@@ -91,14 +91,12 @@ static void
 vivi_code_unary_class_init (ViviCodeUnaryClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_unary_dispose;
 
-  token_class->print = vivi_code_unary_print;
-  token_class->compile = vivi_code_unary_compile;
-
+  value_class->print_value = vivi_code_unary_print_value;
+  value_class->compile_value = vivi_code_unary_compile_value;
   value_class->is_constant = vivi_code_unary_is_constant;
   value_class->optimize = vivi_code_unary_optimize;
 }

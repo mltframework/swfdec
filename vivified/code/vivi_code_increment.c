@@ -39,9 +39,10 @@ vivi_code_increment_dispose (GObject *object)
 }
 
 static void
-vivi_code_increment_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_increment_print_value (ViviCodeValue *value,
+    ViviCodePrinter *printer)
 {
-  ViviCodeIncrement *increment = VIVI_CODE_INCREMENT (token);
+  ViviCodeIncrement *increment = VIVI_CODE_INCREMENT (value);
 
   vivi_code_printer_print_value (printer, increment->value,
       VIVI_PRECEDENCE_INCREMENT);
@@ -50,9 +51,10 @@ vivi_code_increment_print (ViviCodeToken *token, ViviCodePrinter *printer)
 }
 
 static void
-vivi_code_increment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_increment_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
 {
-  ViviCodeIncrement *increment = VIVI_CODE_INCREMENT (token);
+  ViviCodeIncrement *increment = VIVI_CODE_INCREMENT (value);
 
   vivi_code_compiler_compile_value (compiler, increment->value);
   vivi_code_compiler_take_code (compiler, vivi_code_asm_increment_new ());
@@ -62,12 +64,12 @@ static void
 vivi_code_increment_class_init (ViviCodeIncrementClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_increment_dispose;
 
-  token_class->print = vivi_code_increment_print;
-  token_class->compile = vivi_code_increment_compile;
+  value_class->print_value = vivi_code_increment_print_value;
+  value_class->compile_value = vivi_code_increment_compile_value;
 }
 
 static void

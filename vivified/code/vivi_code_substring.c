@@ -40,9 +40,10 @@ vivi_code_substring_dispose (GObject *object)
 }
 
 static void
-vivi_code_substring_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_substring_print_value (ViviCodeValue *value,
+    ViviCodePrinter *printer)
 {
-  ViviCodeSubstring *substring = VIVI_CODE_SUBSTRING (token);
+  ViviCodeSubstring *substring = VIVI_CODE_SUBSTRING (value);
 
   vivi_code_printer_print (printer, "substring (");
   vivi_code_printer_print_value (printer, substring->string,
@@ -53,16 +54,16 @@ vivi_code_substring_print (ViviCodeToken *token, ViviCodePrinter *printer)
   vivi_code_printer_print (printer, ", ");
   vivi_code_printer_print_value (printer, substring->count,
       VIVI_PRECEDENCE_COMMA);
-  vivi_code_printer_print (printer, ");");
-  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, ")");
 }
 
 static void
-vivi_code_substring_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_substring_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
 {
   g_printerr ("Implement substring\n");
 #if 0
-  ViviCodeSubstring *substring = VIVI_CODE_SUBSTRING (token);
+  ViviCodeSubstring *substring = VIVI_CODE_SUBSTRING (value);
 
   vivi_code_value_compile (substring->string, compiler);
   vivi_code_value_compile (substring->index_, compiler);
@@ -76,12 +77,12 @@ static void
 vivi_code_substring_class_init (ViviCodeSubstringClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_substring_dispose;
 
-  token_class->print = vivi_code_substring_print;
-  token_class->compile = vivi_code_substring_compile;
+  value_class->print_value = vivi_code_substring_print_value;
+  value_class->compile_value = vivi_code_substring_compile_value;
 }
 
 static void

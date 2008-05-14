@@ -60,30 +60,31 @@ vivi_code_init_array_optimize (ViviCodeValue *value, SwfdecAsValueType hint)
 }
 
 static void
-vivi_code_init_array_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_init_array_print_value (ViviCodeValue *value,
+    ViviCodePrinter *printer)
 {
-  ViviCodeInitArray *array = VIVI_CODE_INIT_ARRAY (token);
+  ViviCodeInitArray *array = VIVI_CODE_INIT_ARRAY (value);
   guint i;
 
   vivi_code_printer_print (printer, "[");
   for (i = 0; i < array->variables->len; i++) {
-    ViviCodeValue *value =
+    ViviCodeValue *member =
       VIVI_CODE_VALUE (g_ptr_array_index (array->variables, i));
     if (i > 0)
       vivi_code_printer_print (printer, ", ");
     /* FIXME: precedences? */
     // don't write undefined values
-    if (!VIVI_IS_CODE_UNDEFINED (value))
-      vivi_code_printer_print_value (printer, value, VIVI_PRECEDENCE_COMMA);
+    if (!VIVI_IS_CODE_UNDEFINED (member))
+      vivi_code_printer_print_value (printer, member, VIVI_PRECEDENCE_COMMA);
   }
   vivi_code_printer_print (printer, "]");
 }
 
 static void
-vivi_code_init_array_compile (ViviCodeToken *token,
+vivi_code_init_array_compile_value (ViviCodeValue *value,
     ViviCodeCompiler *compiler)
 {
-  ViviCodeInitArray *array = VIVI_CODE_INIT_ARRAY (token);
+  ViviCodeInitArray *array = VIVI_CODE_INIT_ARRAY (value);
   ViviCodeValue *count;
   guint i;
 
@@ -109,14 +110,12 @@ static void
 vivi_code_init_array_class_init (ViviCodeInitArrayClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_init_array_dispose;
 
-  token_class->print = vivi_code_init_array_print;
-  token_class->compile = vivi_code_init_array_compile;
-
+  value_class->print_value = vivi_code_init_array_print_value;
+  value_class->compile_value = vivi_code_init_array_compile_value;
   value_class->is_constant = vivi_code_init_array_is_constant;
   value_class->optimize = vivi_code_init_array_optimize;
 }

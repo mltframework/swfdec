@@ -39,11 +39,11 @@ vivi_code_builtin_value_call_dispose (GObject *object)
 }
 
 static void
-vivi_code_builtin_value_call_print (ViviCodeToken *token,
+vivi_code_builtin_value_call_print_value (ViviCodeValue *value,
     ViviCodePrinter *printer)
 {
-  ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (token);
-  ViviCodeBuiltinValueCall *call = VIVI_CODE_BUILTIN_VALUE_CALL (token);
+  ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (value);
+  ViviCodeBuiltinValueCall *call = VIVI_CODE_BUILTIN_VALUE_CALL (value);
 
   g_assert (klass->function_name != NULL);
   vivi_code_printer_print (printer, klass->function_name);
@@ -52,16 +52,15 @@ vivi_code_builtin_value_call_print (ViviCodeToken *token,
   g_assert (call->value != NULL);
   vivi_code_printer_print_value (printer, call->value, VIVI_PRECEDENCE_COMMA);
 
-  vivi_code_printer_print (printer, ");");
-  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, ")");
 }
 
 static void
-vivi_code_builtin_value_call_compile (ViviCodeToken *token,
+vivi_code_builtin_value_call_compile_value (ViviCodeValue *value,
     ViviCodeCompiler *compiler)
 {
-  ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (token);
-  ViviCodeBuiltinValueCall *call = VIVI_CODE_BUILTIN_VALUE_CALL (token);
+  ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (value);
+  ViviCodeBuiltinValueCall *call = VIVI_CODE_BUILTIN_VALUE_CALL (value);
 
   g_assert (call->value != NULL);
   vivi_code_compiler_compile_value (compiler, call->value);
@@ -71,16 +70,15 @@ vivi_code_builtin_value_call_compile (ViviCodeToken *token,
 }
 
 static void
-vivi_code_builtin_value_call_class_init (
-    ViviCodeBuiltinValueCallClass *klass)
+vivi_code_builtin_value_call_class_init (ViviCodeBuiltinValueCallClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_builtin_value_call_dispose;
 
-  token_class->print = vivi_code_builtin_value_call_print;
-  token_class->compile = vivi_code_builtin_value_call_compile;
+  value_class->print_value = vivi_code_builtin_value_call_print_value;
+  value_class->compile_value = vivi_code_builtin_value_call_compile_value;
 }
 
 static void

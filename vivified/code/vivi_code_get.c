@@ -42,9 +42,9 @@ vivi_code_get_dispose (GObject *object)
 }
 
 static void
-vivi_code_get_print (ViviCodeToken *token, ViviCodePrinter*printer)
+vivi_code_get_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
-  ViviCodeGet *get = VIVI_CODE_GET (token);
+  ViviCodeGet *get = VIVI_CODE_GET (value);
   char *varname;
 
   if (VIVI_IS_CODE_CONSTANT (get->name))
@@ -75,9 +75,9 @@ vivi_code_get_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_get_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_get_compile_value (ViviCodeValue *value, ViviCodeCompiler *compiler)
 {
-  ViviCodeGet *get = VIVI_CODE_GET (token);
+  ViviCodeGet *get = VIVI_CODE_GET (value);
   ViviCodeAsm *code;
 
   if (get->from)
@@ -103,14 +103,12 @@ static void
 vivi_code_get_class_init (ViviCodeGetClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_get_dispose;
 
-  token_class->print = vivi_code_get_print;
-  token_class->compile = vivi_code_get_compile;
-
+  value_class->print_value = vivi_code_get_print_value;
+  value_class->compile_value = vivi_code_get_compile_value;
   value_class->is_constant = vivi_code_get_is_constant;
 }
 

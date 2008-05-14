@@ -41,10 +41,9 @@ vivi_code_binary_dispose (GObject *object)
 }
 
 static void
-vivi_code_binary_print (ViviCodeToken *token, ViviCodePrinter*printer)
+vivi_code_binary_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
-  ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
-  ViviCodeValue *value = VIVI_CODE_VALUE (token);
+  ViviCodeBinary *binary = VIVI_CODE_BINARY (value);
   ViviCodeBinaryClass *klass = VIVI_CODE_BINARY_GET_CLASS (binary);
 
   vivi_code_printer_print_value (printer, binary->left, 
@@ -57,9 +56,10 @@ vivi_code_binary_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_binary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_binary_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
 {
-  ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
+  ViviCodeBinary *binary = VIVI_CODE_BINARY (value);
   ViviCodeBinaryClass *klass = VIVI_CODE_BINARY_GET_CLASS (binary);
 
   vivi_code_compiler_compile_value (compiler, binary->left);
@@ -82,14 +82,12 @@ static void
 vivi_code_binary_class_init (ViviCodeBinaryClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_binary_dispose;
 
-  token_class->print = vivi_code_binary_print;
-  token_class->compile = vivi_code_binary_compile;
-
+  value_class->print_value = vivi_code_binary_print_value;
+  value_class->compile_value = vivi_code_binary_compile_value;
   value_class->is_constant = vivi_code_binary_is_constant;
 }
 

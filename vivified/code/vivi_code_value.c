@@ -22,23 +22,38 @@
 #endif
 
 #include "vivi_code_value.h"
+#include "vivi_code_printer.h"
+#include "vivi_code_compiler.h"
+#include "vivi_code_asm_code_default.h"
 
-G_DEFINE_ABSTRACT_TYPE (ViviCodeValue, vivi_code_value, VIVI_TYPE_CODE_TOKEN)
+G_DEFINE_ABSTRACT_TYPE (ViviCodeValue, vivi_code_value, VIVI_TYPE_CODE_STATEMENT)
 
 static void
-vivi_code_value_dispose (GObject *object)
+vivi_code_value_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
-  //ViviCodeValue *dec = VIVI_CODE_VAULE (object);
+  ViviCodeValue *value = VIVI_CODE_VALUE (token);
 
-  G_OBJECT_CLASS (vivi_code_value_parent_class)->dispose (object);
+  vivi_code_printer_print_value (printer, value, VIVI_PRECEDENCE_MIN);
+  vivi_code_printer_print (printer, ";");
+  vivi_code_printer_new_line (printer, FALSE);
+}
+
+static void
+vivi_code_value_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+{
+  ViviCodeValue *value = VIVI_CODE_VALUE (token);
+
+  vivi_code_compiler_compile_value (compiler, value);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_pop_new ());
 }
 
 static void
 vivi_code_value_class_init (ViviCodeValueClass *klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
 
-  object_class->dispose = vivi_code_value_dispose;
+  token_class->print = vivi_code_value_print;
+  token_class->compile = vivi_code_value_compile;
 }
 
 static void

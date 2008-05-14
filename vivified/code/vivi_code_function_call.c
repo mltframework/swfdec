@@ -75,9 +75,10 @@ vivi_code_function_call_optimize (ViviCodeValue *value, SwfdecAsValueType hint)
 }
 
 static void
-vivi_code_function_call_print (ViviCodeToken *token, ViviCodePrinter*printer)
+vivi_code_function_call_print_value (ViviCodeValue *value,
+    ViviCodePrinter *printer)
 {
-  ViviCodeFunctionCall *call = VIVI_CODE_FUNCTION_CALL (token);
+  ViviCodeFunctionCall *call = VIVI_CODE_FUNCTION_CALL (value);
   char *varname;
   guint i;
 
@@ -122,10 +123,10 @@ vivi_code_function_call_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_function_call_compile (ViviCodeToken *token,
+vivi_code_function_call_compile_value (ViviCodeValue *value,
     ViviCodeCompiler *compiler)
 {
-  ViviCodeFunctionCall *call = VIVI_CODE_FUNCTION_CALL (token);
+  ViviCodeFunctionCall *call = VIVI_CODE_FUNCTION_CALL (value);
   ViviCodeValue *count;
   ViviCodeAsm *code;
   guint i;
@@ -170,14 +171,12 @@ static void
 vivi_code_function_call_class_init (ViviCodeFunctionCallClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_function_call_dispose;
 
-  token_class->print = vivi_code_function_call_print;
-  token_class->compile = vivi_code_function_call_compile;
-
+  value_class->print_value = vivi_code_function_call_print_value;
+  value_class->compile_value = vivi_code_function_call_compile_value;
   value_class->is_constant = vivi_code_function_call_is_constant;
   value_class->optimize = vivi_code_function_call_optimize;
 }

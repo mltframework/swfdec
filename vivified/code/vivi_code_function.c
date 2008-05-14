@@ -52,9 +52,9 @@ vivi_code_function_dispose (GObject *object)
 }
 
 static void
-vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
+vivi_code_function_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
-  ViviCodeFunction *function = VIVI_CODE_FUNCTION (token);
+  ViviCodeFunction *function = VIVI_CODE_FUNCTION (value);
   guint i;
 
   vivi_code_printer_print (printer, "function (");
@@ -75,9 +75,10 @@ vivi_code_function_print (ViviCodeToken *token, ViviCodePrinter*printer)
 }
 
 static void
-vivi_code_function_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_function_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
 {
-  ViviCodeFunction *function = VIVI_CODE_FUNCTION (token);
+  ViviCodeFunction *function = VIVI_CODE_FUNCTION (value);
   ViviCodeLabel *label_end;
   ViviCodeAsm *code;
   guint i;
@@ -108,14 +109,12 @@ static void
 vivi_code_function_class_init (ViviCodeFunctionClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_function_dispose;
 
-  token_class->print = vivi_code_function_print;
-  token_class->compile = vivi_code_function_compile;
-
+  value_class->print_value = vivi_code_function_print_value;
+  value_class->compile_value = vivi_code_function_compile_value;
   value_class->is_constant = vivi_code_function_is_constant;
 }
 

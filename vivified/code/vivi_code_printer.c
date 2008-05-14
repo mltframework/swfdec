@@ -84,6 +84,8 @@ void
 vivi_code_printer_print_value (ViviCodePrinter *printer, ViviCodeValue *value,
     ViviPrecedence precedence)
 {
+  ViviCodePrinterClass *klass;
+  ViviCodeValueClass *value_class;
   gboolean needs_parens;
 
   g_return_if_fail (VIVI_IS_CODE_PRINTER (printer));
@@ -92,7 +94,16 @@ vivi_code_printer_print_value (ViviCodePrinter *printer, ViviCodeValue *value,
   needs_parens = vivi_code_value_get_precedence (value) < precedence;
   if (needs_parens)
     vivi_code_printer_print (printer, "(");
-  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (value));
+
+  klass = VIVI_CODE_PRINTER_GET_CLASS (printer);
+  if (klass->push_token)
+    klass->push_token (printer, VIVI_CODE_TOKEN (value));
+  value_class = VIVI_CODE_VALUE_GET_CLASS (value);
+  g_return_if_fail (value_class->print_value);
+  value_class->print_value (value, printer);
+  if (klass->pop_token)
+    klass->pop_token (printer, VIVI_CODE_TOKEN (value));
+
   if (needs_parens)
     vivi_code_printer_print (printer, ")");
 }

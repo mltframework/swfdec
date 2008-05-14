@@ -28,21 +28,21 @@
 G_DEFINE_ABSTRACT_TYPE (ViviCodeBuiltinCall, vivi_code_builtin_call, VIVI_TYPE_CODE_VALUE)
 
 static void
-vivi_code_builtin_call_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_builtin_call_print_value (ViviCodeValue *value,
+    ViviCodePrinter *printer)
 {
-  ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (token);
+  ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (value);
 
   g_assert (klass->function_name != NULL);
   vivi_code_printer_print (printer, klass->function_name);
-  vivi_code_printer_print (printer, " ();");
-  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, " ()");
 }
 
 static void
-vivi_code_builtin_call_compile (ViviCodeToken *token,
+vivi_code_builtin_call_compile_value (ViviCodeValue *value,
     ViviCodeCompiler *compiler)
 {
-  ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (token);
+  ViviCodeBuiltinCallClass *klass = VIVI_CODE_BUILTIN_CALL_GET_CLASS (value);
 
   g_assert (klass->asm_constructor != NULL);
   vivi_code_compiler_take_code (compiler, klass->asm_constructor ());
@@ -51,10 +51,10 @@ vivi_code_builtin_call_compile (ViviCodeToken *token,
 static void
 vivi_code_builtin_call_class_init (ViviCodeBuiltinCallClass *klass)
 {
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
-  token_class->print = vivi_code_builtin_call_print;
-  token_class->compile = vivi_code_builtin_call_compile;
+  value_class->print_value = vivi_code_builtin_call_print_value;
+  value_class->compile_value = vivi_code_builtin_call_compile_value;
 }
 
 static void

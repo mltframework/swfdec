@@ -25,6 +25,7 @@
 #include <vivified/code/vivi_code_assembler.h>
 #include <vivified/code/vivi_code_asm.h>
 #include <vivified/code/vivi_code_label.h>
+#include <vivified/code/vivi_code_value.h>
 
 G_BEGIN_DECLS
 
@@ -56,10 +57,11 @@ GType			vivi_code_compiler_get_type   		(void);
 
 ViviCodeCompiler *	vivi_code_compiler_new			(guint			version);
 
-#define vivi_code_compiler_compile_value(c,v) vivi_code_compiler_compile_token((c), VIVI_CODE_TOKEN((v)))
 #define vivi_code_compiler_compile_statement(c,s) vivi_code_compiler_compile_token((c), VIVI_CODE_TOKEN((s)))
 void			vivi_code_compiler_compile_token	(ViviCodeCompiler *	compiler,
 								 ViviCodeToken *	token);
+void			vivi_code_compiler_compile_value	(ViviCodeCompiler *	compiler,
+								 ViviCodeValue *	value);
 void			vivi_code_compiler_compile_script	(ViviCodeCompiler *	compiler,
 								 ViviCodeStatement *	statement);
 

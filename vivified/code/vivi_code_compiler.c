@@ -51,6 +51,20 @@ vivi_code_compiler_init (ViviCodeCompiler *compiler)
 }
 
 void
+vivi_code_compiler_compile_value (ViviCodeCompiler *compiler,
+    ViviCodeValue *value)
+{
+  ViviCodeValueClass *klass;
+
+  g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
+  g_return_if_fail (VIVI_IS_CODE_VALUE (value));
+
+  klass = VIVI_CODE_VALUE_GET_CLASS (value);
+  g_return_if_fail (klass->compile_value);
+  klass->compile_value (value, compiler);
+}
+
+void
 vivi_code_compiler_compile_token (ViviCodeCompiler *compiler,
     ViviCodeToken *token)
 {

@@ -40,9 +40,9 @@ vivi_code_concat_dispose (GObject *object)
 }
 
 static void
-vivi_code_concat_print (ViviCodeToken *token, ViviCodePrinter *printer)
+vivi_code_concat_print_value (ViviCodeValue *value, ViviCodePrinter *printer)
 {
-  ViviCodeConcat *concat = VIVI_CODE_CONCAT (token);
+  ViviCodeConcat *concat = VIVI_CODE_CONCAT (value);
 
   vivi_code_printer_print (printer, "concat (");
   vivi_code_printer_print_value (printer, concat->first,
@@ -50,14 +50,14 @@ vivi_code_concat_print (ViviCodeToken *token, ViviCodePrinter *printer)
   vivi_code_printer_print (printer, ", ");
   vivi_code_printer_print_value (printer, concat->second,
       VIVI_PRECEDENCE_COMMA);
-  vivi_code_printer_print (printer, ");");
-  vivi_code_printer_new_line (printer, FALSE);
+  vivi_code_printer_print (printer, ")");
 }
 
 static void
-vivi_code_concat_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
+vivi_code_concat_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
 {
-  ViviCodeConcat *concat = VIVI_CODE_CONCAT (token);
+  ViviCodeConcat *concat = VIVI_CODE_CONCAT (value);
 
   vivi_code_compiler_compile_value (compiler, concat->first);
   vivi_code_compiler_compile_value (compiler, concat->second);
@@ -69,12 +69,12 @@ static void
 vivi_code_concat_class_init (ViviCodeConcatClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_concat_dispose;
 
-  token_class->print = vivi_code_concat_print;
-  token_class->compile = vivi_code_concat_compile;
+  value_class->print_value = vivi_code_concat_print_value;
+  value_class->compile_value = vivi_code_concat_compile_value;
 }
 
 static void

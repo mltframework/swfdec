@@ -20,7 +20,7 @@
 #ifndef _VIVI_CODE_VALUE_H_
 #define _VIVI_CODE_VALUE_H_
 
-#include <vivified/code/vivi_code_token.h>
+#include <vivified/code/vivi_code_statement.h>
 
 G_BEGIN_DECLS
 
@@ -61,14 +61,19 @@ typedef struct _ViviCodeValueClass ViviCodeValueClass;
 
 struct _ViviCodeValue
 {
-  ViviCodeToken		token;
+  ViviCodeStatement		statement;
 
-  ViviPrecedence	precedence;
+  ViviPrecedence		precedence;
 };
 
 struct _ViviCodeValueClass
 {
-  ViviCodeTokenClass  	token_class;
+  ViviCodeStatementClass	statement_class;
+
+  void			(* print_value)			(ViviCodeValue *	value,
+							 ViviCodePrinter *	printer);
+  void			(* compile_value)		(ViviCodeValue *	value,
+							 ViviCodeCompiler *	compiler);
 
   gboolean		(* is_constant)			(ViviCodeValue *	value);
   ViviCodeValue *	(* optimize)			(ViviCodeValue *	value,

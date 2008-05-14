@@ -79,7 +79,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
     cairo_surface_destroy (stream->surface);
     stream->surface = NULL;
   }
-  if (stream->flvdecoder->video) {
+  if (stream->flvdecoder && stream->flvdecoder->video) {
     buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, timestamp,
 	FALSE, &format, &stream->current_time, &stream->next_time);
   } else {

@@ -965,7 +965,7 @@ static ViviCodeStatement *
 parse_variable_declaration (ParseData *data)
 {
   ViviCodeValue *value;
-  ViviCodeStatement *variable, *statement_right;
+  ViviCodeStatement *variable;
   char *identifier;
 
   vivi_parser_start_code_token (data);
@@ -975,17 +975,13 @@ parse_variable_declaration (ParseData *data)
   if (try_parse_token (data, TOKEN_ASSIGN)) {
     value = parse_assignment_expression (data);
   } else {
-    vivi_parser_start_code_token (data);
-
-    value = vivi_code_undefined_new ();
-    statement_right = NULL;
-
-    vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
+    value = NULL;
   }
 
   variable = vivi_code_variable_new_name (identifier, value);
   g_free (identifier);
-  g_object_unref (value);
+  if (value != NULL)
+    g_object_unref (value);
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (variable));
 

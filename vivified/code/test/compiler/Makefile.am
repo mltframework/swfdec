@@ -56,5 +56,7 @@ EXTRA_DIST = \
 	or.as.expect \
 	trace.as \
 	trace.as.expect \
+	var.as \
+	var.as.expect \
 	while.as \
 	while.as.expect

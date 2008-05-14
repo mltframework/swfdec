@@ -1948,12 +1948,14 @@ static ViviCodeValue *
 parse_unary_expression (ParseData *data, ViviCodeStatement **statement)
 {
   ViviCodeValue *value, *tmp, *one;
+  gboolean increment = FALSE;
 
   switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
     /*case TOKEN_DELETE:
     case TOKEN_VOID:
     case TOKEN_TYPEOF:*/
     case TOKEN_INCREASE:
+      increment = TRUE;
     case TOKEN_DESCREASE:
       vivi_parser_start_code_token (data);
 
@@ -1968,8 +1970,8 @@ parse_unary_expression (ParseData *data, ViviCodeStatement **statement)
       }
 
       one = vivi_code_number_new (1);
-      tmp = (vivi_parser_scanner_peek_next_token (data->scanner) == TOKEN_INCREASE ?
-	  vivi_code_add_new : vivi_code_subtract_new) (value, one);
+      tmp = (increment ? vivi_code_increment_new (value) :
+	  vivi_code_subtract_new (value, one));
       g_object_unref (one);
 
       vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (tmp));

@@ -29,7 +29,7 @@
 #include "vivi_code_compiler.h"
 #include "vivi_code_asm_code_default.h"
 
-G_DEFINE_TYPE (ViviCodeAssignment, vivi_code_assignment, VIVI_TYPE_CODE_STATEMENT)
+G_DEFINE_TYPE (ViviCodeAssignment, vivi_code_assignment, VIVI_TYPE_CODE_VALUE)
 
 static void
 vivi_code_assignment_dispose (GObject *object)
@@ -56,9 +56,6 @@ vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
     varname = NULL;
   }
 
-  if (assignment->local)
-    vivi_code_printer_print (printer, "var ");
-
   if (assignment->from) {
     vivi_code_printer_print_value (printer, assignment->from, VIVI_PRECEDENCE_MEMBER);
     if (varname) {
@@ -78,17 +75,14 @@ vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
       vivi_code_printer_print (printer, ", ");
       vivi_code_printer_print_value (printer, assignment->value, VIVI_PRECEDENCE_ASSIGNMENT);
       vivi_code_printer_print (printer, ")");
-      goto finalize;
+      return;
     }
   }
-  if (!assignment->local || !VIVI_IS_CODE_UNDEFINED (assignment->value)) {
-    vivi_code_printer_print (printer, " = ");
-    vivi_code_printer_print_value (printer, assignment->value, VIVI_PRECEDENCE_ASSIGNMENT);
-  }
+
+  vivi_code_printer_print (printer, " = ");
+  vivi_code_printer_print_value (printer, assignment->value, VIVI_PRECEDENCE_ASSIGNMENT);
+
   g_free (varname);
-finalize:
-  vivi_code_printer_print (printer, ";");
-  vivi_code_printer_new_line (printer, FALSE);
 }
 
 static void
@@ -97,22 +91,12 @@ vivi_code_assignment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
   ViviCodeAsm *code;
 
-  if (assignment->from && !assignment->local)
+  if (assignment->from)
     vivi_code_compiler_compile_value (compiler, assignment->from);
   vivi_code_compiler_compile_value (compiler, assignment->name);
+  vivi_code_compiler_compile_value (compiler, assignment->value);
 
-  if (assignment->local && assignment->from) {
-    ViviCodeValue *get =
-      vivi_code_get_new (assignment->from, assignment->value);
-    vivi_code_compiler_compile_value (compiler, get);
-    g_object_unref (get);
-  } else {
-    vivi_code_compiler_compile_value (compiler, assignment->value);
-  }
-
-  if (assignment->local) {
-    code = vivi_code_asm_define_local_new ();
-  } else if (assignment->from) {
+  if (assignment->from) {
     code = vivi_code_asm_set_member_new ();
   } else {
     code = vivi_code_asm_set_variable_new ();
@@ -121,15 +105,42 @@ vivi_code_assignment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 }
 
 static void
+vivi_code_assignment_compile_value (ViviCodeValue *value,
+    ViviCodeCompiler *compiler)
+{
+  ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (value);
+
+  if (assignment->from)
+    vivi_code_compiler_compile_value (compiler, assignment->from);
+  vivi_code_compiler_compile_value (compiler, assignment->name);
+  vivi_code_compiler_compile_value (compiler, assignment->value);
+
+
+  if (assignment->from) {
+    // TODO
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_set_member_new ());
+    g_assert_not_reached ();
+  } else {
+    vivi_code_compiler_take_code (compiler,
+	vivi_code_asm_push_duplicate_new ());
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_set_variable_new ());
+  }
+}
+
+static void
 vivi_code_assignment_class_init (ViviCodeAssignmentClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
+  ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_code_assignment_dispose;
 
   token_class->print = vivi_code_assignment_print;
   token_class->compile = vivi_code_assignment_compile;
+
+  value_class->compile_value = vivi_code_assignment_compile_value;
 }
 
 static void
@@ -137,7 +148,7 @@ vivi_code_assignment_init (ViviCodeAssignment *assignment)
 {
 }
 
-ViviCodeStatement *
+ViviCodeValue *
 vivi_code_assignment_new (ViviCodeValue *from, ViviCodeValue *name, ViviCodeValue *value)
 {
   ViviCodeAssignment *assignment;
@@ -152,14 +163,13 @@ vivi_code_assignment_new (ViviCodeValue *from, ViviCodeValue *name, ViviCodeValu
   assignment->name = g_object_ref (name);
   assignment->value = g_object_ref (value);
 
-  return VIVI_CODE_STATEMENT (assignment);
+  return VIVI_CODE_VALUE (assignment);
 }
 
-ViviCodeStatement *
+ViviCodeValue *
 vivi_code_assignment_new_name (const char *name, ViviCodeValue *value)
 {
-  ViviCodeValue *constant;
-  ViviCodeStatement *result;
+  ViviCodeValue *constant, *result;
 
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (value), NULL);
@@ -167,16 +177,6 @@ vivi_code_assignment_new_name (const char *name, ViviCodeValue *value)
   constant = vivi_code_string_new (name);
   result = vivi_code_assignment_new (NULL, constant, value);
   g_object_unref (constant);
+
   return result;
 }
-
-void
-vivi_code_assignment_set_local (ViviCodeAssignment *assign, gboolean local)
-{
-  g_return_if_fail (VIVI_IS_CODE_ASSIGNMENT (assign));
-  /* can't assign to non-local variables */
-  g_return_if_fail (assign->from == NULL);
-
-  assign->local = local;
-}
-

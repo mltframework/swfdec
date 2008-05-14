@@ -331,8 +331,8 @@ vivi_decompiler_block_add_state_transition (ViviDecompilerBlock *from,
     }
     if (val_from != VIVI_CODE_VALUE (val_to)) {
       name = vivi_code_string_new (vivi_decompiler_unknown_get_name (val_to));
-      vivi_code_block_add_statement (block,
-	  vivi_code_assignment_new (NULL, name, val_from));
+      vivi_code_block_add_statement (block, VIVI_CODE_STATEMENT (
+	    vivi_code_assignment_new (NULL, name, val_from)));
     }
   }
 }

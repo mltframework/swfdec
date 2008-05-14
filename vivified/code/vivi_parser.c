@@ -64,6 +64,7 @@
 #include "vivi_code_unary.h"
 #include "vivi_code_undefined.h"
 #include "vivi_code_value_statement.h"
+#include "vivi_code_variable.h"
 #include "vivi_compiler_empty_statement.h"
 #include "vivi_compiler_get_temporary.h"
 #include "vivi_compiler_goto_name.h"
@@ -358,7 +359,7 @@ vivi_parser_function_call_new (ViviCodeValue *name)
   return vivi_code_function_call_new (value, name);
 }
 
-static ViviCodeStatement *
+static ViviCodeValue *
 vivi_parser_assignment_new (ViviCodeValue *left, ViviCodeValue *right)
 {
   ViviCodeValue *from;
@@ -1003,12 +1004,13 @@ peek_variable_declaration (ParseData *data)
 static ViviCodeStatement *
 parse_variable_declaration (ParseData *data)
 {
-  ViviCodeValue *identifier, *value;
-  ViviCodeStatement *assignment, *statement_right;
+  ViviCodeValue *value;
+  ViviCodeStatement *variable, *statement_right;
+  char *identifier;
 
   vivi_parser_start_code_token (data);
 
-  identifier = parse_identifier (data);
+  identifier = g_strdup (parse_identifier_value (data));
 
   if (try_parse_token (data, TOKEN_ASSIGN)) {
     value = parse_assignment_expression (data, &statement_right);
@@ -1021,14 +1023,13 @@ parse_variable_declaration (ParseData *data)
     vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
   }
 
-  assignment = vivi_parser_assignment_new (identifier, value);
-  vivi_code_assignment_set_local (VIVI_CODE_ASSIGNMENT (assignment), TRUE);
-  g_object_unref (identifier);
+  variable = vivi_code_variable_new_name (identifier, value);
+  g_free (identifier);
   g_object_unref (value);
 
-  vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (assignment));
+  vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (variable));
 
-  return vivi_parser_join_statements (statement_right, assignment);
+  return vivi_parser_join_statements (statement_right, variable);
 }
 
 // asm functions
@@ -1872,8 +1873,7 @@ peek_postfix_expression (ParseData *data)
 static ViviCodeValue *
 parse_postfix_expression (ParseData *data, ViviCodeStatement **statement)
 {
-  ViviCodeStatement *assignment;
-  ViviCodeValue *value, *operation, *one, *temporary;
+  ViviCodeValue *assignment, *value, *operation, *one;
   gboolean add;
 
   vivi_parser_start_code_token (data);
@@ -1909,18 +1909,11 @@ parse_postfix_expression (ParseData *data, ViviCodeStatement **statement)
 
   assignment = vivi_parser_assignment_new (value, operation);
   g_object_unref (operation);
+  g_object_unref (value);
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (assignment));
 
-  temporary = vivi_compiler_get_temporary_new ();
-  *statement = vivi_parser_join_statements (*statement,
-     vivi_parser_join_statements (
-       vivi_parser_assignment_new (temporary, value), assignment));
-
-  g_object_unref (value);
-  value = temporary;
-
-  return value;
+  return assignment;
 }
 
 static gboolean
@@ -1976,9 +1969,10 @@ parse_unary_expression (ParseData *data, ViviCodeStatement **statement)
 
       vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (tmp));
 
-      *statement = vivi_parser_join_statements (*statement,
-	  vivi_parser_assignment_new (value, tmp));
+      one = vivi_parser_assignment_new (value, tmp);
       g_object_unref (tmp);
+      g_object_unref (value);
+      value = one;
       break;
     case TOKEN_PLUS:
       vivi_parser_scanner_get_next_token (data->scanner);
@@ -2378,8 +2372,8 @@ peek_assignment_expression (ParseData *data)
 static ViviCodeValue *
 parse_assignment_expression (ParseData *data, ViviCodeStatement **statement)
 {
-  ViviCodeValue *value, *right;
-  ViviCodeStatement *assignment, *statement_right;
+  ViviCodeValue *value, *assignment, *right;
+  ViviCodeStatement *statement_right;
   ViviCodeValue * (* func) (ViviCodeValue *, ViviCodeValue *);
 
   vivi_parser_start_code_token (data);
@@ -2443,13 +2437,13 @@ parse_assignment_expression (ParseData *data, ViviCodeStatement **statement)
     assignment = vivi_parser_assignment_new (value, right);
   }
   g_object_unref (right);
+  g_object_unref (value);
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (assignment));
 
-  *statement = vivi_parser_join_statements (*statement,
-      vivi_parser_join_statements (statement_right, assignment));
+  *statement = vivi_parser_join_statements (*statement, statement_right);
 
-  return value;
+  return assignment;
 }
 
 static gboolean

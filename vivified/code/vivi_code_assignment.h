@@ -20,7 +20,7 @@
 #ifndef _VIVI_CODE_ASSIGNMENT_H_
 #define _VIVI_CODE_ASSIGNMENT_H_
 
-#include <vivified/code/vivi_code_statement.h>
+#include <vivified/code/vivi_code_value.h>
 #include <vivified/code/vivi_code_value.h>
 
 G_BEGIN_DECLS
@@ -38,29 +38,25 @@ typedef struct _ViviCodeAssignmentClass ViviCodeAssignmentClass;
 
 struct _ViviCodeAssignment
 {
-  ViviCodeStatement	statement;
+  ViviCodeValue		token;
 
   ViviCodeValue *	from;
   ViviCodeValue *	name;
   ViviCodeValue	*	value;
-  gboolean		local;
 };
 
 struct _ViviCodeAssignmentClass
 {
-  ViviCodeStatementClass	value_class;
+  ViviCodeValueClass	value_class;
 };
 
-GType			vivi_code_assignment_get_type   	(void);
+GType			vivi_code_assignment_get_type		(void);
 
-ViviCodeStatement *	vivi_code_assignment_new		(ViviCodeValue *	from,
+ViviCodeValue *		vivi_code_assignment_new		(ViviCodeValue *	from,
 								 ViviCodeValue *	name,
 								 ViviCodeValue *	value);
-ViviCodeStatement *	vivi_code_assignment_new_name		(const char *		name,
+ViviCodeValue *		vivi_code_assignment_new_name		(const char *		name,
 								 ViviCodeValue *	value);
-
-void			vivi_code_assignment_set_local		(ViviCodeAssignment *	assign,
-								 gboolean		local);
 
 
 G_END_DECLS

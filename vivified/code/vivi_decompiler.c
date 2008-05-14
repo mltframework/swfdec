@@ -53,6 +53,7 @@
 #include "vivi_code_unary.h"
 #include "vivi_code_undefined.h"
 #include "vivi_code_value_statement.h"
+#include "vivi_code_variable.h"
 #include "vivi_decompiler_block.h"
 #include "vivi_decompiler_duplicate.h"
 #include "vivi_decompiler_state.h"
@@ -365,7 +366,7 @@ vivi_decompile_set_variable (ViviDecompilerBlock *block, ViviDecompilerState *st
 
   value = vivi_decompiler_state_pop (state);
   name = vivi_decompiler_state_pop (state);
-  assign = vivi_code_assignment_new (NULL, name, value);
+  assign = VIVI_CODE_STATEMENT (vivi_code_assignment_new (NULL, name, value));
   g_object_unref (name);
   g_object_unref (value);
   vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), assign);
@@ -382,7 +383,7 @@ vivi_decompile_set_member (ViviDecompilerBlock *block, ViviDecompilerState *stat
   value = vivi_decompiler_state_pop (state);
   name = vivi_decompiler_state_pop (state);
   from = vivi_decompiler_state_pop (state);
-  assign = vivi_code_assignment_new (from, name, value);
+  assign = VIVI_CODE_STATEMENT (vivi_code_assignment_new (from, name, value));
   g_object_unref (from);
   g_object_unref (name);
   g_object_unref (value);
@@ -395,7 +396,7 @@ vivi_decompile_define_local (ViviDecompilerBlock *block, ViviDecompilerState *st
     guint code, const guint8 *data, guint len)
 {
   ViviCodeValue *name, *value;
-  ViviCodeStatement *assign;
+  ViviCodeStatement *variable;
 
   if (code == SWFDEC_AS_ACTION_DEFINE_LOCAL)
     value = vivi_decompiler_state_pop (state);
@@ -403,11 +404,10 @@ vivi_decompile_define_local (ViviDecompilerBlock *block, ViviDecompilerState *st
     value = vivi_code_undefined_new ();
   name = vivi_decompiler_state_pop (state);
 
-  assign = vivi_code_assignment_new (NULL, name, value);
-  vivi_code_assignment_set_local (VIVI_CODE_ASSIGNMENT (assign), TRUE);
+  variable = vivi_code_variable_new (name, value);
   g_object_unref (name);
   g_object_unref (value);
-  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), assign);
+  vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), variable);
   return TRUE;
 }
 
@@ -632,7 +632,7 @@ vivi_decompile_store_register (ViviDecompilerBlock *block, ViviDecompilerState *
     char *name;
 
     name = g_strdup_printf ("$reg%u", data[0]);
-    assign = vivi_code_assignment_new_name (name, value);
+    assign = VIVI_CODE_STATEMENT (vivi_code_assignment_new_name (name, value));
     vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), assign);
     g_object_unref (assign);
 

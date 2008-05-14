@@ -300,7 +300,6 @@ identifier_part		[$_a-zA-Z0-9]
 			  if (result == 0) {
 			    ERROR ("Invalid escape sequence %s", yytext);
 			  } else {
-			    g_print (":: %lu\n", result);
 			    g_string_append_unichar (value->value.v_string, result);
 			  }
 			}

@@ -110,19 +110,18 @@ vivi_code_assignment_compile_value (ViviCodeValue *value,
 {
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (value);
 
-  if (assignment->from)
-    vivi_code_compiler_compile_value (compiler, assignment->from);
-  vivi_code_compiler_compile_value (compiler, assignment->name);
-  vivi_code_compiler_compile_value (compiler, assignment->value);
-
-
   if (assignment->from) {
     // TODO
+    vivi_code_compiler_compile_value (compiler, assignment->from);
+    vivi_code_compiler_compile_value (compiler, assignment->name);
+    vivi_code_compiler_compile_value (compiler, assignment->value);
     vivi_code_compiler_take_code (compiler, vivi_code_asm_set_member_new ());
     g_assert_not_reached ();
   } else {
+    vivi_code_compiler_compile_value (compiler, assignment->value);
     vivi_code_compiler_take_code (compiler,
 	vivi_code_asm_push_duplicate_new ());
+    vivi_code_compiler_compile_value (compiler, assignment->name);
     vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
     vivi_code_compiler_take_code (compiler, vivi_code_asm_set_variable_new ());
   }

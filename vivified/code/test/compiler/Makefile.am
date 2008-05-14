@@ -26,6 +26,8 @@ EXTRA_DIST = \
 	assignment.as.expect \
 	assignment_operator.as \
 	assignment_operator.as.expect \
+	assignment_value.as \
+	assignment_value.as.expect \
 	builtin_statement.as \
 	builtin_statement.as.expect \
 	call_function.as \

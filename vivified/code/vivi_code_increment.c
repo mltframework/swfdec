@@ -53,13 +53,9 @@ static void
 vivi_code_increment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeIncrement *increment = VIVI_CODE_INCREMENT (token);
-  ViviCodeAsm *code;
 
   vivi_code_compiler_compile_value (compiler, increment->value);
-
-  code = vivi_code_asm_increment_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_increment_new ());
 }
 
 static void

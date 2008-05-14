@@ -90,14 +90,12 @@ vivi_code_function_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 	g_ptr_array_index (function->arguments, i), 0);
   }
 
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, code);
 
   if (function->body != NULL)
     vivi_code_compiler_compile_statement (compiler, function->body);
 
-  vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_end));
-  g_object_unref (label_end);
+  vivi_code_compiler_take_code (compiler, VIVI_CODE_ASM (label_end));
 }
 
 static gboolean

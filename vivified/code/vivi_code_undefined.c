@@ -45,8 +45,7 @@ vivi_code_undefined_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 
   code = vivi_code_asm_push_new ();
   vivi_code_asm_push_add_undefined (VIVI_CODE_ASM_PUSH (code));
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, code);
 }
 
 static char *

@@ -90,8 +90,7 @@ vivi_code_get_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
     code = vivi_code_asm_get_variable_new ();
   }
 
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, code);
 }
 
 static gboolean

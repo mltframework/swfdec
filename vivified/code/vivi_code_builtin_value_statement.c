@@ -67,15 +67,12 @@ vivi_code_builtin_value_statement_compile (ViviCodeToken *token,
     VIVI_CODE_BUILTIN_STATEMENT_GET_CLASS (token);
   ViviCodeBuiltinValueStatement *stmt =
     VIVI_CODE_BUILTIN_VALUE_STATEMENT (token);
-  ViviCodeAsm *code;
 
   g_assert (stmt->value != NULL);
   vivi_code_compiler_compile_value (compiler, stmt->value);
 
   g_assert (klass->asm_constructor != NULL);
-  code = klass->asm_constructor ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, klass->asm_constructor ());
 }
 
 static void

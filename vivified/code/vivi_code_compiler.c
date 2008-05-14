@@ -64,16 +64,11 @@ void
 vivi_code_compiler_compile_script (ViviCodeCompiler *compiler,
     ViviCodeStatement *statement)
 {
-  ViviCodeAsm *code;
-
   g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
   g_return_if_fail (VIVI_IS_CODE_STATEMENT (statement));
 
   vivi_code_compiler_compile_statement (compiler, statement);
-
-  code = vivi_code_asm_end_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_end_new ());
 
   vivi_code_assembler_pool (compiler->assembler);
   vivi_code_assembler_merge_push (compiler->assembler);
@@ -86,6 +81,16 @@ vivi_code_compiler_add_code (ViviCodeCompiler *compiler, ViviCodeAsm *code)
   g_return_if_fail (VIVI_IS_CODE_ASM (code));
 
   vivi_code_assembler_add_code (compiler->assembler, code);
+}
+
+void
+vivi_code_compiler_take_code (ViviCodeCompiler *compiler, ViviCodeAsm *code)
+{
+  g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
+  g_return_if_fail (VIVI_IS_CODE_ASM (code));
+
+  vivi_code_compiler_add_code (compiler, code);
+  g_object_unref (code);
 }
 
 ViviCodeLabel *

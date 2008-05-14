@@ -75,8 +75,7 @@ vivi_code_number_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
       g_assert_not_reached ();
   }
 
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, code);
 }
 
 static void

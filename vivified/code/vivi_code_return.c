@@ -60,20 +60,16 @@ static void
 vivi_code_return_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeReturn *ret = VIVI_CODE_RETURN (token);
-  ViviCodeAsm *code;
 
   if (ret->value) {
     vivi_code_compiler_compile_value (compiler, ret->value);
   } else {
     ViviCodeAsm *push = vivi_code_asm_push_new ();
     vivi_code_asm_push_add_undefined (VIVI_CODE_ASM_PUSH (push));
-    vivi_code_compiler_add_code (compiler, push);
-    g_object_unref (push);
+    vivi_code_compiler_take_code (compiler, push);
   }
 
-  code = vivi_code_asm_return_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_return_new ());
 }
 
 static void

@@ -65,6 +65,8 @@ void			vivi_code_compiler_compile_script	(ViviCodeCompiler *	compiler,
 
 void			vivi_code_compiler_add_code		(ViviCodeCompiler	*compiler,
 								 ViviCodeAsm		*code);
+void			vivi_code_compiler_take_code		(ViviCodeCompiler	*compiler,
+								 ViviCodeAsm		*code);
 
 ViviCodeAssembler *	vivi_code_compiler_get_assembler	(ViviCodeCompiler *	compiler);
 guint			vivi_code_compiler_get_version		(ViviCodeCompiler *	compiler);

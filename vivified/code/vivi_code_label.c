@@ -79,12 +79,9 @@ static void
 vivi_code_label_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeLabel *label = VIVI_CODE_LABEL (token);
-  ViviCodeAsm *code;
 
-  code =
-    VIVI_CODE_ASM (vivi_code_compiler_create_label (compiler, label->name));
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler,
+      VIVI_CODE_ASM (vivi_code_compiler_create_label (compiler, label->name)));
 }
 
 static gboolean

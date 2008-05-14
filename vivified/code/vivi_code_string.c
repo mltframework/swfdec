@@ -60,8 +60,7 @@ vivi_code_string_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 
   code = vivi_code_asm_push_new ();
   vivi_code_asm_push_add_string (VIVI_CODE_ASM_PUSH (code), string->value);
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, code);
 }
 
 static char *

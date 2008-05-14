@@ -133,40 +133,30 @@ vivi_code_if_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeIf *stmt = VIVI_CODE_IF (token);
   ViviCodeLabel *label_if, *label_end;
-  ViviCodeAsm *code;
 
   vivi_code_compiler_compile_value (compiler, stmt->condition);
 
   if (stmt->else_statement) {
     label_if = vivi_code_compiler_create_label (compiler, "if_true");
-    code = vivi_code_asm_if_new (label_if);
-    vivi_code_compiler_add_code (compiler, code);
-    g_object_unref (code);
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_if_new (label_if));
 
     vivi_code_compiler_compile_statement (compiler, stmt->else_statement);
 
     label_end = vivi_code_compiler_create_label (compiler, "if_end");
-    code = vivi_code_asm_jump_new (label_end);
-    vivi_code_compiler_add_code (compiler, code);
-    g_object_unref (code);
+    vivi_code_compiler_take_code (compiler,
+	vivi_code_asm_jump_new (label_end));
 
-    vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_if));
-    g_object_unref (label_if);
+    vivi_code_compiler_take_code (compiler, VIVI_CODE_ASM (label_if));
   } else {
-    code = vivi_code_asm_not_new ();
-    vivi_code_compiler_add_code (compiler, code);
-    g_object_unref (code);
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_not_new ());
 
     label_end = vivi_code_compiler_create_label (compiler, "if_end");
-    code = vivi_code_asm_if_new (label_end);
-    vivi_code_compiler_add_code (compiler, code);
-    g_object_unref (code);
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_if_new (label_end));
   }
 
   vivi_code_compiler_compile_statement (compiler, stmt->if_statement);
 
-  vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_end));
-  g_object_unref (label_end);
+  vivi_code_compiler_take_code (compiler, VIVI_CODE_ASM (label_end));
 }
 
 static void

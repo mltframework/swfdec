@@ -61,15 +61,12 @@ vivi_code_binary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
   ViviCodeBinaryClass *klass = VIVI_CODE_BINARY_GET_CLASS (binary);
-  ViviCodeAsm *code;
 
   vivi_code_compiler_compile_value (compiler, binary->left);
   vivi_code_compiler_compile_value (compiler, binary->right);
 
   g_assert (klass->asm_constructor != 0);
-  code = klass->asm_constructor ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, klass->asm_constructor ());
 }
 
 static gboolean

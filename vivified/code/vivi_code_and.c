@@ -32,32 +32,21 @@ static void
 vivi_code_and_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeBinary *binary = VIVI_CODE_BINARY (token);
-  ViviCodeAsm *code;
   ViviCodeLabel *label_end;
 
   vivi_code_compiler_compile_value (compiler, binary->left);
 
-  code = vivi_code_asm_push_duplicate_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
-
-  code = vivi_code_asm_not_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_push_duplicate_new ());
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_not_new ());
 
   label_end = vivi_code_compiler_create_label (compiler, "and_end");
-  code = vivi_code_asm_if_new (label_end);
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_if_new (label_end));
 
-  code = vivi_code_asm_pop_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_pop_new ());
 
   vivi_code_compiler_compile_value (compiler, binary->right);
 
-  vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_end));
-  g_object_unref (label_end);
+  vivi_code_compiler_take_code (compiler, VIVI_CODE_ASM (label_end));
 }
 
 static void

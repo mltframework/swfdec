@@ -63,15 +63,12 @@ vivi_code_substring_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   g_printerr ("Implement substring\n");
 #if 0
   ViviCodeSubstring *substring = VIVI_CODE_SUBSTRING (token);
-  ViviCodeAsm *code;
 
   vivi_code_value_compile (substring->string, compiler);
   vivi_code_value_compile (substring->index_, compiler);
   vivi_code_value_compile (substring->count, compiler);
 
-  code = vivi_code_asm_string_extract_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_string_extract_new ());
 #endif
 }
 

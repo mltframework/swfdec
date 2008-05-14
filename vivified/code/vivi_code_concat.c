@@ -58,14 +58,11 @@ static void
 vivi_code_concat_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeConcat *concat = VIVI_CODE_CONCAT (token);
-  ViviCodeAsm *code;
 
   vivi_code_compiler_compile_value (compiler, concat->first);
   vivi_code_compiler_compile_value (compiler, concat->second);
 
-  code = vivi_code_asm_string_add_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_string_add_new ());
 }
 
 static void

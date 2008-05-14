@@ -60,15 +60,11 @@ static void
 vivi_code_throw_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeThrow *throw_ = VIVI_CODE_THROW (token);
-  ViviCodeAsm *code;
 
   g_return_if_fail (throw_->value != NULL);
 
   vivi_code_compiler_compile_value (compiler, throw_->value);
-
-  code = vivi_code_asm_throw_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_throw_new ());
 }
 
 static void

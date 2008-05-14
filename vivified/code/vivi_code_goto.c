@@ -54,11 +54,9 @@ static void
 vivi_code_goto_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeGoto *gotoo = VIVI_CODE_GOTO (token);
-  ViviCodeAsm *code;
 
-  code = vivi_code_asm_jump_new (gotoo->label);
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler,
+      vivi_code_asm_jump_new (gotoo->label));
 }
 
 static void

@@ -117,8 +117,7 @@ vivi_code_assignment_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   } else {
     code = vivi_code_asm_set_variable_new ();
   }
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, code);
 }
 
 static void

@@ -84,7 +84,6 @@ vivi_code_init_object_compile (ViviCodeToken *token,
 {
   ViviCodeInitObject *object = VIVI_CODE_INIT_OBJECT (token);
   ViviCodeValue *count;
-  ViviCodeAsm *code;
   guint i;
 
   for (i = 0; i < object->variables->len; i++) {
@@ -97,9 +96,7 @@ vivi_code_init_object_compile (ViviCodeToken *token,
   vivi_code_compiler_compile_value (compiler, count);
   g_object_unref (count);
 
-  code = vivi_code_asm_init_object_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_init_object_new ());
 }
 
 static gboolean

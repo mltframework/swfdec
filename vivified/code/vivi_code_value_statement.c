@@ -54,13 +54,9 @@ vivi_code_value_statement_compile (ViviCodeToken *token,
     ViviCodeCompiler *compiler)
 {
   ViviCodeValueStatement *stmt = VIVI_CODE_VALUE_STATEMENT (token);
-  ViviCodeAsm *code;
 
   vivi_code_compiler_compile_value (compiler, stmt->value);
-
-  code = vivi_code_asm_pop_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_pop_new ());
 }
 
 static void

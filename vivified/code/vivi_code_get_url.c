@@ -72,10 +72,8 @@ vivi_code_get_url_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   vivi_code_value_compile (url->url, assembler);
   vivi_code_value_compile (url->target, assembler);
 
-  code =
-    vivi_code_asm_get_url2_new (url->method, url->internal, url->variables);
-  vivi_code_assembler_add_code (assembler, code);
-  g_object_unref (code);
+  vivi_code_assembler_take_code (assembler,
+      vivi_code_asm_get_url2_new (url->method, url->internal, url->variables));
 #endif
 }
 

@@ -73,15 +73,12 @@ static void
 vivi_code_unary_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeUnary *unary = VIVI_CODE_UNARY (token);
-  ViviCodeAsm *code;
 
   g_return_if_fail (unary->operation == '!');
 
   vivi_code_compiler_compile_value (compiler, unary->value);
 
-  code = vivi_code_asm_not_new ();
-  vivi_code_compiler_add_code (compiler, code);
-  g_object_unref (code);
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_not_new ());
 }
 
 static gboolean

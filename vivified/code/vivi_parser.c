@@ -859,12 +859,8 @@ parse_array_literal (ParseData *data)
 
   parse_token (data, TOKEN_BRACKET_LEFT);
 
-  while (TRUE) {
-    if (try_parse_token (data, TOKEN_BRACKET_RIGHT)) {
-      vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (value),
-	 vivi_code_undefined_new ());
-      break;
-    } else if (try_parse_token (data, TOKEN_COMMA)) {
+  while (!try_parse_token (data, TOKEN_BRACKET_RIGHT)) {
+    if (try_parse_token (data, TOKEN_COMMA)) {
       vivi_code_init_array_add_variable (VIVI_CODE_INIT_ARRAY (value),
 	 vivi_code_undefined_new ());
     }

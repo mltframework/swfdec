@@ -24,6 +24,7 @@
 #include "vivi_code_inc_dec.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_constant.h"
+#include "vivi_code_string.h"
 #include "vivi_code_compiler.h"
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_push.h"
@@ -175,19 +176,11 @@ vivi_code_inc_dec_compile_value (ViviCodeValue *value,
     vivi_code_compiler_take_code (compiler, push);
   } else {
     vivi_code_compiler_compile_value (compiler, inc_dec->name);
-    if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
-      vivi_code_compiler_take_code (compiler,
-	  vivi_code_asm_push_duplicate_new ());
-    }
     vivi_code_compiler_take_code (compiler, vivi_code_asm_get_variable_new ());
 
     if (!inc_dec->pre_assignment) {
-      if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
-	vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
-      } else {
-	vivi_code_compiler_take_code (compiler,
-	    vivi_code_asm_push_duplicate_new ());
-      }
+      vivi_code_compiler_take_code (compiler,
+	  vivi_code_asm_push_duplicate_new ());
     }
 
     if (inc_dec->increment) {
@@ -197,12 +190,8 @@ vivi_code_inc_dec_compile_value (ViviCodeValue *value,
     }
 
     if (inc_dec->pre_assignment) {
-      if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
-	vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
-      } else {
-	vivi_code_compiler_take_code (compiler,
-	    vivi_code_asm_push_duplicate_new ());
-      }
+      vivi_code_compiler_take_code (compiler,
+	  vivi_code_asm_push_duplicate_new ());
     }
 
     if (VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
@@ -211,12 +200,6 @@ vivi_code_inc_dec_compile_value (ViviCodeValue *value,
     }
 
     vivi_code_compiler_take_code (compiler, vivi_code_asm_set_variable_new ());
-
-    if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
-      push = vivi_code_asm_push_new ();
-      vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
-      vivi_code_compiler_take_code (compiler, push);
-    }
   }
 }
 
@@ -248,6 +231,7 @@ vivi_code_inc_dec_new (ViviCodeValue *from, ViviCodeValue *name,
 
   g_return_val_if_fail (from == NULL || VIVI_IS_CODE_VALUE (from), NULL);
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (name), NULL);
+  g_return_val_if_fail (from != NULL || VIVI_IS_CODE_CONSTANT (name), NULL);
 
   inc_dec = g_object_new (VIVI_TYPE_CODE_INC_DEC, NULL);
   if (from != NULL)
@@ -257,4 +241,20 @@ vivi_code_inc_dec_new (ViviCodeValue *from, ViviCodeValue *name,
   inc_dec->pre_assignment = pre_assignment;
 
   return VIVI_CODE_VALUE (inc_dec);
+}
+
+ViviCodeValue *
+vivi_code_inc_dec_new_name (const char *name, gboolean increment,
+    gboolean pre_assignment)
+{
+  ViviCodeValue *name_value, *inc_dec;
+
+  g_return_val_if_fail (name != NULL, NULL);
+
+  name_value = vivi_code_string_new (name);
+  inc_dec =
+    vivi_code_inc_dec_new (NULL, name_value, increment, pre_assignment);
+  g_object_unref (name_value);
+
+  return inc_dec;
 }

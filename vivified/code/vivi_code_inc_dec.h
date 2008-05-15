@@ -57,6 +57,9 @@ ViviCodeValue *		vivi_code_inc_dec_new			(ViviCodeValue *	name,
 								 ViviCodeValue *	from,
 								 gboolean		increment,
 								 gboolean		pre_assignment);
+ViviCodeValue *		vivi_code_inc_dec_new_name		(const char *		name,
+								 gboolean		increment,
+								 gboolean		pre_assignment);
 
 
 G_END_DECLS

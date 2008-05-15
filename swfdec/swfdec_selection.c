@@ -28,6 +28,9 @@
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sandbox.h"
+#include "swfdec_button_movie.h"
+#include "swfdec_sprite_movie.h"
+#include "swfdec_text_field_movie.h"
 
 SWFDEC_AS_NATIVE (600, 0, swfdec_selection_getBeginIndex)
 void
@@ -68,25 +71,44 @@ swfdec_selection_getFocus (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
+static gboolean
+swfdec_actor_can_grab_focus (SwfdecActor *actor)
+{
+  SwfdecAsValue val;
+
+  /* Functions like this just make me love Flash */
+  if (SWFDEC_IS_SPRITE_MOVIE (actor) ||
+      SWFDEC_IS_BUTTON_MOVIE (actor)) {
+    if (SWFDEC_MOVIE (actor)->parent == NULL)
+      return FALSE;
+    if (!swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor),
+	SWFDEC_AS_STR_focusEnabled, &val))
+      return FALSE;
+    return swfdec_as_value_to_boolean (SWFDEC_AS_OBJECT (actor)->context, &val);
+  } else if (SWFDEC_IS_TEXT_FIELD_MOVIE (actor)) {
+    /* cool that you can select all textfields, eh? */
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
 SWFDEC_AS_NATIVE (600, 4, swfdec_selection_setFocus)
 void
 swfdec_selection_setFocus (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsValue val;
   SwfdecActor *actor;
   SwfdecSandbox *sandbox;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, FALSE);
   SWFDEC_AS_CHECK (0, NULL, "O", &actor);
 
-  if (actor != NULL &&
-      (!SWFDEC_IS_MOVIE (actor) ||
-       SWFDEC_MOVIE (actor)->parent == NULL ||
-       !swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor),
-	  SWFDEC_AS_STR_focusEnabled, &val) ||
-       swfdec_as_value_to_boolean (SWFDEC_AS_OBJECT (actor)->context, &val) == FALSE))
-    return;
+  if (actor != NULL) {
+    if (!SWFDEC_IS_ACTOR (actor) ||
+	!swfdec_actor_can_grab_focus (actor))
+      return;
+  }
 
   /* FIXME: how is security handled here? */
   sandbox = SWFDEC_SANDBOX (cx->global);

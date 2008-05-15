@@ -1,0 +1,14 @@
+asm {
+  pool "i"
+  push pool 0
+  push_duplicate
+  get_variable
+  increment
+  set_variable
+  push pool 0
+  push_duplicate
+  get_variable
+  increment
+  set_variable
+  end
+}

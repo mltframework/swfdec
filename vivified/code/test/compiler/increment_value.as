@@ -1,0 +1,2 @@
+trace (i++);
+trace (++i);

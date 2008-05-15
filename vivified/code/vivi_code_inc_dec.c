@@ -145,16 +145,25 @@ vivi_code_inc_dec_compile_value (ViviCodeValue *value,
   ViviCodeAsm *push;
 
   if (inc_dec->from) {
-    // FIXME: optimize the VIVI_IS_CODE_CONSTANT (inc_dec->name) case
-    vivi_code_compiler_compile_value (compiler, inc_dec->name);
-    vivi_code_compiler_compile_value (compiler, inc_dec->from);
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
-    vivi_code_compiler_take_code (compiler,
-	vivi_code_asm_push_duplicate_new ());
-    push = vivi_code_asm_push_new ();
-    vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
-    vivi_code_compiler_take_code (compiler, push);
+    if (VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
+      vivi_code_compiler_compile_value (compiler, inc_dec->from);
+      vivi_code_compiler_take_code (compiler,
+	  vivi_code_asm_push_duplicate_new ());
+      vivi_code_compiler_compile_value (compiler, inc_dec->name);
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
+      vivi_code_compiler_compile_value (compiler, inc_dec->name);
+    } else {
+      vivi_code_compiler_compile_value (compiler, inc_dec->name);
+      vivi_code_compiler_compile_value (compiler, inc_dec->from);
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
+      vivi_code_compiler_take_code (compiler,
+	  vivi_code_asm_push_duplicate_new ());
+      push = vivi_code_asm_push_new ();
+      vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
+      vivi_code_compiler_take_code (compiler, push);
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
+    }
     vivi_code_compiler_take_code (compiler, vivi_code_asm_get_member_new ());
 
     if (!inc_dec->pre_assignment)

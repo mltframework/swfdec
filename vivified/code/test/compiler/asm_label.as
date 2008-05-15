@@ -1,7 +1,5 @@
 asm {
   play
-
-hello_0001:
+hello:
   stop
-  end
 }

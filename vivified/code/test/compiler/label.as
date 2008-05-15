@@ -1,1 +1,3 @@
+play ();
 hello:
+stop ();

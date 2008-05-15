@@ -2454,10 +2454,9 @@ parse_iteration_statement (ParseData *data)
       g_assert (VIVI_IS_CODE_BLOCK (pre_statement));
       if (vivi_code_block_get_n_statements (VIVI_CODE_BLOCK (pre_statement))
 	  == 1) {
-	ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (
+	ViviCodeVariable *variable = VIVI_CODE_VARIABLE (
 	    vivi_code_block_get_statement (VIVI_CODE_BLOCK (pre_statement), 0));
-	g_assert (assignment->from == NULL);
-	pre_value = vivi_code_get_new (NULL, assignment->name);
+	pre_value = vivi_code_get_new (NULL, variable->name);
       } else {
 	pre_value = NULL;
       }

@@ -28,6 +28,8 @@
 #include "vivi_code_undefined.h"
 #include "vivi_code_compiler.h"
 #include "vivi_code_asm_code_default.h"
+#include "vivi_code_asm_push.h"
+#include "vivi_code_asm_store.h"
 
 G_DEFINE_TYPE (ViviCodeAssignment, vivi_code_assignment, VIVI_TYPE_CODE_VALUE)
 
@@ -111,12 +113,16 @@ vivi_code_assignment_compile_value (ViviCodeValue *value,
   ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (value);
 
   if (assignment->from) {
-    // TODO
+    ViviCodeAsm *push;
+
     vivi_code_compiler_compile_value (compiler, assignment->from);
     vivi_code_compiler_compile_value (compiler, assignment->name);
     vivi_code_compiler_compile_value (compiler, assignment->value);
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
     vivi_code_compiler_take_code (compiler, vivi_code_asm_set_member_new ());
-    g_assert_not_reached ();
+    push = vivi_code_asm_push_new ();
+    vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
+    vivi_code_compiler_take_code (compiler, push);
   } else {
     vivi_code_compiler_compile_value (compiler, assignment->value);
     vivi_code_compiler_take_code (compiler,

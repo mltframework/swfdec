@@ -18,6 +18,10 @@ EXTRA_DIST = \
 	and.as.expect \
 	array_literal.as \
 	array_literal.as.expect \
+	array_literal_empty.as \
+	array_literal_empty.as.expect \
+	array_literal_missing_values.as \
+	array_literal_missing_values.as.expect \
 	asm_empty.as \
 	asm_empty.as.expect \
 	asm_default.as \
@@ -72,6 +76,8 @@ EXTRA_DIST = \
 	operator.as.expect \
 	object_literal.as \
 	object_literal.as.expect \
+	object_literal_empty.as \
+	object_literal_empty.as.expect \
 	or.as \
 	or.as.expect \
 	trace.as \

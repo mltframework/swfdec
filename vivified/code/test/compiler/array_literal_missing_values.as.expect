@@ -1,0 +1,22 @@
+asm {
+  pool "a"
+  push pool 0, undefined, 1
+  init_array
+  set_variable
+  push pool 0, undefined, undefined, 2
+  init_array
+  set_variable
+  push pool 0, undefined, 1, 2
+  init_array
+  set_variable
+  push pool 0, 1, undefined, 2
+  init_array
+  set_variable
+  push pool 0, 1, undefined, undefined, 3
+  init_array
+  set_variable
+  push pool 0, 1, undefined, 1, 3
+  init_array
+  set_variable
+  end
+}

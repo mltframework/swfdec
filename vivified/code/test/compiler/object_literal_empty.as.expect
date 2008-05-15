@@ -1,0 +1,7 @@
+asm {
+  pool "o"
+  push pool 0, 0
+  init_object
+  set_variable
+  end
+}

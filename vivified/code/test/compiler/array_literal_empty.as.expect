@@ -1,0 +1,7 @@
+asm {
+  pool "a"
+  push pool 0, 0
+  init_array
+  set_variable
+  end
+}

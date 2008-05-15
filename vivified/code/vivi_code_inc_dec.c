@@ -105,7 +105,8 @@ vivi_code_inc_dec_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
     vivi_code_compiler_take_code (compiler,
 	vivi_code_asm_push_duplicate_new ());
     vivi_code_compiler_compile_value (compiler, inc_dec->name);
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
+    if (!VIVI_IS_CODE_CONSTANT (inc_dec->name))
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
     vivi_code_compiler_take_code (compiler, vivi_code_asm_get_member_new ());
   } else {
     vivi_code_compiler_compile_value (compiler, inc_dec->name);
@@ -121,9 +122,13 @@ vivi_code_inc_dec_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   }
 
   if (inc_dec->from) {
-    ViviCodeAsm *push = vivi_code_asm_push_new ();
-    vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
-    vivi_code_compiler_take_code (compiler, push);
+    if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
+      ViviCodeAsm *push = vivi_code_asm_push_new ();
+      vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
+      vivi_code_compiler_take_code (compiler, push);
+    } else {
+      vivi_code_compiler_compile_value (compiler, inc_dec->name);
+    }
     vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
     vivi_code_compiler_take_code (compiler, vivi_code_asm_set_member_new ());
   } else {
@@ -139,41 +144,80 @@ vivi_code_inc_dec_compile_value (ViviCodeValue *value,
   ViviCodeAsm *push;
 
   if (inc_dec->from) {
+    // FIXME: optimize the VIVI_IS_CODE_CONSTANT (inc_dec->name) case
+    vivi_code_compiler_compile_value (compiler, inc_dec->name);
     vivi_code_compiler_compile_value (compiler, inc_dec->from);
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_get_variable_new ());
-    vivi_code_compiler_take_code (compiler,
-	vivi_code_asm_push_duplicate_new ());
-    vivi_code_compiler_compile_value (compiler, inc_dec->name);
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_get_member_new ());
-  } else {
-    vivi_code_compiler_compile_value (compiler, inc_dec->name);
-    vivi_code_compiler_take_code (compiler,
-	vivi_code_asm_push_duplicate_new ());
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_get_variable_new ());
-  }
-
-  if (!inc_dec->pre_assignment)
     vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
-
-  if (inc_dec->increment) {
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_increment_new ());
-  } else {
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_decrement_new ());
-  }
-
-  if (inc_dec->pre_assignment)
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
-
-  if (inc_dec->from) {
     vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_set_member_new ());
-  } else {
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_set_variable_new ());
-  }
+    vivi_code_compiler_take_code (compiler,
+	vivi_code_asm_push_duplicate_new ());
+    push = vivi_code_asm_push_new ();
+    vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
+    vivi_code_compiler_take_code (compiler, push);
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_get_member_new ());
 
-  push = vivi_code_asm_push_new ();
-  vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
-  vivi_code_compiler_take_code (compiler, push);
+    if (!inc_dec->pre_assignment)
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
+
+    if (inc_dec->increment) {
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_increment_new ());
+    } else {
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_decrement_new ());
+    }
+
+    if (inc_dec->pre_assignment)
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
+
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_set_member_new ());
+
+    push = vivi_code_asm_push_new ();
+    vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
+    vivi_code_compiler_take_code (compiler, push);
+  } else {
+    vivi_code_compiler_compile_value (compiler, inc_dec->name);
+    if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
+      vivi_code_compiler_take_code (compiler,
+	  vivi_code_asm_push_duplicate_new ());
+    }
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_get_variable_new ());
+
+    if (!inc_dec->pre_assignment) {
+      if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
+	vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
+      } else {
+	vivi_code_compiler_take_code (compiler,
+	    vivi_code_asm_push_duplicate_new ());
+      }
+    }
+
+    if (inc_dec->increment) {
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_increment_new ());
+    } else {
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_decrement_new ());
+    }
+
+    if (inc_dec->pre_assignment) {
+      if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
+	vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
+      } else {
+	vivi_code_compiler_take_code (compiler,
+	    vivi_code_asm_push_duplicate_new ());
+      }
+    }
+
+    if (VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
+      vivi_code_compiler_compile_value (compiler, inc_dec->name);
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
+    }
+
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_set_variable_new ());
+
+    if (!VIVI_IS_CODE_CONSTANT (inc_dec->name)) {
+      push = vivi_code_asm_push_new ();
+      vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
+      vivi_code_compiler_take_code (compiler, push);
+    }
+  }
 }
 
 static void

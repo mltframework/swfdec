@@ -102,10 +102,10 @@ vivi_code_inc_dec_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 
   if (inc_dec->from) {
     vivi_code_compiler_compile_value (compiler, inc_dec->from);
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_get_variable_new ());
     vivi_code_compiler_take_code (compiler,
 	vivi_code_asm_push_duplicate_new ());
     vivi_code_compiler_compile_value (compiler, inc_dec->name);
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_store_new (0));
     vivi_code_compiler_take_code (compiler, vivi_code_asm_get_member_new ());
   } else {
     vivi_code_compiler_compile_value (compiler, inc_dec->name);
@@ -121,6 +121,9 @@ vivi_code_inc_dec_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   }
 
   if (inc_dec->from) {
+    ViviCodeAsm *push = vivi_code_asm_push_new ();
+    vivi_code_asm_push_add_register (VIVI_CODE_ASM_PUSH (push), 0);
+    vivi_code_compiler_take_code (compiler, push);
     vivi_code_compiler_take_code (compiler, vivi_code_asm_swap_new ());
     vivi_code_compiler_take_code (compiler, vivi_code_asm_set_member_new ());
   } else {

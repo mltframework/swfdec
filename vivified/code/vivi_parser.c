@@ -351,25 +351,6 @@ vivi_parser_assignment_new (ViviCodeValue *left, ViviCodeValue *right)
   return vivi_code_assignment_new (from, name, right);
 }
 
-static ViviCodeValue *
-vivi_parser_inc_dec_new (ViviCodeValue *left, gboolean increment,
-    gboolean pre_assignment)
-{
-  ViviCodeValue *from, *name;
-
-  if (VIVI_IS_CODE_GET (left)) {
-    ViviCodeGet *get = VIVI_CODE_GET (left);
-
-    from = get->from;
-    name = get->name;
-  } else {
-    from = NULL;
-    name = left;
-  }
-
-  return vivi_code_inc_dec_new (from, name, increment, pre_assignment);
-}
-
 static gboolean
 vivi_parser_value_is_left_hand_side (ViviCodeValue *value)
 {
@@ -1776,7 +1757,8 @@ peek_postfix_expression (ParseData *data)
 static ViviCodeValue *
 parse_postfix_expression (ParseData *data)
 {
-  ViviCodeValue *value, *operation;
+  ViviCodeValue *value;
+  ViviCodeGet *get;
   gboolean add;
 
   vivi_parser_start_code_token (data);
@@ -1801,13 +1783,17 @@ parse_postfix_expression (ParseData *data)
   if (!vivi_parser_value_is_left_hand_side (value)) {
     vivi_parser_error (data,
 	"Invalid left-hand side expression for INCREASE/DECREASE");
+    g_object_unref (value);
+    value = vivi_code_get_new_name (NULL, "undefined");
   }
 
-  operation = vivi_parser_inc_dec_new (value, add, FALSE);
+  get = VIVI_CODE_GET (value);
+  value = vivi_code_inc_dec_new (get->from, get->name, add, FALSE);
+  g_object_unref (get);
 
-  vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (operation));
+  vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
 
-  return operation;
+  return value;
 }
 
 static gboolean
@@ -1835,6 +1821,7 @@ static ViviCodeValue *
 parse_unary_expression (ParseData *data)
 {
   ViviCodeValue *value, *tmp;
+  ViviCodeGet *get;
   gboolean increment = FALSE;
 
   switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
@@ -1854,11 +1841,13 @@ parse_unary_expression (ParseData *data)
       if (!vivi_parser_value_is_left_hand_side (value)) {
 	vivi_parser_error (data,
 	    "Invalid left-hand side expression for INCREASE/DECREASE");
+	g_object_unref (value);
+	value = vivi_code_get_new_name (NULL, "undefined");
       }
 
-      tmp = value;
-      value = vivi_parser_inc_dec_new (tmp, increment, TRUE);
-      g_object_unref (tmp);
+      get = VIVI_CODE_GET (value);
+      value = vivi_code_inc_dec_new (get->from, get->name, increment, TRUE);
+      g_object_unref (get);
 
       vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
       break;

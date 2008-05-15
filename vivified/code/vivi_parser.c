@@ -2442,6 +2442,7 @@ parse_iteration_statement (ParseData *data)
   else if (try_parse_token (data, TOKEN_FOR))
   {
     ViviCodeValue *pre_value;
+    ViviCodeStatement *post_statement;
 
     parse_token (data, TOKEN_PARENTHESIS_LEFT);
 
@@ -2483,8 +2484,9 @@ parse_iteration_statement (ParseData *data)
       }
 
       if (!peek_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-	pre_value = parse_expression (data);
-	g_object_unref (pre_value);
+	post_statement = VIVI_CODE_STATEMENT (parse_expression (data));
+      } else {
+	post_statement = NULL;
       }
     } else if (pre_value != NULL && try_parse_token (data, TOKEN_IN)) {
       // FIXME: correct?
@@ -2498,6 +2500,7 @@ parse_iteration_statement (ParseData *data)
       vivi_parser_error (data, "for (... in ...) has not been implemented yet");
 
       condition = vivi_code_undefined_new ();
+      post_statement = NULL;
     } else {
       if (pre_value != NULL) {
 	vivi_parser_error_unexpected_or (data, TOKEN_SEMICOLON, TOKEN_IN,
@@ -2507,6 +2510,7 @@ parse_iteration_statement (ParseData *data)
       }
 
       condition = vivi_code_undefined_new ();
+      post_statement = NULL;
 
       if (pre_value != NULL)
 	g_object_unref (pre_value);
@@ -2516,6 +2520,16 @@ parse_iteration_statement (ParseData *data)
 
     parse_token (data, TOKEN_PARENTHESIS_RIGHT);
     loop_statement = parse_statement (data);
+
+    if (post_statement != NULL) {
+      ViviCodeStatement *block = vivi_code_block_new ();
+      vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), loop_statement);
+      g_object_unref (loop_statement);
+      vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), post_statement);
+      g_object_unref (post_statement);
+
+      loop_statement = block;
+    }
   }
   else
   {

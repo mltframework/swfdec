@@ -1,0 +1,23 @@
+asm {
+  pool "i"
+  push pool 0, 0
+  define_local
+
+loop_start_0001:
+  push pool 0
+  get_variable
+  push 5
+  less2
+  not
+  if loop_end_0002
+  play
+  push pool 0
+  push_duplicate
+  get_variable
+  increment
+  set_variable
+  jump loop_start_0001
+
+loop_end_0002:
+  end
+}

@@ -24,6 +24,8 @@ EXTRA_DIST = \
 	asm_default.as.expect \
 	assignment.as \
 	assignment.as.expect \
+	assignment_member.as \
+	assignment_member.as.expect \
 	assignment_operator.as \
 	assignment_operator.as.expect \
 	assignment_value.as \

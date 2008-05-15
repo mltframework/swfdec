@@ -331,7 +331,7 @@ vivi_parser_function_call_new (ViviCodeValue *name)
 static ViviCodeValue *
 vivi_parser_assignment_new (ViviCodeValue *left, ViviCodeValue *right)
 {
-  ViviCodeValue *from;
+  ViviCodeValue *from, *name;
 
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (left), NULL);
   g_return_val_if_fail (VIVI_IS_CODE_VALUE (right), NULL);
@@ -341,20 +341,14 @@ vivi_parser_assignment_new (ViviCodeValue *left, ViviCodeValue *right)
   if (VIVI_IS_CODE_GET (left)) {
     ViviCodeGet *get = VIVI_CODE_GET (left);
 
-    if (get->from != NULL) {
-      from = g_object_ref (get->from);
-      left = g_object_ref (get->name);
-    }
+    from = get->from;
+    name = get->name;
+  } else {
+    from = NULL;
+    name = left;
   }
 
-  if (VIVI_IS_CODE_GET (left)) {
-    ViviCodeGet *get = VIVI_CODE_GET (left);
-
-    if (get->from == NULL)
-      left = g_object_ref (get->name);
-  }
-
-  return vivi_code_assignment_new (from, left, right);
+  return vivi_code_assignment_new (from, name, right);
 }
 
 static ViviCodeValue *

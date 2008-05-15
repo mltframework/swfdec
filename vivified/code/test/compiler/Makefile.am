@@ -58,6 +58,10 @@ EXTRA_DIST = \
 	if_else.as.expect \
 	increment.as \
 	increment.as.expect \
+	increment_member.as \
+	increment_member.as.expect \
+	increment_member_value.as \
+	increment_member_value.as.expect \
 	increment_value.as \
 	increment_value.as.expect \
 	label.as \

@@ -1,0 +1,44 @@
+asm {
+  pool "a", "b"
+  push pool 0
+  get_variable
+  push_duplicate
+  push pool 1
+  get_member
+  increment
+  push pool 1
+  swap
+  set_member
+  push pool 0
+  get_variable
+  push_duplicate
+  push pool 1
+  get_variable
+  store 0
+  get_member
+  increment
+  push reg 0
+  swap
+  set_member
+  push pool 0
+  get_variable
+  push_duplicate
+  push pool 1
+  get_member
+  increment
+  push pool 1
+  swap
+  set_member
+  push pool 0
+  get_variable
+  push_duplicate
+  push pool 1
+  get_variable
+  store 0
+  get_member
+  increment
+  push reg 0
+  swap
+  set_member
+  end
+}

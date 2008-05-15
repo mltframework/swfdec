@@ -40,6 +40,8 @@ EXTRA_DIST = \
 	call_function.as.expect \
 	comment.as \
 	comment.as.expect \
+	decrement.as \
+	decrement.as.expect \
 	empty.as \
 	empty.as.expect \
 	empty_block.as \

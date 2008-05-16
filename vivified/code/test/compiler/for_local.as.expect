@@ -1,7 +1,7 @@
 asm {
   pool "i"
   push pool 0, 0
-  set_variable
+  define_local
 
 loop_start_0001:
   push pool 0

@@ -62,6 +62,8 @@ EXTRA_DIST = \
 	enumerate_member.as.expect \
 	for.as \
 	for.as.expect \
+	for_local.as \
+	for_local.as.expect \
 	function_declaration.as \
 	function_declaration.as.expect \
 	function_expression.as \

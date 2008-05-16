@@ -41,6 +41,8 @@ vivi_code_enumerate_dispose (GObject *object)
   ViviCodeEnumerate *enumerate = VIVI_CODE_ENUMERATE (object);
 
   g_object_unref (enumerate->target);
+  if (enumerate->from)
+    g_object_unref (enumerate->from);
   g_object_unref (enumerate->name);
   if (enumerate->statement)
     g_object_unref (enumerate->statement);
@@ -206,7 +208,8 @@ vivi_code_enumerate_new (ViviCodeValue *target, ViviCodeValue *from,
   enumerate = g_object_new (VIVI_TYPE_CODE_ENUMERATE, NULL);
 
   enumerate->target = g_object_ref (target);
-  enumerate->from = g_object_ref (from);
+  if (from != NULL)
+    enumerate->from = g_object_ref (from);
   enumerate->name = g_object_ref (name);
   enumerate->local = local;
 

@@ -53,17 +53,45 @@ vivi_code_enumerate_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {
   ViviCodeEnumerate *enumerate= VIVI_CODE_ENUMERATE (token);
   gboolean needs_braces;
+  char *varname;
 
   needs_braces = enumerate->statement &&
     vivi_code_statement_needs_braces (enumerate->statement);
 
-  // FIXME: member
-
   vivi_code_printer_print (printer, "while (");
-  if (enumerate->local)
-    vivi_code_printer_print (printer, "var ");
-  vivi_code_printer_print_value (printer, enumerate->name,
-      VIVI_PRECEDENCE_MIN);
+
+  // FIXME: duplicated code from ViviAssignment
+  if (VIVI_IS_CODE_CONSTANT (enumerate->name)) {
+    varname = vivi_code_constant_get_variable_name (
+	VIVI_CODE_CONSTANT (enumerate->name));
+  } else {
+    varname = NULL;
+  }
+
+  if (enumerate->from) {
+    g_assert (enumerate->local == FALSE);
+    vivi_code_printer_print_value (printer, enumerate->from,
+	VIVI_PRECEDENCE_MEMBER);
+    if (varname) {
+      vivi_code_printer_print (printer, ".");
+      vivi_code_printer_print (printer, varname);
+    } else {
+      vivi_code_printer_print (printer, "[");
+      vivi_code_printer_print_value (printer, enumerate->name,
+	  VIVI_PRECEDENCE_MIN);
+      vivi_code_printer_print (printer, "]");
+    }
+  } else {
+    if (enumerate->local)
+      vivi_code_printer_print (printer, "var ");
+    if (varname) {
+      vivi_code_printer_print (printer, varname);
+    } else {
+      // FIXME
+      g_assert_not_reached ();
+    }
+  }
+
   vivi_code_printer_print (printer, " in ");
   vivi_code_printer_print_value (printer, enumerate->target,
       VIVI_PRECEDENCE_MIN);

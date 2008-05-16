@@ -42,6 +42,7 @@
 #include "vivi_code_concat.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
+#include "vivi_code_enumerate.h"
 #include "vivi_code_function.h"
 #include "vivi_code_function_call.h"
 #include "vivi_code_function_declaration.h"
@@ -2399,9 +2400,14 @@ peek_iteration_statement (ParseData *data)
 static ViviCodeStatement *
 parse_iteration_statement (ParseData *data)
 {
-  ViviCodeValue *condition;
+  ViviCodeValue *condition, *enumerate_variable;
   ViviCodeStatement *statement;
   ViviCodeStatement *pre_statement, *loop_statement;
+  gboolean enumerate, enumerate_local;
+
+  enumerate = FALSE;
+  enumerate_local = FALSE;
+  enumerate_variable = NULL;
 
   if (try_parse_token (data, TOKEN_DO))
   {
@@ -2425,7 +2431,6 @@ parse_iteration_statement (ParseData *data)
   }
   else if (try_parse_token (data, TOKEN_FOR))
   {
-    ViviCodeValue *pre_value;
     ViviCodeStatement *post_statement;
 
     parse_token (data, TOKEN_PARENTHESIS_LEFT);
@@ -2434,31 +2439,34 @@ parse_iteration_statement (ParseData *data)
       // FIXME: no in
       pre_statement = parse_statement_list (data, peek_variable_declaration,
 	  parse_variable_declaration, TOKEN_COMMA);
-      // FIXME: ugly
-      // If there was only one VariableDeclaration, get the name for pre_value
+      // FIXME: ugly... if there was only one VariableDeclaration,
+      // get the name for enumerate_variable
       g_assert (VIVI_IS_CODE_BLOCK (pre_statement));
       if (vivi_code_block_get_n_statements (VIVI_CODE_BLOCK (pre_statement))
 	  == 1) {
 	ViviCodeVariable *variable = VIVI_CODE_VARIABLE (
 	    vivi_code_block_get_statement (VIVI_CODE_BLOCK (pre_statement), 0));
-	pre_value = vivi_code_get_new (NULL, variable->name);
+	enumerate_variable = vivi_code_get_new (NULL, variable->name);
+	enumerate_local = TRUE;
       } else {
-	pre_value = NULL;
+	enumerate_variable = NULL;
       }
     } else {
       if (try_parse_token (data, TOKEN_SEMICOLON)) {
-	pre_value = NULL;
+	enumerate_variable = NULL;
 	pre_statement = NULL;
       } else {
 	// FIXME: no in
-	pre_value = parse_expression (data);
-	pre_statement = NULL;
+	enumerate_variable = parse_expression (data);
+	enumerate_local = FALSE;
+	pre_statement =
+	  g_object_ref (VIVI_CODE_STATEMENT (enumerate_variable));
       }
     }
 
     if (try_parse_token (data, TOKEN_SEMICOLON)) {
-      if (pre_value != NULL)
-	g_object_unref (pre_value);
+      if (enumerate_variable != NULL)
+	g_object_unref (enumerate_variable);
 
       if (try_parse_token (data, TOKEN_SEMICOLON)) {
 	condition = vivi_code_boolean_new (TRUE);
@@ -2472,21 +2480,25 @@ parse_iteration_statement (ParseData *data)
       } else {
 	post_statement = NULL;
       }
-    } else if (pre_value != NULL && try_parse_token (data, TOKEN_IN)) {
+    } else if (enumerate_variable != NULL && try_parse_token (data, TOKEN_IN)) {
       // FIXME: correct?
-      if (!vivi_parser_value_is_left_hand_side (pre_value))
+      if (!vivi_parser_value_is_left_hand_side (enumerate_variable)) {
 	vivi_parser_error (data, "Invalid left-hand side expression for in");
+	enumerate_variable = vivi_code_string_new ("undefined");
+      }
 
-      g_object_unref (pre_value);
-      if (pre_statement != NULL)
+      if (pre_statement != NULL) {
 	g_object_unref (pre_statement);
+	pre_statement = NULL;
+      }
 
-      vivi_parser_error (data, "for (... in ...) has not been implemented yet");
-
-      condition = vivi_code_undefined_new ();
+      condition = parse_expression (data);
       post_statement = NULL;
+      enumerate = TRUE;
     } else {
-      if (pre_value != NULL) {
+      enumerate = FALSE;
+
+      if (enumerate_variable != NULL) {
 	vivi_parser_error_unexpected_or (data, TOKEN_SEMICOLON, TOKEN_IN,
 	    TOKEN_NONE);
       } else {
@@ -2496,8 +2508,8 @@ parse_iteration_statement (ParseData *data)
       condition = vivi_code_undefined_new ();
       post_statement = NULL;
 
-      if (pre_value != NULL)
-	g_object_unref (pre_value);
+      if (enumerate_variable != NULL)
+	g_object_unref (enumerate_variable);
       if (pre_statement != NULL)
 	g_object_unref (pre_statement);
     }
@@ -2519,9 +2531,22 @@ parse_iteration_statement (ParseData *data)
   {
     vivi_parser_error_unexpected (data, ERROR_TOKEN_ITERATION_STATEMENT);
 
+    enumerate = FALSE;
     condition = vivi_code_undefined_new ();
     pre_statement = NULL;
     loop_statement = vivi_compiler_empty_statement_new ();
+  }
+
+  if (enumerate) {
+    g_assert (pre_statement == NULL);
+    g_assert (VIVI_IS_CODE_GET (enumerate_variable));
+
+    statement = vivi_code_enumerate_new (condition,
+	VIVI_CODE_GET (enumerate_variable)->from,
+	VIVI_CODE_GET (enumerate_variable)->name, enumerate_local);
+    vivi_code_enumerate_set_statement (VIVI_CODE_ENUMERATE (statement),
+	loop_statement);
+    return statement;
   }
 
   statement = vivi_code_loop_new ();

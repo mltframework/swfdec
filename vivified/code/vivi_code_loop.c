@@ -84,22 +84,33 @@ vivi_code_loop_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   label_start = vivi_code_compiler_create_label (compiler, "loop_start");
   vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_start));
 
+  if (loop->post_condition && loop->statement)
+    vivi_code_compiler_compile_statement (compiler, loop->statement);
+
   if (loop->condition) {
     vivi_code_compiler_compile_value (compiler, loop->condition);
 
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_not_new ());
-
-    label_end = vivi_code_compiler_create_label (compiler, "loop_end");
-    vivi_code_compiler_take_code (compiler, vivi_code_asm_if_new (label_end));
+    if (!loop->post_condition) {
+      vivi_code_compiler_take_code (compiler, vivi_code_asm_not_new ());
+      label_end = vivi_code_compiler_create_label (compiler, "loop_end");
+      vivi_code_compiler_take_code (compiler,
+	  vivi_code_asm_if_new (label_end));
+    }
   }
 
-  if (loop->statement)
+  if (!loop->post_condition && loop->statement)
     vivi_code_compiler_compile_statement (compiler, loop->statement);
 
-  vivi_code_compiler_take_code (compiler, vivi_code_asm_jump_new (label_start));
+  if (loop->post_condition) {
+    vivi_code_compiler_take_code (compiler,
+	vivi_code_asm_if_new (label_start));
+  } else {
+    vivi_code_compiler_take_code (compiler,
+	vivi_code_asm_jump_new (label_start));
+  }
   g_object_unref (label_start);
 
-  if (loop->condition)
+  if (loop->condition && !loop->post_condition)
     vivi_code_compiler_take_code (compiler, VIVI_CODE_ASM (label_end));
 }
 
@@ -127,7 +138,8 @@ vivi_code_loop_new (void)
 }
 
 void
-vivi_code_loop_set_condition (ViviCodeLoop *loop, ViviCodeValue *condition)
+vivi_code_loop_set_condition (ViviCodeLoop *loop, ViviCodeValue *condition,
+    gboolean post_condition)
 {
   g_return_if_fail (VIVI_IS_CODE_LOOP (loop));
   g_return_if_fail (VIVI_IS_CODE_VALUE (condition));
@@ -137,6 +149,7 @@ vivi_code_loop_set_condition (ViviCodeLoop *loop, ViviCodeValue *condition)
   if (loop->condition)
     g_object_unref (loop->condition);
   loop->condition = condition;
+  loop->post_condition = post_condition;
 }
 
 void

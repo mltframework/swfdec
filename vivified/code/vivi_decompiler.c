@@ -1351,11 +1351,11 @@ vivi_decompiler_merge_loops (GList **list)
 	value = vivi_code_unary_new (vivi_decompiler_block_get_branch_condition (start), '!');
 	opt = vivi_code_value_optimize (value, SWFDEC_AS_TYPE_BOOLEAN);
 	g_object_unref (value);
-	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), opt);
+	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), opt, FALSE);
 	g_object_unref (opt);
       } else {
 	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), 
-	    vivi_decompiler_block_get_branch_condition (start));
+	    vivi_decompiler_block_get_branch_condition (start), FALSE);
 	vivi_decompiler_block_set_next (start,
 	    vivi_decompiler_block_get_branch (start));
       }
@@ -1376,7 +1376,7 @@ vivi_decompiler_merge_loops (GList **list)
 	value = vivi_code_unary_new (vivi_decompiler_block_get_branch_condition (start), '!');
 	opt = vivi_code_value_optimize (value, SWFDEC_AS_TYPE_BOOLEAN);
 	g_object_unref (value);
-	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), opt);
+	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), opt, FALSE);
 	g_object_unref (opt);
 	vivi_decompiler_block_set_next (block, vivi_decompiler_block_get_branch (start));
 	vivi_decompiler_block_set_branch (start, NULL, NULL);

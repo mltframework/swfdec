@@ -41,6 +41,7 @@ struct _ViviCodeLoop
   ViviCodeStatement	parent;
 
   ViviCodeValue *	condition;
+  gboolean		post_condition;
   ViviCodeStatement *	statement;
 };
 
@@ -53,7 +54,8 @@ GType			vivi_code_loop_get_type   	(void);
 
 ViviCodeStatement *	vivi_code_loop_new		(void);
 void			vivi_code_loop_set_condition	(ViviCodeLoop *		loop,
-							 ViviCodeValue *	condition);
+							 ViviCodeValue *	condition,
+							 gboolean		post_condition);
 void			vivi_code_loop_set_statement	(ViviCodeLoop *		loop,
 							 ViviCodeStatement *	statement);
 

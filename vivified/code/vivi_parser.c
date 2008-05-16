@@ -2403,7 +2403,7 @@ parse_iteration_statement (ParseData *data)
   ViviCodeValue *condition, *enumerate_variable;
   ViviCodeStatement *statement;
   ViviCodeStatement *pre_statement, *loop_statement;
-  gboolean enumerate, enumerate_local;
+  gboolean post_condition, enumerate, enumerate_local;
 
   enumerate = FALSE;
   enumerate_local = FALSE;
@@ -2415,15 +2415,17 @@ parse_iteration_statement (ParseData *data)
     parse_token (data, TOKEN_WHILE);
     parse_token (data, TOKEN_PARENTHESIS_LEFT);
     condition = parse_expression (data);
+    post_condition = TRUE;
     parse_token (data, TOKEN_PARENTHESIS_RIGHT);
     parse_automatic_semicolon (data);
 
-    pre_statement = g_object_ref (loop_statement);
+    pre_statement = NULL;
   }
   else if (try_parse_token (data, TOKEN_WHILE))
   {
     parse_token (data, TOKEN_PARENTHESIS_LEFT);
     condition = parse_expression (data);
+    post_condition = FALSE;
     parse_token (data, TOKEN_PARENTHESIS_RIGHT);
     loop_statement = parse_statement (data);
 
@@ -2470,8 +2472,10 @@ parse_iteration_statement (ParseData *data)
 
       if (try_parse_token (data, TOKEN_SEMICOLON)) {
 	condition = vivi_code_boolean_new (TRUE);
+	post_condition = FALSE;
       } else {
 	condition = parse_expression (data);
+	post_condition = FALSE;
 	parse_token (data, TOKEN_SEMICOLON);
       }
 
@@ -2493,6 +2497,7 @@ parse_iteration_statement (ParseData *data)
       }
 
       condition = parse_expression (data);
+      post_condition = FALSE;
       post_statement = NULL;
       enumerate = TRUE;
     } else {
@@ -2506,6 +2511,7 @@ parse_iteration_statement (ParseData *data)
       }
 
       condition = vivi_code_undefined_new ();
+      post_condition = FALSE;
       post_statement = NULL;
 
       if (enumerate_variable != NULL)
@@ -2533,13 +2539,15 @@ parse_iteration_statement (ParseData *data)
 
     enumerate = FALSE;
     condition = vivi_code_undefined_new ();
+    post_condition = FALSE;
     pre_statement = NULL;
     loop_statement = vivi_compiler_empty_statement_new ();
   }
 
   if (enumerate) {
-    g_assert (pre_statement == NULL);
     g_assert (VIVI_IS_CODE_GET (enumerate_variable));
+    g_assert (pre_statement == NULL);
+    g_assert (post_condition == FALSE);
 
     statement = vivi_code_enumerate_new (condition,
 	VIVI_CODE_GET (enumerate_variable)->from,
@@ -2550,13 +2558,12 @@ parse_iteration_statement (ParseData *data)
   }
 
   statement = vivi_code_loop_new ();
-  vivi_code_loop_set_condition (VIVI_CODE_LOOP (statement), condition);
+  vivi_code_loop_set_condition (VIVI_CODE_LOOP (statement), condition,
+      post_condition);
   g_object_unref (condition);
   vivi_code_loop_set_statement (VIVI_CODE_LOOP (statement), loop_statement);
   g_object_unref (loop_statement);
 
-  // can't use join_statements here
-  // because we don't want to put statement inside pre_statement
   if (pre_statement != NULL) {
     ViviCodeStatement *block = vivi_code_block_new ();
     vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), pre_statement);

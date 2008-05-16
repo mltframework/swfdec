@@ -1,0 +1,3 @@
+do {
+  play ();
+} while (a);

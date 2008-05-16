@@ -46,6 +46,8 @@ EXTRA_DIST = \
 	comment.as.expect \
 	decrement.as \
 	decrement.as.expect \
+	do_while.as \
+	do_while.as.expect \
 	empty.as \
 	empty.as.expect \
 	empty_block.as \

@@ -74,7 +74,6 @@ decode_script (gpointer scriptp, gpointer use_asm)
   printer = vivi_code_text_printer_new ();
 
   vivi_code_printer_print_token (printer, token);
-  g_print ("\n\n");
 
   g_object_unref (printer);
   g_object_unref (token);

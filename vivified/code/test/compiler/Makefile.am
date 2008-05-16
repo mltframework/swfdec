@@ -74,6 +74,8 @@ EXTRA_DIST = \
 	label.as.expect \
 	operator.as \
 	operator.as.expect \
+	operator_precedence.as \
+	operator_precedence.as.expect \
 	object_literal.as \
 	object_literal.as.expect \
 	object_literal_empty.as \

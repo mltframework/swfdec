@@ -1,0 +1,205 @@
+asm {
+  pool "a"
+  push 1, 2
+  equals2
+  push 3
+  equals2
+  not
+  push 4
+  strict_equals
+  push 5
+  strict_equals
+  not
+  trace
+  push 1, 2
+  strict_equals
+  not
+  push 3
+  strict_equals
+  push 4
+  equals2
+  not
+  push 5
+  equals2
+  trace
+  push 1, 2
+  less2
+  push 3
+  greater
+  push 4
+  greater
+  not
+  push 5
+  less2
+  not
+  push pool 0
+  get_variable
+  instance_of
+  trace
+  push 1, pool 0
+  get_variable
+  instance_of
+  push 3
+  less2
+  not
+  push 4
+  greater
+  not
+  push 5
+  greater
+  push 6
+  less2
+  trace
+  push 1, 2
+  bit_lshift
+  push 3
+  bit_rshift
+  push 4
+  bit_urshift
+  trace
+  push 1, 2
+  bit_urshift
+  push 3
+  bit_rshift
+  push 4
+  bit_lshift
+  trace
+  push 1, 2
+  add2
+  push 3
+  subtract
+  trace
+  push 1, 2
+  subtract
+  push 3
+  add2
+  trace
+  push 1, 2
+  multiply
+  push 3
+  divide
+  push 4
+  modulo
+  trace
+  push 1, 2
+  modulo
+  push 3
+  divide
+  push 4
+  multiply
+  trace
+  push 1
+  push_duplicate
+  not
+  if and_end_0001
+  pop
+  push 2
+
+and_end_0001:
+  push_duplicate
+  if or_end_0002
+  pop
+  push 3
+
+or_end_0002:
+  trace
+  push 1
+  push_duplicate
+  if or_end_0003
+  pop
+  push 2
+  push_duplicate
+  not
+  if and_end_0004
+  pop
+  push 3
+
+and_end_0004:
+
+or_end_0003:
+  trace
+  push 1, 2
+  bit_or
+  push_duplicate
+  not
+  if and_end_0005
+  pop
+  push 3
+
+and_end_0005:
+  trace
+  push 1
+  push_duplicate
+  not
+  if and_end_0006
+  pop
+  push 2, 3
+  bit_or
+
+and_end_0006:
+  trace
+  push 1, 2
+  bit_xor
+  push 3
+  bit_or
+  trace
+  push 1, 2, 3
+  bit_xor
+  bit_or
+  trace
+  push 1, 2
+  bit_and
+  push 3
+  bit_xor
+  trace
+  push 1, 2, 3
+  bit_and
+  bit_xor
+  trace
+  push 1, 2
+  equals2
+  push 3
+  bit_and
+  trace
+  push 1, 2, 3
+  equals2
+  bit_and
+  trace
+  push 1, 2
+  less2
+  push 3
+  equals2
+  trace
+  push 1, 2, 3
+  less2
+  equals2
+  trace
+  push 1, 2
+  bit_lshift
+  push 3
+  less2
+  trace
+  push 1, 2, 3
+  bit_lshift
+  less2
+  trace
+  push 1, 2
+  add2
+  push 3
+  bit_lshift
+  trace
+  push 1, 2, 3
+  add2
+  bit_lshift
+  trace
+  push 1, 2
+  multiply
+  push 3
+  add2
+  trace
+  push 1, 2, 3
+  multiply
+  add2
+  trace
+  end
+}

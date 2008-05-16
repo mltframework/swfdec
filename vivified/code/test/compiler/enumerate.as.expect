@@ -1,0 +1,23 @@
+asm {
+  pool "a", "x"
+  push pool 0
+  get_variable
+  enumerate2
+
+enumerate_start_0001:
+  push_duplicate
+  push null
+  equals2
+  if enumerate_end_0002
+  push pool 1
+  swap
+  set_variable
+  push pool 1
+  get_variable
+  trace
+  jump enumerate_start_0001
+
+enumerate_end_0002:
+  pop
+  end
+}

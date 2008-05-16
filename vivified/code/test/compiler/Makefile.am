@@ -52,6 +52,12 @@ EXTRA_DIST = \
 	empty_block.as.expect \
 	empty_statement.as \
 	empty_statement.as.expect \
+	enumerate.as \
+	enumerate.as.expect \
+	enumerate_local.as \
+	enumerate_local.as.expect \
+	enumerate_member.as \
+	enumerate_member.as.expect \
 	for.as \
 	for.as.expect \
 	function_declaration.as \

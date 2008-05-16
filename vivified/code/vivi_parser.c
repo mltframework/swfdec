@@ -1946,9 +1946,8 @@ parse_operator_expression (ParseData *data,
     { TOKEN_STRICT_EQUAL, vivi_code_strict_equals_new },
     { TOKEN_NOT_STRICT_EQUAL, vivi_code_strict_equals_new },
     { TOKEN_GREATER_THAN, vivi_code_greater_new },
-    { TOKEN_EQUAL_OR_GREATER_THAN, vivi_code_less2_new },
+    { TOKEN_GREATER_THAN_OR_EQUAL, vivi_code_less2_new },
     { TOKEN_INSTANCEOF, vivi_code_instance_of_new },
-//    { TOKEN_, vivi_code_string_greater_new },
     { TOKEN_LOGICAL_AND, vivi_code_and_new },
     { TOKEN_LOGICAL_OR, vivi_code_or_new }
   };
@@ -1977,7 +1976,7 @@ again:
 	if (tokens[i] == TOKEN_NOT_EQUAL ||
 	    tokens[i] == TOKEN_NOT_STRICT_EQUAL ||
 	    tokens[i] == TOKEN_LESS_THAN_OR_EQUAL ||
-	    tokens[i] == TOKEN_EQUAL_OR_GREATER_THAN) {
+	    tokens[i] == TOKEN_GREATER_THAN_OR_EQUAL) {
 	  left = vivi_code_unary_new (value, '!');
 	  g_object_unref (value);
 	  value = left;
@@ -2056,7 +2055,7 @@ parse_relational_expression (ParseData *data)
 {
   static const ViviParserScannerToken tokens[] = { TOKEN_LESS_THAN,
     TOKEN_GREATER_THAN, TOKEN_LESS_THAN_OR_EQUAL,
-    TOKEN_EQUAL_OR_GREATER_THAN, TOKEN_INSTANCEOF, /*TOKEN_IN,*/ TOKEN_NONE };
+    TOKEN_GREATER_THAN_OR_EQUAL, TOKEN_INSTANCEOF, /*TOKEN_IN,*/ TOKEN_NONE };
 
   return parse_operator_expression (data, tokens, PASS_ALWAYS,
       parse_shift_expression);

@@ -107,7 +107,7 @@ identifier_part		[$_a-zA-Z0-9]
 "<"			{ return TOKEN_LESS_THAN; }
 ">"			{ return TOKEN_GREATER_THAN; }
 "<="			{ return TOKEN_LESS_THAN_OR_EQUAL; }
-">="			{ return TOKEN_EQUAL_OR_GREATER_THAN; }
+">="			{ return TOKEN_GREATER_THAN_OR_EQUAL; }
 
 "=="			{ return TOKEN_EQUAL; }
 "!="			{ return TOKEN_NOT_EQUAL; }

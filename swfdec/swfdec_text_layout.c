@@ -1009,3 +1009,79 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
   } while (!g_sequence_iter_is_end (iter));
 }
 
+/**
+ * swfdec_text_layout_query_position:
+ * @layout: the layout to query
+ * @row: the start of this row indicates the (0,0) position to which @x and @y 
+ *       are relative
+ * @x: x offset
+ * @y: y offset
+ * @index_: %NULL or variable that will be set to the index in the layout's 
+ *          buffer that corresponds to the position of the pressed grapheme.
+ * @hit: %NULL or variable that will be set to %TRUE if the coordinate is inside
+ *	 the glyhs's extents and %FALSE otherwise
+ * @trailing: %NULL or variable that will be set to thenumber of characters 
+ *            inside the grapheme that have been passed.
+ *
+ * Magic function to query everything of interest about the string at a current 
+ * position inisde the @layout.
+ **/
+void
+swfdec_text_layout_query_position (SwfdecTextLayout *layout, guint row,
+    int x, int y, gsize *index_, gboolean *hit, int *trailing)
+{
+  GSequenceIter *iter;
+  SwfdecTextBlock *block;
+  PangoRectangle extents;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout));
+  g_return_if_fail (row < swfdec_text_layout_get_n_rows (layout));
+
+  swfdec_text_layout_ensure (layout);
+
+  iter = swfdec_text_layout_find_row (layout, row); 
+  block = g_sequence_get (iter);
+  row -= block->row;
+
+  do {
+    block = g_sequence_get (iter);
+    if (y < 0) {
+      if (index_)
+	*index_ = block->start;
+      if (hit)
+	*hit = FALSE;
+      if (trailing)
+	*trailing = 0;
+      return;
+    }
+
+    for (;row < (guint) pango_layout_get_line_count (block->layout); row++) {
+      PangoLayoutLine *line = pango_layout_get_line_readonly (block->layout, row);
+      
+      pango_layout_line_get_pixel_extents (line, NULL, &extents);
+      if (extents.height > y) {
+	gboolean tmp;
+	int ind;
+	x -= swfdec_text_layout_get_line_offset (layout, block, line);
+	tmp = pango_layout_line_x_to_index (line, x * PANGO_SCALE, &ind, trailing);
+	if (hit)
+	  *hit = tmp;
+	if (index_)
+	  *index_ = block->start + ind;
+	return;
+      }
+      y -= extents.height;
+    }
+    y -= pango_layout_get_spacing (block->layout) / PANGO_SCALE;
+    row = 0;
+    iter = g_sequence_iter_next (iter);
+  } while (!g_sequence_iter_is_end (iter));
+
+  if (index_)
+    *index_ = swfdec_text_buffer_get_length (layout->text);
+  if (hit)
+    *hit = FALSE;
+  if (trailing)
+    *trailing = 0;
+}
+

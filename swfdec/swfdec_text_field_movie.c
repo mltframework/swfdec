@@ -495,14 +495,28 @@ swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
   }
 }
 
-static gboolean
+static void
 swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
-    double y, gsize *index_)
+    double y, gsize *index_, gboolean *hit)
 {
-  SWFDEC_STUB ("swfdec_text_field_movie_xy_to_index");
+  SwfdecRectangle area;
+  int trailing;
+  int stage_x, stage_y;
+
+  stage_x = x * text->xscale / SWFDEC_TWIPS_SCALE_FACTOR;
+  stage_y = y * text->yscale / SWFDEC_TWIPS_SCALE_FACTOR;
+  swfdec_text_field_movie_get_visible_area (text, &area);
+#if 0
+  g_print ("@ %g,%g => %d,%d => %d, %d\n", x, y, stage_x, stage_y,
+      stage_x - area.x, stage_y - area.y);
+#endif
+  swfdec_text_layout_query_position (text->layout, text->scroll,
+      stage_x, stage_y, index_, hit, &trailing);
+
   if (index_)
-    *index_ = 0;
-  return FALSE;
+    *index_ += trailing;
+
+  //g_print ("found %u %s\n", index_ ? *index_ : (guint) -1, hit ? *hit ? "HIT" : "" : "???");
 }
 
 static SwfdecMouseCursor
@@ -512,10 +526,12 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
   double x, y;
   guint index_;
   const SwfdecTextAttributes *attr;
+  gboolean hit;
 
   swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
-  if (swfdec_text_field_movie_xy_to_index (text, x, y, &index_)) {
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &hit);
+  if (hit) {
     attr = swfdec_text_buffer_get_attributes (text->text, index_);
   } else {
     attr = NULL;
@@ -544,7 +560,7 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
   guint index_;
-  gboolean direct;
+  gboolean hit;
 
   if (!text->selectable)
     return;
@@ -556,18 +572,18 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
 
   swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
-  direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_);
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &hit);
 
-  text->mouse_pressed = TRUE;
-  swfdec_text_buffer_set_cursor (text->text, index_, index_);
-
-  if (direct) {
+  if (hit) {
     text->character_pressed = index_;
   } else {
-    text->character_pressed = 0;
+    text->character_pressed = -1;
   }
 
   swfdec_player_grab_focus (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), actor);
+
+  text->mouse_pressed = TRUE;
+  swfdec_text_buffer_set_cursor (text->text, index_, index_);
 }
 
 static void
@@ -575,6 +591,7 @@ swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   guint index_;
+  gsize start, end;
 
   if (!text->selectable)
     return;
@@ -582,9 +599,13 @@ swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
   if (!text->mouse_pressed)
     return;
 
-  swfdec_text_field_movie_xy_to_index (text, x, y, &index_);
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, NULL);
 
-  swfdec_text_buffer_set_cursor (text->text, swfdec_text_buffer_get_cursor (text->text), index_);
+  swfdec_text_buffer_get_selection (text->text, &start, &end);
+  swfdec_text_buffer_set_cursor (text->text, 
+      swfdec_text_buffer_get_cursor (text->text) == start ? end : start, index_);
+  g_print ("setting cursor to %u %u\n", 
+      swfdec_text_buffer_get_cursor (text->text) == start ? end : start, index_);
 }
 
 static void
@@ -593,7 +614,7 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
   guint index_;
-  gboolean direct;
+  gboolean hit;
 
   if (!text->selectable)
     return;
@@ -607,15 +628,11 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
 
   text->mouse_pressed = FALSE;
 
-  direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_);
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &hit);
 
-  if (text->character_pressed != 0) {
-    if (direct && text->character_pressed == index_ + 1) {
-      swfdec_text_field_movie_letter_clicked (text,
-	  text->character_pressed - 1);
-    }
-
-    text->character_pressed = 0;
+  if (hit && text->character_pressed == index_) {
+    swfdec_text_field_movie_letter_clicked (text, text->character_pressed);
+    text->character_pressed = -1;
   }
 }
 
@@ -772,6 +789,7 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
       G_CALLBACK (swfdec_text_field_movie_layout_changed), text);
 
   text->mouse_wheel_enabled = TRUE;
+  text->character_pressed = -1;
 
   swfdec_text_attributes_reset (&text->default_attributes);
 }

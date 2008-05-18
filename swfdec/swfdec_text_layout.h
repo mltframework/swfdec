@@ -92,6 +92,13 @@ void			swfdec_text_layout_render		(SwfdecTextLayout *	layout,
 								 guint			row,
 								 guint			height,
 								 SwfdecColor		focus);
+void			swfdec_text_layout_query_position	(SwfdecTextLayout *	layout,
+								 guint			row,
+								 int			x,
+								 int			y,
+								 gsize *		index_,
+								 gboolean *		hit,
+								 int *			trailing);
 
 
 G_END_DECLS

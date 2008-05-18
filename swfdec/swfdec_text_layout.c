@@ -921,6 +921,9 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
   SwfdecTextBlock *block;
   PangoRectangle extents;
   PangoAttrList *attr;
+  SwfdecColor cursor_color;
+  gsize cursor;
+  int cursor_index; /* Pango neds proper types... */
   gboolean first_line = TRUE;
 
   g_return_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout));
@@ -930,11 +933,23 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
   
   swfdec_text_layout_ensure (layout);
 
+  if (!focus || swfdec_text_buffer_has_selection (layout->text)) {
+    cursor_color = 0;
+    cursor = G_MAXSIZE;
+  } else {
+    cursor_color = swfdec_text_buffer_get_attributes (layout->text,
+	swfdec_text_buffer_get_length (layout->text))->color;
+    cursor_color = swfdec_color_apply_transform (cursor_color, ctrans);
+    cursor_color = SWFDEC_COLOR_OPAQUE (cursor_color);
+    cursor = swfdec_text_buffer_get_cursor (layout->text);
+    g_print ("drawing cursor at %u\n", cursor);
+  }
   iter = swfdec_text_layout_find_row (layout, row); 
   block = g_sequence_get (iter);
   row -= block->row;
   do {
     block = g_sequence_get (iter);
+    cursor_index = cursor - block->start;
     pango_cairo_update_layout (cr, block->layout);
     cairo_translate (cr, block->rect.x, 0);
     if (block->bullet && row == 0) {
@@ -956,6 +971,21 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
       first_line = FALSE;
       cairo_translate (cr, xoffset, - extents.y);
       pango_cairo_show_layout_line (cr, line);
+      g_print ("  %d [%d %d]\n", cursor_index, line->start_index, line->length);
+      if (line->start_index + line->length >= cursor_index &&
+	  line->start_index <= cursor_index &&
+	  (line->start_index + line->length != cursor_index || 
+	   (gsize) line->start_index + line->length == block->end - block->start)) {
+	int x_index;
+	/* FIXME: implement (trailing for) RTL */
+	pango_layout_line_index_to_x (line, cursor_index, FALSE, &x_index);
+	x_index = PANGO_PIXELS (x_index);
+	swfdec_color_set_source (cr, cursor_color);
+	cairo_set_line_width (cr, 1.0);
+	cairo_move_to (cr, x_index + 0.5, extents.y);
+	cairo_rel_line_to (cr, 0, extents.height);
+	cairo_stroke (cr);
+      }
       height -= extents.height;
       cairo_translate (cr, - xoffset, extents.height + extents.y);
     }

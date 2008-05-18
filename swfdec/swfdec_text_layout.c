@@ -849,6 +849,14 @@ swfdec_text_layout_modify_attributes (SwfdecTextLayout *layout,
       sel_start = sel_end = 0;
     }
   }
+  if (sel_start <= block->start)
+    sel_start = 0;
+  else
+    sel_start -= block->start;
+  if (sel_end <= block->start)
+    sel_end = 0;
+  else
+    sel_end -= block->start;
 
   old = pango_layout_get_attributes (block->layout);
   pango_attr_list_ref (old);

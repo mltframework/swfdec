@@ -942,7 +942,6 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
     cursor_color = swfdec_color_apply_transform (cursor_color, ctrans);
     cursor_color = SWFDEC_COLOR_OPAQUE (cursor_color);
     cursor = swfdec_text_buffer_get_cursor (layout->text);
-    g_print ("drawing cursor at %u\n", cursor);
   }
   iter = swfdec_text_layout_find_row (layout, row); 
   block = g_sequence_get (iter);
@@ -971,7 +970,6 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
       first_line = FALSE;
       cairo_translate (cr, xoffset, - extents.y);
       pango_cairo_show_layout_line (cr, line);
-      g_print ("  %d [%d %d]\n", cursor_index, line->start_index, line->length);
       if (line->start_index + line->length >= cursor_index &&
 	  line->start_index <= cursor_index &&
 	  (line->start_index + line->length != cursor_index || 

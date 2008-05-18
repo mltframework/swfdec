@@ -230,7 +230,8 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 
   swfdec_text_field_movie_get_visible_area (text, &area);
   if (swfdec_text_field_movie_has_focus (text) &&
-      (text->selectable || text->editable)) {
+      (text->editable ||
+       (text->selectable && swfdec_text_buffer_has_selection (text->text)))) {
     if (text->background) {
       color = swfdec_color_apply_transform (text->background_color, ctrans);
       color = SWFDEC_COLOR_OPAQUE (color);
@@ -524,7 +525,7 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
 
   if (attr != NULL && attr->url != SWFDEC_AS_STR_EMPTY) {
     return SWFDEC_MOUSE_CURSOR_CLICK;
-  } else if (text->editable || text->selectable) {
+  } else if (text->selectable) {
     return SWFDEC_MOUSE_CURSOR_TEXT;
   } else{
     return SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -534,7 +535,9 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
 static gboolean
 swfdec_text_field_movie_mouse_events (SwfdecActor *actor)
 {
-  return TRUE;
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+
+  return text->selectable;
 }
 
 static void
@@ -545,13 +548,13 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
   guint index_;
   gboolean direct, before;
 
+  if (!text->selectable)
+    return;
+
   if (button != 0) {
     SWFDEC_FIXME ("implement popup menus, scrollwheel and middle mouse paste");
     return;
   }
-
-  if (!text->selectable)
-    return;
 
   swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
@@ -599,6 +602,9 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
   double x, y;
   guint index_;
   gboolean direct, before;
+
+  if (!text->selectable)
+    return;
 
   if (button != 0) {
     SWFDEC_FIXME ("implement popup menus, scrollwheel and middle mouse paste");

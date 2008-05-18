@@ -186,7 +186,6 @@ swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *ma
       SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
 }
 
-#if 0
 static gboolean
 swfdec_text_field_movie_has_focus (SwfdecTextFieldMovie *text)
 {
@@ -194,7 +193,6 @@ swfdec_text_field_movie_has_focus (SwfdecTextFieldMovie *text)
 
   return swfdec_player_has_focus (player, SWFDEC_ACTOR (text));
 }
-#endif
 
 static void
 swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
@@ -231,13 +229,24 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 
   swfdec_text_field_movie_get_visible_area (text, &area);
+  if (swfdec_text_field_movie_has_focus (text) &&
+      (text->selectable || text->editable)) {
+    if (text->background) {
+      color = swfdec_color_apply_transform (text->background_color, ctrans);
+      color = SWFDEC_COLOR_OPAQUE (color);
+    } else {
+      color = SWFDEC_COLOR_WHITE;
+    }
+  } else {
+    color = 0;
+  }
 
   /* render the layout */
   cairo_rectangle (cr, area.x, area.y, area.width, area.height);
   cairo_clip (cr);
   cairo_translate (cr, (double) area.x - text->hscroll, area.y);
   swfdec_text_layout_render (text->layout, cr, ctrans,
-      text->scroll, area.height);
+      text->scroll, area.height, color);
 }
 
 static void
@@ -617,7 +626,9 @@ swfdec_text_field_movie_focus_in (SwfdecActor *actor)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   
-  if (text->editable)
+  swfdec_text_buffer_set_cursor (text->text, 0,
+      swfdec_text_buffer_get_length (text->text));
+  if (text->editable || text->selectable)
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (actor));
 }
 
@@ -626,7 +637,7 @@ swfdec_text_field_movie_focus_out (SwfdecActor *actor)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   
-  if (text->editable)
+  if (text->editable || text->selectable)
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (actor));
 }
 

@@ -31,13 +31,26 @@
 #include "swfdec_button_movie.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_text_field_movie.h"
+#include "swfdec_text_buffer.h"
 
 SWFDEC_AS_NATIVE (600, 0, swfdec_selection_getBeginIndex)
 void
 swfdec_selection_getBeginIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.getBeginIndex (static)");
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
+  SwfdecTextFieldMovie *text;
+  gsize start, end;
+  const char *s;
+
+  if (!SWFDEC_IS_TEXT_FIELD_MOVIE (priv->focus)) {
+    SWFDEC_AS_VALUE_SET_INT (ret, -1);
+    return;
+  }
+  text = SWFDEC_TEXT_FIELD_MOVIE (priv->focus);
+  swfdec_text_buffer_get_selection (text->text, &start, &end);
+  s = swfdec_text_buffer_get_text (text->text);
+  SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_pointer_to_offset (s, s + start));
 }
 
 SWFDEC_AS_NATIVE (600, 1, swfdec_selection_getEndIndex)
@@ -45,7 +58,19 @@ void
 swfdec_selection_getEndIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.getEndIndex (static)");
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
+  SwfdecTextFieldMovie *text;
+  gsize start, end;
+  const char *s;
+
+  if (!SWFDEC_IS_TEXT_FIELD_MOVIE (priv->focus)) {
+    SWFDEC_AS_VALUE_SET_INT (ret, -1);
+    return;
+  }
+  text = SWFDEC_TEXT_FIELD_MOVIE (priv->focus);
+  swfdec_text_buffer_get_selection (text->text, &start, &end);
+  s = swfdec_text_buffer_get_text (text->text);
+  SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_pointer_to_offset (s, s + end));
 }
 
 SWFDEC_AS_NATIVE (600, 2, swfdec_selection_getCaretIndex)
@@ -53,7 +78,18 @@ void
 swfdec_selection_getCaretIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Selection.getCaretIndex (static)");
+  SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
+  SwfdecTextFieldMovie *text;
+  const char *s;
+
+  if (!SWFDEC_IS_TEXT_FIELD_MOVIE (priv->focus)) {
+    SWFDEC_AS_VALUE_SET_INT (ret, -1);
+    return;
+  }
+  text = SWFDEC_TEXT_FIELD_MOVIE (priv->focus);
+  s = swfdec_text_buffer_get_text (text->text);
+  SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_pointer_to_offset (s, 
+	s + swfdec_text_buffer_get_cursor (text->text)));
 }
 
 SWFDEC_AS_NATIVE (600, 3, swfdec_selection_getFocus)

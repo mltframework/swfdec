@@ -82,6 +82,9 @@ guint			swfdec_text_layout_get_visible_rows	(SwfdecTextLayout *	layout,
 								 guint			height);
 guint			swfdec_text_layout_get_visible_rows_end	(SwfdecTextLayout *	layout,
 								 guint			height);
+void			swfdec_text_layout_get_ascent_descent	(SwfdecTextLayout *	layout,
+								 int *			ascent,
+								 int *			descent);
 
 void			swfdec_text_layout_render		(SwfdecTextLayout *	layout,
 								 cairo_t *		cr, 

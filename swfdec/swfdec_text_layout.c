@@ -853,8 +853,9 @@ swfdec_text_layout_modify_attributes (SwfdecTextLayout *layout,
   old = pango_layout_get_attributes (block->layout);
   pango_attr_list_ref (old);
   new = pango_attr_list_copy (old);
-  /* we create an iterator through the old list, which means we know it
-   * never gets modified. */
+  /* we create an iterator through the old list, so we know it
+   * never gets modified. As the new list is identical to the old one, it 
+   * achieves exactly what we want. */
   iter = pango_attr_list_get_iterator (old);
   do {
     guint cur_start, cur_end;

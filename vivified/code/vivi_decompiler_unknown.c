@@ -39,12 +39,14 @@ vivi_decompiler_unknown_dispose (GObject *object)
 }
 
 static void
-vivi_decompiler_unknown_print (ViviCodeToken *token, ViviCodePrinter*printer)
+vivi_decompiler_unknown_print_value (ViviCodeValue *value,
+    ViviCodePrinter *printer)
 {
-  ViviDecompilerUnknown *unknown = VIVI_DECOMPILER_UNKNOWN (token);
+  ViviDecompilerUnknown *unknown = VIVI_DECOMPILER_UNKNOWN (value);
 
   if (unknown->value) {
-    vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (unknown->value));
+    vivi_code_printer_print_value (printer, unknown->value,
+	VIVI_PRECEDENCE_MIN);
   } else {
     g_printerr ("FIXME: printing unknown!\n");
     vivi_code_printer_print (printer, unknown->name);
@@ -77,13 +79,11 @@ static void
 vivi_decompiler_unknown_class_init (ViviDecompilerUnknownClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_decompiler_unknown_dispose;
 
-  token_class->print = vivi_decompiler_unknown_print;
-
+  value_class->print_value = vivi_decompiler_unknown_print_value;
   value_class->is_constant = vivi_decompiler_unknown_is_constant;
   value_class->optimize = vivi_decompiler_unknown_optimize;
 }

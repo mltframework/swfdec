@@ -37,9 +37,10 @@ vivi_decompiler_duplicate_dispose (GObject *object)
 }
 
 static void
-vivi_decompiler_duplicate_print (ViviCodeToken *token, ViviCodePrinter*printer)
+vivi_decompiler_duplicate_print_value (ViviCodeValue *value,
+    ViviCodePrinter *printer)
 {
-  ViviDecompilerDuplicate *dupl = VIVI_DECOMPILER_DUPLICATE (token);
+  ViviDecompilerDuplicate *dupl = VIVI_DECOMPILER_DUPLICATE (value);
 
   g_printerr ("FIXME: printing duplicate!\n");
   vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (dupl->value));
@@ -55,13 +56,11 @@ static void
 vivi_decompiler_duplicate_class_init (ViviDecompilerDuplicateClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  ViviCodeTokenClass *token_class = VIVI_CODE_TOKEN_CLASS (klass);
   ViviCodeValueClass *value_class = VIVI_CODE_VALUE_CLASS (klass);
 
   object_class->dispose = vivi_decompiler_duplicate_dispose;
 
-  token_class->print = vivi_decompiler_duplicate_print;
-
+  value_class->print_value = vivi_decompiler_duplicate_print_value;
   value_class->is_constant = vivi_decompiler_duplicate_is_constant;
 }
 

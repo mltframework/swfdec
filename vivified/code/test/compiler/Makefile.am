@@ -44,6 +44,8 @@ EXTRA_DIST = \
 	call_function.as.expect \
 	comment.as \
 	comment.as.expect \
+	conditional.as \
+	conditional.as.expect \
 	decrement.as \
 	decrement.as.expect \
 	do_while.as \

@@ -1,0 +1,17 @@
+asm {
+  pool "a", "c", "b"
+  push pool 0
+  get_variable
+  if conditional_if_0001
+  push pool 1
+  get_variable
+  jump conditional_end_0002
+
+conditional_if_0001:
+  push pool 2
+  get_variable
+
+conditional_end_0002:
+  trace
+  end
+}

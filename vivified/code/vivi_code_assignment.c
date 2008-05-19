@@ -47,9 +47,10 @@ vivi_code_assignment_dispose (GObject *object)
 }
 
 static void
-vivi_code_assignment_print (ViviCodeToken *token, ViviCodePrinter*printer)
+vivi_code_assignment_print_value (ViviCodeValue *value,
+    ViviCodePrinter *printer)
 {
-  ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (token);
+  ViviCodeAssignment *assignment = VIVI_CODE_ASSIGNMENT (value);
   char *varname;
 
   if (VIVI_IS_CODE_CONSTANT (assignment->name)) {
@@ -142,9 +143,9 @@ vivi_code_assignment_class_init (ViviCodeAssignmentClass *klass)
 
   object_class->dispose = vivi_code_assignment_dispose;
 
-  token_class->print = vivi_code_assignment_print;
   token_class->compile = vivi_code_assignment_compile;
 
+  value_class->print_value = vivi_code_assignment_print_value;
   value_class->compile_value = vivi_code_assignment_compile_value;
 }
 

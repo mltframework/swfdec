@@ -54,7 +54,8 @@ vivi_code_loop_print (ViviCodeToken *token, ViviCodePrinter *printer)
   needs_braces = loop->statement && vivi_code_statement_needs_braces (loop->statement);
   if (loop->condition) {
     vivi_code_printer_print (printer, "while (");
-    vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (loop->condition));
+    vivi_code_printer_print_value (printer, loop->condition,
+	VIVI_PRECEDENCE_MIN);
     vivi_code_printer_print (printer, ")");
   } else {
     vivi_code_printer_print (printer, "for (;;)");

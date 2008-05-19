@@ -50,9 +50,9 @@ vivi_code_get_url_print (ViviCodeToken *token, ViviCodePrinter *printer)
   } else {
     vivi_code_printer_print (printer, "getURL (");
   }
-  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (url->url));
+  vivi_code_printer_print_value (printer, url->url, VIVI_PRECEDENCE_MIN);
   vivi_code_printer_print (printer, ", ");
-  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (url->target));
+  vivi_code_printer_print_value (printer, url->target, VIVI_PRECEDENCE_MIN);
   if (url->method != 0) {
     vivi_code_printer_print (printer,
 	url->method == 2 ? ", \"POST\"" : ", \"GET\"");

@@ -94,7 +94,8 @@ vivi_code_if_print (ViviCodeToken *token, ViviCodePrinter *printer)
   gboolean needs_braces;
 
   vivi_code_printer_print (printer, "if (");
-  vivi_code_printer_print_token (printer, VIVI_CODE_TOKEN (stmt->condition));
+  vivi_code_printer_print_value (printer, stmt->condition,
+      VIVI_PRECEDENCE_MIN);
   vivi_code_printer_print (printer, ")");
   needs_braces = stmt->if_statement && vivi_code_statement_needs_braces (stmt->if_statement);
   needs_braces |= stmt->else_statement && vivi_code_statement_needs_braces (stmt->else_statement);

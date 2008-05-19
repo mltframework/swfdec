@@ -1,0 +1,4 @@
+asm {
+  push true, false, null, undefined, 1, 1.2, 1f, 1d, "stacked", pool 0, pool 1234, reg 0
+  end
+}

@@ -40,6 +40,7 @@
 #include "vivi_code_builtin_value_call_default.h"
 #include "vivi_code_builtin_value_statement_default.h"
 #include "vivi_code_concat.h"
+#include "vivi_code_conditional.h"
 #include "vivi_code_constant.h"
 #include "vivi_code_continue.h"
 #include "vivi_code_enumerate.h"
@@ -2168,8 +2169,23 @@ peek_conditional_expression (ParseData *data)
 static ViviCodeValue *
 parse_conditional_expression (ParseData *data)
 {
-  // TODO
-  return parse_logical_or_expression (data);
+  ViviCodeValue *condition, *if_value, *else_value, *conditional;
+
+  condition = parse_logical_or_expression (data);
+
+  if (!try_parse_token (data, TOKEN_QUESTION_MARK))
+    return condition;
+
+  if_value = parse_assignment_expression (data);
+  parse_token (data, TOKEN_COLON);
+  else_value = parse_assignment_expression (data);
+
+  conditional = vivi_code_conditional_new (condition, if_value, else_value);
+  g_object_unref (condition);
+  g_object_unref (if_value);
+  g_object_unref (else_value);
+
+  return conditional;
 }
 
 static gboolean

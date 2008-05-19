@@ -57,6 +57,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_comment.c \
 	vivi_code_compiler.c \
 	vivi_code_concat.c \
+	vivi_code_conditional.c \
 	vivi_code_constant.c \
 	vivi_code_continue.c \
 	vivi_code_emitter.c \
@@ -134,6 +135,7 @@ noinst_HEADERS = \
 	vivi_code_comment.h \
 	vivi_code_compiler.h \
 	vivi_code_concat.h \
+	vivi_code_conditional.h \
 	vivi_code_constant.h \
 	vivi_code_continue.h \
 	vivi_code_defaults.h \

@@ -117,11 +117,14 @@ swfdec_sandbox_initialize (SwfdecSandbox *sandbox, guint version)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;
   swfdec_sandbox_unuse (sandbox);
 }
+
 /**
  * swfdec_sandbox_set_allow_network:
  * @sandbox: a #SwfdecSandbox
- * finished, by giving the sandbox network or local file access. This function
- * should be called on all return values of swfdec_sandbox_get_for_url().
+ * @network: %TRUE if network access is possible
+ *
+ * Checks if the given sandbox may be loaded and if so initializes its type. 
+ * This function should be called on every new sandbox.
  *
  * Returns: %TRUE if the sandbox initialization could be finished as requested,
  *          %FALSE if not and it shouldn't be used.
@@ -164,7 +167,6 @@ swfdec_sandbox_set_allow_network (SwfdecSandbox *sandbox, gboolean network)
  * @allow_network: %TRUE to allow network access, %FALSE to only allow local 
  *                 file access. See the documentation of the use_network flag 
  *                 of the SWF FileAttributes tag for what that means.
- *
  *
  * Checks if a sandbox is already in use for a given URL and if so, returns it.
  * Otherwise a new sandbox is created, initialized and returned.

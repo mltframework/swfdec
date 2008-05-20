@@ -743,6 +743,7 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
   if (argc < 1)
     return;
 
+  old = text->auto_size;
   if (SWFDEC_AS_VALUE_IS_BOOLEAN (&argv[0])) {
     if (SWFDEC_AS_VALUE_GET_BOOLEAN (&argv[0])) {
       text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
@@ -753,7 +754,6 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
     swfdec_as_value_to_number (cx, &argv[0]);
     s = swfdec_as_value_to_string (cx, &argv[0]);
 
-    old = text->auto_size;
     if (!g_ascii_strcasecmp (s, "none")) {
       text->auto_size = SWFDEC_AUTO_SIZE_NONE;
     } else if (!g_ascii_strcasecmp (s, "left")) {

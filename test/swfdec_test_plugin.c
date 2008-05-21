@@ -47,12 +47,16 @@ swfdec_test_plugin_swfdec_screenshot (SwfdecTestPlugin *plugin, unsigned char *d
 {
   cairo_surface_t *surface;
   cairo_t *cr;
+  guint background;
 
   surface = cairo_image_surface_create_for_data (data, CAIRO_FORMAT_ARGB32, 
       width, height, width * 4);
   cr = cairo_create (surface);
-  /* use a white background */
-  cairo_set_source_rgb (cr, 1, 1, 1);
+  background  = swfdec_player_get_background_color (plugin->data);
+  cairo_set_source_rgb (cr, 
+      ((background >> 16) & 0xFF) / 255.0,
+      ((background >> 8) & 0xFF) / 255.0,
+      (background & 0xFF) / 255.0);
   cairo_paint (cr);
 
   cairo_translate (cr, -x, -y);

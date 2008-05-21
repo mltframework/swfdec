@@ -118,11 +118,12 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
       x0 = 0;
       break;
     case SWFDEC_AUTO_SIZE_RIGHT:
-      x0 = x1;
+      x0 = -x1;
       x1 = 0;
       break;
     case SWFDEC_AUTO_SIZE_CENTER:
-      x0 = x1 = x1 / 2;
+      x1 = x1 / 2;
+      x0 = -x1;
       break;
     case SWFDEC_AUTO_SIZE_NONE:
     default:
@@ -185,7 +186,6 @@ swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *ma
       SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
 }
 
-#if 0
 static gboolean
 swfdec_text_field_movie_has_focus (SwfdecTextFieldMovie *text)
 {
@@ -193,7 +193,6 @@ swfdec_text_field_movie_has_focus (SwfdecTextFieldMovie *text)
 
   return swfdec_player_has_focus (player, SWFDEC_ACTOR (text));
 }
-#endif
 
 static void
 swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
@@ -230,13 +229,25 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 
   swfdec_text_field_movie_get_visible_area (text, &area);
+  if (swfdec_text_field_movie_has_focus (text) &&
+      (text->editable ||
+       (text->selectable && swfdec_text_buffer_has_selection (text->text)))) {
+    if (text->background) {
+      color = swfdec_color_apply_transform (text->background_color, ctrans);
+      color = SWFDEC_COLOR_OPAQUE (color);
+    } else {
+      color = SWFDEC_COLOR_WHITE;
+    }
+  } else {
+    color = 0;
+  }
 
   /* render the layout */
   cairo_rectangle (cr, area.x, area.y, area.width, area.height);
   cairo_clip (cr);
   cairo_translate (cr, (double) area.x - text->hscroll, area.y);
   swfdec_text_layout_render (text->layout, cr, ctrans,
-      text->scroll, area.height);
+      text->scroll, area.height, color);
 }
 
 static void
@@ -484,16 +495,26 @@ swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
   }
 }
 
-static gboolean
+static void
 swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
-    double y, guint *index_, gboolean *before)
+    double y, gsize *index_, gboolean *hit)
 {
-  SWFDEC_STUB ("swfdec_text_field_movie_xy_to_index");
+  SwfdecRectangle area;
+  int trailing;
+  int stage_x, stage_y;
+
+  stage_x = x * text->xscale / SWFDEC_TWIPS_SCALE_FACTOR;
+  stage_y = y * text->yscale / SWFDEC_TWIPS_SCALE_FACTOR;
+  swfdec_text_field_movie_get_visible_area (text, &area);
+#if 0
+  g_print ("@ %g,%g => %d,%d => %d, %d\n", x, y, stage_x, stage_y,
+      stage_x - area.x, stage_y - area.y);
+#endif
+  swfdec_text_layout_query_position (text->layout, text->scroll,
+      stage_x, stage_y, index_, hit, &trailing);
+
   if (index_)
-    *index_ = 0;
-  if (before)
-    *before = FALSE;
-  return FALSE;
+    *index_ += trailing;
 }
 
 static SwfdecMouseCursor
@@ -501,12 +522,14 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
-  guint index_;
+  gsize index_;
   const SwfdecTextAttributes *attr;
+  gboolean hit;
 
   swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
-  if (swfdec_text_field_movie_xy_to_index (text, x, y, &index_, NULL)) {
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &hit);
+  if (hit) {
     attr = swfdec_text_buffer_get_attributes (text->text, index_);
   } else {
     attr = NULL;
@@ -514,7 +537,7 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
 
   if (attr != NULL && attr->url != SWFDEC_AS_STR_EMPTY) {
     return SWFDEC_MOUSE_CURSOR_CLICK;
-  } else if (text->editable || text->selectable) {
+  } else if (text->selectable) {
     return SWFDEC_MOUSE_CURSOR_TEXT;
   } else{
     return SWFDEC_MOUSE_CURSOR_NORMAL;
@@ -524,7 +547,9 @@ swfdec_text_field_movie_mouse_cursor (SwfdecActor *actor)
 static gboolean
 swfdec_text_field_movie_mouse_events (SwfdecActor *actor)
 {
-  return TRUE;
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+
+  return text->selectable;
 }
 
 static void
@@ -532,41 +557,39 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
-  guint index_;
-  gboolean direct, before;
+  gsize index_;
+  gboolean hit;
+
+  if (!text->selectable)
+    return;
 
   if (button != 0) {
     SWFDEC_FIXME ("implement popup menus, scrollwheel and middle mouse paste");
     return;
   }
 
-  if (!text->selectable)
-    return;
-
   swfdec_movie_get_mouse (SWFDEC_MOVIE (actor), &x, &y);
 
-  direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &hit);
 
-  text->mouse_pressed = TRUE;
-  if (!before && index_ < swfdec_text_buffer_get_length (text->text))
-    index_++;
-  swfdec_text_buffer_set_cursor (text->text, index_, index_);
-
-  if (direct) {
+  if (hit) {
     text->character_pressed = index_;
   } else {
-    text->character_pressed = 0;
+    text->character_pressed = -1;
   }
 
   swfdec_player_grab_focus (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), actor);
+
+  text->mouse_pressed = TRUE;
+  swfdec_text_buffer_set_cursor (text->text, index_, index_);
 }
 
 static void
 swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
-  guint index_;
-  gboolean direct, before;
+  gsize index_;
+  gsize start, end;
 
   if (!text->selectable)
     return;
@@ -574,12 +597,11 @@ swfdec_text_field_movie_mouse_move (SwfdecActor *actor, double x, double y)
   if (!text->mouse_pressed)
     return;
 
-  direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, NULL);
 
-  if (!before && index_ < swfdec_text_buffer_get_length (text->text))
-    index_++;
-
-  swfdec_text_buffer_set_cursor (text->text, swfdec_text_buffer_get_cursor (text->text), index_);
+  swfdec_text_buffer_get_selection (text->text, &start, &end);
+  swfdec_text_buffer_set_cursor (text->text, 
+      swfdec_text_buffer_get_cursor (text->text) == start ? end : start, index_);
 }
 
 static void
@@ -587,8 +609,11 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   double x, y;
-  guint index_;
-  gboolean direct, before;
+  gsize index_;
+  gboolean hit;
+
+  if (!text->selectable)
+    return;
 
   if (button != 0) {
     SWFDEC_FIXME ("implement popup menus, scrollwheel and middle mouse paste");
@@ -599,15 +624,11 @@ swfdec_text_field_movie_mouse_release (SwfdecActor *actor, guint button)
 
   text->mouse_pressed = FALSE;
 
-  direct = swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &before);
+  swfdec_text_field_movie_xy_to_index (text, x, y, &index_, &hit);
 
-  if (text->character_pressed != 0) {
-    if (direct && text->character_pressed == index_ + 1 - (before ? 1 : 0)) {
-      swfdec_text_field_movie_letter_clicked (text,
-	  text->character_pressed - 1);
-    }
-
-    text->character_pressed = 0;
+  if (hit && text->character_pressed == index_) {
+    swfdec_text_field_movie_letter_clicked (text, text->character_pressed);
+    text->character_pressed = -1;
   }
 }
 
@@ -616,7 +637,9 @@ swfdec_text_field_movie_focus_in (SwfdecActor *actor)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   
-  if (text->editable)
+  swfdec_text_buffer_set_cursor (text->text, 0,
+      swfdec_text_buffer_get_length (text->text));
+  if (text->editable || text->selectable)
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (actor));
 }
 
@@ -625,7 +648,7 @@ swfdec_text_field_movie_focus_out (SwfdecActor *actor)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
   
-  if (text->editable)
+  if (text->editable || text->selectable)
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (actor));
 }
 
@@ -762,6 +785,7 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
       G_CALLBACK (swfdec_text_field_movie_layout_changed), text);
 
   text->mouse_wheel_enabled = TRUE;
+  text->character_pressed = -1;
 
   swfdec_text_attributes_reset (&text->default_attributes);
 }

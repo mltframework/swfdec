@@ -672,6 +672,11 @@ swfdec_sprite_movie_foreach_copy_properties (SwfdecAsObject *object,
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), FALSE);
 
+  /* FIXME: We likely need better flag handling here.
+   * We might even want to fix swfdec_as_object_foreach() */
+  if (flags & SWFDEC_AS_VARIABLE_HIDDEN)
+    return TRUE;
+
   swfdec_as_object_set_variable (target, variable, value);
 
   return TRUE;
@@ -710,12 +715,12 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecMovie *movie;
   SwfdecMovie *ret;
-  SwfdecAsObject *initObject;
+  SwfdecAsObject *initObject, *constructor;
   const char *name, *export;
   int depth;
   SwfdecGraphic *sprite;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "ssi", &export, &name, &depth);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "ssi", &export, &name, &depth);
 
   if (argc > 3 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[3])) {
     initObject = SWFDEC_AS_VALUE_GET_OBJECT ((&argv[3]));
@@ -740,6 +745,11 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
       ret->name, ret->depth);
   /* run init and construct */
+  constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (cx), export);
+  if (constructor == NULL)
+    constructor = movie->resource->sandbox->MovieClip;
+  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (ret), constructor);
+
   swfdec_sprite_movie_init_from_object (ret, initObject);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (ret));
 }

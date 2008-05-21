@@ -422,7 +422,7 @@ swfdec_text_buffer_get_cursor (SwfdecTextBuffer *buffer)
 {
   g_return_val_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer), 0);
 
-  return buffer->cursor_start;
+  return buffer->cursor_end;
 }
 
 gboolean

@@ -48,6 +48,7 @@
 #include "swfdec_resource.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
+#include "swfdec_text_field_movie.h"
 #include "swfdec_utils.h"
 
 /*** gtk-doc ***/
@@ -1490,7 +1491,11 @@ swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
       continue;
 
     swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
-    if (SWFDEC_MOVIE (actor)->parent != NULL) {
+    if (SWFDEC_IS_TEXT_FIELD_MOVIE (actor)) {
+      SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
+      if (text->editable)
+	ret = g_list_prepend (ret, actor);
+    } else if (SWFDEC_MOVIE (actor)->parent != NULL) {
       swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabEnabled, &val);
       if (swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
 	swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabEnabled, &val);

@@ -386,6 +386,7 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
       /* check that we have found a line */
       g_assert (i < pango_layout_get_line_count (block->layout));
     }
+    block->end = new_block;
 
     start = new_block;
     pango_layout_get_pixel_size (block->layout, &block->rect.width, &block->rect.height);
@@ -410,7 +411,6 @@ swfdec_text_layout_create (SwfdecTextLayout *layout)
   context = pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (map));
 
   p = string = swfdec_text_buffer_get_text (layout->text);
-  //g_print ("=====>\n %s\n<======\n", string);
   for (;;) {
     end = strpbrk (p, "\r\n");
     if (end == NULL) {
@@ -823,6 +823,93 @@ swfdec_text_layout_get_line_offset (SwfdecTextLayout *layout,
   return diff;
 }
 
+static PangoAttrList *
+swfdec_text_layout_modify_attributes (SwfdecTextLayout *layout, 
+    SwfdecTextBlock *block, const SwfdecColorTransform *ctrans, SwfdecColor focus)
+{
+  gsize sel_start, sel_end;
+  PangoAttrList *old, *new;
+  PangoAttrIterator *iter;
+
+  if (swfdec_color_transform_is_identity (ctrans)) {
+    /* if we're not focused, there's no need to draw a selection */
+    if (!focus)
+      return NULL;
+    swfdec_text_buffer_get_selection (layout->text, &sel_start, &sel_end);
+    /* no selection, we draw a cursor instead */
+    if (sel_start == sel_end)
+      return NULL;
+    /* selection outside of block's range */
+    if (sel_start >= block->end || sel_end <= block->start)
+      return NULL;
+  } else {
+    if (focus) {
+      swfdec_text_buffer_get_selection (layout->text, &sel_start, &sel_end);
+    } else {
+      sel_start = sel_end = 0;
+    }
+  }
+  if (sel_start <= block->start)
+    sel_start = 0;
+  else
+    sel_start -= block->start;
+  if (sel_end <= block->start)
+    sel_end = 0;
+  else
+    sel_end -= block->start;
+
+  old = pango_layout_get_attributes (block->layout);
+  pango_attr_list_ref (old);
+  new = pango_attr_list_copy (old);
+  /* we create an iterator through the old list, so we know it
+   * never gets modified. As the new list is identical to the old one, it 
+   * achieves exactly what we want. */
+  iter = pango_attr_list_get_iterator (old);
+  do {
+    guint cur_start, cur_end;
+    PangoAttrColor *color_attr;
+    SwfdecColor color;
+    pango_attr_iterator_range (iter, (int *) &cur_start, (int *) &cur_end);
+    if (cur_end == G_MAXINT)
+      break;
+    color_attr = (PangoAttrColor *) pango_attr_iterator_get (iter, PANGO_ATTR_FOREGROUND);
+    /* must hold as we explicitly set color attributes when creating 
+     * the list initially */
+    g_assert (color_attr);
+    color = SWFDEC_COLOR_COMBINE (color_attr->color.red >> 8, 
+	color_attr->color.green >> 8, color_attr->color.blue >> 8, 0xFF);
+    color = swfdec_color_apply_transform (color, ctrans);
+    /* We differentiate three ranges: before selection, in selection and after selection */
+    if (cur_start < sel_start) {
+      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_R (color) * 0x101,
+	  SWFDEC_COLOR_G (color) * 0x101, SWFDEC_COLOR_B (color) * 0x101);
+      fg->start_index = cur_start;
+      fg->end_index = MIN (cur_end, sel_start);
+      pango_attr_list_change (new, fg);
+    }
+    if (sel_start < cur_end && sel_end > cur_start) {
+      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_R (focus) * 0x101,
+	  SWFDEC_COLOR_G (focus) * 0x101, SWFDEC_COLOR_B (focus) * 0x101);
+      PangoAttribute *bg = pango_attr_background_new (SWFDEC_COLOR_R (color) * 0x101,
+	  SWFDEC_COLOR_G (color) * 0x101, SWFDEC_COLOR_B (color) * 0x101);
+      fg->start_index = bg->start_index = MAX (cur_start, sel_start);
+      fg->end_index = bg->end_index = MIN (cur_end, sel_end);
+      pango_attr_list_change (new, fg);
+      pango_attr_list_change (new, bg);
+    }
+    if (cur_end > sel_end) {
+      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_R (color) * 0x101,
+	  SWFDEC_COLOR_G (color) * 0x101, SWFDEC_COLOR_B (color) * 0x101);
+      fg->start_index = MAX (sel_end, cur_start);
+      fg->end_index = cur_end;
+      pango_attr_list_change (new, fg);
+    }
+  } while (pango_attr_iterator_next (iter));
+  pango_layout_set_attributes (block->layout, new);
+  pango_attr_list_unref (new);
+  return old;
+}
+
 /**
  * swfdec_text_layout_render:
  * @layout: the layout to render
@@ -831,16 +918,21 @@ swfdec_text_layout_get_line_offset (SwfdecTextLayout *layout,
  * @ctrans: The color transform to apply.
  * @row: index of the first row to render.
  * @height: The height in pixels of the visible area.
+ * @focus: color to invert the selection with, 0 if no focus
  *
  * Renders the contents of the layout into the given Cairo context.
  **/
 void
 swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr, 
-    const SwfdecColorTransform *ctrans, guint row, guint height)
+    const SwfdecColorTransform *ctrans, guint row, guint height, SwfdecColor focus)
 {
   GSequenceIter *iter;
   SwfdecTextBlock *block;
   PangoRectangle extents;
+  PangoAttrList *attr;
+  SwfdecColor cursor_color;
+  gsize cursor;
+  int cursor_index; /* Pango neds proper types... */
   gboolean first_line = TRUE;
 
   g_return_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout));
@@ -850,28 +942,63 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
   
   swfdec_text_layout_ensure (layout);
 
+  if (!focus || swfdec_text_buffer_has_selection (layout->text)) {
+    cursor_color = 0;
+    cursor = G_MAXSIZE;
+  } else {
+    cursor_color = swfdec_text_buffer_get_attributes (layout->text,
+	swfdec_text_buffer_get_length (layout->text))->color;
+    cursor_color = swfdec_color_apply_transform (cursor_color, ctrans);
+    cursor_color = SWFDEC_COLOR_OPAQUE (cursor_color);
+    cursor = swfdec_text_buffer_get_cursor (layout->text);
+  }
   iter = swfdec_text_layout_find_row (layout, row); 
   block = g_sequence_get (iter);
   row -= block->row;
   do {
     block = g_sequence_get (iter);
+    cursor_index = cursor - block->start;
     pango_cairo_update_layout (cr, block->layout);
     cairo_translate (cr, block->rect.x, 0);
     if (block->bullet && row == 0) {
       SWFDEC_FIXME ("render bullet");
     }
+    attr = swfdec_text_layout_modify_attributes (layout, block, ctrans, focus);
     for (;row < (guint) pango_layout_get_line_count (block->layout); row++) {
       PangoLayoutLine *line = pango_layout_get_line_readonly (block->layout, row);
       int xoffset = swfdec_text_layout_get_line_offset (layout, block, line);
       
       pango_layout_line_get_pixel_extents (line, NULL, &extents);
-      if (extents.height > (int) height && !first_line)
+      if (extents.height > (int) height && !first_line) {
+	if (attr) {
+	  pango_layout_set_attributes (block->layout, attr);
+	  pango_attr_list_unref (attr);
+	}
 	return;
+      }
       first_line = FALSE;
       cairo_translate (cr, xoffset, - extents.y);
       pango_cairo_show_layout_line (cr, line);
+      if (line->start_index + line->length >= cursor_index &&
+	  line->start_index <= cursor_index &&
+	  (line->start_index + line->length != cursor_index || 
+	   (gsize) line->start_index + line->length == block->end - block->start)) {
+	int x_index;
+	/* FIXME: implement (trailing for) RTL */
+	pango_layout_line_index_to_x (line, cursor_index, FALSE, &x_index);
+	x_index = PANGO_PIXELS (x_index);
+	swfdec_color_set_source (cr, cursor_color);
+	cairo_set_line_width (cr, 1.0);
+	cairo_move_to (cr, x_index + 0.5, extents.y);
+	cairo_rel_line_to (cr, 0, extents.height);
+	cairo_stroke (cr);
+      }
       height -= extents.height;
       cairo_translate (cr, - xoffset, extents.height + extents.y);
+    }
+    if (attr) {
+      pango_layout_set_attributes (block->layout, attr);
+      pango_attr_list_unref (attr);
     }
     if ((int) height <= pango_layout_get_spacing (block->layout) / PANGO_SCALE)
       return;
@@ -880,5 +1007,81 @@ swfdec_text_layout_render (SwfdecTextLayout *layout, cairo_t *cr,
     row = 0;
     iter = g_sequence_iter_next (iter);
   } while (!g_sequence_iter_is_end (iter));
+}
+
+/**
+ * swfdec_text_layout_query_position:
+ * @layout: the layout to query
+ * @row: the start of this row indicates the (0,0) position to which @x and @y 
+ *       are relative
+ * @x: x offset
+ * @y: y offset
+ * @index_: %NULL or variable that will be set to the index in the layout's 
+ *          buffer that corresponds to the position of the pressed grapheme.
+ * @hit: %NULL or variable that will be set to %TRUE if the coordinate is inside
+ *	 the glyhs's extents and %FALSE otherwise
+ * @trailing: %NULL or variable that will be set to thenumber of characters 
+ *            inside the grapheme that have been passed.
+ *
+ * Magic function to query everything of interest about the string at a current 
+ * position inisde the @layout.
+ **/
+void
+swfdec_text_layout_query_position (SwfdecTextLayout *layout, guint row,
+    int x, int y, gsize *index_, gboolean *hit, int *trailing)
+{
+  GSequenceIter *iter;
+  SwfdecTextBlock *block;
+  PangoRectangle extents;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout));
+  g_return_if_fail (row < swfdec_text_layout_get_n_rows (layout));
+
+  swfdec_text_layout_ensure (layout);
+
+  iter = swfdec_text_layout_find_row (layout, row); 
+  block = g_sequence_get (iter);
+  row -= block->row;
+
+  do {
+    block = g_sequence_get (iter);
+    if (y < 0) {
+      if (index_)
+	*index_ = block->start;
+      if (hit)
+	*hit = FALSE;
+      if (trailing)
+	*trailing = 0;
+      return;
+    }
+
+    for (;row < (guint) pango_layout_get_line_count (block->layout); row++) {
+      PangoLayoutLine *line = pango_layout_get_line_readonly (block->layout, row);
+      
+      pango_layout_line_get_pixel_extents (line, NULL, &extents);
+      if (extents.height > y) {
+	gboolean tmp;
+	int ind;
+	x -= swfdec_text_layout_get_line_offset (layout, block, line);
+	tmp = pango_layout_line_x_to_index (line, x * PANGO_SCALE, &ind, trailing);
+	if (hit)
+	  *hit = tmp;
+	if (index_)
+	  *index_ = block->start + ind;
+	return;
+      }
+      y -= extents.height;
+    }
+    y -= pango_layout_get_spacing (block->layout) / PANGO_SCALE;
+    row = 0;
+    iter = g_sequence_iter_next (iter);
+  } while (!g_sequence_iter_is_end (iter));
+
+  if (index_)
+    *index_ = swfdec_text_buffer_get_length (layout->text);
+  if (hit)
+    *hit = FALSE;
+  if (trailing)
+    *trailing = 0;
 }
 

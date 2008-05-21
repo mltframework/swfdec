@@ -789,7 +789,6 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     return;
   }
 
-  cairo_save (cr);
   if (movie->masked_by != NULL) {
     cairo_push_group (cr);
   }
@@ -798,6 +797,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     SWFDEC_DEBUG ("pushing group for blend mode %u", movie->blend_mode);
     cairo_push_group (cr);
   }
+  cairo_save (cr);
 
   SWFDEC_LOG ("transforming movie, transform: %g %g  %g %g   %g %g",
       movie->matrix.xx, movie->matrix.yy,
@@ -830,6 +830,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
     g_warning ("error rendering with cairo: %s", cairo_status_to_string (cairo_status (cr)));
   }
+  cairo_restore (cr);
   if (group) {
     cairo_pattern_t *pattern;
 
@@ -864,7 +865,6 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_mask (cr, mask);
     cairo_pattern_destroy (mask);
   }
-  cairo_restore (cr);
 }
 
 static void
@@ -953,6 +953,10 @@ swfdec_movie_mark (SwfdecAsObject *object)
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
 }
 
+#define swfdec_movie_is_scriptable(mov) \
+  ((SWFDEC_IS_ACTOR (mov) || SWFDEC_IS_VIDEO_MOVIE (mov)) && \
+   (swfdec_movie_get_version (mov) > 5 || !SWFDEC_IS_TEXT_FIELD_MOVIE (mov)))
+
 /* FIXME: This function can definitely be implemented easier */
 SwfdecMovie *
 swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed)
@@ -985,8 +989,12 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
     SwfdecMovie *cur = walk->data;
     if (cur->original_name == SWFDEC_AS_STR_EMPTY && !unnamed)
       continue;
-    if (swfdec_strcmp (version, cur->name, name) == 0)
-      return cur;
+    if (swfdec_strcmp (version, cur->name, name) == 0) {
+      if (swfdec_movie_is_scriptable (cur))
+	return cur;
+      else
+	return movie;
+    }
   }
   return NULL;
 }
@@ -1040,9 +1048,6 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   
   ret = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (ret) {
-    if ((!SWFDEC_IS_ACTOR (ret) && !SWFDEC_IS_VIDEO_MOVIE (ret)) ||
-	(swfdec_movie_get_version (movie) <= 5 && SWFDEC_IS_TEXT_FIELD_MOVIE (ret)))
-      ret = movie;
     SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (ret));
     *flags = 0;
     return TRUE;

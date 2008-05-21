@@ -2850,6 +2850,15 @@ EXTRA_DIST = \
 	selection-properties-7.swf.trace \
 	selection-properties-8.swf \
 	selection-properties-8.swf.trace \
+	selection-setFocus-textfields-5.swf \
+	selection-setFocus-textfields-5.swf.trace \
+	selection-setFocus-textfields-6.swf \
+	selection-setFocus-textfields-6.swf.trace \
+	selection-setFocus-textfields-7.swf \
+	selection-setFocus-textfields-7.swf.trace \
+	selection-setFocus-textfields-8.swf \
+	selection-setFocus-textfields-8.swf.trace \
+	selection-setFocus-textfields.as \
 	set-overwrite-global-5.swf \
 	set-overwrite-global-6.swf \
 	set-overwrite-global-7.swf \

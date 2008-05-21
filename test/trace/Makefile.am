@@ -1653,6 +1653,15 @@ EXTRA_DIST = \
 	loadvars-properties-7.swf.trace \
 	loadvars-properties-8.swf \
 	loadvars-properties-8.swf.trace \
+	loadvars-toString-5.swf \
+	loadvars-toString-5.swf.trace \
+	loadvars-toString-6.swf \
+	loadvars-toString-6.swf.trace \
+	loadvars-toString-7.swf \
+	loadvars-toString-7.swf.trace \
+	loadvars-toString-8.swf \
+	loadvars-toString-8.swf.trace \
+	loadvars-toString.as \
 	local.swf \
 	local.swf.trace \
 	local-connection-properties.as \

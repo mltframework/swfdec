@@ -1116,6 +1116,15 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	extends-properties-5.swf \
+	extends-properties-5.swf.trace \
+	extends-properties-6.swf \
+	extends-properties-6.swf.trace \
+	extends-properties-7.swf \
+	extends-properties-7.swf.trace \
+	extends-properties-8.swf \
+	extends-properties-8.swf.trace \
+	extends-properties.as \
 	externalinterface-escape.as \
 	externalinterface-escape-5.swf \
 	externalinterface-escape-5.swf.trace \

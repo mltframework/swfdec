@@ -156,9 +156,9 @@ LoadVars.prototype.onData = function (src) {
 };
 
 LoadVars.prototype.toString = function () {
-  var str = null;
+  var str = "";
   for (var x in this) {
-    if (str == null) {
+    if (str == "") {
       str = escape(x) + "=" + escape(this[x]);
     } else {
       str += "&" + escape(x) + "=" + escape(this[x]);

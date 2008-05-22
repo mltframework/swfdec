@@ -122,6 +122,8 @@ void			vivi_code_asm_push_insert_pool_big	(ViviCodeAsmPush *	push,
 								 guint			index_,
 								 guint			id);
 
+void			vivi_code_asm_push_remove_value		(ViviCodeAsmPush *	push,
+								 guint			index_);
 void			vivi_code_asm_push_copy_value		(ViviCodeAsmPush *	push,
 								 const ViviCodeAsmPush *other,
 								 guint			index_);

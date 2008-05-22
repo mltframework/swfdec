@@ -242,34 +242,30 @@ vivi_code_assembler_pool (ViviCodeAssembler *assembler)
   // change the pushes
   for (i = 0; i < assembler->codes->len; i++) {
     if (VIVI_IS_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i))) {
-      ViviCodeAsmPush *old =
+      ViviCodeAsmPush *push =
 	VIVI_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i));
-      ViviCodeAsmPush *push = VIVI_CODE_ASM_PUSH (vivi_code_asm_push_new ());
 
-      for (j = 0; j < vivi_code_asm_push_get_n_values (old); j++) {
-	if (vivi_code_asm_push_get_value_type (old, j) ==
-	    VIVI_CODE_CONSTANT_STRING) {
-	  const char *str = vivi_code_asm_push_get_string (old, j);
-	  guint k = 0;
+      for (j = 0; j < vivi_code_asm_push_get_n_values (push); j++) {
+	const char *string;
+	guint k;
 
-	  for (iter = list; iter != NULL; iter = iter->next) {
-	    if (strcmp (iter->data, str) == 0)
-	      break;
-	    k++;
-	  }
-	  if (iter != NULL) {
-	    vivi_code_asm_push_add_pool (push, k);
-	  } else {
-	    vivi_code_asm_push_copy_value (push, old, j);
-	  }
-	} else {
-	  vivi_code_asm_push_copy_value (push, old, j);
+	if (vivi_code_asm_push_get_value_type (push, j) !=
+	    VIVI_CODE_CONSTANT_STRING)
+	  continue;
+
+	string = vivi_code_asm_push_get_string (push, j);
+	k = 0;
+	for (iter = list; iter != NULL; iter = iter->next) {
+	  if (strcmp (iter->data, string) == 0)
+	    break;
+	  k++;
+	}
+
+	if (iter != NULL) {
+	  vivi_code_asm_push_remove_value (push, j);
+	  vivi_code_asm_push_insert_pool (push, j, k);
 	}
       }
-
-      vivi_code_assembler_remove_code (assembler, VIVI_CODE_ASM (old));
-      vivi_code_assembler_insert_code (assembler, i, VIVI_CODE_ASM (push));
-      g_object_unref (push);
     }
   }
 

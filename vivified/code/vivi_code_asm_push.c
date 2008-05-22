@@ -255,6 +255,15 @@ vivi_code_asm_push_get_value_type (const ViviCodeAsmPush *push, guint i)
   return g_array_index (push->values, ViviCodeAsmPushValue, i).type;
 }
 
+void
+vivi_code_asm_push_remove_value (ViviCodeAsmPush *push, guint index_)
+{
+  g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
+  g_return_if_fail (index_ < push->values->len);
+
+  g_array_remove_index (push->values, index_);
+}
+
 static void
 vivi_code_asm_push_insert_value (ViviCodeAsmPush *push, guint index_,
     ViviCodeAsmPushValue *value)

@@ -131,7 +131,7 @@ swfdec_test_plugin_swfdec_notify (SwfdecPlayer *player, GParamSpec *pspec, Swfde
 void
 swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
 {
-  static const GTimeVal the_beginning = { 1035840244, 0 };
+  static const GTimeVal the_beginning = { 1035840244, 123 };
   SwfdecPlayer *player;
   SwfdecURL *url;
 

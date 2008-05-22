@@ -69,7 +69,6 @@
 #include "vivi_code_variable.h"
 #include "vivi_compiler_empty_statement.h"
 #include "vivi_compiler_get_temporary.h"
-#include "vivi_compiler_goto_name.h"
 
 #include "vivi_code_text_printer.h"
 #include "vivi_code_assembler.h"
@@ -108,7 +107,7 @@ static const struct {
 
 typedef struct {
   GSList			*labels;
-  GSList			*gotos;
+  GSList			*waiting_labels;
 } ParseLevel;
 
 typedef struct {
@@ -372,17 +371,50 @@ vivi_parser_start_level (ParseData *data)
 }
 
 static ViviCodeLabel *
-vivi_parser_find_label (ParseData *data, const char *name)
+vivi_parser_get_waiting_label (ParseData *data, const char *name)
 {
   GSList *iter;
 
-  for (iter = data->level->labels; iter != NULL; iter = iter->next) {
-    if (g_str_equal (vivi_code_label_get_name (VIVI_CODE_LABEL (iter->data)),
-	  name))
-      return VIVI_CODE_LABEL (iter->data);
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (data->level != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  for (iter = data->level->waiting_labels; iter != NULL; iter = iter->next) {
+    ViviCodeLabel *label = VIVI_CODE_LABEL (iter->data);
+    if (g_str_equal (vivi_code_label_get_name (label), name))
+      return label;
   }
 
   return NULL;
+}
+
+static void
+vivi_parser_remove_waiting_label (ParseData *data, const ViviCodeLabel *label)
+{
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (data->level != NULL);
+  g_return_if_fail (VIVI_IS_CODE_LABEL (label));
+
+  data->level->waiting_labels =
+    g_slist_remove (data->level->waiting_labels, label);
+}
+
+static ViviCodeLabel *
+vivi_parser_get_label (ParseData *data, const char *name)
+{
+  GSList *iter;
+
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (data->level != NULL, NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  for (iter = data->level->labels; iter != NULL; iter = iter->next) {
+    ViviCodeLabel *label = VIVI_CODE_LABEL (iter->data);
+    if (g_str_equal (vivi_code_label_get_name (label), name))
+      return label;
+  }
+
+  return vivi_parser_get_waiting_label (data, name);
 }
 
 static void
@@ -393,24 +425,15 @@ vivi_parser_end_level (ParseData *data)
   g_return_if_fail (data != NULL);
   g_return_if_fail (data->level != NULL);
 
-  for (iter = data->level->gotos; iter != NULL; iter = iter->next) {
-    ViviCompilerGotoName *goto_;
-    ViviCodeLabel *label;
+  for (iter = data->level->waiting_labels; iter != NULL; iter = iter->next) {
+    ViviCodeLabel *label = VIVI_CODE_LABEL (iter->data);
 
-    goto_ = VIVI_COMPILER_GOTO_NAME (iter->data);
-    label = vivi_parser_find_label (data,
-	vivi_compiler_goto_name_get_name (goto_));
+    vivi_parser_error (data, "Label named '%s' doesn't exist in this block",
+	vivi_code_label_get_name (label));
 
-    if (label != NULL) {
-      vivi_compiler_goto_name_set_label (goto_, label);
-    } else {
-      vivi_parser_error (data, "Label named '%s' doesn't exist in this block",
-	  vivi_compiler_goto_name_get_name (goto_));
-    }
-
-    g_object_unref (goto_);
+    g_object_unref (label);
   }
-  g_slist_free (data->level->gotos);
+  g_slist_free (data->level->waiting_labels);
 
   for (iter = data->level->labels; iter != NULL; iter = iter->next) {
     g_object_unref (VIVI_CODE_LABEL (iter->data));
@@ -427,36 +450,33 @@ vivi_parser_end_level (ParseData *data)
   }
 }
 
-static void
-vivi_parser_add_goto (ParseData *data, ViviCompilerGotoName *goto_)
-{
-  g_return_if_fail (data != NULL);
-  g_return_if_fail (data->level != NULL);
-  g_return_if_fail (VIVI_IS_COMPILER_GOTO_NAME (goto_));
-
-  data->level->gotos =
-    g_slist_prepend (data->level->gotos, g_object_ref (goto_));
-}
-
 static gboolean
 vivi_parser_add_label (ParseData *data, ViviCodeLabel *label)
 {
-  GSList *iter;
-
   g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (data->level != NULL, FALSE);
   g_return_val_if_fail (VIVI_IS_CODE_LABEL (label), FALSE);
 
-  for (iter = data->level->labels; iter != NULL; iter = iter->next) {
-    if (g_str_equal (vivi_code_label_get_name (VIVI_CODE_LABEL (iter->data)),
-	  vivi_code_label_get_name (label)))
+  if (vivi_parser_get_label (data, vivi_code_label_get_name (label)) != NULL)
       return FALSE;
-  }
 
   data->level->labels =
     g_slist_prepend (data->level->labels, g_object_ref (label));
 
   return TRUE;
+}
+
+static void
+vivi_parser_add_waiting_label (ParseData *data, ViviCodeLabel *label)
+{
+  g_return_if_fail (data != NULL);
+  g_return_if_fail (data->level != NULL);
+  g_return_if_fail (VIVI_IS_CODE_LABEL (label));
+  g_return_if_fail (vivi_parser_get_waiting_label (data,
+	vivi_code_label_get_name (label)));
+
+  data->level->labels =
+    g_slist_prepend (data->level->waiting_labels, g_object_ref (label));
 }
 
 static gsize
@@ -1142,9 +1162,18 @@ parse_asm_code (ParseData *data)
   }
 
   if (try_parse_token (data, TOKEN_COLON)) {
-    ViviCodeAsm *code = VIVI_CODE_ASM (vivi_code_label_new (identifier));
+    ViviCodeLabel *label;
+
+    label = vivi_parser_get_waiting_label (data, identifier);
+    if (label != NULL) {
+      vivi_parser_remove_waiting_label (data, label);
+    } else {
+      label = VIVI_CODE_LABEL (vivi_code_label_new (identifier));
+    }
+    vivi_parser_add_label (data, label);
+
     g_free (identifier);
-    return code;
+    return VIVI_CODE_ASM (label);
   } else {
     for (i = 0; i < G_N_ELEMENTS (asm_statements); i++) {
       if (g_ascii_strcasecmp (identifier, asm_statements[i].name) == 0)
@@ -2322,9 +2351,15 @@ parse_continue_or_break_statement (ParseData *data,
   parse_token (data, token);
 
   if (!try_parse_restricted_semicolon (data)) {
-    statement = vivi_compiler_goto_name_new (parse_identifier_value (data));
+    ViviCodeLabel *label;
+    const char *name = parse_identifier_value (data);
 
-    vivi_parser_add_goto (data, VIVI_COMPILER_GOTO_NAME (statement));
+    label = vivi_parser_get_label (data, name);
+    if (label == NULL) {
+      label = VIVI_CODE_LABEL (vivi_code_label_new (name));
+      vivi_parser_add_waiting_label (data, label);
+    }
+    statement = vivi_code_goto_new (label);
 
     parse_automatic_semicolon (data);
   } else {
@@ -2689,16 +2724,24 @@ peek_label_statement (ParseData *data)
 static ViviCodeStatement *
 parse_label_statement (ParseData *data)
 {
-  ViviCodeStatement *statement;
+  ViviCodeLabel *label;
+  const char *name;
 
-  statement = vivi_code_label_new (parse_identifier_value (data));
+  name = parse_identifier_value (data);
+
+  label = vivi_parser_get_waiting_label (data, name);
+  if (label != NULL) {
+    vivi_parser_remove_waiting_label (data, label);
+  } else {
+    label = VIVI_CODE_LABEL (vivi_code_label_new (name));
+  }
 
   parse_token (data, TOKEN_COLON);
 
-  if (!vivi_parser_add_label (data, VIVI_CODE_LABEL (statement)))
+  if (!vivi_parser_add_label (data, label))
     vivi_parser_error (data, "Same label name used twice");
 
-  return statement;
+  return VIVI_CODE_STATEMENT (label);
 }
 
 static gboolean

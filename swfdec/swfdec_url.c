@@ -223,8 +223,12 @@ swfdec_url_new_parent (const SwfdecURL *url)
   SwfdecURL *ret;
   
   path = g_strdup (url->path);
-  if (path)
-    swfdec_url_path_to_parent_path (path);
+  if (path) {
+    if (!swfdec_url_path_to_parent_path (path)) {
+      g_free (path);
+      path = NULL;
+    }
+  }
   ret = swfdec_url_new_components (url->protocol, url->host, url->port,
       path, NULL);
   g_free (path);
@@ -269,7 +273,7 @@ swfdec_url_new_relative (const SwfdecURL *url, const char *string)
     /* relative URL */
     char *cur = g_strdup (url->path);
     while (g_str_has_prefix (string, "../")) {
-      if (!swfdec_url_path_to_parent_path (cur)) {
+      if (!cur || !swfdec_url_path_to_parent_path (cur)) {
 	g_free (cur);
 	return NULL;
       }
@@ -279,9 +283,13 @@ swfdec_url_new_relative (const SwfdecURL *url, const char *string)
       g_free (cur);
       return NULL;
     }
-    path = g_strconcat (cur, "/", string, NULL);
-    g_free (cur);
-    cur = path;
+    if (cur) {
+      path = g_strconcat (cur, "/", string, NULL);
+      g_free (cur);
+      cur = path;
+    } else {
+      cur = g_strdup (string);
+    }
     query = strchr (cur, '?');
     if (query == NULL) {
       path = *string ? g_strdup (cur) : NULL;

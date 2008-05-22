@@ -86,6 +86,10 @@ EXTRA_DIST = \
 	increment_value.as.expect \
 	label.as \
 	label.as.expect \
+	misc_literal.as \
+	misc_literal.as.expect \
+	number.as \
+	number.as.expect \
 	operator.as \
 	operator.as.expect \
 	operator_precedence.as \
@@ -96,6 +100,8 @@ EXTRA_DIST = \
 	object_literal_empty.as.expect \
 	or.as \
 	or.as.expect \
+	string.as \
+	string.as.expect \
 	trace.as \
 	trace.as.expect \
 	var.as \

@@ -1,0 +1,14 @@
+asm {
+  push -5000000, 5000000, 5000, -35000000, -5000, 35000000, -2, 5000, 3.5, 1
+  trace
+  trace
+  trace
+  trace
+  trace
+  trace
+  trace
+  trace
+  trace
+  trace
+  end
+}

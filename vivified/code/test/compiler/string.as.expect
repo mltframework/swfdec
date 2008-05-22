@@ -1,0 +1,13 @@
+asm {
+  pool "'Hello, world!'", "\"Hello, world!\"", "\"", "'", "H", "S", "∈", "\n\r\b\f\n\r\t\v"
+  push pool 7, pool 6, pool 5, pool 4, pool 3, pool 2, pool 1, pool 0
+  trace
+  trace
+  trace
+  trace
+  trace
+  trace
+  trace
+  trace
+  end
+}

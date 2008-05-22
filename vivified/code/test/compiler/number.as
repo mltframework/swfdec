@@ -1,0 +1,10 @@
+trace (1);
+trace (3.5);
+trace (5e3);
+trace (-2);
+trace (3.5e7);
+trace (-5e3);
+trace (-3.5e7);
+trace (5e3);
+trace (.5e7);
+trace (-.5e7);

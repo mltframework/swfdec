@@ -124,7 +124,7 @@ vivi_code_label_new (const char *name)
 }
 
 const char *
-vivi_code_label_get_name (ViviCodeLabel *label)
+vivi_code_label_get_name (const ViviCodeLabel *label)
 {
   g_return_val_if_fail (VIVI_IS_CODE_LABEL (label), NULL);
 

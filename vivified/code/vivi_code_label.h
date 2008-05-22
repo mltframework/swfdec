@@ -51,7 +51,7 @@ GType			vivi_code_label_get_type   	(void);
 
 ViviCodeStatement *	vivi_code_label_new		(const char *		name);
 
-const char *		vivi_code_label_get_name	(ViviCodeLabel *	label);
+const char *		vivi_code_label_get_name	(const ViviCodeLabel *	label);
 
 
 G_END_DECLS

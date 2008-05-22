@@ -473,9 +473,9 @@ vivi_parser_add_waiting_label (ParseData *data, ViviCodeLabel *label)
   g_return_if_fail (data->level != NULL);
   g_return_if_fail (VIVI_IS_CODE_LABEL (label));
   g_return_if_fail (vivi_parser_get_waiting_label (data,
-	vivi_code_label_get_name (label)));
+	vivi_code_label_get_name (label)) == NULL);
 
-  data->level->labels =
+  data->level->waiting_labels =
     g_slist_prepend (data->level->waiting_labels, g_object_ref (label));
 }
 

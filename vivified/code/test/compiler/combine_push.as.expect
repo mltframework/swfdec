@@ -4,7 +4,7 @@ asm {
   trace
   trace
 
-hello_0001:
+hello:
   push pool 1, pool 0
   trace
   trace

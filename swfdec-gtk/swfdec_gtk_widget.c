@@ -735,6 +735,13 @@ swfdec_gtk_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecGtkW
     swfdec_gtk_widget_do_fullscreen (widget, swfdec_player_get_fullscreen (player));
   } else if (g_str_equal (pspec->name, "background-color")) {
     swfdec_gtk_widget_update_background (widget);
+  } else if (g_str_equal (pspec->name, "selection")) {
+    const char *text = swfdec_player_get_selection (player);
+    if (GTK_WIDGET_HAS_FOCUS (widget) && text) {
+      GtkClipboard *clipboard = gtk_widget_get_clipboard (GTK_WIDGET (widget),
+	  GDK_SELECTION_PRIMARY);
+      gtk_clipboard_set_text (clipboard, text, -1);
+    }
   }
 }
 

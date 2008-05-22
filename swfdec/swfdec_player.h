@@ -143,6 +143,7 @@ SwfdecPlayerScripting *
 		swfdec_player_get_scripting	(SwfdecPlayer *		player);
 void		swfdec_player_set_scripting	(SwfdecPlayer *		player,
 						 SwfdecPlayerScripting *scripting);
+const char *	swfdec_player_get_selection	(SwfdecPlayer *		player);
 gboolean	swfdec_player_get_focus		(SwfdecPlayer *		player);
 void		swfdec_player_set_focus		(SwfdecPlayer *		player,
 						 gboolean		focus);

@@ -53,8 +53,7 @@ struct _ViviCodeAsmPush
 {
   ViviCodeAsmCode	code;
 
-  SwfdecBots *		contents;
-  GPtrArray *		offsets;
+  GArray *		values;
 };
 
 struct _ViviCodeAsmPushClass
@@ -70,41 +69,62 @@ guint			vivi_code_asm_push_get_n_values		(const ViviCodeAsmPush *	push);
 ViviCodeConstantType	vivi_code_asm_push_get_value_type	(const ViviCodeAsmPush *	push,
 								 guint			i);
 const char *		vivi_code_asm_push_get_string		(const ViviCodeAsmPush *	push,
-								 guint			id);
+								 guint			index_);
 float			vivi_code_asm_push_get_float		(const ViviCodeAsmPush *	push,
-								 guint			id);
+								 guint			index_);
 guint			vivi_code_asm_push_get_register		(const ViviCodeAsmPush *	push,
-								 guint			id);
+								 guint			index_);
 double			vivi_code_asm_push_get_double		(const ViviCodeAsmPush *	push,
-								 guint			id);
+								 guint			index_);
 int			vivi_code_asm_push_get_integer		(const ViviCodeAsmPush *	push,
-								 guint			id);
+								 guint			index_);
 gboolean		vivi_code_asm_push_get_boolean		(const ViviCodeAsmPush *	push,
-								 guint			id);
+								 guint			index_);
 guint			vivi_code_asm_push_get_pool		(const ViviCodeAsmPush *	push,
+								 guint			index_);
+
+#define vivi_code_asm_push_add_string(push, string) vivi_code_asm_push_insert_string(push, G_MAXUINT, string)
+void			vivi_code_asm_push_insert_string	(ViviCodeAsmPush *	push,
+								 guint			index_,
+								 const char *		string);
+#define vivi_code_asm_push_add_float(push, f) vivi_code_asm_push_insert_float(push, G_MAXUINT, f)
+void			vivi_code_asm_push_insert_float		(ViviCodeAsmPush *	push,
+								 guint			index_,
+								 float			f);
+#define vivi_code_asm_push_add_null(push) vivi_code_asm_push_insert_null(push, G_MAXUINT)
+void			vivi_code_asm_push_insert_null		(ViviCodeAsmPush *	push,
+								 guint			index_);
+#define vivi_code_asm_push_add_undefined(push) vivi_code_asm_push_insert_undefined(push, G_MAXUINT)
+void			vivi_code_asm_push_insert_undefined	(ViviCodeAsmPush *	push,
+								 guint			index_);
+#define vivi_code_asm_push_add_register(push, id) vivi_code_asm_push_insert_register(push, G_MAXUINT, id)
+void			vivi_code_asm_push_insert_register	(ViviCodeAsmPush *	push,
+								 guint			index_,
+								 guint			id);
+#define vivi_code_asm_push_add_boolean(push, b) vivi_code_asm_push_insert_boolean(push, G_MAXUINT, b)
+void			vivi_code_asm_push_insert_boolean	(ViviCodeAsmPush *	push,
+								 guint			index_,
+								 gboolean		b);
+#define vivi_code_asm_push_add_double(push, d) vivi_code_asm_push_insert_double(push, G_MAXUINT, d)
+void			vivi_code_asm_push_insert_double	(ViviCodeAsmPush *	push,
+								 guint			index_,
+								 double			d);
+#define vivi_code_asm_push_add_integer(push, i) vivi_code_asm_push_insert_integer(push, G_MAXUINT, i)
+void			vivi_code_asm_push_insert_integer	(ViviCodeAsmPush *	push,
+								 guint			index_,
+								 int			i);
+#define vivi_code_asm_push_add_pool(push, id) vivi_code_asm_push_insert_pool(push, G_MAXUINT, id)
+void			vivi_code_asm_push_insert_pool		(ViviCodeAsmPush *	push,
+								 guint			index_,
+								 guint			id);
+#define vivi_code_asm_push_add_pool_big(push, id) vivi_code_asm_push_insert_pool_big(push, G_MAXUINT, id)
+void			vivi_code_asm_push_insert_pool_big	(ViviCodeAsmPush *	push,
+								 guint			index_,
 								 guint			id);
 
-void			vivi_code_asm_push_add_string		(ViviCodeAsmPush *	push,
-								 const char *		string);
-void			vivi_code_asm_push_add_float		(ViviCodeAsmPush *	push,
-								 float			f);
-void			vivi_code_asm_push_add_null		(ViviCodeAsmPush *	push);
-void			vivi_code_asm_push_add_undefined	(ViviCodeAsmPush *	push);
-void			vivi_code_asm_push_add_register		(ViviCodeAsmPush *	push,
-								 guint			id);
-void			vivi_code_asm_push_add_boolean		(ViviCodeAsmPush *	push,
-								 gboolean		b);
-void			vivi_code_asm_push_add_double		(ViviCodeAsmPush *	push,
-								 double			d);
-void			vivi_code_asm_push_add_integer		(ViviCodeAsmPush *	push,
-								 int			i);
-void			vivi_code_asm_push_add_pool		(ViviCodeAsmPush *	push,
-								 guint			id);
-void			vivi_code_asm_push_add_pool_big		(ViviCodeAsmPush *	push,
-								 guint			id);
 void			vivi_code_asm_push_copy_value		(ViviCodeAsmPush *	push,
 								 const ViviCodeAsmPush *other,
-								 guint id);
+								 guint			index_);
 
 
 G_END_DECLS

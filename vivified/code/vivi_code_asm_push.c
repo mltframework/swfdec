@@ -30,22 +30,81 @@
 #include "vivi_code_error.h"
 #include "vivi_code_printer.h"
 
+typedef struct {
+  ViviCodeConstantType		type;
+  union {
+    char *			v_string;
+    float			v_float;
+    guint			v_register;
+    gboolean			v_boolean;
+    double			v_double;
+    int				v_integer;
+    guint			v_constant_pool;
+  };
+} ViviCodeAsmPushValue;
+
 static gboolean
 vivi_code_asm_push_emit (ViviCodeAsm *code, ViviCodeEmitter *emitter, GError **error)
 {
   ViviCodeAsmPush *push = VIVI_CODE_ASM_PUSH (code);
   SwfdecBots *emit = vivi_code_emitter_get_bots (emitter);
+  SwfdecBots *bots = swfdec_bots_open ();
+  guint i;
   gsize len;
 
-  len = swfdec_bots_get_bytes (push->contents);
+  for (i = 0; i < push->values->len; i++) {
+    ViviCodeAsmPushValue *value =
+      &g_array_index (push->values, ViviCodeAsmPushValue, i);
+
+    swfdec_bots_put_u8 (bots, value->type);
+
+    switch (value->type) {
+      case VIVI_CODE_CONSTANT_STRING:
+	swfdec_bots_put_string (bots, value->v_string);
+	break;
+      case VIVI_CODE_CONSTANT_FLOAT:
+	swfdec_bots_put_float (bots, value->v_float);
+	break;
+      case VIVI_CODE_CONSTANT_NULL:
+	/* nothing */
+	break;
+      case VIVI_CODE_CONSTANT_UNDEFINED:
+	/* nothing */
+	break;
+      case VIVI_CODE_CONSTANT_REGISTER:
+	swfdec_bots_put_u8 (bots, value->v_register);
+	break;
+      case VIVI_CODE_CONSTANT_BOOLEAN:
+	swfdec_bots_put_u8 (bots, value->v_boolean ? 1 : 0);
+	break;
+      case VIVI_CODE_CONSTANT_DOUBLE:
+	swfdec_bots_put_double (bots, value->v_double);
+	break;
+      case VIVI_CODE_CONSTANT_INTEGER:
+	swfdec_bots_put_u32 (bots, value->v_integer);
+	break;
+      case VIVI_CODE_CONSTANT_CONSTANT_POOL:
+	swfdec_bots_put_u8 (bots, value->v_constant_pool);
+	break;
+      case VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG:
+	swfdec_bots_put_u16 (bots, value->v_constant_pool);
+	break;
+      default:
+	g_assert_not_reached ();
+    }
+  }
+
+  len = swfdec_bots_get_bytes (bots);
   if (len > G_MAXUINT16) {
     g_set_error (error, VIVI_CODE_ERROR, VIVI_CODE_ERROR_SIZE,
 	"Push action too big");
+    swfdec_bots_free (bots);
     return FALSE;
   }
   swfdec_bots_put_u8 (emit, SWFDEC_AS_ACTION_PUSH);
   swfdec_bots_put_u16 (emit, len);
-  swfdec_bots_put_bots (emit, push->contents);
+  swfdec_bots_put_bots (emit, bots);
+  swfdec_bots_free (bots);
   return TRUE;
 }
 
@@ -62,38 +121,30 @@ static void
 vivi_code_asm_push_print (ViviCodeToken *token, ViviCodePrinter*printer)
 {
   ViviCodeAsmPush *push = VIVI_CODE_ASM_PUSH (token);
-  SwfdecBits bits;
-  char *s, *s2;
-  gboolean first = TRUE;
-  guint type;
+  char *s;
+  guint i;
 
-  vivi_code_printer_print (printer, "push");
-  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
-  while (swfdec_bits_left (&bits)) {
-    if (first) {
-      vivi_code_printer_print (printer, " ");
-      first = FALSE;
-    } else {
+  vivi_code_printer_print (printer, "push ");
+
+  for (i = 0; i < push->values->len; i++) {
+    ViviCodeAsmPushValue *value =
+      &g_array_index (push->values, ViviCodeAsmPushValue, i);
+
+    if (i != 0)
       vivi_code_printer_print (printer, ", ");
-    }
-    type = swfdec_bits_get_u8 (&bits);
-    switch (type) {
+
+    switch (value->type) {
       case VIVI_CODE_CONSTANT_STRING:
-	s = swfdec_bits_get_string (&bits, 7);
-	s2 = vivi_code_escape_string (s);
+	s = vivi_code_escape_string (value->v_string);
+	vivi_code_printer_print (printer, s);
 	g_free (s);
-	vivi_code_printer_print (printer, s2);
-	g_free (s2);
 	break;
       case VIVI_CODE_CONSTANT_FLOAT:
-	{
-	  s = g_malloc (G_ASCII_DTOSTR_BUF_SIZE);
-	  g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE,
-	      swfdec_bits_get_float (&bits));
-	  vivi_code_printer_print (printer, s);
-	  vivi_code_printer_print (printer, "f");
-	  g_free (s);
-	}
+	s = g_malloc (G_ASCII_DTOSTR_BUF_SIZE);
+	g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE, value->v_float);
+	vivi_code_printer_print (printer, s);
+	vivi_code_printer_print (printer, "f");
+	g_free (s);
 	break;
       case VIVI_CODE_CONSTANT_NULL:
 	vivi_code_printer_print (printer, "null");
@@ -102,37 +153,34 @@ vivi_code_asm_push_print (ViviCodeToken *token, ViviCodePrinter*printer)
 	vivi_code_printer_print (printer, "undefined");
 	break;
       case VIVI_CODE_CONSTANT_REGISTER:
-	s = g_strdup_printf ("reg %u", swfdec_bits_get_u8 (&bits));
+	s = g_strdup_printf ("reg %u", value->v_register);
 	vivi_code_printer_print (printer, s);
 	g_free (s);
 	break;
       case VIVI_CODE_CONSTANT_BOOLEAN:
-	vivi_code_printer_print (printer, swfdec_bits_get_u8 (&bits) ? "true" : "false");
+	vivi_code_printer_print (printer, value->v_boolean ? "true" : "false");
 	break;
       case VIVI_CODE_CONSTANT_DOUBLE:
-	{
-	  double number = swfdec_bits_get_double (&bits);
-	  s = g_malloc (G_ASCII_DTOSTR_BUF_SIZE);
-	  g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE, number);
-	  vivi_code_printer_print (printer, s);
-	  if (number == swfdec_as_double_to_integer (number))
-	    vivi_code_printer_print (printer, "d");
-	  g_free (s);
-	}
+	s = g_malloc (G_ASCII_DTOSTR_BUF_SIZE);
+	g_ascii_dtostr (s, G_ASCII_DTOSTR_BUF_SIZE, value->v_double);
+	vivi_code_printer_print (printer, s);
+	if (value->v_double == swfdec_as_double_to_integer (value->v_double))
+	  vivi_code_printer_print (printer, "d");
+	g_free (s);
 	break;
       case VIVI_CODE_CONSTANT_INTEGER:
-	s = g_strdup_printf ("%d", swfdec_bits_get_s32 (&bits));
+	s = g_strdup_printf ("%d", value->v_integer);
 	vivi_code_printer_print (printer, s);
 	g_free (s);
 	break;
       case VIVI_CODE_CONSTANT_CONSTANT_POOL:
-	s = g_strdup_printf ("pool %u", swfdec_bits_get_u8 (&bits));
+	s = g_strdup_printf ("pool %u", value->v_constant_pool);
 	vivi_code_printer_print (printer, s);
 	g_free (s);
 	break;
       case VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG:
 	/* FIXME: allow differentiation between pool type for values < 256? */
-	s = g_strdup_printf ("pool %u", swfdec_bits_get_u16 (&bits));
+	s = g_strdup_printf ("pool %u", value->v_constant_pool);
 	vivi_code_printer_print (printer, s);
 	g_free (s);
 	break;
@@ -140,6 +188,7 @@ vivi_code_asm_push_print (ViviCodeToken *token, ViviCodePrinter*printer)
 	g_assert_not_reached ();
     }
   }
+
   vivi_code_printer_new_line (printer, FALSE);
 }
 
@@ -147,9 +196,17 @@ static void
 vivi_code_asm_push_dispose (GObject *object)
 {
   ViviCodeAsmPush *push = VIVI_CODE_ASM_PUSH (object);
+  guint i;
 
-  swfdec_bots_free (push->contents);
-  g_ptr_array_free (push->offsets, TRUE);
+  for (i = 0; i < push->values->len; i++) {
+    ViviCodeAsmPushValue *value =
+      &g_array_index (push->values, ViviCodeAsmPushValue, i);
+    if (value->type == VIVI_CODE_CONSTANT_STRING) {
+      g_free (value->v_string);
+    }
+  }
+
+  g_array_free (push->values, TRUE);
 
   G_OBJECT_CLASS (vivi_code_asm_push_parent_class)->dispose (object);
 }
@@ -165,14 +222,13 @@ vivi_code_asm_push_class_init (ViviCodeAsmPushClass *klass)
 
   token_class->print = vivi_code_asm_push_print;
 
-  code_class->bytecode = SWFDEC_AS_ACTION_STORE_REGISTER;
+  code_class->bytecode = SWFDEC_AS_ACTION_PUSH;
 }
 
 static void
 vivi_code_asm_push_init (ViviCodeAsmPush *push)
 {
-  push->contents = swfdec_bots_open ();
-  push->offsets = g_ptr_array_new ();
+  push->values = g_array_new (FALSE, FALSE, sizeof(ViviCodeAsmPushValue));
 }
 
 ViviCodeAsm *
@@ -185,278 +241,256 @@ guint
 vivi_code_asm_push_get_n_values (const ViviCodeAsmPush *push)
 {
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0);
-  
-  return push->offsets->len;
+
+  return push->values->len;
 }
 
 ViviCodeConstantType
 vivi_code_asm_push_get_value_type (const ViviCodeAsmPush *push, guint i)
 {
-  g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0);
-  g_return_val_if_fail (i < push->offsets->len, 0);
+  g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push),
+      VIVI_CODE_CONSTANT_UNDEFINED);
+  g_return_val_if_fail (i < push->values->len, VIVI_CODE_CONSTANT_UNDEFINED);
 
-  return push->contents->data[GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, i))];
+  return g_array_index (push->values, ViviCodeAsmPushValue, i).type;
+}
+
+static void
+vivi_code_asm_push_insert_value (ViviCodeAsmPush *push, guint index_,
+    ViviCodeAsmPushValue *value)
+{
+  g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
+  g_return_if_fail (value != NULL);
+
+  if (index_ < push->values->len) {
+    g_array_insert_val (push->values, index_, *value);
+  } else {
+    g_array_append_val (push->values, *value);
+  }
 }
 
 void
-vivi_code_asm_push_add_string (ViviCodeAsmPush *push, const char *string)
+vivi_code_asm_push_insert_string (ViviCodeAsmPush *push, guint index_,
+    const char *string)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
   g_return_if_fail (string != NULL);
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_STRING);
-  swfdec_bots_put_string (push->contents, string);
+  value.type = VIVI_CODE_CONSTANT_STRING;
+  value.v_string = g_strdup (string);
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_float (ViviCodeAsmPush *push, float f)
+vivi_code_asm_push_insert_float (ViviCodeAsmPush *push, guint index_, float f)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_FLOAT);
-  swfdec_bots_put_float (push->contents, f);
+  value.type = VIVI_CODE_CONSTANT_FLOAT;
+  value.v_float = f;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_null (ViviCodeAsmPush *push)
+vivi_code_asm_push_insert_null (ViviCodeAsmPush *push, guint index_)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_NULL);
+  value.type = VIVI_CODE_CONSTANT_NULL;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_undefined (ViviCodeAsmPush *push)
+vivi_code_asm_push_insert_undefined (ViviCodeAsmPush *push, guint index_)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_UNDEFINED);
+  value.type = VIVI_CODE_CONSTANT_UNDEFINED;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_register (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_insert_register (ViviCodeAsmPush *push, guint index_,
+    guint id)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
   g_return_if_fail (id < 256);
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_REGISTER);
-  swfdec_bots_put_u8 (push->contents, id);
+  value.type = VIVI_CODE_CONSTANT_REGISTER;
+  value.v_register = id;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_boolean (ViviCodeAsmPush *push, gboolean b)
+vivi_code_asm_push_insert_boolean (ViviCodeAsmPush *push, guint index_,
+    gboolean b)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_BOOLEAN);
-  swfdec_bots_put_u8 (push->contents, b ? 1 : 0);
+  value.type = VIVI_CODE_CONSTANT_BOOLEAN;
+  value.v_boolean = b;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_double (ViviCodeAsmPush *push, double d)
+vivi_code_asm_push_insert_double (ViviCodeAsmPush *push, guint index_,
+    double d)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_DOUBLE);
-  swfdec_bots_put_double (push->contents, d);
+  value.type = VIVI_CODE_CONSTANT_DOUBLE;
+  value.v_double = d;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_integer (ViviCodeAsmPush *push, int i)
+vivi_code_asm_push_insert_integer (ViviCodeAsmPush *push, guint index_, int i)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
   g_return_if_fail (i >= G_MININT32 && i <= G_MAXINT32);
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_INTEGER);
-  swfdec_bots_put_u32 (push->contents, i);
+  value.type = VIVI_CODE_CONSTANT_INTEGER;
+  value.v_integer = i;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_pool (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_insert_pool (ViviCodeAsmPush *push, guint index_, guint id)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
   g_return_if_fail (id < 256);
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_CONSTANT_POOL);
-  swfdec_bots_put_u8 (push->contents, id);
+  value.type = VIVI_CODE_CONSTANT_CONSTANT_POOL;
+  value.v_constant_pool = id;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
-vivi_code_asm_push_add_pool_big (ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_insert_pool_big (ViviCodeAsmPush *push, guint index_, guint id)
 {
+  ViviCodeAsmPushValue value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
   g_return_if_fail (id <= G_MAXUINT16);
 
-  g_ptr_array_add (push->offsets, GSIZE_TO_POINTER (swfdec_bots_get_bytes (push->contents)));
-  swfdec_bots_put_u8 (push->contents, VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG);
-  swfdec_bots_put_u16 (push->contents, id);
+  value.type = VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG;
+  value.v_constant_pool = id;
+  vivi_code_asm_push_insert_value (push, index_, &value);
 }
 
 void
 vivi_code_asm_push_copy_value (ViviCodeAsmPush *push,
-    const ViviCodeAsmPush *other, guint id)
+    const ViviCodeAsmPush *other, guint index_)
 {
-  g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
-  g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (other));
-  g_return_if_fail (id <= G_MAXUINT16);
+  ViviCodeAsmPushValue *value =
+    &g_array_index (other->values, ViviCodeAsmPushValue, index_);
 
-  switch (vivi_code_asm_push_get_value_type (other, id)) {
-    case VIVI_CODE_CONSTANT_STRING:
-      vivi_code_asm_push_add_string (push,
-	  vivi_code_asm_push_get_string (other, id));
-      break;
-    case VIVI_CODE_CONSTANT_FLOAT:
-      vivi_code_asm_push_add_float (push,
-	  vivi_code_asm_push_get_float (other, id));
-      break;
-    case VIVI_CODE_CONSTANT_NULL:
-      vivi_code_asm_push_add_null (push);
-      break;
-    case VIVI_CODE_CONSTANT_UNDEFINED:
-      vivi_code_asm_push_add_undefined (push);
-      break;
-    case VIVI_CODE_CONSTANT_REGISTER:
-      vivi_code_asm_push_add_register (push,
-	  vivi_code_asm_push_get_register (other, id));
-      break;
-    case VIVI_CODE_CONSTANT_BOOLEAN:
-      vivi_code_asm_push_add_boolean (push,
-	  vivi_code_asm_push_get_boolean (other, id));
-      break;
-    case VIVI_CODE_CONSTANT_DOUBLE:
-      vivi_code_asm_push_add_double (push,
-	  vivi_code_asm_push_get_double (other, id));
-      break;
-    case VIVI_CODE_CONSTANT_INTEGER:
-      vivi_code_asm_push_add_integer (push,
-	  vivi_code_asm_push_get_integer (other, id));
-      break;
-    case VIVI_CODE_CONSTANT_CONSTANT_POOL:
-      vivi_code_asm_push_add_pool (push,
-	  vivi_code_asm_push_get_pool (other, id));
-      break;
-    case VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG:
-      vivi_code_asm_push_add_pool_big (push,
-	  vivi_code_asm_push_get_pool (other, id));
-      break;
-    default:
-      g_assert_not_reached ();
+  if (value->type == VIVI_CODE_CONSTANT_STRING) {
+    ViviCodeAsmPushValue value_new;
+
+    value_new.type = VIVI_CODE_CONSTANT_STRING;
+    value_new.v_string = g_strdup (value->v_string);
+
+    vivi_code_asm_push_insert_value (push, G_MAXUINT, &value_new);
+  } else {
+    vivi_code_asm_push_insert_value (push, G_MAXUINT, value);
   }
 }
 
 const char *
-vivi_code_asm_push_get_string (const ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_string (const ViviCodeAsmPush *push, guint index_)
 {
-  SwfdecBits bits;
-
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), NULL);
-  g_return_val_if_fail (id < push->offsets->len, NULL);
+  g_return_val_if_fail (index_ < push->values->len, NULL);
+  g_return_val_if_fail (vivi_code_asm_push_get_value_type (push, index_)
+      == VIVI_CODE_CONSTANT_STRING, NULL);
 
-  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
-  swfdec_bits_skip_bytes (&bits, GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, id)));
-  g_return_val_if_fail (swfdec_bits_get_u8 (&bits) == VIVI_CODE_CONSTANT_STRING, NULL);
-
-  return (char *) bits.ptr;
+  return g_array_index (push->values, ViviCodeAsmPushValue, index_).v_string;
 }
 
 float
-vivi_code_asm_push_get_float (const ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_float (const ViviCodeAsmPush *push, guint index_)
 {
-  SwfdecBits bits;
-
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0.0f);
-  g_return_val_if_fail (id < push->offsets->len, 0.0f);
+  g_return_val_if_fail (index_ < push->values->len, 0.0f);
+  g_return_val_if_fail (vivi_code_asm_push_get_value_type (push, index_)
+      == VIVI_CODE_CONSTANT_FLOAT, 0.0f);
 
-  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
-  swfdec_bits_skip_bytes (&bits, GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, id)));
-  g_return_val_if_fail (swfdec_bits_get_u8 (&bits) == VIVI_CODE_CONSTANT_FLOAT, 0.0f);
-
-  return swfdec_bits_get_float (&bits);
+  return g_array_index (push->values, ViviCodeAsmPushValue, index_).v_float;
 }
 
 guint
-vivi_code_asm_push_get_register (const ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_register (const ViviCodeAsmPush *push, guint index_)
 {
-  SwfdecBits bits;
-
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0);
-  g_return_val_if_fail (id < push->offsets->len, 0);
+  g_return_val_if_fail (index_ < push->values->len, 0);
+  g_return_val_if_fail (vivi_code_asm_push_get_value_type (push, index_)
+      == VIVI_CODE_CONSTANT_REGISTER, 0);
 
-  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
-  swfdec_bits_skip_bytes (&bits, GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, id)));
-  g_return_val_if_fail (swfdec_bits_get_u8 (&bits) == VIVI_CODE_CONSTANT_REGISTER, 0);
-
-  return swfdec_bits_get_u8 (&bits);
+  return g_array_index (push->values, ViviCodeAsmPushValue, index_).v_register;
 }
 
 double
-vivi_code_asm_push_get_double (const ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_double (const ViviCodeAsmPush *push, guint index_)
 {
-  SwfdecBits bits;
-
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0.0);
-  g_return_val_if_fail (id < push->offsets->len, 0.0);
+  g_return_val_if_fail (index_ < push->values->len, 0.0);
+  g_return_val_if_fail (vivi_code_asm_push_get_value_type (push, index_)
+      == VIVI_CODE_CONSTANT_DOUBLE, 0);
 
-  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
-  swfdec_bits_skip_bytes (&bits, GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, id)));
-  g_return_val_if_fail (swfdec_bits_get_u8 (&bits) == VIVI_CODE_CONSTANT_DOUBLE, 0.0);
-
-  return swfdec_bits_get_double (&bits);
+  return g_array_index (push->values, ViviCodeAsmPushValue, index_).v_double;
 }
 
 int
-vivi_code_asm_push_get_integer (const ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_integer (const ViviCodeAsmPush *push, guint index_)
 {
-  SwfdecBits bits;
+  g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0);
+  g_return_val_if_fail (index_ < push->values->len, 0);
+  g_return_val_if_fail (vivi_code_asm_push_get_value_type (push, index_)
+      == VIVI_CODE_CONSTANT_INTEGER, 0);
 
-  g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), FALSE);
-  g_return_val_if_fail (id < push->offsets->len, FALSE);
-
-  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
-  swfdec_bits_skip_bytes (&bits, GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, id)));
-  g_return_val_if_fail (swfdec_bits_get_u8 (&bits) == VIVI_CODE_CONSTANT_INTEGER, FALSE);
-
-  return swfdec_bits_get_s32 (&bits);
+  return g_array_index (push->values, ViviCodeAsmPushValue, index_).v_integer;
 }
 
 gboolean
-vivi_code_asm_push_get_boolean (const ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_boolean (const ViviCodeAsmPush *push, guint index_)
 {
-  SwfdecBits bits;
-
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), FALSE);
-  g_return_val_if_fail (id < push->offsets->len, FALSE);
+  g_return_val_if_fail (index_ < push->values->len, FALSE);
+  g_return_val_if_fail (vivi_code_asm_push_get_value_type (push, index_)
+      == VIVI_CODE_CONSTANT_BOOLEAN, FALSE);
 
-  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
-  swfdec_bits_skip_bytes (&bits, GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, id)));
-  g_return_val_if_fail (swfdec_bits_get_u8 (&bits) == VIVI_CODE_CONSTANT_BOOLEAN, FALSE);
-
-  return swfdec_bits_get_u8 (&bits) ? TRUE : FALSE;
+  return g_array_index (push->values, ViviCodeAsmPushValue, index_).v_boolean;
 }
 
 guint
-vivi_code_asm_push_get_pool (const ViviCodeAsmPush *push, guint id)
+vivi_code_asm_push_get_pool (const ViviCodeAsmPush *push, guint index_)
 {
-  SwfdecBits bits;
-  guint type;
-
   g_return_val_if_fail (VIVI_IS_CODE_ASM_PUSH (push), 0);
-  g_return_val_if_fail (id < push->offsets->len, 0);
+  g_return_val_if_fail (index_ < push->values->len, 0);
+  g_return_val_if_fail (vivi_code_asm_push_get_value_type (push, index_) ==
+      VIVI_CODE_CONSTANT_CONSTANT_POOL ||
+      vivi_code_asm_push_get_value_type (push, index_) ==
+      VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG, FALSE);
 
-  swfdec_bits_init_data (&bits, push->contents->data, swfdec_bots_get_bytes (push->contents));
-  swfdec_bits_skip_bytes (&bits, GPOINTER_TO_SIZE (g_ptr_array_index (push->offsets, id)));
-  type = swfdec_bits_get_u8 (&bits);
-  g_return_val_if_fail (type == VIVI_CODE_CONSTANT_CONSTANT_POOL ||
-      type == VIVI_CODE_CONSTANT_CONSTANT_POOL_BIG, 0);
-
-  return type == VIVI_CODE_CONSTANT_CONSTANT_POOL ? swfdec_bits_get_u8 (&bits) : swfdec_bits_get_u16 (&bits);
+  return
+    g_array_index (push->values, ViviCodeAsmPushValue, index_).v_constant_pool;
 }

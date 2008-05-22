@@ -46,6 +46,8 @@ EXTRA_DIST = \
 	automatic_semicolon.as.expect \
 	builtin_statement.as \
 	builtin_statement.as.expect \
+	break_continue_label.as \
+	break_continue_label.as.expect \
 	call_function.as \
 	call_function.as.expect \
 	combine_push.as \

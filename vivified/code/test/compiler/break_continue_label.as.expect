@@ -1,0 +1,21 @@
+asm {
+  pool "Hello", "a", "World"
+
+before:
+  push pool 1, pool 0
+  trace
+  get_variable
+  if if_true_0001
+  jump after
+  jump if_end_0002
+
+if_true_0001:
+  jump before
+
+if_end_0002:
+  push pool 2
+  trace
+
+after:
+  end
+}

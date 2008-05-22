@@ -44,6 +44,8 @@ EXTRA_DIST = \
 	builtin_statement.as.expect \
 	call_function.as \
 	call_function.as.expect \
+	combine_push.as \
+	combine_push.as.expect \
 	comment.as \
 	comment.as.expect \
 	conditional.as \

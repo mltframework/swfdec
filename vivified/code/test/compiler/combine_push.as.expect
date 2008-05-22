@@ -1,0 +1,12 @@
+asm {
+  pool "a", "b"
+  push pool 1, pool 0
+  trace
+  trace
+
+hello_0001:
+  push pool 1, pool 0
+  trace
+  trace
+  end
+}

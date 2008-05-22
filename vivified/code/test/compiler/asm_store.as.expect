@@ -1,0 +1,4 @@
+asm {
+  store 0
+  end
+}

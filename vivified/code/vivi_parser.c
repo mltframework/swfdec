@@ -31,6 +31,7 @@
 #include "vivi_code_and.h"
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_push.h"
+#include "vivi_code_asm_store.h"
 #include "vivi_code_assignment.h"
 #include "vivi_code_binary_default.h"
 #include "vivi_code_block.h"
@@ -967,6 +968,23 @@ parse_variable_declaration (ParseData *data)
 // asm functions
 
 static ViviCodeAsm *
+parse_asm_store (ParseData *data)
+{
+  int id;
+
+  // TODO: error/warn if not an integer
+  id = swfdec_as_double_to_integer (parse_numeric_value (data));
+  if (id < 0 || id >= 256) {
+    vivi_parser_error (data, "Invalid register number: %i", id);
+    id = 0;
+  }
+
+  parse_automatic_semicolon (data);
+
+  return vivi_code_asm_store_new (id);
+}
+
+static ViviCodeAsm *
 parse_asm_push (ParseData *data)
 {
   ViviCodeAsmPush *push;
@@ -1078,7 +1096,8 @@ static const AsmStatement asm_statements[] = {
   { G_STRINGIFY (underscore_name), vivi_code_asm_ ## underscore_name ## _new, NULL },
 #include "vivi_code_defaults.h"
 #undef DEFAULT_ASM
-  { "push", NULL, parse_asm_push }
+  { "push", NULL, parse_asm_push },
+  { "store", NULL, parse_asm_store }
 };
 #if 0
 DEFAULT_ASM (GotoFrame, goto_frame, SWFDEC_AS_ACTION_GOTO_FRAME)

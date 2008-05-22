@@ -1056,6 +1056,9 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     GTimeVal tv;
 
     swfdec_as_context_get_time (cx, &tv);
+    /* Use millisecond granularity here. Otherwise the value returned by 
+     * getTime() or toString() has a decimal point which breaks Flash files.
+     */
     swfdec_as_date_set_milliseconds_utc (date,
 	tv.tv_sec * 1000.0 + tv.tv_usec / 1000);
   }

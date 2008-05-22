@@ -258,8 +258,14 @@ vivi_code_asm_push_get_value_type (const ViviCodeAsmPush *push, guint i)
 void
 vivi_code_asm_push_remove_value (ViviCodeAsmPush *push, guint index_)
 {
+  ViviCodeAsmPushValue *value;
+
   g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
   g_return_if_fail (index_ < push->values->len);
+
+  value = &g_array_index (push->values, ViviCodeAsmPushValue, index_);
+  if (value->type == VIVI_CODE_CONSTANT_STRING)
+    g_free (value->v_string);
 
   g_array_remove_index (push->values, index_);
 }

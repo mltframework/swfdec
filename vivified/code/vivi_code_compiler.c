@@ -85,7 +85,7 @@ vivi_code_compiler_compile_script (ViviCodeCompiler *compiler,
   vivi_code_compiler_take_code (compiler, vivi_code_asm_end_new ());
 
   vivi_code_assembler_pool (compiler->assembler);
-  vivi_code_assembler_merge_push (compiler->assembler, 0);
+  vivi_code_assembler_merge_push (compiler->assembler, G_MAXUINT);
 }
 
 void

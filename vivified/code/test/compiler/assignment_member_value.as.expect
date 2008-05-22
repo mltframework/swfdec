@@ -5,9 +5,8 @@ asm {
   push pool 1, 1
   store 0
   set_member
-  push reg 0
+  push pool 0, reg 0
   trace
-  push pool 0
   get_variable
   push pool 1
   get_variable

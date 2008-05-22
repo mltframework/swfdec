@@ -10,9 +10,8 @@ asm {
   store 0
   increment
   set_member
-  push reg 0
+  push pool 1, reg 0
   trace
-  push pool 1
   get_variable
   push pool 0
   get_variable
@@ -25,9 +24,8 @@ asm {
   store 0
   increment
   set_member
-  push reg 0
+  push pool 0, reg 0
   trace
-  push pool 0
   get_variable
   push_duplicate
   push pool 1
@@ -37,9 +35,8 @@ asm {
   increment
   store 0
   set_member
-  push reg 0
+  push pool 1, reg 0
   trace
-  push pool 1
   get_variable
   push pool 0
   get_variable

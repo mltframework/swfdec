@@ -1,10 +1,8 @@
 asm {
   pool "a", "b", "c"
-  push pool 0
+  push pool 2, undefined, pool 1, 1, pool 0
   define_local2
-  push pool 1, 1
   define_local
-  push pool 2, undefined
   define_local
   end
 }

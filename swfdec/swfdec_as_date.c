@@ -1057,7 +1057,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     swfdec_as_context_get_time (cx, &tv);
     swfdec_as_date_set_milliseconds_utc (date,
-	tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0);
+	tv.tv_sec * 1000.0 + tv.tv_usec / 1000);
   }
   else if (argc == 1) // milliseconds from epoch, local
   {

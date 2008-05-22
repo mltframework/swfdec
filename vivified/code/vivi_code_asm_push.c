@@ -406,11 +406,16 @@ vivi_code_asm_push_insert_pool_big (ViviCodeAsmPush *push, guint index_, guint i
 }
 
 void
-vivi_code_asm_push_copy_value (ViviCodeAsmPush *push,
-    const ViviCodeAsmPush *other, guint index_)
+vivi_code_asm_push_copy_value (ViviCodeAsmPush *push, guint index_to,
+    const ViviCodeAsmPush *other, guint index_from)
 {
-  ViviCodeAsmPushValue *value =
-    &g_array_index (other->values, ViviCodeAsmPushValue, index_);
+  ViviCodeAsmPushValue *value;
+
+  g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (push));
+  g_return_if_fail (VIVI_IS_CODE_ASM_PUSH (other));
+  g_return_if_fail (index_from < other->values->len);
+
+  value = &g_array_index (other->values, ViviCodeAsmPushValue, index_from);
 
   if (value->type == VIVI_CODE_CONSTANT_STRING) {
     ViviCodeAsmPushValue value_new;
@@ -418,9 +423,9 @@ vivi_code_asm_push_copy_value (ViviCodeAsmPush *push,
     value_new.type = VIVI_CODE_CONSTANT_STRING;
     value_new.v_string = g_strdup (value->v_string);
 
-    vivi_code_asm_push_insert_value (push, G_MAXUINT, &value_new);
+    vivi_code_asm_push_insert_value (push, index_to, &value_new);
   } else {
-    vivi_code_asm_push_insert_value (push, G_MAXUINT, value);
+    vivi_code_asm_push_insert_value (push, index_to, value);
   }
 }
 

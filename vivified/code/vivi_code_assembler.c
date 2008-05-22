@@ -293,7 +293,7 @@ vivi_code_assembler_get_stack_change (ViviCodeAsm *code, int *add, int *remove)
 }
 
 void
-vivi_code_assembler_merge_push (ViviCodeAssembler *assembler)
+vivi_code_assembler_merge_push (ViviCodeAssembler *assembler, guint max_depth)
 {
   ViviCodeAsmPush *previous;
   guint i, j, depth;
@@ -302,13 +302,17 @@ vivi_code_assembler_merge_push (ViviCodeAssembler *assembler)
   depth = 0;
   previous = NULL;
   for (i = 0; i < assembler->codes->len; i++) {
-    if (VIVI_IS_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i))) {
-      ViviCodeAsmPush *current =
-	VIVI_CODE_ASM_PUSH (g_ptr_array_index (assembler->codes, i));
+    ViviCodeAsm *code =
+      VIVI_CODE_ASM (g_ptr_array_index (assembler->codes, i));
 
-      if (previous != NULL && depth == 0) {
+    if (VIVI_IS_CODE_ASM_PUSH (code)) {
+      ViviCodeAsmPush *current = VIVI_CODE_ASM_PUSH (code);
+
+      if (previous != NULL &&
+	  vivi_code_asm_push_get_n_values (previous) >= depth) {
 	for (j = 0; j < vivi_code_asm_push_get_n_values (current); j++) {
-	  vivi_code_asm_push_copy_value (previous, current, j);
+	  vivi_code_asm_push_copy_value (previous,
+	      vivi_code_asm_push_get_n_values (previous) - depth, current, j);
 	}
 	vivi_code_assembler_remove_code (assembler, VIVI_CODE_ASM (current));
 	i--;
@@ -318,15 +322,24 @@ vivi_code_assembler_merge_push (ViviCodeAssembler *assembler)
       }
     } else {
       if (previous != NULL) {
-	vivi_code_assembler_get_stack_change (VIVI_CODE_ASM (
-		g_ptr_array_index (assembler->codes, i)), &add, &remove);
-	if (add != 0) {
+	if (VIVI_IS_CODE_LABEL (code)) {
 	  previous = NULL;
+	  depth = 0;
 	} else {
-	  if (remove == -1) {
+	  vivi_code_assembler_get_stack_change (code, &add, &remove);
+	  if (add != 0) {
 	    previous = NULL;
+	    depth = 0;
 	  } else {
-	    depth += remove;
+	    if (remove == -1) {
+	      previous = NULL;
+	    } else {
+	      depth += remove;
+	      if (depth > max_depth) {
+		previous = NULL;
+		depth = 0;
+	      }
+	    }
 	  }
 	}
       }

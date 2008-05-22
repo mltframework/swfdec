@@ -119,7 +119,7 @@ swfdec_action_goto_frame (SwfdecAsContext *cx, guint action, const guint8 *data,
     SWFDEC_ERROR ("GotoFrame action length invalid (is %u, should be 2", len);
     return;
   }
-  frame = (data[0] | data[1] << 8);
+  frame = data[0] | (data[1] << 8);
   if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
     SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
     swfdec_sprite_movie_goto (movie, frame + 1);

@@ -1,0 +1,6 @@
+asm {
+  stop
+  play
+  stop
+  end
+}

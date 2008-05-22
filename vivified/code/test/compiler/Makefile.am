@@ -40,6 +40,8 @@ EXTRA_DIST = \
 	assignment_operator.as.expect \
 	assignment_value.as \
 	assignment_value.as.expect \
+	automatic_semicolon.as \
+	automatic_semicolon.as.expect \
 	builtin_statement.as \
 	builtin_statement.as.expect \
 	call_function.as \

@@ -1116,6 +1116,15 @@ EXTRA_DIST = \
 	extends-simple.swf.trace \
 	extends-super.swf \
 	extends-super.swf.trace \
+	extends-properties-5.swf \
+	extends-properties-5.swf.trace \
+	extends-properties-6.swf \
+	extends-properties-6.swf.trace \
+	extends-properties-7.swf \
+	extends-properties-7.swf.trace \
+	extends-properties-8.swf \
+	extends-properties-8.swf.trace \
+	extends-properties.as \
 	externalinterface-escape.as \
 	externalinterface-escape-5.swf \
 	externalinterface-escape-5.swf.trace \
@@ -1644,6 +1653,15 @@ EXTRA_DIST = \
 	loadvars-properties-7.swf.trace \
 	loadvars-properties-8.swf \
 	loadvars-properties-8.swf.trace \
+	loadvars-toString-5.swf \
+	loadvars-toString-5.swf.trace \
+	loadvars-toString-6.swf \
+	loadvars-toString-6.swf.trace \
+	loadvars-toString-7.swf \
+	loadvars-toString-7.swf.trace \
+	loadvars-toString-8.swf \
+	loadvars-toString-8.swf.trace \
+	loadvars-toString.as \
 	local.swf \
 	local.swf.trace \
 	local-connection-properties.as \

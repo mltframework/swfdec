@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -156,15 +156,11 @@ LoadVars.prototype.onData = function (src) {
 };
 
 LoadVars.prototype.toString = function () {
-  var str = null;
+  var a = [];
   for (var x in this) {
-    if (str == null) {
-      str = escape(x) + "=" + escape(this[x]);
-    } else {
-      str += "&" + escape(x) + "=" + escape(this[x]);
-    }
+    a.push (escape(x) + "=" + escape(this[x]));
   }
-  return str;
+  return a.join ("&");
 };
 
 LoadVars.prototype.getBytesLoaded = function () {

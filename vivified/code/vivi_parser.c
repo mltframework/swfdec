@@ -65,6 +65,7 @@
 #include "vivi_code_string.h"
 #include "vivi_code_substring.h"
 #include "vivi_code_throw.h"
+#include "vivi_code_try.h"
 #include "vivi_code_not.h"
 #include "vivi_code_undefined.h"
 #include "vivi_code_variable.h"
@@ -2440,6 +2441,59 @@ parse_throw_statement (ParseData *data)
   return statement;
 }
 
+static ViviCodeStatement *parse_block (ParseData *data);
+
+static gboolean
+peek_try_statement (ParseData *data)
+{
+  return peek_token (data, TOKEN_TRY);
+}
+
+static ViviCodeStatement *
+parse_try_statement (ParseData *data)
+{
+  ViviCodeStatement *statement;
+  ViviCodeStatement *try_statement, *catch_statement, *finally_statement;
+  char *catch_identifier;
+
+  parse_token (data, TOKEN_TRY);
+
+  try_statement = parse_block (data);
+
+  if (try_parse_token (data, TOKEN_CATCH)) {
+    parse_token (data, TOKEN_PARENTHESIS_LEFT);
+    catch_identifier = g_strdup (parse_identifier_value (data));
+    parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+    catch_statement = parse_block (data);
+  } else {
+    catch_identifier = NULL;
+    catch_statement = NULL;
+  }
+
+  if (try_parse_token (data, TOKEN_FINALLY)) {
+    finally_statement = parse_block (data);
+  } else {
+    finally_statement = NULL;
+  }
+
+  if (catch_statement == NULL && finally_statement == NULL) {
+    vivi_parser_error_unexpected_or (data, TOKEN_CATCH, TOKEN_FINALLY,
+	TOKEN_NONE);
+    finally_statement = vivi_code_block_new ();
+  }
+
+  statement = vivi_code_try_new (try_statement, catch_identifier,
+      catch_statement, finally_statement);
+  g_object_unref (try_statement);
+  g_free (catch_identifier);
+  if (catch_statement != NULL)
+    g_object_unref (catch_statement);
+  if (finally_statement != NULL)
+    g_object_unref (finally_statement);
+
+  return statement;
+}
+
 static gboolean
 peek_return_statement (ParseData *data)
 {
@@ -2840,7 +2894,7 @@ static const struct {
   //{ peek_with_statement, parse_with_statement },
   //{ peek_switch_statement, parse_switch_statement },
   { peek_throw_statement, parse_throw_statement },
-  //{ peek_try_statement, parse_try_statement },
+  { peek_try_statement, parse_try_statement },
   { NULL, NULL }
 };
 

@@ -56,6 +56,94 @@ static ViviCodeAsm * (* simple_commands[0x80]) (void) = {
 #include "vivi_code_defaults.h"
 };
 
+typedef GArray ViviDisassembleLabels;
+typedef struct {
+  const guint8 *	bytecode;
+  ViviCodeLabel *	label;
+} ViviLabelEntry;
+
+static ViviDisassembleLabels *
+vivi_disassemble_labels_new (void)
+{
+  return g_array_new (FALSE, FALSE, sizeof (ViviLabelEntry));
+}
+
+static ViviCodeLabel *
+vivi_disassemble_labels_get_label (ViviDisassembleLabels *labels, const guint8 *bytecode)
+{
+  ViviLabelEntry ins;
+  guint i;
+  char *s;
+
+  for (i = 0; i < labels->len; i++) {
+    ViviLabelEntry *entry = &g_array_index (labels, ViviLabelEntry, i);
+    if (entry->bytecode < bytecode)
+      continue;
+    if (entry->bytecode == bytecode)
+      return entry->label;
+    break;
+  }
+  s = g_strdup_printf ("label_%p", bytecode);
+  ins.bytecode = bytecode;
+  ins.label = VIVI_CODE_LABEL (vivi_code_label_new (s));
+  g_free (s);
+  g_array_insert_val (labels, i, ins);
+  return ins.label;
+}
+
+static void
+vivi_disassemble_labels_resolve (ViviDisassembleLabels *labels,
+    ViviCodeAssembler *assembler, SwfdecScript *script)
+{
+  guint li, ai;
+  const guint8 *pc, *end;
+
+  if (labels->len == 0)
+    return;
+
+  ai = li = 0;
+  pc = script->main;
+  end = script->buffer->data + script->buffer->length;
+  while (pc < end) {
+    ViviLabelEntry *entry = &g_array_index (labels, ViviLabelEntry, li);
+
+    if (entry->bytecode < pc) {
+      char *s = g_strdup_printf ("broken jump: goes to %p, but next bytecode is %p",
+	  entry->bytecode, pc);
+      ViviCodeStatement *comment = vivi_code_comment_new (s);
+      vivi_code_assembler_insert_code (assembler, ai, VIVI_CODE_ASM (comment));
+      ai++;
+      g_object_unref (comment);
+      g_free (s);
+    }
+    if (entry->bytecode <= pc) {
+      vivi_code_assembler_insert_code (assembler, ai, VIVI_CODE_ASM (entry->label));
+      ai++;
+      li++;
+      if (li >= labels->len)
+	break;
+      continue;
+    }
+    if (pc[0] & 0x80) {
+      pc += 3 + (pc[1] | pc[2] << 8);
+    } else {
+      pc++;
+    }
+    ai++;
+  }
+}
+
+static void
+vivi_disassemble_labels_free (ViviDisassembleLabels *labels)
+{
+  guint i;
+
+  for (i = 0; i < labels->len; i++) {
+    g_object_unref (g_array_index (labels, ViviLabelEntry, i).label);
+  }
+  g_array_free (labels, TRUE);
+}
+
 static void
 vivi_disassemble_get_url (ViviCodeAssembler *assembler, SwfdecBits *bits, guint version)
 {
@@ -172,92 +260,59 @@ fail:
   g_object_unref (push);
 }
 
-typedef GArray ViviDisassembleLabels;
-typedef struct {
-  const guint8 *	bytecode;
-  ViviCodeLabel *	label;
-} ViviLabelEntry;
-
-static ViviDisassembleLabels *
-vivi_disassemble_labels_new (void)
-{
-  return g_array_new (FALSE, FALSE, sizeof (ViviLabelEntry));
-}
-
-static ViviCodeLabel *
-vivi_disassemble_labels_get_label (ViviDisassembleLabels *labels, const guint8 *bytecode)
-{
-  ViviLabelEntry ins;
-  guint i;
-  char *s;
-
-  for (i = 0; i < labels->len; i++) {
-    ViviLabelEntry *entry = &g_array_index (labels, ViviLabelEntry, i);
-    if (entry->bytecode < bytecode)
-      continue;
-    if (entry->bytecode == bytecode)
-      return entry->label;
-    break;
-  }
-  s = g_strdup_printf ("label_%p", bytecode);
-  ins.bytecode = bytecode;
-  ins.label = VIVI_CODE_LABEL (vivi_code_label_new (s));
-  g_free (s);
-  g_array_insert_val (labels, i, ins);
-  return ins.label;
-}
-
 static void
-vivi_disassemble_labels_resolve (ViviDisassembleLabels *labels,
-    ViviCodeAssembler *assembler, SwfdecScript *script)
+vivi_disassemble_try (ViviCodeAssembler *assembler, SwfdecBits *bits,
+    guint version, ViviDisassembleLabels *labels, const guint8 *pc)
 {
-  guint li, ai;
-  const guint8 *pc, *end;
+  gboolean has_catch, has_finally, use_register;
+  guint flags, try_size, catch_size, finally_size, register_number;
+  char *name;
+  ViviCodeLabel *catch_start, *finally_start, *end_label;
+  ViviCodeAsm *try;
 
-  if (labels->len == 0)
-    return;
+  flags = swfdec_bits_get_u8 (bits);
 
-  ai = li = 0;
-  pc = script->main;
-  end = script->buffer->data + script->buffer->length;
-  while (pc < end) {
-    ViviLabelEntry *entry = &g_array_index (labels, ViviLabelEntry, li);
+  has_catch = flags & (1 << 0);
+  has_finally = flags & (1 << 1);
+  use_register = flags & (1 << 2);
 
-    if (entry->bytecode < pc) {
-      char *s = g_strdup_printf ("broken jump: goes to %p, but next bytecode is %p",
-	  entry->bytecode, pc);
-      ViviCodeStatement *comment = vivi_code_comment_new (s);
-      vivi_code_assembler_insert_code (assembler, ai, VIVI_CODE_ASM (comment));
-      ai++;
-      g_object_unref (comment);
-      g_free (s);
-    }
-    if (entry->bytecode <= pc) {
-      vivi_code_assembler_insert_code (assembler, ai, VIVI_CODE_ASM (entry->label));
-      ai++;
-      li++;
-      if (li >= labels->len)
-	break;
-      continue;
-    }
-    if (pc[0] & 0x80) {
-      pc += 3 + (pc[1] | pc[2] << 8);
-    } else {
-      pc++;
-    }
-    ai++;
+  try_size = swfdec_bits_get_u16 (bits);
+  catch_size = swfdec_bits_get_u16 (bits);
+  finally_size = swfdec_bits_get_u16 (bits);
+  if (use_register) {
+    register_number = swfdec_bits_get_u8 (bits);
+    name = NULL; // shut up compiler warnings
+  } else {
+    register_number = 0;
+    name = swfdec_bits_get_string (bits, version);
   }
-}
 
-static void
-vivi_disassemble_labels_free (ViviDisassembleLabels *labels)
-{
-  guint i;
-
-  for (i = 0; i < labels->len; i++) {
-    g_object_unref (g_array_index (labels, ViviLabelEntry, i).label);
+  end_label = vivi_disassemble_labels_get_label (labels,
+      pc + try_size + catch_size + finally_size);
+  if (finally_size > 0) {
+    finally_start = vivi_disassemble_labels_get_label (labels,
+	pc + try_size + catch_size);
+  } else {
+    finally_start = end_label;
   }
-  g_array_free (labels, TRUE);
+  if (catch_size > 0) {
+    catch_start = vivi_disassemble_labels_get_label (labels,
+	pc + try_size);
+  } else {
+    catch_start = finally_start;
+  }
+
+  if (use_register) {
+    try = vivi_code_asm_try_new_register (catch_start, finally_start,
+	end_label, register_number);
+  } else {
+    try = vivi_code_asm_try_new (catch_start, finally_start, end_label, name);
+    g_free (name);
+  }
+  vivi_code_asm_try_set_has_catch (VIVI_CODE_ASM_TRY (try), has_catch);
+  vivi_code_asm_try_set_has_finally (VIVI_CODE_ASM_TRY (try), has_finally);
+  vivi_code_asm_try_set_reserved_flags (VIVI_CODE_ASM_TRY (try), flags >> 3);
+  vivi_code_assembler_add_code (assembler, try);
 }
 
 ViviCodeStatement *
@@ -394,58 +449,7 @@ vivi_disassemble_script (SwfdecScript *script)
 	  }
 	  break;
         case SWFDEC_AS_ACTION_TRY:
-	  {
-	    gboolean has_catch, has_finally, use_register;
-	    guint flags, try_size, catch_size, finally_size, register_number;
-	    char *name;
-	    ViviCodeLabel *catch_start, *finally_start, *end_label;
-	    ViviCodeAsm *try;
-
-	    flags = swfdec_bits_get_u8 (&bits);
-
-	    has_catch = flags & (1 << 0);
-	    has_finally = flags & (1 << 1);
-	    use_register = flags & (1 << 2);
-
-	    try_size = swfdec_bits_get_u16 (&bits);
-	    catch_size = swfdec_bits_get_u16 (&bits);
-	    finally_size = swfdec_bits_get_u16 (&bits);
-	    if (use_register) {
-	      register_number = swfdec_bits_get_u8 (&bits);
-	      name = NULL; // shut up compiler warnings
-	    } else {
-	      register_number = 0;
-	      name = swfdec_bits_get_string (&bits, script->version);
-	    }
-
-	    end_label = vivi_disassemble_labels_get_label (labels,
-		pc + try_size + catch_size + finally_size);
-	    if (finally_size > 0) {
-	      finally_start = vivi_disassemble_labels_get_label (labels,
-		  pc + try_size + catch_size);
-	    } else {
-	      finally_start = end_label;
-	    }
-	    if (catch_size > 0) {
-	      catch_start = vivi_disassemble_labels_get_label (labels,
-		  pc + try_size);
-	    } else {
-	      catch_start = finally_start;
-	    }
-
-	    if (use_register) {
-	      try = vivi_code_asm_try_new_register (register_number,
-		  has_catch, has_finally, catch_start, finally_start,
-		  end_label);
-	    } else {
-	      try = vivi_code_asm_try_new_variable (name, has_catch,
-		  has_finally, catch_start, finally_start, end_label);
-	      g_free (name);
-	    }
-	    vivi_code_asm_try_set_reserved_flags (VIVI_CODE_ASM_TRY (try),
-		flags >> 3);
-	    vivi_code_assembler_add_code (assembler, try);
-	  }
+	  vivi_disassemble_try (assembler, &bits, script->version, labels, pc);
 	  break;
         case SWFDEC_AS_ACTION_GET_URL:
 	  vivi_disassemble_get_url (assembler, &bits, script->version);

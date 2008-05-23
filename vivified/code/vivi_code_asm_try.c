@@ -260,61 +260,77 @@ vivi_code_asm_try_init (ViviCodeAsmTry *try_)
 }
 
 static ViviCodeAsmTry *
-vivi_code_asm_try_new_internal (gboolean has_catch, gboolean has_finally,
-    ViviCodeLabel *catch_start, ViviCodeLabel *finally_start,
-    ViviCodeLabel *end)
+vivi_code_asm_try_new_internal (ViviCodeLabel *catch_start,
+    ViviCodeLabel *finally_start, ViviCodeLabel *end)
 {
   ViviCodeAsmTry *ret;
 
-  g_return_val_if_fail (VIVI_IS_CODE_LABEL (catch_start), NULL);
-  g_return_val_if_fail (VIVI_IS_CODE_LABEL (finally_start), NULL);
+  g_return_val_if_fail (
+      catch_start == NULL || VIVI_IS_CODE_LABEL (catch_start), NULL);
+  g_return_val_if_fail (
+      finally_start == NULL || VIVI_IS_CODE_LABEL (finally_start), NULL);
   g_return_val_if_fail (VIVI_IS_CODE_LABEL (end), NULL);
 
   ret = g_object_new (VIVI_TYPE_CODE_ASM_TRY, NULL);
-  ret->catch_start = g_object_ref (catch_start);
-  ret->finally_start = g_object_ref (finally_start);
+  if (catch_start != NULL)
+    ret->catch_start = g_object_ref (catch_start);
+  if (finally_start != NULL)
+    ret->finally_start = g_object_ref (finally_start);
   ret->end = g_object_ref (end);
 
-  ret->has_catch = has_catch;
-  ret->has_finally = has_finally;
+  ret->has_catch = (catch_start != NULL);
+  ret->has_finally = (finally_start != NULL);
   ret->reserved_flags = 0;
 
   return ret;
 }
 
 ViviCodeAsm *
-vivi_code_asm_try_new_variable (const char *name, gboolean has_catch,
-   gboolean has_finally, ViviCodeLabel *catch_start,
-   ViviCodeLabel *finally_start, ViviCodeLabel *end)
+vivi_code_asm_try_new (ViviCodeLabel *catch_start,
+    ViviCodeLabel *finally_start, ViviCodeLabel *end, const char *name)
 {
   ViviCodeAsmTry *try_;
 
-  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (catch_start == NULL || name != NULL, NULL);
 
-  try_ = vivi_code_asm_try_new_internal (has_catch, has_finally, catch_start,
-      finally_start, end);
+  try_ = vivi_code_asm_try_new_internal (catch_start, finally_start, end);
   try_->use_register = FALSE;
-  try_->variable_name = g_strdup (name);
+  try_->variable_name = g_strdup ((name != NULL ? name : ""));
 
   return VIVI_CODE_ASM (try_);
 }
 
 ViviCodeAsm *
-vivi_code_asm_try_new_register (guint register_number, gboolean has_catch,
-    gboolean has_finally, ViviCodeLabel *catch_start,
-    ViviCodeLabel *finally_start, ViviCodeLabel *end)
+vivi_code_asm_try_new_register (ViviCodeLabel *catch_start,
+    ViviCodeLabel *finally_start, ViviCodeLabel *end, guint id)
 {
   ViviCodeAsmTry *try_;
 
-  g_return_val_if_fail (register_number < 256, NULL);
+  g_return_val_if_fail (id < G_MAXUINT8, NULL);
 
-  try_ = vivi_code_asm_try_new_internal (has_catch, has_finally, catch_start,
-      finally_start, end);
+  try_ = vivi_code_asm_try_new_internal (catch_start, finally_start, end);
   try_->use_register = TRUE;
-  try_->register_number = register_number;
+  try_->register_number = id;
 
   return VIVI_CODE_ASM (try_);
 }
+
+void
+vivi_code_asm_try_set_has_catch (ViviCodeAsmTry *try_, gboolean has_catch)
+{
+  g_return_if_fail (VIVI_IS_CODE_ASM_TRY (try_));
+
+  try_->has_catch = has_catch;
+}
+
+void
+vivi_code_asm_try_set_has_finally (ViviCodeAsmTry *try_, gboolean has_finally)
+{
+  g_return_if_fail (VIVI_IS_CODE_ASM_TRY (try_));
+
+  try_->has_finally = has_finally;
+}
+
 
 void
 vivi_code_asm_try_set_reserved_flags (ViviCodeAsmTry *try_, guint flags)

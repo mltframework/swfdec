@@ -60,19 +60,19 @@ struct _ViviCodeAsmTryClass
 
 GType			vivi_code_asm_try_get_type	  	(void);
 
-ViviCodeAsm *		vivi_code_asm_try_new_variable		(const char *		name,
-								 gboolean		has_catch,
-								 gboolean		has_finally,
-								 ViviCodeLabel *	catch_start,
+ViviCodeAsm *		vivi_code_asm_try_new			(ViviCodeLabel *	catch_start,
 								 ViviCodeLabel *	finally_start,
-								 ViviCodeLabel *	end);
-ViviCodeAsm *		vivi_code_asm_try_new_register		(guint			register_number,
-								 gboolean		has_catch,
-								 gboolean		has_finally,
-								 ViviCodeLabel *	catch_start,
+								 ViviCodeLabel *	end,
+								 const char *		name);
+ViviCodeAsm *		vivi_code_asm_try_new_register		(ViviCodeLabel *	catch_start,
 								 ViviCodeLabel *	finally_start,
-								 ViviCodeLabel *	end);
+								 ViviCodeLabel *	end,
+								 guint			id);
 
+void			vivi_code_asm_try_set_has_catch		(ViviCodeAsmTry *	try_,
+								 gboolean		has_catch);
+void			vivi_code_asm_try_set_has_finally	(ViviCodeAsmTry *	try_,
+								 gboolean		has_finally);
 void			vivi_code_asm_try_set_reserved_flags	(ViviCodeAsmTry *	try_,
 								 guint			flags);
 

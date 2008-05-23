@@ -1,0 +1,8 @@
+asm {
+  pool "a"
+  push pool 0
+  get_variable
+  not
+  trace
+  end
+}

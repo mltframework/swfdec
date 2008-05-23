@@ -64,7 +64,7 @@
 #include "vivi_code_string.h"
 #include "vivi_code_substring.h"
 #include "vivi_code_throw.h"
-#include "vivi_code_unary.h"
+#include "vivi_code_not.h"
 #include "vivi_code_undefined.h"
 #include "vivi_code_variable.h"
 #include "vivi_compiler_empty_statement.h"
@@ -1936,7 +1936,7 @@ parse_unary_expression (ParseData *data)
       value = parse_unary_expression (data);
 
       tmp = VIVI_CODE_VALUE (value);
-      value = vivi_code_unary_new (tmp, '!');
+      value = vivi_code_not_new (tmp);
       g_object_unref (tmp);
 
       vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (tmp));
@@ -2022,7 +2022,7 @@ again:
 	    tokens[i] == TOKEN_NOT_STRICT_EQUAL ||
 	    tokens[i] == TOKEN_LESS_THAN_OR_EQUAL ||
 	    tokens[i] == TOKEN_GREATER_THAN_OR_EQUAL) {
-	  left = vivi_code_unary_new (value, '!');
+	  left = vivi_code_not_new (value);
 	  g_object_unref (value);
 	  value = left;
 

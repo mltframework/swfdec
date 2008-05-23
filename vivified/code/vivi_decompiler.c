@@ -50,7 +50,7 @@
 #include "vivi_code_or.h"
 #include "vivi_code_return.h"
 #include "vivi_code_string.h"
-#include "vivi_code_unary.h"
+#include "vivi_code_not.h"
 #include "vivi_code_undefined.h"
 #include "vivi_code_variable.h"
 #include "vivi_decompiler_block.h"
@@ -317,11 +317,11 @@ static gboolean
 vivi_decompile_not (ViviDecompilerBlock *block, ViviDecompilerState *state,
     guint code, const guint8 *data, guint len)
 {
-  ViviCodeValue *val, *unary;
+  ViviCodeValue *val, *not;
 
   val = vivi_decompiler_state_pop (state);
-  unary = vivi_code_unary_new (val, '!');
-  vivi_decompiler_state_push (state, unary);
+  not = vivi_code_not_new (val);
+  vivi_decompiler_state_push (state, not);
   g_object_unref (val);
   return TRUE;
 }
@@ -1102,8 +1102,8 @@ vivi_decompiler_merge_andor (GList **list)
       continue;
     /* extract the value */
     value = vivi_decompiler_block_get_branch_condition (block);
-    if (VIVI_IS_CODE_UNARY (value)) {
-      value = vivi_code_unary_get_value (VIVI_CODE_UNARY (value));
+    if (VIVI_IS_CODE_NOT (value)) {
+      value = vivi_code_not_get_value (VIVI_CODE_NOT (value));
       func = vivi_code_and_new;
     } else {
       func = vivi_code_or_new;
@@ -1348,7 +1348,7 @@ vivi_decompiler_merge_loops (GList **list)
 	  vivi_decompiler_block_get_next (start) == end))) {
       if (vivi_decompiler_block_get_branch (start) == end) {
 	ViviCodeValue *value, *opt;
-	value = vivi_code_unary_new (vivi_decompiler_block_get_branch_condition (start), '!');
+	value = vivi_code_not_new (vivi_decompiler_block_get_branch_condition (start));
 	opt = vivi_code_value_optimize (value, SWFDEC_AS_TYPE_BOOLEAN);
 	g_object_unref (value);
 	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), opt, FALSE);
@@ -1373,7 +1373,7 @@ vivi_decompiler_merge_loops (GList **list)
       vivi_code_block_add_statement (VIVI_CODE_BLOCK (block), VIVI_CODE_STATEMENT (loop));
       if (vivi_decompiler_block_get_branch (start)) {
 	ViviCodeValue *value, *opt;
-	value = vivi_code_unary_new (vivi_decompiler_block_get_branch_condition (start), '!');
+	value = vivi_code_not_new (vivi_decompiler_block_get_branch_condition (start));
 	opt = vivi_code_value_optimize (value, SWFDEC_AS_TYPE_BOOLEAN);
 	g_object_unref (value);
 	vivi_code_loop_set_condition (VIVI_CODE_LOOP (loop), opt, FALSE);

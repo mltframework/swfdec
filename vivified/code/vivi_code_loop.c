@@ -23,7 +23,6 @@
 
 #include "vivi_code_loop.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_unary.h"
 #include "vivi_code_compiler.h"
 #include "vivi_code_label.h"
 #include "vivi_code_asm_if.h"

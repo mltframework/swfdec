@@ -77,6 +77,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_init_object.c \
 	vivi_code_label.c \
 	vivi_code_loop.c \
+	vivi_code_not.c \
 	vivi_code_null.c \
 	vivi_code_number.c \
 	vivi_code_or.c \
@@ -88,7 +89,6 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_text_printer.c \
 	vivi_code_throw.c \
 	vivi_code_token.c \
-	vivi_code_unary.c \
 	vivi_code_undefined.c \
 	vivi_code_value.c \
 	vivi_code_variable.c \
@@ -155,6 +155,7 @@ noinst_HEADERS = \
 	vivi_code_init_object.h \
 	vivi_code_label.h \
 	vivi_code_loop.h \
+	vivi_code_not.h \
 	vivi_code_null.h \
 	vivi_code_number.h \
 	vivi_code_or.h \
@@ -166,7 +167,6 @@ noinst_HEADERS = \
 	vivi_code_text_printer.h \
 	vivi_code_throw.h \
 	vivi_code_token.h \
-	vivi_code_unary.h \
 	vivi_code_undefined.h \
 	vivi_code_value.h \
 	vivi_code_variable.h \

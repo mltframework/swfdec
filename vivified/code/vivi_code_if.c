@@ -22,7 +22,7 @@
 #endif
 
 #include "vivi_code_if.h"
-#include "vivi_code_unary.h"
+#include "vivi_code_not.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_compiler.h"
 #include "vivi_code_asm_if.h"
@@ -58,7 +58,7 @@ vivi_code_if_optimize (ViviCodeStatement *statement)
     return NULL;
 
   if (if_stmt == NULL && else_stmt != NULL) {
-    tmp = VIVI_CODE_VALUE (vivi_code_unary_new (stmt->condition, '!'));
+    tmp = VIVI_CODE_VALUE (vivi_code_not_new (stmt->condition));
     cond = vivi_code_value_optimize (tmp, SWFDEC_AS_TYPE_BOOLEAN);
     g_object_unref (tmp);
     if_stmt = else_stmt;

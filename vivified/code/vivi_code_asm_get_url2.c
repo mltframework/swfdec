@@ -37,6 +37,7 @@ vivi_code_asm_get_url2_emit (ViviCodeAsm *code, ViviCodeEmitter *emitter,
   SwfdecBots *emit = vivi_code_emitter_get_bots (emitter);
 
   swfdec_bots_put_u8 (emit, SWFDEC_AS_ACTION_GET_URL2);
+  swfdec_bots_put_u16 (emit, 1);
   swfdec_bots_put_u8 (emit, get_url->flags);
 
   return TRUE;

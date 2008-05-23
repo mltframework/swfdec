@@ -80,6 +80,8 @@ EXTRA_DIST = \
 	function_declaration.as.expect \
 	function_expression.as \
 	function_expression.as.expect \
+	get_url.as \
+	get_url.as.expect \
 	if.as \
 	if.as.expect \
 	if_else.as \

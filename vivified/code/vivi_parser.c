@@ -1307,7 +1307,7 @@ parse_get_url2 (ParseData *data, gboolean require_two, gboolean level,
       method = SWFDEC_LOADER_REQUEST_DEFAULT;
     }
   } else {
-    target = vivi_code_undefined_new ();
+    target = vivi_code_string_new ("");
     method = SWFDEC_LOADER_REQUEST_DEFAULT;
   }
 
@@ -1335,13 +1335,13 @@ parse_load_movie (ParseData *data)
 static ViviCodeStatement *
 parse_load_movie_num (ParseData *data)
 {
-  return parse_get_url2 (data, TRUE, TRUE, TRUE, FALSE);
+  return parse_get_url2 (data, TRUE, TRUE, FALSE, FALSE);
 }
 
 static ViviCodeStatement *
 parse_load_variables (ParseData *data)
 {
-  return parse_get_url2 (data, TRUE, FALSE, FALSE, TRUE);
+  return parse_get_url2 (data, TRUE, FALSE, TRUE, TRUE);
 }
 
 static ViviCodeStatement *

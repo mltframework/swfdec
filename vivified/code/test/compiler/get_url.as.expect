@@ -1,0 +1,19 @@
+asm {
+  pool "url", "", "target", "_level1"
+  push pool 0, pool 3, pool 0, pool 3, pool 0, pool 2, pool 0, pool 2, pool 0, pool 3, pool 0, pool 3, pool 0, pool 2, pool 0, pool 2, pool 0, pool 2, pool 0, pool 2, pool 0, pool 2, pool 0, pool 2, pool 0, pool 2, pool 0, pool 1
+  get_url2
+  get_url2
+  get_url2 post
+  get_url2 get
+  get_url2 post
+  get_url2 get
+  get_url2 internal
+  get_url2 post internal
+  get_url2
+  get_url2 post
+  get_url2 internal variables
+  get_url2 post internal variables
+  get_url2 variables
+  get_url2 post variables
+  end
+}

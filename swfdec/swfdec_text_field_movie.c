@@ -46,72 +46,96 @@ G_DEFINE_TYPE (SwfdecTextFieldMovie, swfdec_text_field_movie, SWFDEC_TYPE_ACTOR)
 
 /*** VFUNCS ***/
 
+static void
+swfdec_text_field_movie_compute_layout_area (SwfdecTextFieldMovie *text)
+{
+  int tmpx, tmpy;
+
+  tmpx = round ((BORDER_LEFT + BORDER_RIGHT) * SWFDEC_TWIPS_SCALE_FACTOR * text->to_layout.xx);
+  tmpy = round ((BORDER_TOP + BORDER_BOTTOM) * SWFDEC_TWIPS_SCALE_FACTOR * text->to_layout.yy);
+  text->layout_area = text->stage_area;
+  if (tmpx >= text->layout_area.width ||
+      tmpy >= text->layout_area.height)
+    return;
+  
+  text->layout_area.x += tmpx / 2;
+  text->layout_area.y += tmpy / 2;
+  text->layout_area.width -= tmpx;
+  text->layout_area.height -= tmpy;
+}
+
 /* NB: This signal can happen without a locked player */
 static void
 swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (text);
-  cairo_matrix_t matrix, translate;
+  cairo_matrix_t *matrix, translate;
   double x, y;
 
   if (swfdec_player_is_locked (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)))
     swfdec_movie_invalidate_next (movie);
 
   /* check if we indeed want to render */
-  swfdec_movie_local_to_global_matrix (movie, &matrix);
-  cairo_matrix_multiply (&matrix, &matrix,
+  matrix = &text->to_layout;
+  swfdec_movie_local_to_global_matrix (movie, matrix);
+  cairo_matrix_multiply (matrix, matrix,
       &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->priv->global_to_stage);
-  if (matrix.xy != 0.0 || matrix.yx != 0.0 ||
-      matrix.xx <= 0.0 || matrix.yy <= 0.0) {
-    swfdec_rectangle_init_empty (&text->stage_rect);
+  if (matrix->xy != 0.0 || matrix->yx != 0.0 ||
+      matrix->xx <= 0.0 || matrix->yy <= 0.0) {
+    swfdec_rectangle_init_empty (&text->stage_area);
+    swfdec_rectangle_init_empty (&text->layout_area);
     return;
   }
 
-  translate = matrix;
   x = text->extents.x0;
   y = text->extents.y0;
-  cairo_matrix_transform_point (&matrix, &x, &y);
+  cairo_matrix_transform_point (matrix, &x, &y);
   cairo_matrix_init_translate (&translate, round (x) - x, round (y) - y);
-  cairo_matrix_multiply (&matrix, &matrix, &translate);
+  cairo_matrix_multiply (matrix, matrix, &translate);
+  text->from_layout = *matrix;
+  if (cairo_matrix_invert (&text->from_layout)) {
+    SWFDEC_ERROR ("cannot invert to-layout matrix");
+    swfdec_rectangle_init_empty (&text->stage_area);
+    swfdec_rectangle_init_empty (&text->layout_area);
+    return;
+  }
   
   x = text->extents.x0;
   y = text->extents.y0;
-  cairo_matrix_transform_point (&matrix, &x, &y);
-  text->stage_rect.x = x;
-  text->stage_rect.y = y;
+  cairo_matrix_transform_point (matrix, &x, &y);
+  text->stage_area.x = x;
+  text->stage_area.y = y;
   x = text->extents.x1;
   y = text->extents.y1;
-  cairo_matrix_transform_point (&matrix, &x, &y);
+  cairo_matrix_transform_point (matrix, &x, &y);
   /* FIXME: floor, ceil or round? */
-  text->stage_rect.width = round (x) - text->stage_rect.x;
-  text->stage_rect.height = round (y) - text->stage_rect.y;
-  text->xscale = matrix.xx * SWFDEC_TWIPS_SCALE_FACTOR;
-  text->yscale = matrix.yy * SWFDEC_TWIPS_SCALE_FACTOR;
-  swfdec_text_layout_set_scale (text->layout, text->yscale);
-  swfdec_text_layout_set_wrap_width (text->layout, text->stage_rect.width - 
-      BORDER_LEFT - BORDER_RIGHT);
+  text->stage_area.width = round (x) - text->stage_area.x;
+  text->stage_area.height = round (y) - text->stage_area.y;
+
+  swfdec_text_field_movie_compute_layout_area (text);
+
+  swfdec_text_layout_set_scale (text->layout, matrix->yy * SWFDEC_TWIPS_SCALE_FACTOR);
+  swfdec_text_layout_set_wrap_width (text->layout, text->layout_area.width);
 }
 
 static void
 swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (text);
-  SwfdecRectangle area;
   double x0, z0, x1, z1; /* y0 and y1 are taken by math.h */
 
   if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return;
 
-  swfdec_text_field_movie_get_visible_area (text, &area);
-  x1 = (double) text->layout_width - area.width;
-  z1 = (double) text->layout_height - area.height;
+  x1 = (double) text->layout_width - text->layout_area.width;
+  z1 = (double) text->layout_height - text->layout_area.height;
 
   if (x1 == 0 && z1 == 0)
     return;
 
   /* FIXME: rounding */
-  x1 *= SWFDEC_TWIPS_SCALE_FACTOR / text->xscale;
-  z1 *= SWFDEC_TWIPS_SCALE_FACTOR / text->yscale;
+  x1 *= text->from_layout.xx;
+  z1 *= text->from_layout.yy;
 
   switch (text->auto_size) {
     case SWFDEC_AUTO_SIZE_LEFT:
@@ -170,10 +194,10 @@ swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *ma
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecRect rect;
 
-  rect.x0 = text->stage_rect.x;
-  rect.y0 = text->stage_rect.y;
-  rect.x1 = text->stage_rect.x + text->stage_rect.width;
-  rect.y1 = text->stage_rect.y + text->stage_rect.height;
+  rect.x0 = text->stage_area.x;
+  rect.y0 = text->stage_area.y;
+  rect.x1 = text->stage_area.x + text->stage_area.width;
+  rect.y1 = text->stage_area.y + text->stage_area.height;
 
   if (text->border) {
     rect.x1++;
@@ -200,27 +224,26 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 {
   static const cairo_matrix_t identity = { 1, 0, 0, 1, 0, 0 };
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
-  SwfdecRectangle area;
   SwfdecColor color;
 
   /* textfields don't mask */
   if (swfdec_color_transform_is_mask (ctrans) ||
-      swfdec_rectangle_is_empty (&text->stage_rect))
+      swfdec_rectangle_is_empty (&text->stage_area))
     return;
 
   /* FIXME: need to handle the case where we're not drawing with identity */
   cairo_set_matrix (cr, &identity);
 
   if (text->background) {
-    cairo_rectangle (cr, text->stage_rect.x, text->stage_rect.y,
-	text->stage_rect.width, text->stage_rect.height);
+    cairo_rectangle (cr, text->stage_area.x, text->stage_area.y,
+	text->stage_area.width, text->stage_area.height);
     color = swfdec_color_apply_transform (text->background_color, ctrans);
     swfdec_color_set_source (cr, SWFDEC_COLOR_OPAQUE (color));
     cairo_fill (cr);
   }
   if (text->border) {
-    cairo_rectangle (cr, text->stage_rect.x + 0.5, text->stage_rect.y + 0.5,
-	text->stage_rect.width, text->stage_rect.height);
+    cairo_rectangle (cr, text->stage_area.x + 0.5, text->stage_area.y + 0.5,
+	text->stage_area.width, text->stage_area.height);
     color = swfdec_color_apply_transform (text->border_color, ctrans);
     swfdec_color_set_source (cr, SWFDEC_COLOR_OPAQUE (color));
     cairo_set_line_width (cr, 1.0);
@@ -228,7 +251,6 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_stroke (cr);
   }
 
-  swfdec_text_field_movie_get_visible_area (text, &area);
   if (swfdec_text_field_movie_has_focus (text) &&
       (text->editable ||
        (text->selectable && swfdec_text_buffer_has_selection (text->text)))) {
@@ -243,11 +265,13 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 
   /* render the layout */
-  cairo_rectangle (cr, area.x, area.y, area.width, area.height);
+  cairo_rectangle (cr, text->layout_area.x, text->layout_area.y, 
+      text->layout_area.width, text->layout_area.height);
   cairo_clip (cr);
-  cairo_translate (cr, (double) area.x - text->hscroll, area.y);
+  /* FIXME: This -1 is spacing? */
+  cairo_translate (cr, (double) text->layout_area.x - text->hscroll, text->layout_area.y - 1);
   swfdec_text_layout_render (text->layout, cr, ctrans,
-      text->scroll, area.height, color);
+      text->scroll, text->layout_area.height, color);
 }
 
 static void
@@ -310,7 +334,7 @@ swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text)
 {
   guint scroll_max, lines_visible, rows, height;
 
-  height = text->stage_rect.height - BORDER_TOP - BORDER_BOTTOM;
+  height = text->layout_area.height;
   rows = swfdec_text_layout_get_n_rows (text->layout);
   scroll_max = rows - swfdec_text_layout_get_visible_rows_end (text->layout, height);
   if (scroll_max != text->scroll_max) {
@@ -499,19 +523,11 @@ static void
 swfdec_text_field_movie_xy_to_index (SwfdecTextFieldMovie *text, double x,
     double y, gsize *index_, gboolean *hit)
 {
-  SwfdecRectangle area;
   int trailing;
-  int stage_x, stage_y;
 
-  stage_x = x * text->xscale / SWFDEC_TWIPS_SCALE_FACTOR;
-  stage_y = y * text->yscale / SWFDEC_TWIPS_SCALE_FACTOR;
-  swfdec_text_field_movie_get_visible_area (text, &area);
-#if 0
-  g_print ("@ %g,%g => %d,%d => %d, %d\n", x, y, stage_x, stage_y,
-      stage_x - area.x, stage_y - area.y);
-#endif
+  cairo_matrix_transform_point (&text->to_layout, &x, &y);
   swfdec_text_layout_query_position (text->layout, text->scroll,
-      stage_x, stage_y, index_, hit, &trailing);
+      x - text->layout_area.x, y - text->layout_area.y, index_, hit, &trailing);
 
   if (index_)
     *index_ += trailing;
@@ -1009,46 +1025,17 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   }
 }
 
-gboolean
-swfdec_text_field_movie_get_visible_area (SwfdecTextFieldMovie *text, SwfdecRectangle *rect)
-{
-  int tmp;
-
-  g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), FALSE);
-  g_return_val_if_fail (rect != NULL, FALSE);
-
-  tmp = round ((BORDER_LEFT + BORDER_RIGHT) * text->xscale);
-  if (tmp >= text->stage_rect.width) {
-    *rect = text->stage_rect;
-    return FALSE;
-  } else {
-    rect->width = text->stage_rect.width - tmp;
-  }
-  tmp = round ((BORDER_TOP + BORDER_BOTTOM) * text->yscale);
-  if (tmp >= text->stage_rect.height) {
-    *rect = text->stage_rect;
-    return FALSE;
-  } else {
-    rect->height = text->stage_rect.height - tmp;
-  }
-  rect->x = text->stage_rect.x + round (BORDER_LEFT * text->xscale);
-  rect->y = text->stage_rect.y + round (BORDER_TOP * text->yscale) - 1;
-  return TRUE;
-}
-
 guint
 swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *text)
 {
-  SwfdecRectangle area;
   guint width;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), 0);
 
-  swfdec_text_field_movie_get_visible_area (text, &area);
   width = text->layout_width;
-  if ((guint) area.width >= width)
+  if ((guint) text->layout_area.width >= width)
     return 0;
   else
-    return width - area.width;
+    return width - text->layout_area.width;
 }
 

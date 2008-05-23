@@ -48,6 +48,8 @@ EXTRA_DIST = \
 	bitwise_not.as.expect \
 	builtin_statement.as \
 	builtin_statement.as.expect \
+	break.as \
+	break.as.expect \
 	break_continue_label.as \
 	break_continue_label.as.expect \
 	call_function.as \
@@ -58,6 +60,8 @@ EXTRA_DIST = \
 	comment.as.expect \
 	conditional.as \
 	conditional.as.expect \
+	continue.as \
+	continue.as.expect \
 	decrement.as \
 	decrement.as.expect \
 	do_while.as \

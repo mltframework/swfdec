@@ -1,0 +1,40 @@
+asm {
+  pool "a", "b"
+
+loop_start_0001:
+  push pool 0
+  get_variable
+  not
+  if loop_end_0002
+  push pool 1
+  get_variable
+  if if_true_0003
+  jump loop_end_0002
+  jump if_end_0004
+
+if_true_0003:
+  jump loop_end_0002
+
+if_end_0004:
+  jump loop_start_0001
+
+loop_end_0002:
+
+loop_start_0005:
+  push pool 1
+  get_variable
+  if if_true_0007
+  jump loop_end_0006
+  jump if_end_0008
+
+if_true_0007:
+  jump loop_end_0006
+
+if_end_0008:
+  push pool 0
+  get_variable
+  if loop_start_0005
+
+loop_end_0006:
+  end
+}

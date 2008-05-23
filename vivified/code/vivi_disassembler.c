@@ -30,6 +30,7 @@
 #include "vivi_code_asm_function.h"
 #include "vivi_code_asm_function2.h"
 #include "vivi_code_asm_get_url.h"
+#include "vivi_code_asm_get_url2.h"
 #include "vivi_code_asm_if.h"
 #include "vivi_code_asm_jump.h"
 #include "vivi_code_asm_pool.h"
@@ -66,6 +67,18 @@ vivi_disassemble_get_url (ViviCodeAssembler *assembler, SwfdecBits *bits, guint 
   code = vivi_code_asm_get_url_new (url, target);
   g_free (url);
   g_free (target);
+  vivi_code_assembler_add_code (assembler, code);
+  g_object_unref (code);
+}
+
+static void
+vivi_disassemble_get_url2 (ViviCodeAssembler *assembler, SwfdecBits *bits, guint version)
+{
+  ViviCodeAsm *code;
+  guint flags;
+
+  flags = swfdec_bits_get_u8 (bits);
+  code = vivi_code_asm_get_url2_new_from_flags (flags);
   vivi_code_assembler_add_code (assembler, code);
   g_object_unref (code);
 }
@@ -444,6 +457,8 @@ vivi_disassemble_script (SwfdecScript *script)
         case SWFDEC_AS_ACTION_GOTO_LABEL:
         case SWFDEC_AS_ACTION_WAIT_FOR_FRAME2:
         case SWFDEC_AS_ACTION_GET_URL2:
+	  vivi_disassemble_get_url2 (assembler, &bits, script->version);
+	  break;
         case SWFDEC_AS_ACTION_CALL:
         case SWFDEC_AS_ACTION_GOTO_FRAME2:
 	default:

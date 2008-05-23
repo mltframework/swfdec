@@ -114,6 +114,10 @@ EXTRA_DIST = \
 	string.as.expect \
 	trace.as \
 	trace.as.expect \
+	unary_minus.as \
+	unary_minus.as.expect \
+	unary_plus.as \
+	unary_plus.as.expect \
 	var.as \
 	var.as.expect \
 	while.as \

@@ -1851,9 +1851,9 @@ peek_unary_expression (ParseData *data)
     case TOKEN_TYPEOF:*/
     case TOKEN_INCREASE:
     case TOKEN_DESCREASE:
-    /*case TOKEN_PLUS:
+    case TOKEN_PLUS:
     case TOKEN_MINUS:
-    case TOKEN_BITWISE_NOT:*/
+    /*case TOKEN_BITWISE_NOT:*/
     case TOKEN_LOGICAL_NOT:
       return TRUE;
     default:
@@ -1920,10 +1920,6 @@ parse_unary_expression (ParseData *data)
 	g_object_unref (tmp);
       } else {
 	ViviCodeValue *number;
-
-	tmp = value;
-	value = vivi_code_to_number_new (tmp);
-	g_object_unref (tmp);
 
 	number = vivi_code_number_new (-1);
 	tmp = value;

@@ -1,0 +1,10 @@
+asm {
+  pool "a"
+  push -1, pool 0
+  get_variable
+  multiply
+  trace
+  push -5
+  trace
+  end
+}

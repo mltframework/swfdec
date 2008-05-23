@@ -45,6 +45,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_assignment.c \
 	vivi_code_binary.c \
 	vivi_code_binary_default.c \
+	vivi_code_bit_not.c \
 	vivi_code_block.c \
 	vivi_code_boolean.c \
 	vivi_code_break.c \
@@ -123,6 +124,7 @@ noinst_HEADERS = \
 	vivi_code_assignment.h \
 	vivi_code_binary.h \
 	vivi_code_binary_default.h \
+	vivi_code_bit_not.h \
 	vivi_code_block.h \
 	vivi_code_boolean.h \
 	vivi_code_break.h \

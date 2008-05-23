@@ -34,6 +34,7 @@
 #include "vivi_code_asm_store.h"
 #include "vivi_code_assignment.h"
 #include "vivi_code_binary_default.h"
+#include "vivi_code_bit_not.h"
 #include "vivi_code_block.h"
 #include "vivi_code_boolean.h"
 #include "vivi_code_break.h"
@@ -1847,13 +1848,13 @@ peek_unary_expression (ParseData *data)
 {
   switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
     //case TOKEN_DELETE:
-    case TOKEN_VOID:
     //case TOKEN_TYPEOF:
     case TOKEN_INCREASE:
     case TOKEN_DESCREASE:
     case TOKEN_PLUS:
     case TOKEN_MINUS:
-    //case TOKEN_BITWISE_NOT:
+    case TOKEN_VOID:
+    case TOKEN_BITWISE_NOT:
     case TOKEN_LOGICAL_NOT:
       return TRUE;
     default:
@@ -1866,25 +1867,14 @@ peek_unary_expression (ParseData *data)
 static ViviCodeValue *
 parse_unary_expression (ParseData *data)
 {
+  ViviCodeValue *(*constructor) (ViviCodeValue *value);
   ViviCodeValue *value, *tmp;
   ViviCodeGet *get;
   gboolean increment = FALSE;
 
+  constructor = NULL;
   switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
     //case TOKEN_DELETE:
-    case TOKEN_VOID:
-      vivi_parser_start_code_token (data);
-
-      vivi_parser_scanner_get_next_token (data->scanner);
-
-      value = parse_unary_expression (data);
-
-      tmp = VIVI_CODE_VALUE (value);
-      value = vivi_code_void_new (tmp);
-      g_object_unref (tmp);
-
-      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
-      break;
     //case TOKEN_TYPEOF:
     case TOKEN_INCREASE:
       increment = TRUE;
@@ -1940,8 +1930,16 @@ parse_unary_expression (ParseData *data)
 	g_object_unref (number);
       }
       break;
-    //case TOKEN_BITWISE_NOT:
+    case TOKEN_VOID:
+      if (constructor == NULL)
+	constructor = vivi_code_void_new;
+    case TOKEN_BITWISE_NOT:
+      if (constructor == NULL)
+	constructor = vivi_code_bit_not_new;
     case TOKEN_LOGICAL_NOT:
+      if (constructor == NULL)
+	constructor = vivi_code_not_new;
+
       vivi_parser_start_code_token (data);
 
       vivi_parser_scanner_get_next_token (data->scanner);
@@ -1949,7 +1947,7 @@ parse_unary_expression (ParseData *data)
       value = parse_unary_expression (data);
 
       tmp = VIVI_CODE_VALUE (value);
-      value = vivi_code_not_new (tmp);
+      value = constructor (tmp);
       g_object_unref (tmp);
 
       vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));

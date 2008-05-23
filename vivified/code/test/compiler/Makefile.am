@@ -98,6 +98,8 @@ EXTRA_DIST = \
 	label.as.expect \
 	misc_literal.as \
 	misc_literal.as.expect \
+	not.as \
+	not.as.expect \
 	number.as \
 	number.as.expect \
 	operator.as \

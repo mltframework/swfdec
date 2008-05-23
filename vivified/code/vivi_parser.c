@@ -109,6 +109,7 @@ static const struct {
 typedef struct {
   GSList			*labels;
   GSList			*waiting_labels;
+  guint				loop_count;
 } ParseLevel;
 
 typedef struct {
@@ -2369,8 +2370,16 @@ parse_continue_or_break_statement (ParseData *data,
 
     parse_automatic_semicolon (data);
   } else {
-    // FIXME
-    statement = vivi_code_break_new ();
+    g_assert (data->level != NULL);
+    if (data->level->loop_count == 0) {
+      vivi_parser_error (data,
+	  "Break or continue without label outside of loop");
+    }
+    if (token == TOKEN_CONTINUE) {
+      statement = vivi_code_continue_new ();
+    } else {
+      statement = vivi_code_break_new ();
+    }
   }
 
   vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (statement));
@@ -2484,6 +2493,9 @@ parse_iteration_statement (ParseData *data)
   enumerate = FALSE;
   enumerate_local = FALSE;
   enumerate_variable = NULL;
+
+  g_assert (data->level != NULL);
+  data->level->loop_count++;
 
   if (try_parse_token (data, TOKEN_DO))
   {
@@ -2648,6 +2660,8 @@ parse_iteration_statement (ParseData *data)
     g_object_unref (statement);
     statement = block;
   }
+
+  data->level->loop_count--;
 
   return statement;
 }

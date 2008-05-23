@@ -24,6 +24,7 @@
 #include "vivi_code_break.h"
 #include "vivi_code_printer.h"
 #include "vivi_code_compiler.h"
+#include "vivi_code_asm_jump.h"
 
 G_DEFINE_TYPE (ViviCodeBreak, vivi_code_break, VIVI_TYPE_CODE_STATEMENT)
 
@@ -37,7 +38,12 @@ vivi_code_break_print (ViviCodeToken *token, ViviCodePrinter *printer)
 static void
 vivi_code_break_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
-  g_printerr ("Implement break\n");
+  ViviCodeLabel *label;
+
+  label = vivi_code_compiler_use_break_label (compiler);
+  g_return_if_fail (label != NULL); // FIXME
+
+  vivi_code_compiler_take_code (compiler, vivi_code_asm_jump_new (label));
 }
 
 static void

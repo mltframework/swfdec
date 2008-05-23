@@ -31,6 +31,8 @@ vivi_code_compiler_dispose (GObject *object)
 {
   ViviCodeCompiler *compiler = VIVI_CODE_COMPILER (object);
 
+  g_assert (compiler->loop_labels == NULL);
+
   g_object_unref (compiler->assembler);
 
   G_OBJECT_CLASS (vivi_code_compiler_parent_class)->dispose (object);
@@ -124,6 +126,87 @@ vivi_code_compiler_create_label (ViviCodeCompiler *compiler,
   g_free (name);
 
   return label;
+}
+
+typedef struct {
+  ViviCodeLabel *	continue_label;
+  ViviCodeLabel *	break_label;
+  guint			continue_used;
+  guint			break_used;
+} LoopLabels;
+
+void
+vivi_code_compiler_push_loop_labels (ViviCodeCompiler *compiler,
+    ViviCodeLabel *continue_label, ViviCodeLabel *break_label)
+{
+  LoopLabels *labels;
+
+  g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
+  g_return_if_fail (continue_label == NULL ||
+      VIVI_IS_CODE_LABEL (continue_label));
+  g_return_if_fail (break_label == NULL || VIVI_IS_CODE_LABEL (break_label));
+
+  if (continue_label != NULL)
+      g_object_ref (continue_label);
+  if (break_label != NULL)
+      g_object_ref (break_label);
+
+  labels = g_new0 (LoopLabels, 1);
+  labels->continue_label = continue_label;
+  labels->break_label = break_label;
+
+  compiler->loop_labels = g_slist_prepend (compiler->loop_labels, labels);
+}
+
+void
+vivi_code_compiler_pop_loop_labels (ViviCodeCompiler *compiler,
+    guint *continue_used, guint *break_used)
+{
+  LoopLabels *labels;
+
+  g_return_if_fail (VIVI_IS_CODE_COMPILER (compiler));
+  g_return_if_fail (compiler->loop_labels != NULL);
+
+  labels = compiler->loop_labels->data;
+
+  if (continue_used != NULL)
+    *continue_used = labels->continue_used;
+  if (break_used != NULL)
+    *break_used = labels->break_used;
+
+  if (labels->continue_label != NULL)
+    g_object_unref (labels->continue_label);
+  if (labels->break_label != NULL)
+    g_object_unref (labels->break_label);
+
+  compiler->loop_labels =
+    g_slist_delete_link (compiler->loop_labels, compiler->loop_labels);
+}
+
+ViviCodeLabel *
+vivi_code_compiler_use_continue_label (ViviCodeCompiler *compiler)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_COMPILER (compiler), NULL);
+
+  if (compiler->loop_labels == NULL)
+    return NULL;
+
+  ((LoopLabels *)compiler->loop_labels->data)->continue_used++;
+  return VIVI_CODE_LABEL (
+      ((LoopLabels *)compiler->loop_labels->data)->continue_label);
+}
+
+ViviCodeLabel *
+vivi_code_compiler_use_break_label (ViviCodeCompiler *compiler)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_COMPILER (compiler), NULL);
+
+  if (compiler->loop_labels == NULL)
+    return NULL;
+
+  ((LoopLabels *)compiler->loop_labels->data)->break_used++;
+  return VIVI_CODE_LABEL (
+      ((LoopLabels *)compiler->loop_labels->data)->break_label);
 }
 
 ViviCodeCompiler *

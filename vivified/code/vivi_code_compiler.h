@@ -46,6 +46,8 @@ struct _ViviCodeCompiler
   ViviCodeAssembler *	assembler;
 
   guint			num_labels;
+
+  GSList *		loop_labels;
 };
 
 struct _ViviCodeCompilerClass
@@ -74,6 +76,15 @@ ViviCodeAssembler *	vivi_code_compiler_get_assembler	(ViviCodeCompiler *	compile
 guint			vivi_code_compiler_get_version		(ViviCodeCompiler *	compiler);
 ViviCodeLabel *		vivi_code_compiler_create_label		(ViviCodeCompiler *	compiler,
 								 const char *		prefix);
+
+void			vivi_code_compiler_push_loop_labels	(ViviCodeCompiler *	compiler,
+								 ViviCodeLabel *	continue_label,
+								 ViviCodeLabel *	break_label);
+void			vivi_code_compiler_pop_loop_labels	(ViviCodeCompiler *	compiler,
+								 guint *		continue_used,
+								 guint *		break_used);
+ViviCodeLabel *		vivi_code_compiler_use_break_label	(ViviCodeCompiler *	compiler);
+ViviCodeLabel *		vivi_code_compiler_use_continue_label	(ViviCodeCompiler *	compiler);
 
 G_END_DECLS
 #endif

@@ -80,8 +80,12 @@ vivi_code_loop_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeLoop *loop = VIVI_CODE_LOOP (token);
   ViviCodeLabel *label_start, *label_end = NULL;
+  guint break_used;
 
   label_start = vivi_code_compiler_create_label (compiler, "loop_start");
+  label_end = vivi_code_compiler_create_label (compiler, "loop_end");
+  vivi_code_compiler_push_loop_labels (compiler, label_start, label_end);
+
   vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_start));
 
   if (loop->post_condition && loop->statement)
@@ -92,7 +96,6 @@ vivi_code_loop_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 
     if (!loop->post_condition) {
       vivi_code_compiler_take_code (compiler, vivi_code_asm_not_new ());
-      label_end = vivi_code_compiler_create_label (compiler, "loop_end");
       vivi_code_compiler_take_code (compiler,
 	  vivi_code_asm_if_new (label_end));
     }
@@ -110,8 +113,11 @@ vivi_code_loop_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
   }
   g_object_unref (label_start);
 
-  if (loop->condition && !loop->post_condition)
-    vivi_code_compiler_take_code (compiler, VIVI_CODE_ASM (label_end));
+  vivi_code_compiler_pop_loop_labels (compiler, NULL, &break_used);
+
+  if ((loop->condition && !loop->post_condition) || break_used > 0)
+    vivi_code_compiler_add_code (compiler, VIVI_CODE_ASM (label_end));
+  g_object_unref (label_end);
 }
 
 static void

@@ -68,7 +68,6 @@
 #include "vivi_code_undefined.h"
 #include "vivi_code_variable.h"
 #include "vivi_compiler_empty_statement.h"
-#include "vivi_compiler_get_temporary.h"
 
 #include "vivi_code_text_printer.h"
 #include "vivi_code_assembler.h"

@@ -208,7 +208,9 @@ vivi_code_asm_try_print (ViviCodeToken *token, ViviCodePrinter *printer)
     vivi_code_printer_print (printer, str);
     g_free (str);
   } else {
-    vivi_code_printer_print (printer, try_->variable_name);
+    char *str = vivi_code_escape_string (try_->variable_name);
+    vivi_code_printer_print (printer, str);
+    g_free (str);
   }
   vivi_code_printer_print (printer, " ");
 
@@ -272,11 +274,17 @@ vivi_code_asm_try_new_internal (ViviCodeLabel *catch_start,
   g_return_val_if_fail (VIVI_IS_CODE_LABEL (end), NULL);
 
   ret = g_object_new (VIVI_TYPE_CODE_ASM_TRY, NULL);
-  if (catch_start != NULL)
-    ret->catch_start = g_object_ref (catch_start);
-  if (finally_start != NULL)
-    ret->finally_start = g_object_ref (finally_start);
   ret->end = g_object_ref (end);
+  if (finally_start != NULL) {
+    ret->finally_start = g_object_ref (finally_start);
+  } else {
+    ret->finally_start = g_object_ref (ret->end);
+  }
+  if (catch_start != NULL) {
+    ret->catch_start = g_object_ref (catch_start);
+  } else {
+    ret->catch_start = g_object_ref (ret->finally_start);
+  }
 
   ret->has_catch = (catch_start != NULL);
   ret->has_finally = (finally_start != NULL);

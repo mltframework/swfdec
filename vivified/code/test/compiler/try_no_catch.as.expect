@@ -1,0 +1,13 @@
+asm {
+  pool "try", "finally"
+  try has_finally "" try_finally_0001 try_finally_0001 try_end_0002
+  push pool 0
+  trace
+
+try_finally_0001:
+  push pool 1
+  trace
+
+try_end_0002:
+  end
+}

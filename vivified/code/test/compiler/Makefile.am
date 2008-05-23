@@ -122,6 +122,12 @@ EXTRA_DIST = \
 	string.as.expect \
 	trace.as \
 	trace.as.expect \
+	try.as \
+	try.as.expect \
+	try_no_catch.as \
+	try_no_catch.as \
+	try_no_finally.as.expect \
+	try_no_finally.as.expect \
 	unary_minus.as \
 	unary_minus.as.expect \
 	unary_plus.as \

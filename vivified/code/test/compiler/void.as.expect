@@ -1,0 +1,9 @@
+asm {
+  pool "a"
+  push pool 0
+  get_variable
+  pop
+  push undefined
+  trace
+  end
+}

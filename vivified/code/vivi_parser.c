@@ -67,6 +67,7 @@
 #include "vivi_code_not.h"
 #include "vivi_code_undefined.h"
 #include "vivi_code_variable.h"
+#include "vivi_code_void.h"
 #include "vivi_compiler_empty_statement.h"
 
 #include "vivi_code_text_printer.h"
@@ -1845,14 +1846,14 @@ static gboolean
 peek_unary_expression (ParseData *data)
 {
   switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
-    /*case TOKEN_DELETE:
+    //case TOKEN_DELETE:
     case TOKEN_VOID:
-    case TOKEN_TYPEOF:*/
+    //case TOKEN_TYPEOF:
     case TOKEN_INCREASE:
     case TOKEN_DESCREASE:
     case TOKEN_PLUS:
     case TOKEN_MINUS:
-    /*case TOKEN_BITWISE_NOT:*/
+    //case TOKEN_BITWISE_NOT:
     case TOKEN_LOGICAL_NOT:
       return TRUE;
     default:
@@ -1870,9 +1871,21 @@ parse_unary_expression (ParseData *data)
   gboolean increment = FALSE;
 
   switch ((guint) vivi_parser_scanner_peek_next_token (data->scanner)) {
-    /*case TOKEN_DELETE:
+    //case TOKEN_DELETE:
     case TOKEN_VOID:
-    case TOKEN_TYPEOF:*/
+      vivi_parser_start_code_token (data);
+
+      vivi_parser_scanner_get_next_token (data->scanner);
+
+      value = parse_unary_expression (data);
+
+      tmp = VIVI_CODE_VALUE (value);
+      value = vivi_code_void_new (tmp);
+      g_object_unref (tmp);
+
+      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
+      break;
+    //case TOKEN_TYPEOF:
     case TOKEN_INCREASE:
       increment = TRUE;
     case TOKEN_DESCREASE:
@@ -1939,7 +1952,7 @@ parse_unary_expression (ParseData *data)
       value = vivi_code_not_new (tmp);
       g_object_unref (tmp);
 
-      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (tmp));
+      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
       break;
     default:
       value = parse_postfix_expression (data);

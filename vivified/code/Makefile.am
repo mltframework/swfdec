@@ -92,6 +92,7 @@ libvivified_compiler_la_SOURCES = \
 	vivi_code_undefined.c \
 	vivi_code_value.c \
 	vivi_code_variable.c \
+	vivi_code_void.c \
 	vivi_compiler_empty_statement.c \
 	vivi_decompiler_block.c \
 	vivi_decompiler_duplicate.c \
@@ -170,6 +171,7 @@ noinst_HEADERS = \
 	vivi_code_undefined.h \
 	vivi_code_value.h \
 	vivi_code_variable.h \
+	vivi_code_void.h \
 	vivi_compiler_empty_statement.h \
 	vivi_decompiler.h \
 	vivi_decompiler_block.h \

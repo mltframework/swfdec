@@ -50,7 +50,6 @@ struct _SwfdecAudioEvent
   SwfdecSoundEnvelope *	envelope;		/* volume envelope or NULL if none */
   /* dynamic data */
   SwfdecBuffer *	decoded;		/* the decoded buffer we play back or NULL if failure */
-  SwfdecAudioFormat	decoded_format;		/* format of the decoded buffer */
   guint			offset;			/* current offset in 44.1kHz */
   guint			loop;			/* current loop we're in */
   guint			n_samples;	      	/* length of decoded buffer in 44.1kHz samples - can be 0 */

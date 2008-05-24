@@ -152,7 +152,7 @@ tag_func_define_sound (SwfdecSwfDecoder * s, guint tag)
 }
 
 SwfdecBuffer *
-swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
+swfdec_sound_get_decoded (SwfdecSound *sound)
 {
   gpointer decoder;
   SwfdecBuffer *tmp;
@@ -162,10 +162,8 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   guint depth;
 
   g_return_val_if_fail (SWFDEC_IS_SOUND (sound), NULL);
-  g_return_val_if_fail (format != NULL, NULL);
 
   if (sound->decoded) {
-    *format = sound->decoded_format;
     return sound->decoded;
   }
   if (sound->encoded == NULL)
@@ -181,7 +179,6 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   while ((tmp = swfdec_audio_decoder_pull (decoder))) {
     swfdec_buffer_queue_push (queue, tmp);
   }
-  sound->decoded_format = swfdec_audio_format_new (44100, 2, TRUE);
   swfdec_audio_decoder_free (decoder);
   depth = swfdec_buffer_queue_get_depth (queue);
   if (depth == 0) {
@@ -191,8 +188,8 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   tmp = swfdec_buffer_queue_pull (queue, depth);
   swfdec_buffer_queue_unref (queue);
 
-  sample_bytes = swfdec_audio_format_get_bytes_per_sample (sound->decoded_format);
-  n_samples = sound->n_samples / swfdec_audio_format_get_granularity (sound->decoded_format);
+  sample_bytes = 4;
+  n_samples = sound->n_samples;
 
   SWFDEC_LOG ("after decoding, got %"G_GSIZE_FORMAT" samples, should get %u and skip %u", 
       tmp->length / sample_bytes, n_samples, sound->skip);
@@ -218,7 +215,6 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   /* only assign here, the decoding code checks this variable */
   sound->decoded = tmp;
 
-  *format = sound->decoded_format;
   return sound->decoded;
 }
 

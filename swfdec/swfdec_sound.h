@@ -69,7 +69,6 @@ struct _SwfdecSound
   guint			skip;			/* samples to skip at start */
   SwfdecBuffer *	encoded;		/* encoded data */
 
-  SwfdecAudioFormat	decoded_format;		/* format of decoded data */
   SwfdecBuffer *	decoded;		/* decoded data */
 };
 
@@ -86,16 +85,15 @@ int tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag);
 int tag_func_start_sound (SwfdecSwfDecoder * s, guint tag);
 int tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag);
 
-SwfdecBuffer *		swfdec_sound_get_decoded	(SwfdecSound *		sound,
-							 SwfdecAudioFormat *	format);
+SwfdecBuffer *		swfdec_sound_get_decoded	(SwfdecSound *		sound);
 void			swfdec_sound_buffer_render	(gint16 *		dest, 
 							 const SwfdecBuffer *	source, 
-							 SwfdecAudioFormat		format,
+							 SwfdecAudioFormat	format,
 							 const SwfdecBuffer *	previous, 
-							 guint		offset,
-							 guint		n_samples);
+							 guint	  		offset,
+							 guint			n_samples);
 guint			swfdec_sound_buffer_get_n_samples (const SwfdecBuffer * buffer, 
-                                                         SwfdecAudioFormat		format);
+                                                         SwfdecAudioFormat	format);
 
 SwfdecSoundChunk *	swfdec_sound_parse_chunk	(SwfdecSwfDecoder *	s,
 							 SwfdecBits *		bits,

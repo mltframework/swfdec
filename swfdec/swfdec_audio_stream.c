@@ -77,13 +77,13 @@ end:
   return buffer;
 }
 
-static void
+static guint
 swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
     guint start, guint n_samples)
 {
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
   GList *walk;
-  guint samples;
+  guint samples, rendered;
   SwfdecBuffer *buffer, *previous;
 
   g_assert (start < G_MAXINT);
@@ -91,7 +91,7 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
   SWFDEC_LOG ("stream %p rendering offset %u, samples %u", stream, start, n_samples);
   walk = g_queue_peek_head_link (stream->playback_queue);
   previous = NULL;
-  while (n_samples) {
+  for (rendered = 0; rendered < n_samples;) {
     if (walk) {
       buffer = walk->data;
       walk = walk->next;
@@ -116,15 +116,17 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
     } else {
       SWFDEC_LOG ("rendering %u samples", samples);
     }
-    samples = MIN (samples, n_samples);
+    samples = MIN (samples, n_samples - rendered);
     swfdec_sound_buffer_render (dest, buffer, 
 	swfdec_audio_decoder_get_format (stream->decoder), 
 	previous, start, samples);
     start = 0;
-    n_samples -= samples;
+    rendered += samples;
     dest += 2 * samples;
     previous = buffer;
   }
+
+  return rendered;
 }
 
 static guint

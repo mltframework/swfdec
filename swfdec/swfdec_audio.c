@@ -161,19 +161,24 @@ swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
  * Renders the samples from @audio into the area pointed to by @dest. The data 
  * is added to @dest, so you probably want to initialize @dest to silence 
  * before calling this function.
+ *
+ * Returns: The amount of samples actually rendered. Usually this number is 
+ *          equal to @n_samples, but if you arrived at the end of stream or the
+ *          stream is still loading, this number may be lower. It indicates 
+ *          that no more samples are available.
  **/
-void
+guint
 swfdec_audio_render (SwfdecAudio *audio, gint16 *dest, 
     guint start_offset, guint n_samples)
 {
   SwfdecAudioClass *klass;
 
-  g_return_if_fail (SWFDEC_IS_AUDIO (audio));
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (n_samples > 0);
+  g_return_val_if_fail (SWFDEC_IS_AUDIO (audio), 0);
+  g_return_val_if_fail (dest != NULL, 0);
+  g_return_val_if_fail (n_samples > 0, 0);
 
   klass = SWFDEC_AUDIO_GET_CLASS (audio);
-  klass->render (audio, dest, start_offset, n_samples);
+  return klass->render (audio, dest, start_offset, n_samples);
 }
 
 /**

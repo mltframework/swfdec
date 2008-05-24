@@ -78,17 +78,17 @@ swfdec_audio_event_get_envelop_volume (SwfdecAudioEvent *event, guint pos,
     event->envelope[pos].volume[channel] * (offset / distance);
 }
 
-static void
+static guint
 swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
     guint n_samples)
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
   guint offset = event->offset + start;
-  guint loop, samples, global_offset, pos, i, channels;
+  guint loop, samples, global_offset, pos, i, channels, rendered;
   gint16 *dest_end;
 
   if (event->n_samples == 0)
-    return;
+    return 0;
 
   channels = swfdec_audio_format_get_channels (event->decoded_format);
 
@@ -105,18 +105,19 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
   dest_end = dest;
   loop = event->loop + offset / event->n_samples;
   offset %= event->n_samples;
-  for (; loop < event->n_loops && n_samples > 0; loop++) {
-    samples = MIN (n_samples, event->n_samples - offset);
+  for (rendered = 0; loop < event->n_loops && rendered < n_samples; loop++) {
+    samples = MIN (n_samples - rendered, event->n_samples - offset);
     swfdec_sound_buffer_render (dest_end, event->decoded,
 	event->decoded_format, loop == 0 ? NULL : event->decoded, offset,
 	samples);
-    n_samples -= samples;
+    rendered += samples;
     dest_end += samples * 2;
     offset = 0;
+    rendered += samples;
   }
 
   if (event->n_envelopes == 0)
-    return;
+    return rendered;
 
   pos = 0;
   for (i = 0; i < (guint) (dest_end - dest); i++) {
@@ -133,6 +134,7 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
 	  global_offset + (i / 2), i % 2) / 32768.0;
     }
   }
+  return rendered;
 }
 
 static void

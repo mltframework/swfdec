@@ -25,6 +25,7 @@
   <chapter>
     <title>extending SwfdecPlayer</title>
     <xi:include href="xml/SwfdecPlayerScripting.xml"/>
+    <xi:include href="xml/SwfdecRenderer.xml"/>
     <xi:include href="xml/SwfdecStream.xml"/>
     <xi:include href="xml/SwfdecLoader.xml"/>
     <xi:include href="xml/SwfdecSocket.xml"/>

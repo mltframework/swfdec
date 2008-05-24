@@ -158,9 +158,8 @@ swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
  *		  by swfdec_player_set_audio_advance() is ignored.
  * @n_samples: amount of samples to render.
  *
- * Renders the samples from @audio into the area pointed to by @dest. The data 
- * is added to @dest, so you probably want to initialize @dest to silence 
- * before calling this function.
+ * Renders the samples from @audio into the area pointed to by @dest. Existing
+ * data in @dest is overwritten.
  *
  * Returns: The amount of samples actually rendered. Usually this number is 
  *          equal to @n_samples, but if you arrived at the end of stream or the

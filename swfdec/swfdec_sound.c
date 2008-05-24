@@ -436,18 +436,10 @@ void
 swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source, 
     guint offset, guint n_samples)
 {
-  const gint16 *src;
-  guint i;
-
   g_return_if_fail (dest != NULL);
   g_return_if_fail (source != NULL);
   g_return_if_fail ((offset + n_samples) * 4 <= source->length);
 
-  src = (gint16 *) source->data;
-  src += 2 * offset;
-  n_samples *= 2;
-  for (i = 0; i < n_samples; i++) {
-    *dest++ += *src++;
-  }
+  memcpy (dest, source->data + 4 * offset, 4 * n_samples);
 }
 

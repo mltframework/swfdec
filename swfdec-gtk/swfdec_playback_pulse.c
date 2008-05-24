@@ -83,7 +83,6 @@ stream_write_callback (pa_stream *pa,
   /* Set up our fragment and render swfdec's audio into it. The swfdec audio
    * decoder renders deltas from the existing data in the fragment.
    */
-  memset (frag, 0, bytes);
   swfdec_audio_render (stream->audio, (gint16 *)frag, stream->offset,
 		       samples);
 

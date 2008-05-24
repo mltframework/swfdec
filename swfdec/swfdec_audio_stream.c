@@ -104,7 +104,7 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
       g_queue_push_tail (stream->playback_queue, buffer);
     }
     samples = swfdec_sound_buffer_get_n_samples (buffer, 
-	swfdec_audio_decoder_get_format (stream->decoder));
+	swfdec_audio_format_new (44100, 2, TRUE));
     if (start) {
       if (samples <= start) {
 	start -= samples;
@@ -118,7 +118,7 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
     }
     samples = MIN (samples, n_samples - rendered);
     swfdec_sound_buffer_render (dest, buffer, 
-	swfdec_audio_decoder_get_format (stream->decoder), 
+	swfdec_audio_format_new (44100, 2, TRUE),
 	previous, start, samples);
     start = 0;
     rendered += samples;
@@ -138,14 +138,14 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
   stream->playback_skip += remove;
   buffer = g_queue_peek_head (stream->playback_queue);
   while (buffer && stream->playback_skip >= 
-	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_decoder_get_format (stream->decoder)) 
-	 + swfdec_audio_format_get_granularity (swfdec_audio_decoder_get_format (stream->decoder))) {
+	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_format_new (44100, 2, TRUE))
+	 + swfdec_audio_format_get_granularity (swfdec_audio_format_new (44100, 2, TRUE))) {
     buffer = g_queue_pop_head (stream->playback_queue);
     SWFDEC_LOG ("removing buffer with %u samples", 
 	swfdec_sound_buffer_get_n_samples (buffer, 
-	  swfdec_audio_decoder_get_format (stream->decoder)));
+	  swfdec_audio_format_new (44100, 2, TRUE)));
     stream->playback_skip -= swfdec_sound_buffer_get_n_samples (buffer, 
-	swfdec_audio_decoder_get_format (stream->decoder));
+	swfdec_audio_format_new (44100, 2, TRUE));
     swfdec_buffer_unref (buffer);
     buffer = g_queue_peek_head (stream->playback_queue);
   }
@@ -155,7 +155,7 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
   } else {
     GList *walk;
     guint ret = 0;
-    SwfdecAudioFormat format = swfdec_audio_decoder_get_format (stream->decoder);
+    SwfdecAudioFormat format = swfdec_audio_format_new (44100, 2, TRUE);
     
     for (walk = g_queue_peek_head_link (stream->playback_queue); walk; walk = walk->next) {
       ret += swfdec_sound_buffer_get_n_samples (walk->data, format);

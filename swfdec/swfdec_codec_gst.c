@@ -430,7 +430,6 @@ swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
     return NULL;
 
   player = g_slice_new0 (SwfdecGstAudio);
-  player->decoder.format = SWFDEC_AUDIO_FORMAT_INVALID;
   player->decoder.pull = swfdec_audio_decoder_gst_pull;
   player->decoder.push = swfdec_audio_decoder_gst_push;
   player->decoder.free = swfdec_audio_decoder_gst_free;
@@ -458,7 +457,6 @@ swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
 
   gst_caps_unref (srccaps);
   gst_caps_unref (sinkcaps);
-  player->decoder.format = swfdec_audio_format_new (44100, 2, TRUE);
   return &player->decoder;
 
 error:

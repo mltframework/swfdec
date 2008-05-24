@@ -181,7 +181,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound, SwfdecAudioFormat *format)
   while ((tmp = swfdec_audio_decoder_pull (decoder))) {
     swfdec_buffer_queue_push (queue, tmp);
   }
-  sound->decoded_format = swfdec_audio_decoder_get_format (decoder);
+  sound->decoded_format = swfdec_audio_format_new (44100, 2, TRUE);
   swfdec_audio_decoder_free (decoder);
   depth = swfdec_buffer_queue_get_depth (queue);
   if (depth == 0) {

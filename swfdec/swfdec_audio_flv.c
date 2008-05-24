@@ -136,7 +136,7 @@ swfdec_audio_flv_render (SwfdecAudio *audio, gint16* dest,
 	break;
     }
     samples = swfdec_sound_buffer_get_n_samples (buffer, 
-	swfdec_audio_decoder_get_format (flv->decoder));
+	swfdec_audio_format_new (44100, 2, TRUE));
     if (start) {
       if (samples <= start) {
 	start -= samples;
@@ -150,7 +150,7 @@ swfdec_audio_flv_render (SwfdecAudio *audio, gint16* dest,
     }
     samples = MIN (samples, n_samples);
     swfdec_sound_buffer_render (dest, buffer, 
-	swfdec_audio_decoder_get_format (flv->decoder), previous, start, 
+	swfdec_audio_format_new (44100, 2, TRUE), previous, start, 
 	samples);
     start = 0;
     rendered += samples;
@@ -171,14 +171,13 @@ swfdec_audio_flv_iterate (SwfdecAudio *audio, guint remove)
   flv->playback_skip += remove;
   buffer = g_queue_peek_head (flv->playback_queue);
   while (buffer && flv->playback_skip >= 
-	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_decoder_get_format (flv->decoder)) 
-	 + swfdec_audio_format_get_granularity (swfdec_audio_decoder_get_format (flv->decoder))) {
+	 swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_format_new (44100, 2, TRUE))
+	 + swfdec_audio_format_get_granularity (swfdec_audio_format_new (44100, 2, TRUE))) {
     buffer = g_queue_pop_head (flv->playback_queue);
     SWFDEC_LOG ("removing buffer with %u samples", 
-	swfdec_sound_buffer_get_n_samples (buffer, 
-	  swfdec_audio_decoder_get_format (flv->decoder)));
+	swfdec_sound_buffer_get_n_samples (buffer, swfdec_audio_format_new (44100, 2, TRUE))); 
     flv->playback_skip -= swfdec_sound_buffer_get_n_samples (buffer, 
-	swfdec_audio_decoder_get_format (flv->decoder));
+	swfdec_audio_format_new (44100, 2, TRUE));
     swfdec_buffer_unref (buffer);
     buffer = g_queue_peek_head (flv->playback_queue);
   }

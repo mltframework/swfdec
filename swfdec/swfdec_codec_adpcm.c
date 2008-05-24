@@ -193,7 +193,6 @@ swfdec_audio_decoder_adpcm_new (guint type, SwfdecAudioFormat format)
     return NULL;
   adpcm = g_slice_new (SwfdecAudioDecoderAdpcm);
   adpcm->format = format;
-  adpcm->decoder.format = swfdec_audio_format_new (44100, 2, TRUE);
   adpcm->decoder.push = swfdec_audio_decoder_adpcm_push;
   adpcm->decoder.pull = swfdec_audio_decoder_adpcm_pull;
   adpcm->decoder.free = swfdec_audio_decoder_adpcm_free;

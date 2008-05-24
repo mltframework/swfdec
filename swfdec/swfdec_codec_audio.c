@@ -135,7 +135,6 @@ swfdec_audio_decoder_uncompressed_new (guint type, SwfdecAudioFormat format)
     SWFDEC_WARNING ("endianness of audio unknown, assuming little endian");
   }
   dec = g_new (SwfdecAudioDecoderUncompressed, 1);
-  dec->decoder.format = swfdec_audio_format_new (44100, 2, TRUE);
   if (swfdec_audio_format_is_16bit (format))
     dec->decoder.push = swfdec_audio_decoder_uncompressed_decode_16bit;
   else
@@ -259,25 +258,6 @@ swfdec_audio_decoder_free (SwfdecAudioDecoder *decoder)
 }
 
 /**
- * swfdec_audio_decoder_get_format:
- * @decoder: a #SwfdecAudioDecoder
- *
- * Queries the format that is used by the decoder for its produced output.
- * The format will only be valid after swfdec_audio_decoder_pull () has been
- * called at least once.
- *
- * Returns: the format of the decoded data
- **/
-SwfdecAudioFormat
-swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *decoder)
-{
-  g_return_val_if_fail (decoder != NULL, 0);
-  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (decoder->format), 0);
-
-  return decoder->format;
-}
-
-/**
  * swfdec_audio_decoder_push:
  * @decoder: a #SwfdecAudioDecoder
  * @buffer: a #SwfdecBuffer to process or %NULL to flush
@@ -325,7 +305,6 @@ swfdec_audio_decoder_pull (SwfdecAudioDecoder *decoder)
   ret = decoder->pull (decoder);
   if (ret == NULL)
     return NULL;
-  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (decoder->format), ret);
   return ret;
 }
 

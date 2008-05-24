@@ -37,7 +37,6 @@ typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (guint type, gboolean w
     SwfdecAudioFormat format);
 struct _SwfdecAudioDecoder {
   guint			codec;
-  SwfdecAudioFormat	format;
   void			(* push)	(SwfdecAudioDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
   SwfdecBuffer *	(* pull)	(SwfdecAudioDecoder *	decoder);
@@ -50,7 +49,6 @@ gboolean		swfdec_audio_decoder_prepare	(guint			codec,
 SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(guint			codec,
 							 SwfdecAudioFormat	format);
 void			swfdec_audio_decoder_free      	(SwfdecAudioDecoder *	decoder);
-SwfdecAudioFormat	swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *	decoder);
 void			swfdec_audio_decoder_push	(SwfdecAudioDecoder *	decoder,
 							 SwfdecBuffer *		buffer);
 SwfdecBuffer *		swfdec_audio_decoder_pull	(SwfdecAudioDecoder *	decoder);

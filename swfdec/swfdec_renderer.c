@@ -57,6 +57,29 @@ struct _SwfdecRendererPrivate {
  * See #SwfdecRendererClass for details about these functions.
  */
 
+/**
+ * SwfdecRenderer:
+ *
+ * The base renderer object. All its members are private.
+ */
+
+/**
+ * SwfdecRendererClass:
+ * @create_similar: This function imitates cairo_surface_create_similar(). It
+ *                  is supposed to create a surface with identical contents as
+ *                  the given surface, but tuned for usage with the given 
+ *                  renderer.
+ * @create_for_data: This function imitates cairo_surface_create_for_data(). It
+ *                   creates a surface for the given data, tuned for the given 
+ *                   renderer. The function takes ownership of the passed in 
+ *                   data and is responsible for freeing it with g_free() when
+ *                   it no longer needs it.
+ *
+ * The base class for the renderer. It contains some virtual functions that can
+ * be overridden in subclasses to accelerate certain time-critical Swfdec 
+ * functions. For example, a subclass could make use of special hardware 
+ * features on embedded devices.
+ */
 
 /*** OBJECT ***/
 
@@ -371,6 +394,16 @@ swfdec_renderer_new (cairo_surface_t *surface)
   return g_object_new (SWFDEC_TYPE_RENDERER, "surface", surface, NULL);
 }
 
+/**
+ * swfdec_renderer_new_for_player:
+ * @surface: a cairo surface
+ * @player: the player this renderer should be used with
+ *
+ * Creates a renderer to be used with the given @surface and @player. The 
+ * renderer will use the same cache as the @player.
+ *
+ * Returns: a new renderer
+ **/
 SwfdecRenderer *
 swfdec_renderer_new_for_player (cairo_surface_t *surface, SwfdecPlayer *player)
 {

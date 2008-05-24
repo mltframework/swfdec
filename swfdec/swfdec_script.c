@@ -227,6 +227,15 @@ swfdec_script_unref (SwfdecScript *script)
   g_free (script);
 }
 
+/**
+ * swfdec_script_get_version:
+ * @script: the script
+ *
+ * Queries the Flash version this script was compiled with. Different versions
+ * result in slightly different behavior in the script interpreter.
+ *
+ * Returns: The Flash version this script conforms to
+ **/
 guint
 swfdec_script_get_version (SwfdecScript *script)
 {

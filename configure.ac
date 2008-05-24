@@ -204,29 +204,6 @@ if test "$HAVE_CAIRO" = "no"; then
   AC_MSG_ERROR([cairo and cairo-png = $CAIRO_VER is required to build swfdec])
 fi
 
-dnl  I'd put a required version in here if distros can agree on a way
-dnl  to detect ffmpeg. But as it stands even pkg-config versions are weird.
-dnl  So you'll have to update your ffmpeg checkout if compilation fails.
-dnl  Or you submit a patch that detects ffmpeg reliably on the distros.
-AC_ARG_ENABLE(ffmpeg,
-	AS_HELP_STRING([--enable-ffmpeg],
-			[enable ffmpeg support (default=no)])],
-	enable_ffmpeg=$enableval,
-	enable_ffmpeg="no")
-
-if test "$enable_ffmpeg" = "yes"; then
-	PKG_CHECK_MODULES(FFMPEG, libavcodec libswscale, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
-	AC_SUBST(FFMPEG_CFLAGS)
-	AC_SUBST(FFMPEG_LIBS)
-	if test "x$HAVE_FFMPEG" = xyes; then
-	  AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
-	else
-	  AC_MSG_ERROR([Couldn't find ffmpeg. You might need to install the libavcodec-dev and libswscale-dev packages.])
-	fi
-else
-	AC_MSG_NOTICE([ffmpeg support was not enabled.])
-fi
-AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 AC_ARG_ENABLE(gstreamer,
 	AS_HELP_STRING([--enable-gstreamer],
 			[enable GStreamer support (default=yes)])],

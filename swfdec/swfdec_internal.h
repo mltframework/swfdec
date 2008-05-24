@@ -33,13 +33,6 @@ G_BEGIN_DECLS
 
 SwfdecAudioDecoder *	swfdec_audio_decoder_adpcm_new		(guint			type, 
 								 SwfdecAudioFormat	format);
-#ifdef HAVE_FFMPEG
-SwfdecAudioDecoder *	swfdec_audio_decoder_ffmpeg_new		(guint			type, 
-								 SwfdecAudioFormat	format);
-gboolean		swfdec_audio_decoder_ffmpeg_prepare	(guint			codec,
-								 SwfdecAudioFormat	format,
-								 char **		detail);
-#endif
 #ifdef HAVE_GST
 SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(guint			type, 
 								 SwfdecAudioFormat	format);
@@ -52,11 +45,6 @@ gboolean		swfdec_audio_decoder_gst_prepare	(guint			codec,
 
 SwfdecVideoDecoder *	swfdec_video_decoder_screen_new		(guint			format);
 SwfdecVideoDecoder *	swfdec_video_decoder_vp6_alpha_new    	(guint			format);
-#ifdef HAVE_FFMPEG
-SwfdecVideoDecoder *	swfdec_video_decoder_ffmpeg_new		(guint			format);
-gboolean		swfdec_video_decoder_ffmpeg_prepare	(guint			codec,
-								 char **		detail);
-#endif
 #ifdef HAVE_GST
 SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(guint			format);
 gboolean		swfdec_video_decoder_gst_prepare	(guint			codec,

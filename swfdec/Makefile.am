@@ -2,9 +2,6 @@ SUBDIRS = jpeg
 
 CODECS =
 
-if HAVE_FFMPEG
-CODECS += swfdec_codec_ffmpeg.c
-endif
 if HAVE_GST
 CODECS += swfdec_codec_gst.c
 endif

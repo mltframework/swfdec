@@ -422,79 +422,10 @@ swfdec_sound_buffer_get_n_samples (const SwfdecBuffer *buffer, SwfdecAudioFormat
     swfdec_audio_format_get_granularity (format);
 }
 
-static void
-swfdec_sound_buffer_render_stereo (gint16 *dest, const gint16 *source, guint offset,
-    guint n_samples, guint rate)
-{
-  guint i, j;
-
-  source += 2 * (offset / rate);
-  offset %= rate;
-
-  if (offset) {
-    offset = MIN (rate - offset, n_samples);
-    for (i = 0; i < offset; i++) {
-      *dest++ = source[0];
-      *dest++ = source[1];
-    }
-    source += 2;
-    n_samples -= offset;
-  }
-  for (i = rate; i <= n_samples; i += rate) {
-    for (j = 0; j < rate; j++) {
-      *dest++ = source[0];
-      *dest++ = source[1];
-    }
-    source += 2;
-  }
-  n_samples -= i - rate;
-  g_assert (n_samples < rate);
-  for (i = 0; i < n_samples; i++) {
-    *dest++ = source[0];
-    *dest++ = source[1];
-  }
-}
-
-static void
-swfdec_sound_buffer_render_mono (gint16 *dest, const gint16 *source, guint offset,
-    guint n_samples, guint rate)
-{
-  guint i, j;
-
-  source += (offset / rate);
-  offset %= rate;
-
-  if (offset) {
-    offset = MIN (rate - offset, n_samples);
-    for (i = 0; i < offset; i++) {
-      *dest++ = *source;
-      *dest++ = *source;
-    }
-    source++;
-    n_samples -= offset;
-  }
-  for (i = rate; i <= n_samples; i += rate) {
-    for (j = 0; j < rate; j++) {
-      *dest++ = *source;
-      *dest++ = *source;
-    }
-    source++;
-  }
-  n_samples -= i - rate;
-  g_assert (n_samples < rate);
-  for (i = 0; i < n_samples; i++) {
-    *dest++ = *source;
-    *dest++ = *source;
-  }
-}
-
 /**
  * swfdec_sound_render_buffer:
  * @dest: target buffer to render to
  * @source: source data to render
- * @format: format of data in @source and @previous
- * @previous: previous buffer or NULL for none. This is necessary for
- *            upsampling at buffer boundaries
  * @offset: offset in 44100Hz samples into @source
  * @n_samples: number of samples to render into @dest. If more data would be
  *	       rendered than is available in @source, 0 samples are used instead.
@@ -503,40 +434,20 @@ swfdec_sound_buffer_render_mono (gint16 *dest, const gint16 *source, guint offse
  **/
 void
 swfdec_sound_buffer_render (gint16 *dest, const SwfdecBuffer *source, 
-    SwfdecAudioFormat format, const SwfdecBuffer *previous,
     guint offset, guint n_samples)
 {
-  guint channels = swfdec_audio_format_get_channels (format);
-  guint rate = swfdec_audio_format_get_granularity (format);
-  guint width = swfdec_audio_format_is_16bit (format) ? 2 : 1;
-  guint total_samples;
-  gint16 *fixme = NULL;
+  const gint16 *src;
+  guint i;
 
   g_return_if_fail (dest != NULL);
   g_return_if_fail (source != NULL);
-  g_return_if_fail (swfdec_sound_buffer_get_n_samples (source, format) > 0);
-  g_return_if_fail (previous == NULL || swfdec_sound_buffer_get_n_samples (previous, format) > 0);
+  g_return_if_fail ((offset + n_samples) * 4 <= source->length);
 
-  total_samples = (source->length / channels / width) * rate;
-  SWFDEC_LOG ("rendering [%u %u) - total: %u samples", offset, n_samples, total_samples);
-  /* FIXME: warn about this? */
-  n_samples = MIN (n_samples, total_samples - offset);
-  
-  if (width == 1) {
-    guint i;
-    /* FIXME: make this faster */
-    fixme = g_try_malloc (source->length * 2);
-    if (fixme == NULL)
-      return;
-    for (i = 0; i < source->length; i++) {
-      fixme[i] = (((gint16) source->data[i]) << 8) - 32768;
-    }
+  src = (gint16 *) source->data;
+  src += 2 * offset;
+  n_samples *= 2;
+  for (i = 0; i < n_samples; i++) {
+    *dest++ += *src++;
   }
-  if (channels == 2) {
-    swfdec_sound_buffer_render_stereo (dest, (const void *) source->data, offset, n_samples, rate);
-  } else {
-    swfdec_sound_buffer_render_mono (dest, (const void *) source->data, offset, n_samples, rate);
-  }
-  g_free (fixme);
 }
 

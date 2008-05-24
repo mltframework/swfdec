@@ -103,9 +103,7 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
   offset %= event->n_samples;
   for (rendered = 0; loop < event->n_loops && rendered < n_samples; loop++) {
     samples = MIN (n_samples - rendered, event->n_samples - offset);
-    swfdec_sound_buffer_render (dest_end, event->decoded,
-	swfdec_audio_format_new (44100, 2, TRUE), loop == 0 ? NULL : event->decoded, offset,
-	samples);
+    swfdec_sound_buffer_render (dest_end, event->decoded, offset, samples);
     rendered += samples;
     dest_end += samples * 2;
     offset = 0;

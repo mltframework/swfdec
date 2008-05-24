@@ -1,3 +1,3 @@
 #!/bin/sh
 autoreconf -i -f &&
-./configure --disable-static --enable-gtk-doc --enable-vivified --enable-ffmpeg --enable-mad $@
+./configure --disable-static --enable-gtk-doc --enable-vivified --enable-ffmpeg $@

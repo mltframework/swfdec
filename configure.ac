@@ -204,30 +204,6 @@ if test "$HAVE_CAIRO" = "no"; then
   AC_MSG_ERROR([cairo and cairo-png = $CAIRO_VER is required to build swfdec])
 fi
 
-AC_ARG_ENABLE(mad,
-	AS_HELP_STRING([--enable-mad],
-			[enable mad audio (default=no)])],
-	enable_mad=$enableval,
-	enable_mad="no")
-
-if test "$enable_mad" = "yes"; then
-        PKG_CHECK_EXISTS([mad],[
-		MAD_VER=0.15.0
-                PKG_CHECK_MODULES(MAD, mad >= $MAD_VER mad >= $MAD_VER, HAVE_MAD=yes, HAVE_MAD=no)
-        ], [
-                AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
-        ])
-	AC_SUBST(MAD_LIBS)
-	if test "x$HAVE_MAD" = xyes; then
-	  AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
-	else
-	  AC_MSG_ERROR([Couldn't find mad. You might need to install the libmad0-dev package.])
-	fi
-else
-	AC_MSG_NOTICE([mad audio support was not enabled.])
-fi
-AM_CONDITIONAL(HAVE_MAD, [test "x$HAVE_MAD" = xyes])
-
 dnl  I'd put a required version in here if distros can agree on a way
 dnl  to detect ffmpeg. But as it stands even pkg-config versions are weird.
 dnl  So you'll have to update your ffmpeg checkout if compilation fails.

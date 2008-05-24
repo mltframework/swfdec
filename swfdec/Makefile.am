@@ -8,9 +8,6 @@ endif
 if HAVE_GST
 CODECS += swfdec_codec_gst.c
 endif
-if HAVE_MAD
-CODECS += swfdec_codec_mad.c
-endif
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
 

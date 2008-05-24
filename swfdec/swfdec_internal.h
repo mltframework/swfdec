@@ -33,13 +33,6 @@ G_BEGIN_DECLS
 
 SwfdecAudioDecoder *	swfdec_audio_decoder_adpcm_new		(guint			type, 
 								 SwfdecAudioFormat	format);
-#ifdef HAVE_MAD
-SwfdecAudioDecoder *	swfdec_audio_decoder_mad_new		(guint		type, 
-								 SwfdecAudioFormat	format);
-gboolean		swfdec_audio_decoder_mad_prepare	(guint			codec,
-								 SwfdecAudioFormat	format,
-								 char **		detail);
-#endif
 #ifdef HAVE_FFMPEG
 SwfdecAudioDecoder *	swfdec_audio_decoder_ffmpeg_new		(guint			type, 
 								 SwfdecAudioFormat	format);

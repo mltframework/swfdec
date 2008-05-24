@@ -138,9 +138,6 @@ static const struct {
 #ifdef HAVE_GST
   { "gst",	swfdec_audio_decoder_gst_new, swfdec_audio_decoder_gst_prepare },
 #endif
-#ifdef HAVE_MAD
-  { "mad",	swfdec_audio_decoder_mad_new, swfdec_audio_decoder_mad_prepare },
-#endif
 #ifdef HAVE_FFMPEG
   { "ffmpeg",	swfdec_audio_decoder_ffmpeg_new, swfdec_audio_decoder_ffmpeg_prepare }
 #endif

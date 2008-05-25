@@ -33,8 +33,6 @@ typedef struct _SwfdecAudioDecoder SwfdecAudioDecoder;
 #define SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ 5
 #define SWFDEC_AUDIO_CODEC_NELLYMOSER 6
 
-typedef SwfdecAudioDecoder * (SwfdecAudioDecoderNewFunc) (guint type, gboolean width,
-    SwfdecAudioFormat format);
 struct _SwfdecAudioDecoder {
   guint			codec;
   void			(* push)	(SwfdecAudioDecoder *	decoder,

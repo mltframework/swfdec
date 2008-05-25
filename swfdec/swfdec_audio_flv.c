@@ -125,7 +125,7 @@ swfdec_audio_flv_render (SwfdecAudio *audio, gint16* dest,
   start += flv->playback_skip;
   SWFDEC_LOG ("flv %p rendering offset %u, samples %u", flv, start, n_samples);
   walk = g_queue_peek_head_link (flv->playback_queue);
-  while (n_samples) {
+  for (rendered = 0; rendered < n_samples;) {
     if (walk) {
       buffer = walk->data;
       walk = walk->next;
@@ -147,11 +147,10 @@ swfdec_audio_flv_render (SwfdecAudio *audio, gint16* dest,
     } else {
       SWFDEC_LOG ("rendering %u samples", samples);
     }
-    samples = MIN (samples, n_samples);
+    samples = MIN (samples, n_samples - rendered);
     swfdec_sound_buffer_render (dest, buffer, start, samples);
     start = 0;
     rendered += samples;
-    n_samples -= samples;
     dest += 2 * samples;
   }
   return rendered;

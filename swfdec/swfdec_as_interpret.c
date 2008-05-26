@@ -2591,7 +2591,7 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
     try_data->scope_object = NULL;
   }
 
-  if (swfdec_as_context_catch (cx, &val))
+  if (try_data->finally_start && swfdec_as_context_catch (cx, &val))
   {
     // we got an exception while in catch block:
     // create new block for finally to pass on the exception

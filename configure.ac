@@ -53,8 +53,6 @@ AM_PROG_CC_STDC
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_AWK
-dnl FIXME only require lex for vivi
-AM_PROG_LEX
 
 AC_HEADER_STDC
 
@@ -231,6 +229,7 @@ AC_ARG_ENABLE(vivified,
 	enable_vivi=$enableval,
 	enable_vivi="no")
 if test "$enable_vivi" = "yes"; then
+	AM_PROG_LEX
 	MING_REQUIRED=0.4.0.beta5
 	VIVI_GTK_REQUIRED=2.11.6
 	VIVI_GLIB_REQUIRED=2.14

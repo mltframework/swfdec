@@ -64,6 +64,28 @@ static const char *flag_names[8] = {
   "variables"
 };
 
+int
+vivi_code_asm_get_url2_flag_name_to_value (const char *name)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (flag_names); i++) {
+    if (!g_ascii_strcasecmp (flag_names[i], name))
+      return i;
+  }
+
+  return -1;
+}
+
+const char *
+vivi_code_asm_get_url2_flag_value_to_name (guint value)
+{
+  if (value >= G_N_ELEMENTS (flag_names))
+    return NULL;
+
+  return flag_names[value];
+}
+
 static void
 vivi_code_asm_get_url2_print (ViviCodeToken *token, ViviCodePrinter *printer)
 {

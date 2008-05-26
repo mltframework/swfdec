@@ -1106,18 +1106,6 @@ parse_asm_push (ParseData *data)
   return VIVI_CODE_ASM (push);
 }
 
-/* FIXME: export for compiler */
-static const char *get_url2_flag_names[8] = {
-  "get",
-  "post",
-  "reserved1",
-  "reserved2",
-  "reserved3",
-  "reserved4",
-  "internal",
-  "variables"
-};
-
 static ViviCodeAsm *
 parse_asm_get_url2 (ParseData *data)
 {
@@ -1125,17 +1113,14 @@ parse_asm_get_url2 (ParseData *data)
 
   while (peek_identifier (data) && !peek_line_terminator (data)) {
     const char *name = parse_identifier_value (data);
-    guint i;
+    int value = vivi_code_asm_get_url2_flag_name_to_value (name);
 
-    for (i = 0; i < G_N_ELEMENTS (get_url2_flag_names); i++) {
-      if (!g_ascii_strcasecmp (name, get_url2_flag_names[i])) {
-	// TODO: warn if already set?
-	flags |= 1 << i;
-	break;
-      }
-    }
-    if (i == G_N_ELEMENTS (get_url2_flag_names))
+    if (value == -1) {
       vivi_parser_error (data, "Invalid flag for get_url2: %s", name);
+    } else {
+      // TODO: warn if already set?
+      flags |= 1 << value;
+    }
   }
 
   parse_automatic_semicolon (data);

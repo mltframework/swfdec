@@ -47,14 +47,16 @@ struct _ViviCodeAsmGetUrl2Class
   ViviCodeAsmCodeClass	code_class;
 };
 
-GType		vivi_code_asm_get_url2_get_type	  	(void);
+GType		vivi_code_asm_get_url2_get_type			(void);
 
-ViviCodeAsm *	vivi_code_asm_get_url2_new		(SwfdecLoaderRequest		method,
-							 gboolean			internal,
-							 gboolean			variables);
+ViviCodeAsm *	vivi_code_asm_get_url2_new			(SwfdecLoaderRequest		method,
+								 gboolean			internal,
+								 gboolean			variables);
 
-ViviCodeAsm *	vivi_code_asm_get_url2_new_from_flags	(guint				flags);
+ViviCodeAsm *	vivi_code_asm_get_url2_new_from_flags		(guint				flags);
 
+int		vivi_code_asm_get_url2_flag_name_to_value	(const char *			name);
+const char *	vivi_code_asm_get_url2_flag_value_to_name	(guint				value);
 
 G_END_DECLS
 #endif

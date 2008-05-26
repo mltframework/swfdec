@@ -34,6 +34,7 @@
 #include "vivi_code_asm_pool.h"
 #include "vivi_code_asm_push.h"
 #include "vivi_code_asm_store.h"
+#include "vivi_code_asm_try.h"
 #include "vivi_code_assignment.h"
 #include "vivi_code_binary_default.h"
 #include "vivi_code_bit_not.h"
@@ -1010,6 +1011,101 @@ parse_asm_store (ParseData *data)
 }
 
 static ViviCodeAsm *
+parse_asm_try (ParseData *data)
+{
+  gboolean has_catch, has_finally;
+  guint reserved_flags, id;
+  const char *name;
+  char *variable;
+  ViviCodeLabel *label_catch, *label_finally, *label_end;
+  ViviCodeAsm *try_;
+
+  has_catch = FALSE;
+  has_finally = FALSE;
+  reserved_flags = 0;
+
+  while (peek_identifier (data) && !peek_line_terminator (data)) {
+    name = parse_identifier_value (data);
+
+    if (!g_ascii_strcasecmp (name, "has_catch")) {
+      has_catch = TRUE;
+    } else if (!g_ascii_strcasecmp (name, "has_finally")) {
+      has_finally = TRUE;
+    } else {
+      guint i;
+
+      for (i = 0; i < 5; i++) {
+	char *str = g_strdup_printf ("reserved%i", i + 1);
+	if (!g_ascii_strcasecmp (name, str)) {
+	  g_free (str);
+	  break;
+	}
+	g_free (str);
+      }
+      if (i < 5) {
+	reserved_flags |= (1 << i);
+      } else {
+	vivi_parser_error (data, "Unknown flag for try: %s", name);
+      }
+    }
+  }
+
+  id = 0; // silence compiler warning
+  if (peek_string (data)) {
+    variable = g_strdup (parse_string_value (data));
+  } else if (peek_numeric (data)) {
+    // TODO: warning/error if not int
+    variable = NULL;
+    id = swfdec_as_double_to_integer (parse_numeric_value (data));
+    if (id > G_MAXUINT8) {
+      vivi_parser_error (data, "Too large register number for try: %i", id);
+      id = 0;
+    }
+  } else {
+    vivi_parser_error_unexpected_or (data, TOKEN_STRING, TOKEN_NUMBER,
+	TOKEN_NONE);
+    variable = g_strdup ("undefined");
+  }
+
+  name = parse_identifier_value (data);
+  label_catch = vivi_parser_get_label (data, name);
+  if (label_catch == NULL) {
+    label_catch = VIVI_CODE_LABEL (vivi_code_label_new (name));
+    vivi_parser_add_waiting_label (data, label_catch);
+  }
+
+  name = parse_identifier_value (data);
+  label_finally = vivi_parser_get_label (data, name);
+  if (label_finally == NULL) {
+    label_finally = VIVI_CODE_LABEL (vivi_code_label_new (name));
+    vivi_parser_add_waiting_label (data, label_finally);
+  }
+
+  name = parse_identifier_value (data);
+  label_end = vivi_parser_get_label (data, name);
+  if (label_end == NULL) {
+    label_end = VIVI_CODE_LABEL (vivi_code_label_new (name));
+    vivi_parser_add_waiting_label (data, label_end);
+  }
+
+  parse_automatic_semicolon (data);
+
+  if (variable != NULL) {
+    try_ = vivi_code_asm_try_new (label_catch, label_finally, label_end,
+	variable);
+  } else {
+    try_ = vivi_code_asm_try_new_register (label_catch, label_finally,
+	label_end, id);
+  }
+  vivi_code_asm_try_set_has_catch (VIVI_CODE_ASM_TRY (try_), has_catch);
+  vivi_code_asm_try_set_has_finally (VIVI_CODE_ASM_TRY (try_), has_finally);
+  vivi_code_asm_try_set_reserved_flags (VIVI_CODE_ASM_TRY (try_),
+      reserved_flags);
+
+  return try_;
+}
+
+static ViviCodeAsm *
 parse_asm_pool (ParseData *data)
 {
   SwfdecConstantPool *pool;
@@ -1181,7 +1277,8 @@ static const AsmStatement asm_statements[] = {
   { "get_url2", NULL, parse_asm_get_url2 },
   { "pool", NULL, parse_asm_pool },
   { "push", NULL, parse_asm_push },
-  { "store", NULL, parse_asm_store }
+  { "store", NULL, parse_asm_store },
+  { "try", NULL, parse_asm_try }
 };
 #if 0
 DEFAULT_ASM (GotoFrame, goto_frame, SWFDEC_AS_ACTION_GOTO_FRAME)
@@ -1213,6 +1310,8 @@ parse_asm_code (ParseData *data)
 
   if (try_parse_token (data, TOKEN_THROW)) {
     identifier = g_strdup ("throw");
+  } else if (try_parse_token (data, TOKEN_TRY)) {
+    identifier = g_strdup ("try");
   } else if (try_parse_token (data, TOKEN_IMPLEMENTS)) {
     identifier = g_strdup ("implements");
   } else if (try_parse_token (data, TOKEN_DELETE)) {
@@ -1294,6 +1393,7 @@ parse_asm_statement (ParseData *data)
       g_object_unref (code);
     } while (peek_token (data, TOKEN_IDENTIFIER) ||
 	peek_token (data, TOKEN_THROW) ||
+	peek_token (data, TOKEN_TRY) ||
 	peek_token (data, TOKEN_IMPLEMENTS) ||
 	peek_token (data, TOKEN_DELETE) ||
 	peek_token (data, TOKEN_RETURN) ||

@@ -36,6 +36,8 @@ EXTRA_DIST = \
 	asm_push.as.expect \
 	asm_store.as \
 	asm_store.as.expect \
+	asm_try.as \
+	asm_try.as.expect \
 	assignment.as \
 	assignment.as.expect \
 	assignment_member.as \

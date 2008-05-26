@@ -195,11 +195,12 @@ main (int argc, char *argv[])
     g_object_unref (assembler);
   } else {
     SwfdecScript *script =
-      vivi_code_assembler_assemble_script (assembler, version, NULL);
+      vivi_code_assembler_assemble_script (assembler, version, &error);
     g_object_unref (assembler);
 
-    if (script == NULL) {
-      g_printerr ("Script assembling failed\n");
+    if (error != NULL) {
+      g_printerr ("Script assembling failed: %s\n", error->message);
+      g_error_free (error);
       return 1;
     }
 

@@ -31,6 +31,7 @@
 #include "vivi_code_and.h"
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_get_url2.h"
+#include "vivi_code_asm_pool.h"
 #include "vivi_code_asm_push.h"
 #include "vivi_code_asm_store.h"
 #include "vivi_code_assignment.h"
@@ -1009,6 +1010,40 @@ parse_asm_store (ParseData *data)
 }
 
 static ViviCodeAsm *
+parse_asm_pool (ParseData *data)
+{
+  SwfdecConstantPool *pool;
+  ViviCodeAsm *code;
+  SwfdecBots *bots;
+  SwfdecBuffer *buffer;
+  guint num;
+
+  bots = swfdec_bots_open ();
+  swfdec_bots_put_u16 (bots, 0);
+
+  num = 0;
+  if (!try_parse_restricted_semicolon (data)) {
+    do {
+      swfdec_bots_put_string (bots, parse_string_value (data));
+      num++;
+    } while (try_parse_token (data, TOKEN_COMMA));
+
+    parse_automatic_semicolon (data);
+  }
+
+  *(guint16 *)bots->data = GUINT16_TO_LE (num);
+
+  // FIXME: version
+  buffer =  swfdec_bots_close (bots);
+  pool = swfdec_constant_pool_new (NULL, buffer, 8);
+  swfdec_buffer_unref (buffer);
+  code = vivi_code_asm_pool_new (pool);
+  swfdec_constant_pool_unref (pool);
+
+  return code;
+}
+
+static ViviCodeAsm *
 parse_asm_push (ParseData *data)
 {
   ViviCodeAsmPush *push;
@@ -1144,6 +1179,7 @@ static const AsmStatement asm_statements[] = {
 #include "vivi_code_defaults.h"
 #undef DEFAULT_ASM
   { "get_url2", NULL, parse_asm_get_url2 },
+  { "pool", NULL, parse_asm_pool },
   { "push", NULL, parse_asm_push },
   { "store", NULL, parse_asm_store }
 };

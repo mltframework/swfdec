@@ -69,10 +69,8 @@ swfdec_constant_pool_new (SwfdecAsContext *context, SwfdecBuffer *buffer, guint 
   swfdec_bits_init (&bits, buffer);
 
   n = swfdec_bits_get_u16 (&bits);
-  if (n == 0)
-    return NULL;
 
-  size = sizeof (SwfdecConstantPool) + (n - 1) * sizeof (char *);
+  size = sizeof (SwfdecConstantPool) + (MAX (1, n) - 1) * sizeof (char *);
   pool = g_slice_alloc0 (size);
   pool->n_strings = n;
   for (i = 0; i < n; i++) {
@@ -142,7 +140,7 @@ swfdec_constant_pool_unref (SwfdecConstantPool *pool)
     }
   }
   swfdec_buffer_unref (pool->buffer);
-  g_slice_free1 (sizeof (SwfdecConstantPool) + (pool->n_strings - 1) * sizeof (char *), pool);
+  g_slice_free1 (sizeof (SwfdecConstantPool) + (MAX (1, pool->n_strings) - 1) * sizeof (char *), pool);
 }
 
 /**

@@ -192,12 +192,9 @@ vivi_code_asm_try_print (ViviCodeToken *token, ViviCodePrinter *printer)
   if (try_->has_finally)
     vivi_code_printer_print (printer, "has_finally ");
 
-  if (try_->use_register)
-    vivi_code_printer_print (printer, "use_register ");
-
   for (i = 0; i < 5; i++) {
     if (try_->reserved_flags & (1 << i)) {
-      char *str = g_strdup_printf ("reserverd%i ", i + 1);
+      char *str = g_strdup_printf ("reserved%i ", i + 1);
       vivi_code_printer_print (printer, str);
       g_free (str);
     }

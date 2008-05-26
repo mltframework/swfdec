@@ -30,6 +30,7 @@
 
 #include "vivi_code_and.h"
 #include "vivi_code_asm_code_default.h"
+#include "vivi_code_asm_get_url2.h"
 #include "vivi_code_asm_push.h"
 #include "vivi_code_asm_store.h"
 #include "vivi_code_assignment.h"
@@ -1105,6 +1106,44 @@ parse_asm_push (ParseData *data)
   return VIVI_CODE_ASM (push);
 }
 
+/* FIXME: export for compiler */
+static const char *get_url2_flag_names[8] = {
+  "get",
+  "post",
+  "reserved1",
+  "reserved2",
+  "reserved3",
+  "reserved4",
+  "internal",
+  "variables"
+};
+
+static ViviCodeAsm *
+parse_asm_get_url2 (ParseData *data)
+{
+  guint flags = 0;
+
+  while (peek_identifier (data) && !peek_line_terminator (data)) {
+    const char *name = parse_identifier_value (data);
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (get_url2_flag_names); i++) {
+      if (!g_ascii_strcasecmp (name, get_url2_flag_names[i])) {
+	// TODO: warn if already set?
+	flags |= 1 << i;
+	break;
+      }
+    }
+    if (i == G_N_ELEMENTS (get_url2_flag_names))
+      vivi_parser_error (data, "Invalid flag for get_url2: %s", name);
+  }
+
+  parse_automatic_semicolon (data);
+
+  return vivi_code_asm_get_url2_new_from_flags (flags);
+}
+
+
 typedef ViviCodeAsm *(*AsmConstructor) (void);
 typedef ViviCodeAsm *(*ParseAsmFunction) (ParseData *data);
 
@@ -1119,6 +1158,7 @@ static const AsmStatement asm_statements[] = {
   { G_STRINGIFY (underscore_name), vivi_code_asm_ ## underscore_name ## _new, NULL },
 #include "vivi_code_defaults.h"
 #undef DEFAULT_ASM
+  { "get_url2", NULL, parse_asm_get_url2 },
   { "push", NULL, parse_asm_push },
   { "store", NULL, parse_asm_store }
 };

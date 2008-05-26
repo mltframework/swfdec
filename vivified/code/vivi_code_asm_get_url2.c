@@ -53,7 +53,7 @@ G_DEFINE_TYPE_WITH_CODE (ViviCodeAsmGetUrl2, vivi_code_asm_get_url2, VIVI_TYPE_C
 
 
 /* FIXME: export for compiler */
-static const char *flag_names[16] = {
+static const char *flag_names[8] = {
   "get",
   "post",
   "reserved1",
@@ -101,7 +101,7 @@ vivi_code_asm_get_url2_new_from_flags (guint flags)
 {
   ViviCodeAsmGetUrl2 *get_url;
 
-  g_return_val_if_fail (flags < G_MAXUINT8, NULL);
+  g_return_val_if_fail (flags <= G_MAXUINT8, NULL);
 
   get_url = g_object_new (VIVI_TYPE_CODE_ASM_GET_URL2, NULL);
   get_url->flags = flags;

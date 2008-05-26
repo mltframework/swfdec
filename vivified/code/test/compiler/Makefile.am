@@ -22,10 +22,12 @@ EXTRA_DIST = \
 	array_literal_empty.as.expect \
 	array_literal_missing_values.as \
 	array_literal_missing_values.as.expect \
-	asm_empty.as \
-	asm_empty.as.expect \
 	asm_default.as \
 	asm_default.as.expect \
+	asm_empty.as \
+	asm_empty.as.expect \
+	asm_get_url2.as \
+	asm_get_url2.as.expect \
 	asm_label.as \
 	asm_label.as.expect \
 	asm_push.as \

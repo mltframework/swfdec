@@ -2584,10 +2584,12 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
 
   cx = SWFDEC_AS_OBJECT (frame)->context;
 
-  g_assert (frame->scope_chain->data == try_data->scope_object);
-  frame->scope_chain =
-    g_slist_delete_link (frame->scope_chain, frame->scope_chain);
-  try_data->scope_object = NULL;
+  if (try_data->scope_object) {
+    g_assert (frame->scope_chain->data == try_data->scope_object);
+    frame->scope_chain =
+      g_slist_delete_link (frame->scope_chain, frame->scope_chain);
+    try_data->scope_object = NULL;
+  }
 
   if (swfdec_as_context_catch (cx, &val))
   {
@@ -2691,7 +2693,7 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
   if (use_catch)
     try_data->catch_start = data + len + try_size;
   if (use_finally)
-    try_data->finally_start = try_data->catch_start + try_data->catch_size;
+    try_data->finally_start = data + len + try_size + try_data->catch_size;
 
   if (try_data->use_register) {
     try_data->register_number = swfdec_bits_get_u8 (&bits);

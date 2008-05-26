@@ -158,53 +158,26 @@ swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
  *		  by swfdec_player_set_audio_advance() is ignored.
  * @n_samples: amount of samples to render.
  *
- * Renders the samples from @audio into the area pointed to by @dest. The data 
- * is added to @dest, so you probably want to initialize @dest to silence 
- * before calling this function.
+ * Renders the samples from @audio into the area pointed to by @dest. Existing
+ * data in @dest is overwritten.
+ *
+ * Returns: The amount of samples actually rendered. Usually this number is 
+ *          equal to @n_samples, but if you arrived at the end of stream or the
+ *          stream is still loading, this number may be lower. It indicates 
+ *          that no more samples are available.
  **/
-void
+guint
 swfdec_audio_render (SwfdecAudio *audio, gint16 *dest, 
     guint start_offset, guint n_samples)
 {
   SwfdecAudioClass *klass;
 
-  g_return_if_fail (SWFDEC_IS_AUDIO (audio));
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (n_samples > 0);
+  g_return_val_if_fail (SWFDEC_IS_AUDIO (audio), 0);
+  g_return_val_if_fail (dest != NULL, 0);
+  g_return_val_if_fail (n_samples > 0, 0);
 
   klass = SWFDEC_AUDIO_GET_CLASS (audio);
-  klass->render (audio, dest, start_offset, n_samples);
-}
-
-/**
- * swfdec_player_render_audio:
- * @player: a #SwfdecPlayer
- * @dest: location to add audio signal to. The audio signal will be in 
- *        44100kHz signed 16bit stereo.
- * @start_offset: offset in samples at which to start rendering. The offset is 
- *		  calculated relative to the last iteration, so the value set 
- *		  by swfdec_player_set_audio_advance() is ignored.
- * @n_samples: amount of samples to render.
- *
- * Renders the data for this frame into the given location. The data is added to @dest, 
- * so you probably want to initialize @dest to silence before calling this function.
- **/
-void 
-swfdec_player_render_audio (SwfdecPlayer *player, gint16* dest, 
-    guint start_offset, guint n_samples)
-{
-  GList *walk;
-  SwfdecAudio *audio;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (n_samples > 0);
-
-  SWFDEC_LOG ("rendering offset %u, samples %u", start_offset, n_samples);
-  for (walk = player->priv->audio; walk; walk = walk->next) {
-    audio = walk->data;
-    swfdec_audio_render (audio, dest, start_offset, n_samples);
-  }
+  return klass->render (audio, dest, start_offset, n_samples);
 }
 
 /*** SWFDEC_AUDIO_FORMAT ***/

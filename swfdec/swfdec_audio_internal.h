@@ -46,7 +46,7 @@ struct _SwfdecAudioClass {
 
   guint			(* iterate)	  		(SwfdecAudio *	audio,
 							 guint		n_samples);
-  void			(* render)			(SwfdecAudio *	audio,
+  guint			(* render)			(SwfdecAudio *	audio,
 							 gint16 *	dest,
 							 guint		start, 
 							 guint		n_samples);

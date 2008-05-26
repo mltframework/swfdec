@@ -427,7 +427,8 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_height / text->yscale));
+  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_height * 
+	SWFDEC_TWIPS_SCALE_FACTOR * text->from_layout.yy));
 }
 
 static void
@@ -439,7 +440,8 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_width / text->yscale));
+  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_height *
+	SWFDEC_TWIPS_SCALE_FACTOR * text->from_layout.xx));
 }
 
 /*
@@ -1355,9 +1357,11 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   g_assert (SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
   g_object_unref (edittext);
 
+  swfdec_movie_begin_update_matrix (movie);
   movie->matrix.x0 = SWFDEC_DOUBLE_TO_TWIPS (x);
   movie->matrix.y0 = SWFDEC_DOUBLE_TO_TWIPS (y);
   movie->modified = TRUE;
+  swfdec_movie_end_update_matrix (movie);
 
   swfdec_movie_initialize (movie);
   swfdec_movie_update (movie);

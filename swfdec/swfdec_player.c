@@ -673,7 +673,8 @@ enum {
   PROP_FOCUS,
   PROP_RENDERER,
   PROP_FULLSCREEN,
-  PROP_ALLOW_FULLSCREEN
+  PROP_ALLOW_FULLSCREEN,
+  PROP_SELECTION
 };
 
 G_DEFINE_TYPE (SwfdecPlayer, swfdec_player, SWFDEC_TYPE_AS_CONTEXT)
@@ -804,6 +805,9 @@ swfdec_player_get_property (GObject *object, guint param_id, GValue *value,
       break;
     case PROP_ALLOW_FULLSCREEN:
       g_value_set_boolean (value, priv->allow_fullscreen);
+      break;
+    case PROP_SELECTION:
+      g_value_set_string (value, priv->selection);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -1945,6 +1949,35 @@ swfdec_player_update_focusrect (SwfdecPlayer *player)
   swfdec_player_invalidate (player, &priv->focusrect);
 }
 
+static void
+swfdec_player_update_selection (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv = player->priv;
+
+  if (SWFDEC_IS_TEXT_FIELD_MOVIE (priv->focus)) {
+    SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (priv->focus);
+    gsize start, end;
+    swfdec_text_buffer_get_selection (text->text, &start, &end);
+    if (start != end) {
+      const char *s = swfdec_text_buffer_get_text (text->text);
+      if (priv->selection != NULL &&
+	  priv->selection[end - start] == '\0' &&
+	  strncmp (s + start, priv->selection, end - start) == 0)
+	return;
+      g_free (priv->selection);
+      priv->selection = g_strndup (s + start, end - start);
+      g_object_notify (G_OBJECT (player), "selection");
+      return;
+    }
+  }
+  /* only possible if both are NULL */
+  if (priv->selection == NULL)
+    return;
+  g_free (priv->selection);
+  priv->selection = NULL;
+  g_object_notify (G_OBJECT (player), "selection");
+}
+
 /* used for breakpoints */
 void
 swfdec_player_unlock_soft (SwfdecPlayer *player)
@@ -1957,6 +1990,7 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
   swfdec_player_update_movies (player);
   swfdec_player_update_mouse_cursor (player);
   swfdec_player_update_focusrect (player);
+  swfdec_player_update_selection (player);
   g_object_thaw_notify (G_OBJECT (player));
   swfdec_player_emit_signals (player);
   player->priv->locked = FALSE;
@@ -2122,6 +2156,9 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       g_param_spec_boolean ("allow-fullscreen", "allow fullscreen", 
 	  "if the player is allowed to change into fullscreen mode",
 	  FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_SELECTION,
+      g_param_spec_string ("selection", "selection", "currently selected text",
+	  NULL, G_PARAM_READABLE));
 
   /**
    * SwfdecPlayer::invalidate:
@@ -3805,3 +3842,19 @@ swfdec_player_set_allow_fullscreen (SwfdecPlayer *player, gboolean allow)
   g_object_notify (G_OBJECT (player), "allow-fullscreen");
 }
 
+/**
+ * swfdec_player_get_selection:
+ * @player: the player
+ *
+ * Retrieves the currently selected text of the player. If no text is currently
+ * selected, %NULL is returned.
+ *
+ * Returns: the currently selected text or %NULL
+ **/
+const char *
+swfdec_player_get_selection (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+
+  return player->priv->selection;
+}

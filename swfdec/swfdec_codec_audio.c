@@ -29,8 +29,34 @@
 
 typedef struct {
   SwfdecAudioDecoder	decoder;
+  SwfdecAudioFormat	format;
   SwfdecBufferQueue *	queue;		/* queue collecting output buffers */
 } SwfdecAudioDecoderUncompressed;
+
+static void
+swfdec_audio_decoder_uncompressed_upscale (SwfdecAudioDecoder *decoder, 
+    SwfdecBuffer *buffer)
+{
+  SwfdecAudioDecoderUncompressed *unc = (SwfdecAudioDecoderUncompressed *) decoder;
+  guint channels = swfdec_audio_format_get_channels (unc->format);
+  guint granularity = swfdec_audio_format_get_granularity (unc->format);
+  SwfdecBuffer *ret;
+  guint i, j;
+  gint16 *src, *dest;
+
+  ret = swfdec_buffer_new (buffer->length * 2 / channels * granularity);
+  src = (gint16 *) buffer->data;
+  dest = (gint16 *) ret->data;
+  for (i = 0; i < buffer->length / 2; i++) {
+    for (j = 0; j < granularity; j++) {
+      *dest++ = src[0];
+      *dest++ = src[channels - 1];
+    }
+    src += channels;
+  }
+
+  swfdec_buffer_queue_push (unc->queue, ret);
+}
 
 static void
 swfdec_audio_decoder_uncompressed_decode_8bit (SwfdecAudioDecoder *decoder, 
@@ -52,18 +78,32 @@ swfdec_audio_decoder_uncompressed_decode_8bit (SwfdecAudioDecoder *decoder,
     out++;
     in++;
   }
-  swfdec_buffer_queue_push (((SwfdecAudioDecoderUncompressed *) decoder)->queue, ret);
+  swfdec_audio_decoder_uncompressed_upscale (decoder, ret);
+  swfdec_buffer_unref (ret);
 }
 
 static void
 swfdec_audio_decoder_uncompressed_decode_16bit (SwfdecAudioDecoder *decoder, 
     SwfdecBuffer *buffer)
 {
+  SwfdecBuffer *tmp;
+  gint16 *src, *dest;
+  guint i;
+
   if (buffer == NULL)
     return;
 
-  swfdec_buffer_ref (buffer);
-  swfdec_buffer_queue_push (((SwfdecAudioDecoderUncompressed *) decoder)->queue, buffer);
+  tmp = swfdec_buffer_new (buffer->length);
+  src = (gint16 *) buffer->data;
+  dest = (gint16 *) tmp->data;
+  for (i = 0; i < buffer->length; i += 2) {
+    *dest = GINT16_FROM_LE (*src);
+    dest++;
+    src++;
+  }
+
+  swfdec_audio_decoder_uncompressed_upscale (decoder, tmp);
+  swfdec_buffer_unref (tmp);
 }
 
 static SwfdecBuffer *
@@ -95,7 +135,6 @@ swfdec_audio_decoder_uncompressed_new (guint type, SwfdecAudioFormat format)
     SWFDEC_WARNING ("endianness of audio unknown, assuming little endian");
   }
   dec = g_new (SwfdecAudioDecoderUncompressed, 1);
-  dec->decoder.format = format;
   if (swfdec_audio_format_is_16bit (format))
     dec->decoder.push = swfdec_audio_decoder_uncompressed_decode_16bit;
   else
@@ -137,12 +176,6 @@ static const struct {
   { "builtin",	swfdec_audio_decoder_builtin_new, swfdec_audio_decoder_builtin_prepare },
 #ifdef HAVE_GST
   { "gst",	swfdec_audio_decoder_gst_new, swfdec_audio_decoder_gst_prepare },
-#endif
-#ifdef HAVE_MAD
-  { "mad",	swfdec_audio_decoder_mad_new, swfdec_audio_decoder_mad_prepare },
-#endif
-#ifdef HAVE_FFMPEG
-  { "ffmpeg",	swfdec_audio_decoder_ffmpeg_new, swfdec_audio_decoder_ffmpeg_prepare }
 #endif
 };
 
@@ -225,25 +258,6 @@ swfdec_audio_decoder_free (SwfdecAudioDecoder *decoder)
 }
 
 /**
- * swfdec_audio_decoder_get_format:
- * @decoder: a #SwfdecAudioDecoder
- *
- * Queries the format that is used by the decoder for its produced output.
- * The format will only be valid after swfdec_audio_decoder_pull () has been
- * called at least once.
- *
- * Returns: the format of the decoded data
- **/
-SwfdecAudioFormat
-swfdec_audio_decoder_get_format	(SwfdecAudioDecoder *decoder)
-{
-  g_return_val_if_fail (decoder != NULL, 0);
-  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (decoder->format), 0);
-
-  return decoder->format;
-}
-
-/**
  * swfdec_audio_decoder_push:
  * @decoder: a #SwfdecAudioDecoder
  * @buffer: a #SwfdecBuffer to process or %NULL to flush
@@ -291,7 +305,6 @@ swfdec_audio_decoder_pull (SwfdecAudioDecoder *decoder)
   ret = decoder->pull (decoder);
   if (ret == NULL)
     return NULL;
-  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (decoder->format), ret);
   return ret;
 }
 

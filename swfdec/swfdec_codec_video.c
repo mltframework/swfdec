@@ -55,9 +55,6 @@ static const struct {
 #ifdef HAVE_GST
   , { "gst",		swfdec_video_decoder_gst_new,		swfdec_video_decoder_gst_prepare }
 #endif
-#ifdef HAVE_FFMPEG
-  , { "ffmpeg",		swfdec_video_decoder_ffmpeg_new,	swfdec_video_decoder_ffmpeg_prepare }
-#endif
 };
 
 char *

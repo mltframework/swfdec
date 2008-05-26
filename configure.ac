@@ -204,53 +204,6 @@ if test "$HAVE_CAIRO" = "no"; then
   AC_MSG_ERROR([cairo and cairo-png = $CAIRO_VER is required to build swfdec])
 fi
 
-AC_ARG_ENABLE(mad,
-	AS_HELP_STRING([--enable-mad],
-			[enable mad audio (default=no)])],
-	enable_mad=$enableval,
-	enable_mad="no")
-
-if test "$enable_mad" = "yes"; then
-        PKG_CHECK_EXISTS([mad],[
-		MAD_VER=0.15.0
-                PKG_CHECK_MODULES(MAD, mad >= $MAD_VER mad >= $MAD_VER, HAVE_MAD=yes, HAVE_MAD=no)
-        ], [
-                AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad", HAVE_MAD="no")
-        ])
-	AC_SUBST(MAD_LIBS)
-	if test "x$HAVE_MAD" = xyes; then
-	  AC_DEFINE(HAVE_MAD, 1, [Define if mad is enabled])
-	else
-	  AC_MSG_ERROR([Couldn't find mad. You might need to install the libmad0-dev package.])
-	fi
-else
-	AC_MSG_NOTICE([mad audio support was not enabled.])
-fi
-AM_CONDITIONAL(HAVE_MAD, [test "x$HAVE_MAD" = xyes])
-
-dnl  I'd put a required version in here if distros can agree on a way
-dnl  to detect ffmpeg. But as it stands even pkg-config versions are weird.
-dnl  So you'll have to update your ffmpeg checkout if compilation fails.
-dnl  Or you submit a patch that detects ffmpeg reliably on the distros.
-AC_ARG_ENABLE(ffmpeg,
-	AS_HELP_STRING([--enable-ffmpeg],
-			[enable ffmpeg support (default=no)])],
-	enable_ffmpeg=$enableval,
-	enable_ffmpeg="no")
-
-if test "$enable_ffmpeg" = "yes"; then
-	PKG_CHECK_MODULES(FFMPEG, libavcodec libswscale, HAVE_FFMPEG=yes, HAVE_FFMPEG=no)
-	AC_SUBST(FFMPEG_CFLAGS)
-	AC_SUBST(FFMPEG_LIBS)
-	if test "x$HAVE_FFMPEG" = xyes; then
-	  AC_DEFINE(HAVE_FFMPEG, 1, [Define if ffmpeg is enabled])
-	else
-	  AC_MSG_ERROR([Couldn't find ffmpeg. You might need to install the libavcodec-dev and libswscale-dev packages.])
-	fi
-else
-	AC_MSG_NOTICE([ffmpeg support was not enabled.])
-fi
-AM_CONDITIONAL(HAVE_FFMPEG, [test "x$HAVE_FFMPEG" = xyes])
 AC_ARG_ENABLE(gstreamer,
 	AS_HELP_STRING([--enable-gstreamer],
 			[enable GStreamer support (default=yes)])],
@@ -297,7 +250,7 @@ AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_CFLAGS)
 
 SWFDEC_CFLAGS="-I\$(top_srcdir) $GLIB_CFLAGS $CAIRO_CFLAGS"
-SWFDEC_LIBS="\$(top_builddir)/swfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS $CAIRO_LIBS -lz"
+SWFDEC_LIBS="\$(top_builddir)/swfdec/libswfdec-$SWFDEC_MAJORMINOR.la $GLIB_LIBS $CAIRO_LIBS -lz -lm"
 AC_SUBST(SWFDEC_LIBS)
 AC_SUBST(SWFDEC_CFLAGS)
 

@@ -44,9 +44,10 @@ struct _SwfdecTextFieldMovie {
   SwfdecActor		actor;
 
   SwfdecRect		extents;	/* original extents (copied from graphic) */
-  double		xscale;		/* scale movie => stage in x direction */
-  double		yscale;		/* scale movie => stage in y direction */
-  SwfdecRectangle	stage_rect;	/* these extents in stage coordinates */
+  cairo_matrix_t	to_layout;	/* matrix to go from movie => layout */
+  cairo_matrix_t	from_layout;	/* matrix to go from layout => movie */
+  SwfdecRectangle	layout_area;	/* layout we render to in stage coordinates */
+  SwfdecRectangle	stage_area;	/* complete size of textfield in stage coordinates */
 
   /* properties copied from textfield */
   gboolean		html;
@@ -112,8 +113,6 @@ void		swfdec_text_field_movie_replace_text	(SwfdecTextFieldMovie *		text,
 							 guint				end_index,
 							 const char *			str);
 
-gboolean	swfdec_text_field_movie_get_visible_area(SwfdecTextFieldMovie *	text,
-							 SwfdecRectangle *	rect);
 guint		swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *	text);
 
 /* implemented in swfdec_text_field_movie_as.c */

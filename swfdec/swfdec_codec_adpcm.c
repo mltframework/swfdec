@@ -28,6 +28,7 @@
 
 typedef struct {
   SwfdecAudioDecoder	decoder;
+  SwfdecAudioFormat	format;
   SwfdecBufferQueue *	queue;
 } SwfdecAudioDecoderAdpcm;
 
@@ -51,10 +52,11 @@ static const int stepSizeTable[89] = {
 };
 
 static SwfdecBuffer *
-swfdec_audio_decoder_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint channels)
+swfdec_audio_decoder_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, 
+    guint channels, guint granularity)
 {
   SwfdecBuffer *ret;
-  guint len;
+  guint len, repeat;
   guint i, j, ch;
   guint index[2];
   int pred[2];
@@ -63,6 +65,9 @@ swfdec_audio_decoder_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint c
   int diff;
   const int *realIndexTable;
   guint step[2];
+
+  /* for scaling up the audio to 44100kHz */
+  repeat = 2 * granularity - channels;
 
   realIndexTable = indexTable[n_bits - 2];
   for (ch = 0; ch < channels; ch++) {
@@ -78,12 +83,18 @@ swfdec_audio_decoder_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint c
   }
   len = swfdec_bits_left (bits) / channels / n_bits;
   len = MIN (len, 4095);
-  ret = swfdec_buffer_new ((len + 1) * sizeof (gint16) * channels);
+  ret = swfdec_buffer_new ((len + 1) * sizeof (gint16) * granularity * 2);
   out = (gint16 *) (void *) ret->data;
   /* output initial value */
   SWFDEC_LOG ("decoding %u samples", len + 1);
   for (ch = 0; ch < channels; ch++)
     *out++ = pred[ch];
+  /* upscale to 44.1kHz */
+  for (ch = 0; ch < repeat; ch++) {
+    *out = out[-(gssize) channels];
+    out++;
+  }
+
   sign_mask = 1 << (n_bits - 1);
   for (i = 0; i < len; i++) {
     for (ch = 0; ch < channels; ch++) {
@@ -123,6 +134,12 @@ swfdec_audio_decoder_adpcm_decode_chunk (SwfdecBits *bits, guint n_bits, guint c
       /* Step 7 - Output value */
       *out++ = pred[ch];
     }
+
+    /* upscale to 44.1kHz */
+    for (ch = 0; ch < repeat; ch++) {
+      *out = out[-(gssize) channels];
+      out++;
+    }
   }
   return ret;
 }
@@ -131,19 +148,20 @@ static void
 swfdec_audio_decoder_adpcm_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
 {
   SwfdecAudioDecoderAdpcm *adpcm = (SwfdecAudioDecoderAdpcm *) dec;
-  guint channels, n_bits;
+  guint channels, n_bits, granularity;
   SwfdecBits bits;
 
   if (buffer == NULL)
     return;
 
-  channels = swfdec_audio_format_get_channels (dec->format);
+  channels = swfdec_audio_format_get_channels (adpcm->format);
+  granularity = swfdec_audio_format_get_granularity (adpcm->format);
   swfdec_bits_init (&bits, buffer);
   n_bits = swfdec_bits_getbits (&bits, 2) + 2;
   SWFDEC_DEBUG ("starting decoding: %u channels, %u bits", channels, n_bits);
   /* 22 is minimum required header size */
   while (swfdec_bits_left (&bits) >= 22) {
-    buffer = swfdec_audio_decoder_adpcm_decode_chunk (&bits, n_bits, channels);
+    buffer = swfdec_audio_decoder_adpcm_decode_chunk (&bits, n_bits, channels, granularity);
     if (buffer)
       swfdec_buffer_queue_push (adpcm->queue, buffer);
   }
@@ -174,8 +192,7 @@ swfdec_audio_decoder_adpcm_new (guint type, SwfdecAudioFormat format)
   if (type != SWFDEC_AUDIO_CODEC_ADPCM)
     return NULL;
   adpcm = g_slice_new (SwfdecAudioDecoderAdpcm);
-  adpcm->decoder.format = swfdec_audio_format_new (swfdec_audio_format_get_rate (format),
-      swfdec_audio_format_get_channels (format), TRUE);
+  adpcm->format = format;
   adpcm->decoder.push = swfdec_audio_decoder_adpcm_push;
   adpcm->decoder.pull = swfdec_audio_decoder_adpcm_pull;
   adpcm->decoder.free = swfdec_audio_decoder_adpcm_free;

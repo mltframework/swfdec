@@ -143,6 +143,7 @@ SwfdecPlayerScripting *
 		swfdec_player_get_scripting	(SwfdecPlayer *		player);
 void		swfdec_player_set_scripting	(SwfdecPlayer *		player,
 						 SwfdecPlayerScripting *scripting);
+const char *	swfdec_player_get_selection	(SwfdecPlayer *		player);
 gboolean	swfdec_player_get_focus		(SwfdecPlayer *		player);
 void		swfdec_player_set_focus		(SwfdecPlayer *		player,
 						 gboolean		focus);
@@ -189,10 +190,6 @@ gboolean	swfdec_player_key_release	(SwfdecPlayer *	player,
 						 guint		keycode,
 						 guint		character);
 /* audio - see swfdec_audio.c */
-void		swfdec_player_render_audio	(SwfdecPlayer *	player,
-						 gint16 *	dest, 
-						 guint		start_offset,
-						 guint		n_samples);
 const GList *	swfdec_player_get_audio		(SwfdecPlayer *	player);
 
 G_END_DECLS

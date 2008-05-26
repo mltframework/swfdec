@@ -38,7 +38,7 @@ typedef struct _SwfdecAudioClass SwfdecAudioClass;
 
 GType		swfdec_audio_get_type		(void);
 
-void		swfdec_audio_render		(SwfdecAudio *	audio,
+guint		swfdec_audio_render		(SwfdecAudio *	audio,
 						 gint16 *	dest,
 						 guint		start_offset,
 						 guint		n_samples);

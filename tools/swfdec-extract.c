@@ -44,7 +44,7 @@
 #include <swfdec/swfdec_resource.h>
 
 static SwfdecBuffer *
-encode_wav (SwfdecBuffer *buffer, SwfdecAudioFormat format)
+encode_wav (SwfdecBuffer *buffer)
 {
   SwfdecBuffer *wav = swfdec_buffer_new (buffer->length + 44);
   unsigned char *data;
@@ -55,25 +55,20 @@ encode_wav (SwfdecBuffer *buffer, SwfdecAudioFormat format)
   memmove (data, "RIFF----WAVEfmt \020\0\0\0"
 		 "\001\0ccRRRRbbbbAAbbdata", 40);
   *(guint32 *) (void *) &data[4] = GUINT32_TO_LE (buffer->length + 36);
-  *(guint16 *) (void *) &data[22] = GUINT16_TO_LE (swfdec_audio_format_get_channels (format));
-  *(guint32 *) (void *) &data[24] = GUINT32_TO_LE (swfdec_audio_format_get_rate (format));
+  /* rate */
+  *(guint16 *) (void *) &data[22] = GUINT16_TO_LE (44100);
+  /* channels */
+  *(guint32 *) (void *) &data[24] = GUINT32_TO_LE (2);
   /* bits per sample */
-  i = swfdec_audio_format_is_16bit (format) ? 2 : 1;
-  *(guint16 *) (void *) &data[34] = GUINT16_TO_LE (i * 8);
+  *(guint16 *) (void *) &data[34] = GUINT16_TO_LE (16);
   /* block align */
-  i *= swfdec_audio_format_get_channels (format);
-  *(guint16 *) (void *) &data[32] = GUINT16_TO_LE (i);
+  *(guint16 *) (void *) &data[32] = GUINT16_TO_LE (16 * 2);
   /* bytes per second */
-  i *= swfdec_audio_format_get_rate (format);
-  *(guint32 *) (void *) &data[28] = GUINT32_TO_LE (i);
+  *(guint32 *) (void *) &data[28] = GUINT32_TO_LE (16 * 2 * 44100);
   *(guint32 *) (void *) &data[40] = GUINT32_TO_LE (buffer->length);
   data += 44;
-  if (swfdec_audio_format_is_16bit (format)) {
-    for (i = 0; i < buffer->length; i += 2) {
-      *(gint16 *) (void *) (data + i) = GINT16_TO_LE (*(gint16* ) (void *) (buffer->data + i));
-    }
-  } else {
-    memcpy (data, buffer->data, buffer->length);
+  for (i = 0; i < buffer->length; i += 2) {
+    *(gint16 *) (void *) (data + i) = GINT16_TO_LE (*(gint16* ) (void *) (buffer->data + i));
   }
   return wav;
 }
@@ -83,15 +78,14 @@ export_sound (SwfdecSound *sound, const char *filename)
 {
   GError *error = NULL;
   SwfdecBuffer *wav, *buffer;
-  SwfdecAudioFormat format;
 
   /* try to render the sound, that should decode it. */
-  buffer = swfdec_sound_get_decoded (sound, &format);
+  buffer = swfdec_sound_get_decoded (sound);
   if (buffer == NULL) {
     g_printerr ("Couldn't decode sound. For extraction of streams extract the sprite.\n");
     return FALSE;
   }
-  wav = encode_wav (buffer, format);
+  wav = encode_wav (buffer);
   if (!g_file_set_contents (filename, (char *) wav->data, 
 	wav->length, &error)) {
     g_printerr ("Couldn't save sound to file \"%s\": %s\n", filename, error->message);
@@ -146,7 +140,7 @@ export_sprite_sound (SwfdecSprite *sprite, const char *filename)
   }
   buffer = swfdec_buffer_queue_pull (queue, depth);
   swfdec_buffer_queue_unref (queue);
-  wav = encode_wav (buffer, swfdec_audio_format_new (44100, 2, TRUE));
+  wav = encode_wav (buffer);
   swfdec_buffer_unref (buffer);
   if (!g_file_set_contents (filename, (char *) wav->data, 
 	wav->length, &error)) {

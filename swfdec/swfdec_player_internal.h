@@ -82,6 +82,7 @@ struct _SwfdecPlayerPrivate
   GType			socket_type;		/* type to use for creating sockets */
   gboolean		has_focus;		/* TRUE if this movie is given focus */
   gboolean		allow_fullscreen;	/* TRUE if this movie may go fullscreen */
+  char *		selection;		/* selected string or %NULL if none */
   /* stage properties */
   guint			internal_width;		/* width used by the scripting engine */
   guint			internal_height;	/* height used by the scripting engine */

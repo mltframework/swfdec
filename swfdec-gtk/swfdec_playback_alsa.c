@@ -84,7 +84,6 @@ write_player (Stream *stream, const snd_pcm_channel_area_t *dst,
   g_assert (dst[0].step == dst[1].step);
   g_assert (dst[0].step == 32);
 
-  memset ((guint8 *) dst[0].addr + offset * dst[0].step / 8, 0, avail * 4);
   swfdec_audio_render (stream->audio, (gint16 *) ((guint8 *) dst[0].addr + offset * dst[0].step / 8), 
       stream->offset, avail);
   //g_print ("rendering %u %u\n", stream->offset, (guint) avail);
@@ -128,7 +127,7 @@ try_write_so_pa_gets_it (Stream *stream)
   ALSA_ERROR (avail, "snd_pcm_avail_update failed", FALSE);
 
   while (avail > 0) {
-    gint16 data[2 * STEP] = { 0, };
+    gint16 data[2 * STEP];
 
     step = MIN (avail, STEP);
     swfdec_audio_render (stream->audio, data, stream->offset, step);

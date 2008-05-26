@@ -99,6 +99,25 @@ swfdec_player_scripting_get_type
 </SECTION>
 
 <SECTION>
+<FILE>SwfdecRenderer</FILE>
+<TITLE>SwfdecRenderer</TITLE>
+SwfdecRenderer
+SwfdecRendererClass
+swfdec_renderer_new
+swfdec_renderer_new_for_player
+swfdec_renderer_get_surface
+<SUBSECTION Standard>
+SWFDEC_IS_RENDERER
+SWFDEC_IS_RENDERER_CLASS
+SWFDEC_RENDERER
+SWFDEC_RENDERER_CLASS
+SWFDEC_RENDERER_GET_CLASS
+SWFDEC_TYPE_RENDERER
+SwfdecRendererPrivate
+swfdec_renderer_get_type
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecURL</FILE>
 <TITLE>SwfdecURL</TITLE>
 SwfdecURL
@@ -119,8 +138,9 @@ swfdec_url_get_url
 swfdec_url_is_local
 swfdec_url_is_parent
 swfdec_url_format_for_display
-swfdec_url_equal
 swfdec_url_hash
+swfdec_url_equal
+swfdec_url_host_equal
 swfdec_url_path_is_relative
 <SUBSECTION Standard>
 SWFDEC_TYPE_URL
@@ -146,21 +166,28 @@ swfdec_player_get_size
 swfdec_player_set_size
 swfdec_player_get_next_event
 swfdec_player_get_background_color
-swfdec_player_set_background_color
 swfdec_player_get_scale_mode
 swfdec_player_set_scale_mode
 swfdec_player_get_alignment
 swfdec_player_set_alignment
 swfdec_player_get_scripting
 swfdec_player_set_scripting
+swfdec_player_get_allow_fullscreen
+swfdec_player_set_allow_fullscreen
+swfdec_player_get_fullscreen
+swfdec_player_get_renderer
+swfdec_player_set_renderer
 swfdec_player_render
+swfdec_player_render_with_renderer
 swfdec_player_advance
 swfdec_player_mouse_move
 swfdec_player_mouse_press
 swfdec_player_mouse_release
 swfdec_player_key_press
 swfdec_player_key_release
-swfdec_player_render_audio
+swfdec_player_get_focus
+swfdec_player_set_focus
+swfdec_player_get_selection
 swfdec_player_get_audio
 swfdec_player_get_maximum_runtime
 swfdec_player_set_maximum_runtime
@@ -264,6 +291,8 @@ swfdec_rectangle_get_type
 <TITLE>SwfdecGtkPlayer</TITLE>
 <INCLUDE>swfdec/swfdec-gtk.h</INCLUDE>
 SwfdecGtkPlayer
+SWFDEC_GTK_PRIORITY_ITERATE
+SWFDEC_GTK_PRIORITY_REDRAW
 swfdec_gtk_player_new
 swfdec_gtk_player_get_playing
 swfdec_gtk_player_set_playing
@@ -291,6 +320,7 @@ SWFDEC_TYPE_GTK_PLAYER
 <INCLUDE>swfdec/swfdec-gtk.h</INCLUDE>
 SwfdecGtkWidget
 swfdec_gtk_widget_new
+swfdec_gtk_widget_new_fullscreen
 swfdec_gtk_widget_get_player
 swfdec_gtk_widget_set_player
 swfdec_gtk_widget_get_interactive
@@ -547,6 +577,7 @@ SwfdecScript
 swfdec_script_new
 swfdec_script_ref
 swfdec_script_unref
+swfdec_script_get_version
 <SUBSECTION Standard>
 swfdec_as_debugger_get_type
 SWFDEC_AS_DEBUGGER

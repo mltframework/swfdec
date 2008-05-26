@@ -419,30 +419,6 @@ swfdec_audio_decoder_gst_pull (SwfdecAudioDecoder *dec)
   return swfdec_buffer_new_from_gst (buf);
 }
 
-static gboolean
-swfdec_audio_decoder_set_caps (GstPad *pad, GstCaps *caps)
-{
-  SwfdecGstAudio *player = g_object_get_data (G_OBJECT (pad), "swfdec-player");
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
-  int depth, channels, rate;
-
-  if (SWFDEC_IS_AUDIO_FORMAT (player->decoder.format)) {
-    SWFDEC_ERROR ("resetting format not allowed");
-    player->error = TRUE;
-    return FALSE;
-  }
-  if (!gst_structure_get_int (structure, "depth", &depth) ||
-      !gst_structure_get_int (structure, "rate", &rate) ||
-      !gst_structure_get_int (structure, "channels", &channels)) {
-    SWFDEC_ERROR ("invalid caps");
-    player->error = TRUE;
-    return FALSE;
-  }
-
-  player->decoder.format = swfdec_audio_format_new (rate, channels, depth == 16 ? TRUE : FALSE);
-  return TRUE;
-}
-
 SwfdecAudioDecoder *
 swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
 {
@@ -454,7 +430,6 @@ swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
     return NULL;
 
   player = g_slice_new0 (SwfdecGstAudio);
-  player->decoder.format = SWFDEC_AUDIO_FORMAT_INVALID;
   player->decoder.pull = swfdec_audio_decoder_gst_pull;
   player->decoder.push = swfdec_audio_decoder_gst_push;
   player->decoder.free = swfdec_audio_decoder_gst_free;
@@ -467,19 +442,18 @@ swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
   /* create audioconvert */
   gst_caps_unref (srccaps);
   srccaps = sinkcaps;
-  sinkcaps = gst_caps_from_string ("audio/x-raw-int, endianness=byte_order, signed=(boolean)true, width=16, depth=16, channels={2,1}");
+  sinkcaps = gst_caps_from_string ("audio/x-raw-int, endianness=byte_order, signed=(boolean)true, width=16, depth=16, channels=2");
   g_assert (sinkcaps);
   if (!swfdec_gst_decoder_init (&player->convert, "audioconvert", srccaps, sinkcaps))
     goto error;
   /* create audiorate */
   gst_caps_unref (srccaps);
   srccaps = sinkcaps;
-  sinkcaps = gst_caps_from_string ("audio/x-raw-int, endianness=byte_order, signed=(boolean)true, width=16, depth=16, rate={44100, 22050, 11025, 5512}, channels={2,1}");
+  sinkcaps = gst_caps_from_string ("audio/x-raw-int, endianness=byte_order, signed=(boolean)true, width=16, depth=16, rate=44100, channels=2");
   g_assert (sinkcaps);
   if (!swfdec_gst_decoder_init (&player->resample, "audioresample", srccaps, sinkcaps))
     goto error;
   g_object_set_data (G_OBJECT (player->resample.sink), "swfdec-player", player);
-  gst_pad_set_setcaps_function (player->resample.sink, swfdec_audio_decoder_set_caps);
 
   gst_caps_unref (srccaps);
   gst_caps_unref (sinkcaps);

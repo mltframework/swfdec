@@ -35,7 +35,7 @@ swfdec_audio_flv_dispose (GObject *object)
   SwfdecAudioFlv *flv = SWFDEC_AUDIO_FLV (object);
 
   if (flv->decoder != NULL) {
-    swfdec_audio_decoder_free (flv->decoder);
+    g_object_unref (flv->decoder);
     flv->decoder = NULL;
   }
   g_queue_foreach (flv->playback_queue, (GFunc) swfdec_buffer_unref, NULL);
@@ -87,7 +87,7 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
     if (flv->in == 0) {
       /* init */
       if (flv->decoder) {
-	swfdec_audio_decoder_free (flv->decoder);
+	g_object_unref (flv->decoder);
 	flv->decoder = NULL;
       }
       flv->format = format;

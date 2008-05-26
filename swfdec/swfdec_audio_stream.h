@@ -22,8 +22,8 @@
 #ifndef _SWFDEC_AUDIO_STREAM_H_
 #define _SWFDEC_AUDIO_STREAM_H_
 
+#include <swfdec/swfdec_audio_decoder.h>
 #include <swfdec/swfdec_audio_internal.h>
-#include <swfdec/swfdec_codec_audio.h>
 
 G_BEGIN_DECLS
 

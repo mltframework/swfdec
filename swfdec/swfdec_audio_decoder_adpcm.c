@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,16 +21,11 @@
 #include "config.h"
 #endif
 
-#include "swfdec_codec_audio.h"
-#include "swfdec_bits.h"
+#include "swfdec_audio_decoder_adpcm.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 
-typedef struct {
-  SwfdecAudioDecoder	decoder;
-  SwfdecAudioFormat	format;
-  SwfdecBufferQueue *	queue;
-} SwfdecAudioDecoderAdpcm;
+G_DEFINE_TYPE (SwfdecAudioDecoderAdpcm, swfdec_audio_decoder_adpcm, SWFDEC_TYPE_AUDIO_DECODER)
 
 static const int indexTable[4][16] = {
   { -1, 2 },
@@ -154,8 +149,8 @@ swfdec_audio_decoder_adpcm_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
   if (buffer == NULL)
     return;
 
-  channels = swfdec_audio_format_get_channels (adpcm->format);
-  granularity = swfdec_audio_format_get_granularity (adpcm->format);
+  channels = swfdec_audio_format_get_channels (dec->format);
+  granularity = swfdec_audio_format_get_granularity (dec->format);
   swfdec_bits_init (&bits, buffer);
   n_bits = swfdec_bits_getbits (&bits, 2) + 2;
   SWFDEC_DEBUG ("starting decoding: %u channels, %u bits", channels, n_bits);
@@ -176,28 +171,29 @@ swfdec_audio_decoder_adpcm_pull (SwfdecAudioDecoder *dec)
 }
 
 static void
-swfdec_audio_decoder_adpcm_free (SwfdecAudioDecoder *dec)
+swfdec_audio_decoder_adpcm_dispose (GObject *object)
 {
-  SwfdecAudioDecoderAdpcm *adpcm = (SwfdecAudioDecoderAdpcm *) dec;
+  SwfdecAudioDecoderAdpcm *dec = (SwfdecAudioDecoderAdpcm *) object;
 
-  swfdec_buffer_queue_unref (adpcm->queue);
-  g_slice_free (SwfdecAudioDecoderAdpcm, adpcm);
+  swfdec_buffer_queue_unref (dec->queue);
+
+  G_OBJECT_CLASS (swfdec_audio_decoder_adpcm_parent_class)->dispose (object);
 }
 
-SwfdecAudioDecoder *
-swfdec_audio_decoder_adpcm_new (guint type, SwfdecAudioFormat format)
+static void
+swfdec_audio_decoder_adpcm_class_init (SwfdecAudioDecoderAdpcmClass *klass)
 {
-  SwfdecAudioDecoderAdpcm *adpcm;
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecAudioDecoderClass *decoder_class = SWFDEC_AUDIO_DECODER_CLASS (klass);
 
-  if (type != SWFDEC_AUDIO_CODEC_ADPCM)
-    return NULL;
-  adpcm = g_slice_new (SwfdecAudioDecoderAdpcm);
-  adpcm->format = format;
-  adpcm->decoder.push = swfdec_audio_decoder_adpcm_push;
-  adpcm->decoder.pull = swfdec_audio_decoder_adpcm_pull;
-  adpcm->decoder.free = swfdec_audio_decoder_adpcm_free;
-  adpcm->queue = swfdec_buffer_queue_new ();
+  object_class->dispose = swfdec_audio_decoder_adpcm_dispose;
 
-  return &adpcm->decoder;
+  decoder_class->pull = swfdec_audio_decoder_adpcm_pull;
+  decoder_class->push = swfdec_audio_decoder_adpcm_push;
+}
+
+static void
+swfdec_audio_decoder_adpcm_init (SwfdecAudioDecoderAdpcm *audio_decoder_adpcm)
+{
 }
 

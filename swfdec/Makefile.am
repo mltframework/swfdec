@@ -1,9 +1,9 @@
 SUBDIRS = jpeg
 
-CODECS =
+CODEC_FILES =
 
 if HAVE_GST
-CODECS += swfdec_codec_gst.c
+CODEC_FILES += swfdec_codec_gst.c swfdec_audio_decoder_gst.c
 endif
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
@@ -33,6 +33,10 @@ libswfdec_source_files = \
 	swfdec_as_types.c \
 	swfdec_asbroadcaster.c \
 	swfdec_audio.c \
+	swfdec_audio_decoder.c \
+	swfdec_audio_decoder_adpcm.c \
+	swfdec_audio_decoder_uncompressed.c \
+	$(CODEC_FILES) \
 	swfdec_audio_event.c \
 	swfdec_audio_flv.c \
 	swfdec_audio_stream.c \
@@ -52,9 +56,6 @@ libswfdec_source_files = \
 	swfdec_cached_video.c \
 	swfdec_camera.c \
 	swfdec_character.c \
-	swfdec_codec_adpcm.c \
-	swfdec_codec_audio.c \
-	$(CODECS) \
 	swfdec_codec_screen.c \
 	swfdec_codec_video.c \
 	swfdec_codec_vp6_alpha.c \
@@ -226,6 +227,10 @@ noinst_HEADERS = \
 	swfdec_as_super.h \
 	swfdec_asnative.h \
 	swfdec_audio_internal.h \
+	swfdec_audio_decoder.h \
+	swfdec_audio_decoder_adpcm.h \
+	swfdec_audio_decoder_gst.h \
+	swfdec_audio_decoder_uncompressed.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \
 	swfdec_audio_stream.h \
@@ -238,7 +243,7 @@ noinst_HEADERS = \
 	swfdec_cached_image.h \
 	swfdec_cached_video.h \
 	swfdec_character.h \
-	swfdec_codec_audio.h \
+	swfdec_codec_gst.h \
 	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_constant_pool.h \

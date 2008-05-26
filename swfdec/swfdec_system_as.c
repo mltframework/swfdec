@@ -25,7 +25,7 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
-#include "swfdec_codec_audio.h"
+#include "swfdec_audio_decoder.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 

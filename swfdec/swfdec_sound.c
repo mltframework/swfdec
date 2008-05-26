@@ -23,8 +23,9 @@
 #endif
 #include <string.h>
 
-#include "swfdec_audio_internal.h"
 #include "swfdec_sound.h"
+#include "swfdec_audio_decoder.h"
+#include "swfdec_audio_internal.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
 #include "swfdec_button.h"
@@ -179,7 +180,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound)
   while ((tmp = swfdec_audio_decoder_pull (decoder))) {
     swfdec_buffer_queue_push (queue, tmp);
   }
-  swfdec_audio_decoder_free (decoder);
+  g_object_unref (decoder);
   depth = swfdec_buffer_queue_get_depth (queue);
   if (depth == 0) {
     SWFDEC_ERROR ("decoding didn't produce any data, bailing");

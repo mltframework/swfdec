@@ -114,11 +114,35 @@ swfdec_audio_decoder_gst_init (SwfdecAudioDecoderGst *audio_decoder_gst)
 {
 }
 
+static const char *
+swfdec_audio_decoder_get_resampler (void)
+{
+  /* FIXME: This is hardcoded as there's no autopluggable way to get the 
+   * best resampler by rank.
+   * Even if there were, audioresample (which has the highest rank) is so slow
+   * it takes roughly a second to resample stuff that ffaudioresample does in 
+   * 0.05 seconds.
+   */
+  static const char *options[] = { "ffaudioresample", "speexresample", "audioresample" };
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (options); i++) {
+    GstElementFactory *factory = gst_element_factory_find (options[i]);
+    if (factory) {
+      gst_object_unref (factory);
+      return options[i];
+    }
+  }
+  SWFDEC_ERROR ("no resampling element found. Check that GStreamer's base plugins are installed.");
+  return NULL;
+}
+
 SwfdecAudioDecoder *
 swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoderGst *player;
   GstCaps *srccaps, *sinkcaps;
+  const char *resample;
 
   srccaps = swfdec_audio_decoder_get_caps (type, format);
   if (srccaps == NULL)
@@ -129,8 +153,11 @@ swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
   /* create decoder */
   sinkcaps = gst_caps_from_string ("audio/x-raw-int, endianness=byte_order, signed=(boolean)true, width=16, depth=16, rate=44100, channels=2");
   g_assert (sinkcaps);
+  resample = swfdec_audio_decoder_get_resampler ();
+  if (resample == NULL)
+    goto error;
   if (!swfdec_gst_decoder_init (&player->dec, srccaps, sinkcaps, 
-	"audioconvert", "audioresample", NULL))
+	"audioconvert", resample, NULL))
     goto error;
 
   gst_caps_unref (srccaps);

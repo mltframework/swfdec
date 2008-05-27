@@ -30,6 +30,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <swfdec/swfdec.h>
+#include <swfdec/swfdec_audio_decoder.h>
 #include <swfdec/swfdec_button.h>
 #include <swfdec/swfdec_text_field.h>
 #include <swfdec/swfdec_font.h>

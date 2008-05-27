@@ -213,31 +213,52 @@ swfdec_gst_chain_func (GstPad *pad, GstBuffer *buffer)
 }
 
 gboolean
-swfdec_gst_decoder_init (SwfdecGstDecoder *dec, const char *name, GstCaps *srccaps, GstCaps *sinkcaps)
+swfdec_gst_decoder_init (SwfdecGstDecoder *dec, GstCaps *srccaps, GstCaps *sinkcaps, ...)
 {
-  if (name) {
-    dec->decoder = gst_element_factory_make (name, "decoder");
-  } else {
-    GstElementFactory *factory = swfdec_gst_get_element_factory (srccaps);
-    if (factory) {
-      dec->decoder = gst_element_factory_create (factory, "decoder");
-      gst_object_unref (factory);
-    }
+  va_list args;
+  GstElementFactory *factory;
+  GstElement *decoder;
+  const char *name;
+  
+  /* create decoder */
+  factory = swfdec_gst_get_element_factory (srccaps);
+  dec->bin = gst_bin_new ("bin");
+  if (factory) {
+    decoder = gst_element_factory_create (factory, "decoder");
+    gst_object_unref (factory);
   }
-  if (dec->decoder == NULL) {
+  if (decoder == NULL) {
     SWFDEC_ERROR ("failed to create decoder");
     return FALSE;
   }
-  dec->src = swfdec_gst_connect_srcpad (dec->decoder, srccaps);
+  gst_bin_add (GST_BIN (dec->bin), decoder);
+  dec->src = swfdec_gst_connect_srcpad (decoder, srccaps);
   if (dec->src == NULL)
     return FALSE;
-  dec->sink = swfdec_gst_connect_sinkpad (dec->decoder, sinkcaps);
+
+  /* plug transform elements */
+  va_start (args, sinkcaps);
+  while ((name = va_arg (args, const char *))) {
+    GstElement *next = gst_element_factory_make (name, NULL);
+    if (next == NULL) {
+      SWFDEC_ERROR ("failed to create '%s' element", name);
+      return FALSE;
+    }
+    gst_bin_add (GST_BIN (dec->bin), next);
+    if (!gst_element_link (decoder, next)) {
+      SWFDEC_ERROR ("failed to link '%s' element to decoder", name);
+      return FALSE;
+    }
+    decoder = next;
+  }
+  va_end (args);
+  dec->sink = swfdec_gst_connect_sinkpad (decoder, sinkcaps);
   if (dec->sink == NULL)
     return FALSE;
   gst_pad_set_chain_function (dec->sink, swfdec_gst_chain_func);
   dec->queue = g_queue_new ();
   g_object_set_data (G_OBJECT (dec->sink), "swfdec-queue", dec->queue);
-  if (!gst_element_set_state (dec->decoder, GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS) {
+  if (!gst_element_set_state (dec->bin, GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS) {
     SWFDEC_ERROR ("could not change element state");
     return FALSE;
   }
@@ -247,10 +268,10 @@ swfdec_gst_decoder_init (SwfdecGstDecoder *dec, const char *name, GstCaps *srcca
 void
 swfdec_gst_decoder_finish (SwfdecGstDecoder *dec)
 {
-  if (dec->decoder) {
-    gst_element_set_state (dec->decoder, GST_STATE_NULL);
-    g_object_unref (dec->decoder);
-    dec->decoder = NULL;
+  if (dec->bin) {
+    gst_element_set_state (dec->bin, GST_STATE_NULL);
+    g_object_unref (dec->bin);
+    dec->bin = NULL;
   }
   if (dec->src) {
     g_object_unref (dec->src);
@@ -437,7 +458,7 @@ swfdec_video_decoder_gst_new (guint codec)
   player->decoder.decode = swfdec_video_decoder_gst_decode;
   player->decoder.free = swfdec_video_decoder_gst_free;
 
-  if (!swfdec_gst_decoder_init (&player->dec, NULL, srccaps, sinkcaps)) {
+  if (!swfdec_gst_decoder_init (&player->dec, srccaps, sinkcaps, NULL)) {
     swfdec_video_decoder_gst_free (&player->decoder);
     gst_caps_unref (srccaps);
     gst_caps_unref (sinkcaps);

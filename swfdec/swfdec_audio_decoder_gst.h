@@ -41,8 +41,6 @@ struct _SwfdecAudioDecoderGst
   SwfdecAudioDecoder		decoder;
 
   SwfdecGstDecoder		dec;		/* the actual decoder */
-  SwfdecGstDecoder		convert;	/* audioconvert element to got to S16 stereo */
-  SwfdecGstDecoder		resample;	/* resampler to 44100Hz */
 };
 
 struct _SwfdecAudioDecoderGstClass

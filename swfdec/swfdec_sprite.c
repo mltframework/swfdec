@@ -46,13 +46,6 @@ swfdec_sprite_dispose (GObject *object)
     for (i = 0; i < sprite->n_frames; i++) {
       g_slist_foreach (sprite->frames[i].labels, (GFunc) g_free, NULL);
       g_slist_free (sprite->frames[i].labels);
-      if (sprite->frames[i].sound_head)
-	g_object_unref (sprite->frames[i].sound_head);
-      if (sprite->frames[i].sound_block) {
-        swfdec_buffer_unref (sprite->frames[i].sound_block);
-      }
-      g_slist_foreach (sprite->frames[i].sound, (GFunc) swfdec_sound_chunk_free, NULL);
-      g_slist_free (sprite->frames[i].sound);
     }
     g_free(sprite->frames);
   }
@@ -69,31 +62,6 @@ swfdec_sprite_dispose (GObject *object)
   }
 
   G_OBJECT_CLASS (swfdec_sprite_parent_class)->dispose (object);
-}
-
-void
-swfdec_sprite_add_sound_chunk (SwfdecSprite * sprite, guint frame,
-    SwfdecBuffer * chunk, int skip, guint n_samples)
-{
-  g_assert (sprite->frames != NULL);
-  g_assert (chunk != NULL || n_samples == 0);
-
-  if (sprite->frames[frame].sound_head == NULL) {
-    SWFDEC_ERROR ("attempting to add a sound block without previous sound head");
-    swfdec_buffer_unref (chunk);
-    return;
-  }
-  if (sprite->frames[frame].sound_block) {
-    SWFDEC_ERROR ("attempting to add 2 sound blocks to one frame");
-    swfdec_buffer_unref (chunk);
-    return;
-  }
-  SWFDEC_LOG ("adding %u samples in %"G_GSIZE_FORMAT" bytes to frame %u", n_samples, 
-      chunk ? chunk->length : 0, frame);
-  sprite->frames[frame].sound_skip = skip;
-  sprite->frames[frame].sound_block = chunk;
-  sprite->frames[frame].sound_samples = n_samples *
-    swfdec_audio_format_get_granularity (sprite->frames[frame].sound_head->format);
 }
 
 void
@@ -121,14 +89,6 @@ swfdec_sprite_get_action (SwfdecSprite *sprite, guint n, guint *tag, SwfdecBuffe
   *tag = action->tag;
   *buffer = action->buffer;
   return TRUE;
-}
-
-int
-tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag)
-{
-  s->parse_sprite->bgcolor = swfdec_bits_get_color (&s->b);
-
-  return SWFDEC_STATUS_OK;
 }
 
 static SwfdecMovie *
@@ -164,18 +124,11 @@ void
 swfdec_sprite_set_n_frames (SwfdecSprite *sprite, guint n_frames,
     guint rate)
 {
-  guint i;
-
   g_return_if_fail (SWFDEC_IS_SPRITE (sprite));
+
   if (n_frames > 0) {
     sprite->frames = g_new0 (SwfdecSpriteFrame, n_frames);
     sprite->n_frames = n_frames;
-
-    if (rate > 0) {
-      for (i = 0; i < n_frames; i++) {
-	sprite->frames[i].sound_samples = 44100 * 256 / rate;
-      }
-    }
   }
 
   SWFDEC_LOG ("n_frames = %d", sprite->n_frames);

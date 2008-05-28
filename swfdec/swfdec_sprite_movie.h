@@ -50,8 +50,8 @@ struct _SwfdecSpriteMovie
   gboolean		playing;	/* TRUE if the movie automatically advances */
 
   /* audio stream handling */
-  guint			sound_frame;	/* current sound frame */
   SwfdecAudio *		sound_stream;	/* stream that currently plays */
+  gboolean		sound_active;	/* if the sound stream had a SoundStreamBlock last frame */
 };
 
 struct _SwfdecSpriteMovieClass

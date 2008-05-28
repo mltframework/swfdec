@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,25 +41,27 @@ struct _SwfdecAudioStream
 {
   SwfdecAudio		audio;
 
-  SwfdecSprite *	sprite;		/* sprite we're playing back */
-  SwfdecSound *		sound;	      	/* sound we're playing */
-  SwfdecAudioDecoder *	decoder;	/* decoder used for this frame */
-  guint			playback_skip;	/* number of samples to skip at the beginning of queue */
-  GQueue *		playback_queue;	/* all the samples we've decoded so far */
-  guint			current_frame;	/* last decoded frame */
-  gboolean		done;		/* TRUE when no new data will be made available */
+  SwfdecAudioDecoder *	decoder;	/* decoder in use */
+  GQueue *		queue;		/* all the samples we've decoded so far */
+  guint			queue_size;	/* size of queue in samples */
+  gboolean		done;		/* no more data will arrive */
 };
 
 struct _SwfdecAudioStreamClass
 {
   SwfdecAudioClass    	audio_class;
+
+  /* get another buffer if available */
+  SwfdecBuffer *	(* pull)			(SwfdecAudioStream *	stream);
 };
 
 GType		swfdec_audio_stream_get_type		(void);
 
-SwfdecAudio *	swfdec_audio_stream_new			(SwfdecPlayer *	player,
-							 SwfdecSprite *	sprite,
-							 guint		start_frame);
+/* to be called from pull callback */
+void		swfdec_audio_stream_use_decoder		(SwfdecAudioStream *	stream,
+							 guint			codec,
+							 SwfdecAudioFormat	format);
+void		swfdec_audio_stream_done		(SwfdecAudioStream *	stream);
 
 G_END_DECLS
 #endif

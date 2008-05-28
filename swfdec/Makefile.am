@@ -40,6 +40,7 @@ libswfdec_source_files = \
 	swfdec_audio_event.c \
 	swfdec_audio_flv.c \
 	swfdec_audio_stream.c \
+	swfdec_audio_swf_stream.c \
 	swfdec_bevel_filter.c \
 	swfdec_bitmap_data.c \
 	swfdec_bitmap_filter.c \
@@ -234,6 +235,7 @@ noinst_HEADERS = \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \
 	swfdec_audio_stream.h \
+	swfdec_audio_swf_stream.h \
 	swfdec_bits.h \
 	swfdec_bots.h \
 	swfdec_button.h \

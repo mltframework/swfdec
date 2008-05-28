@@ -74,6 +74,9 @@ SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(guint			codec,
 void			swfdec_audio_decoder_push	(SwfdecAudioDecoder *	decoder,
 							 SwfdecBuffer *		buffer);
 SwfdecBuffer *		swfdec_audio_decoder_pull	(SwfdecAudioDecoder *	decoder);
+gboolean		swfdec_audio_decoder_uses_format(SwfdecAudioDecoder *	decoder,
+							 guint			codec,
+							 SwfdecAudioFormat	format);
 
 /* for subclasses */
 void			swfdec_audio_decoder_error	(SwfdecAudioDecoder *	decoder,

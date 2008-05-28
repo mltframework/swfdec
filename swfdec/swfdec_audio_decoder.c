@@ -217,3 +217,25 @@ swfdec_audio_decoder_errorv (SwfdecAudioDecoder *decoder, const char *error, va_
   decoder->error = TRUE;
 }
 
+/**
+ * swfdec_audio_decoder_uses_format:
+ * @decoder: the decoder to check
+ * @codec: the codec the decoder should use
+ * @format: the format the decoder should use
+ *
+ * This is a little helper function that checks if the decoder uses the right
+ * format.
+ *
+ * Returns: %TRUE if the @decoder uses the given @codec and @format, %FALSE 
+ *          otherwise.
+ **/
+gboolean
+swfdec_audio_decoder_uses_format (SwfdecAudioDecoder *decoder, guint codec,
+    SwfdecAudioFormat format)
+{
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_DECODER (decoder), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), FALSE);
+
+  return decoder->codec == codec && decoder->format == format;
+}
+

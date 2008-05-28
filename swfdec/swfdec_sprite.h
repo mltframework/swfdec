@@ -52,13 +52,6 @@ struct _SwfdecSpriteAction {
 struct _SwfdecSpriteFrame
 {
   GSList *labels;                       /* names of the frame for "GotoLabel" */
-
-  /* sound */
-  SwfdecSound *sound_head;		/* sound head for this frame */
-  int sound_skip;			/* samples to skip - maybe even backwards */
-  SwfdecBuffer *sound_block;		/* sound chunk to play here or NULL for none */
-  guint sound_samples;			/* number of samples in this frame */
-  GSList *sound;			/* list of SwfdecSoundChunk events to start playing here */
 };
 
 struct _SwfdecSprite
@@ -69,7 +62,6 @@ struct _SwfdecSprite
   guint			n_frames;	/* number of frames in this sprite */
   SwfdecScript *	init_action;	/* action to run when initializing this sprite */
   GArray *		actions;      	/* SwfdecSpriteAction in execution order */
-  SwfdecColor		bgcolor;	/* background color for this sprite */
 
   /* parse state */
   guint			parse_frame;	/* frame we're currently parsing. == n_frames if done parsing */
@@ -93,8 +85,7 @@ gboolean	swfdec_sprite_get_action	(SwfdecSprite *		sprite,
 						 SwfdecBuffer **	buffer);
 int		swfdec_sprite_get_frame		(SwfdecSprite *		sprite,
 				      		 const char *		label);
-
-int tag_func_set_background_color (SwfdecSwfDecoder * s, guint tag);
+#define swfdec_sprite_is_loaded(sprite) ((sprite)->parse_frame == (sprite)->n_frames)
 
 
 G_END_DECLS

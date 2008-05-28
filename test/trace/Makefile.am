@@ -797,6 +797,15 @@ EXTRA_DIST = \
 	crash-0.7.1-getTextExtent-8.swf \
 	crash-0.7.1-getTextExtent-8.swf.trace \
 	crash-0.7.1-getTextExtent.as \
+	crash-0.7.1-throw-5.swf \
+	crash-0.7.1-throw-5.swf.trace \
+	crash-0.7.1-throw-6.swf \
+	crash-0.7.1-throw-6.swf.trace \
+	crash-0.7.1-throw-7.swf \
+	crash-0.7.1-throw-7.swf.trace \
+	crash-0.7.1-throw-8.swf \
+	crash-0.7.1-throw-8.swf.trace \
+	crash-0.7.1-throw.as \
 	createTextField-returnvalue-5.swf \
 	createTextField-returnvalue-5.swf.trace \
 	createTextField-returnvalue-6.swf \

@@ -907,7 +907,11 @@ start:
       pc = frame->pc;
       if (frame != context->frame)
 	goto start;
+      if (context->exception)
+	break;
     }
+    if (context->exception)
+      continue;
 
     /* decode next action */
     action = *pc;

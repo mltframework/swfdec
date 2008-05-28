@@ -3606,6 +3606,15 @@ EXTRA_DIST = \
 	try-return-in-finally-7.swf.trace \
 	try-return-in-finally-8.swf \
 	try-return-in-finally-8.swf.trace \
+	try-variable-propflags.as \
+	try-variable-propflags-5.swf \
+	try-variable-propflags-5.swf.trace \
+	try-variable-propflags-6.swf \
+	try-variable-propflags-6.swf.trace \
+	try-variable-propflags-7.swf \
+	try-variable-propflags-7.swf.trace \
+	try-variable-propflags-8.swf \
+	try-variable-propflags-8.swf.trace \
 	undefined-tostring.swf \
 	undefined-tostring.swf.trace \
 	undefined1.swf \

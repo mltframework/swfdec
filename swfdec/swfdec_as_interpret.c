@@ -2726,7 +2726,7 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
   if (use_catch)
     try_data->catch_start = data + len + try_size;
   if (use_finally)
-    try_data->finally_start = try_data->catch_start + try_data->catch_size;
+    try_data->finally_start = data + len + try_size + try_data->catch_size;
 
   if (try_data->use_register) {
     try_data->register_number = swfdec_bits_get_u8 (&bits);

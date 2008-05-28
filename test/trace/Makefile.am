@@ -3597,6 +3597,15 @@ EXTRA_DIST = \
 	try-throw-in-finally-7.swf.trace \
 	try-throw-in-finally-8.swf \
 	try-throw-in-finally-8.swf.trace \
+	try-return-in-finally.as \
+	try-return-in-finally-5.swf \
+	try-return-in-finally-5.swf.trace \
+	try-return-in-finally-6.swf \
+	try-return-in-finally-6.swf.trace \
+	try-return-in-finally-7.swf \
+	try-return-in-finally-7.swf.trace \
+	try-return-in-finally-8.swf \
+	try-return-in-finally-8.swf.trace \
 	undefined-tostring.swf \
 	undefined-tostring.swf.trace \
 	undefined1.swf \

@@ -27,6 +27,7 @@
 #include "vivi_code_asm.h"
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_try.h"
+#include "vivi_code_asm_jump.h"
 
 G_DEFINE_TYPE (ViviCodeTry, vivi_code_try, VIVI_TYPE_CODE_STATEMENT)
 
@@ -98,6 +99,8 @@ vivi_code_try_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 
   vivi_code_compiler_compile_statement (compiler, try_->try_statement);
   if (try_->catch_statement) {
+    vivi_code_compiler_take_code (compiler, vivi_code_asm_jump_new (
+	  label_finally != NULL ? label_finally : label_end));
     vivi_code_compiler_take_code (compiler, VIVI_CODE_ASM (label_catch));
     vivi_code_compiler_compile_statement (compiler, try_->catch_statement);
   }

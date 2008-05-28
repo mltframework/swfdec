@@ -3,6 +3,7 @@ asm {
   try has_catch has_finally "e" try_catch_0001 try_finally_0002 try_end_0003
   push pool 0
   trace
+  jump try_finally_0002
 
 try_catch_0001:
   push pool 1

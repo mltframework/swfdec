@@ -87,7 +87,7 @@ main (int argc, char *argv[])
   char *size_string = NULL;
   SwfdecRect size_rect = { 0, 0, 2000, 3000 };
   const char *output_filename = NULL;
-  gboolean use_asm;
+  gboolean use_asm = FALSE;
   GError *error = NULL;
 
   GOptionEntry options[] = {

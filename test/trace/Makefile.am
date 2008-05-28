@@ -3574,6 +3574,15 @@ EXTRA_DIST = \
 	try-finally-7.swf.trace \
 	try-finally-8.swf \
 	try-finally-8.swf.trace \
+	try-flags.as \
+	try-flags-5.swf \
+	try-flags-5.swf.trace \
+	try-flags-6.swf \
+	try-flags-6.swf.trace \
+	try-flags-7.swf \
+	try-flags-7.swf.trace \
+	try-flags-8.swf \
+	try-flags-8.swf.trace \
 	try-jump.as \
 	try-jump-6.swf \
 	try-jump-6.swf.trace \

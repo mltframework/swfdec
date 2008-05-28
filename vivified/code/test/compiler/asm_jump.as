@@ -1,0 +1,4 @@
+asm {
+  jump hello
+hello:
+}

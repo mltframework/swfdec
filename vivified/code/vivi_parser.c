@@ -31,6 +31,7 @@
 #include "vivi_code_and.h"
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_get_url2.h"
+#include "vivi_code_asm_jump.h"
 #include "vivi_code_asm_pool.h"
 #include "vivi_code_asm_push.h"
 #include "vivi_code_asm_store.h"
@@ -1011,6 +1012,28 @@ parse_asm_store (ParseData *data)
 }
 
 static ViviCodeAsm *
+parse_asm_jump (ParseData *data)
+{
+  ViviCodeAsm *code;
+  ViviCodeLabel *label;
+  const char *name;
+
+  name = parse_identifier_value (data);
+  label = vivi_parser_get_label (data, name);
+  if (label == NULL) {
+    label = VIVI_CODE_LABEL (vivi_code_label_new (name));
+    vivi_parser_add_waiting_label (data, label);
+  }
+
+  parse_automatic_semicolon (data);
+
+  code = vivi_code_asm_jump_new (label);
+  g_object_unref (label);
+
+  return code;
+}
+
+static ViviCodeAsm *
 parse_asm_try (ParseData *data)
 {
   gboolean has_catch, has_finally;
@@ -1275,6 +1298,7 @@ static const AsmStatement asm_statements[] = {
 #include "vivi_code_defaults.h"
 #undef DEFAULT_ASM
   { "get_url2", NULL, parse_asm_get_url2 },
+  { "jump", NULL, parse_asm_jump },
   { "pool", NULL, parse_asm_pool },
   { "push", NULL, parse_asm_push },
   { "store", NULL, parse_asm_store },

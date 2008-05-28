@@ -1,0 +1,6 @@
+asm {
+  jump hello
+
+hello:
+  end
+}

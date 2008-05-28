@@ -107,7 +107,6 @@ swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
     rendered += samples;
     dest_end += samples * 2;
     offset = 0;
-    rendered += samples;
   }
 
   if (event->n_envelopes == 0)

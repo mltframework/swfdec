@@ -1144,7 +1144,7 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     SWFDEC_ERROR ("GetURL without a SwfdecPlayer");
   } else {
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
-	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL, FALSE);
+	SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
   }
   g_free (url);
   g_free (target);
@@ -1184,7 +1184,6 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     SWFDEC_FIXME ("encode variables");
   }
 
-  target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   url = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
 
   if (!SWFDEC_IS_PLAYER (cx)) {
@@ -1192,13 +1191,18 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   } else if (variables) {
     SwfdecMovie *movie;
     
+    target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
     if (movie != NULL) {
       swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, method, NULL, NULL,
 	  swfdec_as_interpret_load_variables_on_finish);
     }
+  } else if (internal) {
+    swfdec_resource_load_movie (SWFDEC_PLAYER (cx), swfdec_as_stack_peek (cx, 1), 
+	url, method, NULL, NULL);
   } else {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL, internal);
+    target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL);
   }
 
   swfdec_as_stack_pop_n (cx, 2);

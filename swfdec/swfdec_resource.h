@@ -60,7 +60,7 @@ struct _SwfdecResource
 
   /* only used while loading */
   SwfdecResourceState	state;		/* state we're in (for determining callbacks */
-  char *		target;		/* target path we use for signalling */
+  SwfdecMovie *		target;		/* target path we use for signalling */
   SwfdecMovieClipLoader *clip_loader;	/* loader that gets notified about load events */
   SwfdecSandbox *	clip_loader_sandbox; /* sandbox used for events on the clip loader */
 };
@@ -85,13 +85,17 @@ gpointer	swfdec_resource_get_export		(SwfdecResource *	root,
 const char *	swfdec_resource_get_export_name    	(SwfdecResource *	root,
 							 SwfdecCharacter *	character);
 
+void		swfdec_resource_load_movie		(SwfdecPlayer *		player,
+							 const SwfdecAsValue *	target, 
+							 const char *		url,
+							 SwfdecLoaderRequest	request,
+							 SwfdecBuffer *		buffer, 
+							 SwfdecMovieClipLoader *loader);
 void		swfdec_resource_load			(SwfdecPlayer *		player,
 							 const char *		target,
 							 const char *		url,
 							 SwfdecLoaderRequest	request,
-							 SwfdecBuffer *		buffer,
-							 SwfdecMovieClipLoader *loader,
-							 gboolean		target_is_movie);
+							 SwfdecBuffer *		buffer);
 
 
 G_END_DECLS

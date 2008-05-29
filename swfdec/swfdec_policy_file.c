@@ -260,7 +260,7 @@ swfdec_policy_file_new (SwfdecPlayer *player, const SwfdecURL *url)
 	swfdec_url_get_host (url), swfdec_url_get_port (url)));
   } else {
     file->stream = SWFDEC_STREAM (swfdec_player_load (player,
-	  swfdec_url_get_url (url), SWFDEC_LOADER_REQUEST_DEFAULT, NULL));
+	  swfdec_url_get_url (url), NULL));
   }
   swfdec_stream_set_target (file->stream, SWFDEC_STREAM_TARGET (file));
   player->priv->loading_policy_files = 

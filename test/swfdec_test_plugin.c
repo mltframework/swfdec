@@ -100,9 +100,8 @@ swfdec_test_plugin_swfdec_trace (SwfdecPlayer *player, const char *message,
 }
 
 static void
-swfdec_test_plugin_swfdec_launch (SwfdecPlayer *player,
-  SwfdecLoaderRequest request, const char *url, const char *target,
-  SwfdecBuffer *data, SwfdecTestPlugin *plugin)
+swfdec_test_plugin_swfdec_launch (SwfdecPlayer *player, const char *url,
+    const char *target, SwfdecBuffer *data, SwfdecTestPlugin *plugin)
 {
   plugin->launch (plugin, url);
 }

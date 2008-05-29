@@ -2298,8 +2298,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    */
   signals[LAUNCH] = g_signal_new ("launch", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__ENUM_STRING_STRING_BOXED,
-      G_TYPE_NONE, 4, SWFDEC_TYPE_LOADER_REQUEST, G_TYPE_STRING, G_TYPE_STRING, 
-      SWFDEC_TYPE_BUFFER);
+      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_STRING, SWFDEC_TYPE_BUFFER);
   /**
    * SwfdecPlayer::missing-plugins:
    * @player: the #SwfdecPlayer missing plugins
@@ -2545,7 +2544,7 @@ swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
 }
 
 void
-swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const char *url, 
+swfdec_player_launch (SwfdecPlayer *player, const char *url,
     const char *target, SwfdecBuffer *data)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
@@ -2557,7 +2556,7 @@ swfdec_player_launch (SwfdecPlayer *player, SwfdecLoaderRequest request, const c
     g_signal_emit (player, signals[FSCOMMAND], 0, command, target);
     return;
   }
-  g_signal_emit (player, signals[LAUNCH], 0, (int) request, url, target, data);
+  g_signal_emit (player, signals[LAUNCH], 0, url, target, data);
 }
 
 void
@@ -2715,7 +2714,7 @@ swfdec_player_create_url (SwfdecPlayer *player, const char *string)
 
 SwfdecLoader *
 swfdec_player_load (SwfdecPlayer *player, const char *url,
-    SwfdecLoaderRequest request, SwfdecBuffer *buffer)
+    SwfdecBuffer *buffer)
 {
   SwfdecLoader *loader;
   SwfdecLoaderClass *klass;
@@ -2726,7 +2725,7 @@ swfdec_player_load (SwfdecPlayer *player, const char *url,
   loader = g_object_new (player->priv->loader_type, NULL);
   klass = SWFDEC_LOADER_GET_CLASS (loader);
   g_return_val_if_fail (klass->load != NULL, NULL);
-  klass->load (loader, player, url, request, buffer);
+  klass->load (loader, player, url, buffer);
 
   return loader;
 }
@@ -3732,8 +3731,7 @@ swfdec_player_set_url (SwfdecPlayer *player, const SwfdecURL *url)
   }
   /* we initialize url and base_url before requesting the loader, so the loader
    * can query them */
-  loader = swfdec_player_load (player, swfdec_url_get_url (url), 
-      SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+  loader = swfdec_player_load (player, swfdec_url_get_url (url), NULL);
   priv->resource = swfdec_resource_new (player, loader, priv->variables);
   movie = swfdec_movie_new (player, -16384, NULL, priv->resource, NULL, SWFDEC_AS_STR__level0);
   SWFDEC_ACTOR (movie)->focusrect = SWFDEC_FLASH_YES;

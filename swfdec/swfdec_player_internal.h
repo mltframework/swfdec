@@ -182,7 +182,6 @@ SwfdecURL *	swfdec_player_create_url	(SwfdecPlayer *		player,
 						 const char *		string);
 SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *		player,
 						 const char *		url,
-						 SwfdecLoaderRequest	request,
 						 SwfdecBuffer *		buffer);
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
 						 const char *		name);
@@ -252,7 +251,6 @@ SwfdecSpriteMovie *
 						 SwfdecResource *	resource,
 						 int			level);
 void		swfdec_player_launch		(SwfdecPlayer *         player,
-						 SwfdecLoaderRequest	request,
 						 const char *		url,
 						 const char *		target,
 						 SwfdecBuffer *		data);

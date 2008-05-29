@@ -47,7 +47,6 @@ struct _SwfdecLoadObject {
   GObject			object;
   
   const char *			url;		/* GC'ed url to request */
-  SwfdecLoaderRequest		request;	/* type of request */
   SwfdecBuffer *		buffer;		/* data to send */
   SwfdecLoader *		loader;		/* loader when loading or NULL */
 
@@ -66,7 +65,6 @@ GType		swfdec_load_object_get_type	(void);
 
 void		swfdec_load_object_create     	(SwfdecAsObject *		target,
 						 const char *			url,
-						 SwfdecLoaderRequest		request,
 						 SwfdecBuffer *			data,
 						 SwfdecLoadObjectProgress	progress,
 						 SwfdecLoadObjectFinish		finish);

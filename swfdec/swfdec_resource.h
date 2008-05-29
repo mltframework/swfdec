@@ -88,7 +88,6 @@ const char *	swfdec_resource_get_export_name    	(SwfdecResource *	root,
 void		swfdec_resource_load			(SwfdecPlayer *		player,
 							 const char *		target,
 							 const char *		url,
-							 SwfdecLoaderRequest	request,
 							 SwfdecBuffer *		buffer,
 							 SwfdecMovieClipLoader *loader,
 							 gboolean		target_is_movie);

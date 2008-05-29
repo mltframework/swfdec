@@ -1143,8 +1143,8 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_ERROR ("GetURL without a SwfdecPlayer");
   } else {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
-	SWFDEC_LOADER_REQUEST_DEFAULT, NULL, NULL, FALSE);
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url,
+	NULL, NULL, FALSE);
   }
   g_free (url);
   g_free (target);
@@ -1194,11 +1194,11 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
     if (movie != NULL) {
-      swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, method, NULL, NULL,
+      swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, NULL, NULL,
 	  swfdec_as_interpret_load_variables_on_finish);
     }
   } else {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, method, NULL, NULL, internal);
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, NULL, NULL, internal);
   }
 
   swfdec_as_stack_pop_n (cx, 2);

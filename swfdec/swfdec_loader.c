@@ -78,18 +78,6 @@
  * inside a #SwfdecLoader.
  */
 
-/**
- * SwfdecLoaderRequest:
- * @SWFDEC_LOADER_REQUEST_DEFAULT: Use the default method (this most likely is 
- *                                 equal to HTTPget)
- * @SWFDEC_LOADER_REQUEST_GET: Use HTTP get
- * @SWFDEC_LOADER_REQUEST_POST: Use HTTP post
- *
- * Describes the moethod to use for requesting a given URL. These methods map
- * naturally to HTTP methods, since HTTP is the common method for requesting 
- * Flash content.
- */
-
 /*** SwfdecLoader ***/
 
 enum {

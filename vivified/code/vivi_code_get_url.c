@@ -93,7 +93,7 @@ vivi_code_get_url_init (ViviCodeGetUrl *token)
 
 ViviCodeStatement *
 vivi_code_get_url_new (ViviCodeValue *target, ViviCodeValue *url,
-    SwfdecLoaderRequest method, gboolean internal, gboolean variables)
+    guint method, gboolean internal, gboolean variables)
 {
   ViviCodeGetUrl *ret;
 

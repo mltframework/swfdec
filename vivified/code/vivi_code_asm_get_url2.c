@@ -133,14 +133,14 @@ vivi_code_asm_get_url2_new_from_flags (guint flags)
 }
 
 ViviCodeAsm *
-vivi_code_asm_get_url2_new (SwfdecLoaderRequest method, gboolean internal,
+vivi_code_asm_get_url2_new (guint method, gboolean internal,
     gboolean variables)
 {
   guint flags = 0;
 
-  if (method == SWFDEC_LOADER_REQUEST_GET) {
+  if (method == 1) {
     flags |= (1 << 0);
-  } else if (method == SWFDEC_LOADER_REQUEST_POST) {
+  } else if (method == 2) {
     flags |= (1 << 1);
   }
   if (internal)

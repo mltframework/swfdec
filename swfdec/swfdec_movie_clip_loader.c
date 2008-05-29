@@ -74,8 +74,7 @@ swfdec_movie_clip_loader_loadClip (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "ss", &url, &target);
 
-  swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, 
-      SWFDEC_LOADER_REQUEST_DEFAULT, NULL, loader, TRUE);
+  swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, NULL, loader, TRUE);
 }
 
 SWFDEC_AS_NATIVE (112, 102, swfdec_movie_clip_loader_unloadClip)
@@ -88,8 +87,7 @@ swfdec_movie_clip_loader_unloadClip (SwfdecAsContext *cx, SwfdecAsObject *object
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "s", &target);
 
-  swfdec_resource_load (SWFDEC_PLAYER (cx), target, "", 
-      SWFDEC_LOADER_REQUEST_DEFAULT, NULL, loader, TRUE);
+  swfdec_resource_load (SWFDEC_PLAYER (cx), target, "", NULL, loader, TRUE);
 }
 
 SWFDEC_AS_NATIVE (112, 101, swfdec_movie_clip_loader_getProgress)

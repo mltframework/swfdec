@@ -128,7 +128,7 @@ swfdec_gtk_loader_dispose (GObject *object)
 
 static void
 swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecPlayer *player, 
-    const char *url_string, SwfdecLoaderRequest request, SwfdecBuffer *buffer)
+    const char *url_string, SwfdecBuffer *buffer)
 {
   SwfdecURL *url;
   
@@ -145,12 +145,12 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   if (!swfdec_url_has_protocol (url, "http") &&
       !swfdec_url_has_protocol (url, "https")) {
     SWFDEC_LOADER_CLASS (swfdec_gtk_loader_parent_class)->load (loader, player,
-	url_string, request, buffer);
+	url_string, buffer);
   } else {
     SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
     SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
 
-    gtk->message = soup_message_new (request == SWFDEC_LOADER_REQUEST_POST ? "POST" : "GET",
+    gtk->message = soup_message_new (buffer != NULL ? "POST" : "GET",
 	swfdec_url_get_url (url));
     soup_message_set_flags (gtk->message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
     g_signal_connect (gtk->message, "got-chunk", G_CALLBACK (swfdec_gtk_loader_push), gtk);

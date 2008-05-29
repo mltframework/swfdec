@@ -74,8 +74,8 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "s", &url);
 
-  swfdec_load_object_create (object, url, SWFDEC_LOADER_REQUEST_DEFAULT, NULL,
-      swfdec_load_object_on_progress, swfdec_load_object_on_finish);
+  swfdec_load_object_create (object, url, NULL, swfdec_load_object_on_progress,
+      swfdec_load_object_on_finish);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__bytesLoaded,
@@ -108,23 +108,31 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsObject *target;
   SwfdecAsValue val;
   SwfdecBuffer *buffer;
-  SwfdecLoaderRequest method;
+  gboolean get;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "sO|s", &url, &target, &method_string);
 
   SWFDEC_FIXME ("support for contentType is missing");
 
   if (method_string == NULL || g_ascii_strcasecmp (method_string, "get") == 0) {
-    method = SWFDEC_LOADER_REQUEST_GET;
+    get = TRUE;
   } else {
-    method = SWFDEC_LOADER_REQUEST_POST;
+    get = FALSE;
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   data = swfdec_as_value_to_string (cx, &val);
-  // don't send the nul-byte
-  buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data)),
-      strlen (data));
-  swfdec_load_object_create (target, url, method, buffer,
+
+  if (get) {
+    url = swfdec_as_context_give_string (cx,
+	g_strjoin (NULL, url, "?", data, NULL));
+    buffer = NULL;
+  } else {
+    // don't send the nul-byte
+    buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data)),
+	strlen (data));
+  }
+
+  swfdec_load_object_create (target, url, buffer,
       swfdec_load_object_on_progress, swfdec_load_object_on_finish);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);

@@ -557,8 +557,7 @@ swfdec_net_stream_load (SwfdecPlayer *player, gboolean allowed, gpointer streamp
   SwfdecLoader *loader;
 
   if (allowed) {
-    loader = swfdec_player_load (player, stream->requested_url, 
-	SWFDEC_LOADER_REQUEST_DEFAULT, NULL);
+    loader = swfdec_player_load (player, stream->requested_url, NULL);
     swfdec_net_stream_set_loader (stream, loader);
     g_object_unref (loader);
   } else {

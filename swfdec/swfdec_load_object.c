@@ -172,7 +172,7 @@ swfdec_load_object_load (SwfdecPlayer *player, gboolean allow, gpointer obj)
     return;
   }
 
-  load->loader = swfdec_player_load (player, load->url, load->request, load->buffer);
+  load->loader = swfdec_player_load (player, load->url, load->buffer);
 
   swfdec_stream_set_target (SWFDEC_STREAM (load->loader), SWFDEC_STREAM_TARGET (load));
   swfdec_loader_set_data_type (load->loader, SWFDEC_LOADER_DATA_TEXT);
@@ -241,8 +241,8 @@ swfdec_load_object_mark (gpointer object, gpointer player)
 
 void
 swfdec_load_object_create (SwfdecAsObject *target, const char *url,
-    SwfdecLoaderRequest request, SwfdecBuffer *data,
-    SwfdecLoadObjectProgress progress, SwfdecLoadObjectFinish finish)
+    SwfdecBuffer *data, SwfdecLoadObjectProgress progress,
+    SwfdecLoadObjectFinish finish)
 {
   SwfdecPlayer *player;
   SwfdecLoadObject *load;
@@ -257,7 +257,6 @@ swfdec_load_object_create (SwfdecAsObject *target, const char *url,
 
   load->target = target;
   load->url = url;
-  load->request = request;
   load->buffer = data;
   load->progress = progress;
   load->finish = finish;

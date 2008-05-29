@@ -42,7 +42,7 @@ struct _ViviCodeGetUrl
 
   ViviCodeValue *	url;
   ViviCodeValue *	target;
-  SwfdecLoaderRequest	method;
+  guint			method;
   gboolean		internal;
   gboolean		variables;
 };
@@ -56,7 +56,7 @@ GType			vivi_code_get_url_get_type   	(void);
 
 ViviCodeStatement *	vivi_code_get_url_new		(ViviCodeValue *	target,
 							 ViviCodeValue *	url,
-							 SwfdecLoaderRequest	method,
+							 guint			method,
 							 gboolean		internal,
 							 gboolean		variables);
 

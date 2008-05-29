@@ -1440,7 +1440,7 @@ parse_get_url2 (ParseData *data, gboolean require_two, gboolean level,
 {
   ViviCodeValue *url, *target;
   ViviCodeStatement *statement;
-  SwfdecLoaderRequest method;
+  guint method;
 
   parse_token (data, TOKEN_PARENTHESIS_LEFT);
 
@@ -1478,25 +1478,25 @@ parse_get_url2 (ParseData *data, gboolean require_two, gboolean level,
 	  method_string = parse_string_value (data);
 	}
 	if (g_ascii_strcasecmp (method_string, "GET") == 0) {
-	  method = SWFDEC_LOADER_REQUEST_GET;
+	  method = 1;
 	} else if (g_ascii_strcasecmp (method_string, "POST") == 0) {
-	  method = SWFDEC_LOADER_REQUEST_POST;
+	  method = 2;
 	} else {
-	  method = SWFDEC_LOADER_REQUEST_DEFAULT;
+	  method = 0;
 	  // FIXME: only for identifiers?
 	  vivi_parser_error (data, "Invalid URL method: %s\n", method_string);
 	}
       } else {
 	vivi_parser_error_unexpected_or (data, TOKEN_IDENTIFIER, TOKEN_STRING,
 	    TOKEN_NONE);
-	method = SWFDEC_LOADER_REQUEST_DEFAULT;
+	method = 0;
       }
     } else {
-      method = SWFDEC_LOADER_REQUEST_DEFAULT;
+      method = 0;
     }
   } else {
     target = vivi_code_string_new ("");
-    method = SWFDEC_LOADER_REQUEST_DEFAULT;
+    method = 0;
   }
 
   parse_token (data, TOKEN_PARENTHESIS_RIGHT);

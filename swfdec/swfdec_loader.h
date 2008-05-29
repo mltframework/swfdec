@@ -38,13 +38,6 @@ typedef enum {
   SWFDEC_LOADER_DATA_PNG
 } SwfdecLoaderDataType;
 
-/* NB: actal numbers in SwfdecLoaderRequest are important for GetURL2 action */
-typedef enum {
-  SWFDEC_LOADER_REQUEST_DEFAULT = 0,
-  SWFDEC_LOADER_REQUEST_GET = 1,
-  SWFDEC_LOADER_REQUEST_POST = 2
-} SwfdecLoaderRequest;
-
 typedef struct _SwfdecLoader SwfdecLoader;
 typedef struct _SwfdecLoaderClass SwfdecLoaderClass;
 
@@ -74,7 +67,6 @@ struct _SwfdecLoaderClass
   void			(* load)	(SwfdecLoader *			loader, 
 					 SwfdecPlayer *			player,
 					 const char *			url,
-					 SwfdecLoaderRequest		request,
 					 SwfdecBuffer *	           	buffer);
 };
 

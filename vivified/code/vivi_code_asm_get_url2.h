@@ -49,7 +49,7 @@ struct _ViviCodeAsmGetUrl2Class
 
 GType		vivi_code_asm_get_url2_get_type			(void);
 
-ViviCodeAsm *	vivi_code_asm_get_url2_new			(SwfdecLoaderRequest		method,
+ViviCodeAsm *	vivi_code_asm_get_url2_new			(guint				method,
 								 gboolean			internal,
 								 gboolean			variables);
 

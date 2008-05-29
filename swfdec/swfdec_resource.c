@@ -524,7 +524,6 @@ struct _SwfdecResourceLoad {
   SwfdecSandbox *		sandbox;
   char *			target;
   char *			url;
-  SwfdecLoaderRequest		request;
   SwfdecBuffer *		buffer;
   SwfdecMovieClipLoader *	loader;
   gboolean			target_is_movie;
@@ -581,7 +580,7 @@ swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
   }
 
   swfdec_player_root (player, resource, (GFunc) swfdec_as_object_mark);
-  loader = swfdec_player_load (player, load-> url, load->request, load->buffer);
+  loader = swfdec_player_load (player, load-> url, load->buffer);
   swfdec_resource_set_loader (resource, loader);
   g_object_unref (loader);
 }
@@ -617,7 +616,7 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
 
   /* LAUNCH command (aka getURL) */
   if (!load->target_is_movie && swfdec_player_get_level (player, load->target) < 0) {
-    swfdec_player_launch (player, load->request, load->url,load->target, load->buffer);
+    swfdec_player_launch (player, load->url, load->target, load->buffer);
     return;
   }
 
@@ -654,10 +653,10 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
 }
 
 /* NB: must be called from a script */
-/* FIXME: 7 arguments?! */
+/* FIXME: 6 arguments?! */
 void
-swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url, 
-    SwfdecLoaderRequest request, SwfdecBuffer *buffer, SwfdecMovieClipLoader *loader,
+swfdec_resource_load (SwfdecPlayer *player, const char *target,
+    const char *url, SwfdecBuffer *buffer, SwfdecMovieClipLoader *loader,
     gboolean target_is_movie)
 {
   SwfdecSpriteMovie *movie;
@@ -686,7 +685,6 @@ swfdec_resource_load (SwfdecPlayer *player, const char *target, const char *url,
   }
   load->sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
   load->url = g_strdup (url);
-  load->request = request;
   load->buffer = buffer;
   load->loader = loader;
   load->target_is_movie = target_is_movie;

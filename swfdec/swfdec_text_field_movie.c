@@ -515,7 +515,7 @@ swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
 
   if (attr->url != SWFDEC_AS_STR_EMPTY) {
     swfdec_player_launch (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context),
-	SWFDEC_LOADER_REQUEST_DEFAULT, attr->url, attr->target, NULL);
+	attr->url, attr->target, NULL);
   }
 }
 

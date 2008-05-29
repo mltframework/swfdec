@@ -685,24 +685,24 @@ swfdec_resource_load_internal (SwfdecPlayer *player,
   swfdec_player_request_resource (player, swfdec_resource_load_request, load, swfdec_resource_load_free);
 }
 
-void
+gboolean
 swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target, 
     const char *url, SwfdecBuffer *buffer, SwfdecMovieClipLoader *loader)
 {
   SwfdecMovie *movie;
   const char *s;
 
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-  g_return_if_fail (target != NULL);
-  g_return_if_fail (url != NULL);
-  g_return_if_fail (loader == NULL || SWFDEC_IS_MOVIE_CLIP_LOADER (loader));
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
+  g_return_val_if_fail (target != NULL, FALSE);
+  g_return_val_if_fail (url != NULL, FALSE);
+  g_return_val_if_fail (loader == NULL || SWFDEC_IS_MOVIE_CLIP_LOADER (loader), FALSE);
 
   if (SWFDEC_AS_VALUE_IS_OBJECT (target)) {
     SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (target);
     if (SWFDEC_IS_SPRITE_MOVIE (object)) {
       swfdec_resource_load_internal (player, SWFDEC_SPRITE_MOVIE (object),
 	  NULL, url, buffer, loader);
-      return;
+      return TRUE;
     }
   }
 
@@ -712,12 +712,14 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
     swfdec_resource_load_internal (player, SWFDEC_SPRITE_MOVIE (movie),
 	NULL, url, buffer, loader);
     return;
+    return TRUE;
   }
-  if (swfdec_player_get_level (player, s) < 0) {
-    SWFDEC_WARNING ("%s does not reference a movie, not loading %s", s, url);
-    return;
+  if (swfdec_player_get_level (player, s) >= 0) {
+    swfdec_resource_load_internal (player, NULL, s, url, buffer, NULL);
+    return TRUE;
   }
-  swfdec_resource_load_internal (player, NULL, s, url, buffer, NULL);
+  SWFDEC_WARNING ("%s does not reference a movie, not loading %s", s, url);
+  return FALSE;
 }
 
 void

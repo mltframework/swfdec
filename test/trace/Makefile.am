@@ -1620,6 +1620,13 @@ EXTRA_DIST = \
 	loadobject-bom-7.swf.trace \
 	loadobject-bom-8.swf \
 	loadobject-bom-8.swf.trace \
+	loadobject-sendandload.as \
+	loadobject-sendandload-6.swf \
+	loadobject-sendandload-6.swf.trace \
+	loadobject-sendandload-7.swf \
+	loadobject-sendandload-7.swf.trace \
+	loadobject-sendandload-8.swf \
+	loadobject-sendandload-8.swf.trace \
 	loadvariables.as \
 	loadvariables-5.swf \
 	loadvariables-5.swf.trace \

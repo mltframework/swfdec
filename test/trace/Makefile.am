@@ -1937,6 +1937,15 @@ EXTRA_DIST = \
 	moviecliploader-known-image-size-7.swf.trace \
 	moviecliploader-known-image-size-8.swf \
 	moviecliploader-known-image-size-8.swf.trace \
+	moviecliploader-level-5.swf \
+	moviecliploader-level-5.swf.trace \
+	moviecliploader-level-6.swf \
+	moviecliploader-level-6.swf.trace \
+	moviecliploader-level-7.swf \
+	moviecliploader-level-7.swf.trace \
+	moviecliploader-level-8.swf \
+	moviecliploader-level-8.swf.trace \
+	moviecliploader-level.as \
 	moviecliploader-properties.as \
 	moviecliploader-properties-5.swf \
 	moviecliploader-properties-5.swf.trace \

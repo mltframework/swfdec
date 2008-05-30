@@ -484,6 +484,15 @@ EXTRA_DIST = \
 	chartoascii-7.swf.trace \
 	chartoascii-8.swf \
 	chartoascii-8.swf.trace \
+	chartoascii-mb.as \
+	chartoascii-mb-5.swf \
+	chartoascii-mb-5.swf.trace \
+	chartoascii-mb-6.swf \
+	chartoascii-mb-6.swf.trace \
+	chartoascii-mb-7.swf \
+	chartoascii-mb-7.swf.trace \
+	chartoascii-mb-8.swf \
+	chartoascii-mb-8.swf.trace \
 	children.swf \
 	children.swf.trace \
 	chr.as \

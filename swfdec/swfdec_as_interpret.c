@@ -1372,6 +1372,9 @@ swfdec_action_string_compare (SwfdecAsContext *cx, guint action, const guint8 *d
     case SWFDEC_AS_ACTION_STRING_LESS:
       cond = strcmp (l, r) < 0;
       break;
+    case SWFDEC_AS_ACTION_STRING_GREATER:
+      cond = strcmp (l, r) > 0;
+      break;
     default:
       cond = FALSE;
       g_assert_not_reached ();
@@ -3261,7 +3264,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   /* version 6 */
   [SWFDEC_AS_ACTION_STRICT_EQUALS] = { "StrictEquals", NULL, 2, 1, swfdec_action_strict_equals, 6 },
   [SWFDEC_AS_ACTION_GREATER] = { "Greater", NULL, 2, 1, swfdec_action_new_comparison, 6 },
-  [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL, -1, -1, NULL, 6 },
+  [SWFDEC_AS_ACTION_STRING_GREATER] = { "StringGreater", NULL, 2, 1, swfdec_action_string_compare, 6 },
   /* version 7 */
   [SWFDEC_AS_ACTION_EXTENDS] = { "Extends", NULL, 2, 0, swfdec_action_extends, 7 },
   /* version 1 */

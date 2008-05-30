@@ -1094,6 +1094,15 @@ EXTRA_DIST = \
 	equality-7.swf.trace \
 	equality-8.swf \
 	equality-8.swf.trace \
+	equality-old.as \
+	equality-old-5.swf \
+	equality-old-5.swf.trace \
+	equality-old-6.swf \
+	equality-old-6.swf.trace \
+	equality-old-7.swf \
+	equality-old-7.swf.trace \
+	equality-old-8.swf \
+	equality-old-8.swf.trace \
 	escape.as \
 	escape-5.swf \
 	escape-5.swf.trace \

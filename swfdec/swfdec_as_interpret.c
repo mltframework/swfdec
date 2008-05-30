@@ -1162,11 +1162,50 @@ swfdec_as_interpret_load_variables_on_finish (SwfdecAsObject *target,
   swfdec_actor_queue_script (SWFDEC_ACTOR (target), SWFDEC_EVENT_DATA);
 }
 
+static gboolean
+swfdec_as_interpret_encode_variables_foreach (SwfdecAsObject *object,
+    const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
+{
+  GString *variables = data;
+  char *escaped;
+
+  // FIXME: check propflags?
+
+  if (variables->len > 0)
+    g_string_append_c (variables, '&');
+
+  escaped = swfdec_as_string_escape (object->context, variable);
+  g_string_append (variables, escaped);
+  g_free (escaped);
+
+  g_string_append_c (variables, '=');
+
+  escaped = swfdec_as_string_escape (object->context,
+      swfdec_as_value_to_string (object->context, value));
+  g_string_append (variables, escaped);
+  g_free (escaped);
+
+  return TRUE;
+}
+
+static char *
+swfdec_as_interpret_encode_variables (SwfdecAsObject *object)
+{
+  GString *variables = g_string_new ("");
+
+  SWFDEC_FIXME ("Encoding variables for getURL2 shouldn't include child movies");
+  swfdec_as_object_foreach (object,
+      swfdec_as_interpret_encode_variables_foreach, variables);
+
+  return g_string_free (variables, FALSE);
+}
+
 static void
 swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   const char *target, *url;
   guint method, internal, variables;
+  SwfdecBuffer *buffer;
 
   if (len != 1) {
     SWFDEC_ERROR ("GetURL2 requires 1 byte of data, not %u", len);
@@ -1180,12 +1219,23 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   }
   internal = data[0] & 64;
   variables = data[0] & 128;
-  if (method == 1 || method == 2) {
-    SWFDEC_FIXME ("encode variables");
-  }
 
   target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   url = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  buffer = NULL;
+
+  if (method == 1 || method == 2) {
+    char *text = swfdec_as_interpret_encode_variables (cx->frame->target);
+    if (method == 1) {
+      url = swfdec_as_context_give_string (cx, g_strjoin (NULL, url,
+	    strchr (url, '?') == NULL ? "?" : "&", data, NULL));
+    } else {
+      // don't send the nul-byte
+      buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (text)),
+	  strlen (text));
+    }
+    g_free (text);
+  }
 
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_ERROR ("GetURL2 action requires a SwfdecPlayer");
@@ -1194,11 +1244,12 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
     if (movie != NULL) {
-      swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, NULL, NULL,
+      swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, buffer, NULL,
 	  swfdec_as_interpret_load_variables_on_finish);
     }
   } else {
-    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, NULL, NULL, internal);
+    swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, buffer, NULL,
+	internal);
   }
 
   swfdec_as_stack_pop_n (cx, 2);

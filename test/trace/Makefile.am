@@ -3160,6 +3160,15 @@ EXTRA_DIST = \
 	string-lastIndexOf-7.swf.trace \
 	string-lastIndexOf-8.swf \
 	string-lastIndexOf-8.swf.trace \
+	string-length-old.as \
+	string-length-old-5.swf \
+	string-length-old-5.swf.trace \
+	string-length-old-6.swf \
+	string-length-old-6.swf.trace \
+	string-length-old-7.swf \
+	string-length-old-7.swf.trace \
+	string-length-old-8.swf \
+	string-length-old-8.swf.trace \
 	string-object-tostring.as \
 	string-object-tostring-5.swf \
 	string-object-tostring-5.swf.trace \

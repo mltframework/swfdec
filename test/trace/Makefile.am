@@ -3178,6 +3178,15 @@ EXTRA_DIST = \
 	string-length-old-7.swf.trace \
 	string-length-old-8.swf \
 	string-length-old-8.swf.trace \
+	string-length-old-mb.as \
+	string-length-old-mb-5.swf \
+	string-length-old-mb-5.swf.trace \
+	string-length-old-mb-6.swf \
+	string-length-old-mb-6.swf.trace \
+	string-length-old-mb-7.swf \
+	string-length-old-mb-7.swf.trace \
+	string-length-old-mb-8.swf \
+	string-length-old-mb-8.swf.trace \
 	string-object-tostring.as \
 	string-object-tostring-5.swf \
 	string-object-tostring-5.swf.trace \

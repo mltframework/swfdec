@@ -3211,7 +3211,7 @@ const SwfdecActionSpec swfdec_as_actions[256] = {
   [SWFDEC_AS_ACTION_IMPLEMENTS] = { "Implements", NULL, -1, 0, swfdec_action_implements, 7 },
   /* version 4 */
   [SWFDEC_AS_ACTION_RANDOM] = { "RandomNumber", NULL, 1, 1, swfdec_action_random_number, 4 },
-  [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL, -1, -1, NULL, 4 },
+  [SWFDEC_AS_ACTION_MB_STRING_LENGTH] = { "MBStringLength", NULL, 1, 1, swfdec_action_string_length, 4 },
   [SWFDEC_AS_ACTION_CHAR_TO_ASCII] = { "CharToAscii", NULL, 1, 1, swfdec_action_char_to_ascii, 4 },
   [SWFDEC_AS_ACTION_ASCII_TO_CHAR] = { "AsciiToChar", NULL, 1, 1, swfdec_action_ascii_to_char, 4 },
   [SWFDEC_AS_ACTION_GET_TIME] = { "GetTime", NULL, 0, 1, swfdec_action_get_time, 4 },

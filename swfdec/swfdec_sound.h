@@ -23,7 +23,6 @@
 #define _SWFDEC_SOUND_H_
 
 #include <swfdec/swfdec_character.h>
-#include <swfdec/swfdec_codec_audio.h>
 #include <swfdec/swfdec_swf_decoder.h>
 #include <swfdec/swfdec_types.h>
 
@@ -80,8 +79,6 @@ struct _SwfdecSoundClass
 GType swfdec_sound_get_type (void);
 
 int tag_func_define_sound (SwfdecSwfDecoder * s, guint tag);
-int tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag);
-int tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag);
 int tag_func_start_sound (SwfdecSwfDecoder * s, guint tag);
 int tag_func_define_button_sound (SwfdecSwfDecoder * s, guint tag);
 

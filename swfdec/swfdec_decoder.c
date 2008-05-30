@@ -23,9 +23,9 @@
 
 #include <string.h>
 
-#include "swfdec_codec_audio.h"
-#include "swfdec_codec_video.h"
 #include "swfdec_decoder.h"
+#include "swfdec_audio_decoder.h"
+#include "swfdec_codec_video.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_image.h"

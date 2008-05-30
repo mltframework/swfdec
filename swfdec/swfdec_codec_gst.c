@@ -21,43 +21,14 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
 
-#include "swfdec_codec_audio.h"
+#include "swfdec_codec_gst.h"
 #include "swfdec_codec_video.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 
 /*** CAPS MATCHING ***/
-
-static GstCaps *
-swfdec_audio_decoder_get_caps (guint codec, SwfdecAudioFormat format)
-{
-  GstCaps *caps;
-  char *s;
-
-  switch (codec) {
-    case SWFDEC_AUDIO_CODEC_MP3:
-      s = g_strdup ("audio/mpeg, mpegversion=(int)1, layer=(int)3");
-      break;
-    case SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ:
-      s = g_strdup ("audio/x-nellymoser, rate=8000, channels=1");
-      break;
-    case SWFDEC_AUDIO_CODEC_NELLYMOSER:
-      s = g_strdup_printf ("audio/x-nellymoser, rate=%d, channels=%d",
-	  swfdec_audio_format_get_rate (format), 
-	  swfdec_audio_format_get_channels (format));
-      break;
-    default:
-      return NULL;
-  }
-
-  caps = gst_caps_from_string (s);
-  g_assert (caps);
-  g_free (s);
-  return caps;
-}
 
 static GstCaps *
 swfdec_video_decoder_get_caps (guint codec)
@@ -80,12 +51,7 @@ swfdec_video_decoder_get_caps (guint codec)
 
 /*** BUFFER ***/
 
-/* NB: references argument more than once */
-#define swfdec_buffer_new_from_gst(buffer) \
-  swfdec_buffer_new_full (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), \
-      (SwfdecBufferFreeFunc) gst_mini_object_unref, (buffer))
-
-static GstBuffer *
+GstBuffer *
 swfdec_gst_buffer_new (SwfdecBuffer *buffer)
 {
   /* FIXME: make this a zero-copy operation */
@@ -160,7 +126,7 @@ swfdec_gst_compare_features (gconstpointer a_, gconstpointer b_)
   return strcmp (gst_plugin_feature_get_name (a), gst_plugin_feature_get_name (b));
 }
 
-static GstElementFactory *
+GstElementFactory *
 swfdec_gst_get_element_factory (GstCaps *caps)
 {
   GstElementFactory *ret;
@@ -236,13 +202,6 @@ error:
 
 /*** DECODER ***/
 
-typedef struct {
-  GstElement *		decoder;
-  GstPad *		src;
-  GstPad *		sink;
-  GQueue *		queue;		/* all the stored output GstBuffers */
-} SwfdecGstDecoder;
-
 static GstFlowReturn
 swfdec_gst_chain_func (GstPad *pad, GstBuffer *buffer)
 {
@@ -253,45 +212,66 @@ swfdec_gst_chain_func (GstPad *pad, GstBuffer *buffer)
   return GST_FLOW_OK;
 }
 
-static gboolean
-swfdec_gst_decoder_init (SwfdecGstDecoder *dec, const char *name, GstCaps *srccaps, GstCaps *sinkcaps)
+gboolean
+swfdec_gst_decoder_init (SwfdecGstDecoder *dec, GstCaps *srccaps, GstCaps *sinkcaps, ...)
 {
-  if (name) {
-    dec->decoder = gst_element_factory_make (name, "decoder");
-  } else {
-    GstElementFactory *factory = swfdec_gst_get_element_factory (srccaps);
-    if (factory) {
-      dec->decoder = gst_element_factory_create (factory, "decoder");
-      gst_object_unref (factory);
-    }
+  va_list args;
+  GstElementFactory *factory;
+  GstElement *decoder;
+  const char *name;
+  
+  /* create decoder */
+  factory = swfdec_gst_get_element_factory (srccaps);
+  dec->bin = gst_bin_new ("bin");
+  if (factory) {
+    decoder = gst_element_factory_create (factory, "decoder");
+    gst_object_unref (factory);
   }
-  if (dec->decoder == NULL) {
+  if (decoder == NULL) {
     SWFDEC_ERROR ("failed to create decoder");
     return FALSE;
   }
-  dec->src = swfdec_gst_connect_srcpad (dec->decoder, srccaps);
+  gst_bin_add (GST_BIN (dec->bin), decoder);
+  dec->src = swfdec_gst_connect_srcpad (decoder, srccaps);
   if (dec->src == NULL)
     return FALSE;
-  dec->sink = swfdec_gst_connect_sinkpad (dec->decoder, sinkcaps);
+
+  /* plug transform elements */
+  va_start (args, sinkcaps);
+  while ((name = va_arg (args, const char *))) {
+    GstElement *next = gst_element_factory_make (name, NULL);
+    if (next == NULL) {
+      SWFDEC_ERROR ("failed to create '%s' element", name);
+      return FALSE;
+    }
+    gst_bin_add (GST_BIN (dec->bin), next);
+    if (!gst_element_link (decoder, next)) {
+      SWFDEC_ERROR ("failed to link '%s' element to decoder", name);
+      return FALSE;
+    }
+    decoder = next;
+  }
+  va_end (args);
+  dec->sink = swfdec_gst_connect_sinkpad (decoder, sinkcaps);
   if (dec->sink == NULL)
     return FALSE;
   gst_pad_set_chain_function (dec->sink, swfdec_gst_chain_func);
   dec->queue = g_queue_new ();
   g_object_set_data (G_OBJECT (dec->sink), "swfdec-queue", dec->queue);
-  if (!gst_element_set_state (dec->decoder, GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS) {
+  if (!gst_element_set_state (dec->bin, GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS) {
     SWFDEC_ERROR ("could not change element state");
     return FALSE;
   }
   return TRUE;
 }
 
-static void
+void
 swfdec_gst_decoder_finish (SwfdecGstDecoder *dec)
 {
-  if (dec->decoder) {
-    gst_element_set_state (dec->decoder, GST_STATE_NULL);
-    g_object_unref (dec->decoder);
-    dec->decoder = NULL;
+  if (dec->bin) {
+    gst_element_set_state (dec->bin, GST_STATE_NULL);
+    g_object_unref (dec->bin);
+    dec->bin = NULL;
   }
   if (dec->src) {
     g_object_unref (dec->src);
@@ -311,7 +291,7 @@ swfdec_gst_decoder_finish (SwfdecGstDecoder *dec)
   }
 }
 
-static gboolean
+gboolean
 swfdec_gst_decoder_push (SwfdecGstDecoder *dec, GstBuffer *buffer)
 {
   GstFlowReturn ret;
@@ -338,132 +318,16 @@ swfdec_gst_decoder_push (SwfdecGstDecoder *dec, GstBuffer *buffer)
   return FALSE;
 }
 
-static void
+void
 swfdec_gst_decoder_push_eos (SwfdecGstDecoder *dec)
 {
   gst_pad_push_event (dec->src, gst_event_new_eos ());
 }
 
-static GstBuffer *
+GstBuffer *
 swfdec_gst_decoder_pull (SwfdecGstDecoder *dec)
 {
   return g_queue_pop_head (dec->queue);
-}
-
-/*** AUDIO ***/
-
-typedef struct _SwfdecGstAudio SwfdecGstAudio;
-struct _SwfdecGstAudio {
-  SwfdecAudioDecoder	decoder;
-
-  gboolean		error;
-  SwfdecGstDecoder	dec;
-  SwfdecGstDecoder	convert;
-  SwfdecGstDecoder	resample;
-};
-
-static void
-swfdec_audio_decoder_gst_free (SwfdecAudioDecoder *dec)
-{
-  SwfdecGstAudio *player = (SwfdecGstAudio *) dec;
-
-  swfdec_gst_decoder_finish (&player->dec);
-  swfdec_gst_decoder_finish (&player->convert);
-  swfdec_gst_decoder_finish (&player->resample);
-
-  g_slice_free (SwfdecGstAudio, player);
-}
-
-static void
-swfdec_audio_decoder_gst_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
-{
-  SwfdecGstAudio *player = (SwfdecGstAudio *) dec;
-  GstBuffer *buf;
-
-  if (player->error)
-    return;
-  if (buffer == NULL) {
-    swfdec_gst_decoder_push_eos (&player->dec);
-  } else {
-    swfdec_buffer_ref (buffer);
-    buf = swfdec_gst_buffer_new (buffer);
-    if (!swfdec_gst_decoder_push (&player->dec, buf))
-      goto error;
-  }
-  while ((buf = swfdec_gst_decoder_pull (&player->dec))) {
-    if (!swfdec_gst_decoder_push (&player->convert, buf))
-      goto error;
-  }
-  while ((buf = swfdec_gst_decoder_pull (&player->convert))) {
-    if (!swfdec_gst_decoder_push (&player->resample, buf))
-      goto error;
-  }
-  return;
-
-error:
-  SWFDEC_ERROR ("error pushing");
-  player->error = TRUE;
-}
-
-static SwfdecBuffer *
-swfdec_audio_decoder_gst_pull (SwfdecAudioDecoder *dec)
-{
-  SwfdecGstAudio *player = (SwfdecGstAudio *) dec;
-  GstBuffer *buf;
-
-  if (player->error)
-    return NULL;
-  buf = swfdec_gst_decoder_pull (&player->resample);
-  if (buf == NULL)
-    return NULL;
-  return swfdec_buffer_new_from_gst (buf);
-}
-
-SwfdecAudioDecoder *
-swfdec_audio_decoder_gst_new (guint type, SwfdecAudioFormat format)
-{
-  SwfdecGstAudio *player;
-  GstCaps *srccaps, *sinkcaps;
-
-  srccaps = swfdec_audio_decoder_get_caps (type, format);
-  if (srccaps == NULL)
-    return NULL;
-
-  player = g_slice_new0 (SwfdecGstAudio);
-  player->decoder.pull = swfdec_audio_decoder_gst_pull;
-  player->decoder.push = swfdec_audio_decoder_gst_push;
-  player->decoder.free = swfdec_audio_decoder_gst_free;
-
-  /* create decoder */
-  sinkcaps = gst_caps_from_string ("audio/x-raw-int");
-  g_assert (sinkcaps);
-  if (!swfdec_gst_decoder_init (&player->dec, NULL, srccaps, sinkcaps))
-    goto error;
-  /* create audioconvert */
-  gst_caps_unref (srccaps);
-  srccaps = sinkcaps;
-  sinkcaps = gst_caps_from_string ("audio/x-raw-int, endianness=byte_order, signed=(boolean)true, width=16, depth=16, channels=2");
-  g_assert (sinkcaps);
-  if (!swfdec_gst_decoder_init (&player->convert, "audioconvert", srccaps, sinkcaps))
-    goto error;
-  /* create audiorate */
-  gst_caps_unref (srccaps);
-  srccaps = sinkcaps;
-  sinkcaps = gst_caps_from_string ("audio/x-raw-int, endianness=byte_order, signed=(boolean)true, width=16, depth=16, rate=44100, channels=2");
-  g_assert (sinkcaps);
-  if (!swfdec_gst_decoder_init (&player->resample, "audioresample", srccaps, sinkcaps))
-    goto error;
-  g_object_set_data (G_OBJECT (player->resample.sink), "swfdec-player", player);
-
-  gst_caps_unref (srccaps);
-  gst_caps_unref (sinkcaps);
-  return &player->decoder;
-
-error:
-  swfdec_audio_decoder_gst_free (&player->decoder);
-  gst_caps_unref (srccaps);
-  gst_caps_unref (sinkcaps);
-  return NULL;
 }
 
 /*** VIDEO ***/
@@ -594,7 +458,7 @@ swfdec_video_decoder_gst_new (guint codec)
   player->decoder.decode = swfdec_video_decoder_gst_decode;
   player->decoder.free = swfdec_video_decoder_gst_free;
 
-  if (!swfdec_gst_decoder_init (&player->dec, NULL, srccaps, sinkcaps)) {
+  if (!swfdec_gst_decoder_init (&player->dec, srccaps, sinkcaps, NULL)) {
     swfdec_video_decoder_gst_free (&player->decoder);
     gst_caps_unref (srccaps);
     gst_caps_unref (sinkcaps);
@@ -608,30 +472,6 @@ swfdec_video_decoder_gst_new (guint codec)
 
 /*** MISSING PLUGIN SUPPORT ***/
   
-gboolean
-swfdec_audio_decoder_gst_prepare (guint codec, SwfdecAudioFormat format, char **detail)
-{
-  GstElementFactory *factory;
-  GstCaps *caps;
-
-  /* Check if we can handle the format at all. If not, no plugin will help us. */
-  caps = swfdec_audio_decoder_get_caps (codec, format);
-  if (caps == NULL)
-    return FALSE;
-
-  /* If we can already handle it, woohoo! */
-  factory = swfdec_gst_get_element_factory (caps);
-  if (factory != NULL) {
-    gst_object_unref (factory);
-    return TRUE;
-  }
-
-  /* need to install plugins... */
-  *detail = gst_missing_decoder_installer_detail_new (caps);
-  gst_caps_unref (caps);
-  return FALSE;
-}
-
 gboolean
 swfdec_video_decoder_gst_prepare (guint codec, char **detail)
 {

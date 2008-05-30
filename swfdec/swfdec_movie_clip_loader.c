@@ -70,11 +70,12 @@ swfdec_movie_clip_loader_loadClip (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovieClipLoader *loader;
-  const char *url, *target;
+  const char *url;
+  SwfdecAsValue target;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "ss", &url, &target);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "sv", &url, &target);
 
-  swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, NULL, loader, TRUE);
+  swfdec_resource_load_movie (SWFDEC_PLAYER (cx), &target, url, NULL, loader);
 }
 
 SWFDEC_AS_NATIVE (112, 102, swfdec_movie_clip_loader_unloadClip)
@@ -83,11 +84,11 @@ swfdec_movie_clip_loader_unloadClip (SwfdecAsContext *cx, SwfdecAsObject *object
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovieClipLoader *loader;
-  const char *target;
+  SwfdecAsValue target;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "s", &target);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "v", &target);
 
-  swfdec_resource_load (SWFDEC_PLAYER (cx), target, "", NULL, loader, TRUE);
+  swfdec_resource_load_movie (SWFDEC_PLAYER (cx), &target, "", NULL, loader);
 }
 
 SWFDEC_AS_NATIVE (112, 101, swfdec_movie_clip_loader_getProgress)

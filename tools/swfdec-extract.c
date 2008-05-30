@@ -100,31 +100,20 @@ export_sound (SwfdecSound *sound, const char *filename)
 static gboolean
 export_sprite_sound (SwfdecSprite *sprite, const char *filename)
 {
+  g_printerr ("FIXME: Someone implement sound export from sprites plz\n");
+  return FALSE;
+#if 0
   GError *error = NULL;
   guint i, depth;
   SwfdecAudio *audio;
   SwfdecBufferQueue *queue;
   SwfdecBuffer *buffer, *wav;
 
-  for (i = 0; i < sprite->n_frames; i++) {
-    if (sprite->frames[i].sound_head)
-      break;
-  }
-  if (i >= sprite->n_frames) {
-    g_printerr ("No sound in sprite %u\n", SWFDEC_CHARACTER (sprite)->id);
-    return FALSE;
-  }
   audio = swfdec_audio_stream_new (NULL, sprite, i);
   i = 4096;
   queue = swfdec_buffer_queue_new ();
   while (i > 0) {
     buffer = swfdec_buffer_new0 (i * 4);
-#if 0
-    if (i > 1234) {
-      swfdec_audio_render (audio, (gint16 *) buffer->data, 0, 1234);
-      swfdec_audio_render (audio, (gint16 *) buffer->data + 2468, 1234, i - 1234);
-    } else
-#endif
     {
       swfdec_audio_render (audio, (gint16 *) (void *) buffer->data, 0, i);
     }
@@ -151,6 +140,7 @@ export_sprite_sound (SwfdecSprite *sprite, const char *filename)
   }
   swfdec_buffer_unref (wav);
   return TRUE;
+#endif
 }
 
 static cairo_surface_t *

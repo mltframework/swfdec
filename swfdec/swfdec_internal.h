@@ -23,23 +23,10 @@
 #define _SWFDEC_INTERNAL_H_
 
 #include <swfdec/swfdec_types.h>
-#include <swfdec/swfdec_codec_audio.h>
 #include <swfdec/swfdec_codec_video.h>
 
 G_BEGIN_DECLS
 
-
-/* audio codecs */
-
-SwfdecAudioDecoder *	swfdec_audio_decoder_adpcm_new		(guint			type, 
-								 SwfdecAudioFormat	format);
-#ifdef HAVE_GST
-SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(guint			type, 
-								 SwfdecAudioFormat	format);
-gboolean		swfdec_audio_decoder_gst_prepare	(guint			codec,
-								 SwfdecAudioFormat	format,
-								 char **		detail);
-#endif
 
 /* video codecs */
 

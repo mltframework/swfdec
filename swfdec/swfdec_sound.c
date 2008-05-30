@@ -23,8 +23,9 @@
 #endif
 #include <string.h>
 
-#include "swfdec_audio_internal.h"
 #include "swfdec_sound.h"
+#include "swfdec_audio_decoder.h"
+#include "swfdec_audio_internal.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
 #include "swfdec_button.h"
@@ -60,46 +61,6 @@ static void
 swfdec_sound_init (SwfdecSound * sound)
 {
 
-}
-
-int
-tag_func_sound_stream_block (SwfdecSwfDecoder * s, guint tag)
-{
-  SwfdecSound *sound;
-  SwfdecBuffer *chunk;
-  int n_samples;
-  int skip;
-
-  sound = SWFDEC_SOUND (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head);
-
-  if (!sound) {
-    SWFDEC_WARNING ("no streaming sound block");
-    return SWFDEC_STATUS_OK;
-  }
-
-  n_samples = swfdec_bits_get_u16 (&s->b);
-  if (sound->codec == SWFDEC_AUDIO_CODEC_MP3) {
-    skip = swfdec_bits_get_s16 (&s->b);
-  } else {
-    skip = 0;
-  }
-  if (swfdec_bits_left (&s->b) == 0) {
-    SWFDEC_DEBUG ("empty sound block n_samples=%d skip=%d", n_samples,
-        skip);
-    chunk = NULL;
-    return SWFDEC_STATUS_OK;
-  } else {
-    chunk = swfdec_bits_get_buffer (&s->b, -1);
-    g_assert (chunk != NULL);
-    SWFDEC_LOG ("got a buffer with %u samples, %d skip and %"G_GSIZE_FORMAT" bytes mp3 data", n_samples, skip,
-	chunk->length);
-    /* use this to write out the stream data to stdout - nice way to get an mp3 file :) */
-    //write (1, (void *) chunk->data, chunk->length);
-  }
-
-  swfdec_sprite_add_sound_chunk (s->parse_sprite, s->parse_sprite->parse_frame, chunk, skip, n_samples);
-
-  return SWFDEC_STATUS_OK;
 }
 
 int
@@ -179,7 +140,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound)
   while ((tmp = swfdec_audio_decoder_pull (decoder))) {
     swfdec_buffer_queue_push (queue, tmp);
   }
-  swfdec_audio_decoder_free (decoder);
+  g_object_unref (decoder);
   depth = swfdec_buffer_queue_get_depth (queue);
   if (depth == 0) {
     SWFDEC_ERROR ("decoding didn't produce any data, bailing");
@@ -216,61 +177,6 @@ swfdec_sound_get_decoded (SwfdecSound *sound)
   sound->decoded = tmp;
 
   return sound->decoded;
-}
-
-int
-tag_func_sound_stream_head (SwfdecSwfDecoder * s, guint tag)
-{
-  SwfdecBits *b = &s->b;
-  SwfdecAudioFormat playback;
-  guint playback_codec;
-  int n_samples;
-  int latency;
-  SwfdecSound *sound;
-
-  playback_codec = swfdec_bits_getbits (b, 4);
-  /* we don't care about playback suggestions */
-  playback = swfdec_audio_format_parse (b);
-  SWFDEC_LOG ("  suggested playback format: %s", swfdec_audio_format_to_string (playback));
-
-  sound = g_object_new (SWFDEC_TYPE_SOUND, NULL);
-  sound->codec = swfdec_bits_getbits (b, 4);
-  sound->format = swfdec_audio_format_parse (b);
-  n_samples = swfdec_bits_get_u16 (b);
-  if (playback_codec != 0 && playback_codec != sound->codec) {
-    SWFDEC_FIXME ("playback codec %u doesn't match sound codec %u", 
-	playback_codec, sound->codec);
-  }
-
-  if (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head)
-    g_object_unref (s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head);
-  s->parse_sprite->frames[s->parse_sprite->parse_frame].sound_head = sound;
-
-  switch (sound->codec) {
-    case SWFDEC_AUDIO_CODEC_UNDEFINED:
-      if (swfdec_audio_format_is_16bit (sound->format)) {
-	SWFDEC_WARNING ("undefined endianness for s16 sound");
-	/* just assume LE and hope it works (FIXME: want a switch for this?) */
-	sound->codec = SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
-      }
-      break;
-    case SWFDEC_AUDIO_CODEC_MP3:
-      /* latency seek */
-      latency = swfdec_bits_get_s16 (b);
-      break;
-    case SWFDEC_AUDIO_CODEC_ADPCM:
-    case SWFDEC_AUDIO_CODEC_UNCOMPRESSED:
-    case SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ:
-    case SWFDEC_AUDIO_CODEC_NELLYMOSER:
-      break;
-    default:
-      SWFDEC_WARNING ("unknown codec %d", sound->codec);
-      sound->codec = SWFDEC_AUDIO_CODEC_UNDEFINED;
-  }
-
-  swfdec_decoder_use_audio_codec (SWFDEC_DECODER (s), sound->codec, sound->format);
-
-  return SWFDEC_STATUS_OK;
 }
 
 void

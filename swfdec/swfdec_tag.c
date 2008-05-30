@@ -292,12 +292,6 @@ tag_func_show_frame (SwfdecSwfDecoder * s, guint tag)
       SWFDEC_CHARACTER (s->parse_sprite)->id);
 
   s->parse_sprite->parse_frame++;
-  if (s->parse_sprite->parse_frame < s->parse_sprite->n_frames) {
-    SwfdecSpriteFrame *old = &s->parse_sprite->frames[s->parse_sprite->parse_frame - 1];
-    SwfdecSpriteFrame *new = &s->parse_sprite->frames[s->parse_sprite->parse_frame];
-    if (old->sound_head)
-      new->sound_head = g_object_ref (old->sound_head);
-  }
   tag_func_enqueue (s, tag);
 
   return SWFDEC_STATUS_IMAGE;
@@ -352,6 +346,34 @@ tag_func_do_init_action (SwfdecSwfDecoder * s, guint tag)
   return SWFDEC_STATUS_OK;
 }
 
+/* only needed for the codec finding stuff */
+static int
+tag_func_sound_stream_head (SwfdecSwfDecoder *s, guint tag)
+{
+  SwfdecBits bits;
+  SwfdecAudioFormat playback_format, format;
+  guint playback_codec, codec;
+  int n_samples;
+
+  bits = s->b;
+
+  /* we don't care about playback suggestions */
+  playback_codec = swfdec_bits_getbits (&bits, 4);
+  playback_format = swfdec_audio_format_parse (&bits);
+  SWFDEC_LOG ("  suggested playback format: %s", swfdec_audio_format_to_string (playback_format));
+
+  codec = swfdec_bits_getbits (&bits, 4);
+  format = swfdec_audio_format_parse (&bits);
+  n_samples = swfdec_bits_get_u16 (&bits);
+  SWFDEC_LOG ("  codec: %u", codec);
+  SWFDEC_LOG ("  format: %s", swfdec_audio_format_to_string (format));
+  SWFDEC_LOG ("  samples: %u", n_samples);
+
+  swfdec_decoder_use_audio_codec (SWFDEC_DECODER (s), codec, format);
+
+  return tag_func_enqueue (s, tag);
+}
+
 struct tag_func_struct
 {
   const char *name;
@@ -379,7 +401,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_DEFINEBUTTONSOUND] =
       {"DefineButtonSound", tag_func_define_button_sound, 0},
   [SWFDEC_TAG_SOUNDSTREAMHEAD] = {"SoundStreamHead", tag_func_sound_stream_head, SWFDEC_TAG_DEFINE_SPRITE },
-  [SWFDEC_TAG_SOUNDSTREAMBLOCK] = {"SoundStreamBlock", tag_func_sound_stream_block, SWFDEC_TAG_DEFINE_SPRITE },
+  [SWFDEC_TAG_SOUNDSTREAMBLOCK] = {"SoundStreamBlock", tag_func_enqueue, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINEBITSLOSSLESS] =
       {"DefineBitsLossless", tag_func_define_bits_lossless, 0},
   [SWFDEC_TAG_DEFINEBITSJPEG2] = {"DefineBitsJPEG2", tag_func_define_bits_jpeg_2, 0},

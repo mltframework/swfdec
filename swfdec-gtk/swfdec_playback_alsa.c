@@ -74,75 +74,6 @@ struct _Stream {
 
 /*** STREAMS ***/
 
-static snd_pcm_uframes_t
-write_player (Stream *stream, const snd_pcm_channel_area_t *dst, 
-    snd_pcm_uframes_t offset, snd_pcm_uframes_t avail)
-{
-  /* FIXME: do a long path if this doesn't hold */
-  g_assert (dst[1].first - dst[0].first == 16);
-  g_assert (dst[0].addr == dst[1].addr);
-  g_assert (dst[0].step == dst[1].step);
-  g_assert (dst[0].step == 32);
-
-  swfdec_audio_render (stream->audio, (gint16 *) ((guint8 *) dst[0].addr + offset * dst[0].step / 8), 
-      stream->offset, avail);
-  //g_print ("rendering %u %u\n", stream->offset, (guint) avail);
-  return avail;
-}
-
-static gboolean
-try_write_mmap (Stream *stream)
-{
-  snd_pcm_sframes_t avail_result;
-  snd_pcm_uframes_t offset, avail;
-  const snd_pcm_channel_area_t *dst;
-
-  while (TRUE) {
-    avail_result = snd_pcm_avail_update (stream->pcm);
-    ALSA_ERROR (avail_result, "snd_pcm_avail_update failed", FALSE);
-    if (avail_result == 0)
-      return TRUE;
-    avail = avail_result;
-    ALSA_ERROR (snd_pcm_mmap_begin (stream->pcm, &dst, &offset, &avail),
-	"snd_pcm_mmap_begin failed", FALSE);
-    //g_print ("  avail = %u\n", (guint) avail);
-
-    avail = write_player (stream, dst, offset, avail);
-    if (snd_pcm_mmap_commit (stream->pcm, offset, avail) < 0) {
-      g_printerr ("snd_pcm_mmap_commit failed\n");
-      return FALSE;
-    }
-    stream->offset += avail;
-    //g_print ("offset: %u (+%u)\n", stream->offset, (guint) avail);
-  }
-  return TRUE;
-}
-
-static gboolean
-try_write_so_pa_gets_it (Stream *stream)
-{
-#define STEP 1024
-  snd_pcm_sframes_t avail, step;
-  avail = snd_pcm_avail_update (stream->pcm);
-  ALSA_ERROR (avail, "snd_pcm_avail_update failed", FALSE);
-
-  while (avail > 0) {
-    gint16 data[2 * STEP];
-
-    step = MIN (avail, STEP);
-    swfdec_audio_render (stream->audio, data, stream->offset, step);
-    step = snd_pcm_writei (stream->pcm, data, step);
-    ALSA_ERROR (step, "snd_pcm_writei failed", FALSE);
-    avail -= step;
-    stream->offset += step;
-  }
-
-  return TRUE;
-#undef STEP
-}
-
-#define try_write(stream) ((stream)->write (stream))
-
 static void
 swfdec_playback_stream_remove_handlers (Stream *stream)
 {
@@ -156,6 +87,83 @@ swfdec_playback_stream_remove_handlers (Stream *stream)
     }
   }
 }
+
+static snd_pcm_uframes_t
+write_player (Stream *stream, const snd_pcm_channel_area_t *dst, 
+    snd_pcm_uframes_t offset, snd_pcm_uframes_t avail)
+{
+  snd_pcm_uframes_t rendered;
+  /* FIXME: do a long path if this doesn't hold */
+  g_assert (dst[1].first - dst[0].first == 16);
+  g_assert (dst[0].addr == dst[1].addr);
+  g_assert (dst[0].step == dst[1].step);
+  g_assert (dst[0].step == 32);
+
+  rendered = swfdec_audio_render (stream->audio, (gint16 *) ((guint8 *) dst[0].addr + offset * dst[0].step / 8), 
+      stream->offset, avail);
+  //g_print ("rendering %u %u\n", stream->offset, (guint) avail);
+  return rendered;
+}
+
+static gboolean
+try_write_mmap (Stream *stream)
+{
+  snd_pcm_sframes_t avail_result;
+  snd_pcm_uframes_t offset, avail, rendered;
+  const snd_pcm_channel_area_t *dst;
+
+  do {
+    avail_result = snd_pcm_avail_update (stream->pcm);
+    ALSA_ERROR (avail_result, "snd_pcm_avail_update failed", FALSE);
+    if (avail_result == 0)
+      return TRUE;
+    avail = avail_result;
+    ALSA_ERROR (snd_pcm_mmap_begin (stream->pcm, &dst, &offset, &avail),
+	"snd_pcm_mmap_begin failed", FALSE);
+    //g_print ("  avail = %u\n", (guint) avail);
+
+    rendered = write_player (stream, dst, offset, avail);
+    if (snd_pcm_mmap_commit (stream->pcm, offset, rendered) < 0) {
+      g_printerr ("snd_pcm_mmap_commit failed\n");
+      return FALSE;
+    }
+    stream->offset += rendered;
+    //g_print ("offset: %u (+%u)\n", stream->offset, (guint) avail);
+  } while (rendered == avail);
+  swfdec_playback_stream_remove_handlers (stream);
+  return TRUE;
+}
+
+static gboolean
+try_write_so_pa_gets_it (Stream *stream)
+{
+#define STEP 1024
+  snd_pcm_sframes_t avail, step, written;
+  gboolean finish = FALSE;
+
+  avail = snd_pcm_avail_update (stream->pcm);
+  ALSA_ERROR (avail, "snd_pcm_avail_update failed", FALSE);
+
+  while (avail > 0 && !finish) {
+    gint16 data[2 * STEP];
+
+    step = MIN (avail, STEP);
+    written = swfdec_audio_render (stream->audio, data, stream->offset, step);
+    finish = written < step;
+    step = snd_pcm_writei (stream->pcm, data, written);
+    finish &= step == written;
+    ALSA_ERROR (step, "snd_pcm_writei failed", FALSE);
+    avail -= step;
+    stream->offset += step;
+  }
+
+  if (finish)
+    swfdec_playback_stream_remove_handlers (stream);
+  return TRUE;
+#undef STEP
+}
+
+#define try_write(stream) ((stream)->write (stream))
 
 static void swfdec_playback_stream_start (Stream *stream);
 static gboolean

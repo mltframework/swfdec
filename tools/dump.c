@@ -30,6 +30,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <swfdec/swfdec.h>
+#include <swfdec/swfdec_audio_decoder.h>
 #include <swfdec/swfdec_button.h>
 #include <swfdec/swfdec_text_field.h>
 #include <swfdec/swfdec_font.h>
@@ -82,24 +83,6 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
   } else {
     guint i, j, tag;
     SwfdecBuffer *buffer;
-    SwfdecSound *sound = NULL;
-
-    for (i = 0; i < s->n_frames; i++) {
-      SwfdecSpriteFrame *frame = &s->frames[i];
-      if (frame->sound_head != sound &&
-	  frame->sound_block != NULL) {
-	sound = frame->sound_head;
-	for (j = i; j < s->n_frames; j++) {
-	  SwfdecSpriteFrame *cur = &s->frames[i];
-	  if (cur->sound_head != sound)
-	    break;
-	}
-	if (sound)
-	  g_print ("   %4u -%4u  sound: %s %s\n", i, j, 
-	      get_audio_format_name (sound->codec),
-	      swfdec_audio_format_to_string (sound->format));
-      }
-    }
 
     j = 0;
     for (i = 0; ; i++) {
@@ -158,6 +141,13 @@ dump_sprite (SwfdecSwfDecoder *dec, SwfdecSprite *s)
 	  break;
 	case SWFDEC_TAG_SETBACKGROUNDCOLOR:
 	  g_print ("   %4u background color\n", j);
+	  break;
+	case SWFDEC_TAG_SOUNDSTREAMHEAD:
+	  /* FIXME */
+	  g_print ("   %4u sound stream\n", j);
+	  break;
+	case SWFDEC_TAG_SOUNDSTREAMHEAD2:
+	case SWFDEC_TAG_SOUNDSTREAMBLOCK:
 	  break;
 	default:
 	  g_assert_not_reached ();

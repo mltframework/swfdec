@@ -3679,6 +3679,9 @@ EXTRA_DIST = \
 	utf-32-le-bom.txt \
 	values.as \
 	video.flv \
+	video-enumerate.c \
+	video-enumerate.swf \
+	video-enumerate.swf.trace \
 	video-properties.as \
 	video-properties-6.swf \
 	video-properties-6.swf.trace \

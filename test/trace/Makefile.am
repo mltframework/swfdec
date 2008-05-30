@@ -3128,6 +3128,15 @@ EXTRA_DIST = \
 	string-convert-6.swf.trace \
 	string-convert-7.swf \
 	string-convert-7.swf.trace \
+	string-equals-old.as \
+	string-equals-old-5.swf \
+	string-equals-old-5.swf.trace \
+	string-equals-old-6.swf \
+	string-equals-old-6.swf.trace \
+	string-equals-old-7.swf \
+	string-equals-old-7.swf.trace \
+	string-equals-old-8.swf \
+	string-equals-old-8.swf.trace \
 	string-extract.as \
 	string-extract-5.swf \
 	string-extract-5.swf.trace \

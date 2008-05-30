@@ -226,6 +226,8 @@ swfdec_gst_decoder_init (SwfdecGstDecoder *dec, GstCaps *srccaps, GstCaps *sinkc
   if (factory) {
     decoder = gst_element_factory_create (factory, "decoder");
     gst_object_unref (factory);
+  } else {
+    decoder = NULL;
   }
   if (decoder == NULL) {
     SWFDEC_ERROR ("failed to create decoder");

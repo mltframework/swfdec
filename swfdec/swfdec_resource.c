@@ -543,6 +543,8 @@ swfdec_resource_create_movie (SwfdecResource *resource, SwfdecResourceLoad *load
     int level = swfdec_player_get_level (player, load->target_string);
     if (level >= 0)
       movie = swfdec_player_create_movie_at_level (player, resource, level);
+    else
+      movie = NULL;
   }
   if (movie == NULL) {
     SWFDEC_WARNING ("target does not reference a movie, not loading %s", load->url);

@@ -131,69 +131,6 @@ ASSetNative (NetStream.prototype, 2101, "6close,6attachAudio,6attachVideo,6send,
 ASSetNativeAccessor (NetStream.prototype, 2101, "checkPolicyFile", 5);
 ASSetPropFlags (NetStream.prototype, null, 3);
 
-/*** LOADVARS ***/
-
-function LoadVars () { };
-
-LoadVars.prototype.contentType = "application/x-www-form-urlencoded";
-
-LoadVars.prototype.load = ASnative (301, 0);
-LoadVars.prototype.send = ASnative (301, 1);
-LoadVars.prototype.sendAndLoad = ASnative (301, 2);
-LoadVars.prototype.decode = ASnative (301, 3);
-
-LoadVars.prototype.onLoad = function () {
-};
-
-LoadVars.prototype.onData = function (src) {
-  this.loaded = true;
-  if (src != null) {
-    this.decode (src);
-    this.onLoad (true);
-  } else {
-    this.onLoad (false);
-  }
-};
-
-LoadVars.prototype.toString = function () {
-  var a = [];
-  for (var x in this) {
-    a.push (escape(x) + "=" + escape(this[x]));
-  }
-  return a.join ("&");
-};
-
-LoadVars.prototype.getBytesLoaded = function () {
-  return this._bytesLoaded;
-};
-
-LoadVars.prototype.getBytesTotal = function () {
-  return this._bytesTotal;
-};
-
-LoadVars.prototype.addRequestHeader = function (key, value) {
-  if (typeof (this._customHeaders) == "undefined") {
-    this._customHeaders = new Array ();
-    ASSetPropFlags (this, "_customHeaders", 131);
-  }
-  if (typeof (key) == "string" && typeof (value) == "string") {
-    this._customHeaders.push (key, value);
-  } else if (key instanceof Array) {
-    for (var i = 0; i + 1 < key.length; i += 2) {
-      this.addRequestHeader (key[i], key[i + 1]);
-    }
-  }
-};
-
-ASSetPropFlags(LoadVars.prototype, null, 131);
-
-/*** Sound ***/
-
-Sound = ASconstructor (500, 16);
-ASSetNative (Sound.prototype, 500, "getPan,getTransform,getVolume,setPan,setTransform,setVolume,stop,attachSound,start,6getDuration,6setDuration,6getPosition,6setPosition,6loadSound,6getBytesLoaded,6getBytesTotal,9areSoundsInaccessible");
-ASSetNativeAccessor (Sound.prototype, 500, "checkPolicyFile", 18);
-ASSetPropFlags (Sound.prototype, null, 7);
-
 /*** XMLNode ***/
 
 XMLNode = ASconstructor (253, 0);
@@ -245,7 +182,70 @@ XML.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
-XML.prototype.addRequestHeader = LoadVars.prototype.addRequestHeader;
+XML.prototype.addRequestHeader = function (key, value) {
+  if (typeof (this._customHeaders) == "undefined") {
+    this._customHeaders = new Array ();
+    ASSetPropFlags (this, "_customHeaders", 131);
+  }
+  if (typeof (key) == "string" && typeof (value) == "string") {
+    this._customHeaders.push (key, value);
+  } else if (key instanceof Array) {
+    for (var i = 0; i + 1 < key.length; i += 2) {
+      this.addRequestHeader (key[i], key[i + 1]);
+    }
+  }
+};
+
+/*** LOADVARS ***/
+
+function LoadVars () { };
+
+LoadVars.prototype.contentType = "application/x-www-form-urlencoded";
+
+LoadVars.prototype.load = ASnative (301, 0);
+LoadVars.prototype.send = ASnative (301, 1);
+LoadVars.prototype.sendAndLoad = ASnative (301, 2);
+LoadVars.prototype.decode = ASnative (301, 3);
+
+LoadVars.prototype.onLoad = function () {
+};
+
+LoadVars.prototype.onData = function (src) {
+  this.loaded = true;
+  if (src != null) {
+    this.decode (src);
+    this.onLoad (true);
+  } else {
+    this.onLoad (false);
+  }
+};
+
+LoadVars.prototype.toString = function () {
+  var a = [];
+  for (var x in this) {
+    a.push (escape(x) + "=" + escape(this[x]));
+  }
+  return a.join ("&");
+};
+
+LoadVars.prototype.getBytesLoaded = function () {
+  return this._bytesLoaded;
+};
+
+LoadVars.prototype.getBytesTotal = function () {
+  return this._bytesTotal;
+};
+
+LoadVars.prototype.addRequestHeader = XML.prototype.addRequestHeader;
+
+ASSetPropFlags(LoadVars.prototype, null, 131);
+
+/*** Sound ***/
+
+Sound = ASconstructor (500, 16);
+ASSetNative (Sound.prototype, 500, "getPan,getTransform,getVolume,setPan,setTransform,setVolume,stop,attachSound,start,6getDuration,6setDuration,6getPosition,6setPosition,6loadSound,6getBytesLoaded,6getBytesTotal,9areSoundsInaccessible");
+ASSetNativeAccessor (Sound.prototype, 500, "checkPolicyFile", 18);
+ASSetPropFlags (Sound.prototype, null, 7);
 
 /*** System ***/
 

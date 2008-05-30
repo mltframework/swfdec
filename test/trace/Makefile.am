@@ -1620,6 +1620,15 @@ EXTRA_DIST = \
 	loadobject-addrequestheader-7.swf.trace \
 	loadobject-addrequestheader-8.swf \
 	loadobject-addrequestheader-8.swf.trace \
+	loadobject-addrequestheader-propflags.as \
+	loadobject-addrequestheader-propflags-5.swf \
+	loadobject-addrequestheader-propflags-5.swf.trace \
+	loadobject-addrequestheader-propflags-6.swf \
+	loadobject-addrequestheader-propflags-6.swf.trace \
+	loadobject-addrequestheader-propflags-7.swf \
+	loadobject-addrequestheader-propflags-7.swf.trace \
+	loadobject-addrequestheader-propflags-8.swf \
+	loadobject-addrequestheader-propflags-8.swf.trace \
 	loadobject-bom.as \
 	loadobject-bom-5.swf \
 	loadobject-bom-5.swf.trace \

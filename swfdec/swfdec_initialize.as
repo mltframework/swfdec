@@ -171,9 +171,18 @@ LoadVars.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
-LoadVars.prototype.addRequestHeader = function () {
-  // Same as XML?
-  var o = {}; o["Implement LoadVars.addRequestHeader"] ();
+LoadVars.prototype.addRequestHeader = function (key, value) {
+  if (typeof (this._customHeaders) == "undefined") {
+    this._customHeaders = new Array ();
+    ASSetPropFlags (this, "_customHeaders", 131);
+  }
+  if (typeof (key) == "string" && typeof (value) == "string") {
+    this._customHeaders.push (key, value);
+  } else if (key instanceof Array) {
+    for (var i = 0; i + 1 < key.length; i += 2) {
+      this.addRequestHeader (key[i], key[i + 1]);
+    }
+  }
 };
 
 ASSetPropFlags(LoadVars.prototype, null, 131);
@@ -236,10 +245,7 @@ XML.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
-XML.prototype.addRequestHeader = function () {
-  // Same as LoadVars?
-  var o = {}; o["Implement XML.addRequestHeader"] ();
-};
+XML.prototype.addRequestHeader = LoadVars.prototype.addRequestHeader;
 
 /*** System ***/
 

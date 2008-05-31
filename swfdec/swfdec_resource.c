@@ -711,7 +711,6 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     swfdec_resource_load_internal (player, SWFDEC_SPRITE_MOVIE (movie),
 	NULL, url, buffer, loader);
-    return;
     return TRUE;
   }
   if (swfdec_player_get_level (player, s) >= 0) {

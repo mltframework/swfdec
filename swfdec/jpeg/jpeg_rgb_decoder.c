@@ -57,7 +57,10 @@ int jpeg_decode_argb (uint8_t *data, int length, uint32_t **image,
   jpeg_decoder_addbits (dec, data, length);
   ret = jpeg_decoder_decode(dec);
 
-  if (!ret) return FALSE;
+  if (!ret) {
+    jpeg_decoder_free (dec);
+    return FALSE;
+  }
 
   jpeg_decoder_get_image_size (dec, width, height);
   *image = (uint32_t *)jpeg_decoder_get_argb_image (dec);

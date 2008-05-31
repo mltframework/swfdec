@@ -72,10 +72,13 @@ swfdec_movie_clip_loader_loadClip (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecMovieClipLoader *loader;
   const char *url;
   SwfdecAsValue target;
+  gboolean result;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE_CLIP_LOADER, &loader, "sv", &url, &target);
 
-  swfdec_resource_load_movie (SWFDEC_PLAYER (cx), &target, url, NULL, loader);
+  result = swfdec_resource_load_movie (SWFDEC_PLAYER (cx), &target, url, 
+      NULL, loader);
+  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, result);
 }
 
 SWFDEC_AS_NATIVE (112, 102, swfdec_movie_clip_loader_unloadClip)

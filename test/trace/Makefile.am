@@ -1973,6 +1973,15 @@ EXTRA_DIST = \
 	moviecliploader-known-image-size-7.swf.trace \
 	moviecliploader-known-image-size-8.swf \
 	moviecliploader-known-image-size-8.swf.trace \
+	moviecliploader-level-5.swf \
+	moviecliploader-level-5.swf.trace \
+	moviecliploader-level-6.swf \
+	moviecliploader-level-6.swf.trace \
+	moviecliploader-level-7.swf \
+	moviecliploader-level-7.swf.trace \
+	moviecliploader-level-8.swf \
+	moviecliploader-level-8.swf.trace \
+	moviecliploader-level.as \
 	moviecliploader-properties.as \
 	moviecliploader-properties-5.swf \
 	moviecliploader-properties-5.swf.trace \
@@ -1982,6 +1991,11 @@ EXTRA_DIST = \
 	moviecliploader-properties-7.swf.trace \
 	moviecliploader-properties-8.swf \
 	moviecliploader-properties-8.swf.trace \
+	moviecliploader-undefined-on-error-7.swf \
+	moviecliploader-undefined-on-error-7.swf.trace \
+	moviecliploader-undefined-on-error-8.swf \
+	moviecliploader-undefined-on-error-8.swf.trace \
+	moviecliploader-undefined-on-error.as \
 	moviecliploader-unknown-format.as \
 	moviecliploader-unknown-format-5.swf \
 	moviecliploader-unknown-format-5.swf.trace \

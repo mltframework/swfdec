@@ -16,7 +16,7 @@ t.onData = function (str) {
 
   t.onData = t.onData2;
 
-  o.sendAndLoad("test.txt?test=paranormal", t, "POST");
+  o.sendAndLoad("loadvars.txt?test=paranormal", t, "POST");
 };
 
-o.sendAndLoad("test.txt?test=paranormal", t, "GET");
+o.sendAndLoad("loadvars.txt?test=paranormal", t, "GET");

@@ -1,2 +1,2 @@
-Finished: test=normal\n
-Finished: test=normal\n
+Finished: test=2&hi=hello&empty_value&=empty_name&spa%20ce=spa%20ce&sp ace&spa ce=sp ace&many=equal=signs=in=row&eof=\nwas there&eof\n=was there&\n
+Finished: test=2&hi=hello&empty_value&=empty_name&spa%20ce=spa%20ce&sp ace&spa ce=sp ace&many=equal=signs=in=row&eof=\nwas there&eof\n=was there&\n

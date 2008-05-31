@@ -68,9 +68,14 @@ IGNORE_HFILES= \
 	swfdec_as_with.h \
 	swfdec_asnative.h \
 	swfdec_audio_internal.h \
+	swfdec_audio_decoder.h \
+	swfdec_audio_decoder_adpcm.h \
+	swfdec_audio_decoder_gst.h \
+	swfdec_audio_decoder_uncompressed.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \
 	swfdec_audio_stream.h \
+	swfdec_audio_swf_stream.h \
 	swfdec_bits.h \
 	swfdec_bots.h \
 	swfdec_button.h \
@@ -81,6 +86,7 @@ IGNORE_HFILES= \
 	swfdec_cached_video.h \
 	swfdec_character.h \
 	swfdec_codec_audio.h \
+	swfdec_codec_gst.h \
 	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_color_as.h \

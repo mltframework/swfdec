@@ -236,7 +236,21 @@ LoadVars.prototype.getBytesTotal = function () {
   return this._bytesTotal;
 };
 
-LoadVars.prototype.addRequestHeader = XML.prototype.addRequestHeader;
+// Duplicated from XML
+// Just using the same function here fails loadvars-properties test
+LoadVars.prototype.addRequestHeader = function () {
+  if (typeof (this._customHeaders) == "undefined") {
+    this._customHeaders = new Array ();
+    ASSetPropFlags (this, "_customHeaders", 131);
+  }
+  if (typeof (key) == "string" && typeof (value) == "string") {
+    this._customHeaders.push (key, value);
+  } else if (key instanceof Array) {
+    for (var i = 0; i + 1 < key.length; i += 2) {
+      this.addRequestHeader (key[i], key[i + 1]);
+    }
+  }
+};
 
 ASSetPropFlags(LoadVars.prototype, null, 131);
 

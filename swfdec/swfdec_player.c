@@ -2297,7 +2297,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    * The effect of calling any swfdec functions on the emitting @player is undefined.
    */
   signals[LAUNCH] = g_signal_new ("launch", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__ENUM_STRING_STRING_BOXED,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING_BOXED,
       G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_STRING, SWFDEC_TYPE_BUFFER);
   /**
    * SwfdecPlayer::missing-plugins:

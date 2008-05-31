@@ -1,14 +1,11 @@
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <liboil/liboil.h>
+#include <liboil/liboildebug.h>
+#include <cogcompat.h>
 
 #include "jpeg.h"
 
-#include <liboil/liboil.h>
-#include <liboil/liboildebug.h>
 
-#define CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define oil_argb(a,r,g,b) \
   ((oil_clamp_255(a)<<24) | \
    (oil_clamp_255(r)<<16) | \

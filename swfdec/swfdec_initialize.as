@@ -238,7 +238,7 @@ LoadVars.prototype.getBytesTotal = function () {
 
 // Duplicated from XML
 // Just using the same function here fails loadvars-properties test
-LoadVars.prototype.addRequestHeader = function () {
+LoadVars.prototype.addRequestHeader = function (key, value) {
   if (typeof (this._customHeaders) == "undefined") {
     this._customHeaders = new Array ();
     ASSetPropFlags (this, "_customHeaders", 131);

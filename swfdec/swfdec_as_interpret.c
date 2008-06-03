@@ -687,7 +687,7 @@ swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *dat
       goto error;
   }
   if (id > (cx->version > 4 ? 21 : 18)) {
-    SWFDEC_WARNING ("trying to SetProperty %u, doesn't exist", id);
+    SWFDEC_WARNING ("trying to GetProperty %u, doesn't exist", id);
     goto error;
   }
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (movie), swfdec_movieclip_props[id].name,

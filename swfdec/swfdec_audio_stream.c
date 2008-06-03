@@ -114,7 +114,7 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
     dest += 2 * samples;
   }
 
-  return rendered;
+  return rendered - start;
 }
 
 static guint

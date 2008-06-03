@@ -53,6 +53,31 @@ typedef enum {
   SWFDEC_FLASH_NO
 } SwfdecFlashBool;
 
+typedef enum {
+  SWFDEC_MOVIE_PROPERTY_X = 0,
+  SWFDEC_MOVIE_PROPERTY_Y = 1,
+  SWFDEC_MOVIE_PROPERTY_XSCALE = 2,
+  SWFDEC_MOVIE_PROPERTY_YSCALE = 3,
+  SWFDEC_MOVIE_PROPERTY_CURRENTFRAME = 4,
+  SWFDEC_MOVIE_PROPERTY_TOTALFRAMES = 5,
+  SWFDEC_MOVIE_PROPERTY_ALPHA = 6,
+  SWFDEC_MOVIE_PROPERTY_VISIBLE = 7,
+  SWFDEC_MOVIE_PROPERTY_WIDTH = 8,
+  SWFDEC_MOVIE_PROPERTY_HEIGHT = 9,
+  SWFDEC_MOVIE_PROPERTY_ROTATION = 10,
+  SWFDEC_MOVIE_PROPERTY_TARGET = 11,
+  SWFDEC_MOVIE_PROPERTY_FRAMESLOADED = 12,
+  SWFDEC_MOVIE_PROPERTY_NAME = 13,
+  SWFDEC_MOVIE_PROPERTY_DROPTARGET = 14,
+  SWFDEC_MOVIE_PROPERTY_URL = 15,
+  SWFDEC_MOVIE_PROPERTY_HIGHQUALITY = 16,
+  SWFDEC_MOVIE_PROPERTY_FOCUSRECT = 17,
+  SWFDEC_MOVIE_PROPERTY_SOUNDBUFTIME = 18,
+  SWFDEC_MOVIE_PROPERTY_QUALITY = 19,
+  SWFDEC_MOVIE_PROPERTY_XMOUSE = 20,
+  SWFDEC_MOVIE_PROPERTY_YMOUSE = 21
+} SwfdecMovieProperty;
+
 #define SWFDEC_BLEND_MODE_NORMAL	1
 #define SWFDEC_BLEND_MODE_LAYER		2
 #define SWFDEC_BLEND_MODE_MULTIPLY	3
@@ -157,6 +182,12 @@ struct _SwfdecMovieClass {
   /* general vfuncs */
   void			(* init_movie)		(SwfdecMovie *		movie);
   void			(* finish_movie)	(SwfdecMovie *		movie);
+  void			(* property_get)	(SwfdecMovie *		movie,
+						 guint			prop_id,
+						 SwfdecAsValue *	value);
+  void			(* property_set)	(SwfdecMovie *		movie,
+						 guint			prop_id,
+						 const SwfdecAsValue *	value);
   void			(* replace)		(SwfdecMovie *		movie,
 						 SwfdecGraphic *	graphic);
   void			(* set_ratio)		(SwfdecMovie *		movie);
@@ -194,6 +225,12 @@ SwfdecMovie *	swfdec_movie_get_by_name	(SwfdecMovie *		movie,
 						 const char *		name,
 						 gboolean		unnamed);
 SwfdecMovie *	swfdec_movie_get_root		(SwfdecMovie *		movie);
+void		swfdec_movie_property_set	(SwfdecMovie *		movie,
+						 guint			id, 
+						 const SwfdecAsValue *	val);
+void		swfdec_movie_property_get	(SwfdecMovie *		movie,
+						 guint			id, 
+						 SwfdecAsValue *	val);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
 void		swfdec_movie_destroy		(SwfdecMovie *		movie);
 void		swfdec_movie_set_static_properties 
@@ -260,11 +297,12 @@ SwfdecDepthClass
 		swfdec_depth_classify		(int			depth);
 
 /* in swfdec_movie_asprops.c */
-gboolean	swfdec_movie_set_asprop		(SwfdecMovie *		movie,
-						 const char *		name,
+guint		swfdec_movie_property_lookup	(const char *		name);
+void		swfdec_movie_property_do_set	(SwfdecMovie *		movie,
+						 guint			id, 
 						 const SwfdecAsValue *	val);
-gboolean	swfdec_movie_get_asprop		(SwfdecMovie *		movie,
-						 const char *		name,
+void		swfdec_movie_property_do_get	(SwfdecMovie *		movie,
+						 guint			id, 
 						 SwfdecAsValue *	val);
 
 void		swfdec_movie_add_variable_listener (SwfdecMovie *	movie,

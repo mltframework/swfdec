@@ -510,55 +510,37 @@ struct {
   { 0, SWFDEC_AS_STR__root,		mc_root,	    NULL },
 };
 
-static int
-swfdec_movie_get_asprop_index (SwfdecMovie *movie, const char *name)
+guint
+swfdec_movie_property_lookup (const char *name)
 {
   guint i;
 
-  if (name < SWFDEC_AS_STR__x || name > SWFDEC_AS_STR__root)
-    return -1;
-
   for (i = 0; i < G_N_ELEMENTS (swfdec_movieclip_props); i++) {
-    if (swfdec_movieclip_props[i].name == name) {
-      if (swfdec_movieclip_props[i].needs_movie && !SWFDEC_IS_SPRITE_MOVIE (movie))
-	return -1;
-      if (swfdec_movieclip_props[i].get == NULL) {
-	SWFDEC_FIXME ("property %s not implemented", name);
-      }
+    if (swfdec_movieclip_props[i].name == name)
       return i;
-    }
   }
-  g_assert_not_reached ();
-  return -1;
+  return G_MAXUINT;
 }
 
-gboolean
-swfdec_movie_set_asprop (SwfdecMovie *movie, const char *name, const SwfdecAsValue *val)
+void
+swfdec_movie_property_do_get (SwfdecMovie *movie, guint id, 
+    SwfdecAsValue *val)
 {
-  int i;
-  
-  i = swfdec_movie_get_asprop_index (movie, name);
-  if (i == -1)
-    return FALSE;
-  if (swfdec_movieclip_props[i].set != NULL) {
-    swfdec_movieclip_props[i].set (movie, val);
-  }
-  return TRUE;
-}
-
-gboolean
-swfdec_movie_get_asprop (SwfdecMovie *movie, const char *name, SwfdecAsValue *val)
-{
-  int i;
-  
-  i = swfdec_movie_get_asprop_index (movie, name);
-  if (i == -1)
-    return FALSE;
-  if (swfdec_movieclip_props[i].get != NULL) {
-    swfdec_movieclip_props[i].get (movie, val);
-  } else {
+  if (id >= G_N_ELEMENTS (swfdec_movieclip_props) ||
+      swfdec_movieclip_props[id].get == NULL) {
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
+  } else {
+    swfdec_movieclip_props[id].get (movie, val);
   }
-  return TRUE;
+}
+
+void
+swfdec_movie_property_do_set (SwfdecMovie *movie, guint id, 
+    const SwfdecAsValue *val)
+{
+  if (id < G_N_ELEMENTS (swfdec_movieclip_props) &&
+      swfdec_movieclip_props[id].set != NULL) {
+    swfdec_movieclip_props[id].set (movie, val);
+  }
 }
 

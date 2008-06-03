@@ -403,9 +403,14 @@ swfdec_gtk_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
   } else {
     guint w, h;
     swfdec_player_get_default_size (priv->player, &w, &h);
-    /* FIXME: set some sane upper limit here? */
     req->width = MIN (w, G_MAXINT);
     req->height = MIN (h, G_MAXINT);
+    /* constrain the size - fix for huge (aka broken) Flash files */
+    if (gtk_widget_has_screen (gtkwidget)) {
+      GdkScreen *screen = gtk_widget_get_screen (gtkwidget);
+      req->width = MIN (req->width, gdk_screen_get_width (screen));
+      req->height = MIN (req->height, gdk_screen_get_height (screen));
+    }
   } 
 }
 

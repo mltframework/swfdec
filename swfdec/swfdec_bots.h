@@ -17,8 +17,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __SWFDEC_OUT_H__
-#define __SWFDEC_OUT_H__
+#ifndef __SWFDEC_BOTS_H__
+#define __SWFDEC_BOTS_H__
 
 #include <swfdec/swfdec_buffer.h>
 #include <swfdec/swfdec_color.h>

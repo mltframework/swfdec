@@ -193,7 +193,8 @@ swfdec_audio_decoder_adpcm_class_init (SwfdecAudioDecoderAdpcmClass *klass)
 }
 
 static void
-swfdec_audio_decoder_adpcm_init (SwfdecAudioDecoderAdpcm *audio_decoder_adpcm)
+swfdec_audio_decoder_adpcm_init (SwfdecAudioDecoderAdpcm *dec)
 {
+  dec->queue = swfdec_buffer_queue_new ();
 }
 

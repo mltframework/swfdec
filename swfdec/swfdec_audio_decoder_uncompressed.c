@@ -139,7 +139,8 @@ swfdec_audio_decoder_uncompressed_class_init (SwfdecAudioDecoderUncompressedClas
 }
 
 static void
-swfdec_audio_decoder_uncompressed_init (SwfdecAudioDecoderUncompressed *audio_decoder_uncompressed)
+swfdec_audio_decoder_uncompressed_init (SwfdecAudioDecoderUncompressed *dec)
 {
+  dec->queue = swfdec_buffer_queue_new ();
 }
 

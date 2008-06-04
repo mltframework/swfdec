@@ -62,6 +62,10 @@ main (int argc, char **argv)
     }
   };
 
+  // catch asserts and don't spew debug output by default
+  g_log_set_always_fatal (G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING);
+  g_setenv ("SWFDEC_DEBUG", "0", FALSE);
+
   // init
   swfdec_init ();
 

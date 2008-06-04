@@ -1902,6 +1902,15 @@ EXTRA_DIST = \
 	movieclip-lockroot-loadmovie-7.swf.trace \
 	movieclip-lockroot-loadmovie-8.swf \
 	movieclip-lockroot-loadmovie-8.swf.trace \
+	movieclip-property-priorities-5.swf \
+	movieclip-property-priorities-5.swf.trace \
+	movieclip-property-priorities-6.swf \
+	movieclip-property-priorities-6.swf.trace \
+	movieclip-property-priorities-7.swf \
+	movieclip-property-priorities-7.swf.trace \
+	movieclip-property-priorities-8.swf \
+	movieclip-property-priorities-8.swf.trace \
+	movieclip-property-priorities.as \
 	movieclip-set-prototype.c \
 	movieclip-set-prototype-5.swf \
 	movieclip-set-prototype-5.swf.trace \

@@ -43,7 +43,7 @@ swfdec_audio_decoder_init (SwfdecAudioDecoder *audio_decoder)
 static SwfdecAudioDecoder *
 swfdec_audio_decoder_builtin_new (guint codec, SwfdecAudioFormat format)
 {
-  switch (format) {
+  switch (codec) {
     case SWFDEC_AUDIO_CODEC_UNDEFINED:
     case SWFDEC_AUDIO_CODEC_UNCOMPRESSED:
       return g_object_new (SWFDEC_TYPE_AUDIO_DECODER_UNCOMPRESSED, NULL);

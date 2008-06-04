@@ -1068,7 +1068,8 @@ swfdec_text_format_copy (const SwfdecTextFormat *copy_from)
 SwfdecAsObject *
 swfdec_text_format_new_no_properties (SwfdecAsContext *context)
 {
-  SwfdecAsObject *ret;
+  SwfdecAsObject *tmp, *ret;
+  SwfdecAsFunction *function;
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
@@ -1086,6 +1087,17 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return ret;
   swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+
+  // FIXME: Need better way to create function without prototype/constructor
+  tmp = context->Function;
+  context->Function = NULL;
+  function = swfdec_as_native_function_new (context, SWFDEC_AS_STR_getTextExtent,
+      swfdec_text_format_getTextExtent, 0, NULL);
+  context->Function = tmp;
+  if (function != NULL) {
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
+    swfdec_as_object_set_variable (ret, SWFDEC_AS_STR_getTextExtent, &val);
+  }
 
   return ret;
 }

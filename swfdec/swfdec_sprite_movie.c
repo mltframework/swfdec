@@ -748,6 +748,27 @@ swfdec_sprite_movie_mark (SwfdecAsObject *object)
 }
 
 static void
+swfdec_sprite_movie_property_get (SwfdecMovie *mov, guint prop_id, SwfdecAsValue *val)
+{
+  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
+
+  switch (prop_id) {
+    case SWFDEC_MOVIE_PROPERTY_CURRENTFRAME:
+      SWFDEC_AS_VALUE_SET_INT (val, movie->frame);
+      break;
+    case SWFDEC_MOVIE_PROPERTY_FRAMESLOADED:
+      SWFDEC_AS_VALUE_SET_INT (val, swfdec_sprite_movie_get_frames_loaded (movie));
+      break;
+    case SWFDEC_MOVIE_PROPERTY_TOTALFRAMES:
+      SWFDEC_AS_VALUE_SET_INT (val, swfdec_sprite_movie_get_frames_total (movie));
+      break;
+    default:
+      SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->property_get (mov, prop_id, val);
+      break;
+  }
+}
+
+static void
 swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -762,6 +783,7 @@ swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;
+  movie_class->property_get = swfdec_sprite_movie_property_get;
   
   actor_class->iterate_start = swfdec_sprite_movie_iterate;
 }

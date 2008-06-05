@@ -3218,10 +3218,7 @@ swfdec_player_get_next_event (SwfdecPlayer *player)
  * @player: a #SwfdecPlayer
  *
  * Queries the framerate of this movie. This number specifies the number
- * of frames that are supposed to pass per second. It is a 
- * multiple of 1/256. It is possible that the movie has no framerate if it does
- * not display a Flash movie but an FLV video for example. This does not mean
- * it will not change however.
+ * of frames that are supposed to pass per second. It is a multiple of 1/256. 
  *
  * Returns: The framerate of this movie or 0 if it isn't known yet or the
  *          movie doesn't have a framerate.

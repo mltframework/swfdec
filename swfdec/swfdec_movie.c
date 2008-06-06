@@ -463,6 +463,8 @@ swfdec_movie_destroy (SwfdecMovie *movie)
 SwfdecMovie *
 swfdec_movie_resolve (SwfdecMovie *movie)
 {
+  SwfdecMovie *parent;
+
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
 
   if (movie->state != SWFDEC_MOVIE_STATE_DESTROYED)
@@ -471,8 +473,11 @@ swfdec_movie_resolve (SwfdecMovie *movie)
     SWFDEC_FIXME ("figure out how to resolve root movies");
     return NULL;
   }
+  parent = swfdec_movie_resolve (movie->parent);
+  if (parent == NULL)
+    return NULL;
   /* FIXME: include unnamed ones? */
-  return swfdec_movie_get_by_name (movie->parent, movie->original_name, FALSE);
+  return swfdec_movie_get_by_name (parent, movie->original_name, FALSE);
 }
 
 guint

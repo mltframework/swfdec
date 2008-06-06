@@ -162,9 +162,6 @@ jpeg_decoder_init_decoder (JpegDecoder *dec)
     return;
   }
 
-
-
-
   for (i=0; i < dec->n_components; i++) {
     max_h_sample = MAX (max_h_sample, dec->components[i].h_sample);
     max_v_sample = MAX (max_v_sample, dec->components[i].v_sample);

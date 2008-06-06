@@ -2730,6 +2730,15 @@ EXTRA_DIST = \
 	replaceText-newline-8.swf \
 	replaceText-newline-8.swf.trace \
 	replaceText-newline.as \
+	resolve-parent-5.swf \
+	resolve-parent-5.swf.trace \
+	resolve-parent-6.swf \
+	resolve-parent-6.swf.trace \
+	resolve-parent-7.swf \
+	resolve-parent-7.swf.trace \
+	resolve-parent-8.swf \
+	resolve-parent-8.swf.trace \
+	resolve-parent.as \
 	rewind-remove.c \
 	rewind-remove-5.swf \
 	rewind-remove-5.swf.trace \

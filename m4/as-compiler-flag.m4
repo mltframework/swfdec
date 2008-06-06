@@ -37,19 +37,20 @@ dnl Tries to compile with the given CFLAGS.
 AC_DEFUN([AS_COMPILER_FLAGS],
 [
   list=$2
+  flag_list=""
+  AC_MSG_CHECKING([for supported compiler flags])
   for each in $list
   do
-    AC_MSG_CHECKING([to see if compiler understands $each])
-
     save_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS $each"
     AC_TRY_COMPILE([ ], [], [flag_ok=yes], [flag_ok=no])
     CFLAGS="$save_CFLAGS"
 
     if test "X$flag_ok" = Xyes ; then
-      $1="$$1 $each"
+      flag_list="$flag_list $each"
     fi
-    AC_MSG_RESULT([$flag_ok])
   done
+  AC_MSG_RESULT([$flag_list])
+  $1="$$1 $flag_list"
 ])
 

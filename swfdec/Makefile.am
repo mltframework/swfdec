@@ -88,6 +88,7 @@ libswfdec_source_files = \
 	swfdec_graphic_movie.c \
 	swfdec_image.c \
 	swfdec_image_decoder.c \
+	swfdec_init.c \
 	swfdec_interval.c \
 	swfdec_key_as.c \
 	swfdec_load_object.c \

@@ -22,9 +22,6 @@
 #endif
 
 #include "swfdec_audio_decoder.h"
-#include "swfdec_audio_decoder_adpcm.h"
-#include "swfdec_audio_decoder_gst.h"
-#include "swfdec_audio_decoder_uncompressed.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 
@@ -40,51 +37,30 @@ swfdec_audio_decoder_init (SwfdecAudioDecoder *audio_decoder)
 {
 }
 
-static SwfdecAudioDecoder *
-swfdec_audio_decoder_builtin_new (guint codec, SwfdecAudioFormat format)
-{
-  switch (codec) {
-    case SWFDEC_AUDIO_CODEC_UNDEFINED:
-    case SWFDEC_AUDIO_CODEC_UNCOMPRESSED:
-      return g_object_new (SWFDEC_TYPE_AUDIO_DECODER_UNCOMPRESSED, NULL);
-    case SWFDEC_AUDIO_CODEC_ADPCM:
-      return g_object_new (SWFDEC_TYPE_AUDIO_DECODER_ADPCM, NULL);
-    default:
-      return NULL;
-  }
-}
+static GSList *audio_codecs = NULL;
 
-static gboolean
-swfdec_audio_decoder_builtin_prepare (guint codec, SwfdecAudioFormat format, char **detail)
+void
+swfdec_audio_decoder_register (GType type)
 {
-  return codec == SWFDEC_AUDIO_CODEC_UNCOMPRESSED ||
-    codec == SWFDEC_AUDIO_CODEC_UNDEFINED ||
-    codec == SWFDEC_AUDIO_CODEC_ADPCM;
-}
+  g_return_if_fail (g_type_is_a (type, SWFDEC_TYPE_AUDIO_DECODER));
 
-static const struct {
-  const char *		name;
-  SwfdecAudioDecoder *	(* func) (guint, SwfdecAudioFormat);
-  gboolean		(* prepare) (guint, SwfdecAudioFormat, char **);
-} audio_codecs[] = {
-  { "builtin",	swfdec_audio_decoder_builtin_new, swfdec_audio_decoder_builtin_prepare },
-#ifdef HAVE_GST
-  { "gst",	swfdec_audio_decoder_gst_new, swfdec_audio_decoder_gst_prepare },
-#endif
-};
+  audio_codecs = g_slist_append (audio_codecs, GSIZE_TO_POINTER ((gsize) type));
+}
 
 gboolean
 swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **missing)
 {
   char *detail = NULL, *s = NULL;
-  guint i;
+  GSList *walk;
   
-  for (i = 0; i < G_N_ELEMENTS (audio_codecs); i++) {
-    if (audio_codecs[i].prepare (codec, format, &s)) {
+  for (walk = audio_codecs; walk; walk = walk->next) {
+    SwfdecAudioDecoderClass *klass = g_type_class_ref (GPOINTER_TO_SIZE (walk->data));
+    if (klass->prepare (codec, format, &s)) {
       g_free (detail);
       g_free (s);
       if (missing)
 	*missing = NULL;
+      g_type_class_unref (klass);
       return TRUE;
     }
     if (s) {
@@ -94,6 +70,7 @@ swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **miss
 	g_free (s);
       s = NULL;
     }
+    g_type_class_unref (klass);
   }
   if (missing)
     *missing = detail;
@@ -113,12 +90,14 @@ SwfdecAudioDecoder *
 swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format)
 {
   SwfdecAudioDecoder *ret;
-  guint i;
-
+  GSList *walk;
+  
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), NULL);
 
-  for (i = 0; i < G_N_ELEMENTS (audio_codecs); i++) {
-    ret = audio_codecs[i].func (codec, format);
+  for (walk = audio_codecs; walk; walk = walk->next) {
+    SwfdecAudioDecoderClass *klass = g_type_class_ref (GPOINTER_TO_SIZE (walk->data));
+    ret = klass->create (codec, format);
+    g_type_class_unref (klass);
     if (ret)
       break;
   }

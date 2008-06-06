@@ -27,6 +27,23 @@
 
 G_DEFINE_TYPE (SwfdecAudioDecoderUncompressed, swfdec_audio_decoder_uncompressed, SWFDEC_TYPE_AUDIO_DECODER)
 
+static gboolean
+swfdec_audio_decoder_uncompressed_prepare (guint codec, SwfdecAudioFormat format, char **missing)
+{
+  return codec == SWFDEC_AUDIO_CODEC_UNDEFINED ||
+      codec == SWFDEC_AUDIO_CODEC_UNCOMPRESSED;
+}
+
+static SwfdecAudioDecoder *
+swfdec_audio_decoder_uncompressed_create (guint codec, SwfdecAudioFormat format)
+{
+  if (codec != SWFDEC_AUDIO_CODEC_UNDEFINED &&
+      codec != SWFDEC_AUDIO_CODEC_UNCOMPRESSED)
+    return NULL;
+
+  return g_object_new (SWFDEC_TYPE_AUDIO_DECODER_UNCOMPRESSED, NULL);
+}
+
 static SwfdecBuffer *
 swfdec_audio_decoder_uncompressed_upscale (SwfdecBuffer *buffer, SwfdecAudioFormat format)
 {
@@ -134,6 +151,8 @@ swfdec_audio_decoder_uncompressed_class_init (SwfdecAudioDecoderUncompressedClas
 
   object_class->dispose = swfdec_audio_decoder_uncompressed_dispose;
 
+  decoder_class->prepare = swfdec_audio_decoder_uncompressed_prepare;
+  decoder_class->create = swfdec_audio_decoder_uncompressed_create;
   decoder_class->pull = swfdec_audio_decoder_uncompressed_pull;
   decoder_class->push = swfdec_audio_decoder_uncompressed_push;
 }

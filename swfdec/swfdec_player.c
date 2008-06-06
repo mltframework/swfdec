@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,14 +22,9 @@
 #endif
 
 #include <errno.h>
-#ifdef HAVE_GST
-#include <gst/gst.h>
-#include <gst/pbutils/pbutils.h>
-#endif
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#include <liboil/liboil.h>
 
 #include "swfdec_player_internal.h"
 #include "swfdec_as_frame_internal.h"
@@ -2833,43 +2828,6 @@ swfdec_player_new (SwfdecAsDebugger *debugger)
       "debugger", debugger, NULL);
 
   return player;
-}
-
-/**
- * swfdec_init:
- *
- * Initializes the Swfdec library.
- **/
-void
-swfdec_init (void)
-{
-  static gboolean _inited = FALSE;
-  const char *s;
-
-  if (_inited)
-    return;
-
-  _inited = TRUE;
-
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-  g_type_init ();
-  oil_init ();
-#ifdef HAVE_GST
-  gst_init (NULL, NULL);
-  gst_pb_utils_init ();
-#endif
-
-  s = g_getenv ("SWFDEC_DEBUG");
-  if (s && s[0]) {
-    char *end;
-    int level;
-
-    level = strtoul (s, &end, 0);
-    if (end[0] == 0) {
-      swfdec_debug_set_level (level);
-    }
-  }
 }
 
 /**

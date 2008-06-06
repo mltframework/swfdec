@@ -4,7 +4,7 @@ dnl autostars m4 macro for detection of compiler flags
 
 dnl David Schleef <ds@schleef.org>
 
-dnl $Id: as-compiler-flag.m4,v 1.2 2006/02/12 05:26:26 otte Exp $
+dnl $Id: as-compiler-flag.m4,v 1.1 2005/12/15 23:35:19 ds Exp $
 
 dnl AS_COMPILER_FLAG(CFLAGS, ACTION-IF-ACCEPTED, [ACTION-IF-NOT-ACCEPTED])
 dnl Tries to compile with the given CFLAGS.
@@ -18,22 +18,38 @@ AC_DEFUN([AS_COMPILER_FLAG],
   save_CFLAGS="$CFLAGS"
   CFLAGS="$CFLAGS $1"
 
-  AC_TRY_COMPILE([
-int main (int argc, char **argv)
-{
-#if 0
-], [
-#endif
-], [flag_ok=yes], [flag_ok=no])
+  AC_TRY_COMPILE([ ], [], [flag_ok=yes], [flag_ok=no])
   CFLAGS="$save_CFLAGS"
 
   if test "X$flag_ok" = Xyes ; then
-    m4_ifvaln([$2],[$2])
+    $2
     true
   else
-    m4_ifvaln([$3],[$3])
+    $3
     true
   fi
   AC_MSG_RESULT([$flag_ok])
+])
+
+dnl AS_COMPILER_FLAGS(VAR, FLAGS)
+dnl Tries to compile with the given CFLAGS.
+
+AC_DEFUN([AS_COMPILER_FLAGS],
+[
+  list=$2
+  for each in $list
+  do
+    AC_MSG_CHECKING([to see if compiler understands $each])
+
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $each"
+    AC_TRY_COMPILE([ ], [], [flag_ok=yes], [flag_ok=no])
+    CFLAGS="$save_CFLAGS"
+
+    if test "X$flag_ok" = Xyes ; then
+      $1="$$1 $each"
+    fi
+    AC_MSG_RESULT([$flag_ok])
+  done
 ])
 

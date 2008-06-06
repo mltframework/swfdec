@@ -35,7 +35,7 @@ AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 
 dnl C99 is only required to get definitions for NAN and INFINITY.
-AS_COMPILER_FLAG(GLOBAL_CFLAGS, "-std=gnu99")
+AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-std=gnu99")
 
 dnl ensures the library is linked against the internal Mozilla
 dnl if this doesn't work on your platform, I'll take patches :)

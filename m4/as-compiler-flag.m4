@@ -37,7 +37,8 @@ dnl Tries to compile with the given CFLAGS.
 AC_DEFUN([AS_COMPILER_FLAGS],
 [
   list=$2
-  flag_list=""
+  flags_supported=""
+  flags_unsupported=""
   AC_MSG_CHECKING([for supported compiler flags])
   for each in $list
   do
@@ -47,10 +48,15 @@ AC_DEFUN([AS_COMPILER_FLAGS],
     CFLAGS="$save_CFLAGS"
 
     if test "X$flag_ok" = Xyes ; then
-      flag_list="$flag_list $each"
+      flags_supported="$flags_supported $each"
+    else
+      flags_unsupported="$flags_unsupported $each"
     fi
   done
-  AC_MSG_RESULT([$flag_list])
-  $1="$$1 $flag_list"
+  AC_MSG_RESULT([$flags_supported])
+  if test "X$flags_unsupported" != X ; then
+    AC_MSG_WARN([unsupported compiler flags: $flags_unsupported])
+  fi
+  $1="$$1 $flags_supported"
 ])
 

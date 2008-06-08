@@ -89,7 +89,7 @@ swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **miss
 SwfdecAudioDecoder *
 swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format)
 {
-  SwfdecAudioDecoder *ret;
+  SwfdecAudioDecoder *ret = NULL;
   GSList *walk;
   
   g_return_val_if_fail (SWFDEC_IS_AUDIO_FORMAT (format), NULL);

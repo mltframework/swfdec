@@ -163,8 +163,9 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
       name = NULL;
     }
   }
+  // if there is uneven amount of elements, just ignore the last one
   if (name != NULL)
-    SWFDEC_FIXME ("_customHeaders with uneven amount of elements, what to do?");
+    SWFDEC_WARNING ("_customHeaders with uneven amount of elements");
 
 end:
   g_assert (array_names->len == array_values->len);

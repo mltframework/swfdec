@@ -103,10 +103,19 @@ static void
 swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
     char ***header_names, char ***header_values)
 {
+  // Should these be filtered at some other point instead?
+  static const char *disallowed_names[] = { "Accept-Ranges", "Age", "Allow",
+    "Allowed", "Connection", "Content-Length", "Content-Location",
+    "Content-Range", "ETag", "Host", "Last-Modified", "Location",
+    "Max-Forwards", "Proxy-Authenticate", "Proxy-Authorization", "Public",
+    "Range", "Referer", "Retry-After", "Server", "TE", "Trailer",
+    "Transfer-Encoding", "Upgrade", "URI", "Vary", "Via", "Warning",
+    "WWW-Authenticate", "x-flash-version" };
   GPtrArray *array_names, *array_values;
   SwfdecAsValue val;
   SwfdecAsObject *list;
   int i, length;
+  guint j;
   const char *name;
   SwfdecAsContext *cx;
 
@@ -142,9 +151,15 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
     if (name == NULL) {
       name = swfdec_as_value_to_string (cx, &val);
     } else {
-      g_ptr_array_add (array_names, g_strdup (name));
-      g_ptr_array_add (array_values,
-	  g_strdup (swfdec_as_value_to_string (cx, &val)));
+      for (j = 0; j < G_N_ELEMENTS (disallowed_names); j++) {
+	if (g_ascii_strcasecmp (name, disallowed_names[j]) == 0)
+	  break;
+      }
+      if (j >= G_N_ELEMENTS (disallowed_names)) {
+	g_ptr_array_add (array_names, g_strdup (name));
+	g_ptr_array_add (array_values,
+	    g_strdup (swfdec_as_value_to_string (cx, &val)));
+      }
       name = NULL;
     }
   }

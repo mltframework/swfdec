@@ -733,12 +733,13 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
  * @movie: The movie to act as the mask
  * @cr: a cairo context which should be used for masking. The cairo context's
  *      matrix is assumed to be in the coordinate system of the movie's parent.
+ * @matrix: matrix to apply before rendering
  * @inval: The region that is relevant for masking
  *
  * Creates a pattern suitable for masking. To do rendering using the returned
  * mask, you want to use code like this:
  * <informalexample><programlisting>
- * mask = swfdec_movie_mask (cr, movie, inval);
+ * mask = swfdec_movie_mask (cr, movie, matrix, inval);
  * cairo_push_group (cr);
  * // do rendering here
  * cairo_pop_group_to_source (cr);
@@ -748,14 +749,27 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
  *
  * Returns: A new cairo_patten_t to be used as the mask.
  **/
-cairo_pattern_t *
-swfdec_movie_mask (cairo_t *cr, SwfdecMovie *movie, const SwfdecRect *inval)
+static cairo_pattern_t *
+swfdec_movie_mask (cairo_t *cr, SwfdecMovie *movie,
+    const cairo_matrix_t *matrix, const SwfdecRect *inval)
 {
   SwfdecColorTransform black;
+  cairo_matrix_t inv;
+  SwfdecRect rect;
 
   swfdec_color_transform_init_mask (&black);
   cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
-  swfdec_movie_render (movie, cr, &black, inval);
+  cairo_transform (cr, matrix);
+  inv = *matrix;
+  if (cairo_matrix_invert (&inv) == CAIRO_STATUS_SUCCESS && FALSE) {
+    swfdec_rect_transform (&rect, inval, &inv);
+  } else {
+    SWFDEC_INFO ("non-invertible matrix when computing invalid area");
+    rect.x0 = rect.y0 = -G_MAXDOUBLE;
+    rect.x1 = rect.y1 = G_MAXDOUBLE;
+  }
+
+  swfdec_movie_render (movie, cr, &black, &rect);
   return cairo_pop_group (cr);
 }
 
@@ -847,24 +861,17 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
   if (movie->masked_by) {
     cairo_pattern_t *mask;
-    if (movie->parent == movie->masked_by->parent) {
-      cairo_transform (cr, &movie->inverse_matrix);
-      rect = *inval;
-    } else {
-      cairo_matrix_t mat, mat2;
-      swfdec_movie_local_to_global_matrix (movie, &mat);
-      swfdec_movie_global_to_local_matrix (movie->masked_by, &mat2);
-      cairo_matrix_multiply (&mat, &mat2, &mat);
-      cairo_transform (cr, &mat);
-      if (cairo_matrix_invert (&mat) == CAIRO_STATUS_SUCCESS && FALSE) {
-	swfdec_rect_transform (&rect, &rect, &mat);
-      } else {
-	SWFDEC_INFO ("non-invertible matrix when computing invalid area");
-	rect.x0 = rect.y0 = -G_MAXDOUBLE;
-	rect.x1 = rect.y1 = G_MAXDOUBLE;
-      }
+    cairo_matrix_t mat;
+    if (movie->parent)
+      swfdec_movie_global_to_local_matrix (movie->parent, &mat);
+    else
+      cairo_matrix_init_identity (&mat);
+    if (movie->masked_by->parent) {
+      cairo_matrix_t mat2;
+      swfdec_movie_local_to_global_matrix (movie->masked_by->parent, &mat2);
+      cairo_matrix_multiply (&mat, &mat, &mat2);
     }
-    mask = swfdec_movie_mask (cr, movie->masked_by, &rect);
+    mask = swfdec_movie_mask (cr, movie->masked_by, &mat, inval);
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_mask (cr, mask);
@@ -1191,6 +1198,7 @@ static void
 swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *ctrans, const SwfdecRect *inval)
 {
+  static const cairo_matrix_t ident = { 1, 0, 0, 1, 0, 0};
   GList *g;
   GSList *walk;
   GSList *clips = NULL;
@@ -1238,7 +1246,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     while (clip && clip->depth < child->depth) {
       cairo_pattern_t *mask;
       SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip->depth, child->depth);
-      mask = swfdec_movie_mask (cr, clip->movie, inval);
+      mask = swfdec_movie_mask (cr, clip->movie, &ident, inval);
       cairo_pop_group_to_source (cr);
       cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
       cairo_mask (cr, mask);
@@ -1265,7 +1273,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
   while (clip) {
     cairo_pattern_t *mask;
     SWFDEC_INFO ("unsetting clip depth %d", clip->depth);
-    mask = swfdec_movie_mask (cr, clip->movie, inval);
+    mask = swfdec_movie_mask (cr, clip->movie, &ident, inval);
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_mask (cr, mask);

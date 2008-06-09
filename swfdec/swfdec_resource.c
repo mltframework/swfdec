@@ -119,10 +119,12 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
     return;
   cx = SWFDEC_AS_OBJECT (resource->clip_loader)->context;
   /* This feels wrong. Why do we resolve here by real name? */
-  if (resource->target)
-    movie = swfdec_movie_get_by_name (resource->target->parent, resource->target->name, FALSE);
-  else
+  if (resource->target) {
+    SwfdecMovie *parent = swfdec_movie_resolve (resource->target->parent);
+    movie = swfdec_movie_get_by_name (parent, resource->target->name, FALSE);
+  } else {
     movie = NULL;
+  }
   if (movie == NULL && resource->movie != NULL) {
     SWFDEC_DEBUG ("no movie, not emitting signal");
     return;

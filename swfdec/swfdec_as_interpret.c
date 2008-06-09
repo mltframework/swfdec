@@ -663,13 +663,6 @@ swfdec_action_set_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
   swfdec_as_stack_pop_n (cx, 2);
 }
 
-/* FIXME: this sucks */
-extern struct {
-  gboolean needs_movie;
-  const char * name; /* GC'd */
-  void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
-  void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
-} swfdec_movieclip_props[];
 static void
 swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
@@ -679,25 +672,21 @@ swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *dat
   id = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_INFO ("tried using GetProperty in a non-SwfdecPlayer context");
-    goto error;
+    movie = NULL;
   } else {
     movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx),
 	swfdec_as_stack_peek (cx, 2));
-    if (movie == NULL)
-      goto error;
   }
-  if (id > (cx->version > 4 ? 21 : 18)) {
+  if (movie == NULL) {
+    SWFDEC_ERROR ("calling GetProperty not on a movieclip object");
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 2));
+  } else if (id > (cx->version > 4 ? 21 : 18)) {
     SWFDEC_WARNING ("trying to GetProperty %u, doesn't exist", id);
-    goto error;
+    SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 2));
+  } else {
+    swfdec_movie_property_get (movie, id, swfdec_as_stack_peek (cx, 2));
   }
-  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (movie), swfdec_movieclip_props[id].name,
-      swfdec_as_stack_peek (cx, 2));
   swfdec_as_stack_pop (cx);
-  return;
-
-error :
-  swfdec_as_stack_pop (cx);
-  SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 1));
 }
 
 static void
@@ -709,23 +698,18 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
   id = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_INFO ("tried using GetProperty in a non-SwfdecPlayer context");
-    goto error;
+    movie = NULL;
   } else {
     movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx),
 	swfdec_as_stack_peek (cx, 3));
-    if (movie == NULL)
-      goto error;
   }
-  if (id > (cx->version > 4 ? 21 : 18)) {
+  if (movie == NULL) {
+    SWFDEC_ERROR ("calling GetProperty not on a movieclip object");
+  } else if (id > (cx->version > 4 ? 21 : 18)) {
     SWFDEC_WARNING ("trying to SetProperty %u, doesn't exist", id);
-    goto error;
+  } else {
+    swfdec_movie_property_set (movie, id, swfdec_as_stack_peek (cx, 1));
   }
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), swfdec_movieclip_props[id].name,
-      swfdec_as_stack_peek (cx, 1));
-  swfdec_as_stack_pop_n (cx, 3);
-  return;
-
-error :
   swfdec_as_stack_pop_n (cx, 3);
 }
 

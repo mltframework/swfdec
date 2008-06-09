@@ -154,31 +154,6 @@ mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 }
 
 static void
-mc_currentframe (SwfdecMovie *movie, SwfdecAsValue *rval)
-{
-  g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, SWFDEC_SPRITE_MOVIE (movie)->frame);
-}
-
-static void
-mc_framesloaded (SwfdecMovie *mov, SwfdecAsValue *rval)
-{
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-
-  SWFDEC_AS_VALUE_SET_INT (rval, 
-      swfdec_sprite_movie_get_frames_loaded (movie));
-}
-
-static void
-mc_totalframes (SwfdecMovie *mov, SwfdecAsValue *rval)
-{
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-
-  SWFDEC_AS_VALUE_SET_INT (rval, 
-      swfdec_sprite_movie_get_frames_total (movie));
-}
-
-static void
 mc_alpha_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   SWFDEC_AS_VALUE_SET_NUMBER (rval,
@@ -479,86 +454,67 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 }
 
 struct {
-  gboolean needs_movie;
   const char *name;
   void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
   void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
 } swfdec_movieclip_props[] = {
-  { 0, SWFDEC_AS_STR__x,		mc_x_get,	    mc_x_set },
-  { 0, SWFDEC_AS_STR__y,		mc_y_get,	    mc_y_set },
-  { 0, SWFDEC_AS_STR__xscale,		mc_xscale_get,	    mc_xscale_set },
-  { 0, SWFDEC_AS_STR__yscale,		mc_yscale_get,	    mc_yscale_set },
-  { 1, SWFDEC_AS_STR__currentframe,	mc_currentframe,    NULL },
-  { 1, SWFDEC_AS_STR__totalframes,	mc_totalframes,	    NULL },
-  { 0, SWFDEC_AS_STR__alpha,		mc_alpha_get,	    mc_alpha_set },
-  { 0, SWFDEC_AS_STR__visible,		mc_visible_get,	    mc_visible_set },
-  { 0, SWFDEC_AS_STR__width,		mc_width_get,	    mc_width_set },
-  { 0, SWFDEC_AS_STR__height,		mc_height_get,	    mc_height_set },
-  { 0, SWFDEC_AS_STR__rotation,		mc_rotation_get,    mc_rotation_set },
-  { 1, SWFDEC_AS_STR__target,		mc_target_get,	    NULL },
-  { 1, SWFDEC_AS_STR__framesloaded,	mc_framesloaded,    NULL},
-  { 0, SWFDEC_AS_STR__name,		mc_name_get,	    mc_name_set },
-  { 1, SWFDEC_AS_STR__droptarget,	NULL,		    NULL }, //"_droptarget"
-  { 0, SWFDEC_AS_STR__url,		mc_url_get,	    NULL },
-  { 0, SWFDEC_AS_STR__highquality,	NULL,		    NULL }, //"_highquality"
-  { 0, SWFDEC_AS_STR__focusrect,	mc_focusrect_get,   mc_focusrect_set }, //"_focusrect"
-  { 0, SWFDEC_AS_STR__soundbuftime,	NULL,		    NULL }, //"_soundbuftime"
-  { 0, SWFDEC_AS_STR__quality,		NULL,		    NULL }, //"_quality"
-  { 0, SWFDEC_AS_STR__xmouse,		mc_xmouse_get,	    NULL },
-  { 0, SWFDEC_AS_STR__ymouse,		mc_ymouse_get,	    NULL },
-  { 0, SWFDEC_AS_STR__parent,		mc_parent,	    NULL },
-  { 0, SWFDEC_AS_STR__root,		mc_root,	    NULL },
+  { SWFDEC_AS_STR__x,		mc_x_get,	    mc_x_set },
+  { SWFDEC_AS_STR__y,		mc_y_get,	    mc_y_set },
+  { SWFDEC_AS_STR__xscale,	mc_xscale_get,	    mc_xscale_set },
+  { SWFDEC_AS_STR__yscale,	mc_yscale_get,	    mc_yscale_set },
+  { SWFDEC_AS_STR__currentframe,NULL,		    NULL },
+  { SWFDEC_AS_STR__totalframes,	NULL,	  	    NULL },
+  { SWFDEC_AS_STR__alpha,	mc_alpha_get,	    mc_alpha_set },
+  { SWFDEC_AS_STR__visible,	mc_visible_get,	    mc_visible_set },
+  { SWFDEC_AS_STR__width,	mc_width_get,	    mc_width_set },
+  { SWFDEC_AS_STR__height,	mc_height_get,	    mc_height_set },
+  { SWFDEC_AS_STR__rotation,	mc_rotation_get,    mc_rotation_set },
+  { SWFDEC_AS_STR__target,	mc_target_get,	    NULL },
+  { SWFDEC_AS_STR__framesloaded,NULL,		    NULL},
+  { SWFDEC_AS_STR__name,	mc_name_get,	    mc_name_set },
+  { SWFDEC_AS_STR__droptarget,	NULL,		    NULL }, //"_droptarget"
+  { SWFDEC_AS_STR__url,		mc_url_get,	    NULL },
+  { SWFDEC_AS_STR__highquality,	NULL,		    NULL }, //"_highquality"
+  { SWFDEC_AS_STR__focusrect,	mc_focusrect_get,   mc_focusrect_set }, //"_focusrect"
+  { SWFDEC_AS_STR__soundbuftime,NULL,		    NULL }, //"_soundbuftime"
+  { SWFDEC_AS_STR__quality,	NULL,		    NULL }, //"_quality"
+  { SWFDEC_AS_STR__xmouse,	mc_xmouse_get,	    NULL },
+  { SWFDEC_AS_STR__ymouse,	mc_ymouse_get,	    NULL },
+  { SWFDEC_AS_STR__parent,	mc_parent,	    NULL },
+  { SWFDEC_AS_STR__root,	mc_root,	    NULL },
 };
 
-static int
-swfdec_movie_get_asprop_index (SwfdecMovie *movie, const char *name)
+guint
+swfdec_movie_property_lookup (const char *name)
 {
   guint i;
 
-  if (name < SWFDEC_AS_STR__x || name > SWFDEC_AS_STR__root)
-    return -1;
-
   for (i = 0; i < G_N_ELEMENTS (swfdec_movieclip_props); i++) {
-    if (swfdec_movieclip_props[i].name == name) {
-      if (swfdec_movieclip_props[i].needs_movie && !SWFDEC_IS_SPRITE_MOVIE (movie))
-	return -1;
-      if (swfdec_movieclip_props[i].get == NULL) {
-	SWFDEC_FIXME ("property %s not implemented", name);
-      }
+    if (swfdec_movieclip_props[i].name == name)
       return i;
-    }
   }
-  g_assert_not_reached ();
-  return -1;
+  return G_MAXUINT;
 }
 
-gboolean
-swfdec_movie_set_asprop (SwfdecMovie *movie, const char *name, const SwfdecAsValue *val)
+void
+swfdec_movie_property_do_get (SwfdecMovie *movie, guint id, 
+    SwfdecAsValue *val)
 {
-  int i;
-  
-  i = swfdec_movie_get_asprop_index (movie, name);
-  if (i == -1)
-    return FALSE;
-  if (swfdec_movieclip_props[i].set != NULL) {
-    swfdec_movieclip_props[i].set (movie, val);
-  }
-  return TRUE;
-}
-
-gboolean
-swfdec_movie_get_asprop (SwfdecMovie *movie, const char *name, SwfdecAsValue *val)
-{
-  int i;
-  
-  i = swfdec_movie_get_asprop_index (movie, name);
-  if (i == -1)
-    return FALSE;
-  if (swfdec_movieclip_props[i].get != NULL) {
-    swfdec_movieclip_props[i].get (movie, val);
-  } else {
+  if (id >= G_N_ELEMENTS (swfdec_movieclip_props) ||
+      swfdec_movieclip_props[id].get == NULL) {
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
+  } else {
+    swfdec_movieclip_props[id].get (movie, val);
   }
-  return TRUE;
+}
+
+void
+swfdec_movie_property_do_set (SwfdecMovie *movie, guint id, 
+    const SwfdecAsValue *val)
+{
+  if (id < G_N_ELEMENTS (swfdec_movieclip_props) &&
+      swfdec_movieclip_props[id].set != NULL) {
+    swfdec_movieclip_props[id].set (movie, val);
+  }
 }
 

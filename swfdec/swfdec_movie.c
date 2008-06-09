@@ -463,6 +463,8 @@ swfdec_movie_destroy (SwfdecMovie *movie)
 SwfdecMovie *
 swfdec_movie_resolve (SwfdecMovie *movie)
 {
+  SwfdecMovie *parent;
+
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
 
   if (movie->state != SWFDEC_MOVIE_STATE_DESTROYED)
@@ -471,8 +473,11 @@ swfdec_movie_resolve (SwfdecMovie *movie)
     SWFDEC_FIXME ("figure out how to resolve root movies");
     return NULL;
   }
+  parent = swfdec_movie_resolve (movie->parent);
+  if (parent == NULL)
+    return NULL;
   /* FIXME: include unnamed ones? */
-  return swfdec_movie_get_by_name (movie->parent, movie->original_name, FALSE);
+  return swfdec_movie_get_by_name (parent, movie->original_name, FALSE);
 }
 
 guint
@@ -1024,6 +1029,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecMovie *movie, *ret;
+  guint prop_id;
   
   movie = SWFDEC_MOVIE (object);
   movie = swfdec_movie_resolve (movie);
@@ -1033,11 +1039,6 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 
   if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, orig, variable, val, flags))
     return TRUE;
-
-  if (swfdec_movie_get_asprop (movie, variable, val)) {
-    *flags = 0;
-    return TRUE;
-  }
 
   /* FIXME: check that this is correct */
   if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {
@@ -1052,6 +1053,14 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     *flags = 0;
     return TRUE;
   }
+
+  prop_id = swfdec_movie_property_lookup (variable);
+  if (prop_id != G_MAXUINT) {
+    swfdec_movie_property_get (movie, prop_id, val);
+    *flags = 0;
+    return TRUE;
+  }
+
   return FALSE;
 }
 
@@ -1126,14 +1135,18 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
     const SwfdecAsValue *val, guint flags)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
+  guint prop_id;
 
   movie = swfdec_movie_resolve (movie);
   if (movie == NULL)
     return;
   object = SWFDEC_AS_OBJECT (movie);
 
-  if (swfdec_movie_set_asprop (movie, variable, val))
+  prop_id = swfdec_movie_property_lookup (variable);
+  if (prop_id != G_MAXUINT) {
+    swfdec_movie_property_set (movie, prop_id, val);
     return;
+  }
 
   swfdec_movie_call_variable_listeners (movie, variable, val);
 
@@ -1313,6 +1326,8 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   movie_class->render = swfdec_movie_do_render;
   movie_class->invalidate = swfdec_movie_do_invalidate;
   movie_class->contains = swfdec_movie_do_contains;
+  movie_class->property_get = swfdec_movie_property_do_get;
+  movie_class->property_set = swfdec_movie_property_do_set;
 }
 
 void
@@ -1655,5 +1670,29 @@ swfdec_movie_get_own_resource (SwfdecMovie *movie)
     return NULL;
 
   return movie->resource;
+}
+
+void
+swfdec_movie_property_set (SwfdecMovie *movie, guint id, const SwfdecAsValue *val)
+{
+  SwfdecMovieClass *klass;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (val != NULL);
+
+  klass = SWFDEC_MOVIE_GET_CLASS (movie);
+  klass->property_set (movie, id, val);
+}
+
+void
+swfdec_movie_property_get (SwfdecMovie *movie, guint id, SwfdecAsValue *val)
+{
+  SwfdecMovieClass *klass;
+
+  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
+  g_return_if_fail (val != NULL);
+
+  klass = SWFDEC_MOVIE_GET_CLASS (movie);
+  klass->property_get (movie, id, val);
 }
 

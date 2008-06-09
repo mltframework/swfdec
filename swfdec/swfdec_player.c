@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,14 +22,9 @@
 #endif
 
 #include <errno.h>
-#ifdef HAVE_GST
-#include <gst/gst.h>
-#include <gst/pbutils/pbutils.h>
-#endif
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#include <liboil/liboil.h>
 
 #include "swfdec_player_internal.h"
 #include "swfdec_as_frame_internal.h"
@@ -2840,43 +2835,6 @@ swfdec_player_new (SwfdecAsDebugger *debugger)
 }
 
 /**
- * swfdec_init:
- *
- * Initializes the Swfdec library.
- **/
-void
-swfdec_init (void)
-{
-  static gboolean _inited = FALSE;
-  const char *s;
-
-  if (_inited)
-    return;
-
-  _inited = TRUE;
-
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-  g_type_init ();
-  oil_init ();
-#ifdef HAVE_GST
-  gst_init (NULL, NULL);
-  gst_pb_utils_init ();
-#endif
-
-  s = g_getenv ("SWFDEC_DEBUG");
-  if (s && s[0]) {
-    char *end;
-    int level;
-
-    level = strtoul (s, &end, 0);
-    if (end[0] == 0) {
-      swfdec_debug_set_level (level);
-    }
-  }
-}
-
-/**
  * swfdec_player_mouse_move:
  * @player: a #SwfdecPlayer
  * @x: x coordinate of mouse
@@ -3222,10 +3180,7 @@ swfdec_player_get_next_event (SwfdecPlayer *player)
  * @player: a #SwfdecPlayer
  *
  * Queries the framerate of this movie. This number specifies the number
- * of frames that are supposed to pass per second. It is a 
- * multiple of 1/256. It is possible that the movie has no framerate if it does
- * not display a Flash movie but an FLV video for example. This does not mean
- * it will not change however.
+ * of frames that are supposed to pass per second. It is a multiple of 1/256. 
  *
  * Returns: The framerate of this movie or 0 if it isn't known yet or the
  *          movie doesn't have a framerate.

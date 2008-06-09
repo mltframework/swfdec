@@ -56,7 +56,15 @@ struct _SwfdecAudioDecoder
 
 struct _SwfdecAudioDecoderClass
 {
+  /*< private >*/
   GObjectClass		object_class;
+
+  /*< public >*/
+  gboolean		(* prepare)	(guint                  codec,
+                                         SwfdecAudioFormat      format,
+					 char **                missing);
+  SwfdecAudioDecoder *	(* create)	(guint                  codec,
+					 SwfdecAudioFormat      format);
 
   void			(* push)	(SwfdecAudioDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
@@ -64,6 +72,8 @@ struct _SwfdecAudioDecoderClass
 };
 
 GType			swfdec_audio_decoder_get_type	(void);
+
+void			swfdec_audio_decoder_register	(GType			type);
 
 gboolean		swfdec_audio_decoder_prepare	(guint			codec,
 							 SwfdecAudioFormat	format,

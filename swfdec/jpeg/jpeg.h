@@ -4,6 +4,7 @@
 
 #include <jpeg/jpeg_bits.h>
 
+#include <glib.h>
 #include <stdint.h>
 
 #ifndef TRUE
@@ -159,7 +160,7 @@ uint32_t *jpeg_decoder_get_argb_image (JpegDecoder *dec);
 int jpeg_decode_argb (uint8_t *data, int length, uint32_t **image,
     unsigned int *width, unsigned int *height);
 
-void jpeg_decoder_error(JpegDecoder *dec, const char *fmt, ...);
+void jpeg_decoder_error(JpegDecoder *dec, const char *fmt, ...) G_GNUC_PRINTF (2, 3);
 
 int jpeg_decoder_sof_baseline_dct(JpegDecoder *dec, JpegBits *bits);
 int jpeg_decoder_define_quant_table(JpegDecoder *dec, JpegBits *bits);

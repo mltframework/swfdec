@@ -1902,6 +1902,15 @@ EXTRA_DIST = \
 	movieclip-lockroot-loadmovie-7.swf.trace \
 	movieclip-lockroot-loadmovie-8.swf \
 	movieclip-lockroot-loadmovie-8.swf.trace \
+	movieclip-property-priorities-5.swf \
+	movieclip-property-priorities-5.swf.trace \
+	movieclip-property-priorities-6.swf \
+	movieclip-property-priorities-6.swf.trace \
+	movieclip-property-priorities-7.swf \
+	movieclip-property-priorities-7.swf.trace \
+	movieclip-property-priorities-8.swf \
+	movieclip-property-priorities-8.swf.trace \
+	movieclip-property-priorities.as \
 	movieclip-set-prototype.c \
 	movieclip-set-prototype-5.swf \
 	movieclip-set-prototype-5.swf.trace \
@@ -2721,6 +2730,15 @@ EXTRA_DIST = \
 	replaceText-newline-8.swf \
 	replaceText-newline-8.swf.trace \
 	replaceText-newline.as \
+	resolve-parent-5.swf \
+	resolve-parent-5.swf.trace \
+	resolve-parent-6.swf \
+	resolve-parent-6.swf.trace \
+	resolve-parent-7.swf \
+	resolve-parent-7.swf.trace \
+	resolve-parent-8.swf \
+	resolve-parent-8.swf.trace \
+	resolve-parent.as \
 	rewind-remove.c \
 	rewind-remove-5.swf \
 	rewind-remove-5.swf.trace \

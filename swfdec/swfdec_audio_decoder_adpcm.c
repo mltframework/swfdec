@@ -27,6 +27,21 @@
 
 G_DEFINE_TYPE (SwfdecAudioDecoderAdpcm, swfdec_audio_decoder_adpcm, SWFDEC_TYPE_AUDIO_DECODER)
 
+static gboolean
+swfdec_audio_decoder_adpcm_prepare (guint codec, SwfdecAudioFormat format, char **missing)
+{
+  return codec == SWFDEC_AUDIO_CODEC_ADPCM;
+}
+
+static SwfdecAudioDecoder *
+swfdec_audio_decoder_adpcm_create (guint codec, SwfdecAudioFormat format)
+{
+  if (codec != SWFDEC_AUDIO_CODEC_ADPCM)
+    return NULL;
+
+  return g_object_new (SWFDEC_TYPE_AUDIO_DECODER_ADPCM, NULL);
+}
+
 static const int indexTable[4][16] = {
   { -1, 2 },
   { -1, -1, 2, 4 },
@@ -188,12 +203,15 @@ swfdec_audio_decoder_adpcm_class_init (SwfdecAudioDecoderAdpcmClass *klass)
 
   object_class->dispose = swfdec_audio_decoder_adpcm_dispose;
 
+  decoder_class->prepare = swfdec_audio_decoder_adpcm_prepare;
+  decoder_class->create = swfdec_audio_decoder_adpcm_create;
   decoder_class->pull = swfdec_audio_decoder_adpcm_pull;
   decoder_class->push = swfdec_audio_decoder_adpcm_push;
 }
 
 static void
-swfdec_audio_decoder_adpcm_init (SwfdecAudioDecoderAdpcm *audio_decoder_adpcm)
+swfdec_audio_decoder_adpcm_init (SwfdecAudioDecoderAdpcm *dec)
 {
+  dec->queue = swfdec_buffer_queue_new ();
 }
 

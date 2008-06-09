@@ -193,8 +193,9 @@ render_all_streams (SwfdecPlayer *player, guint msecs, guint n_samples, TestData
   
   for (walk = data->streams; walk; walk = walk->next) {
     TestStream *stream = walk->data;
-    SwfdecBuffer *buffer = swfdec_buffer_new0 (n_samples * 4);
-    swfdec_audio_render (stream->audio, (gint16 *) buffer->data, 0, n_samples);
+    SwfdecBuffer *buffer = swfdec_buffer_new (n_samples * 4);
+    n_samples = swfdec_audio_render (stream->audio, (gint16 *) buffer->data, 0, n_samples);
+    buffer->length = n_samples * 4;
     swfdec_buffer_queue_push (stream->queue, buffer);
   }
 }

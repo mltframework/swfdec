@@ -50,12 +50,6 @@ struct _SwfdecAudioDecoderGstClass
 
 GType			swfdec_audio_decoder_gst_get_type	(void);
 
-SwfdecAudioDecoder *	swfdec_audio_decoder_gst_new		(guint			codec, 
-								 SwfdecAudioFormat	format);
-gboolean		swfdec_audio_decoder_gst_prepare	(guint			codec,
-								 SwfdecAudioFormat	format,
-								 char **		missing);
-
 
 G_END_DECLS
 #endif

@@ -180,9 +180,14 @@ void		swfdec_player_perform_actions	(SwfdecPlayer *		player);
     swfdec_function_list_add (&(player)->priv->resource_requests, (request_func), (data), (destroy_notify))
 SwfdecURL *	swfdec_player_create_url	(SwfdecPlayer *		player,
 						 const char *		string);
-SwfdecLoader *	swfdec_player_load		(SwfdecPlayer *		player,
+#define swfdec_player_load(player, url, buffer) \
+  swfdec_player_load_with_headers((player), (url), (buffer), 0, NULL, NULL)
+SwfdecLoader *	swfdec_player_load_with_headers	(SwfdecPlayer *		player,
 						 const char *		url,
-						 SwfdecBuffer *		buffer);
+						 SwfdecBuffer *		buffer,
+						 guint			header_count,
+						 const char **		header_names,
+						 const char **		header_values);
 SwfdecAsObject *swfdec_player_get_export_class	(SwfdecPlayer *		player,
 						 const char *		name);
 void		swfdec_player_set_export_class	(SwfdecPlayer *		player,

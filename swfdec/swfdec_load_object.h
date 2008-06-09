@@ -48,6 +48,9 @@ struct _SwfdecLoadObject {
   
   const char *			url;		/* GC'ed url to request */
   SwfdecBuffer *		buffer;		/* data to send */
+  guint				header_count;	/* number of headers */
+  char **			header_names;	/* names of headers */
+  char **			header_values;	/* values of headers */
   SwfdecLoader *		loader;		/* loader when loading or NULL */
 
   SwfdecSandbox *		sandbox;	/* sandbox that inited the loading */
@@ -66,6 +69,9 @@ GType		swfdec_load_object_get_type	(void);
 void		swfdec_load_object_create     	(SwfdecAsObject *		target,
 						 const char *			url,
 						 SwfdecBuffer *			data,
+						 guint				header_count,
+						 char **			header_names,
+						 char **			header_values,
 						 SwfdecLoadObjectProgress	progress,
 						 SwfdecLoadObjectFinish		finish);
 

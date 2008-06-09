@@ -67,7 +67,10 @@ struct _SwfdecLoaderClass
   void			(* load)	(SwfdecLoader *			loader, 
 					 SwfdecPlayer *			player,
 					 const char *			url,
-					 SwfdecBuffer *	           	buffer);
+					 SwfdecBuffer *			buffer,
+					 guint				header_count,
+					 const char **			header_names,
+					 const char **			header_values);
 };
 
 GType		swfdec_loader_get_type		(void);

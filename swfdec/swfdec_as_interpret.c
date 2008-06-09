@@ -1243,8 +1243,8 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
     if (movie != NULL) {
-      swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, buffer, NULL,
-	  swfdec_as_interpret_load_variables_on_finish);
+      swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, buffer, 0,
+	  NULL, NULL, NULL, swfdec_as_interpret_load_variables_on_finish);
     }
   } else if (internal) {
     swfdec_resource_load_movie (SWFDEC_PLAYER (cx), swfdec_as_stack_peek (cx, 1), 

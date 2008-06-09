@@ -2713,19 +2713,23 @@ swfdec_player_create_url (SwfdecPlayer *player, const char *string)
 }
 
 SwfdecLoader *
-swfdec_player_load (SwfdecPlayer *player, const char *url,
-    SwfdecBuffer *buffer)
+swfdec_player_load_with_headers (SwfdecPlayer *player, const char *url,
+    SwfdecBuffer *buffer, guint header_count, const char **header_names,
+    const char **header_values)
 {
   SwfdecLoader *loader;
   SwfdecLoaderClass *klass;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (url != NULL, NULL);
+  g_return_val_if_fail (header_count == 0 || header_names != NULL, NULL);
+  g_return_val_if_fail (header_count == 0 || header_values != NULL, NULL);
 
   loader = g_object_new (player->priv->loader_type, NULL);
   klass = SWFDEC_LOADER_GET_CLASS (loader);
   g_return_val_if_fail (klass->load != NULL, NULL);
-  klass->load (loader, player, url, buffer);
+  klass->load (loader, player, url, buffer, header_count, header_names,
+      header_values);
 
   return loader;
 }

@@ -128,9 +128,11 @@ swfdec_gtk_loader_dispose (GObject *object)
 
 static void
 swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecPlayer *player, 
-    const char *url_string, SwfdecBuffer *buffer)
+    const char *url_string, SwfdecBuffer *buffer, guint header_count,
+    const char **header_names, const char **header_values)
 {
   SwfdecURL *url;
+  guint i;
   
   if (swfdec_url_path_is_relative (url_string)) {
     url = swfdec_url_new_relative (swfdec_player_get_base_url (player), url_string);
@@ -145,7 +147,7 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   if (!swfdec_url_has_protocol (url, "http") &&
       !swfdec_url_has_protocol (url, "https")) {
     SWFDEC_LOADER_CLASS (swfdec_gtk_loader_parent_class)->load (loader, player,
-	url_string, buffer);
+	url_string, buffer, header_count, header_names, header_values);
   } else {
     SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (loader);
     SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
@@ -153,6 +155,12 @@ swfdec_gtk_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
     gtk->message = soup_message_new (buffer != NULL ? "POST" : "GET",
 	swfdec_url_get_url (url));
     soup_message_set_flags (gtk->message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
+
+    for (i = 0; i < header_count; i++) {
+      soup_message_headers_append (gtk->message->request_headers,
+	  header_names[i], header_values[i]);
+    }
+
     g_signal_connect (gtk->message, "got-chunk", G_CALLBACK (swfdec_gtk_loader_push), gtk);
     g_signal_connect (gtk->message, "finished", G_CALLBACK (swfdec_gtk_loader_finished), gtk);
     if (buffer)

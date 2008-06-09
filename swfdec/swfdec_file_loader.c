@@ -39,7 +39,8 @@ G_DEFINE_TYPE (SwfdecFileLoader, swfdec_file_loader, SWFDEC_TYPE_LOADER)
 
 static void
 swfdec_file_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
-    const char *url_string, SwfdecBuffer *buffer)
+    const char *url_string, SwfdecBuffer *buffer, guint header_count,
+    const char **header_names, const char **header_values)
 {
   SwfdecStream *stream = SWFDEC_STREAM (loader);
   GError *error = NULL;

@@ -74,8 +74,8 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "s", &url);
 
-  swfdec_load_object_create (object, url, NULL, swfdec_load_object_on_progress,
-      swfdec_load_object_on_finish);
+  swfdec_load_object_create (object, url, NULL, 0, NULL, NULL,
+      swfdec_load_object_on_progress, swfdec_load_object_on_finish);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__bytesLoaded,
@@ -99,12 +99,73 @@ swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("LoadVars/XML.send");
 }
 
+static void
+swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
+    char ***header_names, char ***header_values)
+{
+  GPtrArray *array_names, *array_values;
+  SwfdecAsValue val;
+  SwfdecAsObject *list;
+  int i, length;
+  const char *name;
+  SwfdecAsContext *cx;
+
+  cx = object->context;
+
+  array_names = g_ptr_array_new ();
+  array_values = g_ptr_array_new ();
+
+  if (swfdec_as_object_get_variable (object, SWFDEC_AS_STR_contentType, &val))
+  {
+    g_ptr_array_add (array_names, g_strdup (SWFDEC_AS_STR_Content_Type));
+    g_ptr_array_add (array_values,
+	g_strdup (swfdec_as_value_to_string (cx, &val)));
+  }
+
+  if (!swfdec_as_object_get_variable (object, SWFDEC_AS_STR__customHeaders,
+	&val))
+    goto end;
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    SWFDEC_WARNING ("_customHeaders is not an object");
+    goto end;
+  }
+  list = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_get_variable (list, SWFDEC_AS_STR_length, &val);
+  length = swfdec_as_value_to_integer (cx, &val);
+
+  /* FIXME: solve this with foreach, so it gets faster for weird cases */
+  name = NULL;
+  for (i = 0; i < length; i++) {
+    swfdec_as_object_get_variable (list, swfdec_as_integer_to_string (cx, i),
+	&val);
+    if (name == NULL) {
+      name = swfdec_as_value_to_string (cx, &val);
+    } else {
+      g_ptr_array_add (array_names, g_strdup (name));
+      g_ptr_array_add (array_values,
+	  g_strdup (swfdec_as_value_to_string (cx, &val)));
+      name = NULL;
+    }
+  }
+  if (name != NULL)
+    SWFDEC_FIXME ("_customHeaders with uneven amount of elements, what to do?");
+
+end:
+  g_assert (array_names->len == array_values->len);
+  *header_count = array_names->len;
+  *header_names = (char **)g_ptr_array_free (array_names, FALSE);
+  *header_values = (char **)g_ptr_array_free (array_values, FALSE);
+}
+
 SWFDEC_AS_NATIVE (301, 2, swfdec_load_object_as_sendAndLoad)
 void
 swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   const char *url, *data, *method_string;
+  guint header_count;
+  char **header_names, **header_values;
   SwfdecAsObject *target;
   SwfdecAsValue val;
   SwfdecBuffer *buffer;
@@ -132,8 +193,11 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
 	strlen (data));
   }
 
-  swfdec_load_object_create (target, url, buffer,
-      swfdec_load_object_on_progress, swfdec_load_object_on_finish);
+  swfdec_load_object_as_get_headers (object, &header_count, &header_names,
+      &header_values);
+  swfdec_load_object_create (target, url, buffer, header_count, header_names,
+      header_values, swfdec_load_object_on_progress,
+      swfdec_load_object_on_finish);
 
   SWFDEC_AS_VALUE_SET_INT (&val, 0);
   swfdec_as_object_set_variable_and_flags (target, SWFDEC_AS_STR__bytesLoaded,

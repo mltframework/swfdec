@@ -126,6 +126,7 @@ static void
 swfdec_load_object_dispose (GObject *object)
 {
   SwfdecLoadObject *load = SWFDEC_LOAD_OBJECT (object);
+  guint i;
 
   if (load->loader) {
     swfdec_stream_set_target (SWFDEC_STREAM (load->loader), NULL);
@@ -136,6 +137,13 @@ swfdec_load_object_dispose (GObject *object)
     swfdec_buffer_unref (load->buffer);
     load->buffer = NULL;
   }
+
+  for (i = 0; i < load->header_count; i++) {
+    g_free (load->header_names[i]);
+    g_free (load->header_values[i]);
+  }
+  g_free (load->header_names);
+  g_free (load->header_values);
 
   G_OBJECT_CLASS (swfdec_load_object_parent_class)->dispose (object);
 }
@@ -172,7 +180,9 @@ swfdec_load_object_load (SwfdecPlayer *player, gboolean allow, gpointer obj)
     return;
   }
 
-  load->loader = swfdec_player_load (player, load->url, load->buffer);
+  load->loader = swfdec_player_load_with_headers (player, load->url,
+      load->buffer, load->header_count, (const char **)load->header_names,
+      (const char **)load->header_values);
 
   swfdec_stream_set_target (SWFDEC_STREAM (load->loader), SWFDEC_STREAM_TARGET (load));
   swfdec_loader_set_data_type (load->loader, SWFDEC_LOADER_DATA_TEXT);
@@ -241,7 +251,8 @@ swfdec_load_object_mark (gpointer object, gpointer player)
 
 void
 swfdec_load_object_create (SwfdecAsObject *target, const char *url,
-    SwfdecBuffer *data, SwfdecLoadObjectProgress progress,
+    SwfdecBuffer *data, guint header_count, char **header_names,
+    char **header_values, SwfdecLoadObjectProgress progress,
     SwfdecLoadObjectFinish finish)
 {
   SwfdecPlayer *player;
@@ -249,6 +260,8 @@ swfdec_load_object_create (SwfdecAsObject *target, const char *url,
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (target));
   g_return_if_fail (url != NULL);
+  g_return_if_fail (header_count == 0 || header_names != NULL);
+  g_return_if_fail (header_count == 0 || header_values != NULL);
   g_return_if_fail (finish != NULL);
 
   player = SWFDEC_PLAYER (target->context);
@@ -258,6 +271,9 @@ swfdec_load_object_create (SwfdecAsObject *target, const char *url,
   load->target = target;
   load->url = url;
   load->buffer = data;
+  load->header_count = header_count;
+  load->header_names = header_names;
+  load->header_values = header_values;
   load->progress = progress;
   load->finish = finish;
   /* get the current security */

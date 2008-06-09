@@ -107,6 +107,11 @@ swfdec_gtk_loader_finished (SoupMessage *msg, gpointer loader)
     swfdec_gtk_loader_ensure_open (loader);
     swfdec_stream_eof (loader);
   } else {
+    if (!SWFDEC_GTK_LOADER (loader)->opened) {
+      char *real_uri = soup_uri_to_string (soup_message_get_uri (msg), FALSE);
+      swfdec_loader_set_url (loader, real_uri);
+      g_free (real_uri);
+    }
     swfdec_stream_error (loader, "%u %s", msg->status_code, msg->reason_phrase);
   }
 }

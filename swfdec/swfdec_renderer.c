@@ -106,7 +106,8 @@ swfdec_renderer_dispose (GObject *object)
     g_hash_table_iter_init (&iter, priv->cache_lookup);
     while (g_hash_table_iter_next (&iter, NULL, &list)) {
       for (walk = list; walk; walk = walk->next) {
-	g_object_remove_weak_pointer (walk->data, &walk->data);
+	if (walk->data)
+	  g_object_remove_weak_pointer (walk->data, &walk->data);
       }
       g_list_free (list);
     }

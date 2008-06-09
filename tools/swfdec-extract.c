@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,7 @@
 #include <swfdec/swfdec_sprite.h>
 #include <swfdec/swfdec_sprite_movie.h>
 #include <swfdec/swfdec_swf_decoder.h>
+#include <swfdec/swfdec_renderer_internal.h>
 #include <swfdec/swfdec_resource.h>
 
 static SwfdecBuffer *
@@ -181,6 +182,7 @@ surface_destroy_for_type (cairo_surface_t *surface, const char *filename)
 static gboolean
 export_graphic (SwfdecGraphic *graphic, const char *filename)
 {
+  SwfdecRenderer *renderer;
   cairo_surface_t *surface;
   cairo_t *cr;
   guint width, height;
@@ -203,9 +205,12 @@ export_graphic (SwfdecGraphic *graphic, const char *filename)
   cairo_translate (cr, - floor (graphic->extents.x0 / SWFDEC_TWIPS_SCALE_FACTOR),
     - floor (graphic->extents.y0 / SWFDEC_TWIPS_SCALE_FACTOR));
   cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
+  renderer = swfdec_renderer_new (surface);
+  swfdec_renderer_attach (renderer, cr);
   swfdec_graphic_render (graphic, cr, &trans, &graphic->extents);
   cairo_show_page (cr);
   cairo_destroy (cr);
+  g_object_unref (renderer);
   return surface_destroy_for_type (surface, filename);
 }
 

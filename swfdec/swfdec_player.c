@@ -2719,6 +2719,10 @@ swfdec_player_load_with_headers (SwfdecPlayer *player, const char *url,
   g_return_val_if_fail (url != NULL, NULL);
   g_return_val_if_fail (header_count == 0 || header_names != NULL, NULL);
   g_return_val_if_fail (header_count == 0 || header_values != NULL, NULL);
+  g_return_val_if_fail (header_names == NULL ||
+      header_names[header_count] == NULL, NULL);
+  g_return_val_if_fail (header_values == NULL ||
+      header_values[header_count] == NULL, NULL);
 
   loader = g_object_new (player->priv->loader_type, NULL);
   klass = SWFDEC_LOADER_GET_CLASS (loader);

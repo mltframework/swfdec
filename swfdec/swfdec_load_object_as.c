@@ -170,6 +170,8 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
 end:
   g_assert (array_names->len == array_values->len);
   *header_count = array_names->len;
+  g_ptr_array_add (array_names, NULL);
+  g_ptr_array_add (array_values, NULL);
   *header_names = (char **)g_ptr_array_free (array_names, FALSE);
   *header_values = (char **)g_ptr_array_free (array_values, FALSE);
 }

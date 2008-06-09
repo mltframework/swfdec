@@ -126,7 +126,6 @@ static void
 swfdec_load_object_dispose (GObject *object)
 {
   SwfdecLoadObject *load = SWFDEC_LOAD_OBJECT (object);
-  guint i;
 
   if (load->loader) {
     swfdec_stream_set_target (SWFDEC_STREAM (load->loader), NULL);
@@ -137,13 +136,8 @@ swfdec_load_object_dispose (GObject *object)
     swfdec_buffer_unref (load->buffer);
     load->buffer = NULL;
   }
-
-  for (i = 0; i < load->header_count; i++) {
-    g_free (load->header_names[i]);
-    g_free (load->header_values[i]);
-  }
-  g_free (load->header_names);
-  g_free (load->header_values);
+  g_strfreev (load->header_names);
+  g_strfreev (load->header_values);
 
   G_OBJECT_CLASS (swfdec_load_object_parent_class)->dispose (object);
 }

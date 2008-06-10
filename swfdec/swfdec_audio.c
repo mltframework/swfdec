@@ -25,9 +25,9 @@
 
 #include <string.h>
 #include "swfdec_audio_internal.h"
+#include "swfdec_actor.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
-#include "swfdec_sprite_movie.h"
 
 /**
  * SECTION:SwfdecAudio
@@ -63,7 +63,7 @@ swfdec_audio_dispose (GObject *object)
 {
   SwfdecAudio *audio = SWFDEC_AUDIO (object);
 
-  g_assert (audio->movie == NULL);
+  g_assert (audio->actor == NULL);
   g_assert (audio->player == NULL);
 
   G_OBJECT_CLASS (swfdec_audio_parent_class)->dispose (object);
@@ -117,7 +117,7 @@ swfdec_audio_remove (SwfdecAudio *audio)
   if (audio->player != NULL) {
     SwfdecPlayerPrivate *priv = audio->player->priv;
     SWFDEC_INFO ("removing %s %p", G_OBJECT_TYPE_NAME (audio), audio);
-    swfdec_audio_set_movie (audio, NULL);
+    swfdec_audio_set_actor (audio, NULL);
     priv->audio = g_list_remove (priv->audio, audio);
     if (audio->added) {
       g_signal_emit_by_name (audio->player, "audio-removed", audio);
@@ -153,19 +153,19 @@ swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
 }
 
 void
-swfdec_audio_set_movie (SwfdecAudio *audio, SwfdecSpriteMovie *movie)
+swfdec_audio_set_actor (SwfdecAudio *audio, SwfdecActor *actor)
 {
   g_return_if_fail (SWFDEC_IS_AUDIO (audio));
   g_return_if_fail (audio->player != NULL);
-  g_return_if_fail (movie == NULL || SWFDEC_IS_SPRITE_MOVIE (movie));
+  g_return_if_fail (actor == NULL || SWFDEC_IS_ACTOR (actor));
 
-  if (movie) {
-    g_object_ref (movie);
+  if (actor) {
+    g_object_ref (actor);
   }
-  if (audio->movie) {
-    g_object_unref (audio->movie);
+  if (audio->actor) {
+    g_object_unref (audio->actor);
   }
-  audio->movie = movie;
+  audio->actor = actor;
 }
 
 /**
@@ -198,10 +198,10 @@ swfdec_audio_render (SwfdecAudio *audio, gint16 *dest,
 
   klass = SWFDEC_AUDIO_GET_CLASS (audio);
   rendered = klass->render (audio, dest, start_offset, n_samples);
-  if (audio->movie) {
+  if (audio->actor) {
     SwfdecSoundMatrix sound;
 
-    swfdec_sound_matrix_multiply (&sound, &audio->movie->sound_matrix,
+    swfdec_sound_matrix_multiply (&sound, &audio->actor->sound_matrix,
 	&audio->player->priv->sound_matrix);
     swfdec_sound_matrix_apply (&sound, dest, rendered);
   } else if (audio->player) {

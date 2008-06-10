@@ -793,8 +793,6 @@ swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
 {
   movie->playing = TRUE;
   movie->frame = (guint) -1;
-
-  swfdec_sound_matrix_init_identity (&movie->sound_matrix);
 }
 
 /* cute little hack */

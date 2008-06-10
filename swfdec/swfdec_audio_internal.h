@@ -39,7 +39,7 @@ struct _SwfdecAudio {
 
   SwfdecPlayer *	player;		/* the player that plays us */
   gboolean		added;		/* set to TRUE after the added signal has been emitted */
-  SwfdecSpriteMovie *	movie;		/* NULL or movieclip that controls our volume */
+  SwfdecActor *		actor;		/* NULL or movieclip that controls our volume */
 };
 
 struct _SwfdecAudioClass {
@@ -56,8 +56,8 @@ struct _SwfdecAudioClass {
 void			swfdec_audio_add		(SwfdecAudio *		audio,
 							 SwfdecPlayer *		player);
 void			swfdec_audio_remove		(SwfdecAudio *		audio);
-void			swfdec_audio_set_movie		(SwfdecAudio *		audio,
-							 SwfdecSpriteMovie *	movie);
+void			swfdec_audio_set_actor		(SwfdecAudio *		audio,
+							 SwfdecActor *		actor);
 
 guint			swfdec_audio_iterate		(SwfdecAudio *		audio,
 							 guint			n_samples);

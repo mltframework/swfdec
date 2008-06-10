@@ -2278,7 +2278,6 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   /**
    * SwfdecPlayer::launch:
    * @player: the #SwfdecPlayer affected
-   * @request: the type of request
    * @url: URL to open
    * @target: target to load the URL into
    * @data: optional data to pass on with the request. Will be of mime type

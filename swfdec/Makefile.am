@@ -127,6 +127,7 @@ libswfdec_source_files = \
 	swfdec_shared_object.c \
 	swfdec_socket.c \
 	swfdec_sound.c \
+	swfdec_sound_matrix.c \
 	swfdec_sound_object.c \
 	swfdec_sprite.c \
 	swfdec_sprite_movie.c \
@@ -289,6 +290,7 @@ noinst_HEADERS = \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \
+	swfdec_sound_matrix.h \
 	swfdec_sound_object.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \

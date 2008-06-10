@@ -30,6 +30,7 @@
 #include <swfdec/swfdec_rect.h>
 #include <swfdec/swfdec_ringbuffer.h>
 #include <swfdec/swfdec_socket.h>
+#include <swfdec/swfdec_sound_matrix.h>
 #include <swfdec/swfdec_system.h>
 
 G_BEGIN_DECLS
@@ -137,6 +138,7 @@ struct _SwfdecPlayerPrivate
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
   GSList *		missing_plugins;	/* list of GStreamer detail strings for missing plugins */
+  SwfdecSoundMatrix	sound_matrix;		/* global sound transform - FIXME: is this per-sandbox or global? */
 
   /* events and advancing */
   SwfdecTick		time;			/* current time */

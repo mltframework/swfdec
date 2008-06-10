@@ -2351,6 +2351,8 @@ swfdec_player_init (SwfdecPlayer *player)
   cairo_matrix_init_scale (&priv->stage_to_global, 
       SWFDEC_TWIPS_SCALE_FACTOR, SWFDEC_TWIPS_SCALE_FACTOR);
   priv->global_to_stage = priv->stage_to_global;
+  cairo_matrix_invert (&priv->global_to_stage);
+  swfdec_sound_matrix_init_identity (&priv->sound_matrix);
 }
 
 void

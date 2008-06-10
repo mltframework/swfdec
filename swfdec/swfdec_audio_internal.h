@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -39,6 +39,7 @@ struct _SwfdecAudio {
 
   SwfdecPlayer *	player;		/* the player that plays us */
   gboolean		added;		/* set to TRUE after the added signal has been emitted */
+  SwfdecSpriteMovie *	movie;		/* NULL or movieclip that controls our volume */
 };
 
 struct _SwfdecAudioClass {
@@ -55,6 +56,8 @@ struct _SwfdecAudioClass {
 void			swfdec_audio_add		(SwfdecAudio *		audio,
 							 SwfdecPlayer *		player);
 void			swfdec_audio_remove		(SwfdecAudio *		audio);
+void			swfdec_audio_set_movie		(SwfdecAudio *		audio,
+							 SwfdecSpriteMovie *	movie);
 
 guint			swfdec_audio_iterate		(SwfdecAudio *		audio,
 							 guint			n_samples);

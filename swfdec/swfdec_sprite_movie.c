@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -793,6 +793,8 @@ swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
 {
   movie->playing = TRUE;
   movie->frame = (guint) -1;
+
+  swfdec_sound_matrix_init_identity (&movie->sound_matrix);
 }
 
 /* cute little hack */

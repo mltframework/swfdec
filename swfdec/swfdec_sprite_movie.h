@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 
 #include <swfdec/swfdec_actor.h>
 #include <swfdec/swfdec_audio.h>
+#include <swfdec/swfdec_sound_matrix.h>
 #include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
@@ -52,6 +53,7 @@ struct _SwfdecSpriteMovie
   /* audio stream handling */
   SwfdecAudio *		sound_stream;	/* stream that currently plays */
   gboolean		sound_active;	/* if the sound stream had a SoundStreamBlock last frame */
+  SwfdecSoundMatrix	sound_matrix;	/* movie's sound matrix */
 };
 
 struct _SwfdecSpriteMovieClass

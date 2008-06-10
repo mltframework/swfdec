@@ -181,27 +181,20 @@ void
 swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  const char *url, *data, *method_string;
+  const char *url, *data, *method;
   guint header_count;
   char **header_names, **header_values;
   SwfdecAsObject *target;
   SwfdecAsValue val;
   SwfdecBuffer *buffer;
-  gboolean get;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "sO|s", &url, &target, &method_string);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "sO|s", &url, &target,
+      &method);
 
-  SWFDEC_FIXME ("support for contentType is missing");
-
-  if (method_string == NULL || g_ascii_strcasecmp (method_string, "get") == 0) {
-    get = TRUE;
-  } else {
-    get = FALSE;
-  }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   data = swfdec_as_value_to_string (cx, &val);
 
-  if (get) {
+  if (method == NULL || g_ascii_strcasecmp (method, "GET") == 0) {
     url = swfdec_as_context_give_string (cx,
 	g_strjoin (NULL, url, "?", data, NULL));
     buffer = NULL;

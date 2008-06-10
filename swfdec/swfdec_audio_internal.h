@@ -44,20 +44,20 @@ struct _SwfdecAudio {
 struct _SwfdecAudioClass {
   GObjectClass		object_class;
 
-  guint			(* iterate)	  		(SwfdecAudio *	audio,
-							 guint		n_samples);
-  guint			(* render)			(SwfdecAudio *	audio,
-							 gint16 *	dest,
-							 guint		start, 
-							 guint		n_samples);
+  guint			(* iterate)	  		(SwfdecAudio *		audio,
+							 guint			n_samples);
+  guint			(* render)			(SwfdecAudio *		audio,
+							 gint16 *		dest,
+							 guint			start, 
+							 guint			n_samples);
 };
 
-void			swfdec_audio_add		(SwfdecAudio *	audio,
-							 SwfdecPlayer *	player);
-void			swfdec_audio_remove		(SwfdecAudio *	audio);
+void			swfdec_audio_add		(SwfdecAudio *		audio,
+							 SwfdecPlayer *		player);
+void			swfdec_audio_remove		(SwfdecAudio *		audio);
 
-guint			swfdec_audio_iterate		(SwfdecAudio *	audio,
-							 guint		n_samples);
+guint			swfdec_audio_iterate		(SwfdecAudio *		audio,
+							 guint			n_samples);
 
 SwfdecAudioFormat	swfdec_audio_format_parse	(SwfdecBits *	  	bits);
 SwfdecAudioFormat	swfdec_audio_format_new		(guint			rate,

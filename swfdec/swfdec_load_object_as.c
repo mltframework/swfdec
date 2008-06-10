@@ -91,14 +91,6 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }
 
-SWFDEC_AS_NATIVE (301, 1, swfdec_load_object_as_send)
-void
-swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
-{
-  SWFDEC_STUB ("LoadVars/XML.send");
-}
-
 static void
 swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
     char ***header_names, char ***header_values)
@@ -174,6 +166,38 @@ end:
   g_ptr_array_add (array_values, NULL);
   *header_names = (char **)g_ptr_array_free (array_names, FALSE);
   *header_values = (char **)g_ptr_array_free (array_values, FALSE);
+}
+
+SWFDEC_AS_NATIVE (301, 1, swfdec_load_object_as_send)
+void
+swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  const char *url, *target, *method, *data;
+  SwfdecAsValue val;
+  SwfdecBuffer *buffer;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "s|ss", &url, &target, &method);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  data = swfdec_as_value_to_string (cx, &val);
+
+  if (method == NULL || g_ascii_strcasecmp (method, "GET") == 0) {
+    url = swfdec_as_context_give_string (cx,
+	g_strjoin (NULL, url, "?", data, NULL));
+    buffer = NULL;
+  } else {
+    // don't send the nul-byte
+    buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data)),
+	strlen (data));
+  }
+
+  SWFDEC_FIXME ("XML/LoadVars.send: Support for sending headers missing");
+
+  swfdec_player_launch (SWFDEC_PLAYER (cx), url, target, buffer);
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }
 
 SWFDEC_AS_NATIVE (301, 2, swfdec_load_object_as_sendAndLoad)

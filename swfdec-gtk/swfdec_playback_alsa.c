@@ -54,7 +54,7 @@ struct _Stream {
   snd_pcm_t *		pcm;		/* the pcm we play back to */
   GSource **		sources;	/* sources for writing data */
   guint			n_sources;	/* number of sources */
-  guint			offset;		/* offset into sound */
+  gsize			offset;		/* offset into sound */
   gboolean		(* write)	(Stream *);
 };
 
@@ -237,6 +237,28 @@ swfdec_playback_stream_start (Stream *stream)
 }
 
 static void
+swfdec_playback_stream_changed (SwfdecAudio *audio, Stream *stream)
+{
+#if 0
+  snd_pcm_sframes_t back;
+
+  /* doesn't exist in Hardy yet and is broken on dmix */
+  back = snd_pcm_rewindable (stream->pcm);
+  if (back <= 0)
+    return;
+  if ((gsize) back > stream->offset)
+    back = stream->offset;
+
+  back = snd_pcm_rewind (stream->pcm, back);
+  if (back <= 0)
+    return;
+
+  stream->offset -= back;
+  try_write (stream);
+#endif
+}
+
+static void
 swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
 {
   Stream *stream;
@@ -301,6 +323,8 @@ swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   if (stream->n_sources > 0)
     stream->sources = g_new0 (GSource *, stream->n_sources);
   sound->streams = g_list_prepend (sound->streams, stream);
+  g_signal_connect (stream->audio, "changed", 
+      G_CALLBACK (swfdec_playback_stream_changed), stream);
   swfdec_playback_stream_start (stream);
   return;
 
@@ -315,6 +339,8 @@ swfdec_playback_stream_close (Stream *stream)
   swfdec_playback_stream_remove_handlers (stream);
   g_free (stream->sources);
   stream->sound->streams = g_list_remove (stream->sound->streams, stream);
+  g_signal_handlers_disconnect_by_func (stream->audio, 
+      swfdec_playback_stream_changed, stream);
   g_object_unref (stream->audio);
   g_free (stream);
 }

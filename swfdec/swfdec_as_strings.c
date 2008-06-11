@@ -507,5 +507,9 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("onFullScreen")
   SWFDEC_AS_CONSTANT_STRING ("_customHeaders")
   SWFDEC_AS_CONSTANT_STRING ("Content-Type")
+  SWFDEC_AS_CONSTANT_STRING ("ll")
+  SWFDEC_AS_CONSTANT_STRING ("lr")
+  SWFDEC_AS_CONSTANT_STRING ("rl")
+  SWFDEC_AS_CONSTANT_STRING ("rr")
   /* add more here */
 ;

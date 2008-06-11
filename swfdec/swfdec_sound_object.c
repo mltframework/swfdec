@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -89,12 +89,32 @@ swfdec_sound_object_get_sound (SwfdecSoundObject *sound, const char *name)
 
 /*** AS CODE ***/
 
+static SwfdecSoundMatrix *
+swfdec_sound_object_get_matrix (SwfdecSoundObject *sound)
+{
+  if (sound->global) {
+    return &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (sound)->context)->priv->sound_matrix;
+  } else if (SWFDEC_IS_ACTOR (sound->target)) {
+    return &SWFDEC_ACTOR (sound->target)->sound_matrix;
+  }
+  return NULL;
+}
+
 SWFDEC_AS_NATIVE (500, 0, swfdec_sound_object_getPan)
 void
 swfdec_sound_object_getPan (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Sound.getPan");
+  SwfdecSoundObject *sound;
+  const SwfdecSoundMatrix *matrix;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "");
+
+  matrix = swfdec_sound_object_get_matrix (sound);
+  if (matrix == NULL)
+    return;
+
+  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_sound_matrix_get_pan (matrix));
 }
 
 SWFDEC_AS_NATIVE (500, 1, swfdec_sound_object_getTransform)
@@ -102,7 +122,31 @@ void
 swfdec_sound_object_getTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Sound.getTransform");
+  SwfdecSoundObject *sound;
+  const SwfdecSoundMatrix *matrix;
+  SwfdecAsObject *obj;
+  SwfdecAsValue val;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "");
+
+  matrix = swfdec_sound_object_get_matrix (sound);
+  if (matrix == NULL)
+    return;
+
+  obj = swfdec_as_object_new (cx);
+  if (obj == NULL)
+    return;
+
+  SWFDEC_AS_VALUE_SET_INT (&val, matrix->ll);
+  swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_ll, &val);
+  SWFDEC_AS_VALUE_SET_INT (&val, matrix->lr);
+  swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_lr, &val);
+  SWFDEC_AS_VALUE_SET_INT (&val, matrix->rl);
+  swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_rl, &val);
+  SWFDEC_AS_VALUE_SET_INT (&val, matrix->rr);
+  swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_rr, &val);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, obj);
 }
 
 SWFDEC_AS_NATIVE (500, 2, swfdec_sound_object_getVolume)
@@ -110,7 +154,16 @@ void
 swfdec_sound_object_getVolume (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Sound.getVolume");
+  SwfdecSoundObject *sound;
+  const SwfdecSoundMatrix *matrix;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "");
+
+  matrix = swfdec_sound_object_get_matrix (sound);
+  if (matrix == NULL)
+    return;
+
+  SWFDEC_AS_VALUE_SET_INT (ret, matrix->volume);
 }
 
 SWFDEC_AS_NATIVE (500, 3, swfdec_sound_object_setPan)
@@ -118,7 +171,17 @@ void
 swfdec_sound_object_setPan (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Sound.setPan");
+  SwfdecSoundObject *sound;
+  SwfdecSoundMatrix *matrix;
+  int pan;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "i", &pan);
+
+  matrix = swfdec_sound_object_get_matrix (sound);
+  if (matrix == NULL)
+    return;
+
+  swfdec_sound_matrix_set_pan (matrix, pan);
 }
 
 SWFDEC_AS_NATIVE (500, 4, swfdec_sound_object_setTransform)
@@ -126,7 +189,45 @@ void
 swfdec_sound_object_setTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Sound.setTransform");
+  SwfdecSoundObject *sound;
+  SwfdecSoundMatrix *matrix;
+  SwfdecAsObject *trans;
+  SwfdecAsValue *val;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "o", &trans);
+
+  matrix = swfdec_sound_object_get_matrix (sound);
+  if (matrix == NULL)
+    return;
+
+  /* ll */
+  val = swfdec_as_object_peek_variable (trans, SWFDEC_AS_STR_ll);
+  if (val) {
+    matrix->ll = swfdec_as_value_to_integer (cx, val);
+  } else if (swfdec_as_object_has_variable (trans, SWFDEC_AS_STR_ll) == trans) {
+    matrix->ll = 0;
+  }
+  /* lr */
+  val = swfdec_as_object_peek_variable (trans, SWFDEC_AS_STR_lr);
+  if (val) {
+    matrix->lr = swfdec_as_value_to_integer (cx, val);
+  } else if (swfdec_as_object_has_variable (trans, SWFDEC_AS_STR_lr) == trans) {
+    matrix->lr = 0;
+  }
+  /* rr */
+  val = swfdec_as_object_peek_variable (trans, SWFDEC_AS_STR_rr);
+  if (val) {
+    matrix->rr = swfdec_as_value_to_integer (cx, val);
+  } else if (swfdec_as_object_has_variable (trans, SWFDEC_AS_STR_rr) == trans) {
+    matrix->rr = 0;
+  }
+  /* rl */
+  val = swfdec_as_object_peek_variable (trans, SWFDEC_AS_STR_rl);
+  if (val) {
+    matrix->rl = swfdec_as_value_to_integer (cx, val);
+  } else if (swfdec_as_object_has_variable (trans, SWFDEC_AS_STR_rl) == trans) {
+    matrix->rl = 0;
+  }
 }
 
 SWFDEC_AS_NATIVE (500, 5, swfdec_sound_object_setVolume)
@@ -134,7 +235,17 @@ void
 swfdec_sound_object_setVolume (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Sound.setVolume");
+  SwfdecSoundObject *sound;
+  SwfdecSoundMatrix *matrix;
+  int volume;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "i", &volume);
+
+  matrix = swfdec_sound_object_get_matrix (sound);
+  if (matrix == NULL)
+    return;
+
+  matrix->volume = volume;
 }
 
 SWFDEC_AS_NATIVE (500, 9, swfdec_sound_object_getDuration)

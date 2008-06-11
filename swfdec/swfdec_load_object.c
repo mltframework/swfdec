@@ -208,7 +208,7 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
   }
   switch (load->sandbox->type) {
     case SWFDEC_SANDBOX_REMOTE:
-      if (swfdec_url_host_equal(url, swfdec_player_get_url (player))) {
+      if (swfdec_url_host_equal(url, load->sandbox->url)) {
 	swfdec_load_object_load (player, TRUE, load);
 	break;
       }

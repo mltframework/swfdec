@@ -372,6 +372,8 @@ swfdec_sound_object_start (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
     offset = 0;
 
   audio = swfdec_audio_event_new (SWFDEC_PLAYER (cx), sound->attached, offset / 44100, loops);
+  if (sound->target && !sound->global)
+    swfdec_audio_set_actor (audio, SWFDEC_ACTOR (sound->target));
   g_object_unref (audio);
 }
 

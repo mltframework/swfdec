@@ -3100,6 +3100,15 @@ EXTRA_DIST = \
 	sound-properties-8.swf.trace \
 	sound-properties-9.swf \
 	sound-properties-9.swf.trace \
+	sound-setTransform-propertytypes-5.swf \
+	sound-setTransform-propertytypes-5.swf.trace \
+	sound-setTransform-propertytypes-6.swf \
+	sound-setTransform-propertytypes-6.swf.trace \
+	sound-setTransform-propertytypes-7.swf \
+	sound-setTransform-propertytypes-7.swf.trace \
+	sound-setTransform-propertytypes-8.swf \
+	sound-setTransform-propertytypes-8.swf.trace \
+	sound-setTransform-propertytypes.as \
 	stack-overflow.as \
 	stack-overflow-5.swf \
 	stack-overflow-5.swf.trace \

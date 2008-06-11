@@ -65,7 +65,17 @@ swfdec_sound_matrix_is_identity (const SwfdecSoundMatrix *sound)
   g_return_val_if_fail (sound != NULL, FALSE);
 
   return sound->ll == 100 && sound->rr == 100 &&
-    sound->lr == 0 && sound->rr == 0 && sound->volume == 100;
+    sound->lr == 0 && sound->rl == 0 && sound->volume == 100;
+}
+
+gboolean
+swfdec_sound_matrix_is_equal (const SwfdecSoundMatrix *a, const SwfdecSoundMatrix *b)
+{
+  g_return_val_if_fail (a != NULL, FALSE);
+  g_return_val_if_fail (b != NULL, FALSE);
+
+  return a->ll == b->ll && a->rr == b->rr &&
+    a->lr == b->lr && a->rl == b->rl && a->volume == b->volume;
 }
 
 void

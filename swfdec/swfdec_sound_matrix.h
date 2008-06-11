@@ -36,6 +36,8 @@ struct _SwfdecSoundMatrix
 void		swfdec_sound_matrix_init_identity	(SwfdecSoundMatrix *		sound);
 
 gboolean	swfdec_sound_matrix_is_identity		(const SwfdecSoundMatrix *	sound);
+gboolean	swfdec_sound_matrix_is_equal		(const SwfdecSoundMatrix *	a,
+							 const SwfdecSoundMatrix *	b);
 
 int		swfdec_sound_matrix_get_pan		(const SwfdecSoundMatrix *	sound);
 void		swfdec_sound_matrix_set_pan		(SwfdecSoundMatrix *		sound,

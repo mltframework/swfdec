@@ -589,22 +589,29 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, SwfdecSandbox *sandbox, cons
   }
   stream->requested_url = g_strdup (url_string);
   stream->sandbox = sandbox;
+#if 0
   if (swfdec_url_path_is_relative (url_string)) {
     swfdec_net_stream_load (player, TRUE, stream);
     return;
   }
+#endif
   url = swfdec_player_create_url (player, url_string);
   if (url == NULL) {
     swfdec_net_stream_load (player, FALSE, stream);
     return;
   }
   if (swfdec_url_is_local (url)) {
-    swfdec_net_stream_load (player, TRUE, stream);
+    swfdec_net_stream_load (player, 
+	sandbox->type == SWFDEC_SANDBOX_LOCAL_TRUSTED ||
+	sandbox->type == SWFDEC_SANDBOX_LOCAL_FILE, stream);
   } else {
     switch (sandbox->type) {
       case SWFDEC_SANDBOX_REMOTE:
-	swfdec_net_stream_load (player, TRUE, stream);
-	break;
+	if (swfdec_url_host_equal(url, sandbox->url)) {
+	  swfdec_net_stream_load (player, TRUE, stream);
+	  break;
+	}
+	/* fall through */
       case SWFDEC_SANDBOX_LOCAL_NETWORK:
       case SWFDEC_SANDBOX_LOCAL_TRUSTED:
 	{

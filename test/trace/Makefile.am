@@ -3100,6 +3100,15 @@ EXTRA_DIST = \
 	sound-properties-8.swf.trace \
 	sound-properties-9.swf \
 	sound-properties-9.swf.trace \
+	sound-set-5.swf \
+	sound-set-5.swf.trace \
+	sound-set-6.swf \
+	sound-set-6.swf.trace \
+	sound-set-7.swf \
+	sound-set-7.swf.trace \
+	sound-set-8.swf \
+	sound-set-8.swf.trace \
+	sound-set.as \
 	sound-setTransform-propertytypes-5.swf \
 	sound-setTransform-propertytypes-5.swf.trace \
 	sound-setTransform-propertytypes-6.swf \

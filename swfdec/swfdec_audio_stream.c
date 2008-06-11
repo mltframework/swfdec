@@ -75,13 +75,13 @@ swfdec_audio_stream_require (SwfdecAudioStream *stream, guint n_samples)
   }
 }
 
-static guint
+static gsize
 swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
-    guint start, guint n_samples)
+    gsize start, gsize n_samples)
 {
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
   GList *walk;
-  guint samples, rendered, skip;
+  gsize samples, rendered, skip;
   SwfdecBuffer *buffer;
 
   g_assert (start < G_MAXINT);
@@ -117,12 +117,12 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
   return rendered - start;
 }
 
-static guint
-swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
+static gsize
+swfdec_audio_stream_iterate (SwfdecAudio *audio, gsize remove)
 {
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
   SwfdecBuffer *buffer;
-  guint samples, cur_samples;
+  gsize samples, cur_samples;
 
   swfdec_audio_stream_require (stream, remove);
   samples = MIN (remove, stream->queue_size);

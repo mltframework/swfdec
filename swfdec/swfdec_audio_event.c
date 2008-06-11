@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,8 +32,8 @@
 G_DEFINE_TYPE (SwfdecAudioEvent, swfdec_audio_event, SWFDEC_TYPE_AUDIO)
 
 
-static guint
-swfdec_audio_event_iterate (SwfdecAudio *audio, guint remove)
+static gsize
+swfdec_audio_event_iterate (SwfdecAudio *audio, gsize remove)
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
 
@@ -78,13 +78,13 @@ swfdec_audio_event_get_envelop_volume (SwfdecAudioEvent *event, guint pos,
     event->envelope[pos].volume[channel] * (offset / distance);
 }
 
-static guint
-swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, guint start,
-    guint n_samples)
+static gsize
+swfdec_audio_event_render (SwfdecAudio *audio, gint16* dest, gsize start,
+    gsize n_samples)
 {
   SwfdecAudioEvent *event = SWFDEC_AUDIO_EVENT (audio);
-  guint offset = event->offset + start;
-  guint loop, samples, global_offset, pos, i, rendered;
+  gsize offset = event->offset + start;
+  gsize loop, samples, global_offset, pos, i, rendered;
   gint16 *dest_end;
 
   if (event->n_samples == 0)

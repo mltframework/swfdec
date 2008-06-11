@@ -158,7 +158,7 @@ swfdec_audio_remove (SwfdecAudio *audio)
  * Returns: maximum number of remaining frames. If G_MAXUINT is returned,
  *          then the number of frames isn't known yet.
  **/
-guint
+gsize
 swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
 {
   SwfdecAudioClass *klass;
@@ -228,9 +228,9 @@ swfdec_audio_update_matrix (SwfdecAudio *audio)
  *          stream is still loading, this number may be lower. It indicates 
  *          that no more samples are available.
  **/
-guint
+gsize
 swfdec_audio_render (SwfdecAudio *audio, gint16 *dest, 
-    guint start_offset, guint n_samples)
+    gsize start_offset, gsize n_samples)
 {
   SwfdecAudioClass *klass;
   guint rendered;

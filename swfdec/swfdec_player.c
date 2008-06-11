@@ -828,10 +828,11 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
   for (walk = priv->audio; walk; walk = walk->next) {
     SwfdecAudio *audio = walk->data;
 
-    if (audio->added)
-      continue;
-    g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
-    audio->added = TRUE;
+    swfdec_audio_update_matrix (audio);
+    if (!audio->added) {
+      g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
+      audio->added = TRUE;
+    }
   }
 
   /* emit missing-plugin signal for newly discovered plugins */

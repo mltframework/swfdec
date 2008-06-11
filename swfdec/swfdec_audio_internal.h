@@ -25,6 +25,7 @@
 #include <swfdec/swfdec.h>
 #include <swfdec/swfdec_audio.h>
 #include <swfdec/swfdec_bits.h>
+#include <swfdec/swfdec_sound_matrix.h>
 #include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
@@ -40,6 +41,7 @@ struct _SwfdecAudio {
   SwfdecPlayer *	player;		/* the player that plays us */
   gboolean		added;		/* set to TRUE after the added signal has been emitted */
   SwfdecActor *		actor;		/* NULL or movieclip that controls our volume */
+  SwfdecSoundMatrix	matrix;		/* matrix used by this audio instance */
 };
 
 struct _SwfdecAudioClass {
@@ -61,6 +63,7 @@ void			swfdec_audio_set_actor		(SwfdecAudio *		audio,
 
 guint			swfdec_audio_iterate		(SwfdecAudio *		audio,
 							 guint			n_samples);
+void			swfdec_audio_update_matrix	(SwfdecAudio *		audio);
 
 SwfdecAudioFormat	swfdec_audio_format_parse	(SwfdecBits *	  	bits);
 SwfdecAudioFormat	swfdec_audio_format_new		(guint			rate,

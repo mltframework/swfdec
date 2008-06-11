@@ -58,6 +58,13 @@
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecAudio, swfdec_audio, G_TYPE_OBJECT)
 
+enum {
+  CHANGED,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
+
 static void
 swfdec_audio_dispose (GObject *object)
 {
@@ -73,6 +80,18 @@ static void
 swfdec_audio_class_init (SwfdecAudioClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  /**
+   * SwfdecAudio::changed:
+   * @audio: the #SwfdecAudio affected
+   *
+   * This signal is emitted whenever the data of the @audio changed and cached
+   * data should be rerendered. This happens for example when the volume of the
+   * audio is changed by the Flash file.
+   */
+  signals[CHANGED] = g_signal_new ("changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
 
   object_class->dispose = swfdec_audio_dispose;
 }
@@ -168,6 +187,30 @@ swfdec_audio_set_actor (SwfdecAudio *audio, SwfdecActor *actor)
   audio->actor = actor;
 }
 
+/* FIXME: This function is pretty much a polling approach at sound matrix 
+ * handling and it would be much nicer if we had a "changed" signal on the
+ * matrices. But matrices can't emit signals...
+ */
+void
+swfdec_audio_update_matrix (SwfdecAudio *audio)
+{
+  SwfdecSoundMatrix sound;
+
+  g_return_if_fail (SWFDEC_IS_AUDIO (audio));
+
+  if (audio->actor) {
+    swfdec_sound_matrix_multiply (&sound, &audio->actor->sound_matrix,
+	&audio->player->priv->sound_matrix);
+  } else if (audio->player) {
+    sound = audio->player->priv->sound_matrix;
+  }
+  if (swfdec_sound_matrix_is_equal (&sound, &audio->matrix))
+    return;
+
+  audio->matrix = sound;
+  g_signal_emit (audio, signals[CHANGED], 0);
+}
+
 /**
  * swfdec_audio_render:
  * @audio: a #SwfdecAudio
@@ -198,15 +241,7 @@ swfdec_audio_render (SwfdecAudio *audio, gint16 *dest,
 
   klass = SWFDEC_AUDIO_GET_CLASS (audio);
   rendered = klass->render (audio, dest, start_offset, n_samples);
-  if (audio->actor) {
-    SwfdecSoundMatrix sound;
-
-    swfdec_sound_matrix_multiply (&sound, &audio->actor->sound_matrix,
-	&audio->player->priv->sound_matrix);
-    swfdec_sound_matrix_apply (&sound, dest, rendered);
-  } else if (audio->player) {
-    swfdec_sound_matrix_apply (&audio->player->priv->sound_matrix, dest, rendered);
-  }
+  swfdec_sound_matrix_apply (&audio->matrix, dest, rendered);
 
   return rendered;
 }

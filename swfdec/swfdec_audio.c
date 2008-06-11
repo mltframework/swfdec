@@ -159,7 +159,7 @@ swfdec_audio_remove (SwfdecAudio *audio)
  *          then the number of frames isn't known yet.
  **/
 gsize
-swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
+swfdec_audio_iterate (SwfdecAudio *audio, gsize n_samples)
 {
   SwfdecAudioClass *klass;
 

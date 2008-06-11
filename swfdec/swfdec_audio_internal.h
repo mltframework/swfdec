@@ -47,9 +47,9 @@ struct _SwfdecAudio {
 struct _SwfdecAudioClass {
   GObjectClass		object_class;
 
-  guint			(* iterate)	  		(SwfdecAudio *		audio,
+  gsize			(* iterate)	  		(SwfdecAudio *		audio,
 							 gsize			n_samples);
-  guint			(* render)			(SwfdecAudio *		audio,
+  gsize			(* render)			(SwfdecAudio *		audio,
 							 gint16 *		dest,
 							 gsize			start, 
 							 gsize			n_samples);

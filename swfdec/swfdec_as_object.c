@@ -978,9 +978,10 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
  * function does not check variables that are available via an overwritten get 
  * function of the object's class.
  *
- * Returns: %TRUE if the @object contains the given @variable
+ * Returns: the object in the prototype chain that contains @variable or %NULL
+ *          if the @object does not contain this variable.
  **/
-gboolean
+SwfdecAsObject *
 swfdec_as_object_has_variable (SwfdecAsObject *object, const char *variable)
 {
   guint i;
@@ -992,11 +993,11 @@ swfdec_as_object_has_variable (SwfdecAsObject *object, const char *variable)
     var = swfdec_as_object_hash_lookup (object, variable);
     if (var) {
       /* FIXME: propflags? */
-      return TRUE;
+      return object;
     }
     object = swfdec_as_object_get_prototype_internal (object);
   }
-  return FALSE;
+  return NULL;
 }
 
 /**

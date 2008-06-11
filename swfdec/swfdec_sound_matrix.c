@@ -50,10 +50,10 @@ swfdec_sound_matrix_set_pan (SwfdecSoundMatrix *sound, int pan)
 
   if (pan > 0) {
     sound->rr = 100;
-    sound->ll = 100 + pan;
+    sound->ll = 100 - pan;
   } else {
     sound->ll = 100;
-    sound->rr = 100 - pan;
+    sound->rr = 100 + pan;
   }
 }
 

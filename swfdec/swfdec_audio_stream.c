@@ -85,7 +85,8 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
   SwfdecBuffer *buffer;
 
   g_assert (start < G_MAXINT);
-  SWFDEC_LOG ("stream %p rendering offset %u, samples %u", stream, start, n_samples);
+  SWFDEC_LOG ("stream %p rendering offset %"G_GSIZE_FORMAT", samples %"G_GSIZE_FORMAT,
+      stream, start, n_samples);
   swfdec_audio_stream_require (stream, start + n_samples);
   if (stream->queue_size <= start)
     return 0;

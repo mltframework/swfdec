@@ -172,7 +172,7 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
     guint skip;
     skip = 4 * event->start_sample;
     if (skip >= event->decoded->length) {
-      SWFDEC_WARNING ("start sample %u > total number of samples %"G_GSIZE_FORMAT,
+      SWFDEC_WARNING ("start sample %"G_GSIZE_FORMAT" > total number of samples %"G_GSIZE_FORMAT,
 	  event->start_sample, event->decoded->length / 4);
       swfdec_buffer_unref (event->decoded);
       event->decoded = swfdec_buffer_new (0);
@@ -187,7 +187,7 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
     guint keep;
     keep = 4 * (event->stop_sample - event->start_sample);
     if (keep > event->decoded->length) {
-      SWFDEC_WARNING ("stop sample %u outside of decoded number of samples %"G_GSIZE_FORMAT,
+      SWFDEC_WARNING ("stop sample %"G_GSIZE_FORMAT" outside of decoded number of samples %"G_GSIZE_FORMAT,
 	  event->stop_sample, event->decoded->length / 4 +
 	  event->start_sample);
     } else if (keep < event->decoded->length) {
@@ -198,7 +198,7 @@ swfdec_audio_event_decode (SwfdecAudioEvent *event)
     }
   }
   event->n_samples = event->decoded->length / 4;
-  SWFDEC_LOG ("total 44100Hz samples: %u", event->n_samples);
+  SWFDEC_LOG ("total 44100Hz samples: %"G_GSIZE_FORMAT, event->n_samples);
 }
 
 static SwfdecAudioEvent *
@@ -302,8 +302,8 @@ swfdec_audio_event_new_from_chunk (SwfdecPlayer *player, SwfdecSoundChunk *chunk
   event->n_envelopes = chunk->n_envelopes;
   if (event->n_envelopes)
     event->envelope = g_memdup (chunk->envelope, sizeof (SwfdecSoundEnvelope) * event->n_envelopes);
-  SWFDEC_DEBUG ("playing sound %d from offset %d now", SWFDEC_CHARACTER (event->sound)->id,
-      event->start_sample);
+  SWFDEC_DEBUG ("playing sound %d from offset %"G_GSIZE_FORMAT" now", 
+      SWFDEC_CHARACTER (event->sound)->id, event->start_sample);
   swfdec_audio_add (SWFDEC_AUDIO (event), player);
 
   return SWFDEC_AUDIO (event);

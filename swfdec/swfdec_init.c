@@ -22,6 +22,7 @@
 #endif
 
 #include <errno.h>
+#include <stdlib.h>
 #ifdef HAVE_GST
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>

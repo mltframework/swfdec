@@ -55,6 +55,8 @@ swfdec_sound_matrix_set_pan (SwfdecSoundMatrix *sound, int pan)
     sound->ll = 100;
     sound->rr = 100 + pan;
   }
+  sound->lr = 0;
+  sound->rl = 0;
 }
 
 gboolean

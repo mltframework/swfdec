@@ -380,6 +380,8 @@ swfdec_resource_mark (SwfdecAsObject *object)
   }
   if (resource->sandbox)
     swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->sandbox));
+  if (resource->target)
+    swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->target));
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_resource_parent_class)->mark (object);
 }

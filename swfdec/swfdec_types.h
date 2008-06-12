@@ -50,6 +50,7 @@ typedef struct _SwfdecShapeVec SwfdecShapeVec;
 typedef struct _SwfdecRect SwfdecRect;
 typedef struct _SwfdecResource SwfdecResource;
 typedef struct _SwfdecRootSprite SwfdecRootSprite;
+typedef struct _SwfdecSandbox SwfdecSandbox;
 typedef struct _SwfdecScriptable SwfdecScriptable;
 typedef struct _SwfdecSound SwfdecSound;
 typedef struct _SwfdecSoundChunk SwfdecSoundChunk;

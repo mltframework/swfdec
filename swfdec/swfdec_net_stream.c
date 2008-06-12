@@ -570,14 +570,13 @@ swfdec_net_stream_load (SwfdecPlayer *player, gboolean allowed, gpointer streamp
 }
 
 void
-swfdec_net_stream_set_url (SwfdecNetStream *stream, SwfdecSandbox *sandbox, const char *url_string)
+swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url_string)
 {
   SwfdecPlayer *player;
   SwfdecAsContext *cx;
-  SwfdecURL *url;
 
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
-  g_return_if_fail (SWFDEC_IS_SANDBOX (sandbox));
+  g_return_if_fail (url_string != NULL);
 
   cx = SWFDEC_AS_OBJECT (stream)->context;
   player = SWFDEC_PLAYER (cx);
@@ -588,52 +587,9 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, SwfdecSandbox *sandbox, cons
     return;
   }
   stream->requested_url = g_strdup (url_string);
-  stream->sandbox = sandbox;
-#if 0
-  if (swfdec_url_path_is_relative (url_string)) {
-    swfdec_net_stream_load (player, TRUE, stream);
-    return;
-  }
-#endif
-  url = swfdec_player_create_url (player, url_string);
-  if (url == NULL) {
-    swfdec_net_stream_load (player, FALSE, stream);
-    return;
-  }
-  if (swfdec_url_is_local (url)) {
-    swfdec_net_stream_load (player, 
-	sandbox->type == SWFDEC_SANDBOX_LOCAL_TRUSTED ||
-	sandbox->type == SWFDEC_SANDBOX_LOCAL_FILE, stream);
-  } else {
-    switch (sandbox->type) {
-      case SWFDEC_SANDBOX_REMOTE:
-	if (swfdec_url_host_equal(url, sandbox->url)) {
-	  swfdec_net_stream_load (player, TRUE, stream);
-	  break;
-	}
-	/* fall through */
-      case SWFDEC_SANDBOX_LOCAL_NETWORK:
-      case SWFDEC_SANDBOX_LOCAL_TRUSTED:
-	{
-	  SwfdecURL *load_url = swfdec_url_new_components (
-	      swfdec_url_get_protocol (url), swfdec_url_get_host (url), 
-	      swfdec_url_get_port (url), "crossdomain.xml", NULL);
-	  swfdec_player_allow_or_load (player, url, load_url,
-	    swfdec_net_stream_load, stream);
-	  swfdec_url_free (load_url);
-	}
-	break;
-      case SWFDEC_SANDBOX_LOCAL_FILE:
-	swfdec_net_stream_load (player, FALSE, stream);
-	break;
-      case SWFDEC_SANDBOX_NONE:
-      default:
-	g_assert_not_reached ();
-	break;
-    }
-  }
+  stream->sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
 
-  swfdec_url_free (url);
+  swfdec_player_load_default (player, url_string, swfdec_net_stream_load, stream);
 }
 
 void

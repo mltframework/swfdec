@@ -51,7 +51,7 @@ swfdec_net_stream_play (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, Sw
   const char *url;
 
   url = swfdec_as_value_to_string (cx, &argv[0]);
-  swfdec_net_stream_set_url (stream, SWFDEC_SANDBOX (cx->global), url);
+  swfdec_net_stream_set_url (stream, url);
   swfdec_net_stream_set_playing (stream, TRUE);
 }
 

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -31,6 +31,7 @@
 #include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_sandbox.h"
 #include "swfdec_xml.h"
 #include "swfdec_xml_node.h"
 
@@ -356,5 +357,59 @@ swfdec_player_allow_or_load (SwfdecPlayer *player, const SwfdecURL *url,
 
   file = priv->loading_policy_files->data;
   file->requests = g_slist_append (file->requests, request);
+}
+
+void
+swfdec_player_load_default (SwfdecPlayer *player, const char *url_string,
+    SwfdecPolicyFunc func, gpointer data)
+{
+  SwfdecSandbox *sandbox;
+  SwfdecURL *url;
+
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (url_string != NULL);
+  g_return_if_fail (func);
+
+  sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
+  g_assert (sandbox);
+
+  url = swfdec_player_create_url (player, url_string);
+  if (url == NULL) {
+    func (player, FALSE, data);
+    return;
+  }
+  if (swfdec_url_is_local (url)) {
+    func (player, 
+	sandbox->type == SWFDEC_SANDBOX_LOCAL_TRUSTED ||
+	sandbox->type == SWFDEC_SANDBOX_LOCAL_FILE, data);
+  } else {
+    switch (sandbox->type) {
+      case SWFDEC_SANDBOX_REMOTE:
+	if (swfdec_url_host_equal(url, sandbox->url)) {
+	  func (player, TRUE, data);
+	  break;
+	}
+	/* fall through */
+      case SWFDEC_SANDBOX_LOCAL_NETWORK:
+      case SWFDEC_SANDBOX_LOCAL_TRUSTED:
+	{
+	  SwfdecURL *load_url = swfdec_url_new_components (
+	      swfdec_url_get_protocol (url), swfdec_url_get_host (url), 
+	      swfdec_url_get_port (url), "crossdomain.xml", NULL);
+	  swfdec_player_allow_or_load (player, url, load_url, func, data);
+	  swfdec_url_free (load_url);
+	}
+	break;
+      case SWFDEC_SANDBOX_LOCAL_FILE:
+	func (player, FALSE, data);
+	break;
+      case SWFDEC_SANDBOX_NONE:
+      default:
+	g_assert_not_reached ();
+	break;
+    }
+  }
+
+  swfdec_url_free (url);
 }
 

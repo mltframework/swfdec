@@ -168,6 +168,7 @@ libswfdec_source_files = \
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
   	$(libswfdec_source_files) \
+	swfdec_asnative.c \
 	swfdec_enums.c \
 	swfdec_marshal.c
 
@@ -321,7 +322,7 @@ EXTRA_DIST = \
 	swfdec_marshal.list
 
 BUILT_SOURCES = \
-	swfdec_asnative.h \
+	swfdec_asnative.c \
 	swfdec_as_strings.h \
 	swfdec_enums.c \
 	swfdec_enums.h \
@@ -331,7 +332,7 @@ BUILT_SOURCES = \
 CLEANFILES = \
 	$(BUILT_SOURCES)
 
-swfdec_asnative.h: $(libswfdec_source_files)
+swfdec_asnative.c: $(libswfdec_source_files)
 	(cd $(srcdir) \
 	  && echo "#include \"swfdec_as_types.h\"" \
 	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) void func (SwfdecAsContext *cx, \\" \
@@ -343,7 +344,7 @@ swfdec_asnative.h: $(libswfdec_source_files)
 	  && echo "#undef SWFDEC_AS_NATIVE" \
 	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) SWFDEC_AS_CONSTRUCTOR(x,y,func,NULL)" \
 	  && echo "#define SWFDEC_AS_CONSTRUCTOR(x,y,func,type) { x, y, func, G_STRINGIFY (func), type }," \
-	  && echo "static const struct { guint x, y; SwfdecAsNative func; const char *name; GType (* get_type) (void); } native_funcs[] = {" \
+	  && echo "const struct { guint x, y; SwfdecAsNative func; const char *name; GType (* get_type) (void); } native_funcs[] = {" \
 	  && grep -he "^SWFDEC_AS_CONSTRUCTOR" $(libswfdec_source_files) \
 	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_source_files) \
 	  && echo "  { 0, 0, NULL }" \
@@ -351,7 +352,7 @@ swfdec_asnative.h: $(libswfdec_source_files)
 	  && echo "#undef SWFDEC_AS_CONSTRUCTOR" \
 	  && echo "#undef SWFDEC_AS_NATIVE" \
 	 ) >> xgen-san \
-	&& (cmp -s xgen-san swfdec_asnative.h || cp xgen-san swfdec_asnative.h) \
+	&& (cmp -s xgen-san swfdec_asnative.c || cp xgen-san swfdec_asnative.c) \
 	&& rm -f xgen-san
 
 swfdec_marshal.h: swfdec_marshal.list Makefile

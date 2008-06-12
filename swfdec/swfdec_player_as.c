@@ -35,10 +35,6 @@
 #include "swfdec_interval.h"
 #include "swfdec_as_frame_internal.h"
 
-/* FIXME: to avoid duplicate definitions */
-#undef SWFDEC_AS_NATIVE
-#define SWFDEC_AS_NATIVE(x, y, func)
-
 /*** INTERVALS ***/
 
 static void

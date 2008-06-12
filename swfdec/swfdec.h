@@ -22,6 +22,7 @@
 #ifndef __SWFDEC_H__
 #define __SWFDEC_H__
 
+#include <swfdec/swfdec_as_array.h>
 #include <swfdec/swfdec_as_context.h>
 #include <swfdec/swfdec_as_debugger.h>
 #include <swfdec/swfdec_as_frame.h>

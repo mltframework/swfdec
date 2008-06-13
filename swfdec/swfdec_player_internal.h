@@ -255,10 +255,15 @@ SwfdecSpriteMovie *
 						(SwfdecPlayer *		player,
 						 SwfdecResource *	resource,
 						 int			level);
-void		swfdec_player_launch		(SwfdecPlayer *         player,
+#define swfdec_player_launch(player,url,target,data) \
+  swfdec_player_launch_with_headers ((player), (url), (target), (data), 0, NULL, NULL)
+void		swfdec_player_launch_with_headers (SwfdecPlayer *	player,
 						 const char *		url,
 						 const char *		target,
-						 SwfdecBuffer *		data);
+						 SwfdecBuffer *		data,
+						 guint			header_count,
+						 const char **		header_names,
+						 const char **		header_values);
 void		swfdec_player_stage_to_global	(SwfdecPlayer *		player,
 						 double *		x,
 						 double *		y);

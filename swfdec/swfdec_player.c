@@ -2280,9 +2280,11 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    * @player: the #SwfdecPlayer affected
    * @url: URL to open
    * @target: target to load the URL into
-   * @data: optional data to pass on with the request. Will be of mime type
-   *        application/x-www-form-urlencoded. Can be %NULL indicating no data
-   *        should be passed.
+   * @data: optional data to pass on with the request. Can be %NULL indicating
+   *        no data should be passed.
+   * @header_count: number of custom HTTP headers to be sent
+   * @header_names: names of the custom HTTP headers. %NULL terminated
+   * @header_values: values of the custom HTTP headers. %NULL terminated
    *
    * Emitted whenever the @player encounters an URL that should be loaded into 
    * a target the Flash player does not recognize. In most cases this happens 
@@ -2291,8 +2293,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    * The effect of calling any swfdec functions on the emitting @player is undefined.
    */
   signals[LAUNCH] = g_signal_new ("launch", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING_BOXED,
-      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_STRING, SWFDEC_TYPE_BUFFER);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING_BOXED_UINT_BOXED_BOXED,
+      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_STRING, SWFDEC_TYPE_BUFFER, G_TYPE_UINT, G_TYPE_STRV, G_TYPE_STRV);
   /**
    * SwfdecPlayer::missing-plugins:
    * @player: the #SwfdecPlayer missing plugins
@@ -2538,19 +2540,27 @@ swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
 }
 
 void
-swfdec_player_launch (SwfdecPlayer *player, const char *url,
-    const char *target, SwfdecBuffer *data)
+swfdec_player_launch_with_headers (SwfdecPlayer *player, const char *url,
+    const char *target, SwfdecBuffer *data, guint header_count,
+    const char **header_names, const char **header_values)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (url != NULL);
   g_return_if_fail (target != NULL);
+  g_return_if_fail (header_count == 0 || header_names != NULL);
+  g_return_if_fail (header_count == 0 || header_values != NULL);
+  g_return_if_fail (header_names == NULL ||
+      header_names[header_count] == NULL);
+  g_return_if_fail (header_values == NULL ||
+      header_values[header_count] == NULL);
 
   if (!g_ascii_strncasecmp (url, "FSCommand:", strlen ("FSCommand:"))) {
     const char *command = url + strlen ("FSCommand:");
     g_signal_emit (player, signals[FSCOMMAND], 0, command, target);
     return;
   }
-  g_signal_emit (player, signals[LAUNCH], 0, url, target, data);
+  g_signal_emit (player, signals[LAUNCH], 0, url, target, data, header_count,
+      header_names, header_values);
 }
 
 void

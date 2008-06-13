@@ -370,7 +370,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_push (arr, &val);
     return;
   }
-  if (argc > 1) {
+  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1])) {
     swfdec_as_value_to_string (cx, &argv[0]);
     count = swfdec_as_value_to_integer (cx, &argv[1]);
   } else {
@@ -392,8 +392,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
     SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (cx, g_strndup (str, end - str)));
     swfdec_as_array_push (arr, &val);
-    if (count)
-      count--;
+    count--;
     str = end + 1;
   }
 }
@@ -428,7 +427,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_push (arr, &val);
     return;
   }
-  if (argc > 1)
+  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))
     count = swfdec_as_value_to_integer (cx, &argv[1]);
   else
     count = G_MAXINT;
@@ -451,8 +450,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
     SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (cx, g_strndup (str, end - str)));
     swfdec_as_array_push (arr, &val);
-    if (count)
-      count--;
+    count--;
     str = end + len;
   }
 }

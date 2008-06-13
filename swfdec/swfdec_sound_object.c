@@ -29,6 +29,7 @@
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_event.h"
+#include "swfdec_audio_load.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
@@ -57,6 +58,10 @@ swfdec_sound_object_dispose (GObject *object)
   if (sound->attached) {
     g_object_unref (sound->attached);
     sound->attached = NULL;
+  }
+  if (sound->load) {
+    g_object_unref (sound->load);
+    sound->load = NULL;
   }
 
   G_OBJECT_CLASS (swfdec_sound_object_parent_class)->dispose (object);
@@ -285,7 +290,17 @@ void
 swfdec_sound_object_loadSound (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Sound.loadSound");
+  SwfdecSoundObject *sound;
+  const char *url;
+  gboolean stream;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "sb", &url, &stream);
+
+  if (sound->load)
+    g_object_unref (sound->load);
+  sound->load = swfdec_load_sound_new (object, url);
+  if (stream)
+    sound->audio = swfdec_audio_load_new (SWFDEC_PLAYER (cx), sound->load);
 }
 
 SWFDEC_AS_NATIVE (500, 14, swfdec_sound_object_getBytesLoaded)

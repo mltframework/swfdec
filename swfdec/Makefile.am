@@ -38,6 +38,7 @@ libswfdec_source_files = \
 	swfdec_audio_decoder_uncompressed.c \
 	$(CODEC_FILES) \
 	swfdec_audio_event.c \
+	swfdec_audio_load.c \
 	swfdec_audio_flv.c \
 	swfdec_audio_stream.c \
 	swfdec_audio_swf_stream.c \
@@ -93,6 +94,7 @@ libswfdec_source_files = \
 	swfdec_key_as.c \
 	swfdec_load_object.c \
 	swfdec_load_object_as.c \
+	swfdec_load_sound.c \
 	swfdec_loader.c \
 	swfdec_loadvars_as.c \
 	swfdec_local_connection.c \
@@ -237,6 +239,7 @@ noinst_HEADERS = \
 	swfdec_audio_decoder_uncompressed.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \
+	swfdec_audio_load.h \
 	swfdec_audio_stream.h \
 	swfdec_audio_swf_stream.h \
 	swfdec_bits.h \
@@ -271,6 +274,7 @@ noinst_HEADERS = \
 	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_load_object.h \
+	swfdec_load_sound.h \
 	swfdec_loader_internal.h \
 	swfdec_marshal.h \
 	swfdec_morph_movie.h \

@@ -45,6 +45,7 @@ struct _SwfdecAudioStream
   GQueue *		queue;		/* all the samples we've decoded so far */
   gsize			queue_size;	/* size of queue in samples */
   gboolean		done;		/* no more data will arrive */
+  gboolean		buffering;	/* pull vfunc returned NULL */
 };
 
 struct _SwfdecAudioStreamClass

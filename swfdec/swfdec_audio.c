@@ -60,6 +60,7 @@ G_DEFINE_ABSTRACT_TYPE (SwfdecAudio, swfdec_audio, G_TYPE_OBJECT)
 
 enum {
   CHANGED,
+  NEW_DATA,
   LAST_SIGNAL
 };
 
@@ -90,6 +91,17 @@ swfdec_audio_class_init (SwfdecAudioClass *klass)
    * audio is changed by the Flash file.
    */
   signals[CHANGED] = g_signal_new ("changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
+  /**
+   * SwfdecAudio::new-data:
+   * @audio: the #SwfdecAudio affected
+   *
+   * This signal is emitted whenever new data was loaded into @audio. You want
+   * to listen to this signal when swfdec_audio_render() previously returned 
+   * less samples than you wanted to render.
+   */
+  signals[NEW_DATA] = g_signal_new ("new-data", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
       G_TYPE_NONE, 0);
 

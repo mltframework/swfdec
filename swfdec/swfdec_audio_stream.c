@@ -68,8 +68,10 @@ swfdec_audio_stream_require (SwfdecAudioStream *stream, guint n_samples)
     }
     /* otherwise get a new buffer from the decoder */
     buffer = klass->pull (stream);
-    if (buffer == NULL)
+    if (buffer == NULL) {
+      stream->buffering = TRUE;
       break;
+    }
     swfdec_audio_decoder_push (stream->decoder, buffer);
     swfdec_buffer_unref (buffer);
   }
@@ -118,6 +120,26 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
   return rendered - start;
 }
 
+static void
+swfdec_audio_stream_check_buffering (SwfdecAudioStream *stream)
+{
+  SwfdecAudioStreamClass *klass;
+  SwfdecBuffer *buffer;
+
+  if (!stream->buffering)
+    return;
+
+  klass = SWFDEC_AUDIO_STREAM_CLASS (stream);
+  buffer = klass->pull (stream);
+  if (buffer == NULL)
+    return;
+
+  swfdec_audio_decoder_push (stream->decoder, buffer);
+  swfdec_buffer_unref (buffer);
+  stream->buffering = FALSE;
+  g_signal_emit_by_name (stream, "new-data");
+}
+
 static gsize
 swfdec_audio_stream_iterate (SwfdecAudio *audio, gsize remove)
 {
@@ -125,6 +147,7 @@ swfdec_audio_stream_iterate (SwfdecAudio *audio, gsize remove)
   SwfdecBuffer *buffer;
   gsize samples, cur_samples;
 
+  swfdec_audio_stream_check_buffering (stream);
   swfdec_audio_stream_require (stream, remove);
   samples = MIN (remove, stream->queue_size);
 

@@ -259,6 +259,12 @@ swfdec_playback_stream_changed (SwfdecAudio *audio, Stream *stream)
 }
 
 static void
+swfdec_playback_stream_new_data (SwfdecAudio *audio, Stream *stream)
+{
+  swfdec_playback_stream_install_handlers (stream);
+}
+
+static void
 swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
 {
   Stream *stream;
@@ -325,6 +331,8 @@ swfdec_playback_stream_open (SwfdecPlayback *sound, SwfdecAudio *audio)
   sound->streams = g_list_prepend (sound->streams, stream);
   g_signal_connect (stream->audio, "changed", 
       G_CALLBACK (swfdec_playback_stream_changed), stream);
+  g_signal_connect (stream->audio, "new-data", 
+      G_CALLBACK (swfdec_playback_stream_new_data), stream);
   swfdec_playback_stream_start (stream);
   return;
 
@@ -341,6 +349,8 @@ swfdec_playback_stream_close (Stream *stream)
   stream->sound->streams = g_list_remove (stream->sound->streams, stream);
   g_signal_handlers_disconnect_by_func (stream->audio, 
       swfdec_playback_stream_changed, stream);
+  g_signal_handlers_disconnect_by_func (stream->audio, 
+      swfdec_playback_stream_new_data, stream);
   g_object_unref (stream->audio);
   g_free (stream);
 }

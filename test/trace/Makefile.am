@@ -3305,6 +3305,15 @@ EXTRA_DIST = \
 	string-split-6.swf.trace \
 	string-split-7.swf \
 	string-split-7.swf.trace \
+	String-split-count-values-5.swf \
+	String-split-count-values-5.swf.trace \
+	String-split-count-values-6.swf \
+	String-split-count-values-6.swf.trace \
+	String-split-count-values-7.swf \
+	String-split-count-values-7.swf.trace \
+	String-split-count-values-8.swf \
+	String-split-count-values-8.swf.trace \
+	String-split-count-values.as \
 	string-split-empty.as \
 	string-split-empty-5.swf \
 	string-split-empty-5.swf.trace \

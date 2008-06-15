@@ -72,7 +72,7 @@ swfdec_load_sound_mp3_parse_id3v2 (SwfdecLoadSound *sound, SwfdecBufferQueue *qu
   if (buffer == NULL)
     return FALSE;
   SWFDEC_FIXME ("implement ID3v2 parsing");
-  SWFDEC_LOG ("%u bytes ID3v2", buffer->length);
+  SWFDEC_LOG ("%"G_GSIZE_FORMAT" bytes ID3v2", buffer->length);
   swfdec_buffer_unref (buffer);
   return TRUE;
 

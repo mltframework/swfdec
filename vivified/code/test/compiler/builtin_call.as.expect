@@ -1,0 +1,48 @@
+asm {
+  pool "x", "y"
+  push pool 0
+  get_variable
+  ascii_to_char
+  trace
+  push pool 0
+  get_variable
+  push pool 1
+  get_variable
+  string_add
+  trace
+  push pool 0
+  get_variable
+  get_variable
+  trace
+  get_time
+  trace
+  push pool 0
+  get_variable
+  to_integer
+  trace
+  push pool 0
+  get_variable
+  string_length
+  trace
+  push pool 0
+  get_variable
+  to_number
+  trace
+  push pool 0
+  get_variable
+  char_to_ascii
+  trace
+  push pool 0
+  get_variable
+  random
+  trace
+  push pool 0
+  get_variable
+  target_path
+  trace
+  push pool 0
+  get_variable
+  type_of
+  trace
+  end
+}

@@ -54,6 +54,8 @@ EXTRA_DIST = \
 	automatic_semicolon.as.expect \
 	bitwise_not.as \
 	bitwise_not.as.expect \
+	builtin_call.as \
+	builtin_call.as.expect \
 	builtin_statement.as \
 	builtin_statement.as.expect \
 	break.as \

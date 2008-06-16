@@ -1862,61 +1862,10 @@ static ViviCodeValue *
 parse_function_expression (ParseData *data);
 
 static gboolean
-peek_member_expression (ParseData *data)
-{
-  return (peek_primary_expression (data) || peek_function_expression (data));
-}
-
-static ViviCodeValue *
-parse_member_expression (ParseData *data)
-{
-  ViviCodeValue *value;
-
-  vivi_parser_start_code_token (data);
-
-  if (peek_primary_expression (data)) {
-    value = parse_primary_expression (data);
-  } else if (peek_function_expression (data)) {
-    value = parse_function_expression (data);
-  } else {
-    vivi_parser_error_unexpected_or (data, ERROR_TOKEN_PRIMARY_EXPRESSION,
-	ERROR_TOKEN_FUNCTION_EXPRESSION, TOKEN_NONE);
-    value = vivi_code_undefined_new ();
-
-    vivi_parser_duplicate_code_token (data);
-    vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
-  }
-
-  while (TRUE) {
-    ViviCodeValue *tmp;
-
-    if (try_parse_token (data, TOKEN_BRACKET_LEFT)) {
-      ViviCodeValue *member = parse_expression (data);
-      tmp = value;
-      value = vivi_code_get_new (tmp, member);
-      g_object_unref (tmp);
-      g_object_unref (member);
-      parse_token (data, TOKEN_BRACKET_RIGHT);
-    } else if (try_parse_token (data, TOKEN_DOT)) {
-      tmp = value;
-      value = vivi_code_get_new_name (tmp, parse_identifier_value (data));
-      g_object_unref (tmp);
-    } else {
-      vivi_parser_end_code_token (data, NULL);
-      return value;
-    }
-
-    vivi_parser_duplicate_code_token (data);
-    vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
-  }
-
-  g_assert_not_reached ();
-}
-
-static gboolean
 peek_left_hand_side_expression (ParseData *data)
 {
-  return (peek_token (data, TOKEN_NEW) || peek_member_expression (data));
+  return (peek_token (data, TOKEN_NEW) || peek_primary_expression (data) ||
+      peek_function_expression (data));
 
 }
 
@@ -1948,29 +1897,58 @@ parse_left_hand_side_expression (ParseData *data)
 
   if (peek_builtin_call (data)) {
     value = parse_builtin_call (data);
+  } else if (peek_primary_expression (data)) {
+    value = parse_primary_expression (data);
+  } else if (peek_function_expression (data)) {
+    value = parse_function_expression (data);
   } else {
-    value = parse_member_expression (data);
+    vivi_parser_error_unexpected_or (data, ERROR_TOKEN_PRIMARY_EXPRESSION,
+	ERROR_TOKEN_FUNCTION_EXPRESSION, TOKEN_NONE);
+    value = vivi_code_undefined_new ();
+    vivi_parser_duplicate_code_token (data);
+    vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
   }
 
-  while (try_parse_token (data, TOKEN_PARENTHESIS_LEFT)) {
-    if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
-      parse_value_list (data, peek_assignment_expression,
-	  parse_assignment_expression, &arguments, TOKEN_COMMA);
-      parse_token (data, TOKEN_PARENTHESIS_RIGHT);
-    } else {
-      arguments = NULL;
-    }
+  while (TRUE) {
+    ViviCodeValue *tmp;
 
-    name = value;
-    value = vivi_parser_function_call_new (name);
-    g_object_unref (name);
-
-    if (arguments != NULL) {
-      for (i = 0; arguments[i] != NULL; i++) {
-	vivi_code_function_call_add_argument (VIVI_CODE_FUNCTION_CALL (value),
-	    arguments[i]);
+    if (try_parse_token (data, TOKEN_BRACKET_LEFT)) {
+      ViviCodeValue *member = parse_expression (data);
+      tmp = value;
+      value = vivi_code_get_new (tmp, member);
+      g_object_unref (tmp);
+      g_object_unref (member);
+      parse_token (data, TOKEN_BRACKET_RIGHT);
+    } else if (try_parse_token (data, TOKEN_DOT)) {
+      tmp = value;
+      value = vivi_code_get_new_name (tmp, parse_identifier_value (data));
+      g_object_unref (tmp);
+    } else if (try_parse_token (data, TOKEN_PARENTHESIS_LEFT)) {
+      if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+	parse_value_list (data, peek_assignment_expression,
+	    parse_assignment_expression, &arguments, TOKEN_COMMA);
+	parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+      } else {
+	arguments = NULL;
       }
-      free_value_list (arguments);
+
+      name = value;
+      value = vivi_parser_function_call_new (name);
+      g_object_unref (name);
+
+      if (arguments != NULL) {
+	for (i = 0; arguments[i] != NULL; i++) {
+	  vivi_code_function_call_add_argument (VIVI_CODE_FUNCTION_CALL (value),
+	      arguments[i]);
+	}
+	free_value_list (arguments);
+      }
+
+      vivi_parser_duplicate_code_token (data);
+      vivi_parser_end_code_token (data, VIVI_CODE_TOKEN (value));
+    } else {
+      vivi_parser_end_code_token (data, NULL);
+      return value;
     }
 
     vivi_parser_duplicate_code_token (data);

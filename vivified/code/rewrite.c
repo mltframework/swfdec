@@ -383,7 +383,7 @@ buffer_decode (SwfdecBuffer *buffer)
   swfdec_bots_put_u8 (bots, swfdec_bits_get_u8 (&bits));
   u = swfdec_bits_get_u32 (&bits);
   g_assert (u <= G_MAXINT32);
-  decoded = swfdec_bits_decompress (&bits, -1, u);
+  decoded = swfdec_bits_decompress (&bits, -1, u - 8);
   swfdec_buffer_unref (buffer);
   if (decoded == NULL)
     return NULL;

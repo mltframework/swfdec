@@ -28,6 +28,8 @@ EXTRA_DIST = \
 	asm_empty.as.expect \
 	asm_get_url2.as \
 	asm_get_url2.as.expect \
+	asm_if.as \
+	asm_if.as.expect \
 	asm_jump.as \
 	asm_jump.as.expect \
 	asm_label.as \

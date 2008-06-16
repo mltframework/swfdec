@@ -1,0 +1,6 @@
+asm {
+  if hello
+
+hello:
+  end
+}

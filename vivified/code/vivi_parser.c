@@ -31,6 +31,7 @@
 #include "vivi_code_and.h"
 #include "vivi_code_asm_code_default.h"
 #include "vivi_code_asm_get_url2.h"
+#include "vivi_code_asm_if.h"
 #include "vivi_code_asm_jump.h"
 #include "vivi_code_asm_pool.h"
 #include "vivi_code_asm_push.h"
@@ -1013,6 +1014,28 @@ parse_asm_store (ParseData *data)
 }
 
 static ViviCodeAsm *
+parse_asm_if (ParseData *data)
+{
+  ViviCodeAsm *code;
+  ViviCodeLabel *label;
+  const char *name;
+
+  name = parse_identifier_value (data);
+  label = vivi_parser_get_label (data, name);
+  if (label == NULL) {
+    label = VIVI_CODE_LABEL (vivi_code_label_new (name));
+    vivi_parser_add_waiting_label (data, label);
+  }
+
+  parse_automatic_semicolon (data);
+
+  code = vivi_code_asm_if_new (label);
+  g_object_unref (label);
+
+  return code;
+}
+
+static ViviCodeAsm *
 parse_asm_jump (ParseData *data)
 {
   ViviCodeAsm *code;
@@ -1299,6 +1322,7 @@ static const AsmStatement asm_statements[] = {
 #include "vivi_code_defaults.h"
 #undef DEFAULT_ASM
   { "get_url2", NULL, parse_asm_get_url2 },
+  { "if", NULL, parse_asm_if },
   { "jump", NULL, parse_asm_jump },
   { "pool", NULL, parse_asm_pool },
   { "push", NULL, parse_asm_push },
@@ -1337,6 +1361,8 @@ parse_asm_code (ParseData *data)
     identifier = g_strdup ("throw");
   } else if (try_parse_token (data, TOKEN_TRY)) {
     identifier = g_strdup ("try");
+  } else if (try_parse_token (data, TOKEN_IF)) {
+    identifier = g_strdup ("if");
   } else if (try_parse_token (data, TOKEN_IMPLEMENTS)) {
     identifier = g_strdup ("implements");
   } else if (try_parse_token (data, TOKEN_DELETE)) {
@@ -1419,6 +1445,7 @@ parse_asm_statement (ParseData *data)
     } while (peek_token (data, TOKEN_IDENTIFIER) ||
 	peek_token (data, TOKEN_THROW) ||
 	peek_token (data, TOKEN_TRY) ||
+	peek_token (data, TOKEN_IF) ||
 	peek_token (data, TOKEN_IMPLEMENTS) ||
 	peek_token (data, TOKEN_DELETE) ||
 	peek_token (data, TOKEN_RETURN) ||

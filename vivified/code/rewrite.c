@@ -169,68 +169,68 @@ static void
 sort_enumerate (ViviCodeAssembler *assembler)
 {
   guint i, j;
-  ViviCodeStatement *statement;
-  ViviCodeCompiler *compiler;
-  ViviCodeAssembler *asm2;
-
-  statement = vivi_parse_string (
-      "asm {"
-      "  push 0;"
-      "  init_array;"
-      "  store 0;"
-      "  pop;"
-
-      "read_start:"
-      "  push_duplicate;"
-      "  push undefined;"
-      "  equals2;"
-      "  if read_end;"
-
-      "  push 1, reg 0, 'push';"
-      "  call_method;"
-      "  pop;"
-      "  jump read_start;"
-
-      "read_end:"
-      "  pop;"
-
-      "  push 0, reg 0, 'sort';"
-      "  call_method;"
-      "  pop;"
-
-      "  push undefined;"
-      "write_start:"
-      "  push 0, reg 0, 'length';"
-      "  get_member;"
-      "  equals2;"
-      "  if write_end;"
-
-      "  push 0, reg 0, 'pop';"
-      "  call_method;"
-      "  jump write_start;"
-
-      "write_end:"
-      "}"
-      );
-  g_assert (statement);
-  compiler = vivi_code_compiler_new (7); // FIXME: version
-  vivi_code_compiler_compile_statement (compiler, statement);
-  g_object_unref (statement);
-  asm2 = g_object_ref (vivi_code_compiler_get_assembler (compiler));
-  g_object_unref (compiler);
 
   for (i = 0; i < vivi_code_assembler_get_n_codes (assembler); i++) {
     ViviCodeAsm *code = vivi_code_assembler_get_code (assembler, i);
     if (VIVI_IS_CODE_ASM_ENUMERATE (code) ||
 	VIVI_IS_CODE_ASM_ENUMERATE2 (code)) {
+      ViviCodeStatement *statement;
+      ViviCodeCompiler *compiler;
+      ViviCodeAssembler *asm2;
+
+      // FIXME: compile once and use multiple times (problem is the labels)
+      statement = vivi_parse_string (
+	  "asm {"
+	  "  push 0;"
+	  "  init_array;"
+	  "  store 0;"
+	  "  pop;"
+
+	  "read_start:"
+	  "  push_duplicate;"
+	  "  push undefined;"
+	  "  equals2;"
+	  "  if read_end;"
+
+	  "  push 1, reg 0, 'push';"
+	  "  call_method;"
+	  "  pop;"
+	  "  jump read_start;"
+
+	  "read_end:"
+	  "  pop;"
+
+	  "  push 0, reg 0, 'sort';"
+	  "  call_method;"
+	  "  pop;"
+
+	  "  push undefined;"
+	  "write_start:"
+	  "  push 0, reg 0, 'length';"
+	  "  get_member;"
+	  "  equals2;"
+	  "  if write_end;"
+
+	  "  push 0, reg 0, 'pop';"
+	  "  call_method;"
+	  "  jump write_start;"
+
+	  "write_end:"
+	  "}"
+	  );
+      g_assert (statement);
+      compiler = vivi_code_compiler_new (7); // FIXME: version
+      vivi_code_compiler_compile_statement (compiler, statement);
+      g_object_unref (statement);
+      asm2 = g_object_ref (vivi_code_compiler_get_assembler (compiler));
+      g_object_unref (compiler);
       for (j = 0; j < vivi_code_assembler_get_n_codes (asm2); j++) {
 	vivi_code_assembler_insert_code (assembler, ++i,
 	    vivi_code_assembler_get_code (asm2, j));
       }
+      g_object_unref (asm2);
     }
   }
-
-  g_object_unref (asm2);
 }
 
 static void

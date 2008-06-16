@@ -57,6 +57,20 @@ ViviCodeAsm *		vivi_code_asm_ ## underscore_name ## _new	(void);
 #define VIVI_CODE_ASM_RANDOM_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_CODE_ASM_RANDOM, ViviCodeAsmRandomClass))
 #define VIVI_CODE_ASM_RANDOM_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_CODE_ASM_RANDOM, ViviCodeAsmRandomClass))
 
+#define VIVI_TYPE_CODE_ASM_ENUMERATE		     (vivi_code_asm_enumerate_get_type())
+#define VIVI_IS_CODE_ASM_ENUMERATE(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_ASM_ENUMERATE))
+#define VIVI_IS_CODE_ASM_ENUMERATE_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_CODE_ASM_ENUMERATE))
+#define VIVI_CODE_ASM_ENUMERATE(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_CODE_ASM_ENUMERATE, ViviCodeAsmEnumerate))
+#define VIVI_CODE_ASM_ENUMERATE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_CODE_ASM_ENUMERATE, ViviCodeAsmEnumerateClass))
+#define VIVI_CODE_ASM_ENUMERATE_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_CODE_ASM_ENUMERATE, ViviCodeAsmEnumerateClass))
+
+#define VIVI_TYPE_CODE_ASM_ENUMERATE2		     (vivi_code_asm_enumerate2_get_type())
+#define VIVI_IS_CODE_ASM_ENUMERATE2(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VIVI_TYPE_CODE_ASM_ENUMERATE2))
+#define VIVI_IS_CODE_ASM_ENUMERATE2_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), VIVI_TYPE_CODE_ASM_ENUMERATE2))
+#define VIVI_CODE_ASM_ENUMERATE2(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), VIVI_TYPE_CODE_ASM_ENUMERATE2, ViviCodeAsmEnumerate2))
+#define VIVI_CODE_ASM_ENUMERATE2_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), VIVI_TYPE_CODE_ASM_ENUMERATE2, ViviCodeAsmEnumerate2Class))
+#define VIVI_CODE_ASM_ENUMERATE2_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), VIVI_TYPE_CODE_ASM_ENUMERATE2, ViviCodeAsmEnumerate2Class))
+
 
 G_END_DECLS
 #endif

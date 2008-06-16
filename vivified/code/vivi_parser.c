@@ -389,14 +389,14 @@ vivi_parser_get_waiting_label (ParseData *data, const char *name)
   for (iter = data->level->waiting_labels; iter != NULL; iter = iter->next) {
     ViviCodeLabel *label = VIVI_CODE_LABEL (iter->data);
     if (g_str_equal (vivi_code_label_get_name (label), name))
-      return label;
+      return g_object_ref (label);
   }
 
   return NULL;
 }
 
 static void
-vivi_parser_remove_waiting_label (ParseData *data, const ViviCodeLabel *label)
+vivi_parser_remove_waiting_label (ParseData *data, ViviCodeLabel *label)
 {
   g_return_if_fail (data != NULL);
   g_return_if_fail (data->level != NULL);
@@ -404,6 +404,7 @@ vivi_parser_remove_waiting_label (ParseData *data, const ViviCodeLabel *label)
 
   data->level->waiting_labels =
     g_slist_remove (data->level->waiting_labels, label);
+  g_object_unref (label);
 }
 
 static ViviCodeLabel *
@@ -418,7 +419,7 @@ vivi_parser_get_label (ParseData *data, const char *name)
   for (iter = data->level->labels; iter != NULL; iter = iter->next) {
     ViviCodeLabel *label = VIVI_CODE_LABEL (iter->data);
     if (g_str_equal (vivi_code_label_get_name (label), name))
-      return label;
+      return g_object_ref (label);
   }
 
   return vivi_parser_get_waiting_label (data, name);

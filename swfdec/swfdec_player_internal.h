@@ -273,10 +273,12 @@ void		swfdec_player_add_missing_plugin(SwfdecPlayer *		player,
 
 /* in swfdec_policy_file.c */
 gboolean	swfdec_player_allow_now		(SwfdecPlayer *		player,
+						 const SwfdecURL *	from,
 						 const SwfdecURL *	url);
 void	      	swfdec_player_allow_or_load	(SwfdecPlayer *		player,
+						 const SwfdecURL *	from,
 						 const SwfdecURL *	url,
-						 const SwfdecURL *	load_url,
+						 const SwfdecURL *	crossdomain,
 						 SwfdecPolicyFunc	func,
 						 gpointer		data);
 void	      	swfdec_player_load_default	(SwfdecPlayer *		player,

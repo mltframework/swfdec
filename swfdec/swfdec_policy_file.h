@@ -58,6 +58,7 @@ SwfdecPolicyFile *swfdec_policy_file_new	(SwfdecPlayer *		player,
 						 const SwfdecURL *	url);
 gboolean	swfdec_policy_file_is_loading	(SwfdecPolicyFile *	file);
 gboolean	swfdec_policy_file_allow	(SwfdecPolicyFile *	file,
+						 const SwfdecURL *	from,
 						 const SwfdecURL *	url);
 
 

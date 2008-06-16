@@ -37,6 +37,7 @@
 
 typedef struct _SwfdecPolicyFileRequest SwfdecPolicyFileRequest;
 struct _SwfdecPolicyFileRequest {
+  SwfdecURL *	  	from;		/* URL we are supposed to check */
   SwfdecURL *	  	url;		/* URL we are supposed to check */
   SwfdecPolicyFunc	func;		/* function to call when we know if access is (not) allowed */
   gpointer		data;		/* data to pass to func */
@@ -45,6 +46,7 @@ struct _SwfdecPolicyFileRequest {
 static void
 swfdec_policy_file_request_free (SwfdecPolicyFileRequest *request)
 {
+  swfdec_url_free (request->from);
   swfdec_url_free (request->url);
   g_slice_free (SwfdecPolicyFileRequest, request);
 }
@@ -150,7 +152,7 @@ swfdec_policy_file_finished_loading (SwfdecPolicyFile *file, const char *text)
 
     for (walk = file->requests; walk; walk = walk->next) {
       SwfdecPolicyFileRequest *request = walk->data;
-      gboolean allow = swfdec_player_allow_now (file->player, request->url);
+      gboolean allow = swfdec_player_allow_now (file->player, request->from, request->url);
       request->func (file->player, allow, request->data);
       swfdec_policy_file_request_free (request);
     }
@@ -279,7 +281,7 @@ swfdec_policy_file_is_loading (SwfdecPolicyFile *file)
 }
 
 gboolean
-swfdec_policy_file_allow (SwfdecPolicyFile *file, const SwfdecURL *url)
+swfdec_policy_file_allow (SwfdecPolicyFile *file, const SwfdecURL *from, const SwfdecURL *url)
 {
   GSList *walk;
   gsize len;
@@ -287,9 +289,15 @@ swfdec_policy_file_allow (SwfdecPolicyFile *file, const SwfdecURL *url)
   const char *hostname;
 
   g_return_val_if_fail (SWFDEC_IS_POLICY_FILE (file), FALSE);
+  g_return_val_if_fail (from != NULL, FALSE);
   g_return_val_if_fail (url != NULL, FALSE);
 
-  hostname = swfdec_url_get_host (url);
+  /* first check if the policy file is allowing the following url */
+  if (!swfdec_url_is_parent (file->url, url))
+    return FALSE;
+
+  /* then try to find the from url in the allowed hosts */
+  hostname = swfdec_url_get_host (from);
   /* This is a hack that simplifies the following code. As the pattern can not
    * contain any ?, the only pattern that matches the string "?" is the pattern
    * "*" 
@@ -312,7 +320,7 @@ swfdec_policy_file_allow (SwfdecPolicyFile *file, const SwfdecURL *url)
 /*** PLAYER API ***/
 
 gboolean
-swfdec_player_allow_now (SwfdecPlayer *player, const SwfdecURL *url)
+swfdec_player_allow_now (SwfdecPlayer *player, const SwfdecURL *from, const SwfdecURL *url)
 {
   GSList *walk;
 
@@ -320,15 +328,15 @@ swfdec_player_allow_now (SwfdecPlayer *player, const SwfdecURL *url)
   g_return_val_if_fail (url != NULL, FALSE);
 
   for (walk = player->priv->policy_files; walk; walk = walk->next) {
-    if (swfdec_policy_file_allow (walk->data, url))
+    if (swfdec_policy_file_allow (walk->data, from, url))
       return TRUE;
   }
   return FALSE;
 }
 
 void
-swfdec_player_allow_or_load (SwfdecPlayer *player, const SwfdecURL *url, 
-    const SwfdecURL *load_url, SwfdecPolicyFunc func, gpointer data)
+swfdec_player_allow_or_load (SwfdecPlayer *player, const SwfdecURL *from,
+    const SwfdecURL *url, const SwfdecURL *crossdomain, SwfdecPolicyFunc func, gpointer data)
 {
   SwfdecPlayerPrivate *priv;
   SwfdecPolicyFileRequest *request;
@@ -338,12 +346,12 @@ swfdec_player_allow_or_load (SwfdecPlayer *player, const SwfdecURL *url,
   g_return_if_fail (url != NULL);
   g_return_if_fail (func);
 
-  if (swfdec_player_allow_now (player, url)) {
+  if (swfdec_player_allow_now (player, from, url)) {
     func (player, TRUE, data);
     return;
   }
-  if (load_url)
-    swfdec_policy_file_new (player, load_url);
+  if (crossdomain)
+    swfdec_policy_file_new (player, crossdomain);
 
   priv = player->priv;
   if (priv->loading_policy_files == NULL) {
@@ -351,6 +359,7 @@ swfdec_player_allow_or_load (SwfdecPlayer *player, const SwfdecURL *url,
     return;
   }
   request = g_slice_new (SwfdecPolicyFileRequest);
+  request->from = swfdec_url_copy (from);
   request->url = swfdec_url_copy (url);
   request->func = func;
   request->data = data;
@@ -396,7 +405,7 @@ swfdec_player_load_default (SwfdecPlayer *player, const char *url_string,
 	  SwfdecURL *load_url = swfdec_url_new_components (
 	      swfdec_url_get_protocol (url), swfdec_url_get_host (url), 
 	      swfdec_url_get_port (url), "crossdomain.xml", NULL);
-	  swfdec_player_allow_or_load (player, url, load_url, func, data);
+	  swfdec_player_allow_or_load (player, sandbox->url, url, load_url, func, data);
 	  swfdec_url_free (load_url);
 	}
 	break;

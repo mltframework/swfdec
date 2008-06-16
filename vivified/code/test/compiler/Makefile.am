@@ -90,6 +90,10 @@ EXTRA_DIST = \
 	for.as.expect \
 	for_local.as \
 	for_local.as.expect \
+	function_call.as \
+	function_call.as.expect \
+	function_call_arguments.as \
+	function_call_arguments.as.expect \
 	function_declaration.as \
 	function_declaration.as.expect \
 	function_expression.as \

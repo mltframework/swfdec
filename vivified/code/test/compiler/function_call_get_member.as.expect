@@ -1,0 +1,15 @@
+asm {
+  pool "test", "x"
+  push 0, pool 0
+  call_function
+  push pool 1
+  get_member
+  trace
+  push 0, pool 0
+  call_function
+  push pool 1
+  get_variable
+  get_member
+  trace
+  end
+}

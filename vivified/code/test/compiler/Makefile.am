@@ -94,6 +94,8 @@ EXTRA_DIST = \
 	function_call.as.expect \
 	function_call_arguments.as \
 	function_call_arguments.as.expect \
+	function_call_get_member.as \
+	function_call_get_member.as.expect \
 	function_call_returned.as \
 	function_call_returned.as.expect \
 	function_declaration.as \

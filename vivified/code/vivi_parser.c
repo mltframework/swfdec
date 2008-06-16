@@ -1660,10 +1660,15 @@ peek_builtin_call (ParseData *data)
   const char *identifier;
   const ViviParserValue *value;
 
-  if (!peek_token (data, TOKEN_IDENTIFIER))
-    return FALSE;
+  if (peek_token (data, TOKEN_TYPEOF)) {
+    identifier = "typeOf";
+  } else {
+    if (!peek_token (data, TOKEN_IDENTIFIER))
+      return FALSE;
 
-  identifier = vivi_parser_scanner_get_value (data->scanner, 1)->value.v_identifier;
+    identifier =
+      vivi_parser_scanner_get_value (data->scanner, 1)->value.v_identifier;
+  }
 
   value = vivi_parser_scanner_get_value (data->scanner, 2);
 
@@ -1685,7 +1690,11 @@ parse_builtin_call (ParseData *data)
   const char *identifier;
   ViviCodeValue *value, *argument;
 
-  identifier = parse_identifier_value (data);
+  if (try_parse_token (data, TOKEN_TYPEOF)) {
+    identifier = "typeOf";
+  } else {
+    identifier = parse_identifier_value (data);
+  }
 
   for (i = 0; i < G_N_ELEMENTS (builtin_calls); i++) {
     if (g_ascii_strcasecmp (identifier, builtin_calls[i].name) == 0)

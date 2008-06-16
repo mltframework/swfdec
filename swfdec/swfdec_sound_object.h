@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,8 @@
 #ifndef _SWFDEC_SOUND_OBJECT_H_
 #define _SWFDEC_SOUND_OBJECT_H_
 
+#include <swfdec/swfdec_audio.h>
+#include <swfdec/swfdec_load_sound.h>
 #include <swfdec/swfdec_movie.h>
 
 G_BEGIN_DECLS
@@ -41,6 +43,8 @@ struct _SwfdecSoundObject {
   SwfdecMovie *		target;		/* target movie or NULL on constructing error */
   gboolean		global;		/* TRUE if handling global sound */
   SwfdecSound *		attached;	/* sound that was attached */
+  SwfdecLoadSound *	load;		/* sound that is/was loaded using loadSound */
+  SwfdecAudio *		audio;		/* audio stream we started */
 };
 
 struct _SwfdecSoundObjectClass {

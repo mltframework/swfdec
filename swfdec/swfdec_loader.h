@@ -68,7 +68,7 @@ struct _SwfdecLoaderClass
 					 SwfdecPlayer *			player,
 					 const char *			url,
 					 SwfdecBuffer *			buffer,
-					 guint				header_count,
+					 guint				n_headers,
 					 const char **			header_names,
 					 const char **			header_values);
 };

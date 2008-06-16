@@ -43,16 +43,16 @@ struct _SwfdecAudioEvent
 
   /* static data */
   SwfdecSound *		sound;		      	/* sound we're playing */
-  guint			start_sample; 		/* sample at which to start playing */
-  guint			stop_sample;	      	/* first sample to not play anymore or 0 for playing all */
-  guint			n_loops;		/* amount of times this sample still needs to be played back */
+  gsize			start_sample; 		/* sample at which to start playing */
+  gsize			stop_sample;	      	/* first sample to not play anymore or 0 for playing all */
+  gsize			n_loops;		/* amount of times this sample still needs to be played back */
   guint			n_envelopes;		/* amount of points in the envelope */
   SwfdecSoundEnvelope *	envelope;		/* volume envelope or NULL if none */
   /* dynamic data */
   SwfdecBuffer *	decoded;		/* the decoded buffer we play back or NULL if failure */
-  guint			offset;			/* current offset in 44.1kHz */
-  guint			loop;			/* current loop we're in */
-  guint			n_samples;	      	/* length of decoded buffer in 44.1kHz samples - can be 0 */
+  gsize			offset;			/* current offset in 44.1kHz */
+  gsize			loop;			/* current loop we're in */
+  gsize			n_samples;	      	/* length of decoded buffer in 44.1kHz samples - can be 0 */
 };
 
 struct _SwfdecAudioEventClass

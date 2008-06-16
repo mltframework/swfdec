@@ -158,6 +158,7 @@ swfdec_actor_class_init (SwfdecActorClass *klass)
 static void
 swfdec_actor_init (SwfdecActor *actor)
 {
+  swfdec_sound_matrix_init_identity (&actor->sound_matrix);
 }
 
 static void

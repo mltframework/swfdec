@@ -144,7 +144,7 @@ gboolean	swfdec_as_object_get_variable_and_flags
 						 SwfdecAsValue *	value,
 						 guint *		flags,
 						 SwfdecAsObject **	pobject);
-gboolean	swfdec_as_object_has_variable	(SwfdecAsObject *	object,
+SwfdecAsObject *swfdec_as_object_has_variable	(SwfdecAsObject *	object,
 						 const char *		variable);
 SwfdecAsDeleteReturn
 		swfdec_as_object_delete_variable(SwfdecAsObject *	object,

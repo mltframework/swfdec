@@ -103,18 +103,18 @@ GType		swfdec_player_get_type		(void);
 
 SwfdecPlayer *	swfdec_player_new		(SwfdecAsDebugger *	debugger);
 
-gboolean	swfdec_player_is_initialized	(SwfdecPlayer *	player);
-glong		swfdec_player_get_next_event  	(SwfdecPlayer *	player);
-double		swfdec_player_get_rate		(SwfdecPlayer *	player);
-void		swfdec_player_get_default_size	(SwfdecPlayer *	player,
-						 guint *	width,
-						 guint *	height);
-void		swfdec_player_get_size		(SwfdecPlayer *	player,
-						 int *		width,
-						 int *		height);
-void		swfdec_player_set_size		(SwfdecPlayer *	player,
-						 int		width,
-						 int		height);
+gboolean	swfdec_player_is_initialized	(SwfdecPlayer *		player);
+glong		swfdec_player_get_next_event  	(SwfdecPlayer *		player);
+double		swfdec_player_get_rate		(SwfdecPlayer *		player);
+void		swfdec_player_get_default_size	(SwfdecPlayer *		player,
+						 guint *		width,
+						 guint *		height);
+void		swfdec_player_get_size		(SwfdecPlayer *		player,
+						 int *			width,
+						 int *			height);
+void		swfdec_player_set_size		(SwfdecPlayer *		player,
+						 int			width,
+						 int			height);
 guint		swfdec_player_get_background_color
 						(SwfdecPlayer *		player);
 SwfdecScaleMode	swfdec_player_get_scale_mode	(SwfdecPlayer *		player);
@@ -170,27 +170,27 @@ void		swfdec_player_render_with_renderer (SwfdecPlayer *	player,
 						 double			y,
 						 double			width,
 						 double			height);
-gulong		swfdec_player_advance		(SwfdecPlayer *	player,
-						 gulong		msecs);
-gboolean	swfdec_player_mouse_move	(SwfdecPlayer *	player, 
-						 double		x,
-						 double		y);
-gboolean	swfdec_player_mouse_press	(SwfdecPlayer *	player, 
-						 double		x,
-						 double		y,
-						 guint		button);
-gboolean	swfdec_player_mouse_release	(SwfdecPlayer *	player, 
-						 double		x,
-						 double		y,
-						 guint		button);
-gboolean	swfdec_player_key_press		(SwfdecPlayer *	player,
-						 guint		keycode,
-						 guint		character);
-gboolean	swfdec_player_key_release	(SwfdecPlayer *	player,
-						 guint		keycode,
-						 guint		character);
+gulong		swfdec_player_advance		(SwfdecPlayer *		player,
+						 gulong			msecs);
+gboolean	swfdec_player_mouse_move	(SwfdecPlayer *		player, 
+						 double			x,
+						 double			y);
+gboolean	swfdec_player_mouse_press	(SwfdecPlayer *		player, 
+						 double			x,
+						 double			y,
+						 guint			button);
+gboolean	swfdec_player_mouse_release	(SwfdecPlayer *		player, 
+						 double			x,
+						 double			y,
+						 guint			button);
+gboolean	swfdec_player_key_press		(SwfdecPlayer *		player,
+						 guint			keycode,
+						 guint			character);
+gboolean	swfdec_player_key_release	(SwfdecPlayer *		player,
+						 guint			keycode,
+						 guint			character);
 /* audio - see swfdec_audio.c */
-const GList *	swfdec_player_get_audio		(SwfdecPlayer *	player);
+const GList *	swfdec_player_get_audio		(SwfdecPlayer *		player);
 
 G_END_DECLS
 #endif

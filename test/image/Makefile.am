@@ -378,6 +378,15 @@ EXTRA_DIST = \
 	replace-shape-shape-6.swf.png \
 	replace-shape-shape-7.swf \
 	replace-shape-shape-7.swf.png \
+	setMask-matrices-5.swf \
+	setMask-matrices-5.swf.png \
+	setMask-matrices-6.swf \
+	setMask-matrices-6.swf.png \
+	setMask-matrices-7.swf \
+	setMask-matrices-7.swf.png \
+	setMask-matrices-8.swf \
+	setMask-matrices-8.swf.png \
+	setMask-matrices.as \
 	swfdec.jpg \
 	text-field-align-5.swf \
 	text-field-align-5.swf.png \

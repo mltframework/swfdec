@@ -38,6 +38,7 @@ libswfdec_source_files = \
 	swfdec_audio_decoder_uncompressed.c \
 	$(CODEC_FILES) \
 	swfdec_audio_event.c \
+	swfdec_audio_load.c \
 	swfdec_audio_flv.c \
 	swfdec_audio_stream.c \
 	swfdec_audio_swf_stream.c \
@@ -93,6 +94,7 @@ libswfdec_source_files = \
 	swfdec_key_as.c \
 	swfdec_load_object.c \
 	swfdec_load_object_as.c \
+	swfdec_load_sound.c \
 	swfdec_loader.c \
 	swfdec_loadvars_as.c \
 	swfdec_local_connection.c \
@@ -127,6 +129,7 @@ libswfdec_source_files = \
 	swfdec_shared_object.c \
 	swfdec_socket.c \
 	swfdec_sound.c \
+	swfdec_sound_matrix.c \
 	swfdec_sound_object.c \
 	swfdec_sprite.c \
 	swfdec_sprite_movie.c \
@@ -167,6 +170,7 @@ libswfdec_source_files = \
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
   	$(libswfdec_source_files) \
+	swfdec_asnative.c \
 	swfdec_enums.c \
 	swfdec_marshal.c
 
@@ -235,6 +239,7 @@ noinst_HEADERS = \
 	swfdec_audio_decoder_uncompressed.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \
+	swfdec_audio_load.h \
 	swfdec_audio_stream.h \
 	swfdec_audio_swf_stream.h \
 	swfdec_bits.h \
@@ -269,6 +274,7 @@ noinst_HEADERS = \
 	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_load_object.h \
+	swfdec_load_sound.h \
 	swfdec_loader_internal.h \
 	swfdec_marshal.h \
 	swfdec_morph_movie.h \
@@ -289,6 +295,7 @@ noinst_HEADERS = \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \
+	swfdec_sound_matrix.h \
 	swfdec_sound_object.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
@@ -319,7 +326,7 @@ EXTRA_DIST = \
 	swfdec_marshal.list
 
 BUILT_SOURCES = \
-	swfdec_asnative.h \
+	swfdec_asnative.c \
 	swfdec_as_strings.h \
 	swfdec_enums.c \
 	swfdec_enums.h \
@@ -329,7 +336,7 @@ BUILT_SOURCES = \
 CLEANFILES = \
 	$(BUILT_SOURCES)
 
-swfdec_asnative.h: $(libswfdec_source_files)
+swfdec_asnative.c: $(libswfdec_source_files)
 	(cd $(srcdir) \
 	  && echo "#include \"swfdec_as_types.h\"" \
 	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) void func (SwfdecAsContext *cx, \\" \
@@ -341,7 +348,7 @@ swfdec_asnative.h: $(libswfdec_source_files)
 	  && echo "#undef SWFDEC_AS_NATIVE" \
 	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) SWFDEC_AS_CONSTRUCTOR(x,y,func,NULL)" \
 	  && echo "#define SWFDEC_AS_CONSTRUCTOR(x,y,func,type) { x, y, func, G_STRINGIFY (func), type }," \
-	  && echo "static const struct { guint x, y; SwfdecAsNative func; const char *name; GType (* get_type) (void); } native_funcs[] = {" \
+	  && echo "const struct { guint x, y; SwfdecAsNative func; const char *name; GType (* get_type) (void); } native_funcs[] = {" \
 	  && grep -he "^SWFDEC_AS_CONSTRUCTOR" $(libswfdec_source_files) \
 	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_source_files) \
 	  && echo "  { 0, 0, NULL }" \
@@ -349,7 +356,7 @@ swfdec_asnative.h: $(libswfdec_source_files)
 	  && echo "#undef SWFDEC_AS_CONSTRUCTOR" \
 	  && echo "#undef SWFDEC_AS_NATIVE" \
 	 ) >> xgen-san \
-	&& (cmp -s xgen-san swfdec_asnative.h || cp xgen-san swfdec_asnative.h) \
+	&& (cmp -s xgen-san swfdec_asnative.c || cp xgen-san swfdec_asnative.c) \
 	&& rm -f xgen-san
 
 swfdec_marshal.h: swfdec_marshal.list Makefile

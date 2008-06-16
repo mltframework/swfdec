@@ -828,10 +828,11 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
   for (walk = priv->audio; walk; walk = walk->next) {
     SwfdecAudio *audio = walk->data;
 
-    if (audio->added)
-      continue;
-    g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
-    audio->added = TRUE;
+    swfdec_audio_update_matrix (audio);
+    if (!audio->added) {
+      g_signal_emit (player, signals[AUDIO_ADDED], 0, audio);
+      audio->added = TRUE;
+    }
   }
 
   /* emit missing-plugin signal for newly discovered plugins */
@@ -2352,6 +2353,8 @@ swfdec_player_init (SwfdecPlayer *player)
   cairo_matrix_init_scale (&priv->stage_to_global, 
       SWFDEC_TWIPS_SCALE_FACTOR, SWFDEC_TWIPS_SCALE_FACTOR);
   priv->global_to_stage = priv->stage_to_global;
+  cairo_matrix_invert (&priv->global_to_stage);
+  swfdec_sound_matrix_init_identity (&priv->sound_matrix);
 }
 
 void

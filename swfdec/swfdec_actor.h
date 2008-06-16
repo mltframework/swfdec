@@ -21,6 +21,7 @@
 #define _SWFDEC_ACTOR_H_
 
 #include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_sound_matrix.h>
 
 G_BEGIN_DECLS
 
@@ -44,6 +45,9 @@ struct _SwfdecActor
 
   SwfdecFlashBool	focusrect;		/* if we should draw a focus rectangle or not */
   guint			needs_matrix;		/* number of movies contained that need matrix updates */
+
+  /* sound */
+  SwfdecSoundMatrix	sound_matrix;		/* movie's sound matrix */
 };
 
 struct _SwfdecActorClass

@@ -68,24 +68,27 @@ swfdec_audio_stream_require (SwfdecAudioStream *stream, guint n_samples)
     }
     /* otherwise get a new buffer from the decoder */
     buffer = klass->pull (stream);
-    if (buffer == NULL)
+    if (buffer == NULL) {
+      stream->buffering = TRUE;
       break;
+    }
     swfdec_audio_decoder_push (stream->decoder, buffer);
     swfdec_buffer_unref (buffer);
   }
 }
 
-static guint
+static gsize
 swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
-    guint start, guint n_samples)
+    gsize start, gsize n_samples)
 {
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
   GList *walk;
-  guint samples, rendered, skip;
+  gsize samples, rendered, skip;
   SwfdecBuffer *buffer;
 
   g_assert (start < G_MAXINT);
-  SWFDEC_LOG ("stream %p rendering offset %u, samples %u", stream, start, n_samples);
+  SWFDEC_LOG ("stream %p rendering offset %"G_GSIZE_FORMAT", samples %"G_GSIZE_FORMAT,
+      stream, start, n_samples);
   swfdec_audio_stream_require (stream, start + n_samples);
   if (stream->queue_size <= start)
     return 0;
@@ -117,13 +120,36 @@ swfdec_audio_stream_render (SwfdecAudio *audio, gint16* dest,
   return rendered - start;
 }
 
-static guint
-swfdec_audio_stream_iterate (SwfdecAudio *audio, guint remove)
+static gboolean
+swfdec_audio_stream_check_buffering (SwfdecAudioStream *stream)
+{
+  SwfdecAudioStreamClass *klass;
+  SwfdecBuffer *buffer;
+
+  if (!stream->buffering || stream->done)
+    return FALSE;
+
+  klass = SWFDEC_AUDIO_STREAM_GET_CLASS (stream);
+  buffer = klass->pull (stream);
+  if (buffer == NULL)
+    return FALSE;
+
+  swfdec_audio_decoder_push (stream->decoder, buffer);
+  swfdec_buffer_unref (buffer);
+  stream->buffering = FALSE;
+  g_signal_emit_by_name (stream, "new-data");
+  return stream->queue_size == 0;
+}
+
+static gsize
+swfdec_audio_stream_iterate (SwfdecAudio *audio, gsize remove)
 {
   SwfdecAudioStream *stream = SWFDEC_AUDIO_STREAM (audio);
   SwfdecBuffer *buffer;
-  guint samples, cur_samples;
+  gsize samples, cur_samples;
 
+  if (swfdec_audio_stream_check_buffering (stream))
+    return G_MAXUINT;
   swfdec_audio_stream_require (stream, remove);
   samples = MIN (remove, stream->queue_size);
 

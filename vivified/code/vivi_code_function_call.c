@@ -139,10 +139,10 @@ vivi_code_function_call_compile_value (ViviCodeValue *value,
   vivi_code_compiler_compile_value (compiler, count);
   g_object_unref (count);
 
-  vivi_code_compiler_compile_value (compiler, call->name);
-
   if (call->value)
     vivi_code_compiler_compile_value (compiler, call->value);
+
+  vivi_code_compiler_compile_value (compiler, call->name);
 
   if (call->construct) {
     if (call->value) {

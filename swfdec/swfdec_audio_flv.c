@@ -112,18 +112,19 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
   return buffer;
 }
 
-static guint
+static gsize
 swfdec_audio_flv_render (SwfdecAudio *audio, gint16* dest,
-    guint start, guint n_samples)
+    gsize start, gsize n_samples)
 {
   SwfdecAudioFlv *flv = SWFDEC_AUDIO_FLV (audio);
   GList *walk;
-  guint samples, rendered;
+  gsize samples, rendered;
   SwfdecBuffer *buffer;
 
   g_assert (start < G_MAXINT);
   start += flv->playback_skip;
-  SWFDEC_LOG ("flv %p rendering offset %u, samples %u", flv, start, n_samples);
+  SWFDEC_LOG ("flv %p rendering offset %"G_GSIZE_FORMAT", samples %"G_GSIZE_FORMAT, 
+      flv, start, n_samples);
   walk = g_queue_peek_head_link (flv->playback_queue);
   for (rendered = 0; rendered < n_samples;) {
     if (walk) {
@@ -142,10 +143,10 @@ swfdec_audio_flv_render (SwfdecAudio *audio, gint16* dest,
 	continue;
       }
       samples -= start;
-      SWFDEC_LOG ("rendering %u samples, skipping %u",
+      SWFDEC_LOG ("rendering %"G_GSIZE_FORMAT" samples, skipping %"G_GSIZE_FORMAT,
 	  samples, start);
     } else {
-      SWFDEC_LOG ("rendering %u samples", samples);
+      SWFDEC_LOG ("rendering %"G_GSIZE_FORMAT" samples", samples);
     }
     samples = MIN (samples, n_samples - rendered);
     swfdec_sound_buffer_render (dest, buffer, start, samples);
@@ -156,8 +157,8 @@ swfdec_audio_flv_render (SwfdecAudio *audio, gint16* dest,
   return rendered;
 }
 
-static guint
-swfdec_audio_flv_iterate (SwfdecAudio *audio, guint remove)
+static gsize
+swfdec_audio_flv_iterate (SwfdecAudio *audio, gsize remove)
 {
   SwfdecAudioFlv *flv = SWFDEC_AUDIO_FLV (audio);
   SwfdecBuffer *buffer;

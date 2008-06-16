@@ -159,24 +159,6 @@ swfdec_audio_swf_stream_init (SwfdecAudioSwfStream *stream)
 {
 }
 
-static void
-check (SwfdecAudio *audio)
-{
-  guint length = 20000;
-  gint16 *data = g_new (gint16, 2 * length);
-  gint16 *compare = g_new (gint16, 2 * length);
-  guint i;
-
-  swfdec_audio_render (audio, compare, 0, length);
-  for (i = 1; i < length; i++) {
-    swfdec_audio_render (audio, data, i, length - i);
-    g_assert (memcmp (data, compare + 2 * i, (length - i) * 4) == 0);
-  }
-
-  g_free (data);
-  g_free (compare);
-}
-
 SwfdecAudio *
 swfdec_audio_swf_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite,
     guint id)
@@ -210,7 +192,6 @@ swfdec_audio_swf_stream_new (SwfdecPlayer *player, SwfdecSprite *sprite,
 
 found:
   swfdec_audio_add (SWFDEC_AUDIO (stream), player);
-  check (SWFDEC_AUDIO (stream));
   return SWFDEC_AUDIO (stream);
 }
 

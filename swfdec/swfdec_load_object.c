@@ -202,7 +202,7 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
   }
   switch (load->sandbox->type) {
     case SWFDEC_SANDBOX_REMOTE:
-      if (swfdec_url_host_equal(url, swfdec_player_get_url (player))) {
+      if (swfdec_url_host_equal(url, load->sandbox->url)) {
 	swfdec_load_object_load (player, TRUE, load);
 	break;
       }
@@ -215,7 +215,7 @@ swfdec_load_object_request (gpointer objectp, gpointer playerp)
 	SwfdecURL *load_url = swfdec_url_new_components (
 	    swfdec_url_get_protocol (url), swfdec_url_get_host (url), 
 	    swfdec_url_get_port (url), "crossdomain.xml", NULL);
-	swfdec_player_allow_or_load (player, url, load_url,
+	swfdec_player_allow_or_load (player, load->sandbox->url, url, load_url,
 	  swfdec_load_object_load, load);
 	swfdec_url_free (load_url);
       }

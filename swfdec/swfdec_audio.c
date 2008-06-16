@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include "swfdec_audio_internal.h"
+#include "swfdec_actor.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 
@@ -57,11 +58,20 @@
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecAudio, swfdec_audio, G_TYPE_OBJECT)
 
+enum {
+  CHANGED,
+  NEW_DATA,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
+
 static void
 swfdec_audio_dispose (GObject *object)
 {
   SwfdecAudio *audio = SWFDEC_AUDIO (object);
 
+  g_assert (audio->actor == NULL);
   g_assert (audio->player == NULL);
 
   G_OBJECT_CLASS (swfdec_audio_parent_class)->dispose (object);
@@ -71,6 +81,29 @@ static void
 swfdec_audio_class_init (SwfdecAudioClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  /**
+   * SwfdecAudio::changed:
+   * @audio: the #SwfdecAudio affected
+   *
+   * This signal is emitted whenever the data of the @audio changed and cached
+   * data should be rerendered. This happens for example when the volume of the
+   * audio is changed by the Flash file.
+   */
+  signals[CHANGED] = g_signal_new ("changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
+  /**
+   * SwfdecAudio::new-data:
+   * @audio: the #SwfdecAudio affected
+   *
+   * This signal is emitted whenever new data was loaded into @audio. You want
+   * to listen to this signal when swfdec_audio_render() previously returned 
+   * less samples than you wanted to render.
+   */
+  signals[NEW_DATA] = g_signal_new ("new-data", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0);
 
   object_class->dispose = swfdec_audio_dispose;
 }
@@ -115,6 +148,7 @@ swfdec_audio_remove (SwfdecAudio *audio)
   if (audio->player != NULL) {
     SwfdecPlayerPrivate *priv = audio->player->priv;
     SWFDEC_INFO ("removing %s %p", G_OBJECT_TYPE_NAME (audio), audio);
+    swfdec_audio_set_actor (audio, NULL);
     priv->audio = g_list_remove (priv->audio, audio);
     if (audio->added) {
       g_signal_emit_by_name (audio->player, "audio-removed", audio);
@@ -136,8 +170,8 @@ swfdec_audio_remove (SwfdecAudio *audio)
  * Returns: maximum number of remaining frames. If G_MAXUINT is returned,
  *          then the number of frames isn't known yet.
  **/
-guint
-swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
+gsize
+swfdec_audio_iterate (SwfdecAudio *audio, gsize n_samples)
 {
   SwfdecAudioClass *klass;
 
@@ -147,6 +181,46 @@ swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
   klass = SWFDEC_AUDIO_GET_CLASS (audio);
   g_assert (klass->iterate);
   return klass->iterate (audio, n_samples);
+}
+
+void
+swfdec_audio_set_actor (SwfdecAudio *audio, SwfdecActor *actor)
+{
+  g_return_if_fail (SWFDEC_IS_AUDIO (audio));
+  g_return_if_fail (audio->player != NULL);
+  g_return_if_fail (actor == NULL || SWFDEC_IS_ACTOR (actor));
+
+  if (actor) {
+    g_object_ref (actor);
+  }
+  if (audio->actor) {
+    g_object_unref (audio->actor);
+  }
+  audio->actor = actor;
+}
+
+/* FIXME: This function is pretty much a polling approach at sound matrix 
+ * handling and it would be much nicer if we had a "changed" signal on the
+ * matrices. But matrices can't emit signals...
+ */
+void
+swfdec_audio_update_matrix (SwfdecAudio *audio)
+{
+  SwfdecSoundMatrix sound;
+
+  g_return_if_fail (SWFDEC_IS_AUDIO (audio));
+
+  if (audio->actor) {
+    swfdec_sound_matrix_multiply (&sound, &audio->actor->sound_matrix,
+	&audio->player->priv->sound_matrix);
+  } else if (audio->player) {
+    sound = audio->player->priv->sound_matrix;
+  }
+  if (swfdec_sound_matrix_is_equal (&sound, &audio->matrix))
+    return;
+
+  audio->matrix = sound;
+  g_signal_emit (audio, signals[CHANGED], 0);
 }
 
 /**
@@ -166,18 +240,22 @@ swfdec_audio_iterate (SwfdecAudio *audio, guint n_samples)
  *          stream is still loading, this number may be lower. It indicates 
  *          that no more samples are available.
  **/
-guint
+gsize
 swfdec_audio_render (SwfdecAudio *audio, gint16 *dest, 
-    guint start_offset, guint n_samples)
+    gsize start_offset, gsize n_samples)
 {
   SwfdecAudioClass *klass;
+  guint rendered;
 
   g_return_val_if_fail (SWFDEC_IS_AUDIO (audio), 0);
   g_return_val_if_fail (dest != NULL, 0);
   g_return_val_if_fail (n_samples > 0, 0);
 
   klass = SWFDEC_AUDIO_GET_CLASS (audio);
-  return klass->render (audio, dest, start_offset, n_samples);
+  rendered = klass->render (audio, dest, start_offset, n_samples);
+  swfdec_sound_matrix_apply (&audio->matrix, dest, rendered);
+
+  return rendered;
 }
 
 /*** SWFDEC_AUDIO_FORMAT ***/

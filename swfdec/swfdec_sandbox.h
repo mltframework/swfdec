@@ -23,10 +23,11 @@
 #include <swfdec/swfdec_as_object.h>
 #include <swfdec/swfdec_url.h>
 #include <swfdec/swfdec_player.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecSandbox SwfdecSandbox;
+//typedef struct _SwfdecSandbox SwfdecSandbox;
 typedef struct _SwfdecSandboxClass SwfdecSandboxClass;
 
 typedef enum {

@@ -285,9 +285,6 @@ void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans,
 						 const SwfdecRect *	inval);
-cairo_pattern_t *swfdec_movie_mask		(cairo_t *		cr,
-						 SwfdecMovie *		movie,
-						 const SwfdecRect *	inval);
 SwfdecMovie *	swfdec_movie_resolve		(SwfdecMovie *		movie);
 guint		swfdec_movie_get_version	(SwfdecMovie *		movie);
 

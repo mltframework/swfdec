@@ -3100,6 +3100,33 @@ EXTRA_DIST = \
 	sound-properties-8.swf.trace \
 	sound-properties-9.swf \
 	sound-properties-9.swf.trace \
+	sound-set-5.swf \
+	sound-set-5.swf.trace \
+	sound-set-6.swf \
+	sound-set-6.swf.trace \
+	sound-set-7.swf \
+	sound-set-7.swf.trace \
+	sound-set-8.swf \
+	sound-set-8.swf.trace \
+	sound-set.as \
+	sound-setTransform-propertytypes-5.swf \
+	sound-setTransform-propertytypes-5.swf.trace \
+	sound-setTransform-propertytypes-6.swf \
+	sound-setTransform-propertytypes-6.swf.trace \
+	sound-setTransform-propertytypes-7.swf \
+	sound-setTransform-propertytypes-7.swf.trace \
+	sound-setTransform-propertytypes-8.swf \
+	sound-setTransform-propertytypes-8.swf.trace \
+	sound-setTransform-propertytypes.as \
+	sound-textfield-5.swf \
+	sound-textfield-5.swf.trace \
+	sound-textfield-6.swf \
+	sound-textfield-6.swf.trace \
+	sound-textfield-7.swf \
+	sound-textfield-7.swf.trace \
+	sound-textfield-8.swf \
+	sound-textfield-8.swf.trace \
+	sound-textfield.as \
 	stack-overflow.as \
 	stack-overflow-5.swf \
 	stack-overflow-5.swf.trace \
@@ -3278,6 +3305,15 @@ EXTRA_DIST = \
 	string-split-6.swf.trace \
 	string-split-7.swf \
 	string-split-7.swf.trace \
+	String-split-count-values-5.swf \
+	String-split-count-values-5.swf.trace \
+	String-split-count-values-6.swf \
+	String-split-count-values-6.swf.trace \
+	String-split-count-values-7.swf \
+	String-split-count-values-7.swf.trace \
+	String-split-count-values-8.swf \
+	String-split-count-values-8.swf.trace \
+	String-split-count-values.as \
 	string-split-empty.as \
 	string-split-empty-5.swf \
 	string-split-empty-5.swf.trace \

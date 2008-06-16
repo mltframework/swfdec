@@ -30,6 +30,7 @@
 #include <swfdec/swfdec_rect.h>
 #include <swfdec/swfdec_ringbuffer.h>
 #include <swfdec/swfdec_socket.h>
+#include <swfdec/swfdec_sound_matrix.h>
 #include <swfdec/swfdec_system.h>
 
 G_BEGIN_DECLS
@@ -137,6 +138,7 @@ struct _SwfdecPlayerPrivate
   /* audio */
   GList *		audio;		 	/* list of playing SwfdecAudio */
   GSList *		missing_plugins;	/* list of GStreamer detail strings for missing plugins */
+  SwfdecSoundMatrix	sound_matrix;		/* global sound transform - FIXME: is this per-sandbox or global? */
 
   /* events and advancing */
   SwfdecTick		time;			/* current time */
@@ -276,12 +278,19 @@ void		swfdec_player_add_missing_plugin(SwfdecPlayer *		player,
 
 /* in swfdec_policy_file.c */
 gboolean	swfdec_player_allow_now		(SwfdecPlayer *		player,
+						 const SwfdecURL *	from,
 						 const SwfdecURL *	url);
 void	      	swfdec_player_allow_or_load	(SwfdecPlayer *		player,
+						 const SwfdecURL *	from,
 						 const SwfdecURL *	url,
-						 const SwfdecURL *	load_url,
+						 const SwfdecURL *	crossdomain,
 						 SwfdecPolicyFunc	func,
 						 gpointer		data);
+void	      	swfdec_player_load_default	(SwfdecPlayer *		player,
+						 const char *		url_string,
+						 SwfdecPolicyFunc	func,
+						 gpointer		data);
+
 /* in swfdec_as_interpret.c */
 SwfdecMovie *	swfdec_player_get_movie_from_value 
 						(SwfdecPlayer *		player,

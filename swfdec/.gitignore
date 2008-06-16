@@ -12,7 +12,7 @@ Makefile.in
 *.loT
 
 swfdec_as_strings.h
-swfdec_asnative.h
+swfdec_asnative.c
 swfdec_enums.[ch]
 swfdec_marshal.[ch]
 

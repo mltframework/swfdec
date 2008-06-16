@@ -81,7 +81,6 @@ GType			swfdec_net_stream_get_type	(void);
 SwfdecNetStream *	swfdec_net_stream_new		(SwfdecNetConnection *	conn);
 
 void			swfdec_net_stream_set_url	(SwfdecNetStream *	stream,
-							 SwfdecSandbox *	sandbox,
 							 const char *		url);
 void			swfdec_net_stream_set_loader	(SwfdecNetStream *	stream,
 							 SwfdecLoader *		loader);

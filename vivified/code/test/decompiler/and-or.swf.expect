@@ -14,5 +14,4 @@ function () {
     trace (4);
   if ((1 || 2) && 3)
     trace (4);
-}
-
+};

@@ -11,5 +11,4 @@ function () {
   if (!true)
     trace ("Goodbye cruel world");
   loadMovie ("fscommand:quit", "");
-}
-
+};

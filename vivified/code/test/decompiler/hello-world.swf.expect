@@ -4,5 +4,4 @@
 function () {
   trace ("Hello World!");
   loadMovie ("fscommand:quit", "");
-}
-
+};

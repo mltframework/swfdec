@@ -4,5 +4,4 @@
 function () {
   while (false)
     trace ("Hello World!");
-}
-
+};

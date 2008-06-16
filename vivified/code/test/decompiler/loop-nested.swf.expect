@@ -5,5 +5,4 @@ function () {
   while (5 < i)
     while (j < 10 * -1)
       trace ("Hello");
-}
-
+};

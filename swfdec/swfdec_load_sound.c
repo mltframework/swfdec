@@ -24,6 +24,7 @@
 #include "swfdec_load_sound.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_decoder.h"
+#include "swfdec_audio_internal.h"
 #include "swfdec_audio_load.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
@@ -41,20 +42,36 @@ swfdec_load_sound_sound_provider_start (SwfdecSoundProvider *provider,
     SwfdecActor *actor, gsize samples_offset, guint loops)
 {
   SwfdecLoadSound *sound = SWFDEC_LOAD_SOUND (provider);
-  SwfdecAudio *audio;
 
+  if (sound->audio) {
+    swfdec_audio_remove (sound->audio);
+    g_object_unref (sound->audio);
+  }
   if (samples_offset > 0 || loops > 1) {
     SWFDEC_FIXME ("implement starting at offset %"G_GSIZE_FORMAT" with %u loops",
 	samples_offset, loops);
   }
-  audio = swfdec_audio_load_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (provider)->context), sound);
-  g_object_unref (audio);
+  sound->audio = swfdec_audio_load_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (provider)->context), sound);
+}
+
+static void
+swfdec_load_sound_sound_provider_stop (SwfdecSoundProvider *provider, SwfdecActor *actor)
+{
+  SwfdecLoadSound *load = SWFDEC_LOAD_SOUND (provider);
+
+  if (load->audio == NULL)
+    return;
+
+  swfdec_audio_remove (load->audio);
+  g_object_unref (load->audio);
+  load->audio = NULL;
 }
 
 static void
 swfdec_load_sound_sound_provider_init (SwfdecSoundProviderInterface *iface)
 {
   iface->start = swfdec_load_sound_sound_provider_start;
+  iface->stop = swfdec_load_sound_sound_provider_stop;
 }
 
 /*** SWFDEC_STREAM_TARGET ***/
@@ -316,6 +333,11 @@ swfdec_load_sound_dispose (GObject *object)
     sound->stream = NULL;
   }
   g_free (sound->url);
+  if (sound->audio) {
+    swfdec_audio_remove (sound->audio);
+    g_object_unref (sound->audio);
+    sound->audio = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_load_sound_parent_class)->dispose (object);
 }

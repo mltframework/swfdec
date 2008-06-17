@@ -76,3 +76,15 @@ swfdec_sound_provider_start (SwfdecSoundProvider *provider,
   iface->start (provider, actor, samples_offset, loops);
 }
 
+void
+swfdec_sound_provider_stop (SwfdecSoundProvider *provider, SwfdecActor *actor)
+{
+  SwfdecSoundProviderInterface *iface;
+  
+  g_return_if_fail (SWFDEC_IS_SOUND_PROVIDER (provider));
+  g_return_if_fail (SWFDEC_IS_ACTOR (actor));
+
+  iface = SWFDEC_SOUND_PROVIDER_GET_INTERFACE (provider);
+  iface->stop (provider, actor);
+}
+

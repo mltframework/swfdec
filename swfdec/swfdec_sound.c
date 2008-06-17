@@ -51,10 +51,39 @@ swfdec_sound_sound_provider_start (SwfdecSoundProvider *provider,
   g_object_unref (audio);
 }
 
+typedef struct {
+  SwfdecActor *	actor;
+  SwfdecSound *	sound;
+} RemoveData;
+
+static gboolean
+swfdec_sound_object_should_stop (SwfdecAudio *audio, gpointer datap)
+{
+  RemoveData *data = datap;
+  SwfdecAudioEvent *event;
+
+  if (!SWFDEC_IS_AUDIO_EVENT (audio))
+    return FALSE;
+  event = SWFDEC_AUDIO_EVENT (audio);
+  if (event->sound != data->sound)
+    return FALSE;
+  return audio->actor == data->actor;
+}
+
+static void
+swfdec_sound_sound_provider_stop (SwfdecSoundProvider *provider, SwfdecActor *actor)
+{
+  RemoveData data = { actor, SWFDEC_SOUND (provider) };
+
+  swfdec_player_stop_sounds (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context), 
+      swfdec_sound_object_should_stop, &data);
+}
+
 static void
 swfdec_sound_sound_provider_init (SwfdecSoundProviderInterface *iface)
 {
   iface->start = swfdec_sound_sound_provider_start;
+  iface->stop = swfdec_sound_sound_provider_stop;
 }
 
 /*** SWFDEC_SOUND ***/

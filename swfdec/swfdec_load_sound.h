@@ -21,6 +21,7 @@
 #define _SWFDEC_LOAD_SOUND_H_
 
 #include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_audio.h>
 #include <swfdec/swfdec_stream.h>
 #include <swfdec/swfdec_types.h>
 
@@ -46,6 +47,7 @@ struct _SwfdecLoadSound
   char *		url;		/* URL we are loading - FIXME: make the security stuff hand us a loader */
   SwfdecStream *	stream;		/* stream we're parsing or NULL when done parsing */
   GPtrArray *		frames;		/* buffers pointing to the frames of this file */
+  SwfdecAudio *		audio;		/* the stream currently running */
 };
 
 struct _SwfdecLoadSoundClass

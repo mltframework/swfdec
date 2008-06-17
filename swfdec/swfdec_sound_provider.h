@@ -41,6 +41,8 @@ struct _SwfdecSoundProviderInterface {
 								 SwfdecActor *		actor, 
 								 gsize			samples_offset,
 								 guint			loops);
+  void			(* stop)				(SwfdecSoundProvider *  provider,
+								 SwfdecActor *		actor);
 };
 
 GType			swfdec_sound_provider_get_type		(void) G_GNUC_CONST;
@@ -49,6 +51,8 @@ void			swfdec_sound_provider_start		(SwfdecSoundProvider *	provider,
 								 SwfdecActor *		actor, 
 								 gsize			samples_offset,
 								 guint			loops);
+void			swfdec_sound_provider_stop		(SwfdecSoundProvider *	provider,
+								 SwfdecActor *		actor); 
 
 
 G_END_DECLS

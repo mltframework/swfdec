@@ -28,12 +28,11 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
-#include "swfdec_audio_event.h"
-#include "swfdec_audio_internal.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
+#include "swfdec_sound.h"
 
 /*** SwfdecSoundObject ***/
 
@@ -409,56 +408,30 @@ swfdec_sound_object_start (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   swfdec_sound_provider_start (sound->provider, actor, offset * 44100, loops);
 }
 
-#if 0
-typedef struct {
-  SwfdecMovie *	movie;
-  gpointer	sound;
-} RemoveData;
-
-static gboolean
-swfdec_sound_object_should_stop (SwfdecAudio *audio, gpointer datap)
-{
-  RemoveData *data = datap;
-  SwfdecAudioEvent *event;
-
-  if (!SWFDEC_IS_AUDIO_EVENT (audio))
-    return FALSE;
-  event = SWFDEC_AUDIO_EVENT (audio);
-  if (data->sound != NULL && event->sound != data->sound)
-    return FALSE;
-  /* FIXME: also check the movie is identical */
-  return TRUE;
-}
-#endif
-
 SWFDEC_AS_NATIVE (500, 6, swfdec_sound_object_stop)
 void
 swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc, 
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-#if 0
   SwfdecSoundObject *sound;
   const char *name;
-  RemoveData data;
+  SwfdecSound *stopme;
+  SwfdecActor *actor;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "|s", &name);
+  actor = swfdec_sound_object_get_actor (sound);
+  if (actor == NULL)
+    return;
 
-  if (sound->global) {
-    data.movie = NULL;
-  } else {
-    data.movie = sound->target;
-  }
   if (argc > 0) {
-    data.sound = swfdec_sound_object_get_sound (sound, name);
-    if (data.sound == NULL)
+    stopme = swfdec_sound_object_get_sound (sound, name);
+    if (stopme == NULL)
       return;
+    if (sound->provider == NULL || SWFDEC_IS_SOUND (sound->provider))
+      swfdec_sound_provider_stop (SWFDEC_SOUND_PROVIDER (stopme), actor);
   } else if (sound->provider) {
-    data.sound = sound->provider;
-  } else {
-    data.sound = NULL;
+    swfdec_sound_provider_stop (sound->provider, actor);
   }
-  swfdec_player_stop_sounds (SWFDEC_PLAYER (cx), swfdec_sound_object_should_stop, &data);
-#endif
 }
 
 SWFDEC_AS_CONSTRUCTOR (500, 16, swfdec_sound_object_construct, swfdec_sound_object_get_type)

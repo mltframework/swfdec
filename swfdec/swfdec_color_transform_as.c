@@ -36,6 +36,7 @@ swfdec_color_transform_as_class_init (SwfdecColorTransformAsClass *klass)
 static void
 swfdec_color_transform_as_init (SwfdecColorTransformAs *transform)
 {
+  swfdec_color_transform_init_identity (&transform->transform);
 }
 
 // properties
@@ -63,7 +64,11 @@ swfdec_color_transform_as_get_redMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("ColorTransform.redMultiplier (get)");
+  SwfdecColorTransformAs *transform;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
+
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.ra / 256.0);
 }
 
 SWFDEC_AS_NATIVE (1105, 104, swfdec_color_transform_as_set_redMultiplier)
@@ -211,11 +216,30 @@ swfdec_color_transform_as_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 // constructor
-SWFDEC_AS_NATIVE (1105, 0, swfdec_color_transform_as_construct)
+SWFDEC_AS_CONSTRUCTOR (1105, 0, swfdec_color_transform_as_construct, swfdec_color_transform_as_get_type)
 void
 swfdec_color_transform_as_construct (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("ColorTransform");
+  SwfdecColorTransformAs *transform;
+  guint i;
+
+  if (!cx->frame->construct)
+    return;
+
+  if (argc < 8)
+    return;
+
+  transform = SWFDEC_COLOR_TRANSFORM_AS (object);
+
+  i = 0;
+  transform->transform.ra = 256 * swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->transform.ga = 256 * swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->transform.ba = 256 * swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->transform.aa = 256 * swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->transform.rb = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->transform.gb = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->transform.bb = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->transform.ab = swfdec_as_value_to_number (cx, &argv[i++]);
 }

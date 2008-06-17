@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,16 +25,38 @@
 
 #include "swfdec_sound.h"
 #include "swfdec_audio_decoder.h"
+#include "swfdec_audio_event.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
 #include "swfdec_button.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_sound_provider.h"
 #include "swfdec_sprite.h"
 #include "swfdec_swf_decoder.h"
 
-G_DEFINE_TYPE (SwfdecSound, swfdec_sound, SWFDEC_TYPE_CHARACTER)
+/*** SWFDEC_SOUND_PROVIDER ***/
+
+static SwfdecAudio *
+swfdec_sound_sound_provider_start (SwfdecSoundProvider *provider,
+    SwfdecPlayer *player, gsize samples_offset, guint loops)
+{
+  SwfdecSound *sound = SWFDEC_SOUND (provider);
+
+  return swfdec_audio_event_new (player, sound, samples_offset, loops);
+}
+
+static void
+swfdec_sound_sound_provider_init (SwfdecSoundProviderInterface *iface)
+{
+  iface->start = swfdec_sound_sound_provider_start;
+}
+
+/*** SWFDEC_SOUND ***/
+
+G_DEFINE_TYPE_WITH_CODE (SwfdecSound, swfdec_sound, SWFDEC_TYPE_CHARACTER,
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_SOUND_PROVIDER, swfdec_sound_sound_provider_init))
 
 static void
 swfdec_sound_dispose (GObject *object)

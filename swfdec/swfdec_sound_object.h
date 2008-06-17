@@ -23,6 +23,7 @@
 #include <swfdec/swfdec_audio.h>
 #include <swfdec/swfdec_load_sound.h>
 #include <swfdec/swfdec_movie.h>
+#include <swfdec/swfdec_sound_provider.h>
 
 G_BEGIN_DECLS
 
@@ -42,8 +43,7 @@ struct _SwfdecSoundObject {
 
   SwfdecMovie *		target;		/* target movie or NULL on constructing error */
   gboolean		global;		/* TRUE if handling global sound */
-  SwfdecSound *		attached;	/* sound that was attached */
-  SwfdecLoadSound *	load;		/* sound that is/was loaded using loadSound */
+  SwfdecSoundProvider *	provider;	/* sound that we play */
   SwfdecAudio *		audio;		/* audio stream we started */
 };
 

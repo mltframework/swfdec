@@ -221,7 +221,7 @@ swfdec_audio_event_create (SwfdecSound *sound, guint offset, guint end_offset, g
  * swfdec_audio_event_new:
  * @player: the #SwfdecPlayer to play the sound in
  * @sound: the sound to be played
- * @offset: offset into sound at which to start playing
+ * @offset: offset into sound in samples at which to start playing
  * @n_loops: number of times the sound should be played
  *
  * Starts playing back a sound from the given offset and loops the sound 

@@ -24,13 +24,36 @@
 #include "swfdec_load_sound.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_decoder.h"
+#include "swfdec_audio_load.h"
 #include "swfdec_bits.h"
 #include "swfdec_buffer.h"
 #include "swfdec_debug.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sandbox.h"
+#include "swfdec_sound_provider.h"
 #include "swfdec_stream_target.h"
+
+/*** SWFDEC_SOUND_PROVIDER ***/
+
+static SwfdecAudio *
+swfdec_load_sound_sound_provider_start (SwfdecSoundProvider *provider,
+    SwfdecPlayer *player, gsize samples_offset, guint loops)
+{
+  SwfdecLoadSound *sound = SWFDEC_LOAD_SOUND (provider);
+
+  if (samples_offset > 0 || loops > 1) {
+    SWFDEC_FIXME ("implement starting at offset %"G_GSIZE_FORMAT" with %u loops",
+	samples_offset, loops);
+  }
+  return swfdec_audio_load_new (player, sound);
+}
+
+static void
+swfdec_load_sound_sound_provider_init (SwfdecSoundProviderInterface *iface)
+{
+  iface->start = swfdec_load_sound_sound_provider_start;
+}
 
 /*** SWFDEC_STREAM_TARGET ***/
 
@@ -275,7 +298,8 @@ swfdec_load_sound_stream_target_init (SwfdecStreamTargetInterface *iface)
 /*** SWFDEC_LOAD_SOUND ***/
 
 G_DEFINE_TYPE_WITH_CODE (SwfdecLoadSound, swfdec_load_sound, G_TYPE_OBJECT,
-    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_load_sound_stream_target_init))
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_load_sound_stream_target_init);
+    G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_SOUND_PROVIDER, swfdec_load_sound_sound_provider_init))
 
 static void
 swfdec_load_sound_dispose (GObject *object)

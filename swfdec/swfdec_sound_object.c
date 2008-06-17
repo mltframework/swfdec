@@ -29,7 +29,7 @@
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_event.h"
-#include "swfdec_audio_load.h"
+#include "swfdec_audio_internal.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
@@ -55,13 +55,9 @@ swfdec_sound_object_dispose (GObject *object)
 {
   SwfdecSoundObject *sound = SWFDEC_SOUND_OBJECT (object);
 
-  if (sound->attached) {
-    g_object_unref (sound->attached);
-    sound->attached = NULL;
-  }
-  if (sound->load) {
-    g_object_unref (sound->load);
-    sound->load = NULL;
+  if (sound->provider) {
+    g_object_unref (sound->provider);
+    sound->provider = NULL;
   }
 
   G_OBJECT_CLASS (swfdec_sound_object_parent_class)->dispose (object);
@@ -296,11 +292,17 @@ swfdec_sound_object_loadSound (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "sb", &url, &stream);
 
-  if (sound->load)
-    g_object_unref (sound->load);
-  sound->load = swfdec_load_sound_new (object, url);
+  if (sound->audio) {
+    swfdec_audio_remove (sound->audio);
+    g_object_unref (sound->audio);
+    sound->audio = NULL;
+  }
+  if (sound->provider)
+    g_object_unref (sound->provider);
+  sound->provider = SWFDEC_SOUND_PROVIDER (swfdec_load_sound_new (object, url));
   if (stream)
-    sound->audio = swfdec_audio_load_new (SWFDEC_PLAYER (cx), sound->load);
+    sound->audio = swfdec_sound_provider_start (sound->provider,
+	SWFDEC_PLAYER (cx), 0, 1);
 }
 
 SWFDEC_AS_NATIVE (500, 14, swfdec_sound_object_getBytesLoaded)
@@ -359,9 +361,9 @@ swfdec_sound_object_attachSound (SwfdecAsContext *cx, SwfdecAsObject *object, gu
 
   new = swfdec_sound_object_get_sound (sound, name);
   if (new) {
-    if (sound->attached)
-      g_object_unref (sound->attached);
-    sound->attached = g_object_ref (new);
+    if (sound->provider)
+      g_object_unref (sound->provider);
+    sound->provider = g_object_ref (new);
   }
 }
 
@@ -373,11 +375,10 @@ swfdec_sound_object_start (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   SwfdecSoundObject *sound;
   double offset;
   int loops;
-  SwfdecAudio *audio;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "|ni", &offset, &loops);
 
-  if (sound->attached == NULL) {
+  if (sound->provider == NULL) {
     SWFDEC_INFO ("no sound attached when calling Sound.start()");
     return;
   }
@@ -386,15 +387,19 @@ swfdec_sound_object_start (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   if (offset < 0 || !isfinite (offset))
     offset = 0;
 
-  audio = swfdec_audio_event_new (SWFDEC_PLAYER (cx), sound->attached, offset / 44100, loops);
+  if (sound->audio) {
+    swfdec_audio_remove (sound->audio);
+    g_object_unref (sound->audio);
+  }
+  sound->audio = swfdec_sound_provider_start (sound->provider, SWFDEC_PLAYER (cx), 
+      offset * 44100, loops);
   if (sound->target && !sound->global)
-    swfdec_audio_set_actor (audio, SWFDEC_ACTOR (sound->target));
-  g_object_unref (audio);
+    swfdec_audio_set_actor (sound->audio, SWFDEC_ACTOR (sound->target));
 }
 
 typedef struct {
-  SwfdecMovie *movie;
-  SwfdecSound *sound;
+  SwfdecMovie *	movie;
+  gpointer	sound;
 } RemoveData;
 
 static gboolean
@@ -432,8 +437,8 @@ swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
     data.sound = swfdec_sound_object_get_sound (sound, name);
     if (data.sound == NULL)
       return;
-  } else if (sound->attached) {
-    data.sound = sound->attached;
+  } else if (sound->provider) {
+    data.sound = sound->provider;
   } else {
     data.sound = NULL;
   }

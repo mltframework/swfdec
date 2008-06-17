@@ -17,8 +17,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_AS_ARRAY_H_
-#define _SWFDEC_AS_ARRAY_H_
+#ifndef _SWFDEC_COLOR_TRANSFORM_H_
+#define _SWFDEC_COLOR_TRANSFORM_H_
 
 #include <swfdec/swfdec_as_object.h>
 #include <swfdec/swfdec_as_types.h>
@@ -47,8 +47,10 @@ struct _SwfdecColorTransformAsClass {
   SwfdecAsObjectClass	object_class;
 };
 
-GType		swfdec_color_transform_as_get_type	(void);
+GType			swfdec_color_transform_as_get_type		(void);
 
+SwfdecColorTransformAs *swfdec_color_transform_as_new_from_transform	(SwfdecAsContext *		context,
+									 const SwfdecColorTransform *	transform);
 
 G_END_DECLS
 #endif

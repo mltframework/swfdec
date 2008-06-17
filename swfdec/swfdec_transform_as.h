@@ -17,8 +17,8 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_AS_ARRAY_H_
-#define _SWFDEC_AS_ARRAY_H_
+#ifndef _SWFDEC_TRANSFORM_H_
+#define _SWFDEC_TRANSFORM_H_
 
 #include <swfdec/swfdec_movie.h>
 #include <swfdec/swfdec_as_object.h>

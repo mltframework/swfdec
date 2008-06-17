@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_color_transform_as.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
@@ -242,4 +243,40 @@ swfdec_color_transform_as_construct (SwfdecAsContext *cx,
   transform->transform.gb = swfdec_as_value_to_number (cx, &argv[i++]);
   transform->transform.bb = swfdec_as_value_to_number (cx, &argv[i++]);
   transform->transform.ab = swfdec_as_value_to_number (cx, &argv[i++]);
+}
+
+SwfdecColorTransformAs *
+swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
+    const SwfdecColorTransform *transform)
+{
+  SwfdecAsValue val;
+  SwfdecColorTransformAs *object;
+  guint size;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  g_return_val_if_fail (transform != NULL, NULL);
+
+  size = sizeof (SwfdecColorTransformAs);
+  if (!swfdec_as_context_use_mem (context, size))
+    return NULL;
+  object = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, NULL);
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (object), context, size);
+
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_flash, &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
+	SWFDEC_AS_STR_geom, &val);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+      swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
+	  SWFDEC_AS_STR_ColorTransform, &val);
+      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (object),
+	    SWFDEC_AS_VALUE_GET_OBJECT (&val));
+      }
+    }
+  }
+
+  object->transform = *transform;
+
+  return object;
 }

@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_transform_as.h"
+#include "swfdec_color_transform_as.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
@@ -79,7 +80,13 @@ swfdec_transform_as_get_colorTransform (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Transform.colorTransform (get)");
+  SwfdecTransformAs *transform;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TRANSFORM_AS, &transform, "");
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret,
+    SWFDEC_AS_OBJECT (swfdec_color_transform_as_new_from_transform (cx,
+	&transform->target->color_transform)));
 }
 
 SWFDEC_AS_NATIVE (1106, 106, swfdec_transform_as_set_colorTransform)

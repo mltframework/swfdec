@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Pekka Lampila <pekka.lampila@iki.fi>
+ * Copyright (C) 2007-2008 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,8 +21,22 @@
 #include "config.h"
 #endif
 
+#include "swfdec_transform.h"
 #include "swfdec_as_internal.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
+
+G_DEFINE_TYPE (SwfdecTransform, swfdec_transform, SWFDEC_TYPE_AS_OBJECT)
+
+static void
+swfdec_transform_class_init (SwfdecTransformClass *klass)
+{
+}
+
+static void
+swfdec_transform_init (SwfdecTransform *transform)
+{
+}
 
 // properties
 SWFDEC_AS_NATIVE (1106, 101, swfdec_transform_get_matrix)
@@ -112,10 +126,21 @@ swfdec_transform_set_pixelBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 // constructor
-SWFDEC_AS_NATIVE (1106, 0, swfdec_transform_construct)
+SWFDEC_AS_CONSTRUCTOR (1106, 0, swfdec_transform_construct, swfdec_transform_get_type)
 void
 swfdec_transform_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Transform");
+  if (!cx->frame->construct)
+    return;
+
+  if (argc < 1 ||
+      !SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
+      !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
+    SWFDEC_FIXME ("new Transform without movieclip should give undefined");
+    return;
+  }
+
+  SWFDEC_TRANSFORM (object)->target =
+    SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
 }

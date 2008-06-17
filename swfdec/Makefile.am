@@ -313,6 +313,7 @@ noinst_HEADERS = \
 	swfdec_text_buffer.h \
 	swfdec_text_format.h \
 	swfdec_text_layout.h \
+	swfdec_transform.h \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \

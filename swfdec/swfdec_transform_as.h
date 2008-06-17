@@ -26,27 +26,27 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecTransform SwfdecTransform;
-typedef struct _SwfdecTransformClass SwfdecTransformClass;
+typedef struct _SwfdecTransformAs SwfdecTransformAs;
+typedef struct _SwfdecTransformAsClass SwfdecTransformAsClass;
 
-#define SWFDEC_TYPE_TRANSFORM                    (swfdec_transform_get_type())
-#define SWFDEC_IS_TRANSFORM(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TRANSFORM))
-#define SWFDEC_IS_TRANSFORM_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_TRANSFORM))
-#define SWFDEC_TRANSFORM(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TRANSFORM, SwfdecTransform))
-#define SWFDEC_TRANSFORM_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TRANSFORM, SwfdecTransformClass))
-#define SWFDEC_TRANSFORM_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_TRANSFORM, SwfdecTransformClass))
+#define SWFDEC_TYPE_TRANSFORM_AS                    (swfdec_transform_as_get_type())
+#define SWFDEC_IS_TRANSFORM_AS(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_TRANSFORM_AS))
+#define SWFDEC_IS_TRANSFORM_AS_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_TRANSFORM_AS))
+#define SWFDEC_TRANSFORM_AS(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_TRANSFORM_AS, SwfdecTransformAs))
+#define SWFDEC_TRANSFORM_AS_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_TRANSFORM_AS, SwfdecTransformAsClass))
+#define SWFDEC_TRANSFORM_AS_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_TRANSFORM_AS, SwfdecTransformAsClass))
 
-struct _SwfdecTransform {
+struct _SwfdecTransformAs {
   SwfdecAsObject	object;
 
   SwfdecMovie *		target;
 };
 
-struct _SwfdecTransformClass {
+struct _SwfdecTransformAsClass {
   SwfdecAsObjectClass	object_class;
 };
 
-GType		swfdec_transform_get_type	(void);
+GType		swfdec_transform_as_get_type	(void);
 
 
 G_END_DECLS

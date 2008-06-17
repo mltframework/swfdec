@@ -21,114 +21,116 @@
 #include "config.h"
 #endif
 
-#include "swfdec_transform.h"
+#include "swfdec_transform_as.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_TYPE (SwfdecTransform, swfdec_transform, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecTransformAs, swfdec_transform_as, SWFDEC_TYPE_AS_OBJECT)
 
 static void
-swfdec_transform_class_init (SwfdecTransformClass *klass)
+swfdec_transform_as_class_init (SwfdecTransformAsClass *klass)
 {
 }
 
 static void
-swfdec_transform_init (SwfdecTransform *transform)
+swfdec_transform_as_init (SwfdecTransformAs *transform)
 {
 }
 
 // properties
-SWFDEC_AS_NATIVE (1106, 101, swfdec_transform_get_matrix)
+SWFDEC_AS_NATIVE (1106, 101, swfdec_transform_as_get_matrix)
 void
-swfdec_transform_get_matrix (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_transform_as_get_matrix (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.matrix (get)");
 }
 
-SWFDEC_AS_NATIVE (1106, 102, swfdec_transform_set_matrix)
+SWFDEC_AS_NATIVE (1106, 102, swfdec_transform_as_set_matrix)
 void
-swfdec_transform_set_matrix (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_transform_as_set_matrix (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.matrix (set)");
 }
 
-SWFDEC_AS_NATIVE (1106, 103, swfdec_transform_get_concatenatedMatrix)
+SWFDEC_AS_NATIVE (1106, 103, swfdec_transform_as_get_concatenatedMatrix)
 void
-swfdec_transform_get_concatenatedMatrix (SwfdecAsContext *cx,
+swfdec_transform_as_get_concatenatedMatrix (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.concatenatedMatrix (get)");
 }
 
-SWFDEC_AS_NATIVE (1106, 104, swfdec_transform_set_concatenatedMatrix)
+SWFDEC_AS_NATIVE (1106, 104, swfdec_transform_as_set_concatenatedMatrix)
 void
-swfdec_transform_set_concatenatedMatrix (SwfdecAsContext *cx,
+swfdec_transform_as_set_concatenatedMatrix (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.concatenatedMatrix (set)");
 }
 
-SWFDEC_AS_NATIVE (1106, 105, swfdec_transform_get_colorTransform)
+SWFDEC_AS_NATIVE (1106, 105, swfdec_transform_as_get_colorTransform)
 void
-swfdec_transform_get_colorTransform (SwfdecAsContext *cx,
+swfdec_transform_as_get_colorTransform (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.colorTransform (get)");
 }
 
-SWFDEC_AS_NATIVE (1106, 106, swfdec_transform_set_colorTransform)
+SWFDEC_AS_NATIVE (1106, 106, swfdec_transform_as_set_colorTransform)
 void
-swfdec_transform_set_colorTransform (SwfdecAsContext *cx,
+swfdec_transform_as_set_colorTransform (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.colorTransform (set)");
 }
 
-SWFDEC_AS_NATIVE (1106, 107, swfdec_transform_get_concatenatedColorTransform)
+SWFDEC_AS_NATIVE (1106, 107, swfdec_transform_as_get_concatenatedColorTransform)
 void
-swfdec_transform_get_concatenatedColorTransform (SwfdecAsContext *cx,
+swfdec_transform_as_get_concatenatedColorTransform (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.concatenatedColorTransform (get)");
 }
 
-SWFDEC_AS_NATIVE (1106, 108, swfdec_transform_set_concatenatedColorTransform)
+SWFDEC_AS_NATIVE (1106, 108, swfdec_transform_as_set_concatenatedColorTransform)
 void
-swfdec_transform_set_concatenatedColorTransform (SwfdecAsContext *cx,
+swfdec_transform_as_set_concatenatedColorTransform (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.concatenatedColorTransform (set)");
 }
 
-SWFDEC_AS_NATIVE (1106, 109, swfdec_transform_get_pixelBounds)
+SWFDEC_AS_NATIVE (1106, 109, swfdec_transform_as_get_pixelBounds)
 void
-swfdec_transform_get_pixelBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_transform_as_get_pixelBounds (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.pixelBounds (get)");
 }
 
-SWFDEC_AS_NATIVE (1106, 110, swfdec_transform_set_pixelBounds)
+SWFDEC_AS_NATIVE (1106, 110, swfdec_transform_as_set_pixelBounds)
 void
-swfdec_transform_set_pixelBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_transform_as_set_pixelBounds (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("Transform.pixelBounds (set)");
 }
 
 // constructor
-SWFDEC_AS_CONSTRUCTOR (1106, 0, swfdec_transform_construct, swfdec_transform_get_type)
+SWFDEC_AS_CONSTRUCTOR (1106, 0, swfdec_transform_as_construct, swfdec_transform_as_get_type)
 void
-swfdec_transform_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_transform_as_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   if (!cx->frame->construct)
@@ -141,6 +143,6 @@ swfdec_transform_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  SWFDEC_TRANSFORM (object)->target =
+  SWFDEC_TRANSFORM_AS (object)->target =
     SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
 }

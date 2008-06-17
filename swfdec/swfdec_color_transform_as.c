@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "swfdec_color_transform.h"
+#include "swfdec_color_transform_as.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
@@ -39,162 +39,162 @@ swfdec_color_transform_as_init (SwfdecColorTransformAs *transform)
 }
 
 // properties
-SWFDEC_AS_NATIVE (1105, 101, swfdec_color_transform_get_alphaMultiplier)
+SWFDEC_AS_NATIVE (1105, 101, swfdec_color_transform_as_get_alphaMultiplier)
 void
-swfdec_color_transform_get_alphaMultiplier (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_alphaMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.alphaMultiplier (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 102, swfdec_color_transform_set_alphaMultiplier)
+SWFDEC_AS_NATIVE (1105, 102, swfdec_color_transform_as_set_alphaMultiplier)
 void
-swfdec_color_transform_set_alphaMultiplier (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_alphaMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.alphaMultiplier (set)");
 }
 
-SWFDEC_AS_NATIVE (1105, 103, swfdec_color_transform_get_redMultiplier)
+SWFDEC_AS_NATIVE (1105, 103, swfdec_color_transform_as_get_redMultiplier)
 void
-swfdec_color_transform_get_redMultiplier (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_redMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.redMultiplier (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 104, swfdec_color_transform_set_redMultiplier)
+SWFDEC_AS_NATIVE (1105, 104, swfdec_color_transform_as_set_redMultiplier)
 void
-swfdec_color_transform_set_redMultiplier (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_redMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.redMultiplier (set)");
 }
 
-SWFDEC_AS_NATIVE (1105, 105, swfdec_color_transform_get_greenMultiplier)
+SWFDEC_AS_NATIVE (1105, 105, swfdec_color_transform_as_get_greenMultiplier)
 void
-swfdec_color_transform_get_greenMultiplier (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_greenMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.greenMultiplier (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 106, swfdec_color_transform_set_greenMultiplier)
+SWFDEC_AS_NATIVE (1105, 106, swfdec_color_transform_as_set_greenMultiplier)
 void
-swfdec_color_transform_set_greenMultiplier (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_greenMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.greenMultiplier (set)");
 }
 
-SWFDEC_AS_NATIVE (1105, 107, swfdec_color_transform_get_blueMultiplier)
+SWFDEC_AS_NATIVE (1105, 107, swfdec_color_transform_as_get_blueMultiplier)
 void
-swfdec_color_transform_get_blueMultiplier (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_blueMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.blueMultiplier (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 108, swfdec_color_transform_set_blueMultiplier)
+SWFDEC_AS_NATIVE (1105, 108, swfdec_color_transform_as_set_blueMultiplier)
 void
-swfdec_color_transform_set_blueMultiplier (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_blueMultiplier (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.blueMultiplier (set)");
 }
 
-SWFDEC_AS_NATIVE (1105, 109, swfdec_color_transform_get_alphaOffset)
+SWFDEC_AS_NATIVE (1105, 109, swfdec_color_transform_as_get_alphaOffset)
 void
-swfdec_color_transform_get_alphaOffset (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_alphaOffset (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.alphaOffset (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 110, swfdec_color_transform_set_alphaOffset)
+SWFDEC_AS_NATIVE (1105, 110, swfdec_color_transform_as_set_alphaOffset)
 void
-swfdec_color_transform_set_alphaOffset (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_alphaOffset (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.alphaOffset (set)");
 }
 
-SWFDEC_AS_NATIVE (1105, 111, swfdec_color_transform_get_redOffset)
+SWFDEC_AS_NATIVE (1105, 111, swfdec_color_transform_as_get_redOffset)
 void
-swfdec_color_transform_get_redOffset (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_redOffset (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.redOffset (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 112, swfdec_color_transform_set_redOffset)
+SWFDEC_AS_NATIVE (1105, 112, swfdec_color_transform_as_set_redOffset)
 void
-swfdec_color_transform_set_redOffset (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_redOffset (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.redOffset (set)");
 }
 
-SWFDEC_AS_NATIVE (1105, 113, swfdec_color_transform_get_greenOffset)
+SWFDEC_AS_NATIVE (1105, 113, swfdec_color_transform_as_get_greenOffset)
 void
-swfdec_color_transform_get_greenOffset (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_greenOffset (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.greenOffset (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 114, swfdec_color_transform_set_greenOffset)
+SWFDEC_AS_NATIVE (1105, 114, swfdec_color_transform_as_set_greenOffset)
 void
-swfdec_color_transform_set_greenOffset (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_greenOffset (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.greenOffset (set)");
 }
 
-SWFDEC_AS_NATIVE (1105, 115, swfdec_color_transform_get_blueOffset)
+SWFDEC_AS_NATIVE (1105, 115, swfdec_color_transform_as_get_blueOffset)
 void
-swfdec_color_transform_get_blueOffset (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_blueOffset (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.blueOffset (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 116, swfdec_color_transform_set_blueOffset)
+SWFDEC_AS_NATIVE (1105, 116, swfdec_color_transform_as_set_blueOffset)
 void
-swfdec_color_transform_set_blueOffset (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_blueOffset (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.blueOffset (set)");
 }
 
-SWFDEC_AS_NATIVE (1105, 117, swfdec_color_transform_get_rgb)
+SWFDEC_AS_NATIVE (1105, 117, swfdec_color_transform_as_get_rgb)
 void
-swfdec_color_transform_get_rgb (SwfdecAsContext *cx,
+swfdec_color_transform_as_get_rgb (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.rgb (get)");
 }
 
-SWFDEC_AS_NATIVE (1105, 118, swfdec_color_transform_set_rgb)
+SWFDEC_AS_NATIVE (1105, 118, swfdec_color_transform_as_set_rgb)
 void
-swfdec_color_transform_set_rgb (SwfdecAsContext *cx,
+swfdec_color_transform_as_set_rgb (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
@@ -202,19 +202,20 @@ swfdec_color_transform_set_rgb (SwfdecAsContext *cx,
 }
 
 // normal
-SWFDEC_AS_NATIVE (1105, 1, swfdec_color_transform_concat)
+SWFDEC_AS_NATIVE (1105, 1, swfdec_color_transform_as_concat)
 void
-swfdec_color_transform_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_color_transform_as_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform.concat");
 }
 
 // constructor
-SWFDEC_AS_NATIVE (1105, 0, swfdec_color_transform_construct)
+SWFDEC_AS_NATIVE (1105, 0, swfdec_color_transform_as_construct)
 void
-swfdec_color_transform_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_color_transform_as_construct (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SWFDEC_STUB ("ColorTransform");
 }

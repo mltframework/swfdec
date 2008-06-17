@@ -211,7 +211,7 @@ void
 swfdec_audio_stream_done (SwfdecAudioStream *stream)
 {
   g_return_if_fail (SWFDEC_IS_AUDIO_STREAM (stream));
-  g_return_if_fail (stream->done);
+  g_return_if_fail (!stream->done);
 
   stream->done = TRUE;
 }

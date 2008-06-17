@@ -256,6 +256,7 @@ noinst_HEADERS = \
 	swfdec_character.h \
 	swfdec_codec_gst.h \
 	swfdec_color.h \
+	swfdec_color_transform.h \
 	swfdec_constant_pool.h \
 	swfdec_debug.h \
 	swfdec_decoder.h \

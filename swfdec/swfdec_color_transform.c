@@ -21,8 +21,22 @@
 #include "config.h"
 #endif
 
+#include "swfdec_color_transform.h"
 #include "swfdec_as_internal.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
+
+G_DEFINE_TYPE (SwfdecColorTransformAs, swfdec_color_transform_as, SWFDEC_TYPE_AS_OBJECT)
+
+static void
+swfdec_color_transform_as_class_init (SwfdecColorTransformAsClass *klass)
+{
+}
+
+static void
+swfdec_color_transform_as_init (SwfdecColorTransformAs *transform)
+{
+}
 
 // properties
 SWFDEC_AS_NATIVE (1105, 101, swfdec_color_transform_get_alphaMultiplier)

@@ -1134,7 +1134,14 @@ flash.geom.Matrix.prototype.toString = function () {
 flash.geom.ColorTransform = ASconstructor (1105, 0);
 
 flash.geom.ColorTransform.prototype.toString = function () {
-  var o = {}; o["Implement ColorTransform.toString"] ();
+  return "(redMultiplier=" + this.redMultiplier +
+    ", greenMultiplier=" + this.greenMultiplier +
+    ", blueMultiplier=" + this.blueMultiplier +
+    ", alphaMultiplier=" + this.alphaMultiplier +
+    ", redOffset=" + this.redOffset +
+    ", greenOffset=" + this.greenOffset +
+    ", blueOffset=" + this.blueOffset +
+    ", alphaOffset=" + this.alphaOffset + ")";
 };
 
 ASSetNative (flash.geom.ColorTransform.prototype, 1105, "8concat", 1);

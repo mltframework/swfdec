@@ -38,13 +38,17 @@
 
 /*** SWFDEC_SOUND_PROVIDER ***/
 
-static SwfdecAudio *
+static void
 swfdec_sound_sound_provider_start (SwfdecSoundProvider *provider,
-    SwfdecPlayer *player, gsize samples_offset, guint loops)
+    SwfdecActor *actor, gsize samples_offset, guint loops)
 {
   SwfdecSound *sound = SWFDEC_SOUND (provider);
+  SwfdecAudio *audio;
 
-  return swfdec_audio_event_new (player, sound, samples_offset, loops);
+  audio = swfdec_audio_event_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context),
+      sound, samples_offset, loops);
+  swfdec_audio_set_actor (audio, actor);
+  g_object_unref (audio);
 }
 
 static void

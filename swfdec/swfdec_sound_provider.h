@@ -21,6 +21,7 @@
 #define __SWFDEC_SOUND_PROVIDER_H__
 
 #include <swfdec/swfdec.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
@@ -36,16 +37,16 @@ typedef struct _SwfdecSoundProviderInterface SwfdecSoundProviderInterface;
 struct _SwfdecSoundProviderInterface {
   GTypeInterface	interface;
 
-  SwfdecAudio *		(* start)				(SwfdecSoundProvider *  provider,
-								 SwfdecPlayer *		player, 
+  void			(* start)				(SwfdecSoundProvider *  provider,
+								 SwfdecActor *		actor, 
 								 gsize			samples_offset,
 								 guint			loops);
 };
 
 GType			swfdec_sound_provider_get_type		(void) G_GNUC_CONST;
 
-SwfdecAudio *     	swfdec_sound_provider_start		(SwfdecSoundProvider *	provider,
-								 SwfdecPlayer *		player, 
+void			swfdec_sound_provider_start		(SwfdecSoundProvider *	provider,
+								 SwfdecActor *		actor, 
 								 gsize			samples_offset,
 								 guint			loops);
 

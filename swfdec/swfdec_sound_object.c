@@ -45,7 +45,7 @@ swfdec_sound_object_mark (SwfdecAsObject *object)
   SwfdecSoundObject *sound = SWFDEC_SOUND_OBJECT (object);
 
   if (sound->target != NULL)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (sound->target));
+    swfdec_as_string_mark (sound->target);
 
   SWFDEC_AS_OBJECT_CLASS (swfdec_sound_object_parent_class)->mark (object);
 }
@@ -79,13 +79,28 @@ swfdec_sound_object_init (SwfdecSoundObject *sound)
 {
 }
 
+static SwfdecActor *
+swfdec_sound_object_get_actor (SwfdecSoundObject *sound)
+{
+  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (sound)->context);
+  SwfdecMovie *movie;
+
+  movie = swfdec_player_get_movie_from_string (player, 
+      sound->target ? sound->target : "");
+  if (!SWFDEC_IS_ACTOR (movie))
+    return NULL;
+  return SWFDEC_ACTOR (movie);
+}
+
 static SwfdecSound *
 swfdec_sound_object_get_sound (SwfdecSoundObject *sound, const char *name)
 {
-  if (sound->target == NULL)
+  SwfdecActor *actor = swfdec_sound_object_get_actor (sound);
+  
+  if (actor == NULL)
     return NULL;
 
-  return swfdec_resource_get_export (sound->target->resource, name);
+  return swfdec_resource_get_export (SWFDEC_MOVIE (actor)->resource, name);
 }
 
 /*** AS CODE ***/
@@ -93,10 +108,12 @@ swfdec_sound_object_get_sound (SwfdecSoundObject *sound, const char *name)
 static SwfdecSoundMatrix *
 swfdec_sound_object_get_matrix (SwfdecSoundObject *sound)
 {
-  if (sound->global) {
+  if (sound->target == NULL) {
     return &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (sound)->context)->priv->sound_matrix;
-  } else if (SWFDEC_IS_ACTOR (sound->target)) {
-    return &SWFDEC_ACTOR (sound->target)->sound_matrix;
+  } else {
+    SwfdecActor *actor = swfdec_sound_object_get_actor (sound);
+    if (actor)
+      return &actor->sound_matrix;
   }
   return NULL;
 }
@@ -287,22 +304,20 @@ swfdec_sound_object_loadSound (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecSoundObject *sound;
+  SwfdecActor *actor;
   const char *url;
   gboolean stream;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "sb", &url, &stream);
+  actor = swfdec_sound_object_get_actor (sound);
+  if (actor == NULL)
+    return;
 
-  if (sound->audio) {
-    swfdec_audio_remove (sound->audio);
-    g_object_unref (sound->audio);
-    sound->audio = NULL;
-  }
   if (sound->provider)
     g_object_unref (sound->provider);
   sound->provider = SWFDEC_SOUND_PROVIDER (swfdec_load_sound_new (object, url));
   if (stream)
-    sound->audio = swfdec_sound_provider_start (sound->provider,
-	SWFDEC_PLAYER (cx), 0, 1);
+    swfdec_sound_provider_start (sound->provider, actor, 0, 1);
 }
 
 SWFDEC_AS_NATIVE (500, 14, swfdec_sound_object_getBytesLoaded)
@@ -373,30 +388,28 @@ swfdec_sound_object_start (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecSoundObject *sound;
+  SwfdecActor *actor;
   double offset;
   int loops;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "|ni", &offset, &loops);
+  actor = swfdec_sound_object_get_actor (sound);
+  if (actor == NULL)
+    return;
 
   if (sound->provider == NULL) {
     SWFDEC_INFO ("no sound attached when calling Sound.start()");
     return;
   }
-  if (argc < 2 || loops < 0)
+  if (argc < 2 || loops <= 0)
     loops = 1;
   if (offset < 0 || !isfinite (offset))
     offset = 0;
 
-  if (sound->audio) {
-    swfdec_audio_remove (sound->audio);
-    g_object_unref (sound->audio);
-  }
-  sound->audio = swfdec_sound_provider_start (sound->provider, SWFDEC_PLAYER (cx), 
-      offset * 44100, loops);
-  if (sound->target && !sound->global)
-    swfdec_audio_set_actor (sound->audio, SWFDEC_ACTOR (sound->target));
+  swfdec_sound_provider_start (sound->provider, actor, offset * 44100, loops);
 }
 
+#if 0
 typedef struct {
   SwfdecMovie *	movie;
   gpointer	sound;
@@ -416,12 +429,14 @@ swfdec_sound_object_should_stop (SwfdecAudio *audio, gpointer datap)
   /* FIXME: also check the movie is identical */
   return TRUE;
 }
+#endif
 
 SWFDEC_AS_NATIVE (500, 6, swfdec_sound_object_stop)
 void
 swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc, 
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+#if 0
   SwfdecSoundObject *sound;
   const char *name;
   RemoveData data;
@@ -443,6 +458,7 @@ swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
     data.sound = NULL;
   }
   swfdec_player_stop_sounds (SWFDEC_PLAYER (cx), swfdec_sound_object_should_stop, &data);
+#endif
 }
 
 SWFDEC_AS_CONSTRUCTOR (500, 16, swfdec_sound_object_construct, swfdec_sound_object_get_type)
@@ -460,14 +476,9 @@ swfdec_sound_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object, guin
   player = SWFDEC_PLAYER (cx);
 
   if (argc == 0 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
-    sound->global = TRUE;
-    /* FIXME: what is the target for global sounds? Problem:
-     * We use the target in attachSound to look up the sound object to attach.
-     * But I'm not sure what is used for global sounds.
-     * So we just use a random one that looks good for now. */
-    sound->target = player->priv->roots->data;
+    sound->target = NULL;
   } else {
-    sound->target = swfdec_player_get_movie_from_value (player, &argv[0]);
+    sound->target = swfdec_as_value_to_string (cx, &argv[0]);
   }
 }
 

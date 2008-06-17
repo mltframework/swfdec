@@ -41,10 +41,8 @@ typedef struct _SwfdecSoundObjectClass SwfdecSoundObjectClass;
 struct _SwfdecSoundObject {
   SwfdecAsObject	object;
 
-  SwfdecMovie *		target;		/* target movie or NULL on constructing error */
-  gboolean		global;		/* TRUE if handling global sound */
+  const char *		target;		/* target or NULL if global */
   SwfdecSoundProvider *	provider;	/* sound that we play */
-  SwfdecAudio *		audio;		/* audio stream we started */
 };
 
 struct _SwfdecSoundObjectClass {

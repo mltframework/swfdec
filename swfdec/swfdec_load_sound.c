@@ -36,17 +36,19 @@
 
 /*** SWFDEC_SOUND_PROVIDER ***/
 
-static SwfdecAudio *
+static void
 swfdec_load_sound_sound_provider_start (SwfdecSoundProvider *provider,
-    SwfdecPlayer *player, gsize samples_offset, guint loops)
+    SwfdecActor *actor, gsize samples_offset, guint loops)
 {
   SwfdecLoadSound *sound = SWFDEC_LOAD_SOUND (provider);
+  SwfdecAudio *audio;
 
   if (samples_offset > 0 || loops > 1) {
     SWFDEC_FIXME ("implement starting at offset %"G_GSIZE_FORMAT" with %u loops",
 	samples_offset, loops);
   }
-  return swfdec_audio_load_new (player, sound);
+  audio = swfdec_audio_load_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (provider)->context), sound);
+  g_object_unref (audio);
 }
 
 static void

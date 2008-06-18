@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include "swfdec_load_object.h"
+#include "swfdec_access.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -182,54 +183,22 @@ swfdec_load_object_load (SwfdecPlayer *player, gboolean allow, gpointer obj)
   swfdec_loader_set_data_type (load->loader, SWFDEC_LOADER_DATA_TEXT);
 }
 
+static const SwfdecAccessMatrix swfdec_load_object_matrix = {
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_YES, SWFDEC_ACCESS_POLICY },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_POLICY },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_POLICY }
+};
+
 /* perform security checks */
 static void
 swfdec_load_object_request (gpointer objectp, gpointer playerp)
 {
-  SwfdecLoadObject *load = SWFDEC_LOAD_OBJECT (objectp);
-  SwfdecPlayer *player = SWFDEC_PLAYER (playerp);
-  SwfdecURL *url;
+  SwfdecLoadObject *load = objectp;
 
-  if (swfdec_url_path_is_relative (load->url)) {
-    swfdec_load_object_load (player, 
-	load->sandbox->type != SWFDEC_SANDBOX_LOCAL_NETWORK, load);
-    return;
-  }
-  url = swfdec_player_create_url (player, load->url);
-  if (url == NULL) {
-    swfdec_load_object_load (player, FALSE, load);
-    return;
-  }
-  switch (load->sandbox->type) {
-    case SWFDEC_SANDBOX_REMOTE:
-      if (swfdec_url_host_equal(url, load->sandbox->url)) {
-	swfdec_load_object_load (player, TRUE, load);
-	break;
-      }
-      /* fall through */
-    case SWFDEC_SANDBOX_LOCAL_NETWORK:
-    case SWFDEC_SANDBOX_LOCAL_TRUSTED:
-      if (swfdec_url_is_local (url)) {
-	swfdec_load_object_load (player, load->sandbox->type == SWFDEC_SANDBOX_LOCAL_TRUSTED, load);
-      } else {
-	SwfdecURL *load_url = swfdec_url_new_components (
-	    swfdec_url_get_protocol (url), swfdec_url_get_host (url), 
-	    swfdec_url_get_port (url), "crossdomain.xml", NULL);
-	swfdec_player_allow_or_load (player, load->sandbox->url, url, load_url,
-	  swfdec_load_object_load, load);
-	swfdec_url_free (load_url);
-      }
-      break;
-    case SWFDEC_SANDBOX_LOCAL_FILE:
-      swfdec_load_object_load (player, swfdec_url_is_local (url), load);
-      break;
-    case SWFDEC_SANDBOX_NONE:
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  swfdec_url_free (url);
+  swfdec_player_allow_by_matrix (playerp, load->sandbox, load->url,
+      swfdec_load_object_matrix, swfdec_load_object_load, load);
 }
 
 static void

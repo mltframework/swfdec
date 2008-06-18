@@ -41,6 +41,7 @@ typedef enum {
 typedef SwfdecAccessPermission SwfdecAccessMatrix[5][3];
 
 void	      	swfdec_player_allow_by_matrix	(SwfdecPlayer *		player,
+						 SwfdecSandbox *	sandbox,
 						 const char *		url_string,
 						 const SwfdecAccessMatrix matrix,
 						 SwfdecPolicyFunc	func,

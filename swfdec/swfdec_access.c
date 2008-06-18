@@ -25,20 +25,18 @@
 #include <swfdec/swfdec_debug.h>
 
 void
-swfdec_player_allow_by_matrix (SwfdecPlayer *player, const char *url_string,
-    const SwfdecAccessMatrix matrix, SwfdecPolicyFunc func, gpointer data)
+swfdec_player_allow_by_matrix (SwfdecPlayer *player, SwfdecSandbox *sandbox,
+    const char *url_string, const SwfdecAccessMatrix matrix, 
+    SwfdecPolicyFunc func, gpointer data)
 {
-  SwfdecSandbox *sandbox;
   SwfdecAccessPermission perm;
   SwfdecAccessType type;
   SwfdecURL *url;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (SWFDEC_IS_SANDBOX (sandbox));
   g_return_if_fail (url_string != NULL);
   g_return_if_fail (func);
-
-  sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
-  g_assert (sandbox);
 
   url = swfdec_player_create_url (player, url_string);
   if (url == NULL) {

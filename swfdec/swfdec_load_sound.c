@@ -410,8 +410,9 @@ swfdec_load_sound_new (SwfdecAsObject *target, const char *url)
   sound->target = target;
   sound->sandbox = SWFDEC_SANDBOX (target->context->global);
   sound->url = g_strdup (url);
-  swfdec_player_allow_by_matrix (SWFDEC_PLAYER (target->context), url, 
-      swfdec_load_sound_matrix, swfdec_load_sound_load, sound);
+  g_assert (sound->sandbox);
+  swfdec_player_allow_by_matrix (SWFDEC_PLAYER (target->context), sound->sandbox,
+      url, swfdec_load_sound_matrix, swfdec_load_sound_load, sound);
   /* tell missing plugins stuff we want MP3 */
   missing = NULL;
   swfdec_audio_decoder_prepare (SWFDEC_AUDIO_CODEC_MP3, 

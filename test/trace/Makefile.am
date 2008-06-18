@@ -3154,6 +3154,15 @@ EXTRA_DIST = \
 	sound-textfield-8.swf \
 	sound-textfield-8.swf.trace \
 	sound-textfield.as \
+	sound-volume-5.swf \
+	sound-volume-5.swf.trace \
+	sound-volume-6.swf \
+	sound-volume-6.swf.trace \
+	sound-volume-7.swf \
+	sound-volume-7.swf.trace \
+	sound-volume-8.swf \
+	sound-volume-8.swf.trace \
+	sound-volume.as \
 	stack-overflow.as \
 	stack-overflow-5.swf \
 	stack-overflow-5.swf.trace \

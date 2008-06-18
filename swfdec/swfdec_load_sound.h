@@ -22,6 +22,7 @@
 
 #include <swfdec/swfdec_as_object.h>
 #include <swfdec/swfdec_audio.h>
+#include <swfdec/swfdec_sound_matrix.h>
 #include <swfdec/swfdec_stream.h>
 #include <swfdec/swfdec_types.h>
 
@@ -48,6 +49,7 @@ struct _SwfdecLoadSound
   SwfdecStream *	stream;		/* stream we're parsing or NULL when done parsing */
   GPtrArray *		frames;		/* buffers pointing to the frames of this file */
   SwfdecAudio *		audio;		/* the stream currently running */
+  SwfdecSoundMatrix	sound_matrix;	/* matrix we reference */
 };
 
 struct _SwfdecLoadSoundClass

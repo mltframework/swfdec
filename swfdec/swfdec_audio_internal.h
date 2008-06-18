@@ -36,12 +36,13 @@ typedef guint SwfdecAudioFormat;
 
 
 struct _SwfdecAudio {
-  GObject		object;
+  GObject			object;
 
-  SwfdecPlayer *	player;		/* the player that plays us */
-  gboolean		added;		/* set to TRUE after the added signal has been emitted */
-  SwfdecActor *		actor;		/* NULL or movieclip that controls our volume */
-  SwfdecSoundMatrix	matrix;		/* matrix used by this audio instance */
+  SwfdecPlayer *		player;		/* the player that plays us */
+  gboolean			added;		/* set to TRUE after the added signal has been emitted */
+  SwfdecActor *			actor;		/* NULL or movieclip that controls our volume */
+  const SwfdecSoundMatrix *	matrix;		/* matrix this audio references or NULL if none */
+  SwfdecSoundMatrix		matrix_cache;	/* matrix used by this audio instance */
 };
 
 struct _SwfdecAudioClass {
@@ -60,6 +61,8 @@ void			swfdec_audio_add		(SwfdecAudio *		audio,
 void			swfdec_audio_remove		(SwfdecAudio *		audio);
 void			swfdec_audio_set_actor		(SwfdecAudio *		audio,
 							 SwfdecActor *		actor);
+void			swfdec_audio_set_matrix		(SwfdecAudio *		audio,
+							 const SwfdecSoundMatrix *matrix);
 
 gsize			swfdec_audio_iterate		(SwfdecAudio *		audio,
 							 gsize			n_samples);

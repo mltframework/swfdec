@@ -52,19 +52,21 @@ swfdec_load_sound_sound_provider_start (SwfdecSoundProvider *provider,
 	samples_offset, loops);
   }
   sound->audio = swfdec_audio_load_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (provider)->context), sound);
+  swfdec_audio_set_matrix (sound->audio, &sound->sound_matrix);
 }
 
 static void
 swfdec_load_sound_sound_provider_stop (SwfdecSoundProvider *provider, SwfdecActor *actor)
 {
-  SwfdecLoadSound *load = SWFDEC_LOAD_SOUND (provider);
+  SwfdecLoadSound *sound = SWFDEC_LOAD_SOUND (provider);
 
-  if (load->audio == NULL)
+  if (sound->audio == NULL)
     return;
 
-  swfdec_audio_remove (load->audio);
-  g_object_unref (load->audio);
-  load->audio = NULL;
+  swfdec_audio_set_matrix (sound->audio, NULL);
+  swfdec_audio_remove (sound->audio);
+  g_object_unref (sound->audio);
+  sound->audio = NULL;
 }
 
 static void
@@ -334,6 +336,7 @@ swfdec_load_sound_dispose (GObject *object)
   }
   g_free (sound->url);
   if (sound->audio) {
+    swfdec_audio_set_matrix (sound->audio, NULL);
     swfdec_audio_remove (sound->audio);
     g_object_unref (sound->audio);
     sound->audio = NULL;
@@ -354,6 +357,8 @@ static void
 swfdec_load_sound_init (SwfdecLoadSound *sound)
 {
   sound->frames = g_ptr_array_new ();
+
+  swfdec_sound_matrix_init_identity (&sound->sound_matrix);
 }
 
 static void

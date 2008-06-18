@@ -197,6 +197,16 @@ swfdec_audio_set_actor (SwfdecAudio *audio, SwfdecActor *actor)
     g_object_unref (audio->actor);
   }
   audio->actor = actor;
+  swfdec_audio_set_matrix (audio, actor ? &actor->sound_matrix : NULL);
+}
+
+void
+swfdec_audio_set_matrix (SwfdecAudio *audio, const SwfdecSoundMatrix *matrix)
+{
+  g_return_if_fail (SWFDEC_IS_AUDIO (audio));
+  g_return_if_fail (matrix != NULL);
+
+  audio->matrix = matrix;
 }
 
 /* FIXME: This function is pretty much a polling approach at sound matrix 
@@ -210,16 +220,16 @@ swfdec_audio_update_matrix (SwfdecAudio *audio)
 
   g_return_if_fail (SWFDEC_IS_AUDIO (audio));
 
-  if (audio->actor) {
-    swfdec_sound_matrix_multiply (&sound, &audio->actor->sound_matrix,
+  if (audio->matrix) {
+    swfdec_sound_matrix_multiply (&sound, audio->matrix,
 	&audio->player->priv->sound_matrix);
   } else if (audio->player) {
     sound = audio->player->priv->sound_matrix;
   }
-  if (swfdec_sound_matrix_is_equal (&sound, &audio->matrix))
+  if (swfdec_sound_matrix_is_equal (&sound, &audio->matrix_cache))
     return;
 
-  audio->matrix = sound;
+  audio->matrix_cache = sound;
   g_signal_emit (audio, signals[CHANGED], 0);
 }
 
@@ -253,7 +263,7 @@ swfdec_audio_render (SwfdecAudio *audio, gint16 *dest,
 
   klass = SWFDEC_AUDIO_GET_CLASS (audio);
   rendered = klass->render (audio, dest, start_offset, n_samples);
-  swfdec_sound_matrix_apply (&audio->matrix, dest, rendered);
+  swfdec_sound_matrix_apply (&audio->matrix_cache, dest, rendered);
 
   return rendered;
 }

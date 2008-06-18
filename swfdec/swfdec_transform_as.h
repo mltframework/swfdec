@@ -46,8 +46,10 @@ struct _SwfdecTransformAsClass {
   SwfdecAsObjectClass	object_class;
 };
 
-GType		swfdec_transform_as_get_type	(void);
+GType			swfdec_transform_as_get_type	(void);
 
+SwfdecTransformAs *	swfdec_transform_as_new		(SwfdecAsContext *		context,
+							 SwfdecMovie *			target);
 
 G_END_DECLS
 #endif

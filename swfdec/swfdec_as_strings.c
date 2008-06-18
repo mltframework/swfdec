@@ -514,5 +514,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("flash")
   SWFDEC_AS_CONSTANT_STRING ("geom")
   SWFDEC_AS_CONSTANT_STRING ("ColorTransform")
+  SWFDEC_AS_CONSTANT_STRING ("Transform")
   /* add more here */
 ;

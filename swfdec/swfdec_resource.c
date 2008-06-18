@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "swfdec_resource.h"
+#include "swfdec_access.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_interpret.h"
@@ -596,12 +597,19 @@ swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
   g_object_unref (loader);
 }
 
+static const SwfdecAccessMatrix swfdec_resource_matrix = {
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_YES, SWFDEC_ACCESS_YES },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_POLICY },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_POLICY }
+};
+
 static void
 swfdec_resource_load_request (gpointer loadp, gpointer playerp)
 {
   SwfdecResourceLoad *load = loadp;
   SwfdecPlayer *player = playerp;
-  SwfdecURL *url;
 
   /* empty URL means unload (yay!) */
   if (load->url[0] == '\0') {
@@ -637,36 +645,8 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
     return;
   }
 
-  if (swfdec_url_path_is_relative (load->url)) {
-    swfdec_resource_do_load (player, TRUE, load);
-    return;
-  }
-  url = swfdec_player_create_url (player, load->url);
-  if (url == NULL) {
-    swfdec_resource_do_load (player, FALSE, load);
-    return;
-  }
-  switch (load->sandbox->type) {
-    case SWFDEC_SANDBOX_REMOTE:
-      swfdec_resource_do_load (player, !swfdec_url_is_local (url), load);
-      break;
-    case SWFDEC_SANDBOX_LOCAL_NETWORK:
-    case SWFDEC_SANDBOX_LOCAL_TRUSTED:
-      if (!swfdec_url_is_local (url)) {
-	SWFDEC_FIXME ("Adobe claims you need to be allowed by policy files now, "
-	    "we don't check that though");
-      }
-      swfdec_resource_do_load (player, TRUE, load);
-      break;
-    case SWFDEC_SANDBOX_LOCAL_FILE:
-      swfdec_resource_do_load (player, swfdec_url_is_local (url), load);
-      break;
-    case SWFDEC_SANDBOX_NONE:
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-  swfdec_url_free (url);
+  swfdec_player_allow_by_matrix (player, load->sandbox, load->url,
+      swfdec_resource_matrix, swfdec_resource_do_load, load);
 }
 
 /* NB: must be called from a script */

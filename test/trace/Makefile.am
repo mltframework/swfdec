@@ -1663,6 +1663,15 @@ EXTRA_DIST = \
 	loadobject-sendandload-7.swf.trace \
 	loadobject-sendandload-8.swf \
 	loadobject-sendandload-8.swf.trace \
+	loadSound-matrix-no-target-5.swf \
+	loadSound-matrix-no-target-5.swf.trace \
+	loadSound-matrix-no-target-6.swf \
+	loadSound-matrix-no-target-6.swf.trace \
+	loadSound-matrix-no-target-7.swf \
+	loadSound-matrix-no-target-7.swf.trace \
+	loadSound-matrix-no-target-8.swf \
+	loadSound-matrix-no-target-8.swf.trace \
+	loadSound-matrix-no-target.as \
 	loadSound-matrix-repeat-5.swf \
 	loadSound-matrix-repeat-5.swf.trace \
 	loadSound-matrix-repeat-6.swf \

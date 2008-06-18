@@ -1681,6 +1681,15 @@ EXTRA_DIST = \
 	loadSound-matrix-repeat-8.swf \
 	loadSound-matrix-repeat-8.swf.trace \
 	loadSound-matrix-repeat.as \
+	loadSound-matrix-reset-5.swf \
+	loadSound-matrix-reset-5.swf.trace \
+	loadSound-matrix-reset-6.swf \
+	loadSound-matrix-reset-6.swf.trace \
+	loadSound-matrix-reset-7.swf \
+	loadSound-matrix-reset-7.swf.trace \
+	loadSound-matrix-reset-8.swf \
+	loadSound-matrix-reset-8.swf.trace \
+	loadSound-matrix-reset.as \
 	loadvariables.as \
 	loadvariables-5.swf \
 	loadvariables-5.swf.trace \

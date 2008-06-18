@@ -84,6 +84,9 @@ swfdec_transform_as_get_colorTransform (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TRANSFORM_AS, &transform, "");
 
+  if (transform->target == NULL)
+    return;
+
   SWFDEC_AS_VALUE_SET_OBJECT (ret,
     SWFDEC_AS_OBJECT (swfdec_color_transform_as_new_from_transform (cx,
 	&transform->target->color_transform)));
@@ -95,7 +98,30 @@ swfdec_transform_as_set_colorTransform (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Transform.colorTransform (set)");
+  SwfdecTransformAs *self;
+  SwfdecColorTransformAs *transform_as;
+  SwfdecColorTransform *transform;
+  SwfdecAsObject *color;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TRANSFORM_AS, &self, "o", &color);
+
+  if (self->target == NULL)
+    return;
+
+  if (!SWFDEC_IS_COLOR_TRANSFORM_AS (color))
+    return;
+
+  transform_as = SWFDEC_COLOR_TRANSFORM_AS (color);
+  transform = &self->target->color_transform;
+
+  transform->ra = CLAMP (transform_as->ra * 256.0, 0, 256);
+  transform->ga = CLAMP (transform_as->ga * 256.0, 0, 256);
+  transform->ba = CLAMP (transform_as->ba * 256.0, 0, 256);
+  transform->aa = CLAMP (transform_as->aa * 256.0, 0, 256);
+  transform->rb = CLAMP (transform_as->rb, -256, 256);
+  transform->gb = CLAMP (transform_as->gb, -256, 256);
+  transform->bb = CLAMP (transform_as->bb, -256, 256);
+  transform->ab = CLAMP (transform_as->ab, -256, 256);
 }
 
 SWFDEC_AS_NATIVE (1106, 107, swfdec_transform_as_get_concatenatedColorTransform)

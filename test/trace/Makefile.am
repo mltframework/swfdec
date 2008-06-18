@@ -2317,6 +2317,9 @@ EXTRA_DIST = \
 	place-object-char-name-6.swf.trace \
 	place-object-char-name-7.swf \
 	place-object-char-name-7.swf.trace \
+	place-object-color-transform.swf \
+	place-object-color-transform.swf.trace \
+	place-object-color-transform.xml \
 	place-object-move-5.swf \
 	place-object-move-5.swf.trace \
 	place-object-move-6.swf \

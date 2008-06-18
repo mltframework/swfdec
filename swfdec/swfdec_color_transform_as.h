@@ -40,7 +40,7 @@ typedef struct _SwfdecColorTransformAsClass SwfdecColorTransformAsClass;
 struct _SwfdecColorTransformAs {
   SwfdecAsObject	object;
 
-  SwfdecColorTransform	transform;
+  double		ra, rb, ga, gb, ba, bb, aa, ab;
 };
 
 struct _SwfdecColorTransformAsClass {

@@ -37,7 +37,14 @@ swfdec_color_transform_as_class_init (SwfdecColorTransformAsClass *klass)
 static void
 swfdec_color_transform_as_init (SwfdecColorTransformAs *transform)
 {
-  swfdec_color_transform_init_identity (&transform->transform);
+  transform->ra = 1;
+  transform->ga = 1;
+  transform->ba = 1;
+  transform->aa = 1;
+  transform->rb = 0;
+  transform->gb = 0;
+  transform->bb = 0;
+  transform->ab = 0;
 }
 
 // properties
@@ -51,7 +58,7 @@ swfdec_color_transform_as_get_alphaMultiplier (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.aa / 256.0);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->aa);
 }
 
 SWFDEC_AS_NATIVE (1105, 102, swfdec_color_transform_as_set_alphaMultiplier)
@@ -73,7 +80,7 @@ swfdec_color_transform_as_get_redMultiplier (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.ra / 256.0);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->ra);
 }
 
 SWFDEC_AS_NATIVE (1105, 104, swfdec_color_transform_as_set_redMultiplier)
@@ -95,7 +102,7 @@ swfdec_color_transform_as_get_greenMultiplier (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.ga / 256.0);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->ga);
 }
 
 SWFDEC_AS_NATIVE (1105, 106, swfdec_color_transform_as_set_greenMultiplier)
@@ -117,7 +124,7 @@ swfdec_color_transform_as_get_blueMultiplier (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.ba / 256.0);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->ba);
 }
 
 SWFDEC_AS_NATIVE (1105, 108, swfdec_color_transform_as_set_blueMultiplier)
@@ -139,7 +146,7 @@ swfdec_color_transform_as_get_alphaOffset (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.ab);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->ab);
 }
 
 SWFDEC_AS_NATIVE (1105, 110, swfdec_color_transform_as_set_alphaOffset)
@@ -161,7 +168,7 @@ swfdec_color_transform_as_get_redOffset (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.rb);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->rb);
 }
 
 SWFDEC_AS_NATIVE (1105, 112, swfdec_color_transform_as_set_redOffset)
@@ -183,7 +190,7 @@ swfdec_color_transform_as_get_greenOffset (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.gb);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->gb);
 }
 
 SWFDEC_AS_NATIVE (1105, 114, swfdec_color_transform_as_set_greenOffset)
@@ -205,7 +212,7 @@ swfdec_color_transform_as_get_blueOffset (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->transform.bb);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->bb);
 }
 
 SWFDEC_AS_NATIVE (1105, 116, swfdec_color_transform_as_set_blueOffset)
@@ -263,14 +270,14 @@ swfdec_color_transform_as_construct (SwfdecAsContext *cx,
   transform = SWFDEC_COLOR_TRANSFORM_AS (object);
 
   i = 0;
-  transform->transform.ra = 256 * swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->transform.ga = 256 * swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->transform.ba = 256 * swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->transform.aa = 256 * swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->transform.rb = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->transform.gb = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->transform.bb = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->transform.ab = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->ra = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->ga = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->ba = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->aa = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->rb = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->gb = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->bb = swfdec_as_value_to_number (cx, &argv[i++]);
+  transform->ab = swfdec_as_value_to_number (cx, &argv[i++]);
 }
 
 SwfdecColorTransformAs *
@@ -278,7 +285,7 @@ swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
     const SwfdecColorTransform *transform)
 {
   SwfdecAsValue val;
-  SwfdecColorTransformAs *object;
+  SwfdecColorTransformAs *transform_as;
   guint size;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
@@ -287,8 +294,8 @@ swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
   size = sizeof (SwfdecColorTransformAs);
   if (!swfdec_as_context_use_mem (context, size))
     return NULL;
-  object = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (object), context, size);
+  transform_as = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, NULL);
+  swfdec_as_object_add (SWFDEC_AS_OBJECT (transform_as), context, size);
 
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_flash, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
@@ -298,13 +305,20 @@ swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
       swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
 	  SWFDEC_AS_STR_ColorTransform, &val);
       if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (object),
+	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (transform_as),
 	    SWFDEC_AS_VALUE_GET_OBJECT (&val));
       }
     }
   }
 
-  object->transform = *transform;
+  transform_as->ra = transform->ra / 256.0;
+  transform_as->ga = transform->ga / 256.0;
+  transform_as->ba = transform->ba / 256.0;
+  transform_as->aa = transform->aa / 256.0;
+  transform_as->rb = transform->rb;
+  transform_as->gb = transform->gb;
+  transform_as->bb = transform->bb;
+  transform_as->ab = transform->ab;
 
-  return object;
+  return transform_as;
 }

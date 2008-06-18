@@ -21,6 +21,7 @@
 #define __SWFDEC_SOUND_PROVIDER_H__
 
 #include <swfdec/swfdec.h>
+#include <swfdec/swfdec_sound_matrix.h>
 #include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
@@ -43,6 +44,7 @@ struct _SwfdecSoundProviderInterface {
 								 guint			loops);
   void			(* stop)				(SwfdecSoundProvider *  provider,
 								 SwfdecActor *		actor);
+  SwfdecSoundMatrix *	(* get_matrix)				(SwfdecSoundProvider *  provider);
 };
 
 GType			swfdec_sound_provider_get_type		(void) G_GNUC_CONST;
@@ -53,6 +55,7 @@ void			swfdec_sound_provider_start		(SwfdecSoundProvider *	provider,
 								 guint			loops);
 void			swfdec_sound_provider_stop		(SwfdecSoundProvider *	provider,
 								 SwfdecActor *		actor); 
+SwfdecSoundMatrix *	swfdec_sound_provider_get_matrix	(SwfdecSoundProvider *  provider);
 
 
 G_END_DECLS

@@ -204,7 +204,6 @@ void
 swfdec_audio_set_matrix (SwfdecAudio *audio, const SwfdecSoundMatrix *matrix)
 {
   g_return_if_fail (SWFDEC_IS_AUDIO (audio));
-  g_return_if_fail (matrix != NULL);
 
   audio->matrix = matrix;
 }

@@ -79,11 +79,18 @@ swfdec_sound_sound_provider_stop (SwfdecSoundProvider *provider, SwfdecActor *ac
       swfdec_sound_object_should_stop, &data);
 }
 
+static SwfdecSoundMatrix *
+swfdec_sound_sound_provider_get_matrix (SwfdecSoundProvider *provider)
+{
+  return NULL;
+}
+
 static void
 swfdec_sound_sound_provider_init (SwfdecSoundProviderInterface *iface)
 {
   iface->start = swfdec_sound_sound_provider_start;
   iface->stop = swfdec_sound_sound_provider_stop;
+  iface->get_matrix = swfdec_sound_sound_provider_get_matrix;
 }
 
 /*** SWFDEC_SOUND ***/

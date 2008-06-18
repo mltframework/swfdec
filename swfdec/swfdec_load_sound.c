@@ -51,7 +51,7 @@ swfdec_load_sound_sound_provider_start (SwfdecSoundProvider *provider,
     SWFDEC_FIXME ("implement starting at offset %"G_GSIZE_FORMAT" with %u loops",
 	samples_offset, loops);
   }
-  sound->audio = swfdec_audio_load_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (provider)->context), sound);
+  sound->audio = swfdec_audio_load_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context), sound);
   swfdec_audio_set_matrix (sound->audio, &sound->sound_matrix);
 }
 
@@ -69,11 +69,20 @@ swfdec_load_sound_sound_provider_stop (SwfdecSoundProvider *provider, SwfdecActo
   sound->audio = NULL;
 }
 
+static SwfdecSoundMatrix *
+swfdec_load_sound_sound_provider_get_matrix (SwfdecSoundProvider *provider)
+{
+  SwfdecLoadSound *sound = SWFDEC_LOAD_SOUND (provider);
+
+  return &sound->sound_matrix;
+}
+
 static void
 swfdec_load_sound_sound_provider_init (SwfdecSoundProviderInterface *iface)
 {
   iface->start = swfdec_load_sound_sound_provider_start;
   iface->stop = swfdec_load_sound_sound_provider_stop;
+  iface->get_matrix = swfdec_load_sound_sound_provider_get_matrix;
 }
 
 /*** SWFDEC_STREAM_TARGET ***/

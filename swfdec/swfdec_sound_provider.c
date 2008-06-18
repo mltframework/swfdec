@@ -88,3 +88,13 @@ swfdec_sound_provider_stop (SwfdecSoundProvider *provider, SwfdecActor *actor)
   iface->stop (provider, actor);
 }
 
+SwfdecSoundMatrix *
+swfdec_sound_provider_get_matrix (SwfdecSoundProvider *provider)
+{
+  SwfdecSoundProviderInterface *iface;
+  
+  g_return_val_if_fail (SWFDEC_IS_SOUND_PROVIDER (provider), NULL);
+
+  iface = SWFDEC_SOUND_PROVIDER_GET_INTERFACE (provider);
+  return iface->get_matrix (provider);
+}

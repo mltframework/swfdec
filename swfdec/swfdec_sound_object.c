@@ -107,6 +107,12 @@ swfdec_sound_object_get_sound (SwfdecSoundObject *sound, const char *name)
 static SwfdecSoundMatrix *
 swfdec_sound_object_get_matrix (SwfdecSoundObject *sound)
 {
+  if (sound->provider) {
+    SwfdecSoundMatrix *ret = swfdec_sound_provider_get_matrix (sound->provider);
+    if (ret)
+      return ret;
+  }
+
   if (sound->target == NULL) {
     return &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (sound)->context)->priv->sound_matrix;
   } else {

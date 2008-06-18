@@ -23,6 +23,7 @@
 
 #include <math.h>
 #include "swfdec_net_stream.h"
+#include "swfdec_access.h"
 #include "swfdec_amf.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_strings.h"
@@ -569,6 +570,14 @@ swfdec_net_stream_load (SwfdecPlayer *player, gboolean allowed, gpointer streamp
   stream->requested_url = NULL;
 }
 
+static const SwfdecAccessMatrix swfdec_net_stream_matrix = {
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_YES, SWFDEC_ACCESS_POLICY },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_POLICY },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_POLICY }
+};
+
 void
 swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url_string)
 {
@@ -589,7 +598,8 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url_string)
   stream->requested_url = g_strdup (url_string);
   stream->sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
 
-  swfdec_player_load_default (player, url_string, swfdec_net_stream_load, stream);
+  swfdec_player_allow_by_matrix (player, url_string, 
+      swfdec_net_stream_matrix, swfdec_net_stream_load, stream);
 }
 
 void

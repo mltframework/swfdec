@@ -286,10 +286,6 @@ void	      	swfdec_player_allow_or_load	(SwfdecPlayer *		player,
 						 const SwfdecURL *	crossdomain,
 						 SwfdecPolicyFunc	func,
 						 gpointer		data);
-void	      	swfdec_player_load_default	(SwfdecPlayer *		player,
-						 const char *		url_string,
-						 SwfdecPolicyFunc	func,
-						 gpointer		data);
 
 /* in swfdec_as_interpret.c */
 SwfdecMovie *	swfdec_player_get_movie_from_value 

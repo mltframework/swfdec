@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_load_sound.h"
+#include "swfdec_access.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_decoder.h"
 #include "swfdec_audio_internal.h"
@@ -388,6 +389,14 @@ swfdec_load_sound_load (SwfdecPlayer *player, gboolean allow, gpointer data)
   swfdec_stream_set_target (sound->stream, SWFDEC_STREAM_TARGET (sound));
 }
 
+static const SwfdecAccessMatrix swfdec_load_sound_matrix = {
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_YES, SWFDEC_ACCESS_YES },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_YES, SWFDEC_ACCESS_YES },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_YES, SWFDEC_ACCESS_YES }
+};
+
 SwfdecLoadSound *
 swfdec_load_sound_new (SwfdecAsObject *target, const char *url)
 {
@@ -401,8 +410,8 @@ swfdec_load_sound_new (SwfdecAsObject *target, const char *url)
   sound->target = target;
   sound->sandbox = SWFDEC_SANDBOX (target->context->global);
   sound->url = g_strdup (url);
-  swfdec_player_load_default (SWFDEC_PLAYER (target->context), url, 
-      swfdec_load_sound_load, sound);
+  swfdec_player_allow_by_matrix (SWFDEC_PLAYER (target->context), url, 
+      swfdec_load_sound_matrix, swfdec_load_sound_load, sound);
   /* tell missing plugins stuff we want MP3 */
   missing = NULL;
   swfdec_audio_decoder_prepare (SWFDEC_AUDIO_CODEC_MP3, 

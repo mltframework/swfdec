@@ -43,11 +43,11 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 struct _SwfdecTextFieldMovie {
   SwfdecActor		actor;
 
-  SwfdecRect		extents;	/* original extents (copied from graphic) */
-  cairo_matrix_t	to_layout;	/* matrix to go from movie => layout */
-  cairo_matrix_t	from_layout;	/* matrix to go from layout => movie */
-  SwfdecRectangle	layout_area;	/* layout we render to in stage coordinates */
-  SwfdecRectangle	stage_area;	/* complete size of textfield in stage coordinates */
+  SwfdecRect		extents;		/* original extents (copied from graphic) */
+  cairo_matrix_t	to_layout;		/* matrix to go from movie => layout */
+  cairo_matrix_t	from_layout;		/* matrix to go from layout => movie */
+  SwfdecRectangle	layout_area;		/* layout we render to in stage coordinates */
+  SwfdecRectangle	stage_area;		/* complete size of textfield in stage coordinates */
 
   /* properties copied from textfield */
   gboolean		html;
@@ -60,11 +60,11 @@ struct _SwfdecTextFieldMovie {
   gboolean		border;
   gboolean		background;
  
-  SwfdecTextBuffer *	text;		/* the text + formatting */
+  SwfdecTextBuffer *	text;			/* the text + formatting */
 
-  SwfdecTextLayout *	layout;		/* the layouted text */
-  guint			layout_width;	/* text width in pixels */
-  guint			layout_height;	/* text height in pixels */
+  SwfdecTextLayout *	layout;			/* the layouted text */
+  guint			layout_width;		/* text width in pixels */
+  guint			layout_height;		/* text height in pixels */
 
   const char *		variable;
 
@@ -73,15 +73,15 @@ struct _SwfdecTextFieldMovie {
   gboolean		condense_white;
 
   SwfdecAsObject *	style_sheet;
-  const char *		style_sheet_input; /* saved input, so it can be used to apply stylesheet again */
+  const char *		style_sheet_input;	/* saved input, so it can be used to apply stylesheet again */
 
-  gboolean		scroll_changed; /* if any of the scroll attributes have changed and we haven't fired the event yet */
-  guint			changed;	/* number of onChanged events we have to emit */
+  gboolean		scroll_changed;		/* if any of the scroll attributes have changed and we haven't fired the event yet */
+  guint			changed;		/* number of onChanged events we have to emit */
   /* scroll variables */
-  guint			scroll;		/* current scroll offset in lines (0-indexed) */
-  guint			scroll_max;	/* scroll must be smaller than this value */
-  guint			lines_visible;	/* number of lines currently visible */
-  guint			hscroll;	/* horizontal scrolling offset in pixels */
+  guint			scroll;			/* current scroll offset in lines (0-indexed) */
+  guint			scroll_max;		/* scroll must be smaller than this value */
+  guint			lines_visible;		/* number of lines currently visible */
+  guint			hscroll;		/* horizontal scrolling offset in pixels */
   gboolean		mouse_wheel_enabled;
 
   const char *		restrict_;
@@ -103,15 +103,17 @@ void		swfdec_text_field_movie_set_text	(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
 void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie * text);
-const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *		text);
-void		swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *	text,
-							 const char *			value);
-void		swfdec_text_field_movie_set_listen_variable_text (SwfdecTextFieldMovie		*text,
-							 const char *			value);
-void		swfdec_text_field_movie_replace_text	(SwfdecTextFieldMovie *		text,
-							 guint				start_index,
-							 guint				end_index,
-							 const char *			str);
+const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *	text);
+void		swfdec_text_field_movie_set_listen_variable 
+							(SwfdecTextFieldMovie *	text,
+							 const char *		value);
+void		swfdec_text_field_movie_set_listen_variable_text 
+							(SwfdecTextFieldMovie *	text,
+							 const char *		value);
+void		swfdec_text_field_movie_replace_text	(SwfdecTextFieldMovie *	text,
+							 guint			start_index,
+							 guint			end_index,
+							 const char *		str);
 
 guint		swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *	text);
 
@@ -121,7 +123,7 @@ void		swfdec_text_field_movie_init_properties	(SwfdecAsContext *	cx);
 /* implemented in swfdec_html_parser.c */
 void		swfdec_text_field_movie_html_parse	(SwfdecTextFieldMovie *	text, 
 							 const char *		str);
-const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *		text);
+const char *	swfdec_text_field_movie_get_html_text	(SwfdecTextFieldMovie *	text);
 
 G_END_DECLS
 #endif

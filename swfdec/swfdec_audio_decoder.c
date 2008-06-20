@@ -169,7 +169,7 @@ swfdec_audio_decoder_pull (SwfdecAudioDecoder *decoder)
   klass = SWFDEC_AUDIO_DECODER_GET_CLASS (decoder);
   result = klass->pull (decoder);
   /* result must be n samples of 44.1kHz stereo 16bit - and one sample is 4 bytes */
-  g_assert (result == NULL || result->length % 4);
+  g_assert (result == NULL || result->length % 4 == 0);
   return result;
 }
 

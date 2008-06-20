@@ -492,8 +492,10 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
       return TRUE;
     case SWFDEC_TAG_SOUNDSTREAMBLOCK:
       if (!fast_forward) {
-	if (movie->sound_stream == NULL)
-	  movie->sound_stream = swfdec_audio_swf_stream_new (player, movie->sprite, tag);
+	if (movie->sound_stream == NULL) {
+	  movie->sound_stream = swfdec_audio_swf_stream_new (player, movie->sprite,
+	      movie->next_action - 1);
+	}
 	movie->sound_active = TRUE;
       }
       return TRUE;

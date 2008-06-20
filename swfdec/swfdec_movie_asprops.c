@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include "swfdec_movie.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
@@ -48,18 +49,13 @@ mc_x_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 static void
 mc_x_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  double d;
+  SwfdecTwips x;
 
-  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
-  if (!isfinite (d)) {
-    SWFDEC_WARNING ("trying to move %s._x to a non-finite value, ignoring", movie->name);
-    return;
-  }
+  x = swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val);
   movie->modified = TRUE;
-  d = SWFDEC_DOUBLE_TO_TWIPS (d);
-  if (d != movie->matrix.x0) {
+  if (x != movie->matrix.x0) {
     swfdec_movie_begin_update_matrix (movie);
-    movie->matrix.x0 = d;
+    movie->matrix.x0 = x;
     swfdec_movie_end_update_matrix (movie);
   }
 }
@@ -77,18 +73,13 @@ mc_y_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 static void
 mc_y_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  double d;
+  SwfdecTwips y;
 
-  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
-  if (!isfinite (d)) {
-    SWFDEC_WARNING ("trying to move %s._y to a non-finite value, ignoring", movie->name);
-    return;
-  }
+  y = swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val);
   movie->modified = TRUE;
-  d = SWFDEC_DOUBLE_TO_TWIPS (d);
-  if (d != movie->matrix.y0) {
+  if (y != movie->matrix.y0) {
     swfdec_movie_begin_update_matrix (movie);
-    movie->matrix.y0 = d;
+    movie->matrix.y0 = y;
     swfdec_movie_end_update_matrix (movie);
   }
 }

@@ -273,9 +273,9 @@ swfdec_url_new_relative (const SwfdecURL *url, const char *string)
     /* relative URL */
     char *cur = g_strdup (url->path);
     while (g_str_has_prefix (string, "../")) {
-      if (!cur || !swfdec_url_path_to_parent_path (cur)) {
+      if (cur && !swfdec_url_path_to_parent_path (cur)) {
 	g_free (cur);
-	return NULL;
+	cur = NULL;
       }
       string += 3;
     }

@@ -815,6 +815,15 @@ EXTRA_DIST = \
 	crash-0.7.1-throw-8.swf \
 	crash-0.7.1-throw-8.swf.trace \
 	crash-0.7.1-throw.as \
+	crash-0.7.1-uncompressed-half-samples-5.swf \
+	crash-0.7.1-uncompressed-half-samples-5.swf.trace \
+	crash-0.7.1-uncompressed-half-samples-6.swf \
+	crash-0.7.1-uncompressed-half-samples-6.swf.trace \
+	crash-0.7.1-uncompressed-half-samples-7.swf \
+	crash-0.7.1-uncompressed-half-samples-7.swf.trace \
+	crash-0.7.1-uncompressed-half-samples-8.swf \
+	crash-0.7.1-uncompressed-half-samples-8.swf.trace \
+	crash-0.7.1-uncompressed-half-samples.xml \
 	createTextField-returnvalue-5.swf \
 	createTextField-returnvalue-5.swf.trace \
 	createTextField-returnvalue-6.swf \

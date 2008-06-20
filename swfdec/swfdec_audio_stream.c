@@ -61,7 +61,6 @@ swfdec_audio_stream_require (SwfdecAudioStream *stream, guint n_samples)
     /* if the decoder still has data */
     buffer = swfdec_audio_decoder_pull (stream->decoder);
     if (buffer) {
-      g_assert (buffer->length %4 == 0);
       g_queue_push_tail (stream->queue, buffer);
       stream->queue_size += buffer->length / 4;
       continue;

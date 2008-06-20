@@ -120,6 +120,16 @@ swfdec_audio_decoder_uncompressed_push (SwfdecAudioDecoder *decoder,
   else
     tmp = swfdec_audio_decoder_uncompressed_decode_8bit (buffer);
 
+  if (tmp->length % 4) {
+    SwfdecBuffer *correct;
+    SWFDEC_ERROR ("incorrect buffer size, %"G_GSIZE_FORMAT" bytes overhead",
+	tmp->length % 4);
+    /* we don't just truncate the length here as it might be the original
+     * buffer we got passed, and we must not modify that one */
+    correct = swfdec_buffer_new_subbuffer (tmp, 0, tmp->length & ~3);
+    swfdec_buffer_unref (tmp);
+    tmp = correct;
+  }
   tmp = swfdec_audio_decoder_uncompressed_upscale (tmp, decoder->format);
   swfdec_buffer_queue_push (SWFDEC_AUDIO_DECODER_UNCOMPRESSED (decoder)->queue,
       tmp);

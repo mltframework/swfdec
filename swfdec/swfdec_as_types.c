@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,6 +34,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 #include "swfdec_movie.h"
 
 /*** GTK-DOC ***/
@@ -676,5 +677,29 @@ swfdec_as_value_to_primitive (SwfdecAsValue *value)
     swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
 	0, NULL, value);
   }
+}
+
+/* from swfdec_internal.h */
+gboolean
+swfdec_as_value_to_twips (SwfdecAsContext *context, const SwfdecAsValue *val, 
+    gboolean is_length, SwfdecTwips *result)
+{
+  double d;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (val != NULL, FALSE);
+  g_return_val_if_fail (result != NULL, FALSE);
+
+  d = swfdec_as_value_to_number (context, val);
+  if (isnan (d))
+    return FALSE;
+  if (is_length && d < 0)
+    return FALSE;
+
+  d *= SWFDEC_TWIPS_SCALE_FACTOR;
+  *result = swfdec_as_double_to_integer (d);
+  if (is_length)
+    *result = ABS (*result);
+  return TRUE;
 }
 

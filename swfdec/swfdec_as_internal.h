@@ -74,9 +74,5 @@ void		swfdec_as_object_add_native_variable (SwfdecAsObject *	object,
 						 SwfdecAsNative		set);
 
 
-#define swfdec_as_value_to_twips(cx, val) \
-  (swfdec_as_double_to_integer (swfdec_as_value_to_number ((cx), (val)) * SWFDEC_TWIPS_SCALE_FACTOR))
-
-
 G_END_DECLS
 #endif

@@ -26,11 +26,11 @@
 #include <math.h>
 
 #include "swfdec_movie.h"
-#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
@@ -51,7 +51,8 @@ mc_x_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   SwfdecTwips x;
 
-  x = swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val);
+  if (!swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val, FALSE, &x))
+    return;
   movie->modified = TRUE;
   if (x != movie->matrix.x0) {
     swfdec_movie_begin_update_matrix (movie);
@@ -75,7 +76,8 @@ mc_y_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   SwfdecTwips y;
 
-  y = swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val);
+  if (!swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val, FALSE, &y))
+    return;
   movie->modified = TRUE;
   if (y != movie->matrix.y0) {
     swfdec_movie_begin_update_matrix (movie);

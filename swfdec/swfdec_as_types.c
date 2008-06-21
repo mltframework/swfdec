@@ -690,6 +690,9 @@ swfdec_as_value_to_twips (SwfdecAsContext *context, const SwfdecAsValue *val,
   g_return_val_if_fail (val != NULL, FALSE);
   g_return_val_if_fail (result != NULL, FALSE);
 
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val) || SWFDEC_AS_VALUE_IS_NULL (val))
+    return FALSE;
+
   d = swfdec_as_value_to_number (context, val);
   if (isnan (d))
     return FALSE;

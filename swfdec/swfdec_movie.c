@@ -182,9 +182,6 @@ swfdec_movie_queue_update (SwfdecMovie *movie, SwfdecMovieCacheState state)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
 
-  if (state > SWFDEC_MOVIE_INVALID_EXTENTS) {
-    swfdec_movie_invalidate_next (movie);
-  }
   while (movie && movie->cache_state < state) {
     movie->cache_state = state;
     movie = movie->parent;

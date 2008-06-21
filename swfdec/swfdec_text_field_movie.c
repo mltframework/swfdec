@@ -31,6 +31,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_interpret.h"
 #include "swfdec_debug.h"
+#include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
 #include "swfdec_sandbox.h"
@@ -740,6 +741,88 @@ swfdec_text_field_movie_key_release (SwfdecActor *actor, guint keycode, guint ch
 }
 
 static void
+swfdec_text_field_movie_property_get (SwfdecMovie *movie, guint prop_id, 
+    SwfdecAsValue *val)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  double d;
+
+  switch (prop_id) {
+    case SWFDEC_MOVIE_PROPERTY_X:
+      swfdec_movie_update (movie);
+      d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0 + text->extents.x0);
+      SWFDEC_AS_VALUE_SET_NUMBER (val, d);
+      return;
+    case SWFDEC_MOVIE_PROPERTY_Y:
+      swfdec_movie_update (movie);
+      d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0 + text->extents.y0);
+      SWFDEC_AS_VALUE_SET_NUMBER (val, d);
+      return;
+    default:
+      break;
+  }
+
+  SWFDEC_MOVIE_CLASS (swfdec_text_field_movie_parent_class)->property_get (movie, prop_id, val);
+}
+
+static void
+swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id, 
+    const SwfdecAsValue *val)
+{
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecAsContext *cx = SWFDEC_AS_OBJECT (movie)->context;
+  SwfdecTwips twips;
+
+  switch (prop_id) {
+    case SWFDEC_MOVIE_PROPERTY_X:
+      if (!swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val, FALSE, &twips))
+	return;
+      movie->modified = TRUE;
+      twips -= text->extents.x0;
+      if (twips != movie->matrix.x0) {
+	swfdec_movie_begin_update_matrix (movie);
+	movie->matrix.x0 = twips;
+	swfdec_movie_end_update_matrix (movie);
+      }
+      return;
+    case SWFDEC_MOVIE_PROPERTY_Y:
+      if (!swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val, FALSE, &twips))
+	return;
+      movie->modified = TRUE;
+      twips -= text->extents.y0;
+      if (twips != movie->matrix.y0) {
+	swfdec_movie_begin_update_matrix (movie);
+	movie->matrix.y0 = twips;
+	swfdec_movie_end_update_matrix (movie);
+      }
+      return;
+    case SWFDEC_MOVIE_PROPERTY_WIDTH:
+      if (swfdec_as_value_to_twips (cx, val, TRUE, &twips)) {
+	movie->modified = TRUE;
+	if (text->extents.x1 != text->extents.x0 + twips) {
+	  text->extents.x1 = text->extents.x0 + twips;
+	  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
+	}
+      }
+      return;
+    case SWFDEC_MOVIE_PROPERTY_HEIGHT:
+      movie->modified = TRUE;
+      if (swfdec_as_value_to_twips (cx, val, TRUE, &twips)) {
+	movie->modified = TRUE;
+	if (text->extents.y1 != text->extents.y0 + twips) {
+	  text->extents.y1 = text->extents.y0 + twips;
+	  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
+	}
+      }
+      return;
+    default:
+      break;
+  }
+
+  SWFDEC_MOVIE_CLASS (swfdec_text_field_movie_parent_class)->property_set (movie, prop_id, val);
+}
+
+static void
 swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
@@ -757,6 +840,8 @@ swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
   movie_class->render = swfdec_text_field_movie_render;
   movie_class->invalidate = swfdec_text_field_movie_invalidate;
   movie_class->contains = swfdec_text_field_movie_contains;
+  movie_class->property_get = swfdec_text_field_movie_property_get;
+  movie_class->property_set = swfdec_text_field_movie_property_set;
 
   actor_class->mouse_cursor = swfdec_text_field_movie_mouse_cursor;
   actor_class->mouse_events = swfdec_text_field_movie_mouse_events;

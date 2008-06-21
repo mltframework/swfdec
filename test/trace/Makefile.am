@@ -3668,6 +3668,11 @@ EXTRA_DIST = \
 	text-snapshot-properties-7.swf.trace \
 	text-snapshot-properties-8.swf \
 	text-snapshot-properties-8.swf.trace \
+	textfield-x-and-width-6.swf \
+	textfield-x-and-width-6.swf.trace \
+	textfield-x-and-width-7.swf \
+	textfield-x-and-width-7.swf.trace \
+	textfield-x-and-width.as \
 	textformat.as \
 	textformat-5.swf \
 	textformat-5.swf.trace \

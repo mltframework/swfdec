@@ -766,10 +766,6 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
       text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
     }
   }
-
-  if (text->auto_size != old) {
-    swfdec_movie_queue_update (SWFDEC_MOVIE (text), SWFDEC_MOVIE_INVALID_EXTENTS);
-  }
 }
 
 static void

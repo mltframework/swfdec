@@ -102,6 +102,7 @@ GType		swfdec_text_field_movie_get_type		(void);
 void		swfdec_text_field_movie_set_text	(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
+void		swfdec_text_field_movie_autosize	(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie * text);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_set_listen_variable 

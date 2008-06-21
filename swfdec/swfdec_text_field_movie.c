@@ -56,8 +56,9 @@ swfdec_text_field_movie_compute_layout_area (SwfdecTextFieldMovie *text)
   tmpy = round ((BORDER_TOP + BORDER_BOTTOM) * SWFDEC_TWIPS_SCALE_FACTOR * text->to_layout.yy);
   text->layout_area = text->stage_area;
   if (tmpx >= text->layout_area.width ||
-      tmpy >= text->layout_area.height)
+      tmpy >= text->layout_area.height) {
     return;
+  }
   
   text->layout_area.x += tmpx / 2;
   text->layout_area.y += tmpy / 2;
@@ -119,8 +120,8 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   swfdec_text_layout_set_wrap_width (text->layout, text->layout_area.width);
 }
 
-static void
-swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
+void
+swfdec_text_field_movie_autosize (SwfdecTextFieldMovie *text)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (text);
   double x0, z0, x1, z1; /* y0 and y1 are taken by math.h */
@@ -128,15 +129,20 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return;
 
-  x1 = (double) text->layout_width - text->layout_area.width;
-  z1 = (double) text->layout_height - text->layout_area.height;
+  x1 = text->layout_width;
+  z1 = text->layout_height;
+  cairo_matrix_transform_distance (&text->from_layout, &x1, &z1);
+  x1 += (BORDER_LEFT + BORDER_RIGHT) * SWFDEC_TWIPS_SCALE_FACTOR;
+  z1 += (BORDER_TOP + BORDER_BOTTOM) * SWFDEC_TWIPS_SCALE_FACTOR;
+  cairo_matrix_transform_distance (&movie->inverse_matrix, &x1, &z1);
+  x1 -= text->extents.x1 - text->extents.x0;
+  z1 -= text->extents.y1 - text->extents.y0;
 
   if (x1 == 0 && z1 == 0)
     return;
 
-  /* FIXME: rounding */
-  x1 *= text->from_layout.xx;
-  z1 *= text->from_layout.yy;
+  x1 = ceil (x1);
+  z1 = ceil (z1);
 
   switch (text->auto_size) {
     case SWFDEC_AUTO_SIZE_LEFT:
@@ -156,11 +162,11 @@ swfdec_text_field_movie_auto_size (SwfdecTextFieldMovie *text)
   }
   z0 = 0;
 
-  cairo_matrix_transform_distance (&movie->inverse_matrix, &x0, &z0);
+  swfdec_movie_invalidate_next (movie);
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
+
   text->extents.x0 += x0;
   text->extents.y0 += z0;
-
-  cairo_matrix_transform_distance (&movie->inverse_matrix, &x1, &z1);
   text->extents.x1 += x1;
   text->extents.y1 += z1;
 
@@ -172,19 +178,6 @@ swfdec_text_field_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
-
-  /* Doing auto-size when invalidating extents is a nasty trick that is 
-   * supposed to help in calculating the correct size with the same caching
-   * algorithm as the official player. Consider the following code:
-   * text.autoSize = "left";
-   * if (foo)
-   *   y = text._width;
-   * text.autoSize = "right";
-   * If foo is set, querying width will cause the autosize to happen, which
-   * will cause text to be left-aligned. If foo is not set, autosize doesn't
-   * happen until after it's set to right-aligned.
-   */
-  swfdec_text_field_movie_auto_size (text);
 
   swfdec_rect_union (extents, extents, &text->extents);
 }
@@ -225,6 +218,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
 {
   static const cairo_matrix_t identity = { 1, 0, 0, 1, 0, 0 };
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecRectangle *area;
   SwfdecColor color;
 
   /* textfields don't mask */
@@ -266,13 +260,13 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
 
   /* render the layout */
-  cairo_rectangle (cr, text->layout_area.x, text->layout_area.y, 
-      text->layout_area.width, text->layout_area.height);
+  area = &text->layout_area;
+  cairo_rectangle (cr, area->x, area->y, area->width, area->height);
   cairo_clip (cr);
   /* FIXME: This -1 is spacing? */
-  cairo_translate (cr, (double) text->layout_area.x - text->hscroll, text->layout_area.y - 1);
+  cairo_translate (cr, (double) area->x - text->hscroll, area->y - 1);
   swfdec_text_layout_render (text->layout, cr, ctrans,
-      text->scroll, text->layout_area.height, color);
+      text->scroll, area->height, color);
 }
 
 static void
@@ -370,8 +364,6 @@ swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
   if (w != text->layout_width || h != text->layout_height) {
     text->layout_width = w;
     text->layout_height = h;
-    if (text->auto_size != SWFDEC_AUTO_SIZE_NONE)
-      swfdec_movie_queue_update (SWFDEC_MOVIE (text), SWFDEC_MOVIE_INVALID_EXTENTS);
   }
 
   swfdec_text_field_movie_update_scroll (text);
@@ -749,15 +741,21 @@ swfdec_text_field_movie_property_get (SwfdecMovie *movie, guint prop_id,
 
   switch (prop_id) {
     case SWFDEC_MOVIE_PROPERTY_X:
+      swfdec_text_field_movie_autosize (text);
       swfdec_movie_update (movie);
       d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0 + text->extents.x0);
       SWFDEC_AS_VALUE_SET_NUMBER (val, d);
       return;
     case SWFDEC_MOVIE_PROPERTY_Y:
+      swfdec_text_field_movie_autosize (text);
       swfdec_movie_update (movie);
       d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0 + text->extents.y0);
       SWFDEC_AS_VALUE_SET_NUMBER (val, d);
       return;
+    case SWFDEC_MOVIE_PROPERTY_WIDTH:
+    case SWFDEC_MOVIE_PROPERTY_HEIGHT:
+      swfdec_text_field_movie_autosize (text);
+      break;
     default:
       break;
   }
@@ -800,8 +798,10 @@ swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id,
       if (swfdec_as_value_to_twips (cx, val, TRUE, &twips)) {
 	movie->modified = TRUE;
 	if (text->extents.x1 != text->extents.x0 + twips) {
-	  text->extents.x1 = text->extents.x0 + twips;
+	  swfdec_movie_invalidate_next (movie);
 	  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
+	  text->extents.x1 = text->extents.x0 + twips;
+	  swfdec_text_field_movie_update_area (text);
 	}
       }
       return;
@@ -810,8 +810,10 @@ swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id,
       if (swfdec_as_value_to_twips (cx, val, TRUE, &twips)) {
 	movie->modified = TRUE;
 	if (text->extents.y1 != text->extents.y0 + twips) {
-	  text->extents.y1 = text->extents.y0 + twips;
+	  swfdec_movie_invalidate_next (movie);
 	  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
+	  text->extents.y1 = text->extents.y0 + twips;
+	  swfdec_text_field_movie_update_area (text);
 	}
       }
       return;

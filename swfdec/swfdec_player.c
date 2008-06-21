@@ -1992,6 +1992,19 @@ swfdec_player_unlock_soft (SwfdecPlayer *player)
   player->priv->locked = FALSE;
 }
 
+/* This function does all the things that happen during rendering */
+static void
+swfdec_player_pretend_to_render (SwfdecPlayer *player)
+{
+  SwfdecPlayerPrivate *priv = player->priv;
+  GList *walk;
+
+  for (walk = priv->actors; walk; walk = walk->next) {
+    if (SWFDEC_IS_TEXT_FIELD_MOVIE (walk->data))
+      swfdec_text_field_movie_autosize (walk->data);
+  }
+}
+
 void
 swfdec_player_unlock (SwfdecPlayer *player)
 {
@@ -2004,6 +2017,8 @@ swfdec_player_unlock (SwfdecPlayer *player)
   g_assert (swfdec_ring_buffer_get_n_elements (player->priv->actions[3]) == 0);
   context = SWFDEC_AS_CONTEXT (player);
   g_return_if_fail (context->state != SWFDEC_AS_CONTEXT_INTERRUPTED);
+
+  swfdec_player_pretend_to_render (player);
 
   if (context->state == SWFDEC_AS_CONTEXT_RUNNING)
     swfdec_as_context_maybe_gc (SWFDEC_AS_CONTEXT (player));

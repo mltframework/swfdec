@@ -169,7 +169,7 @@ swfdec_text_block_new (PangoContext *context)
 
   block = g_slice_new0 (SwfdecTextBlock);
   block->layout = pango_layout_new (context);
-  pango_layout_set_wrap (block->layout, PANGO_WRAP_WORD_CHAR);
+  pango_layout_set_wrap (block->layout, PANGO_WRAP_WORD);
 
   return block;
 }

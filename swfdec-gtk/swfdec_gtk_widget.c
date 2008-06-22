@@ -283,7 +283,7 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 
   if (surface) {
     cairo_t *crw = gdk_cairo_create (gtkwidget->window);
-    cairo_set_source_surface (crw, surface, event->area.x, event->area.y);
+    cairo_set_source_surface (crw, surface, 0, 0);
     cairo_paint (crw);
     cairo_destroy (crw);
     cairo_surface_destroy (surface);

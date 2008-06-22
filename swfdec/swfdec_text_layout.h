@@ -50,6 +50,8 @@ struct _SwfdecTextLayout
 
   /* layout data */
   GSequence *		blocks;		/* ordered list of blocks */
+  /* cached values */
+  guint			layout_width;	/* width of layout or 0 if not computed yet */
 };
 
 struct _SwfdecTextLayoutClass

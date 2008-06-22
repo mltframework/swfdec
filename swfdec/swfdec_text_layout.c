@@ -442,8 +442,11 @@ swfdec_text_layout_invalidate (SwfdecTextLayout *layout)
   if (g_sequence_iter_is_end (g_sequence_get_begin_iter (layout->blocks)))
     return;
 
+  /* clear caches */
   g_sequence_remove_range (g_sequence_get_begin_iter (layout->blocks),
     g_sequence_get_end_iter (layout->blocks));
+  layout->layout_width = 0;
+
   g_signal_emit (layout, signals[CHANGED], 0);
 }
 
@@ -601,9 +604,11 @@ swfdec_text_layout_get_width (SwfdecTextLayout *layout)
 {
   GSequenceIter *iter;
   SwfdecTextBlock *block;
-  guint width = 0;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_LAYOUT (layout), 0);
+
+  if (layout->layout_width)
+    return layout->layout_width;
 
   swfdec_text_layout_ensure (layout);
 
@@ -611,10 +616,10 @@ swfdec_text_layout_get_width (SwfdecTextLayout *layout)
        !g_sequence_iter_is_end (iter);
        iter = g_sequence_iter_next (iter)) {
     block = g_sequence_get (iter);
-    width = MAX (width, (guint) block->rect.x + block->rect.width);
+    layout->layout_width = MAX (layout->layout_width, (guint) block->rect.x + block->rect.width);
   }
 
-  return width;
+  return layout->layout_width;
 }
 
 /**

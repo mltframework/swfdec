@@ -116,9 +116,9 @@ upsample (uint8_t *d, uint8_t *s, int n)
     d[i + 2] = (s[i/2] + 3*s[i/2+1] + 2)>>2;
   }
 
-  if (n&1) {
-    i = n-3;
-    d[n-2] = s[n/2];
+  if (n & 1) {
+    if (n > 1)
+      d[n-2] = s[n/2];
     d[n-1] = s[n/2];
   } else {
     d[n-1] = s[n/2-1];

@@ -33,6 +33,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_renderer_internal.h"
 #include "swfdec_resource.h"
 #include "swfdec_sandbox.h"
 #include "swfdec_text_format.h"
@@ -216,7 +217,6 @@ static void
 swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     const SwfdecColorTransform *ctrans, const SwfdecRect *inval)
 {
-  static const cairo_matrix_t identity = { 1, 0, 0, 1, 0, 0 };
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecRectangle *area;
   SwfdecColor color;
@@ -226,8 +226,7 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
       swfdec_rectangle_is_empty (&text->stage_area))
     return;
 
-  /* FIXME: need to handle the case where we're not drawing with identity */
-  cairo_set_matrix (cr, &identity);
+  swfdec_renderer_reset_matrix (cr);
 
   if (text->background) {
     cairo_rectangle (cr, text->stage_area.x, text->stage_area.y,

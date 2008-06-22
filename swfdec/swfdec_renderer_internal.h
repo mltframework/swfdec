@@ -33,6 +33,8 @@ SwfdecRenderer *	swfdec_renderer_new_default	(SwfdecPlayer *		player);
 void			swfdec_renderer_attach		(SwfdecRenderer *	renderer,
 							 cairo_t *		cr);
 SwfdecRenderer *	swfdec_renderer_get		(cairo_t *		cr);
+void			swfdec_renderer_reset_matrix	(cairo_t *		cr);
+
 void			swfdec_renderer_add_cache	(SwfdecRenderer *	renderer,
 							 gboolean		replace,
 							 gpointer		key,

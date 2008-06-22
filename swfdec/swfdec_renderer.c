@@ -314,15 +314,23 @@ swfdec_renderer_new_default (SwfdecPlayer *player)
 }
 
 static const cairo_user_data_key_t cr_key;
+static const cairo_user_data_key_t matrix_key;
 
 void
 swfdec_renderer_attach (SwfdecRenderer *renderer, cairo_t *cr)
 {
+  cairo_matrix_t *matrix;
+
   g_return_if_fail (SWFDEC_IS_RENDERER (renderer));
   g_return_if_fail (cr != NULL);
 
   g_object_ref (renderer);
   if (cairo_set_user_data (cr, &cr_key, renderer, g_object_unref) != CAIRO_STATUS_SUCCESS) {
+    g_warning ("could not attach user data");
+  }
+  matrix = g_new (cairo_matrix_t, 1);
+  cairo_get_matrix (cr, matrix);
+  if (cairo_set_user_data (cr, &matrix_key, matrix, g_free) != CAIRO_STATUS_SUCCESS) {
     g_warning ("could not attach user data");
   }
 }
@@ -333,6 +341,18 @@ swfdec_renderer_get (cairo_t *cr)
   g_return_val_if_fail (cr != NULL, NULL);
 
   return cairo_get_user_data (cr, &cr_key);
+}
+
+void
+swfdec_renderer_reset_matrix (cairo_t *cr)
+{
+  cairo_matrix_t *matrix;
+
+  g_return_if_fail (cr != NULL);
+
+  matrix = cairo_get_user_data (cr, &matrix_key);
+  g_return_if_fail (matrix != NULL);
+  cairo_set_matrix (cr, matrix);
 }
 
 /**

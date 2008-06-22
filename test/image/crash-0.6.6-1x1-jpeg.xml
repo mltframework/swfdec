@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<swf version="7" compressed="1">
+  <Header framerate="1" frames="2">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <DefineBitsJPEG2 objectID="1">
+        <data>
+	  <data>/9j/4AAQSkZJRgABAQEASABIAAD/4QAWRXhpZgAATU0AKgAAAAgAAAAAAAD//gATQ3JlYXRlZCB3aXRoIEdJTVD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAABgj/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCfQFdhL//Z</data>
+        </data>
+      </DefineBitsJPEG2>
+      <DefineShape objectID="2">
+        <bounds>
+          <Rectangle left="1000" right="3000" top="1000" bottom="2000"/>
+        </bounds>
+        <styles>
+          <StyleList>
+            <fillStyles>
+	      <TiledBitmap objectID="1" />
+            </fillStyles>
+            <lineStyles/>
+          </StyleList>
+        </styles>
+        <shapes>
+          <Shape>
+            <edges>
+              <ShapeSetup x="1000" y="1000" fillStyle0="1"/>
+              <LineTo x="2000" y="0"/>
+              <LineTo x="0" y="1000"/>
+              <LineTo x="-2000" y="0"/>
+              <LineTo x="0" y="-1000"/>
+              <ShapeSetup/>
+            </edges>
+          </Shape>
+        </shapes>
+      </DefineShape>
+      <PlaceObject2 depth="1" objectID="2" />
+      <ShowFrame />
+      <End/>
+    </tags>
+  </Header>
+</swf>

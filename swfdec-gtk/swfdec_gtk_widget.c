@@ -273,8 +273,8 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
 	      event->area.width, event->area.height)) == NULL) {
     cr = gdk_cairo_create (gtkwidget->window);
   } else {
+    cairo_surface_set_device_offset (surface, -event->area.x, -event->area.y);
     cr = cairo_create (surface);
-    cairo_translate (cr, -event->area.x, -event->area.y);
   }
   swfdec_player_render (priv->player, cr,
       event->area.x, event->area.y, event->area.width, event->area.height);

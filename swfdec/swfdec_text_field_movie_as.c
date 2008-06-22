@@ -424,11 +424,13 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
+  guint height;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   swfdec_movie_update (SWFDEC_MOVIE (text));
-  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_height * 
+  height = swfdec_text_layout_get_height (text->layout);
+  SWFDEC_AS_VALUE_SET_INT (ret, floor (height * 
 	text->from_layout.yy / SWFDEC_TWIPS_SCALE_FACTOR));
 }
 
@@ -438,11 +440,13 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
+  double width;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   swfdec_movie_update (SWFDEC_MOVIE (text));
-  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_width *
+  width = swfdec_text_layout_get_width (text->layout);
+  SWFDEC_AS_VALUE_SET_INT (ret, floor (width *
 	text->from_layout.xx / SWFDEC_TWIPS_SCALE_FACTOR));
 }
 

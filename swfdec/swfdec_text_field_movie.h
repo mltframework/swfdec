@@ -64,8 +64,6 @@ struct _SwfdecTextFieldMovie {
   SwfdecTextBuffer *	text;			/* the text + formatting */
 
   SwfdecTextLayout *	layout;			/* the layouted text */
-  guint			layout_width;		/* text width in pixels */
-  guint			layout_height;		/* text height in pixels */
 
   const char *		variable;
 

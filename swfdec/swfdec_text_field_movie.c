@@ -129,8 +129,8 @@ swfdec_text_field_movie_autosize (SwfdecTextFieldMovie *text)
   if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return;
 
-  x1 = text->layout_width;
-  z1 = text->layout_height;
+  x1 = swfdec_text_layout_get_width (text->layout);
+  z1 = swfdec_text_layout_get_height (text->layout);
   cairo_matrix_transform_distance (&text->from_layout, &x1, &z1);
   x1 += (BORDER_LEFT + BORDER_RIGHT) * SWFDEC_TWIPS_SCALE_FACTOR;
   z1 += (BORDER_TOP + BORDER_BOTTOM) * SWFDEC_TWIPS_SCALE_FACTOR;
@@ -353,18 +353,10 @@ static void
 swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
     SwfdecTextFieldMovie *text)
 {
-  guint w, h, max;
+  guint max;
 
   if (swfdec_player_is_locked (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)))
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-
-  w = swfdec_text_layout_get_width (layout);
-  h = swfdec_text_layout_get_height (layout);
-
-  if (w != text->layout_width || h != text->layout_height) {
-    text->layout_width = w;
-    text->layout_height = h;
-  }
 
   swfdec_text_field_movie_update_scroll (text);
 
@@ -1119,7 +1111,7 @@ swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *text)
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), 0);
 
-  width = text->layout_width;
+  width = swfdec_text_layout_get_width (text->layout);
   if ((guint) text->layout_area.width >= width)
     return 0;
   else

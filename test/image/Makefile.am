@@ -89,6 +89,15 @@ EXTRA_DIST = \
 	crash-0.6.4-huge-image-8.swf \
 	crash-0.6.4-huge-image-8.swf.png \
 	crash-0.6.4-huge-image.xml \
+	crash-0.6.6-1x1-jpeg-5.swf \
+	crash-0.6.6-1x1-jpeg-5.swf.png \
+	crash-0.6.6-1x1-jpeg-6.swf \
+	crash-0.6.6-1x1-jpeg-6.swf.png \
+	crash-0.6.6-1x1-jpeg-7.swf \
+	crash-0.6.6-1x1-jpeg-7.swf.png \
+	crash-0.6.6-1x1-jpeg-8.swf \
+	crash-0.6.6-1x1-jpeg-8.swf.png \
+	crash-0.6.6-1x1-jpeg.xml \
 	default.stas \
 	default.sts \
 	definebits-palette-5.swf \

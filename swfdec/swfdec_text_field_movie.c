@@ -140,6 +140,10 @@ swfdec_text_field_movie_autosize (SwfdecTextFieldMovie *text)
   x1 -= text->extents.x1 - text->extents.x0;
   z1 -= text->extents.y1 - text->extents.y0;
 
+  /* when word wrapping is enabled, don't resize width */
+  if (swfdec_text_layout_get_word_wrap (text->layout))
+    x1 = 0;
+
   if (x1 == 0 && z1 == 0)
     return;
 

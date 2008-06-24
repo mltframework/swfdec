@@ -482,7 +482,8 @@ swfdec_text_field_movie_iterate (SwfdecActor *actor)
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
 
   while (text->changed) {
-    swfdec_actor_queue_script (actor, SWFDEC_EVENT_CHANGED);
+    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), 
+	SWFDEC_ACTOR (text), SWFDEC_EVENT_CHANGED, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
     text->changed--;
   }
 

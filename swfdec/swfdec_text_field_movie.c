@@ -321,12 +321,25 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
   SWFDEC_AS_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->mark (object);
 }
 
-/* NB: can be run with unlocked player */
+void
+swfdec_text_field_movie_emit_onScroller (SwfdecTextFieldMovie *text)
+{
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+
+  if (!text->onScroller_emitted && swfdec_movie_get_version (SWFDEC_MOVIE (text)) > 6) {
+    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), 
+	SWFDEC_ACTOR (text), SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
+  }
+  text->onScroller_emitted = TRUE;
+}
+
 void
 swfdec_text_field_movie_update_layout (SwfdecTextFieldMovie *text)
 {
   guint scroll_max, lines_visible, rows, height, max;
   gboolean scroll_changed = FALSE;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
   text->layout_width = swfdec_text_layout_get_width (text->layout);
   text->layout_height = swfdec_text_layout_get_height (text->layout);
@@ -355,11 +368,8 @@ swfdec_text_field_movie_update_layout (SwfdecTextFieldMovie *text)
     scroll_changed = TRUE;
   }
 
-  if (scroll_changed && !text->onScroller_emitted) {
-    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), 
-	SWFDEC_ACTOR (text), SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
-    text->onScroller_emitted = TRUE;
-  }
+  if (scroll_changed)
+    swfdec_text_field_movie_emit_onScroller (text);
 }
 
 static void
@@ -445,7 +455,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   /* don't emit onScroller here, plz */
   text->onScroller_emitted = TRUE;
   swfdec_text_field_movie_update_layout (text);
-  text->onScroller_emitted = FALSE;
+  if (swfdec_movie_get_version (movie) > 6)
+    text->onScroller_emitted = FALSE;
   swfdec_text_field_movie_update_area (text);
 }
 
@@ -475,6 +486,10 @@ swfdec_text_field_movie_iterate (SwfdecActor *actor)
     text->changed--;
   }
 
+  if (text->onScroller_emitted && swfdec_movie_get_version (SWFDEC_MOVIE (text)) <= 6) {
+    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), 
+	SWFDEC_ACTOR (text), SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
+  }
   text->onScroller_emitted = FALSE;
 }
 

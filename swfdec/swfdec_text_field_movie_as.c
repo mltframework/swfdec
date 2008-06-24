@@ -620,11 +620,7 @@ swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
   if ((guint) value != text->hscroll) {
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
     text->hscroll = value;
-    if (!text->onScroller_emitted) {
-      swfdec_player_add_action (SWFDEC_PLAYER (cx), SWFDEC_ACTOR (text), 
-	  SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
-      text->onScroller_emitted = TRUE;
-    }
+    swfdec_text_field_movie_emit_onScroller (text);
   }
 }
 
@@ -706,11 +702,7 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
     value = CLAMP (value - 1, 0, (int) text->scroll_max);
     text->scroll = value;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-    if (!text->onScroller_emitted) {
-      swfdec_player_add_action (SWFDEC_PLAYER (cx), SWFDEC_ACTOR (text), 
-	  SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
-      text->onScroller_emitted = TRUE;
-    }
+    swfdec_text_field_movie_emit_onScroller (text);
   }
 }
 

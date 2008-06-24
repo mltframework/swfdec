@@ -104,6 +104,7 @@ void		swfdec_text_field_movie_set_text	(SwfdecTextFieldMovie *	movie,
 							 gboolean		html);
 void		swfdec_text_field_movie_autosize	(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_update_layout	(SwfdecTextFieldMovie * text);
+void		swfdec_text_field_movie_emit_onScroller (SwfdecTextFieldMovie *	text);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_set_listen_variable 
 							(SwfdecTextFieldMovie *	text,

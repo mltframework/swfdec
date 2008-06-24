@@ -1,17 +1,18 @@
 // makeswf -v 7 -r 1 -o test-7.swf test.as
 
 function trace_scroll_properties () {
-  trace ("bottomScroll > scroll: " + (t.bottomScroll > t.scroll));
+  trace ("bottomScroll: " + t.bottomScroll);
   trace ("hscroll: " + t.hscroll);
-  trace ("maxhscroll > 0: " + (t.maxhscroll > 0));
-  trace ("maxscroll > 0: " + (t.maxscroll > 0));
+  trace ("maxhscroll: " + t.maxhscroll);
+  trace ("maxscroll: " + t.maxscroll);
   trace ("scroll: " + t.scroll);
 }
 
-this.createTextField ("t", 1, 0, 0, 100, 100);
+this.createTextField ("t", 1, 0, 0, 100, 25);
 
 var fmt = new TextFormat ();
 fmt.size = 14;
+fmt.font = "Bitstream Vera Sans";
 t.setNewTextFormat (fmt);
 
 trace ("# EMPTY");
@@ -50,6 +51,7 @@ trace_scroll_properties ();
 trace ("# WITH WORD WRAP - FORMAT RESET");
 
 var fmt = new TextFormat ();
+fmt.font = "Bitstream Vera Sans";
 t.setTextFormat (fmt);
 
 trace_scroll_properties ();
@@ -67,6 +69,7 @@ trace ("# WITHOUT WORD WRAP - FORMAT RESET");
 
 t.wordWrap = false;
 var fmt = new TextFormat ();
+fmt.font = "Bitstream Vera Sans";
 t.setTextFormat (fmt);
 
 trace_scroll_properties ();
@@ -77,4 +80,4 @@ t.text = t.text;
 
 trace_scroll_properties ();
 
-loadMovie ("FSCommand:quit", "");
+getURL ("FSCommand:quit", "");

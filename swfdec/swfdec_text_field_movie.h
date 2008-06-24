@@ -62,8 +62,14 @@ struct _SwfdecTextFieldMovie {
   gboolean		background;
  
   SwfdecTextBuffer *	text;			/* the text + formatting */
-
   SwfdecTextLayout *	layout;			/* the layouted text */
+  /* cached values from the layout (updated sometimes via swfdec_text_field_movie_update_layout()) */
+  guint			layout_width;		/* width of the layout */
+  guint			layout_height;		/* height of the layout */
+  guint			scroll;			/* current scroll offset in lines (0-indexed) */
+  guint			scroll_max;		/* scroll must be smaller than this value */
+  guint			lines_visible;		/* number of lines currently visible */
+  guint			hscroll;		/* horizontal scrolling offset in pixels */
 
   const char *		variable;
 
@@ -74,13 +80,8 @@ struct _SwfdecTextFieldMovie {
   SwfdecAsObject *	style_sheet;
   const char *		style_sheet_input;	/* saved input, so it can be used to apply stylesheet again */
 
-  gboolean		scroll_changed;		/* if any of the scroll attributes have changed and we haven't fired the event yet */
+  gboolean		onScroller_emitted;	/* if any of the scroll attributes have changed and we haven't fired the event yet */
   guint			changed;		/* number of onChanged events we have to emit */
-  /* scroll variables */
-  guint			scroll;			/* current scroll offset in lines (0-indexed) */
-  guint			scroll_max;		/* scroll must be smaller than this value */
-  guint			lines_visible;		/* number of lines currently visible */
-  guint			hscroll;		/* horizontal scrolling offset in pixels */
   gboolean		mouse_wheel_enabled;
 
   const char *		restrict_;
@@ -102,7 +103,7 @@ void		swfdec_text_field_movie_set_text	(SwfdecTextFieldMovie *	movie,
 							 const char *		str,
 							 gboolean		html);
 void		swfdec_text_field_movie_autosize	(SwfdecTextFieldMovie *	text);
-void		swfdec_text_field_movie_update_scroll	(SwfdecTextFieldMovie * text);
+void		swfdec_text_field_movie_update_layout	(SwfdecTextFieldMovie * text);
 const char *	swfdec_text_field_movie_get_text	(SwfdecTextFieldMovie *	text);
 void		swfdec_text_field_movie_set_listen_variable 
 							(SwfdecTextFieldMovie *	text,

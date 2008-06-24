@@ -130,8 +130,9 @@ swfdec_text_field_movie_autosize (SwfdecTextFieldMovie *text)
   if (text->auto_size == SWFDEC_AUTO_SIZE_NONE)
     return;
 
-  x1 = swfdec_text_layout_get_width (text->layout);
-  z1 = swfdec_text_layout_get_height (text->layout);
+  swfdec_text_field_movie_update_layout (text);
+  x1 = text->layout_width;
+  z1 = text->layout_height;
   cairo_matrix_transform_distance (&text->from_layout, &x1, &z1);
   x1 += (BORDER_LEFT + BORDER_RIGHT) * SWFDEC_TWIPS_SCALE_FACTOR;
   z1 += (BORDER_TOP + BORDER_BOTTOM) * SWFDEC_TWIPS_SCALE_FACTOR;
@@ -292,8 +293,6 @@ swfdec_text_field_movie_dispose (GObject *object)
     text->text = NULL;
   }
   if (text->layout) {
-    g_signal_handlers_disconnect_matched (text->layout, G_SIGNAL_MATCH_DATA,
-	0, 0, NULL, NULL, text);
     g_object_unref (text->layout);
     text->layout = NULL;
   }
@@ -324,45 +323,42 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
 
 /* NB: can be run with unlocked player */
 void
-swfdec_text_field_movie_update_scroll (SwfdecTextFieldMovie *text)
+swfdec_text_field_movie_update_layout (SwfdecTextFieldMovie *text)
 {
-  guint scroll_max, lines_visible, rows, height;
+  guint scroll_max, lines_visible, rows, height, max;
+  gboolean scroll_changed = FALSE;
+
+  text->layout_width = swfdec_text_layout_get_width (text->layout);
+  text->layout_height = swfdec_text_layout_get_height (text->layout);
 
   height = text->layout_area.height;
   rows = swfdec_text_layout_get_n_rows (text->layout);
   scroll_max = rows - swfdec_text_layout_get_visible_rows_end (text->layout, height);
   if (scroll_max != text->scroll_max) {
     text->scroll_max = scroll_max;
-    text->scroll_changed = TRUE;
+    scroll_changed = TRUE;
   }
   if (scroll_max < text->scroll) {
     text->scroll = scroll_max;
-    text->scroll_changed = TRUE;
+    scroll_changed = TRUE;
   }
   lines_visible = swfdec_text_layout_get_visible_rows (text->layout,
       text->scroll, height);
   if (lines_visible != text->lines_visible) {
     text->lines_visible = lines_visible;
-    text->scroll_changed = TRUE;
+    scroll_changed = TRUE;
   }
-}
-
-/* NB: This signal can happen without a locked player */
-static void
-swfdec_text_field_movie_layout_changed (SwfdecTextLayout *layout,
-    SwfdecTextFieldMovie *text)
-{
-  guint max;
-
-  if (swfdec_player_is_locked (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)))
-    swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-
-  swfdec_text_field_movie_update_scroll (text);
 
   max = swfdec_text_field_movie_get_hscroll_max (text);
   if (text->hscroll > max) {
     text->hscroll = max;
-    text->scroll_changed = TRUE;
+    scroll_changed = TRUE;
+  }
+
+  if (scroll_changed && !text->onScroller_emitted) {
+    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), 
+	SWFDEC_ACTOR (text), SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
+    text->onScroller_emitted = TRUE;
   }
 }
 
@@ -446,8 +442,11 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 	G_CALLBACK (swfdec_text_field_movie_update_area), movie);
     parent = parent->parent;
   }
+  /* don't emit onScroller here, plz */
+  text->onScroller_emitted = TRUE;
+  swfdec_text_field_movie_update_layout (text);
+  text->onScroller_emitted = FALSE;
   swfdec_text_field_movie_update_area (text);
-  swfdec_text_field_movie_layout_changed (text->layout, text);
 }
 
 static void
@@ -475,10 +474,8 @@ swfdec_text_field_movie_iterate (SwfdecActor *actor)
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_CHANGED);
     text->changed--;
   }
-  if (text->scroll_changed) {
-    swfdec_actor_queue_script (actor, SWFDEC_EVENT_SCROLL);
-    text->scroll_changed = FALSE;
-  }
+
+  text->onScroller_emitted = FALSE;
 }
 
 static SwfdecMovie *
@@ -886,8 +883,6 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
       G_CALLBACK (swfdec_text_field_movie_text_changed), text);
 
   text->layout = swfdec_text_layout_new (text->text);
-  g_signal_connect (text->layout, "changed",
-      G_CALLBACK (swfdec_text_field_movie_layout_changed), text);
 
   text->mouse_wheel_enabled = TRUE;
   text->character_pressed = -1;
@@ -1117,14 +1112,11 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
 guint
 swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *text)
 {
-  guint width;
-
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), 0);
 
-  width = swfdec_text_layout_get_width (text->layout);
-  if ((guint) text->layout_area.width >= width)
+  if ((guint) text->layout_area.width >= text->layout_width)
     return 0;
   else
-    return width - text->layout_area.width;
+    return text->layout_width - text->layout_area.width;
 }
 

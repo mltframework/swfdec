@@ -91,6 +91,7 @@ swfdec_text_field_movie_do_set_text (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
   swfdec_text_field_movie_set_text (text, value, FALSE);
+  swfdec_text_field_movie_update_layout (text);
 
   if (text->variable != NULL) {
     if (text->html) {
@@ -424,13 +425,12 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  guint height;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   swfdec_movie_update (SWFDEC_MOVIE (text));
-  height = swfdec_text_layout_get_height (text->layout);
-  SWFDEC_AS_VALUE_SET_INT (ret, floor (height * 
+  swfdec_text_field_movie_update_layout (text);
+  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_height * 
 	text->from_layout.yy / SWFDEC_TWIPS_SCALE_FACTOR));
 }
 
@@ -440,13 +440,12 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  double width;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   swfdec_movie_update (SWFDEC_MOVIE (text));
-  width = swfdec_text_layout_get_width (text->layout);
-  SWFDEC_AS_VALUE_SET_INT (ret, floor (width *
+  swfdec_text_field_movie_update_layout (text);
+  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_width *
 	text->from_layout.xx / SWFDEC_TWIPS_SCALE_FACTOR));
 }
 
@@ -619,9 +618,13 @@ swfdec_text_field_movie_do_set_hscroll (SwfdecAsContext *cx,
 
   value = CLAMP (value, 0, (int) swfdec_text_field_movie_get_hscroll_max (text));
   if ((guint) value != text->hscroll) {
-    text->hscroll = value;
-    text->scroll_changed = TRUE;
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
+    text->hscroll = value;
+    if (!text->onScroller_emitted) {
+      swfdec_player_add_action (SWFDEC_PLAYER (cx), SWFDEC_ACTOR (text), 
+	  SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
+      text->onScroller_emitted = TRUE;
+    }
   }
 }
 
@@ -698,12 +701,16 @@ swfdec_text_field_movie_do_set_scroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  value = CLAMP (value - 1, 0, (int) text->scroll_max);
-  if ((guint) value != text->scroll) {
+  if ((guint) value != text->scroll + 1) {
+    swfdec_text_field_movie_update_layout (text);
+    value = CLAMP (value - 1, 0, (int) text->scroll_max);
     text->scroll = value;
-    text->scroll_changed = TRUE;
-    swfdec_text_field_movie_update_scroll (text);
     swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
+    if (!text->onScroller_emitted) {
+      swfdec_player_add_action (SWFDEC_PLAYER (cx), SWFDEC_ACTOR (text), 
+	  SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
+      text->onScroller_emitted = TRUE;
+    }
   }
 }
 

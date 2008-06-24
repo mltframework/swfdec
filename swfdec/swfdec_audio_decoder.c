@@ -79,6 +79,7 @@ swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **miss
 
 /**
  * swfdec_audio_decoder_new:
+ * @codec: codec id
  * @format: #SwfdecAudioCodec to decode
  *
  * Creates a decoder suitable for decoding @format. If no decoder is available

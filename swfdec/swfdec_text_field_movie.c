@@ -1129,7 +1129,8 @@ swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *text)
 {
   g_return_val_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text), 0);
 
-  if ((guint) text->layout_area.width >= text->layout_width)
+  if ((guint) text->layout_area.width >= text->layout_width ||
+      swfdec_text_layout_get_word_wrap (text->layout))
     return 0;
   else
     return text->layout_width - text->layout_area.width;

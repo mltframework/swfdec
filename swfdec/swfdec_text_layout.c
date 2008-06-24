@@ -32,13 +32,6 @@
 
 #define BULLET_MARGIN 36
 
-enum {
-  CHANGED,
-  LAST_SIGNAL
-};
-
-static guint signals[LAST_SIGNAL] = { 0, };
-
 static void
 swfdec_text_attribute_apply_bold (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr,
     PangoFontDescription *desc)
@@ -446,8 +439,6 @@ swfdec_text_layout_invalidate (SwfdecTextLayout *layout)
   g_sequence_remove_range (g_sequence_get_begin_iter (layout->blocks),
     g_sequence_get_end_iter (layout->blocks));
   layout->layout_width = 0;
-
-  g_signal_emit (layout, signals[CHANGED], 0);
 }
 
 /*** LAYOUT ***/
@@ -478,10 +469,6 @@ swfdec_text_layout_class_init (SwfdecTextLayoutClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_text_layout_dispose;
-
-  signals[CHANGED] = g_signal_new ("changed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
-      G_TYPE_NONE, 0);
 }
 
 static void

@@ -51,7 +51,7 @@ struct _SwfdecAudioDecoder
   /*< private >*/
   guint			codec;		/* codec this decoder uses */
   SwfdecAudioFormat	format;		/* format the codec was initialized with */
-  gboolean		error;		/* if this codec is in an error state */
+  gboolean		error;		/* if this decoder is in an error state */
 };
 
 struct _SwfdecAudioDecoderClass

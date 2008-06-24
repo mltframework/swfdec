@@ -374,6 +374,7 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   SwfdecAsContext *cx;
   SwfdecAsValue val;
   SwfdecMovie *parent;
+  SwfdecAsObject *array;
   gboolean needs_unuse;
 
   needs_unuse = swfdec_sandbox_try_use (movie->resource->sandbox);
@@ -388,7 +389,17 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 	SWFDEC_AS_VALUE_GET_OBJECT (&val));
   }
 
-  // listen self
+  /* create _listeners array */
+  array = swfdec_as_array_new (cx);
+  if (array == NULL)
+    return;
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (movie));
+  swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
+  swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR__listeners, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
+  /* add self to listeners */
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (movie));
   swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_addListener,
       1, &val, NULL);

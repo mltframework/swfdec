@@ -3542,6 +3542,15 @@ EXTRA_DIST = \
 	targetpath-6.swf.trace \
 	targetpath-7.swf \
 	targetpath-7.swf.trace \
+	text-field-autosize-layout-update-5.swf \
+	text-field-autosize-layout-update-5.swf.trace \
+	text-field-autosize-layout-update-6.swf \
+	text-field-autosize-layout-update-6.swf.trace \
+	text-field-autosize-layout-update-7.swf \
+	text-field-autosize-layout-update-7.swf.trace \
+	text-field-autosize-layout-update-8.swf \
+	text-field-autosize-layout-update-8.swf.trace \
+	text-field-autosize-layout-update.as \
 	text-field-get-text-format.as \
 	text-field-get-text-format-5.swf \
 	text-field-get-text-format-5.swf.trace \

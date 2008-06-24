@@ -1149,8 +1149,14 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
       &format->attr, format->values_set);
 
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
-  // special case: update the max values, not the current values
-  // swfdec_text_field_movie_update_scroll (text, FALSE);
+  /* special case: update the max values, not the current values */
+  /* swfdec_text_field_movie_update_layout (text); */
+  /* FIXME: emit onScroller? */
+  text->layout_width = swfdec_text_layout_get_width (text->layout);
+  text->layout_height = swfdec_text_layout_get_height (text->layout);
+  text->scroll_max = swfdec_text_layout_get_n_rows (text->layout)
+    - swfdec_text_layout_get_visible_rows_end (text->layout, 
+	text->layout_area.height);
 }
 
 SWFDEC_AS_NATIVE (104, 101, swfdec_text_field_movie_getTextFormat)

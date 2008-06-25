@@ -25,6 +25,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_swf_decoder.h"
+#include "swfdec_video_decoder.h"
 #include "swfdec_video_movie.h"
 #include "swfdec_video_video_provider.h"
 

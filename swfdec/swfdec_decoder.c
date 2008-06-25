@@ -25,12 +25,12 @@
 
 #include "swfdec_decoder.h"
 #include "swfdec_audio_decoder.h"
-#include "swfdec_codec_video.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
 #include "swfdec_image.h"
 #include "swfdec_image_decoder.h"
 #include "swfdec_swf_decoder.h"
+#include "swfdec_video_decoder.h"
 
 enum {
   MISSING_PLUGINS,
@@ -135,7 +135,8 @@ swfdec_decoder_use_video_codec (SwfdecDecoder *decoder, guint codec)
 
   g_return_if_fail (SWFDEC_IS_DECODER (decoder));
 
-  detail = swfdec_video_decoder_prepare (codec);
+  if (swfdec_video_decoder_prepare (codec, &detail))
+    return;
   if (detail == NULL)
     return;
 

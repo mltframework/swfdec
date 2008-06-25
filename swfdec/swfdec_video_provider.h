@@ -44,6 +44,10 @@ struct _SwfdecVideoProviderInterface {
 								 SwfdecRenderer *	renderer,
 								 guint *		width,
 								 guint *		height);
+  /* get size of current image */
+  void			(* get_size)				(SwfdecVideoProvider *	provider,
+								 guint *		width,
+								 guint *		height);
 };
 
 GType			swfdec_video_provider_get_type		(void) G_GNUC_CONST;
@@ -54,6 +58,8 @@ cairo_surface_t *     	swfdec_video_provider_get_image		(SwfdecVideoProvider *	p
 								 guint *		height);
 void			swfdec_video_provider_set_ratio		(SwfdecVideoProvider *	provider,
 								 guint			ratio);
+guint			swfdec_video_provider_get_width		(SwfdecVideoProvider *	provider);
+guint			swfdec_video_provider_get_height	(SwfdecVideoProvider *	provider);
 
 /* for subclasses */
 void			swfdec_video_provider_new_image		(SwfdecVideoProvider *	provider);

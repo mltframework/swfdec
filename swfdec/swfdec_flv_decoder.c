@@ -27,6 +27,7 @@
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_video_decoder.h"
 
 enum {
   SWFDEC_STATE_HEADER,			/* need to parse header */

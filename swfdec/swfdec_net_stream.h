@@ -22,11 +22,11 @@
 
 #include <swfdec/swfdec.h>
 #include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_codec_video.h>
 #include <swfdec/swfdec_net_connection.h>
 #include <swfdec/swfdec_flv_decoder.h>
 #include <swfdec/swfdec_player_internal.h>
 #include <swfdec/swfdec_sandbox.h>
+#include <swfdec/swfdec_video_decoder.h>
 #include <swfdec/swfdec_video_movie.h>
 
 G_BEGIN_DECLS
@@ -60,7 +60,6 @@ struct _SwfdecNetStream
   /* video decoding */
   guint			current_time;	/* current playback timestamp */
   guint			next_time;	/* next video image at this timestamp */
-  guint			format;		/* current format */
   SwfdecVideoDecoder *	decoder;	/* decoder used for decoding */
   guint			decoder_time;	/* last timestamp the decoder decoded */
   cairo_surface_t *	surface;	/* current image */

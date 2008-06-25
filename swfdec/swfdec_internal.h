@@ -22,21 +22,12 @@
 #ifndef _SWFDEC_INTERNAL_H_
 #define _SWFDEC_INTERNAL_H_
 
+#include <swfdec/swfdec_buffer.h>
+#include <swfdec/swfdec_player.h>
 #include <swfdec/swfdec_types.h>
-#include <swfdec/swfdec_codec_video.h>
 
 G_BEGIN_DECLS
 
-
-/* video codecs */
-
-SwfdecVideoDecoder *	swfdec_video_decoder_screen_new		(guint			format);
-SwfdecVideoDecoder *	swfdec_video_decoder_vp6_alpha_new    	(guint			format);
-#ifdef HAVE_GST
-SwfdecVideoDecoder *	swfdec_video_decoder_gst_new		(guint			format);
-gboolean		swfdec_video_decoder_gst_prepare	(guint			codec,
-								 char **		detail);
-#endif
 
 /* AS engine setup code */
 

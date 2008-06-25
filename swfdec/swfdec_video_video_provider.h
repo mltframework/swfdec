@@ -21,8 +21,8 @@
 #define _SWFDEC_VIDEO_VIDEO_PROVIDER_H_
 
 #include <swfdec/swfdec_graphic.h>
-#include <swfdec/swfdec_codec_video.h>
 #include <swfdec/swfdec_video.h>
+#include <swfdec/swfdec_video_decoder.h>
 #include <swfdec/swfdec_video_provider.h>
 
 G_BEGIN_DECLS

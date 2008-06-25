@@ -3,7 +3,7 @@ SUBDIRS = jpeg
 CODEC_FILES =
 
 if HAVE_GST
-CODEC_FILES += swfdec_codec_gst.c swfdec_audio_decoder_gst.c
+CODEC_FILES += swfdec_codec_gst.c swfdec_audio_decoder_gst.c swfdec_video_decoder_gst.c
 endif
 
 lib_LTLIBRARIES = libswfdec-@SWFDEC_MAJORMINOR@.la
@@ -59,9 +59,6 @@ libswfdec_source_files = \
 	swfdec_cached_video.c \
 	swfdec_camera.c \
 	swfdec_character.c \
-	swfdec_codec_screen.c \
-	swfdec_codec_video.c \
-	swfdec_codec_vp6_alpha.c \
 	swfdec_color.c \
 	swfdec_color_as.c \
 	swfdec_color_matrix_filter.c \
@@ -162,6 +159,9 @@ libswfdec_source_files = \
 	swfdec_url.c \
 	swfdec_utils.c \
 	swfdec_video.c \
+	swfdec_video_decoder.c \
+	swfdec_video_decoder_screen.c \
+	swfdec_video_decoder_vp6_alpha.c \
 	swfdec_video_movie.c \
 	swfdec_video_movie_as.c \
 	swfdec_video_provider.c \
@@ -255,7 +255,6 @@ noinst_HEADERS = \
 	swfdec_cached_video.h \
 	swfdec_character.h \
 	swfdec_codec_gst.h \
-	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_constant_pool.h \
 	swfdec_debug.h \
@@ -316,6 +315,10 @@ noinst_HEADERS = \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \
+	swfdec_video_decoder.h \
+	swfdec_video_decoder_gst.h \
+	swfdec_video_decoder_screen.h \
+	swfdec_video_decoder_vp6_alpha.h \
 	swfdec_video_movie.h \
 	swfdec_video_provider.h \
 	swfdec_video_video_provider.h \

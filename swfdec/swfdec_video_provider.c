@@ -89,6 +89,34 @@ swfdec_video_provider_get_image (SwfdecVideoProvider *provider,
   return iface->get_image (provider, renderer, width, height);
 }
 
+guint
+swfdec_video_provider_get_width (SwfdecVideoProvider *provider)
+{
+  SwfdecVideoProviderInterface *iface;
+  guint w, h;
+  
+  g_return_val_if_fail (SWFDEC_IS_VIDEO_PROVIDER (provider), 0);
+
+  iface = SWFDEC_VIDEO_PROVIDER_GET_INTERFACE (provider);
+  g_assert (iface->get_size != NULL);
+  iface->get_size (provider, &w, &h);
+  return w;
+}
+
+guint
+swfdec_video_provider_get_height (SwfdecVideoProvider *provider)
+{
+  SwfdecVideoProviderInterface *iface;
+  guint w, h;
+  
+  g_return_val_if_fail (SWFDEC_IS_VIDEO_PROVIDER (provider), 0);
+
+  iface = SWFDEC_VIDEO_PROVIDER_GET_INTERFACE (provider);
+  g_assert (iface->get_size != NULL);
+  iface->get_size (provider, &w, &h);
+  return h;
+}
+
 void
 swfdec_video_provider_set_ratio (SwfdecVideoProvider *provider, guint ratio)
 {

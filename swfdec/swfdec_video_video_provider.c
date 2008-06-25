@@ -97,7 +97,7 @@ swfdec_video_video_provider_get_image (SwfdecVideoProvider *prov,
 
   if (provider->decoder == NULL || provider->current_frame < provider->decoder_frame) {
     if (provider->decoder != NULL) {
-      swfdec_video_decoder_free (provider->decoder);
+      g_object_unref (provider->decoder);
     }
     provider->decoder = swfdec_video_decoder_new (provider->video->format);
     if (provider->decoder == NULL)
@@ -112,17 +112,18 @@ swfdec_video_video_provider_get_image (SwfdecVideoProvider *prov,
 
   for (;;) {
     g_assert (frame->buffer);
-    surface = swfdec_video_decoder_decode (provider->decoder, renderer, 
-	frame->buffer, &w, &h);
+    swfdec_video_decoder_decode (provider->decoder, frame->buffer);
     provider->decoder_frame = provider->current_frame;
-    if (surface == NULL)
-      return NULL;
     if (frame->frame == provider->current_frame)
       break;
     frame++;
-    cairo_surface_destroy (surface);
   };
 
+  surface = swfdec_video_decoder_get_image (provider->decoder, renderer);
+  if (surface == NULL)
+    return NULL;
+  w = swfdec_video_decoder_get_width (provider->decoder);
+  h = swfdec_video_decoder_get_height (provider->decoder);
   cached = swfdec_cached_video_new (surface, w * h * 4);
   swfdec_cached_video_set_frame (cached, provider->current_frame);
   swfdec_cached_video_set_size (cached, w, h);
@@ -136,9 +137,24 @@ swfdec_video_video_provider_get_image (SwfdecVideoProvider *prov,
 }
 
 static void
+swfdec_video_video_provider_get_size (SwfdecVideoProvider *prov, guint *width, guint *height)
+{
+  SwfdecVideoVideoProvider *provider = SWFDEC_VIDEO_VIDEO_PROVIDER (prov);
+
+  if (provider->decoder) {
+    *width = swfdec_video_decoder_get_width (provider->decoder);
+    *height = swfdec_video_decoder_get_height (provider->decoder);
+  } else {
+    *width = 0;
+    *height = 0;
+  }
+}
+
+static void
 swfdec_video_video_provider_video_provider_init (SwfdecVideoProviderInterface *iface)
 {
   iface->get_image = swfdec_video_video_provider_get_image;
+  iface->get_size = swfdec_video_video_provider_get_size;
   iface->set_ratio = swfdec_video_video_provider_set_ratio;
 }
 
@@ -153,7 +169,7 @@ swfdec_video_video_provider_dispose (GObject *object)
   SwfdecVideoVideoProvider * provider = SWFDEC_VIDEO_VIDEO_PROVIDER (object);
 
   if (provider->decoder != NULL) {
-    swfdec_video_decoder_free (provider->decoder);
+    g_object_unref (provider->decoder);
     provider->decoder = NULL;
   }
   g_object_unref (provider->video);

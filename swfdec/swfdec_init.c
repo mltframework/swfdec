@@ -27,12 +27,15 @@
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
 #include "swfdec_audio_decoder_gst.h"
+#include "swfdec_video_decoder_gst.h"
 #endif
 #include <liboil/liboil.h>
 
 #include "swfdec_audio_decoder_adpcm.h"
 #include "swfdec_audio_decoder_uncompressed.h"
 #include "swfdec_debug.h"
+#include "swfdec_video_decoder_screen.h"
+#include "swfdec_video_decoder_vp6_alpha.h"
 
 /**
  * swfdec_init:
@@ -76,8 +79,11 @@ swfdec_init (void)
    * NB: The order is important! */
   swfdec_audio_decoder_register (SWFDEC_TYPE_AUDIO_DECODER_UNCOMPRESSED);
   swfdec_audio_decoder_register (SWFDEC_TYPE_AUDIO_DECODER_ADPCM);
+  swfdec_video_decoder_register (SWFDEC_TYPE_VIDEO_DECODER_SCREEN);
+  swfdec_video_decoder_register (SWFDEC_TYPE_VIDEO_DECODER_VP6_ALPHA);
 #ifdef HAVE_GST
   swfdec_audio_decoder_register (SWFDEC_TYPE_AUDIO_DECODER_GST);
+  swfdec_video_decoder_register (SWFDEC_TYPE_VIDEO_DECODER_GST);
 #endif
 }
 

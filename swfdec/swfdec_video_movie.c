@@ -108,41 +108,26 @@ swfdec_video_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 {
   guint version = object->context->version;
   SwfdecVideoMovie *video;
-  guint w, h;
 
   video = SWFDEC_VIDEO_MOVIE (object);
 
   if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_width) == 0) {
-    /* FIXME: find better solution here */
-    cairo_surface_t *surface;
+    guint w;
     if (video->provider) {
-      surface = swfdec_video_provider_get_image (video->provider,
-	  SWFDEC_PLAYER (object->context)->priv->renderer, &w, &h);
-    } else {
-      surface = NULL;
-    }
-    if (surface) {
-      cairo_surface_destroy (surface);
+      w = swfdec_video_provider_get_width (video->provider);
     } else {
       w = 0;
     }
-    SWFDEC_AS_VALUE_SET_NUMBER (val, w);
+    SWFDEC_AS_VALUE_SET_INT (val, w);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_height) == 0) {
-    /* FIXME: find better solution here */
-    cairo_surface_t *surface;
+    guint h;
     if (video->provider) {
-      surface = swfdec_video_provider_get_image (video->provider,
-	  SWFDEC_PLAYER (object->context)->priv->renderer, &w, &h);
-    } else {
-      surface = NULL;
-    }
-    if (surface) {
-      cairo_surface_destroy (surface);
+      h = swfdec_video_provider_get_height (video->provider);
     } else {
       h = 0;
     }
-    SWFDEC_AS_VALUE_SET_NUMBER (val, h);
+    SWFDEC_AS_VALUE_SET_INT (val, h);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_deblocking) == 0) {
     SWFDEC_STUB ("Video.deblocking (get)");

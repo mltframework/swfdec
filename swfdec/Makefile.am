@@ -290,6 +290,7 @@ noinst_HEADERS = \
 	swfdec_player_internal.h \
 	swfdec_policy_file.h \
 	swfdec_rect.h \
+	swfdec_renderer_internal.h \
 	swfdec_resource.h \
 	swfdec_ringbuffer.h \
 	swfdec_sandbox.h \

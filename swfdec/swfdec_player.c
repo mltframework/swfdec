@@ -2000,8 +2000,13 @@ swfdec_player_pretend_to_render (SwfdecPlayer *player)
   GList *walk;
 
   for (walk = priv->actors; walk; walk = walk->next) {
-    if (SWFDEC_IS_TEXT_FIELD_MOVIE (walk->data))
-      swfdec_text_field_movie_autosize (walk->data);
+    if (SWFDEC_IS_TEXT_FIELD_MOVIE (walk->data)) {
+      SwfdecTextFieldMovie *text = walk->data;
+      gboolean onScroller_emitted = text->onScroller_emitted;
+      text->onScroller_emitted = TRUE;
+      swfdec_text_field_movie_autosize (text);
+      text->onScroller_emitted = onScroller_emitted;
+    }
   }
 }
 

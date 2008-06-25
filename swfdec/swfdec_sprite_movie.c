@@ -234,8 +234,12 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 
   if (has_name) {
     char *s = swfdec_bits_get_string (bits, version);
-    name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), s);
-    SWFDEC_LOG ("  name = %s", name);
+    if (s) {
+      name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), s);
+      SWFDEC_LOG ("  name = %s", name);
+    } else {
+      name = NULL;
+    }
   } else {
     name = NULL;
   }

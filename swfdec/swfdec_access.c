@@ -46,7 +46,7 @@ swfdec_player_allow_by_matrix (SwfdecPlayer *player, SwfdecSandbox *sandbox,
 
   if (swfdec_url_is_local (url)) {
     type = SWFDEC_ACCESS_LOCAL;
-  } else if (swfdec_url_host_equal(url, sandbox->url)) {
+  } else if (swfdec_url_host_equal (url, sandbox->url)) {
     type = SWFDEC_ACCESS_SAME_HOST;
   } else {
     type = SWFDEC_ACCESS_NET;

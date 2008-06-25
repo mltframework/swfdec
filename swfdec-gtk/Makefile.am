@@ -42,6 +42,5 @@ libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = \
 
 EXTRA_DIST = \
 	swfdec_playback_alsa.c \
-	swfdec_playback_oss.c \
-	swfdec_playback_pa.c \
+	swfdec_playback_pulse.c \
 	swfdec_playback_none.c

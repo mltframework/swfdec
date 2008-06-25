@@ -512,7 +512,6 @@ swfdec_resource_load_free (gpointer loadp)
 {
   SwfdecResourceLoad *load = loadp;
 
-  swfdec_player_unroot (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (load->sandbox)->context), load);
   g_free (load->url);
   g_free (load->target_string);
   if (load->buffer)
@@ -570,8 +569,10 @@ swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
   SwfdecResource *resource;
   SwfdecLoader *loader;
   
-  if (!swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource)))
+  if (!swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource))) {
+    swfdec_player_unroot (player, load);
     return;
+  }
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (resource), SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource));
   resource->version = 8;
@@ -586,15 +587,17 @@ swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
 	load->url, swfdec_url_get_url (load->sandbox->url));
     /* FIXME: is replacing correct? */
     swfdec_resource_emit_error (resource, SWFDEC_AS_STR_IllegalRequest);
+    swfdec_player_unroot (player, load);
     return;
   }
 
   /* FIXME: load nonetheless, even if there's no movie? */
-  if (!swfdec_resource_create_movie (resource, load))
-    return;
-  loader = swfdec_player_load (player, load->url, load->buffer);
-  swfdec_resource_set_loader (resource, loader);
-  g_object_unref (loader);
+  if (swfdec_resource_create_movie (resource, load)) {
+    loader = swfdec_player_load (player, load->url, load->buffer);
+    swfdec_resource_set_loader (resource, loader);
+    g_object_unref (loader);
+  }
+  swfdec_player_unroot (player, load);
 }
 
 static const SwfdecAccessMatrix swfdec_resource_matrix = {
@@ -616,11 +619,12 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
     SwfdecSpriteMovie *movie;
       
     movie = load->target_movie ? (SwfdecSpriteMovie *) swfdec_movie_resolve (SWFDEC_MOVIE (load->target_movie)) : NULL;
-    if (!SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+      swfdec_resource_replace_movie (movie, SWFDEC_MOVIE (movie)->resource);
+    } else {
       SWFDEC_DEBUG ("no movie, not unloading");
-      return;
     }
-    swfdec_resource_replace_movie (movie, SWFDEC_MOVIE (movie)->resource);
+    swfdec_player_unroot (player, load);
     return;
   }
 
@@ -636,12 +640,14 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
     } else {
       g_signal_emit_by_name (player, "fscommand", command, load->target_string);
     }
+    swfdec_player_unroot (player, load);
     return;
   }
 
   /* LAUNCH command (aka getURL) */
   if (load->target_string && swfdec_player_get_level (player, load->target_string) < 0) {
     swfdec_player_launch (player, load->url, load->target_string, load->buffer);
+    swfdec_player_unroot (player, load);
     return;
   }
 
@@ -668,8 +674,8 @@ swfdec_resource_load_internal (SwfdecPlayer *player,
   load->buffer = buffer;
   load->loader = loader;
 
-  swfdec_player_root (player, load, swfdec_resource_load_mark);
-  swfdec_player_request_resource (player, swfdec_resource_load_request, load, swfdec_resource_load_free);
+  swfdec_player_root_full (player, load, swfdec_resource_load_mark, swfdec_resource_load_free);
+  swfdec_player_request_resource (player, swfdec_resource_load_request, load, NULL);
 }
 
 gboolean

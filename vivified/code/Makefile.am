@@ -25,6 +25,8 @@ libvivified_compiler_la_LDFLAGS = $(SWFDEC_LIBS)
 libvivified_compiler_la_LIBADD = \
 	libvivified-parser-lex.la
 
+EXTRA_DIST = vivi_parser_scanner_lex.l
+
 libvivified_compiler_la_SOURCES = \
 	vivi_code_and.c \
 	vivi_code_asm.c \

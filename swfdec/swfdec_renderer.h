@@ -45,8 +45,10 @@ struct _SwfdecRenderer {
 
 struct _SwfdecRendererClass
 {
+  /*< private >*/
   GObjectClass		object_class;
 
+  /*< public >*/
   cairo_surface_t *	(* create_similar)		(SwfdecRenderer *	renderer,
 							 cairo_surface_t *	surface);
   cairo_surface_t *	(* create_for_data)		(SwfdecRenderer *	renderer,

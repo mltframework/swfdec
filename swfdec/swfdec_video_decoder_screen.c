@@ -78,16 +78,18 @@ swfdec_video_decoder_screen_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffe
     return;
   }
   stride = w * 4;
-  SWFDEC_LOG ("size: %u x %u - block size %u x %u\n", w, h, bw, bh);
+  SWFDEC_LOG ("size: %u x %u - block size %u x %u", w, h, bw, bh);
   for (j = 0; j < h; j += bh) {
     for (i = 0; i < w; i += bw) {
-      guint x, y, size;
+      guint x, y, size, curw, curh;
       SwfdecBuffer *buf;
       guint8 *in, *out;
       size = swfdec_bits_get_bu16 (&bits);
       if (size == 0)
 	continue;
-      buf = swfdec_bits_decompress (&bits, size, bw * bh * 4);
+      curw = MIN (bw, w - i);
+      curh = MIN (bh, h - j);
+      buf = swfdec_bits_decompress (&bits, size, curw * curh * 3);
       if (buf == NULL) {
 	SWFDEC_ERROR ("could not decode block at %ux%u", i, j);
 	continue;
@@ -95,13 +97,14 @@ swfdec_video_decoder_screen_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffe
       /* convert format and write out data */
       out = dec->plane[0] + stride * (h - j - 1) + i * 4;
       in = buf->data;
-      for (y = 0; y < MIN (bh, h - j); y++) {
-	for (x = 0; x < MIN (bw, w - i); x++) {
-	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_BLUE] = *in++;
-	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_GREEN] = *in++;
-	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_RED] = *in++;
-	  out[x * 4 - y * stride + SWFDEC_COLOR_INDEX_ALPHA] = 0xFF;
+      for (y = 0; y < curh; y++) {
+	for (x = 0; x < curw; x++) {
+	  out[x * 4 + SWFDEC_COLOR_INDEX_BLUE] = *in++;
+	  out[x * 4 + SWFDEC_COLOR_INDEX_GREEN] = *in++;
+	  out[x * 4 + SWFDEC_COLOR_INDEX_RED] = *in++;
+	  out[x * 4 + SWFDEC_COLOR_INDEX_ALPHA] = 0xFF;
 	}
+	out -= stride;
       }
       swfdec_buffer_unref (buf);
     }

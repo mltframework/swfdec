@@ -74,6 +74,7 @@ swfdec_audio_decoder_gst_prepare (guint codec, SwfdecAudioFormat format, char **
   factory = swfdec_gst_get_element_factory (caps);
   if (factory != NULL) {
     gst_object_unref (factory);
+    gst_caps_unref (caps);
     return TRUE;
   }
 

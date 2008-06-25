@@ -50,6 +50,7 @@ CFILE_GLOB=$(top_srcdir)/swfdec/*.c $(top_srcdir)/swfdec-gtk/*.c
 IGNORE_HFILES= \
 	js \
 	jpeg \
+	swfdec_access.h \
 	swfdec_actor.h \
 	swfdec_amf.h \
 	swfdec_as_boolean.h \
@@ -74,6 +75,7 @@ IGNORE_HFILES= \
 	swfdec_audio_decoder_uncompressed.h \
 	swfdec_audio_event.h \
 	swfdec_audio_flv.h \
+	swfdec_audio_load.h \
 	swfdec_audio_stream.h \
 	swfdec_audio_swf_stream.h \
 	swfdec_bits.h \
@@ -85,9 +87,7 @@ IGNORE_HFILES= \
 	swfdec_cached_image.h \
 	swfdec_cached_video.h \
 	swfdec_character.h \
-	swfdec_codec_audio.h \
 	swfdec_codec_gst.h \
-	swfdec_codec_video.h \
 	swfdec_color.h \
 	swfdec_color_as.h \
 	swfdec_constant_pool.h \
@@ -113,6 +113,7 @@ IGNORE_HFILES= \
 	swfdec_js.h \
 	swfdec_listener.h \
 	swfdec_load_object.h \
+	swfdec_load_sound.h \
 	swfdec_loader_internal.h \
 	swfdec_stream_target.h \
 	swfdec_marshal.h \
@@ -138,7 +139,9 @@ IGNORE_HFILES= \
 	swfdec_shape.h \
 	swfdec_shape_parser.h \
 	swfdec_sound.h \
+	swfdec_sound_matrix.h \
 	swfdec_sound_object.h \
+	swfdec_sound_provider.h \
 	swfdec_sprite.h \
 	swfdec_sprite_movie.h \
 	swfdec_stroke.h \
@@ -153,6 +156,10 @@ IGNORE_HFILES= \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \
+	swfdec_video_decoder.h \
+	swfdec_video_decoder_gst.h \
+	swfdec_video_decoder_screen.h \
+	swfdec_video_decoder_vp6_alpha.h \
 	swfdec_video_movie.h \
 	swfdec_video_provider.h \
 	swfdec_video_video_provider.h \

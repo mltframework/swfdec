@@ -50,13 +50,19 @@ swfdec_audio_decoder_uncompressed_upscale (SwfdecBuffer *buffer, SwfdecAudioForm
   guint channels = swfdec_audio_format_get_channels (format);
   guint granularity = swfdec_audio_format_get_granularity (format);
   SwfdecBuffer *ret;
-  guint i, j;
+  guint i, j, n_samples;
   gint16 *src, *dest;
 
-  ret = swfdec_buffer_new (buffer->length * 2 / channels * granularity);
+  g_printerr ("buffer length %u, channels %u, granularity %u\n", buffer->length, channels, granularity);
+  n_samples = buffer->length / 2 / channels;
+  if (n_samples * 2 * channels != buffer->length) {
+    SWFDEC_ERROR ("incorrect buffer size, %"G_GSIZE_FORMAT" bytes overhead",
+	buffer->length - n_samples * 2 * channels);
+  }
+  ret = swfdec_buffer_new (n_samples * 4 * granularity);
   src = (gint16 *) buffer->data;
   dest = (gint16 *) ret->data;
-  for (i = 0; i < buffer->length / 2; i++) {
+  for (i = 0; i < n_samples; i++) {
     for (j = 0; j < granularity; j++) {
       *dest++ = src[0];
       *dest++ = src[channels - 1];
@@ -120,16 +126,6 @@ swfdec_audio_decoder_uncompressed_push (SwfdecAudioDecoder *decoder,
   else
     tmp = swfdec_audio_decoder_uncompressed_decode_8bit (buffer);
 
-  if (tmp->length % 4) {
-    SwfdecBuffer *correct;
-    SWFDEC_ERROR ("incorrect buffer size, %"G_GSIZE_FORMAT" bytes overhead",
-	tmp->length % 4);
-    /* we don't just truncate the length here as it might be the original
-     * buffer we got passed, and we must not modify that one */
-    correct = swfdec_buffer_new_subbuffer (tmp, 0, tmp->length & ~3);
-    swfdec_buffer_unref (tmp);
-    tmp = correct;
-  }
   tmp = swfdec_audio_decoder_uncompressed_upscale (tmp, decoder->format);
   swfdec_buffer_queue_push (SWFDEC_AUDIO_DECODER_UNCOMPRESSED (decoder)->queue,
       tmp);

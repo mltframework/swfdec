@@ -1,4 +1,23 @@
 
+ 0.7.2 ("Rock You")
+
+Here is - roughly 3 months too late - the first development release of the 
+Swfdec 0.7 series:
+- lots of conformance fixes that make lots of Flash files work
+- new (de)compiler framework in vivified debugger
+- fullscreen support
+- handle focus properly
+- lots of TextField fixes (including onScroller and onChanged events)
+- TextFields can now receive keyboard input
+- extend SwfdecAudio API to allow partially loaded streams and volume changes
+- the Sound object is now fully supported
+- rework loading of external resources to be more compatible
+- significant speedups to the Actionscript interpreter
+- noticable speedups to rendering infrastructure and new API that allows
+  custom speedups
+- removed unmaintained ffmpeg, mad and OSS support
+- lots of bug fixes
+
  0.6.6 ("Faith Fighter")
 
 Here's another bugfix release.

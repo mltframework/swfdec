@@ -270,7 +270,12 @@ swfdec_color_transform_as_get_rgb (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("ColorTransform.rgb (get)");
+  SwfdecColorTransformAs *transform;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
+
+  SWFDEC_AS_VALUE_SET_INT (ret, ((int)transform->rb << 16) +
+      ((int)transform->gb << 8) + (int)transform->bb);
 }
 
 SWFDEC_AS_NATIVE (1105, 118, swfdec_color_transform_as_set_rgb)
@@ -279,7 +284,17 @@ swfdec_color_transform_as_set_rgb (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("ColorTransform.rgb (set)");
+  SwfdecColorTransformAs *transform;
+  int value;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "i", &value);
+
+  transform->ra = 0;
+  transform->ga = 0;
+  transform->ba = 0;
+  transform->rb = (value & 0xFF0000) >> 16;
+  transform->gb = (value & 0x00FF00) >> 8;
+  transform->bb = (value & 0x0000FF);
 }
 
 // normal

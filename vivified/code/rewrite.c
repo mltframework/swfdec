@@ -181,6 +181,10 @@ sort_enumerate (ViviCodeAssembler *assembler)
       // FIXME: compile once and use multiple times (problem is the labels)
       statement = vivi_parse_string (
 	  "asm {"
+	  "  push reg 0;"
+	  "  push '$_vivi_rewrite_sort_enumerate';"
+	  "  define_local;"
+
 	  "  push 0;"
 	  "  init_array;"
 	  "  store 0;"
@@ -216,6 +220,12 @@ sort_enumerate (ViviCodeAssembler *assembler)
 	  "  jump write_start;"
 
 	  "write_end:"
+	  "  push '$_vivi_rewrite_sort_enumerate';"
+	  "  get_variable;"
+	  "  store 0;"
+	  "  pop;"
+	  "  push '$_vivi_rewrite_sort_enumerate';"
+	  "  delete2;"
 	  "}"
 	  );
       g_assert (statement);

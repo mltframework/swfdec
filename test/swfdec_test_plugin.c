@@ -101,7 +101,9 @@ swfdec_test_plugin_swfdec_trace (SwfdecPlayer *player, const char *message,
 
 static void
 swfdec_test_plugin_swfdec_launch (SwfdecPlayer *player, const char *url,
-    const char *target, SwfdecBuffer *data, SwfdecTestPlugin *plugin)
+    const char *target, SwfdecBuffer *data, guint header_count,
+    const char **header_names, const char **header_values,
+    SwfdecTestPlugin *plugin)
 {
   plugin->launch (plugin, url);
 }

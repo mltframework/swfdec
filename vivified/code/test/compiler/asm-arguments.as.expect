@@ -1,0 +1,13 @@
+asm {
+  pool "x", "values", "y"
+  push pool 0
+  get_variable
+  push pool 1
+  get_variable
+  push pool 2
+  get_variable
+  get_member
+  trace
+  trace
+  end
+}

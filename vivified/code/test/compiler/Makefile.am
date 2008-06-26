@@ -22,6 +22,8 @@ EXTRA_DIST = \
 	array_literal_empty.as.expect \
 	array_literal_missing_values.as \
 	array_literal_missing_values.as.expect \
+	asm-arguments.as \
+	asm-arguments.as.expect \
 	asm_default.as \
 	asm_default.as.expect \
 	asm_empty.as \

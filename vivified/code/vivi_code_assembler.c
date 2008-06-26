@@ -25,13 +25,14 @@
 #include <swfdec/swfdec_script_internal.h>
 
 #include "vivi_code_assembler.h"
+#include "vivi_code_asm_pool.h"
+#include "vivi_code_asm_push.h"
 #include "vivi_code_comment.h"
 #include "vivi_code_compiler.h"
 #include "vivi_code_emitter.h"
 #include "vivi_code_label.h"
 #include "vivi_code_printer.h"
-#include "vivi_code_asm_pool.h"
-#include "vivi_code_asm_push.h"
+#include "vivi_code_undefined.h"
 
 G_DEFINE_TYPE (ViviCodeAssembler, vivi_code_assembler, VIVI_TYPE_CODE_STATEMENT)
 
@@ -39,12 +40,11 @@ static void
 vivi_code_assembler_dispose (GObject *object)
 {
   ViviCodeAssembler *assembler = VIVI_CODE_ASSEMBLER (object);
-  guint i;
 
-  for (i = 0; i < assembler->codes->len; i++) {
-    g_object_unref (g_ptr_array_index (assembler->codes, i));
-  }
+  g_ptr_array_foreach (assembler->codes, (GFunc) g_object_unref, NULL);
   g_ptr_array_free (assembler->codes, TRUE);
+  g_ptr_array_foreach (assembler->arguments, (GFunc) g_object_unref, NULL);
+  g_ptr_array_free (assembler->arguments, TRUE);
 
   G_OBJECT_CLASS (vivi_code_assembler_parent_class)->dispose (object);
 }
@@ -61,7 +61,18 @@ vivi_code_assembler_print (ViviCodeToken *token, ViviCodePrinter *printer)
   ViviCodeAssembler *assembler = VIVI_CODE_ASSEMBLER (token);
   guint i;
 
-  vivi_code_printer_print (printer, "asm {");
+  vivi_code_printer_print (printer, "asm");
+  if (assembler->arguments->len) {
+    vivi_code_printer_print (printer, " (");
+    for (i = 0; i < assembler->codes->len; i++) {
+      if (i > 0)
+	vivi_code_printer_print (printer, ", ");
+      vivi_code_printer_print_value (printer, 
+	  g_ptr_array_index (assembler->arguments, i), VIVI_PRECEDENCE_MEMBER);
+    }
+    vivi_code_printer_print (printer, ")");
+  }
+  vivi_code_printer_print (printer, " {");
   vivi_code_printer_new_line (printer, FALSE);
   vivi_code_printer_push_indentation (printer);
   for (i = 0; i < assembler->codes->len; i++) {
@@ -77,6 +88,11 @@ vivi_code_assembler_compile (ViviCodeToken *token, ViviCodeCompiler *compiler)
 {
   ViviCodeAssembler *assembler = VIVI_CODE_ASSEMBLER (token);
   guint i;
+
+  for (i = 0; i < assembler->arguments->len; i++) {
+    vivi_code_compiler_compile_value (compiler, 
+	g_ptr_array_index (assembler->arguments, i));
+  }
 
   // TODO: clone?
   for (i = 0; i < assembler->codes->len; i++) {
@@ -103,6 +119,7 @@ vivi_code_assembler_class_init (ViviCodeAssemblerClass *klass)
 static void
 vivi_code_assembler_init (ViviCodeAssembler *assembler)
 {
+  assembler->arguments = g_ptr_array_new ();
   assembler->codes = g_ptr_array_new ();
 }
 
@@ -158,6 +175,50 @@ vivi_code_assembler_remove_code (ViviCodeAssembler *assembler, ViviCodeAsm *code
   else
     g_return_if_reached ();
 }
+
+/*** ARGUMENT HANDLING ***/
+
+guint
+vivi_code_assembler_get_n_arguments (ViviCodeAssembler *assembler)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler), 0);
+
+  return assembler->arguments->len;
+}
+
+void
+vivi_code_assembler_push_argument (ViviCodeAssembler *assembler, ViviCodeValue *value)
+{
+  g_return_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler));
+  g_return_if_fail (VIVI_IS_CODE_VALUE (value));
+
+  g_object_ref (value);
+  g_ptr_array_add (assembler->arguments, value);
+}
+
+ViviCodeValue *
+vivi_code_assembler_pop_argument (ViviCodeAssembler *assembler)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler), NULL);
+
+  if (assembler->arguments->len == 0) {
+    return vivi_code_undefined_new ();
+  } else {
+    return g_ptr_array_remove_index (assembler->arguments, 
+	assembler->arguments->len - 1);
+  }
+}
+
+ViviCodeValue *
+vivi_code_assembler_get_argument (ViviCodeAssembler *assembler, guint i)
+{
+  g_return_val_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler), NULL);
+  g_return_val_if_fail (i < assembler->arguments->len, NULL);
+
+  return g_ptr_array_index (assembler->arguments, i);
+}
+
+/*** OPTIMIZATION ***/
 
 gboolean
 vivi_code_assembler_pool (ViviCodeAssembler *assembler)
@@ -357,6 +418,8 @@ vivi_code_assembler_assemble_script (ViviCodeAssembler *assembler,
   guint i;
 
   g_return_val_if_fail (VIVI_IS_CODE_ASSEMBLER (assembler), NULL);
+  /* FIXME: should this work? */
+  g_return_val_if_fail (assembler->arguments->len == 0, NULL);
 
   emit = vivi_code_emitter_new (version);
   for (i = 0; i < assembler->codes->len; i++) {

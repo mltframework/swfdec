@@ -1422,7 +1422,7 @@ peek_asm_statement (ParseData *data)
 
   value = vivi_parser_scanner_get_value (data->scanner, 2);
 
-  return (value->token == TOKEN_BRACE_LEFT);
+  return (value->token == TOKEN_BRACE_LEFT || value->token == TOKEN_PARENTHESIS_LEFT);
 }
 
 static ViviCodeStatement *
@@ -1435,6 +1435,27 @@ parse_asm_statement (ParseData *data)
 
   if (g_ascii_strcasecmp (parse_identifier_value (data), "asm") != 0)
     vivi_parser_error (data, "Expected 'asm'");
+
+  if (try_parse_token (data, TOKEN_PARENTHESIS_LEFT)) {
+    ViviCodeValue **arguments;
+    guint i;
+
+    if (!try_parse_token (data, TOKEN_PARENTHESIS_RIGHT)) {
+      parse_value_list (data, peek_assignment_expression,
+	  parse_assignment_expression, &arguments, TOKEN_COMMA);
+      parse_token (data, TOKEN_PARENTHESIS_RIGHT);
+    } else {
+      arguments = NULL;
+    }
+
+    if (arguments != NULL) {
+      for (i = 0; arguments[i] != NULL; i++) {
+	vivi_code_assembler_push_argument (assembler, arguments[i]);
+      }
+      free_value_list (arguments);
+    }
+  }
+
   parse_token (data, TOKEN_BRACE_LEFT);
 
   if (!try_parse_token (data, TOKEN_BRACE_RIGHT)) {

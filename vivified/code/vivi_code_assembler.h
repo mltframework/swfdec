@@ -22,6 +22,7 @@
 
 #include <vivified/code/vivi_code_asm.h>
 #include <vivified/code/vivi_code_statement.h>
+#include <vivified/code/vivi_code_value.h>
 
 G_BEGIN_DECLS
 
@@ -40,6 +41,7 @@ struct _ViviCodeAssembler
   ViviCodeStatement	statement;
 
   GPtrArray *		codes;		/* ViviCodeAsm inside this assembler */
+  GPtrArray *		arguments;	/* ViviCodeValue of values to push on the stack before running the asm */
 };
 
 struct _ViviCodeAssemblerClass
@@ -60,6 +62,13 @@ void			vivi_code_assembler_insert_code  	(ViviCodeAssembler *	assembler,
 								 ViviCodeAsm *		code);
 void			vivi_code_assembler_remove_code		(ViviCodeAssembler *	assembler,
 								 ViviCodeAsm *		code);
+
+guint			vivi_code_assembler_get_n_arguments	(ViviCodeAssembler *	assembler);
+ViviCodeValue *		vivi_code_assembler_get_argument	(ViviCodeAssembler *	assembler,
+								 guint			i);
+void			vivi_code_assembler_push_argument	(ViviCodeAssembler *	assembler,
+								 ViviCodeValue *	value);
+ViviCodeValue *		vivi_code_assembler_pop_argument	(ViviCodeAssembler *	assembler);
 
 gboolean		vivi_code_assembler_pool		(ViviCodeAssembler *	assembler);
 void			vivi_code_assembler_merge_push		(ViviCodeAssembler *	assembler,

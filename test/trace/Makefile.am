@@ -565,6 +565,15 @@ EXTRA_DIST = \
 	color-transform-construct-7.swf.trace\
 	color-transform-construct-8.swf\
 	color-transform-construct-8.swf.trace\
+	color-transform-multipliers-offsets.as \
+	color-transform-multipliers-offsets-5.swf \
+	color-transform-multipliers-offsets-5.swf.trace \
+	color-transform-multipliers-offsets-6.swf \
+	color-transform-multipliers-offsets-6.swf.trace \
+	color-transform-multipliers-offsets-7.swf \
+	color-transform-multipliers-offsets-7.swf.trace \
+	color-transform-multipliers-offsets-8.swf \
+	color-transform-multipliers-offsets-8.swf.trace \
 	color-transform-properties.as \
 	color-transform-properties-5.swf\
 	color-transform-properties-5.swf.trace\

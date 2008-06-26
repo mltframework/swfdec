@@ -2315,7 +2315,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    */
   signals[LAUNCH] = g_signal_new ("launch", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__STRING_STRING_BOXED_UINT_BOXED_BOXED,
-      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_STRING, SWFDEC_TYPE_BUFFER, G_TYPE_UINT, G_TYPE_STRV, G_TYPE_STRV);
+      G_TYPE_NONE, 6, G_TYPE_STRING, G_TYPE_STRING, SWFDEC_TYPE_BUFFER, G_TYPE_UINT, G_TYPE_STRV, G_TYPE_STRV);
   /**
    * SwfdecPlayer::missing-plugins:
    * @player: the #SwfdecPlayer missing plugins

@@ -53,7 +53,6 @@ swfdec_audio_decoder_uncompressed_upscale (SwfdecBuffer *buffer, SwfdecAudioForm
   guint i, j, n_samples;
   gint16 *src, *dest;
 
-  g_printerr ("buffer length %u, channels %u, granularity %u\n", buffer->length, channels, granularity);
   n_samples = buffer->length / 2 / channels;
   if (n_samples * 2 * channels != buffer->length) {
     SWFDEC_ERROR ("incorrect buffer size, %"G_GSIZE_FORMAT" bytes overhead",

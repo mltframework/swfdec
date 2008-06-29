@@ -127,22 +127,22 @@ swfdec_video_decoder_gst_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *buffer)
   GstCaps *caps;
   GstStructure *structure;
 
-  if (player->last) {
-    gst_buffer_unref (player->last);
-    player->last = NULL;
-  }
-
   buf = swfdec_gst_buffer_new (swfdec_buffer_ref (buffer));
   if (!swfdec_gst_decoder_push (&player->dec, buf)) {
     swfdec_video_decoder_error (dec, "failed to push buffer");
     return;
   }
 
-  player->last = swfdec_gst_decoder_pull (&player->dec);
-  if (player->last == NULL) {
-    swfdec_video_decoder_error (dec, "failed to pull decoded buffer");
+  buf = swfdec_gst_decoder_pull (&player->dec);
+  if (buf == NULL) {
+    SWFDEC_ERROR ("failed to pull decoded buffer. Broken stream?");
     return;
+  } else {
+    if (player->last)
+      gst_buffer_unref (player->last);
+    player->last = buf;
   }
+
   while ((buf = swfdec_gst_decoder_pull (&player->dec))) {
     SWFDEC_ERROR ("too many output buffers!");
     gst_buffer_unref (buf);

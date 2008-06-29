@@ -321,6 +321,11 @@ swfdec_video_decoder_get_image (SwfdecVideoDecoder *decoder, SwfdecRenderer *ren
 
   if (decoder->error)
     return NULL;
+  /* special case: If decoding an image failed, setting plane[0] to NULL means
+   * "currently no image available". This is generally only useful for the 
+   * first image, as otherwise the video decoder is meant to keep the last image. */
+  if (decoder->plane[0] == NULL)
+    return NULL;
 
   if (swfdec_video_codec_get_format (decoder->codec) == SWFDEC_VIDEO_FORMAT_I420) {
     data = swfdec_video_i420_to_rgb (decoder);

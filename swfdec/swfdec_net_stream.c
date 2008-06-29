@@ -82,11 +82,11 @@ swfdec_net_stream_decode_video (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffe
     tmp = swfdec_buffer_new_subbuffer (buffer, 1, buffer->length - 1);
     swfdec_video_decoder_decode (decoder, tmp);
     swfdec_buffer_unref (tmp);
-    if (hsub || wsub) {
-      if (hsub >= decoder->height || wsub >= decoder->width) {
-	swfdec_video_decoder_error (decoder, "can't reduce size by more than available");
-	return;
-      }
+    if (hsub >= decoder->height || wsub >= decoder->width) {
+      SWFDEC_ERROR ("can't reduce size by more than available");
+      decoder->width = 0;
+      decoder->height = 0;
+    } else {
       decoder->width -= wsub;
       decoder->height -= hsub;
     }

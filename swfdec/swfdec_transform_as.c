@@ -115,14 +115,14 @@ swfdec_transform_as_set_colorTransform (SwfdecAsContext *cx,
   transform_as = SWFDEC_COLOR_TRANSFORM_AS (color);
   transform = &self->target->color_transform;
 
-  transform->ra = CLAMP (transform_as->ra * 256.0, 0, 256);
-  transform->ga = CLAMP (transform_as->ga * 256.0, 0, 256);
-  transform->ba = CLAMP (transform_as->ba * 256.0, 0, 256);
-  transform->aa = CLAMP (transform_as->aa * 256.0, 0, 256);
-  transform->rb = CLAMP (transform_as->rb, -256, 256);
-  transform->gb = CLAMP (transform_as->gb, -256, 256);
-  transform->bb = CLAMP (transform_as->bb, -256, 256);
-  transform->ab = CLAMP (transform_as->ab, -256, 256);
+  transform->ra = transform_as->ra * 256.0;
+  transform->ga = transform_as->ga * 256.0;
+  transform->ba = transform_as->ba * 256.0;
+  transform->aa = transform_as->aa * 256.0;
+  transform->rb = transform_as->rb;
+  transform->gb = transform_as->gb;
+  transform->bb = transform_as->bb;
+  transform->ab = transform_as->ab;
 }
 
 SWFDEC_AS_NATIVE (1106, 107, swfdec_transform_as_get_concatenatedColorTransform)

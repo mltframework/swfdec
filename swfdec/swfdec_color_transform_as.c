@@ -271,13 +271,17 @@ swfdec_color_transform_as_get_rgb (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecColorTransformAs *transform;
+  int value;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret,
-      (swfdec_as_double_to_integer (transform->rb) << 16) +
-      (swfdec_as_double_to_integer (transform->gb) << 8) +
-      swfdec_as_double_to_integer (transform->bb));
+  // important to calculate the value this way, to get right results with
+  // negative values
+  value = swfdec_as_double_to_integer (transform->rb) << 16;
+  value |= swfdec_as_double_to_integer (transform->gb) << 8;
+  value |= swfdec_as_double_to_integer (transform->bb);
+
+  SWFDEC_AS_VALUE_SET_INT (ret, value);
 }
 
 SWFDEC_AS_NATIVE (1105, 118, swfdec_color_transform_as_set_rgb)

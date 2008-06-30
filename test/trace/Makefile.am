@@ -556,6 +556,15 @@ EXTRA_DIST = \
 	color-setTransform-negative.swf.trace \
 	color-setTransform-full.swf \
 	color-setTransform-full.swf.trace \
+	color-transform-concat.as \
+	color-transform-concat-5.swf \
+	color-transform-concat-5.swf.trace \
+	color-transform-concat-6.swf \
+	color-transform-concat-6.swf.trace \
+	color-transform-concat-7.swf \
+	color-transform-concat-7.swf.trace \
+	color-transform-concat-8.swf \
+	color-transform-concat-8.swf.trace \
 	color-transform-construct.as \
 	color-transform-construct-5.swf\
 	color-transform-construct-5.swf.trace\

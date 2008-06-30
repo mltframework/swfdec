@@ -309,7 +309,24 @@ void
 swfdec_color_transform_as_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("ColorTransform.concat");
+  SwfdecColorTransformAs *transform, *other;
+  SwfdecAsObject *other_object;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "o",
+      &other_object);
+
+  if (!SWFDEC_IS_COLOR_TRANSFORM_AS (other_object))
+    return;
+  other = SWFDEC_COLOR_TRANSFORM_AS (other_object);
+
+  transform->rb += (transform->ra * other->rb);
+  transform->gb += (transform->ga * other->gb);
+  transform->bb += (transform->ba * other->bb);
+  transform->ab += (transform->aa * other->ab);
+  transform->ra *= other->ra;
+  transform->ga *= other->ga;
+  transform->ba *= other->ba;
+  transform->aa *= other->aa;
 }
 
 // constructor

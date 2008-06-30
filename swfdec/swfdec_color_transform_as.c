@@ -304,10 +304,25 @@ swfdec_color_transform_as_set_rgb (SwfdecAsContext *cx,
 }
 
 // normal
-SWFDEC_AS_NATIVE (1105, 1, swfdec_color_transform_as_concat)
 void
-swfdec_color_transform_as_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_color_transform_as_concat (SwfdecColorTransformAs *transform,
+    const SwfdecColorTransformAs *other)
+{
+  transform->rb += (transform->ra * other->rb);
+  transform->gb += (transform->ga * other->gb);
+  transform->bb += (transform->ba * other->bb);
+  transform->ab += (transform->aa * other->ab);
+  transform->ra *= other->ra;
+  transform->ga *= other->ga;
+  transform->ba *= other->ba;
+  transform->aa *= other->aa;
+}
+
+SWFDEC_AS_NATIVE (1105, 1, swfdec_color_transform_as_do_concat)
+void
+swfdec_color_transform_as_do_concat (SwfdecAsContext *cx,
+    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
+    SwfdecAsValue *ret)
 {
   SwfdecColorTransformAs *transform, *other;
   SwfdecAsObject *other_object;
@@ -319,14 +334,7 @@ swfdec_color_transform_as_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   other = SWFDEC_COLOR_TRANSFORM_AS (other_object);
 
-  transform->rb += (transform->ra * other->rb);
-  transform->gb += (transform->ga * other->gb);
-  transform->bb += (transform->ba * other->bb);
-  transform->ab += (transform->aa * other->ab);
-  transform->ra *= other->ra;
-  transform->ga *= other->ga;
-  transform->ba *= other->ba;
-  transform->aa *= other->aa;
+  swfdec_color_transform_as_concat (transform, other);
 }
 
 // constructor

@@ -91,6 +91,7 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }
 
+#define ALLOWED_CHARACTERS " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 static void
 swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
     char ***header_names, char ***header_values)
@@ -143,14 +144,20 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
     if (name == NULL) {
       name = swfdec_as_value_to_string (cx, &val);
     } else {
+      const char *value = swfdec_as_value_to_string (cx, &val);
       for (j = 0; j < G_N_ELEMENTS (disallowed_names); j++) {
 	if (g_ascii_strcasecmp (name, disallowed_names[j]) == 0)
 	  break;
       }
-      if (j >= G_N_ELEMENTS (disallowed_names)) {
+      if (j < G_N_ELEMENTS (disallowed_names)) {
+	SWFDEC_WARNING ("Custom header with name %s is not allowed", name);
+      } else if (strspn (name, ALLOWED_CHARACTERS) != strlen (name) || strchr (name, ':') != NULL || strchr (name, ' ') != NULL) {
+	SWFDEC_WARNING ("Custom header's name (%s) contains characters that are not allowed", name);
+      } else if (strspn (value, ALLOWED_CHARACTERS) != strlen (value)) {
+	SWFDEC_WARNING ("Custom header's value (%s) contains characters that are not allowed", value);
+      } else {
 	g_ptr_array_add (array_names, g_strdup (name));
-	g_ptr_array_add (array_values,
-	    g_strdup (swfdec_as_value_to_string (cx, &val)));
+	g_ptr_array_add (array_values, g_strdup (value));
       }
       name = NULL;
     }
@@ -167,6 +174,7 @@ end:
   *header_names = (char **)g_ptr_array_free (array_names, FALSE);
   *header_values = (char **)g_ptr_array_free (array_values, FALSE);
 }
+#undef ALLOWED_CHARACTERS
 
 SWFDEC_AS_NATIVE (301, 1, swfdec_load_object_as_send)
 void

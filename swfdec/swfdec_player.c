@@ -69,7 +69,7 @@
  * to the player by calling for example swfdec_player_handle_mouse().
  *
  * You can use swfdec_player_render() to draw the current state of the player.
- * After that, connect to the SwfdecPlayer::invalidate signal to be notified of
+ * After that, connect to the SwfdecPlayer:invalidate signal to be notified of
  * changes.
  *
  * Audio output is handled via the 
@@ -817,10 +817,9 @@ swfdec_player_emit_signals (SwfdecPlayer *player)
   GList *walk;
 
   /* emit invalidate signal */
-  if (!swfdec_rectangle_is_empty (&priv->invalid_extents)) {
-    g_signal_emit (player, signals[INVALIDATE], 0, &priv->invalid_extents,
+  if (priv->invalidations->len != 0) {
+    g_signal_emit (player, signals[INVALIDATE], 0,
 	priv->invalidations->data, priv->invalidations->len);
-    swfdec_rectangle_init_empty (&priv->invalid_extents);
     g_array_set_size (priv->invalidations, 0);
   }
 
@@ -1835,7 +1834,7 @@ swfdec_player_lock_soft (SwfdecPlayer *player)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_assert (!swfdec_player_is_locked (player));
-  g_assert (swfdec_rectangle_is_empty (&player->priv->invalid_extents));
+  g_assert (player->priv->invalidations->len == 0);
 
   g_object_freeze_notify (G_OBJECT (player));
   g_timer_start (player->priv->runtime);
@@ -2179,7 +2178,6 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   /**
    * SwfdecPlayer::invalidate:
    * @player: the #SwfdecPlayer affected
-   * @extents: the smallest rectangle enclosing the full region of changes
    * @rectangles: a number of smaller rectangles for fine-grained control over 
    *              changes
    * @n_rectangles: number of rectangles in @rectangles
@@ -2192,8 +2190,8 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
    * provides a way to handle regions.
    */
   signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__BOXED_POINTER_UINT,
-      G_TYPE_NONE, 3, SWFDEC_TYPE_RECTANGLE, G_TYPE_POINTER, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, swfdec_marshal_VOID__POINTER_UINT,
+      G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_UINT);
   /**
    * SwfdecPlayer::advance:
    * @player: the #SwfdecPlayer affected
@@ -2443,19 +2441,14 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
       break;
     if (swfdec_rectangle_contains (&r, cur)) {
       *cur = r;
-      swfdec_rectangle_union (&priv->invalid_extents, &priv->invalid_extents, &r);
       break;
     }
   }
   if (i == priv->invalidations->len) {
     g_array_append_val (priv->invalidations, r);
-    swfdec_rectangle_union (&priv->invalid_extents, &priv->invalid_extents, &r);
   }
-  SWFDEC_DEBUG ("toplevel invalidation of %d %d  %d %d - invalid region now %d %d  %d %d (%u subregions)",
+  SWFDEC_DEBUG ("toplevel invalidation of %d %d  %d %d - now %u subregions",
       r.x, r.y, r.width, r.height,
-      priv->invalid_extents.x, priv->invalid_extents.y, 
-      priv->invalid_extents.x + priv->invalid_extents.width,
-      priv->invalid_extents.y + priv->invalid_extents.height,
       priv->invalidations->len);
 }
 

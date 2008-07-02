@@ -107,7 +107,6 @@ struct _SwfdecPlayerPrivate
   GHashTable *		registered_classes;	/* name => SwfdecAsObject constructor */
 
   /* rendering */
-  SwfdecRectangle     	invalid_extents;      	/* extents of area that needs a redraw in global coordinates */
   GArray *		invalidations;		/* fine-grained areas in need of redraw */
   GSList *		invalid_pending;	/* pending invalidations due to invalidate_last */
   gboolean		fullscreen;		/* TRUE if the player has gone fullscreen */

@@ -684,7 +684,7 @@ swfdec_gtk_widget_do_invalidate (gpointer widgetp)
 }
 
 static void
-swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player, const SwfdecRectangle *extents,
+swfdec_gtk_widget_invalidate_cb (SwfdecPlayer *player,
     const SwfdecRectangle *rect, guint n_rects, SwfdecGtkWidget *widget)
 {
   SwfdecGtkWidgetPrivate *priv = widget->priv;

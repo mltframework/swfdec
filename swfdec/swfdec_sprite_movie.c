@@ -643,7 +643,7 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
 	if (klass->replace)
 	  klass->replace (prev, cur->graphic);
 	swfdec_movie_set_static_properties (prev, &cur->original_transform,
-	    &cur->original_ctrans, cur->original_ratio, cur->clip_depth, 
+	    &cur->color_transform, cur->original_ratio, cur->clip_depth, 
 	    cur->blend_mode, SWFDEC_IS_ACTOR (cur) ? SWFDEC_ACTOR (cur)->events : NULL);
 	swfdec_movie_destroy (cur);
 	cur = prev;

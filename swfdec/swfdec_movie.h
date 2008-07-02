@@ -129,7 +129,6 @@ struct _SwfdecMovie {
 
   /* static properties (set by PlaceObject tags) */
   const char *		original_name;		/* the original name - GC'd and static */
-  SwfdecColorTransform	original_ctrans;	/* color transform set on this movie */
   cairo_matrix_t	original_transform;	/* initial transform used */
   guint			original_ratio;		/* ratio used in this movie */
   int			clip_depth;		/* up to which movie this movie clips */

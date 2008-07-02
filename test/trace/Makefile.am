@@ -3801,6 +3801,15 @@ EXTRA_DIST = \
 	trace_properties_names_9.as \
 	transform.swf \
 	transform.swf.trace \
+	transform-color-transform.as \
+	transform-color-transform-5.swf \
+	transform-color-transform-5.swf.trace \
+	transform-color-transform-6.swf \
+	transform-color-transform-6.swf.trace \
+	transform-color-transform-7.swf \
+	transform-color-transform-7.swf.trace \
+	transform-color-transform-8.swf \
+	transform-color-transform-8.swf.trace \
 	transform-properties.as \
 	transform-properties-5.swf \
 	transform-properties-5.swf.trace \

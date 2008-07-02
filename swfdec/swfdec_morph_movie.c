@@ -70,18 +70,21 @@ swfdec_morph_movie_create_morphs (SwfdecMorphMovie *mmovie)
 
 static void
 swfdec_morph_movie_render (SwfdecMovie *movie, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans)
 {
   SwfdecMorphMovie *morph = SWFDEC_MORPH_MOVIE (movie);
+  SwfdecRect inval;
   GSList *walk;
 
   if (morph->draws == NULL)
     swfdec_morph_movie_create_morphs (morph);
 
+  cairo_clip_extents (cr, &inval.x0, &inval.y0, &inval.x1, &inval.y1);
+
   for (walk = morph->draws; walk; walk = walk->next) {
     SwfdecDraw *draw = walk->data;
 
-    if (!swfdec_rect_intersect (NULL, &draw->extents, inval))
+    if (!swfdec_rect_intersect (NULL, &draw->extents, &inval))
       continue;
     
     swfdec_draw_paint (draw, cr, trans);

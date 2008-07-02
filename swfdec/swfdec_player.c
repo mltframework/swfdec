@@ -3039,25 +3039,17 @@ swfdec_player_render_focusrect (SwfdecPlayer *player, cairo_t *cr)
  * swfdec_player_render:
  * @player: a #SwfdecPlayer
  * @cr: #cairo_t to render to
- * @x: x coordinate of top left position to render
- * @y: y coordinate of top left position to render
- * @width: width of area to render or 0 for full width
- * @height: height of area to render or 0 for full height
  *
  * Renders the given area of the current frame to @cr. This function just calls 
  * swfdec_player_render_with_renderer() using the @player's renderer.
  **/
 void
-swfdec_player_render (SwfdecPlayer *player, cairo_t *cr, 
-    double x, double y, double width, double height)
+swfdec_player_render (SwfdecPlayer *player, cairo_t *cr)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (cr != NULL);
-  g_return_if_fail (width >= 0.0);
-  g_return_if_fail (height >= 0.0);
 
-  swfdec_player_render_with_renderer (player, cr, player->priv->renderer,
-      x, y, width, height);
+  swfdec_player_render_with_renderer (player, cr, player->priv->renderer);
 }
 
 /**
@@ -3065,60 +3057,45 @@ swfdec_player_render (SwfdecPlayer *player, cairo_t *cr,
  * @player: a #SwfdecPlayer
  * @cr: #cairo_t to render to
  * @renderer: Renderer to use for rendering
- * @x: x coordinate of top left position to render
- * @y: y coordinate of top left position to render
- * @width: width of area to render or 0 for full width
- * @height: height of area to render or 0 for full height
  *
- * Renders the given area of the current frame to @cr.
+ * Renders the given area of the current frame to @cr. If you only want to 
+ * redraw parts of the player, like when responding to a 
+ * SwfdecPlayer:invalidate signal, set a clip on @cr using cairo_clip():
+ * <informalexample><programlisting>
+ * cairo_rectangle (cr, x, y, width, height);
+ * cairo_clip (cr);
+ * swfdec_player_render_with_renderer (player, cr, renderer);
+ * </programlisting></informalexample>
+ * Only redrawing parts of the player improves performance considerably.
  **/
 void
 swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr, 
-    SwfdecRenderer *renderer, double x, double y, double width, double height)
+    SwfdecRenderer *renderer)
 {
   static const SwfdecColorTransform trans = { FALSE, 256, 0, 256, 0, 256, 0, 256, 0 };
   SwfdecPlayerPrivate *priv;
   GList *walk;
-  SwfdecRect real;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (cr != NULL);
   g_return_if_fail (SWFDEC_IS_RENDERER (renderer));
-  g_return_if_fail (width >= 0.0);
-  g_return_if_fail (height >= 0.0);
 
   /* FIXME: fail when !initialized? */
   if (!swfdec_player_is_initialized (player))
     return;
 
   priv = player->priv;
-  if (width == 0.0)
-    width = priv->stage_width;
-  if (height == 0.0)
-    height = priv->stage_height;
 
   swfdec_renderer_attach (renderer, cr);
   /* clip the area */
   cairo_save (cr);
-  cairo_rectangle (cr, x, y, width, height);
-  cairo_clip (cr);
   /* compute the rectangle */
-  real.x0 = x;
-  real.y0 = y;
-  real.x1 = x + width;
-  real.y1 = y + height;
-  swfdec_rect_transform (&real, &real, &priv->stage_to_global);
-  real.x0 = floor (real.x0);
-  real.y0 = floor (real.y0);
-  real.x1 = ceil (real.x1);
-  real.y1 = ceil (real.y1);
-  SWFDEC_INFO ("=== %p: START RENDER, area %g %g  %g %g ===", player, 
-      real.x0, real.y0, real.x1, real.y1);
+  SWFDEC_INFO ("=== %p: START RENDER ===", player);
   /* convert the cairo matrix */
   cairo_transform (cr, &priv->global_to_stage);
 
   for (walk = priv->roots; walk; walk = walk->next) {
-    swfdec_movie_render (walk->data, cr, &trans, &real);
+    swfdec_movie_render (walk->data, cr, &trans);
   }
   cairo_restore (cr);
   /* NB: we render the focusrect after restoring, so the focusrect doesn't scale */

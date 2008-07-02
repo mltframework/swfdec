@@ -276,8 +276,9 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
     cairo_surface_set_device_offset (surface, -event->area.x, -event->area.y);
     cr = cairo_create (surface);
   }
-  swfdec_player_render (priv->player, cr,
-      event->area.x, event->area.y, event->area.width, event->area.height);
+  gdk_cairo_region (cr, event->region);
+  cairo_clip (cr);
+  swfdec_player_render (priv->player, cr);
   cairo_show_page (cr);
   cairo_destroy (cr);
 

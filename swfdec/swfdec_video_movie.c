@@ -46,7 +46,7 @@ swfdec_video_movie_update_extents (SwfdecMovie *movie,
 
 static void
 swfdec_video_movie_render (SwfdecMovie *mov, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans)
 {
   SwfdecVideoMovie *movie = SWFDEC_VIDEO_MOVIE (mov);
   cairo_surface_t *surface;

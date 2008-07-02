@@ -59,17 +59,15 @@ swfdec_text_mouse_in (SwfdecGraphic *graphic, double x, double y)
 
 static void
 swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans)
 {
   guint i;
   SwfdecColor color;
   SwfdecText *text = SWFDEC_TEXT (graphic);
   SwfdecColorTransform force_color;
-  SwfdecRect rect, inval_moved;
 
   cairo_transform (cr, &text->transform);
   /* scale by bounds */
-  swfdec_rect_transform (&inval_moved, inval, &text->transform_inverse);
   for (i = 0; i < text->glyphs->len; i++) {
     SwfdecTextGlyph *glyph;
     SwfdecDraw *draw;
@@ -91,7 +89,6 @@ swfdec_text_render (SwfdecGraphic *graphic, cairo_t *cr,
     cairo_save (cr);
     cairo_transform (cr, &pos);
     if (!cairo_matrix_invert (&pos)) {
-      swfdec_rect_transform (&rect, &inval_moved, &pos);
       color = swfdec_color_apply_transform (glyph->color, trans);
       swfdec_color_transform_init_color (&force_color, color);
       swfdec_draw_paint (draw, cr, &force_color);

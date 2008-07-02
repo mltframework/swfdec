@@ -24,7 +24,6 @@
 
 #include <glib-object.h>
 #include <swfdec/swfdec_character.h>
-#include <swfdec/swfdec_rect.h>
 #include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
@@ -56,8 +55,7 @@ struct _SwfdecGraphicClass
   /* optional vfuncs */
   void			(* render)	(SwfdecGraphic *	      	graphic, 
                                          cairo_t *			cr,
-					 const SwfdecColorTransform *	trans,
-					 const SwfdecRect *		inval);
+					 const SwfdecColorTransform *	trans);
   gboolean		(* mouse_in)	(SwfdecGraphic *      		graphic,
 					 double				x,
 					 double				y);
@@ -67,8 +65,7 @@ GType		swfdec_graphic_get_type	(void);
 
 void		swfdec_graphic_render	(SwfdecGraphic *		graphic,
                                          cairo_t *			cr,
-					 const SwfdecColorTransform *	trans,
-					 const SwfdecRect *		inval);
+					 const SwfdecColorTransform *	trans);
 gboolean	swfdec_graphic_mouse_in	(SwfdecGraphic *      		graphic,
 					 double				x,
 					 double				y);

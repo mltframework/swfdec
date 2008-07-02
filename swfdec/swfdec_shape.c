@@ -49,15 +49,18 @@ swfdec_shape_dispose (GObject *object)
 
 static void
 swfdec_shape_render (SwfdecGraphic *graphic, cairo_t *cr, 
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans)
 {
   SwfdecShape *shape = SWFDEC_SHAPE (graphic);
+  SwfdecRect inval;
   GSList *walk;
+
+  cairo_clip_extents (cr, &inval.x0, &inval.y0, &inval.x1, &inval.y1);
 
   for (walk = shape->draws; walk; walk = walk->next) {
     SwfdecDraw *draw = walk->data;
 
-    if (!swfdec_rect_intersect (NULL, &draw->extents, inval))
+    if (!swfdec_rect_intersect (NULL, &draw->extents, &inval))
       continue;
     
     swfdec_draw_paint (draw, cr, trans);

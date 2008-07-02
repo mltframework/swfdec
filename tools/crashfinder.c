@@ -125,7 +125,7 @@ main (int argc, char **argv)
 	break;
       played += swfdec_player_advance (player, advance);
 
-      swfdec_player_render (player, cr, 0, 0, 0, 0);
+      swfdec_player_render (player, cr);
     }
 
     if (elapsed >= max_per_file ||

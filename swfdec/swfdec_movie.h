@@ -195,8 +195,7 @@ struct _SwfdecMovieClass {
 						 SwfdecRect *   	extents);
   void			(* render)		(SwfdecMovie *		movie, 
 						 cairo_t *		cr,
-						 const SwfdecColorTransform *trans,
-						 const SwfdecRect *	inval);
+						 const SwfdecColorTransform *trans);
   void			(* invalidate)		(SwfdecMovie *		movie,
 						 const cairo_matrix_t *	movie_to_global,
 						 gboolean		new_contents);
@@ -283,8 +282,7 @@ char *		swfdec_movie_get_path		(SwfdecMovie *		movie,
 						 gboolean		dot);
 void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
-						 const SwfdecColorTransform *trans,
-						 const SwfdecRect *	inval);
+						 const SwfdecColorTransform *trans);
 SwfdecMovie *	swfdec_movie_resolve		(SwfdecMovie *		movie);
 guint		swfdec_movie_get_version	(SwfdecMovie *		movie);
 

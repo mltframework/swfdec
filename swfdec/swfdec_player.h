@@ -158,18 +158,10 @@ void		swfdec_player_set_allow_fullscreen
 						 gboolean		allow);
 					 
 void		swfdec_player_render		(SwfdecPlayer *		player,
-						 cairo_t *		cr,
-						 double			x,
-						 double			y,
-						 double			width,
-						 double			height);
+						 cairo_t *		cr);
 void		swfdec_player_render_with_renderer (SwfdecPlayer *	player,
 						 cairo_t *		cr,
-						 SwfdecRenderer *	renderer,
-						 double			x,
-						 double			y,
-						 double			width,
-						 double			height);
+						 SwfdecRenderer *	renderer);
 gulong		swfdec_player_advance		(SwfdecPlayer *		player,
 						 gulong			msecs);
 gboolean	swfdec_player_mouse_move	(SwfdecPlayer *		player, 

@@ -731,12 +731,11 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
  * @cr: a cairo context which should be used for masking. The cairo context's
  *      matrix is assumed to be in the coordinate system of the movie's parent.
  * @matrix: matrix to apply before rendering
- * @inval: The region that is relevant for masking
  *
  * Creates a pattern suitable for masking. To do rendering using the returned
  * mask, you want to use code like this:
  * <informalexample><programlisting>
- * mask = swfdec_movie_mask (cr, movie, matrix, inval);
+ * mask = swfdec_movie_mask (cr, movie, matrix);
  * cairo_push_group (cr);
  * // do rendering here
  * cairo_pop_group_to_source (cr);
@@ -748,35 +747,24 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
  **/
 static cairo_pattern_t *
 swfdec_movie_mask (cairo_t *cr, SwfdecMovie *movie,
-    const cairo_matrix_t *matrix, const SwfdecRect *inval)
+    const cairo_matrix_t *matrix)
 {
   SwfdecColorTransform black;
-  cairo_matrix_t inv;
-  SwfdecRect rect;
 
   swfdec_color_transform_init_mask (&black);
   cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
   cairo_transform (cr, matrix);
-  inv = *matrix;
-  if (cairo_matrix_invert (&inv) == CAIRO_STATUS_SUCCESS && FALSE) {
-    swfdec_rect_transform (&rect, inval, &inv);
-  } else {
-    SWFDEC_INFO ("non-invertible matrix when computing invalid area");
-    rect.x0 = rect.y0 = -G_MAXDOUBLE;
-    rect.x1 = rect.y1 = G_MAXDOUBLE;
-  }
 
-  swfdec_movie_render (movie, cr, &black, &rect);
+  swfdec_movie_render (movie, cr, &black);
   return cairo_pop_group (cr);
 }
 
 void
 swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
-    const SwfdecColorTransform *color_transform, const SwfdecRect *inval)
+    const SwfdecColorTransform *color_transform)
 {
   SwfdecMovieClass *klass;
   SwfdecColorTransform trans;
-  SwfdecRect rect;
   gboolean group;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
@@ -785,18 +773,10 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     g_warning ("%s", cairo_status_to_string (cairo_status (cr)));
   }
   g_return_if_fail (color_transform != NULL);
-  g_return_if_fail (inval != NULL);
   
   if (movie->mask_of != NULL && !swfdec_color_transform_is_mask (color_transform)) {
     SWFDEC_LOG ("not rendering %s %p, movie is a mask",
 	G_OBJECT_TYPE_NAME (movie), movie->name);
-    return;
-  }
-  if (!swfdec_rect_intersect (NULL, &movie->extents, inval)) {
-    SWFDEC_LOG ("not rendering %s %s, extents %g %g  %g %g are not in invalid area %g %g  %g %g",
-	G_OBJECT_TYPE_NAME (movie), movie->name, 
-	movie->extents.x0, movie->extents.y0, movie->extents.x1, movie->extents.y1,
-	inval->x0, inval->y0, inval->x1, inval->y1);
     return;
   }
   if (!movie->visible) {
@@ -820,15 +800,12 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
       movie->matrix.xy, movie->matrix.yx,
       movie->matrix.x0, movie->matrix.y0);
   cairo_transform (cr, &movie->matrix);
-  swfdec_rect_transform (&rect, inval, &movie->inverse_matrix);
-  SWFDEC_LOG ("%sinvalid area is now: %g %g  %g %g",  movie->parent ? "  " : "",
-      rect.x0, rect.y0, rect.x1, rect.y1);
   swfdec_color_transform_chain (&trans, &movie->original_ctrans, color_transform);
   swfdec_color_transform_chain (&trans, &movie->color_transform, &trans);
 
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   g_return_if_fail (klass->render);
-  klass->render (movie, cr, &trans, &rect);
+  klass->render (movie, cr, &trans);
 #if 0
   /* code to draw a red rectangle around the area occupied by this movie clip */
   {
@@ -868,7 +845,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
       swfdec_movie_local_to_global_matrix (movie->masked_by->parent, &mat2);
       cairo_matrix_multiply (&mat, &mat, &mat2);
     }
-    mask = swfdec_movie_mask (cr, movie->masked_by, &mat, inval);
+    mask = swfdec_movie_mask (cr, movie->masked_by, &mat);
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_mask (cr, mask);
@@ -1193,7 +1170,7 @@ typedef struct {
 
 static void
 swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
-    const SwfdecColorTransform *ctrans, const SwfdecRect *inval)
+    const SwfdecColorTransform *ctrans)
 {
   static const cairo_matrix_t ident = { 1, 0, 0, 1, 0, 0};
   GList *g;
@@ -1201,39 +1178,46 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
   GSList *clips = NULL;
   ClipEntry *clip = NULL;
 
-  /* exeute the movie's drawing commands */
-  for (walk = movie->draws; walk; walk = walk->next) {
-    SwfdecDraw *draw = walk->data;
+  if (movie->draws || movie->image) {
+    SwfdecRect inval;
 
-    if (!swfdec_rect_intersect (NULL, &draw->extents, inval))
-      continue;
-    
-    swfdec_draw_paint (draw, cr, ctrans);
-  }
+    cairo_clip_extents (cr, &inval.x0, &inval.y0, &inval.x1, &inval.y1);
 
-  /* if the movie loaded an image, draw it here now */
-  if (movie->image) {
-    SwfdecRenderer *renderer = swfdec_renderer_get (cr);
-    cairo_surface_t *surface;
-    cairo_pattern_t *pattern;
-    
-    if (swfdec_color_transform_is_mask (ctrans))
-      surface = NULL;
-    else
-      surface = swfdec_image_create_surface_transformed (movie->image,
-	renderer, ctrans);
-    if (surface) {
-      static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
-      pattern = cairo_pattern_create_for_surface (surface);
-      SWFDEC_LOG ("rendering loaded image");
-      cairo_pattern_set_matrix (pattern, &matrix);
-    } else {
-      pattern = cairo_pattern_create_rgb (1.0, 0.0, 0.0);
+    /* exeute the movie's drawing commands */
+    for (walk = movie->draws; walk; walk = walk->next) {
+      SwfdecDraw *draw = walk->data;
+
+      if (!swfdec_rect_intersect (NULL, &draw->extents, &inval))
+	continue;
+      
+      swfdec_draw_paint (draw, cr, ctrans);
     }
-    cairo_set_source (cr, pattern);
-    cairo_paint (cr);
-    cairo_pattern_destroy (pattern);
-    cairo_surface_destroy (surface);
+
+    /* if the movie loaded an image, draw it here now */
+    /* FIXME: add check to only draw if inside clip extents */
+    if (movie->image) {
+      SwfdecRenderer *renderer = swfdec_renderer_get (cr);
+      cairo_surface_t *surface;
+      cairo_pattern_t *pattern;
+      
+      if (swfdec_color_transform_is_mask (ctrans))
+	surface = NULL;
+      else
+	surface = swfdec_image_create_surface_transformed (movie->image,
+	  renderer, ctrans);
+      if (surface) {
+	static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
+	pattern = cairo_pattern_create_for_surface (surface);
+	SWFDEC_LOG ("rendering loaded image");
+	cairo_pattern_set_matrix (pattern, &matrix);
+      } else {
+	pattern = cairo_pattern_create_rgb (1.0, 0.0, 0.0);
+      }
+      cairo_set_source (cr, pattern);
+      cairo_paint (cr);
+      cairo_pattern_destroy (pattern);
+      cairo_surface_destroy (surface);
+    }
   }
 
   /* draw the children movies */
@@ -1243,7 +1227,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     while (clip && clip->depth < child->depth) {
       cairo_pattern_t *mask;
       SWFDEC_INFO ("unsetting clip depth %d for depth %d", clip->depth, child->depth);
-      mask = swfdec_movie_mask (cr, clip->movie, &ident, inval);
+      mask = swfdec_movie_mask (cr, clip->movie, &ident);
       cairo_pop_group_to_source (cr);
       cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
       cairo_mask (cr, mask);
@@ -1265,12 +1249,12 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     }
 
     SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
-    swfdec_movie_render (child, cr, ctrans, inval);
+    swfdec_movie_render (child, cr, ctrans);
   }
   while (clip) {
     cairo_pattern_t *mask;
     SWFDEC_INFO ("unsetting clip depth %d", clip->depth);
-    mask = swfdec_movie_mask (cr, clip->movie, &ident, inval);
+    mask = swfdec_movie_mask (cr, clip->movie, &ident);
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_mask (cr, mask);

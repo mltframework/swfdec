@@ -220,11 +220,12 @@ swfdec_text_field_movie_has_focus (SwfdecTextFieldMovie *text)
 
 static void
 swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
-    const SwfdecColorTransform *ctrans, const SwfdecRect *inval)
+    const SwfdecColorTransform *ctrans)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecRectangle *area;
   SwfdecColor color;
+  SwfdecRect inval;
 
   /* textfields don't mask */
   if (swfdec_color_transform_is_mask (ctrans) ||
@@ -263,8 +264,13 @@ swfdec_text_field_movie_render (SwfdecMovie *movie, cairo_t *cr,
     color = 0;
   }
 
-  /* render the layout */
   area = &text->layout_area;
+  /* Don't draw if out of clip */
+  cairo_clip_extents (cr, &inval.x0, &inval.y0, &inval.x1, &inval.y1);
+  if (inval.x1 <= area->x || inval.x0 >= area->x + area->width ||
+      inval.y1 <= area->y || inval.y0 >= area->y + area->height)
+    return;
+  /* render the layout */
   cairo_rectangle (cr, area->x, area->y, area->width, area->height);
   cairo_clip (cr);
   /* FIXME: This -1 is spacing? */

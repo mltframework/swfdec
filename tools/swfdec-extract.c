@@ -207,7 +207,7 @@ export_graphic (SwfdecGraphic *graphic, const char *filename)
   cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
   renderer = swfdec_renderer_new (surface);
   swfdec_renderer_attach (renderer, cr);
-  swfdec_graphic_render (graphic, cr, &trans, &graphic->extents);
+  swfdec_graphic_render (graphic, cr, &trans);
   cairo_show_page (cr);
   cairo_destroy (cr);
   g_object_unref (renderer);

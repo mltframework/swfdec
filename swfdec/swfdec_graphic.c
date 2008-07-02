@@ -51,12 +51,12 @@ swfdec_graphic_init (SwfdecGraphic *graphic)
 
 void
 swfdec_graphic_render (SwfdecGraphic *graphic, cairo_t *cr,
-    const SwfdecColorTransform *trans, const SwfdecRect *inval)
+    const SwfdecColorTransform *trans)
 {
   SwfdecGraphicClass *klass = SWFDEC_GRAPHIC_GET_CLASS (graphic);
 
   if (klass->render)
-    klass->render (graphic, cr, trans, inval);
+    klass->render (graphic, cr, trans);
 }
 
 gboolean

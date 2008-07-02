@@ -51,6 +51,7 @@ swfdec_test_plugin_swfdec_screenshot (SwfdecTestPlugin *plugin, unsigned char *d
 
   surface = cairo_image_surface_create_for_data (data, CAIRO_FORMAT_ARGB32, 
       width, height, width * 4);
+  cairo_surface_set_device_offset (surface, -(double) x, -(double) y);
   cr = cairo_create (surface);
   background  = swfdec_player_get_background_color (plugin->data);
   cairo_set_source_rgb (cr, 
@@ -59,8 +60,7 @@ swfdec_test_plugin_swfdec_screenshot (SwfdecTestPlugin *plugin, unsigned char *d
       (background & 0xFF) / 255.0);
   cairo_paint (cr);
 
-  cairo_translate (cr, -x, -y);
-  swfdec_player_render (plugin->data, cr, x, y, width, height);
+  swfdec_player_render (plugin->data, cr);
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
 }

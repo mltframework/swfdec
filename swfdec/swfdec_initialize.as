@@ -1077,12 +1077,22 @@ flash.geom.Rectangle.prototype.addProperty ("size",
 
 /* Matrix */
 
-flash.geom.Matrix = function () {
-  var o = {}; o["Implement Matrix"] ();
+flash.geom.Matrix = function (pa, pb, pc, pd, ptx, pty) {
+  if (!arguments.length) {
+    this.identity ();
+  } else {
+    this.a = pa;
+    this.b = pb;
+    this.c = pc;
+    this.d = pd;
+    this.tx = ptx;
+    this.ty = pty;
+  }
 };
 
 flash.geom.Matrix.prototype.clone = function () {
-  var o = {}; o["Implement Matrix.clone"] ();
+  return new flash.geom.Matrix (this.a, this.b, this.c, this.d, this.tx,
+      this.ty);
 };
 
 flash.geom.Matrix.prototype.concat = function () {
@@ -1102,7 +1112,8 @@ flash.geom.Matrix.prototype.deltaTransformPoint = function () {
 };
 
 flash.geom.Matrix.prototype.identity = function () {
-  var o = {}; o["Implement Matrix.identity"] ();
+  this.a = this.d = 1;
+  this.b = this.c = this.tx = this.ty = 0;
 };
 
 flash.geom.Matrix.prototype.invert = function () {
@@ -1126,7 +1137,8 @@ flash.geom.Matrix.prototype.translate = function () {
 };
 
 flash.geom.Matrix.prototype.toString = function () {
-  var o = {}; o["Implement Matrix.toString"] ();
+  return "(a=" + this.a + ", b=" + this.b + ", c=" + this.c + ", d=" + this.d +
+    ", tx=" + this.tx + ", ty=" + this.ty + ")";
 };
 
 /* ColorTransform */

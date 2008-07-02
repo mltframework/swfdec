@@ -1852,6 +1852,15 @@ EXTRA_DIST = \
 	math-properties-7.swf.trace \
 	math-properties-8.swf \
 	math-properties-8.swf.trace \
+	matrix-properties.as \
+	matrix-properties-5.swf \
+	matrix-properties-5.swf.trace \
+	matrix-properties-6.swf \
+	matrix-properties-6.swf.trace \
+	matrix-properties-7.swf \
+	matrix-properties-7.swf.trace \
+	matrix-properties-8.swf \
+	matrix-properties-8.swf.trace \
 	microphone-properties.as \
 	microphone-properties-5.swf \
 	microphone-properties-5.swf.trace \

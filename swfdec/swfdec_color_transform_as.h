@@ -49,9 +49,6 @@ struct _SwfdecColorTransformAsClass {
 
 GType			swfdec_color_transform_as_get_type		(void);
 
-void			swfdec_color_transform_as_concat		(SwfdecColorTransformAs *	transform,
-									 const SwfdecColorTransformAs *	other);
-
 SwfdecColorTransformAs *swfdec_color_transform_as_new_from_transform	(SwfdecAsContext *		context,
 									 const SwfdecColorTransform *	transform);
 

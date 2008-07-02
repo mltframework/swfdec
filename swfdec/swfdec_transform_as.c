@@ -132,7 +132,7 @@ swfdec_transform_as_get_concatenatedColorTransform (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTransformAs *self;
-  SwfdecColorTransformAs *transform;
+  SwfdecColorTransform chain;
   SwfdecMovie *movie;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TRANSFORM_AS, &self, "");
@@ -140,16 +140,14 @@ swfdec_transform_as_get_concatenatedColorTransform (SwfdecAsContext *cx,
   if (self->target == NULL)
     return;
 
-  transform = swfdec_color_transform_as_new_from_transform (cx,
-	&self->target->color_transform);
+  chain = self->target->color_transform;
 
   for (movie = self->target->parent; movie != NULL; movie = movie->parent) {
-    swfdec_color_transform_as_concat (transform,
-	swfdec_color_transform_as_new_from_transform (cx,
-	  &movie->color_transform));
+    swfdec_color_transform_chain (&chain, &movie->color_transform, &chain);
   }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (transform));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (
+      swfdec_color_transform_as_new_from_transform (cx, &chain)));
 }
 
 SWFDEC_AS_NATIVE (1106, 108, swfdec_transform_as_set_concatenatedColorTransform)

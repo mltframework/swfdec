@@ -451,6 +451,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   if (text_field && text_field->variable != NULL) {
     swfdec_text_field_movie_set_listen_variable (text,
 	swfdec_as_context_get_string (cx, text_field->variable));
+    swfdec_text_field_movie_set_listen_variable_text (text,
+	swfdec_text_field_movie_get_text (text));
   }
 
   if (needs_unuse)

@@ -3711,6 +3711,9 @@ EXTRA_DIST = \
 	text-field-scroll-7.swf.trace \
 	text-field-scroll-8.swf \
 	text-field-scroll-8.swf.trace \
+	text-field-tag-variable.sc \
+	text-field-tag-variable.swf \
+	text-field-tag-variable.swf.trace \
 	text-field-values.as \
 	text-field-values-5.swf \
 	text-field-values-5.swf.trace \

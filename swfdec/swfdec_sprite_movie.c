@@ -338,7 +338,8 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
       SwfdecActor *actor = SWFDEC_ACTOR (cur);
       swfdec_actor_queue_script (actor, SWFDEC_EVENT_INITIALIZE);
       swfdec_actor_queue_script (actor, SWFDEC_EVENT_CONSTRUCT);
-      swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
+      if (has_clip_actions)
+	swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
     }
     swfdec_movie_initialize (cur);
   }

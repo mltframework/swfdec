@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<swf version="8" compressed="1">
+  <Header framerate="15" frames="2">
+    <size>
+      <Rectangle left="0" right="2000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <FileAttributes hasMetaData="0" useNetwork="0"/>
+      <DefineSprite objectID="1" frames="1">
+        <tags>
+          <ShowFrame/>
+          <End/>
+        </tags>
+      </DefineSprite>
+      <DefineSprite objectID="2" frames="1">
+        <tags>
+          <ShowFrame/>
+          <End/>
+        </tags>
+      </DefineSprite>
+      <DefineSprite objectID="3" frames="1">
+        <tags>
+          <ShowFrame/>
+          <End/>
+        </tags>
+      </DefineSprite>
+      <Export>
+        <symbols>
+          <Symbol objectID="1" name="mc1"/>
+        </symbols>
+      </Export>
+      <Export>
+        <symbols>
+          <Symbol objectID="2" name="mc2"/>
+        </symbols>
+      </Export>
+      <Export>
+        <symbols>
+          <Symbol objectID="3" name="mc3"/>
+        </symbols>
+      </Export>
+      <ShowFrame/>
+      <DoAction>
+        <actions>
+          <Dictionary>
+            <strings>
+              <String value="mc1"/>
+              <String value="onLoad"/>
+              <String value="mc1 onLoad"/>
+              <String value="mc2"/>
+              <String value="mc2 onLoad"/>
+              <String value="mc3"/>
+              <String value="mc3 onLoad"/>
+              <String value="fscommand:quit"/>
+              <String value=""/>
+              <String value="onLoad with and without events in PlaceObject2"/>
+            </strings>
+          </Dictionary>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="9"/>
+            </items>
+          </PushData>
+          <Trace/>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="0"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="1"/>
+            </items>
+          </PushData>
+          <DeclareFunction2 name="" argc="0" regc="0" preloadThis="0" suppressThis="0" preloadArguments="0" suppressArguments="0" preloadSuper="0" suppressSuper="0" preloadRoot="0" preloadParent="0" preloadGlobal="0" reserved="0">
+            <args/>
+            <actions>
+              <PushData>
+                <items>
+                  <StackDictionaryLookup index="2"/>
+                </items>
+              </PushData>
+              <Trace/>
+            </actions>
+          </DeclareFunction2>
+          <SetMember/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="3"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="1"/>
+            </items>
+          </PushData>
+          <DeclareFunction2 name="" argc="0" regc="0" preloadThis="0" suppressThis="0" preloadArguments="0" suppressArguments="0" preloadSuper="0" suppressSuper="0" preloadRoot="0" preloadParent="0" preloadGlobal="0" reserved="0">
+            <args/>
+            <actions>
+              <PushData>
+                <items>
+                  <StackDictionaryLookup index="4"/>
+                </items>
+              </PushData>
+              <Trace/>
+            </actions>
+          </DeclareFunction2>
+          <SetMember/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="5"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="1"/>
+            </items>
+          </PushData>
+          <DeclareFunction2 name="" argc="0" regc="0" preloadThis="0" suppressThis="0" preloadArguments="0" suppressArguments="0" preloadSuper="0" suppressSuper="0" preloadRoot="0" preloadParent="0" preloadGlobal="0" reserved="0">
+            <args/>
+            <actions>
+              <PushData>
+                <items>
+                  <StackDictionaryLookup index="6"/>
+                </items>
+              </PushData>
+              <Trace/>
+            </actions>
+          </DeclareFunction2>
+          <SetMember/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="7"/>
+              <StackDictionaryLookup index="8"/>
+            </items>
+          </PushData>
+          <GetURL2 method="0"/>
+          <Stop/>
+          <EndAction/>
+        </actions>
+      </DoAction>
+      <PlaceObject2 replace="0" depth="0" objectID="1" name="mc1"/>
+      <PlaceObject2 replace="0" depth="1" objectID="2" name="mc2">
+        <events>
+          <Event flags1="512" flags2="0">
+            <actions>
+              <EndAction/>
+            </actions>
+          </Event>
+          <Event flags1="0" flags2="0"/>
+        </events>
+      </PlaceObject2>
+      <PlaceObject2 replace="0" depth="2" objectID="3" name="mc3">
+        <events>
+          <Event flags1="0" flags2="0"/>
+        </events>
+      </PlaceObject2>
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

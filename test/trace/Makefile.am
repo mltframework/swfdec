@@ -2271,6 +2271,9 @@ EXTRA_DIST = \
 	onload-childparent.c \
 	onload-childparent.swf \
 	onload-childparent.swf.trace \
+	onload-events.swf \
+	onload-events.swf.trace \
+	onload-events.xml \
 	onresize.as \
 	onresize-5.swf \
 	onresize-5.swf.trace \

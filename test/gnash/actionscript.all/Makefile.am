@@ -155,4 +155,13 @@ EXTRA_DIST = \
 	Video-7.swf.trace \
 	Video-8.swf \
 	Video-8.swf.trace \
-	Video.as
+	Video.as \
+	XMLNode-5.swf \
+	XMLNode-5.swf.trace \
+	XMLNode-6.swf \
+	XMLNode-6.swf.trace \
+	XMLNode-7.swf \
+	XMLNode-7.swf.trace \
+	XMLNode-8.swf \
+	XMLNode-8.swf.trace \
+	XMLNode.as

@@ -10,7 +10,21 @@
     trace (_root.variable1);
     trace (text2.variable);
     trace (_root.variable2);
+    _root.variable3 = "Variable";
+  .end
+
+.frame 2
+  .edittext text3 width=100 height=100 text="TextField" variable="variable3"
+  .put text3 x=0 y=0
+  .action:
+    trace (text3.text);
+    trace (_root.variable3);
+    _root.variable4 = "Variable4";
+    text3.variable = "variable4";
+    trace (text3.text);
+    trace (_root.variable4);
     getURL ('fscommand:quit', '');
+    stop ();
   .end
 
 .end

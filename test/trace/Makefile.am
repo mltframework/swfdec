@@ -3714,6 +3714,9 @@ EXTRA_DIST = \
 	text-field-tag-variable.sc \
 	text-field-tag-variable.swf \
 	text-field-tag-variable.swf.trace \
+	text-field-tag-variable-change.swf \
+	text-field-tag-variable-change.swf.trace \
+	text-field-tag-variable-change.xml \
 	text-field-values.as \
 	text-field-values-5.swf \
 	text-field-values-5.swf.trace \

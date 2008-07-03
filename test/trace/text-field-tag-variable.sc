@@ -23,6 +23,11 @@
     text3.variable = "variable4";
     trace (text3.text);
     trace (_root.variable4);
+    text3.text = "Changed";
+    trace (text3.text);
+    text3.variable = "variable5";
+    trace (text3.text);
+    trace (_root.variable5);
     getURL ('fscommand:quit', '');
     stop ();
   .end

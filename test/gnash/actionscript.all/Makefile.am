@@ -82,6 +82,16 @@ EXTRA_DIST = \
 	Point-8.swf \
 	Point-8.swf.trace \
 	Point.as \
+	Random-5.swf \
+	Random-5.swf.trace \
+	Random-6.swf \
+	Random-6.swf.trace \
+	Random-7.swf \
+	Random-7.swf.trace \
+	Random-8.swf \
+	Random-8.swf.trace \
+	Random.as \
+	Random.as.original \
 	Rectangle-5.swf \
 	Rectangle-5.swf.trace \
 	Rectangle-6.swf \

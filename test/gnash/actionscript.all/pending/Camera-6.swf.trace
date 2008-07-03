@@ -1,0 +1,15 @@
+PASSED: Camera [Camera.as:36]
+PASSED: cameraObj [Camera.as:38]
+PASSED: cameraObj2 [Camera.as:40]
+PASSED: cameraObj != cameraObj2 [Camera.as:42]
+PASSED: typeof(cameraObj) == 'object' [Camera.as:43]
+PASSED: Camera.get [Camera.as:47]
+XPASSED: cameraObj.get == undefined [Camera.as:48]
+Camera.get() returns: null
+XPASSED: Camera.setmode == undefined [Camera.as:53]
+XPASSED: Camera.setmotionlevel == undefined [Camera.as:54]
+XPASSED: Camera.setquality == undefined [Camera.as:55]
+PASSED: cameraObj.setmode [Camera.as:58]
+PASSED: cameraObj.setmotionlevel [Camera.as:59]
+PASSED: cameraObj.setquality [Camera.as:60]
+totals

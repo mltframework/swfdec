@@ -1,0 +1,5 @@
+NOTE: AsBroadcaster exists but doesn't provide any 'prototype' or 'initialize' for SWF < 6
+PASSED: typeof(AsBroadcaster) == 'function' [AsBroadcaster.as:30]
+XPASSED: typeof(AsBroadcaster.prototype) == 'undefined' [AsBroadcaster.as:31]
+PASSED: typeof(AsBroadcaster.initialize) == 'undefined' [AsBroadcaster.as:32]
+check_totals: 3

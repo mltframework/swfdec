@@ -1,0 +1,18 @@
+The .as files, from Gnash's test suite's directory with same name, have been
+imported here and compiled using the following command line ($v is version):
+	makeswf -v $v -r 12 -s 640x480 -o Test-$v.swf Test.as
+
+check.as has been rewritten, so it performs a Swfdec style trace test mostly
+without modifications to the test scripts. Where modifications were needed, the
+original file is named .as.original and modified version just .as
+
+Various .as files were not needed, they are listed in the REMOVED
+
+Tests that are not working in Swfdec yet are in pending directory and are not
+included in make check
+
+Tests that are considered broken for some reason are not included. Most likely
+reason is producing FAIL or XFAIL on latest Adobe's Windows player
+
+The date when the tests were last imported/updated from Gnash's CVS repository
+can be found from UPDATED

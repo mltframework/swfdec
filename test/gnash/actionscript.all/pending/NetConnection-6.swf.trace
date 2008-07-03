@@ -1,0 +1,10 @@
+PASSED: typeof(NetConnection) == 'function' [NetConnection.as:34]
+PASSED: typeof(NetConnection.prototype) == 'object' [NetConnection.as:35]
+PASSED: typeof(NetConnection.prototype.isConnected) == 'undefined' [NetConnection.as:36]
+PASSED: typeof(NetConnection.prototype.connect) == 'function' [NetConnection.as:37]
+PASSED: typeof(tmp) == 'object' [NetConnection.as:41]
+PASSED: tmp.__proto__ == NetConnection.prototype [NetConnection.as:42]
+PASSED: tmp instanceof NetConnection [NetConnection.as:43]
+XPASSED: typeof(tmp.isConnected) == 'boolean' [NetConnection.as:44]
+XPASSED: tmp.isConnected == false [NetConnection.as:45]
+check_totals: 10

@@ -1,0 +1,2 @@
+PASSED: typeof(flash) == 'undefined' [Matrix.as:37]
+check_totals: 1

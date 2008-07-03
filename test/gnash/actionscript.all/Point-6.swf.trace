@@ -1,0 +1,2 @@
+PASSED: typeof(flash) == 'undefined' [Point.as:29]
+check_totals: 1

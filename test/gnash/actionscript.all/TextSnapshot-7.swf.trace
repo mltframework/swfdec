@@ -1,0 +1,11 @@
+PASSED: typeof(TextSnapshot) == 'function' [TextSnapshot.as:29]
+PASSED: typeof(textsnapshotObj) == 'object' [TextSnapshot.as:34]
+PASSED: typeof(textsnapshotObj.findText) == 'function' [TextSnapshot.as:37]
+PASSED: typeof(textsnapshotObj.getCount) == 'function' [TextSnapshot.as:40]
+PASSED: typeof(textsnapshotObj.getSelected) == 'function' [TextSnapshot.as:43]
+PASSED: typeof(textsnapshotObj.getSelectedText) == 'function' [TextSnapshot.as:46]
+PASSED: typeof(textsnapshotObj.getText) == 'function' [TextSnapshot.as:49]
+PASSED: typeof(textsnapshotObj.hitTestTextNearPos) == 'function' [TextSnapshot.as:52]
+PASSED: typeof(textsnapshotObj.setSelectColor) == 'function' [TextSnapshot.as:55]
+PASSED: typeof(textsnapshotObj.setSelected) == 'function' [TextSnapshot.as:58]
+totals

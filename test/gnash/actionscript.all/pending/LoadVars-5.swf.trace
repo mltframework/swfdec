@@ -1,0 +1,3 @@
+XPASSED: typeof(LoadVars) == 'function' [LoadVars.as:30]
+XPASSED: typeof(loadvarsObj) == 'object' [LoadVars.as:35]
+check_totals: 2

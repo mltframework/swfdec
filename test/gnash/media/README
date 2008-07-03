@@ -1,0 +1,67 @@
+	This directory contains "media" files, that is files for use
+	by either Ming to embed in SWFs or to test gnash loading capabilities.
+	Any filename beginning at the left margin goes into the source
+	distribution
+
+README
+
+	This file.
+
+Bitstream-Vera-Sans.fdb
+Bitstream-Vera-Sans.COPYRIGHT
+
+	Font Definition Block (fdb) for embedding in SWF.
+	Taken from http://ming.sf.net.
+
+default.orc
+
+	Csound default orchestra file
+
+gnash.xml
+
+	An example XML file.
+
+majorscale.sco
+
+	Csound score file for a major scale execution
+
+offspring.swf
+offspring.jpg
+green.jpg
+green.swf
+lynch.swf
+lynch.jpg
+
+	The swfs display the associated jpgs.
+
+sound1.wav
+
+	(tick, tick)
+	Sample Size    : 16-bits
+	Sample Encoding: signed (2's complement)
+	Channels       : 1
+	Sample Rate    : 8000
+
+sound1.mp3
+
+	(bip bip)
+	Sample Size    : 16-bits
+	Sample Encoding: MPEG audio (layer I, II or III)
+	Channels       : 1
+	Sample Rate    : 22050
+
+square.flv
+
+	H263 video in an FLV
+	It's a red square moving horizontally (left to right)
+	over a yellow background.
+
+square.ogg
+
+	Theora video version of square.flv.
+
+vars.txt
+vars2.txt
+
+	Text files containing variable assignments.
+

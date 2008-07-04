@@ -22,6 +22,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 typedef struct _SwfdecSoundMatrix SwfdecSoundMatrix;
 
 struct _SwfdecSoundMatrix
@@ -52,5 +54,6 @@ void		swfdec_sound_matrix_multiply		(SwfdecSoundMatrix *		dest,
 							 const SwfdecSoundMatrix *	b);
 
 
+G_END_DECLS
 #endif
 

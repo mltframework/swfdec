@@ -2951,12 +2951,12 @@ swfdec_player_mouse_release (SwfdecPlayer *player, double x, double y,
 /**
  * swfdec_player_key_press:
  * @player: a #SwfdecPlayer
- * @keycode: the key that was pressed
+ * @keycode: the key that was pressed, must be smaller than 256.
  * @character: UCS4 of the character that was inserted or 0 if none
  *
- * Call this function to make the @player react to a key press. Be sure to
- * check that keycode transformations are done correctly. For a list of 
- * keycodes see FIXME.
+ * Call this function to make the @player react to a key press. A list of 
+ * defined key codes is defined by #SwfdecKey. You will likely need to 
+ * translate from your keyboard API to the Flash key codes.
  *
  * Returns: %TRUE if the key press was handled by the @player, %FALSE if it
  *          should be propagated further

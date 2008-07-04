@@ -17,11 +17,12 @@
  * Boston, MA  02110-1301  USA
  */
 
-#include <glib.h>
-
 #ifndef _SWFDEC_UTILS_H_
 #define _SWFDEC_UTILS_H_
 
+#include <glib.h>
+
+G_BEGIN_DECLS
 
 gboolean	swfdec_str_case_equal		(gconstpointer	v1,
 						 gconstpointer	v2);

@@ -5,6 +5,8 @@
 #include <glib-object.h>
 #include <cairo.h>
 
+G_BEGIN_DECLS
+
 /* Pixel value in the same colorspace as cairo - endian-dependant ARGB.
  * The alpha pixel must be present */
 typedef guint SwfdecColor;
@@ -60,4 +62,5 @@ typedef struct _SwfdecSpriteMovie SwfdecSpriteMovie;
 typedef struct _SwfdecSwfDecoder SwfdecSwfDecoder;
 typedef struct _SwfdecText SwfdecText;
 
+G_END_DECLS
 #endif

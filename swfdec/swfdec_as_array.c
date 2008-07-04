@@ -1193,9 +1193,26 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
       &compare_data);
 
   // check unique sort
-  if ((options[0] & SORT_OPTION_UNIQUESORT) && compare_data.equal_found) {
-    SWFDEC_AS_VALUE_SET_INT (ret, 0);
-    goto done;
+  if (options[0] & SORT_OPTION_UNIQUESORT) {
+    if (fields == NULL && custom_function != NULL) {
+      // if we used custom_function for comparision, we shall now go trough the
+      // sorted array and compare them using the default array sort comparision
+      // and use that to decide if it's unique (no it doesn't make too much
+      // sense)
+      for (i = 0; i < length - 1; i++) {
+	SwfdecAsValue *a = &array[i].value;
+	SwfdecAsValue *b = &array[i + 1].value;
+	if (swfdec_as_array_sort_compare_values (cx, a, b, 0, NULL) == 0)
+	  break;
+      }
+      if (i < length - 1) {
+	SWFDEC_AS_VALUE_SET_INT (ret, 0);
+	goto done;
+      }
+    } else if (compare_data.equal_found) {
+      SWFDEC_AS_VALUE_SET_INT (ret, 0);
+      goto done;
+    }
   }
 
   if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {

@@ -83,6 +83,8 @@ swfdec_video_decoder_vp6_alpha_decode (SwfdecVideoDecoder *dec, SwfdecBuffer *bu
 	swfdec_video_decoder_get_width (vp6->image), swfdec_video_decoder_get_height (vp6->image));
     return;
   }
+  dec->width = swfdec_video_decoder_get_width (vp6->image);
+  dec->height = swfdec_video_decoder_get_height (vp6->image);
   dec->plane[0] = vp6->image->plane[0];
   dec->plane[1] = vp6->image->plane[1];
   dec->plane[2] = vp6->image->plane[2];

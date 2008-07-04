@@ -882,8 +882,10 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object,
   start_index = CLAMP (start_index, 0, length);
 
   if (argc > 1) {
-    num_remove = CLAMP (swfdec_as_value_to_integer (cx, &argv[1]), 0,
-	length - start_index);
+    int tmp = swfdec_as_value_to_integer (cx, &argv[1]);
+    if (tmp < 0)
+      return;
+    num_remove = MIN (tmp, length - start_index);
   } else {
     num_remove = length - start_index;
   }

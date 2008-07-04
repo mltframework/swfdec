@@ -26,6 +26,8 @@
 #include <swfdec/swfdec_color.h>
 #include <swfdec/swfdec_buffer.h>
 
+G_BEGIN_DECLS
+
 typedef struct _SwfdecBits SwfdecBits;
 
 struct _SwfdecBits
@@ -72,4 +74,5 @@ SwfdecBuffer *swfdec_bits_decompress (SwfdecBits *bits, int compressed,
     int decompressed);
 
 
+G_END_DECLS
 #endif

@@ -19,8 +19,12 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef __LIBSWFDEC_TAGS_H__
-#define __LIBSWFDEC_TAGS_H__
+#ifndef __SWFDEC_TAGS_H__
+#define __SWFDEC_TAGS_H__
+
+#include <glib.h>
+
+G_BEGIN_DECLS
 
 typedef enum {
   SWFDEC_TAG_END                  = 0,
@@ -118,4 +122,5 @@ typedef enum {
   SWFDEC_TAG_FIRST_ONLY = (1 << 1)
 } SwfdecTagFlag;
 
+G_END_DECLS
 #endif

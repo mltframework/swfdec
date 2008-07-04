@@ -25,6 +25,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
+G_BEGIN_DECLS
+
 typedef struct _SwfdecBuffer SwfdecBuffer;
 typedef struct _SwfdecBufferQueue SwfdecBufferQueue;
 
@@ -85,5 +87,7 @@ SwfdecBuffer *swfdec_buffer_queue_peek (SwfdecBufferQueue * queue, gsize length)
 SwfdecBuffer *swfdec_buffer_queue_peek_buffer (SwfdecBufferQueue * queue);
 SwfdecBufferQueue *swfdec_buffer_queue_ref (SwfdecBufferQueue * queue);
 void swfdec_buffer_queue_unref (SwfdecBufferQueue * queue);
+
+G_END_DECLS
 #endif
 

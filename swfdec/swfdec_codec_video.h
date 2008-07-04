@@ -24,6 +24,8 @@
 #include <cairo.h>
 #include <swfdec/swfdec_buffer.h>
 
+G_BEGIN_DECLS
+
 #define SWFDEC_VIDEO_CODEC_UNDEFINED 0
 #define SWFDEC_VIDEO_CODEC_H263 2
 #define SWFDEC_VIDEO_CODEC_SCREEN 3

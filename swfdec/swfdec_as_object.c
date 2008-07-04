@@ -206,9 +206,9 @@ swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable, guin
 {
   SwfdecAsVariable *var;
 
-  if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
-    return NULL;
   if (!swfdec_as_variable_name_is_valid (variable))
+    return NULL;
+  if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
     return NULL;
   var = g_slice_new0 (SwfdecAsVariable);
   var->flags = flags;

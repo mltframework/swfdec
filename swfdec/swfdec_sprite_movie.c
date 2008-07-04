@@ -338,7 +338,8 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
       SwfdecActor *actor = SWFDEC_ACTOR (cur);
       swfdec_actor_queue_script (actor, SWFDEC_EVENT_INITIALIZE);
       swfdec_actor_queue_script (actor, SWFDEC_EVENT_CONSTRUCT);
-      swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
+      if (has_clip_actions)
+	swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
     }
     swfdec_movie_initialize (cur);
   }
@@ -643,7 +644,7 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
 	if (klass->replace)
 	  klass->replace (prev, cur->graphic);
 	swfdec_movie_set_static_properties (prev, &cur->original_transform,
-	    &cur->original_ctrans, cur->original_ratio, cur->clip_depth, 
+	    &cur->color_transform, cur->original_ratio, cur->clip_depth, 
 	    cur->blend_mode, SWFDEC_IS_ACTOR (cur) ? SWFDEC_ACTOR (cur)->events : NULL);
 	swfdec_movie_destroy (cur);
 	cur = prev;

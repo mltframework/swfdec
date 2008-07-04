@@ -36,7 +36,7 @@ values = [
   true, false, 
   0, 1, 0.5, -1, -0.5, Infinity, -Infinity, NaN,
   "", "0", "-0", "0.0", "1", "Hello World!", "true", "_level0", "äöü",
-  this, new Object (), new Date (), new String (),
+  this, new Object (), new Date (1239752134235.94), new String (),
   Function, printall, printtostring, printvalueof, nothing ];
 
 var l = values.length;

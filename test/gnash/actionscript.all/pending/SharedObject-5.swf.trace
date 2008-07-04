@@ -1,0 +1,4 @@
+XPASSED: typeof(sharedobjectObj) == 'object' [SharedObject.as:32]
+PASSED: typeof(sharedobjectObj.getLocal) == 'undefined' [SharedObject.as:35]
+XPASSED: typeof(SharedObject.getLocal) == 'function' [SharedObject.as:36]
+check_totals: 3

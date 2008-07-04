@@ -62,7 +62,7 @@ libswfdec_source_files = \
 	swfdec_color.c \
 	swfdec_color_as.c \
 	swfdec_color_matrix_filter.c \
-	swfdec_color_transform.c \
+	swfdec_color_transform_as.c \
 	swfdec_constant_pool.c \
 	swfdec_convolution_filter.c \
 	swfdec_debug.c \
@@ -155,7 +155,7 @@ libswfdec_source_files = \
 	swfdec_text_layout.c \
 	swfdec_text_renderer.c \
 	swfdec_text_snapshot.c \
-	swfdec_transform.c \
+	swfdec_transform_as.c \
 	swfdec_url.c \
 	swfdec_utils.c \
 	swfdec_video.c \
@@ -256,6 +256,7 @@ noinst_HEADERS = \
 	swfdec_character.h \
 	swfdec_codec_gst.h \
 	swfdec_color.h \
+	swfdec_color_transform_as.h \
 	swfdec_constant_pool.h \
 	swfdec_debug.h \
 	swfdec_decoder.h \
@@ -313,6 +314,7 @@ noinst_HEADERS = \
 	swfdec_text_buffer.h \
 	swfdec_text_format.h \
 	swfdec_text_layout.h \
+	swfdec_transform_as.h \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \

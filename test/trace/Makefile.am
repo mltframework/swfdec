@@ -556,6 +556,33 @@ EXTRA_DIST = \
 	color-setTransform-negative.swf.trace \
 	color-setTransform-full.swf \
 	color-setTransform-full.swf.trace \
+	color-transform-concat.as \
+	color-transform-concat-5.swf \
+	color-transform-concat-5.swf.trace \
+	color-transform-concat-6.swf \
+	color-transform-concat-6.swf.trace \
+	color-transform-concat-7.swf \
+	color-transform-concat-7.swf.trace \
+	color-transform-concat-8.swf \
+	color-transform-concat-8.swf.trace \
+	color-transform-construct.as \
+	color-transform-construct-5.swf\
+	color-transform-construct-5.swf.trace\
+	color-transform-construct-6.swf\
+	color-transform-construct-6.swf.trace\
+	color-transform-construct-7.swf\
+	color-transform-construct-7.swf.trace\
+	color-transform-construct-8.swf\
+	color-transform-construct-8.swf.trace\
+	color-transform-multipliers-offsets.as \
+	color-transform-multipliers-offsets-5.swf \
+	color-transform-multipliers-offsets-5.swf.trace \
+	color-transform-multipliers-offsets-6.swf \
+	color-transform-multipliers-offsets-6.swf.trace \
+	color-transform-multipliers-offsets-7.swf \
+	color-transform-multipliers-offsets-7.swf.trace \
+	color-transform-multipliers-offsets-8.swf \
+	color-transform-multipliers-offsets-8.swf.trace \
 	color-transform-properties.as \
 	color-transform-properties-5.swf\
 	color-transform-properties-5.swf.trace\
@@ -565,6 +592,15 @@ EXTRA_DIST = \
 	color-transform-properties-7.swf.trace\
 	color-transform-properties-8.swf\
 	color-transform-properties-8.swf.trace\
+	color-transform-rgb.as \
+	color-transform-rgb-5.swf \
+	color-transform-rgb-5.swf.trace \
+	color-transform-rgb-6.swf \
+	color-transform-rgb-6.swf.trace \
+	color-transform-rgb-7.swf \
+	color-transform-rgb-7.swf.trace \
+	color-transform-rgb-8.swf \
+	color-transform-rgb-8.swf.trace \
 	color1.swf \
 	color1.swf.trace \
 	comparisons-4.swf \
@@ -788,6 +824,15 @@ EXTRA_DIST = \
 	crash-0.6.2-try-and-exception-on-dispose-8.swf \
 	crash-0.6.2-try-and-exception-on-dispose-8.swf.trace \
 	crash-0.6.2-try-and-exception-on-dispose.as \
+	crash-0.6.6-date-5.swf \
+	crash-0.6.6-date-5.swf.trace \
+	crash-0.6.6-date-6.swf \
+	crash-0.6.6-date-6.swf.trace \
+	crash-0.6.6-date-7.swf \
+	crash-0.6.6-date-7.swf.trace \
+	crash-0.6.6-date-8.swf \
+	crash-0.6.6-date-8.swf.trace \
+	crash-0.6.6-date.as \
 	crash-0.6.6-xmlsocket-5.swf \
 	crash-0.6.6-xmlsocket-5.swf.trace \
 	crash-0.6.6-xmlsocket-6.swf \
@@ -1816,6 +1861,24 @@ EXTRA_DIST = \
 	math-properties-7.swf.trace \
 	math-properties-8.swf \
 	math-properties-8.swf.trace \
+	matrix-construct.as \
+	matrix-construct-5.swf \
+	matrix-construct-5.swf.trace \
+	matrix-construct-6.swf \
+	matrix-construct-6.swf.trace \
+	matrix-construct-7.swf \
+	matrix-construct-7.swf.trace \
+	matrix-construct-8.swf \
+	matrix-construct-8.swf.trace \
+	matrix-properties.as \
+	matrix-properties-5.swf \
+	matrix-properties-5.swf.trace \
+	matrix-properties-6.swf \
+	matrix-properties-6.swf.trace \
+	matrix-properties-7.swf \
+	matrix-properties-7.swf.trace \
+	matrix-properties-8.swf \
+	matrix-properties-8.swf.trace \
 	microphone-properties.as \
 	microphone-properties-5.swf \
 	microphone-properties-5.swf.trace \
@@ -2217,6 +2280,9 @@ EXTRA_DIST = \
 	onload-childparent.c \
 	onload-childparent.swf \
 	onload-childparent.swf.trace \
+	onload-events.swf \
+	onload-events.swf.trace \
+	onload-events.xml \
 	onresize.as \
 	onresize-5.swf \
 	onresize-5.swf.trace \
@@ -2308,6 +2374,9 @@ EXTRA_DIST = \
 	place-object-char-name-6.swf.trace \
 	place-object-char-name-7.swf \
 	place-object-char-name-7.swf.trace \
+	place-object-color-transform.swf \
+	place-object-color-transform.swf.trace \
+	place-object-color-transform.xml \
 	place-object-move-5.swf \
 	place-object-move-5.swf.trace \
 	place-object-move-6.swf \
@@ -3651,6 +3720,12 @@ EXTRA_DIST = \
 	text-field-scroll-7.swf.trace \
 	text-field-scroll-8.swf \
 	text-field-scroll-8.swf.trace \
+	text-field-tag-variable.sc \
+	text-field-tag-variable.swf \
+	text-field-tag-variable.swf.trace \
+	text-field-tag-variable-change.swf \
+	text-field-tag-variable-change.swf.trace \
+	text-field-tag-variable-change.xml \
 	text-field-values.as \
 	text-field-values-5.swf \
 	text-field-values-5.swf.trace \
@@ -3762,6 +3837,15 @@ EXTRA_DIST = \
 	trace_properties_names_9.as \
 	transform.swf \
 	transform.swf.trace \
+	transform-color-transform.as \
+	transform-color-transform-5.swf \
+	transform-color-transform-5.swf.trace \
+	transform-color-transform-6.swf \
+	transform-color-transform-6.swf.trace \
+	transform-color-transform-7.swf \
+	transform-color-transform-7.swf.trace \
+	transform-color-transform-8.swf \
+	transform-color-transform-8.swf.trace \
 	transform-properties.as \
 	transform-properties-5.swf \
 	transform-properties-5.swf.trace \

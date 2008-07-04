@@ -1,0 +1,2 @@
+XPASSED: typeof(Camera) == 'function' [Camera.as:29]
+totals

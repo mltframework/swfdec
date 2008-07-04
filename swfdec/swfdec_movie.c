@@ -76,7 +76,6 @@ swfdec_movie_init (SwfdecMovie * movie)
   cairo_matrix_init_identity (&movie->inverse_matrix);
 
   swfdec_color_transform_init_identity (&movie->color_transform);
-  swfdec_color_transform_init_identity (&movie->original_ctrans);
 
   movie->visible = TRUE;
   movie->cache_state = SWFDEC_MOVIE_INVALID_EXTENTS;
@@ -800,8 +799,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
       movie->matrix.xy, movie->matrix.yx,
       movie->matrix.x0, movie->matrix.y0);
   cairo_transform (cr, &movie->matrix);
-  swfdec_color_transform_chain (&trans, &movie->original_ctrans, color_transform);
-  swfdec_color_transform_chain (&trans, &movie->color_transform, &trans);
+  swfdec_color_transform_chain (&trans, &movie->color_transform, color_transform);
 
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   g_return_if_fail (klass->render);
@@ -1490,7 +1488,7 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
   }
   if (ctrans) {
     swfdec_movie_invalidate_last (movie);
-    movie->original_ctrans = *ctrans;
+    movie->color_transform = *ctrans;
   }
   if (ratio >= 0 && (guint) ratio != movie->original_ratio) {
     SwfdecMovieClass *klass;
@@ -1557,7 +1555,7 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   if (copy == NULL)
     return NULL;
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
-      &movie->original_ctrans, movie->original_ratio, movie->clip_depth, 
+      &movie->color_transform, movie->original_ratio, movie->clip_depth, 
       movie->blend_mode, SWFDEC_IS_ACTOR (movie) ? SWFDEC_ACTOR (movie)->events : NULL);
   sandbox = SWFDEC_SANDBOX (SWFDEC_AS_OBJECT (movie)->context->global);
   swfdec_sandbox_unuse (sandbox);

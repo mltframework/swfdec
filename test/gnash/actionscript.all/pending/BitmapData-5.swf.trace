@@ -1,0 +1,2 @@
+PASSED: typeof(flash) == 'undefined' [BitmapData.as:30]
+check_totals: 1

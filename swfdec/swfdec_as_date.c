@@ -103,28 +103,26 @@ swfdec_as_date_days_in_year (int year)
 #define IS_LEAP(year) (swfdec_as_date_days_in_year ((year)) == 366)
 
 static double
-swfdec_as_date_days_since_utc_for_year (int year)
+swfdec_as_date_days_since_utc_for_year (double year)
 {
-  double year_big = year;
-
-  return (
-      365 * (year_big - 1970) +
-      floor (((year_big - 1969) / 4.0f)) -
-      floor (((year_big - 1901) / 100.0f)) +
-      floor (((year_big - 1601) / 400.0f))
+  return floor (
+      365 * (year - 1970) +
+      floor (((year - 1969) / 4.0f)) -
+      floor (((year - 1901) / 100.0f)) +
+      floor (((year - 1601) / 400.0f))
     );
 }
 
-static int
+static double
 swfdec_as_date_days_from_utc_to_year (double days)
 {
-  int low, high, pivot;
+  double low, high, pivot;
 
   low = floor ((days >= 0 ? days / 366.0 : days / 365.0)) + 1970;
   high = ceil ((days >= 0 ? days / 365.0 : days / 366.0)) + 1970;
 
   while (low < high) {
-    pivot = ((double)low + (double)high) / 2.0;
+    pivot = floor ((low + high) / 2.0);
 
     if (swfdec_as_date_days_since_utc_for_year (pivot) <= days) {
       if (swfdec_as_date_days_since_utc_for_year (pivot + 1) > days) {
@@ -145,7 +143,7 @@ swfdec_as_date_milliseconds_to_brokentime (double milliseconds,
     BrokenTime *brokentime)
 {
   double remaining;
-  int year;
+  double year;
 
   g_assert (brokentime != NULL);
 

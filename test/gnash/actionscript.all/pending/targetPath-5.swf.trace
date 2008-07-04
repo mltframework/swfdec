@@ -1,0 +1,7 @@
+PASSED: targetPath(_root) == "_level0" [targetPath.as:35]
+PASSED: typeof(a) == 'undefined' [targetPath.as:46]
+PASSED: typeof(a) == 'undefined' [targetPath.as:55]
+PASSED: typeof(a) == 'undefined' [targetPath.as:64]
+PASSED: typeof(a) == 'undefined' [targetPath.as:73]
+PASSED: typeof(a) == 'undefined' [targetPath.as:83]
+check_totals: 6

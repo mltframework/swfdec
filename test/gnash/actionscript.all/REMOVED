@@ -1,0 +1,7 @@
+CustomActions.as	Doesn't test anything
+dejagnu.as		Part of Gnash's test system that isn't used
+dejagnu_so_fini.as	Ditto
+dejagnu_so_init.as	Ditto
+rtmp.as			Doesn't test anything
+rtrace.as		PHP based report system
+xtrace.as		Help function that isn't used

@@ -1013,6 +1013,8 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
   text->variable = value;
 
   if (value != NULL) {
+    SwfdecTextField *text_field =
+      SWFDEC_TEXT_FIELD (SWFDEC_MOVIE (text)->graphic);
     SwfdecAsValue val;
 
     swfdec_text_field_movie_parse_listen_variable (text, value, &object,
@@ -1021,6 +1023,13 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
       swfdec_text_field_movie_set_text (text,
 	  swfdec_as_value_to_string (SWFDEC_AS_OBJECT (text)->context, &val),
 	  text->html);
+    } else if (text_field != NULL && text_field->input != NULL) {
+      // Set to the original value from the tag, not current value
+      const char *initial = swfdec_as_context_get_string (
+	  SWFDEC_AS_OBJECT (text)->context, text_field->input);
+      swfdec_text_field_movie_set_listen_variable_text (text, initial);
+      // FIXME: html value correct here?
+      swfdec_text_field_movie_set_text (text, initial, text_field->html);
     }
     if (object != NULL && SWFDEC_IS_MOVIE (object)) {
       swfdec_movie_add_variable_listener (SWFDEC_MOVIE (object),

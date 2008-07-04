@@ -1,0 +1,2 @@
+PASSED: typeof(flash) == 'undefined' [Rectangle.as:29]
+check_totals: 1

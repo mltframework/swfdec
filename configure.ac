@@ -292,6 +292,9 @@ swfdec-gtk/Makefile
 player/Makefile
 test/Makefile
 test/custom/Makefile
+test/gnash/Makefile
+test/gnash/media/Makefile
+test/gnash/actionscript.all/Makefile
 test/image/Makefile
 test/sound/Makefile
 test/trace/Makefile

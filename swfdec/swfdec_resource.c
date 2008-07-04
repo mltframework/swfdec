@@ -203,7 +203,7 @@ swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resourc
   swfdec_movie_end_update_matrix (copy);
   /* FIXME: are events copied? If so, wouldn't that be a security issue? */
   swfdec_movie_set_static_properties (copy, &mov->original_transform,
-      &mov->original_ctrans, mov->original_ratio, mov->clip_depth, 
+      &mov->color_transform, mov->original_ratio, mov->clip_depth, 
       mov->blend_mode, NULL);
   swfdec_movie_remove (mov);
   return SWFDEC_SPRITE_MOVIE (copy);

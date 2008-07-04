@@ -1,0 +1,12 @@
+PASSED: r == "1: try body catch  finally ." [Try.as:57]
+PASSED: r == "2: try catch thrown finally ." [Try.as:67]
+PASSED: r == "3: try body finally ." [Try.as:73]
+PASSED: r == "4: try finally thrown ." [Try.as:83]
+PASSED: r == "5: try body catch pre-existing variable d ." [Try.as:92]
+PASSED: r == "6: try catch thrown ." [Try.as:98]
+PASSED: r == "7: try finally finally2 thrown ." [Try.as:110]
+PASSED: r == "8: try finally finally2 try2 catch2  thrown ." [Try.as:130]
+PASSED: r == "9: try finally catch thrown finally2 try2 catch2  catch3  ." [Try.as:153]
+PASSED: r == "10: catch finally." [Try.as:166]
+PASSED: r == "10: catch finally." [Try.as:176]
+totals

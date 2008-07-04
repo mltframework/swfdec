@@ -34,6 +34,7 @@
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_decoder.h"
+#include "swfdec_transform_as.h"
 #include "swfdec_resource.h"
 #include "swfdec_utils.h"
 #include "swfdec_as_internal.h"
@@ -148,7 +149,12 @@ void
 swfdec_sprite_movie_get_transform (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.transform (get)");
+  SwfdecMovie *movie;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
+
+  SWFDEC_AS_VALUE_SET_OBJECT (rval,
+      SWFDEC_AS_OBJECT (swfdec_transform_as_new (cx, movie)));
 }
 
 SWFDEC_AS_NATIVE (900, 420, swfdec_sprite_movie_set_transform)

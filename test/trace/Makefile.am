@@ -833,6 +833,15 @@ EXTRA_DIST = \
 	crash-0.6.6-date-8.swf \
 	crash-0.6.6-date-8.swf.trace \
 	crash-0.6.6-date.as \
+	crash-0.6.6-variable-leak-5.swf \
+	crash-0.6.6-variable-leak-5.swf.trace \
+	crash-0.6.6-variable-leak-6.swf \
+	crash-0.6.6-variable-leak-6.swf.trace \
+	crash-0.6.6-variable-leak-7.swf \
+	crash-0.6.6-variable-leak-7.swf.trace \
+	crash-0.6.6-variable-leak-8.swf \
+	crash-0.6.6-variable-leak-8.swf.trace \
+	crash-0.6.6-variable-leak.as \
 	crash-0.6.6-xmlsocket-5.swf \
 	crash-0.6.6-xmlsocket-5.swf.trace \
 	crash-0.6.6-xmlsocket-6.swf \

@@ -506,6 +506,10 @@ swfdec_net_stream_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     SWFDEC_AS_VALUE_SET_NUMBER (val, bytes);
     *flags = 0;
     return TRUE;
+  } else if (variable == SWFDEC_AS_STR_bufferLength) {
+    SWFDEC_STUB ("Netstream.bufferLength (get)");
+  } else if (variable == SWFDEC_AS_STR_bufferTime) {
+    SWFDEC_STUB ("Netstream.bufferTime (get)");
   }
   return FALSE;
 }

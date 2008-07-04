@@ -515,5 +515,7 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("geom")
   SWFDEC_AS_CONSTANT_STRING ("ColorTransform")
   SWFDEC_AS_CONSTANT_STRING ("Transform")
+  SWFDEC_AS_CONSTANT_STRING ("bufferLength")
+  SWFDEC_AS_CONSTANT_STRING ("bufferTime")
   /* add more here */
 ;

@@ -23,6 +23,8 @@
 #include <swfdec/swfdec_as_context.h>
 #include <swfdec/swfdec_bits.h>
 
+G_BEGIN_DECLS
+
 typedef enum {
   SWFDEC_AMF_NUMBER = 0,
   SWFDEC_AMF_BOOLEAN = 1,
@@ -55,5 +57,7 @@ guint		swfdec_amf_parse		(SwfdecAsContext *	context,
 						 guint			n_items,
 						 ...);
 
+
+G_END_DECLS
 
 #endif

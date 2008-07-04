@@ -24,6 +24,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 enum {
   SWFDEC_LEVEL_NONE = 0,
   SWFDEC_LEVEL_ERROR,
@@ -62,4 +64,5 @@ void swfdec_debug_log (guint level, const char *file, const char *function,
 void swfdec_debug_set_level (guint level);
 int swfdec_debug_get_level (void);
 
+G_END_DECLS
 #endif

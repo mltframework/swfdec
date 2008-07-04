@@ -22,6 +22,8 @@
 
 #include <glib-object.h>
 
+G_BEGIN_DECLS
+
 #define SWFDEC_TYPE_RECTANGLE swfdec_rectangle_get_type ()
 
 typedef struct _SwfdecRectangle SwfdecRectangle;
@@ -52,4 +54,5 @@ gboolean	swfdec_rectangle_contains_point	    (const SwfdecRectangle *	rectangle,
 						     int			y);
 
 
+G_END_DECLS
 #endif

@@ -22,6 +22,8 @@
 
 #include <swfdec/swfdec_as_native_function.h>
 
+G_BEGIN_DECLS
+
 extern const struct { 
   guint x, y; 
   SwfdecAsNative func; 
@@ -29,4 +31,5 @@ extern const struct {
   GType (* get_type) (void); 
 } native_funcs[];
 
+G_END_DECLS
 #endif

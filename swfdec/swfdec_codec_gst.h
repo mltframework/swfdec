@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <swfdec/swfdec.h>
 
+G_BEGIN_DECLS
 
 typedef struct {
   GstElement *		bin;
@@ -55,5 +56,6 @@ GstElementFactory *
 		swfdec_gst_get_element_factory	(GstCaps *		caps);
 
 
+G_END_DECLS
 #endif
 

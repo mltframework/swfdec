@@ -24,6 +24,8 @@
 #include <swfdec/swfdec_audio_internal.h>
 #include <swfdec/swfdec_buffer.h>
 
+G_BEGIN_DECLS
+
 typedef struct _SwfdecAudioDecoder SwfdecAudioDecoder;
 
 #define SWFDEC_AUDIO_CODEC_UNDEFINED 0

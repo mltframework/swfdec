@@ -25,6 +25,8 @@
 #include <swfdec/swfdec_types.h>
 #include <swfdec/swfdec_rectangle.h>
 
+G_BEGIN_DECLS
+
 struct _SwfdecRect
 {
   double x0;
@@ -48,4 +50,5 @@ void swfdec_rect_transform (SwfdecRect *dest, const SwfdecRect *src, const cairo
 
 void swfdec_rectangle_init_rect (SwfdecRectangle *rectangle, const SwfdecRect *rect);
 
+G_END_DECLS
 #endif

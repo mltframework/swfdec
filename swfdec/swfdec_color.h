@@ -24,6 +24,8 @@
 
 #include <swfdec/swfdec_types.h>
 
+G_BEGIN_DECLS
+
 struct _SwfdecColorTransform {
   gboolean mask;			/* TRUE if this is a mask - masks are always black */
   /* naming here is taken from ActionScript, where ?a is the multiplier and ?b the offset */
@@ -72,4 +74,5 @@ void swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
     const cairo_matrix_t *end, guint ratio);
 
 
+G_END_DECLS
 #endif

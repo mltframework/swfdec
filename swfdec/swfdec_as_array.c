@@ -172,6 +172,9 @@ swfdec_as_array_foreach_remove_range (SwfdecAsObject *object,
   if (idx == -1)
     return FALSE;
 
+  if (flags & SWFDEC_AS_VARIABLE_PERMANENT)
+    return FALSE;
+
   if (idx >= fdata->start_index && idx < fdata->start_index + fdata->num)
     return TRUE;
 

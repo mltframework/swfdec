@@ -39,8 +39,15 @@ void
 swfdec_loadvars_decode (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  if (argc < 1 || obj == NULL)
+  if (obj == NULL) {
+    g_printerr ("heer\n");
     return;
+  }
+
+  if (argc < 1) {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
+    return;
+  }
 
   swfdec_as_object_decode (obj, swfdec_as_value_to_string (cx, &argv[0]));
 }

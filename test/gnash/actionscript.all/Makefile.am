@@ -64,6 +64,15 @@ EXTRA_DIST = \
 	Key-8.swf \
 	Key-8.swf.trace \
 	Key.as \
+	LoadVars-5.swf \
+	LoadVars-5.swf.trace \
+	LoadVars-6.swf \
+	LoadVars-6.swf.trace \
+	LoadVars-7.swf \
+	LoadVars-7.swf.trace \
+	LoadVars-8.swf \
+	LoadVars-8.swf.trace \
+	LoadVars.as \
 	Mouse-5.swf \
 	Mouse-5.swf.trace \
 	Mouse-6.swf \

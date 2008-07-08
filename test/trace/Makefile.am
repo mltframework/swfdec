@@ -1804,6 +1804,15 @@ EXTRA_DIST = \
 	loadvars-decode-7.swf.trace \
 	loadvars-decode-8.swf \
 	loadvars-decode-8.swf.trace \
+	loadvars-decode-return.as \
+	loadvars-decode-return-5.swf \
+	loadvars-decode-return-5.swf.trace \
+	loadvars-decode-return-6.swf \
+	loadvars-decode-return-6.swf.trace \
+	loadvars-decode-return-7.swf \
+	loadvars-decode-return-7.swf.trace \
+	loadvars-decode-return-8.swf \
+	loadvars-decode-return-8.swf.trace \
 	loadvars-properties.as \
 	loadvars-properties-5.swf \
 	loadvars-properties-5.swf.trace \

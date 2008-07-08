@@ -15,6 +15,15 @@ EXTRA_DIST = \
 	AsBroadcaster-8.swf.trace \
 	AsBroadcaster.as \
 	AsBroadcaster.as.original \
+	Boolean-5.swf \
+	Boolean-5.swf.trace \
+	Boolean-6.swf \
+	Boolean-6.swf.trace \
+	Boolean-7.swf \
+	Boolean-7.swf.trace \
+	Boolean-8.swf \
+	Boolean-8.swf.trace \
+	Boolean.as \
 	check.as \
 	check.as.original \
 	ContextMenu-5.swf \

@@ -710,6 +710,7 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (initObject == NULL || SWFDEC_IS_AS_OBJECT (initObject));
 
+  swfdec_movie_initialize (movie);
   if (initObject != NULL) {
     swfdec_as_object_foreach (initObject,
 	swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
@@ -721,11 +722,8 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_INITIALIZE);
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_LOAD);
     swfdec_sandbox_unuse (sandbox);
-    swfdec_movie_initialize (movie);
     swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT, 0);
     swfdec_sandbox_use (sandbox);
-  } else {
-    swfdec_movie_initialize (movie);
   }
 }
 

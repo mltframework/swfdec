@@ -1005,7 +1005,8 @@ swfdec_movie_get_root (SwfdecMovie *movie)
 
 static gboolean
 swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags)
+    const char *variable, SwfdecAsValue *val, guint *flags,
+    gboolean *ignore_pobject)
 {
   SwfdecMovie *movie, *ret;
   guint prop_id;
@@ -1016,27 +1017,30 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     return FALSE;
   object = SWFDEC_AS_OBJECT (movie);
 
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, orig, variable, val, flags))
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, orig, variable, val, flags, ignore_pobject))
     return TRUE;
+
+  *flags = 0;
+  *ignore_pobject = FALSE;
 
   /* FIXME: check that this is correct */
   if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {
-    SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie->resource->sandbox));
-    *flags = 0;
+    if (val != NULL)
+      SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie->resource->sandbox));
     return TRUE;
   }
   
   ret = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (ret) {
-    SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (ret));
-    *flags = 0;
+    if (val != NULL)
+      SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (ret));
     return TRUE;
   }
 
   prop_id = swfdec_movie_property_lookup (variable);
   if (prop_id != G_MAXUINT) {
-    swfdec_movie_property_get (movie, prop_id, val);
-    *flags = 0;
+    if (val != NULL)
+      swfdec_movie_property_get (movie, prop_id, val);
     return TRUE;
   }
 

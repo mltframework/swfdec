@@ -958,6 +958,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
   }
   if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+    SWFDEC_AS_VALUE_SET_UNDEFINED (value);
     *flags = 0;
     *pobject = NULL;
     return FALSE;

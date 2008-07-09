@@ -860,6 +860,15 @@ EXTRA_DIST = \
 	crash-0.6.6-date-8.swf \
 	crash-0.6.6-date-8.swf.trace \
 	crash-0.6.6-date.as \
+	crash-0.6.6-prototype-recursion-5.swf \
+	crash-0.6.6-prototype-recursion-5.swf.trace \
+	crash-0.6.6-prototype-recursion-6.swf \
+	crash-0.6.6-prototype-recursion-6.swf.trace \
+	crash-0.6.6-prototype-recursion-7.swf \
+	crash-0.6.6-prototype-recursion-7.swf.trace \
+	crash-0.6.6-prototype-recursion-8.swf \
+	crash-0.6.6-prototype-recursion-8.swf.trace \
+	crash-0.6.6-prototype-recursion.as \
 	crash-0.6.6-variable-leak-5.swf \
 	crash-0.6.6-variable-leak-5.swf.trace \
 	crash-0.6.6-variable-leak-6.swf \

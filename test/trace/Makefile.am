@@ -3441,6 +3441,15 @@ EXTRA_DIST = \
 	string-length-old-mb-7.swf.trace \
 	string-length-old-mb-8.swf \
 	string-length-old-mb-8.swf.trace \
+	string-non-ascii.as \
+	string-non-ascii-5.swf \
+	string-non-ascii-5.swf.trace \
+	string-non-ascii-6.swf \
+	string-non-ascii-6.swf.trace \
+	string-non-ascii-7.swf \
+	string-non-ascii-7.swf.trace \
+	string-non-ascii-8.swf \
+	string-non-ascii-8.swf.trace \
 	string-object-tostring.as \
 	string-object-tostring-5.swf \
 	string-object-tostring-5.swf.trace \

@@ -473,7 +473,7 @@ swfdec_as_string_slice (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   str = swfdec_as_string_object_to_string (cx, object);
-  length = strlen (str);
+  length = g_utf8_strlen (str, -1);
 
   start = swfdec_as_value_to_integer (cx, &argv[0]);
   if (start < 0)
@@ -490,7 +490,7 @@ swfdec_as_string_slice (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   SWFDEC_AS_VALUE_SET_STRING (ret,
-      swfdec_as_context_give_string (cx, g_strndup (str + start, end - start)));
+      swfdec_as_str_sub (cx, str, start, end - start));
 }
 
 SWFDEC_AS_NATIVE (251, 7, swfdec_as_string_concat)

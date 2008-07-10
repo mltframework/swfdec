@@ -702,14 +702,16 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);
     }
-    swfdec_as_object_set_variable (args, SWFDEC_AS_STR_caller, &val);
+    swfdec_as_object_set_variable_and_flags (args, SWFDEC_AS_STR_caller, &val,
+	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
     if (frame->function != NULL) {
       SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->function));
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);
     }
-    swfdec_as_object_set_variable (args, SWFDEC_AS_STR_callee, &val);
+    swfdec_as_object_set_variable_and_flags (args, SWFDEC_AS_STR_callee, &val,
+	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   } else {
     /* silence gcc */
     args = NULL;

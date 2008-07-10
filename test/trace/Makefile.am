@@ -99,6 +99,15 @@ EXTRA_DIST = \
 	arguments-7.swf.trace \
 	arguments-8.swf \
 	arguments-8.swf.trace \
+	arguments-properties.as \
+	arguments-properties-5.swf \
+	arguments-properties-5.swf.trace \
+	arguments-properties-6.swf \
+	arguments-properties-6.swf.trace \
+	arguments-properties-7.swf \
+	arguments-properties-7.swf.trace \
+	arguments-properties-8.swf \
+	arguments-properties-8.swf.trace \
 	array.swf \
 	array.swf.trace \
 	array-init.xml \

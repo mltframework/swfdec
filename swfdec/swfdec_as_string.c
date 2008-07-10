@@ -336,10 +336,18 @@ void
 swfdec_as_string_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_AS_STRING (object))
+  if (object == NULL)
     return;
 
-  SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STRING (object)->string);
+  if (SWFDEC_IS_AS_STRING (object)) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STRING (object)->string);
+  } else {
+    SwfdecAsValue val;
+
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_value_to_string (cx, &val));
+  }
+
 }
 
 static void

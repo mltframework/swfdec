@@ -128,6 +128,15 @@ EXTRA_DIST = \
 	Selection-8.swf \
 	Selection-8.swf.trace \
 	Selection.as \
+	String-5.swf \
+	String-5.swf.trace \
+	String-6.swf \
+	String-6.swf.trace \
+	String-7.swf \
+	String-7.swf.trace \
+	String-8.swf \
+	String-8.swf.trace \
+	String.as \
 	swap-5.swf \
 	swap-5.swf.trace \
 	swap-6.swf \

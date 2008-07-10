@@ -14,12 +14,23 @@ for (i = -1; i < 2; i++) {
   trace (a);
 }
 
+var a = s.split ("");
+trace (typeof (a));
+trace (a.length);
+trace (a);
+
 var a = s.split ();
 trace (typeof (a));
 trace (a.length);
 trace (a);
 
 s = "hello";
+
+var a = s.split ("");
+trace (typeof (a));
+trace (a.length);
+trace (a);
+
 var a = s.split ();
 trace (typeof (a));
 trace (a.length);

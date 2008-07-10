@@ -425,8 +425,10 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   delim = swfdec_as_value_to_string (cx, &argv[0]);
   if (str == SWFDEC_AS_STR_EMPTY) {
-    SWFDEC_AS_VALUE_SET_STRING (&val, str);
-    swfdec_as_array_push (arr, &val);
+    if (strlen (delim) > 0) {
+      SWFDEC_AS_VALUE_SET_STRING (&val, str);
+      swfdec_as_array_push (arr, &val);
+    }
     return;
   }
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))

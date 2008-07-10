@@ -3525,6 +3525,15 @@ EXTRA_DIST = \
 	string-trace-6.swf.trace \
 	string-trace-7.swf \
 	string-trace-7.swf.trace \
+	string-valueof.as \
+	string-valueof-5.swf \
+	string-valueof-5.swf.trace \
+	string-valueof-6.swf \
+	string-valueof-6.swf.trace \
+	string-valueof-7.swf \
+	string-valueof-7.swf.trace \
+	string-valueof-8.swf \
+	string-valueof-8.swf.trace \
 	stringlength.as \
 	stringlength-5.swf \
 	stringlength-5.swf.trace \

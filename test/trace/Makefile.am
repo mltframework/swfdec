@@ -3498,6 +3498,8 @@ EXTRA_DIST = \
 	string-split-empty-6.swf.trace \
 	string-split-empty-7.swf \
 	string-split-empty-7.swf.trace \
+	string-split-empty-8.swf \
+	string-split-empty-8.swf.trace \
 	string-to-number.as \
 	string-to-number-5.swf \
 	string-to-number-5.swf.trace \

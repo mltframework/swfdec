@@ -1,4 +1,4 @@
-Check String.split() on empty string
+Check String.split() on empty string or without parameters
 object
 1
 
@@ -11,3 +11,9 @@ object
 object
 1
 
+object
+1
+
+object
+1
+hello

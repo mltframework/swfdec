@@ -5,6 +5,8 @@ trace ("Check String.split()");
 #include "values.as"
 
 s = new String ("aaaa");
+trace (s.split ());
+trace (typeof (s.split ()));
 trace (s.split ("a"));
 trace (s.split ("a", 3));
 trace (s.split ("a", -2));

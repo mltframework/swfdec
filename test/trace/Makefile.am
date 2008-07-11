@@ -4072,6 +4072,9 @@ EXTRA_DIST = \
 	utf-32-be-bom.txt \
 	utf-32-le-bom.txt \
 	values.as \
+	version4-global.sc \
+	version4-global.swf \
+	version4-global.swf.trace \
 	video.flv \
 	video-enumerate.c \
 	video-enumerate.swf \

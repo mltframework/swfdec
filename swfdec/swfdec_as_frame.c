@@ -29,6 +29,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
+#include "swfdec_movie.h"
 
 /**
  * SECTION:SwfdecAsFrame
@@ -567,10 +568,17 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
       return walk->data;
   }
   /* we've walked the scope chain down. Now look in the special objects. */
-  /* 1) the target */
-  if (swfdec_as_object_get_variable_and_flags (frame->target, variable, value, 
-	flags, pobject))
-    return frame->target;
+  /* 1) the target (if removed, use original target) */
+  if (SWFDEC_IS_MOVIE (frame->target) &&
+      SWFDEC_MOVIE(frame->target)->state < SWFDEC_MOVIE_STATE_DESTROYED) {
+    if (swfdec_as_object_get_variable_and_flags (frame->target, variable,
+	  value, flags, pobject))
+      return frame->target;
+  } else {
+    if (swfdec_as_object_get_variable_and_flags (frame->original_target,
+	  variable, value, flags, pobject))
+      return frame->original_target;
+  }
   /* 2) the global object */
   if (swfdec_as_object_get_variable_and_flags (
 	SWFDEC_AS_OBJECT (frame)->context->global, variable, value, flags, pobject))

@@ -25,6 +25,9 @@ EXTRA_DIST = \
 	mouse_drag_test.sc \
 	mouse_drag_test.swf \
 	mouse_drag_test.swf.trace \
+	movieclip_destruction_test2.sc \
+	movieclip_destruction_test2.swf \
+	movieclip_destruction_test2.swf.trace \
 	movieclip_destruction_test4.sc \
 	movieclip_destruction_test4.swf \
 	movieclip_destruction_test4.swf.trace \

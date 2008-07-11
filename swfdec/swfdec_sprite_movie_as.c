@@ -608,23 +608,20 @@ void
 swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecMovie *movie;
-  SwfdecMovie *other;
+  SwfdecMovie *movie, *other;
+  SwfdecAsValue value;
   int depth;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "v", &value);
 
-  if (argc < 1)
-    return;
-
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
-    other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&value)) {
+    other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&value);
     if (!SWFDEC_IS_MOVIE (other) ||
 	other->parent != movie->parent)
       return;
     depth = other->depth;
   } else {
-    depth = swfdec_as_value_to_integer (cx, &argv[0]);
+    depth = swfdec_as_value_to_integer (cx, &value);
     if (movie->parent) {
       other = swfdec_movie_find (movie->parent, depth);
     } else {
@@ -632,6 +629,13 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
       other = NULL;
     }
   }
+
+  // FIXME: one different than the reserved range, should the classify function
+  // be changed instead?
+  if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY ||
+      depth >= 2130690045)
+    return;
+
   if (other)
     swfdec_movie_set_depth (other, movie->depth);
   swfdec_movie_set_depth (movie, depth);

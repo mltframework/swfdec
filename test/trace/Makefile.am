@@ -2091,6 +2091,15 @@ EXTRA_DIST = \
 	movieclip-swap-depths-7.swf.trace \
 	movieclip-swap-depths-8.swf \
 	movieclip-swap-depths-8.swf.trace \
+	movieclip-swap-depths-range.as \
+	movieclip-swap-depths-range-5.swf \
+	movieclip-swap-depths-range-5.swf.trace \
+	movieclip-swap-depths-range-6.swf \
+	movieclip-swap-depths-range-6.swf.trace \
+	movieclip-swap-depths-range-7.swf \
+	movieclip-swap-depths-range-7.swf.trace \
+	movieclip-swap-depths-range-8.swf \
+	movieclip-swap-depths-range-8.swf.trace \
 	movieclip-target.as \
 	movieclip-target-5.swf \
 	movieclip-target-5.swf.trace \

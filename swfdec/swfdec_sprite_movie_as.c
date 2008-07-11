@@ -656,7 +656,18 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
   if (movie)
     swfdec_movie_remove (movie);
   movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, parent->resource, NULL, name);
-  swfdec_movie_initialize (movie);
+
+  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
+    SwfdecSandbox *sandbox = movie->resource->sandbox;
+    SwfdecActor *actor = SWFDEC_ACTOR (movie);
+    swfdec_sandbox_unuse (sandbox);
+    swfdec_movie_initialize (movie);
+    swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT, 0);
+    swfdec_sandbox_use (sandbox);
+  } else {
+    swfdec_movie_initialize (movie);
+  }
+
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
 }
 

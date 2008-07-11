@@ -923,6 +923,9 @@ EXTRA_DIST = \
 	crash-0.7.1-uncompressed-half-samples-8.swf \
 	crash-0.7.1-uncompressed-half-samples-8.swf.trace \
 	crash-0.7.1-uncompressed-half-samples.xml \
+	createEmptyMovieClip-events.sc \
+	createEmptyMovieClip-events.swf \
+	createEmptyMovieClip-events.swf.trace \
 	createTextField-returnvalue-5.swf \
 	createTextField-returnvalue-5.swf.trace \
 	createTextField-returnvalue-6.swf \

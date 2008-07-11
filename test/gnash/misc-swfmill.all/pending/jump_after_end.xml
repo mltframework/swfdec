@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<swf version="6" compressed="1">
+
+<!--
+
+ This file wants to test if branch after END opcode is allowed.
+
+ It is hard to make it self-contained as if the branch fails
+ we'll loose control over the execution so nothing will be 
+ traced.  Tracing successes is fined.
+
+ The only solution I found was making the test *runner* 
+ aware of what signals end of test, and verify the end of test
+ is reached. The "end-of-test" patter is set in the Makefile.am
+ so if you change last trace from this test please update that
+ as well.
+
+ The best way I found to modify this file is to use flasm, edit
+ the code there, then change back to XML and add the END tag when
+ needed (flasm is unable to add END tags in the middle of an action)
+
+-->
+
+  <Header framerate="12" frames="1">
+    <size>
+      <Rectangle left="0" right="12800" top="0" bottom="9600"/>
+    </size>
+    <tags>
+      <SetBackgroundColor>
+        <color>
+          <Color red="255" green="255" blue="255"/>
+        </color>
+      </SetBackgroundColor>
+      <DoAction>
+        <actions>
+          <PushData>
+            <items>
+              <StackString value="Check if branch after end is allowed"/>
+            </items>
+          </PushData>
+          <Trace/>
+          <PushData>
+            <items>
+              <StackString value="jumpval"/>
+              <!-- NOTE: we'll never get to trace this in a real failure.. -->
+              <StackString value="FAILED: jump after NOT allowed"/>
+            </items>
+          </PushData>
+          <SetVariable/>
+
+          <!-- NOTE:
+               If the branch fails here (not allowed to jump after END opcode)
+               we'll never get to a FAILED trace. To handle such cases we'll check
+               for a final 'end-of-test' message to be seeked-for by the test
+               runner.
+            -->
+          <BranchAlways byteOffset="29"/> <!-- 16 +13 for the push -->
+
+          <PushData>
+            <items>
+              <StackString value="END OF TEST"/>
+              <StackString value="jumpval"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <Trace/>
+          <Trace/>
+	  <EndAction/>
+          <PushData>
+            <items>
+              <StackString value="jumpval"/>
+              <StackString value="PASSED: jump after end ALLOWED"/>
+            </items>
+          </PushData>
+          <SetVariable/>
+          <BranchAlways byteOffset="-79"/> <!-- 66 +13 for the push -->
+          <EndAction/>
+        </actions>
+      </DoAction>
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

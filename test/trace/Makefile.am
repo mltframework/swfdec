@@ -3213,6 +3213,15 @@ EXTRA_DIST = \
 	settarget-relative-7.swf.trace \
 	settarget-relative-8.swf \
 	settarget-relative-8.swf.trace \
+	settarget-remove.as \
+	settarget-remove-5.swf \
+	settarget-remove-5.swf.trace \
+	settarget-remove-6.swf \
+	settarget-remove-6.swf.trace \
+	settarget-remove-7.swf \
+	settarget-remove-7.swf.trace \
+	settarget-remove-8.swf \
+	settarget-remove-8.swf.trace \
 	settimeout.as \
 	settimeout-5.swf \
 	settimeout-5.swf.trace \

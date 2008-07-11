@@ -42,10 +42,7 @@ objects.push ({ o: XML, n: "XML" });
 objects.push ({ o: MovieClip, n: "MovieClip" });
 objects.push ({ o: this, n: "this" });
 objects.push ({ o: TextField, n: "TextField" });
-// FIXME
-#if __SWF_VERSION__ > 5
 objects.push ({ o: t, n: "createTextField (...)" });
-#endif
 
 for (var i = 0; i < objects.length; i++) {
   trace (i + ": " + objects[i].n);
@@ -79,4 +76,4 @@ for (var i = 0; i < objects.length; i++) {
   trace (str);
 }
 
-loadMovie ("FSCommand:quit", "");
+getURL ("FSCommand:quit", "");

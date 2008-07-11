@@ -24,7 +24,8 @@ run_test = function (t, file) {
     t.reset (file);
     var expected = Buffer.load (file + ".trace");
     t.advance (0);
-    t.advance (Math.ceil (10000 / t.rate));
+    // run these tests longer...
+    t.advance (Math.ceil (20000 / t.rate));
     var diff = t.trace.diff (expected);
     if (diff) {
       error ("different trace output");

@@ -22,6 +22,11 @@ EXTRA_DIST = \
 	hello.sc \
 	hello.swf \
 	hello.swf.trace \
+	opcode_guard_test2.sc \
+	opcode_guard_test2.swf \
+	opcode_guard_test2.swf.trace \
+	hello.swf \
+	hello.swf.trace \
 	mouse_drag_test.sc \
 	mouse_drag_test.swf \
 	mouse_drag_test.swf.trace \

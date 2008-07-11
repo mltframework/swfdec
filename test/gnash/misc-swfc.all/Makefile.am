@@ -38,4 +38,8 @@ EXTRA_DIST = \
 	movieclip_destruction_test4.swf.trace \
 	registerclass_test3.sc \
 	registerclass_test3.swf \
-	registerclass_test3.swf.trace
+	registerclass_test3.swf.trace \
+	swf4opcode.sc \
+	swf4opcode.sc.original \
+	swf4opcode.swf \
+	swf4opcode.swf.trace

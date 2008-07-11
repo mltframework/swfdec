@@ -22,11 +22,6 @@ EXTRA_DIST = \
 	hello.sc \
 	hello.swf \
 	hello.swf.trace \
-	opcode_guard_test2.sc \
-	opcode_guard_test2.swf \
-	opcode_guard_test2.swf.trace \
-	hello.swf \
-	hello.swf.trace \
 	mouse_drag_test.sc \
 	mouse_drag_test.swf \
 	mouse_drag_test.swf.trace \
@@ -36,9 +31,15 @@ EXTRA_DIST = \
 	movieclip_destruction_test4.sc \
 	movieclip_destruction_test4.swf \
 	movieclip_destruction_test4.swf.trace \
+	opcode_guard_test2.sc \
+	opcode_guard_test2.swf \
+	opcode_guard_test2.swf.trace \
 	registerclass_test3.sc \
 	registerclass_test3.swf \
 	registerclass_test3.swf.trace \
+	soft_reference_test1.sc \
+	soft_reference_test1.swf \
+	soft_reference_test1.swf.trace \
 	swf4opcode.sc \
 	swf4opcode.sc.original \
 	swf4opcode.swf \

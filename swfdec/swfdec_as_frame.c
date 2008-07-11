@@ -558,9 +558,12 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
     SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
 {
   GSList *walk;
+  SwfdecAsContext *cx;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
+
+  cx = SWFDEC_AS_OBJECT (frame)->context;
 
   for (walk = frame->scope_chain; walk; walk = walk->next) {
     if (swfdec_as_object_get_variable_and_flags (walk->data, variable, value, 
@@ -580,8 +583,9 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
       return frame->original_target;
   }
   /* 2) the global object */
-  if (swfdec_as_object_get_variable_and_flags (
-	SWFDEC_AS_OBJECT (frame)->context->global, variable, value, flags, pobject))
+  /* FIXME: ignored on version 4, but should it never be created instead? */
+  if (cx->version > 4 && swfdec_as_object_get_variable_and_flags (cx->global,
+	variable, value, flags, pobject))
     return SWFDEC_AS_OBJECT (frame)->context->global;
 
   return NULL;

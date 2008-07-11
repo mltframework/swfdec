@@ -489,7 +489,7 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	// FIXME: We should most likely copy Tamarin's code here (MathUtils.cpp)
 	s = SWFDEC_AS_VALUE_GET_STRING (&tmp);
 	if (s == SWFDEC_AS_STR_EMPTY)
-	  return NAN;
+	  return (context->version >= 5) ? NAN : 0.0;
 	if (context->version > 5 && s[0] == '0' &&
 	    (s[1] == 'x' || s[1] == 'X')) {
 	  d = g_ascii_strtoll (s + 2, &end, 16);
@@ -498,16 +498,16 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  d = g_ascii_strtoll (s, &end, 8);
 	} else {
 	  if (strpbrk (s, "xXiI") != NULL)
-	    return NAN;
+	    return (context->version >= 5) ? NAN : 0.0;
 	  d = g_ascii_strtod (s, &end);
 	}
-	if (*end == '\0')
+	if (*end == '\0' || context->version < 5)
 	  return d == -0.0 ? 0.0 : d;
 	else
 	  return NAN;
       }
     case SWFDEC_AS_TYPE_OBJECT:
-      return NAN;
+      return (context->version >= 5) ? NAN : 0.0;
     case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();

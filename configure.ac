@@ -295,6 +295,7 @@ test/custom/Makefile
 test/gnash/Makefile
 test/gnash/media/Makefile
 test/gnash/actionscript.all/Makefile
+test/gnash/misc-swfc.all/Makefile
 test/image/Makefile
 test/sound/Makefile
 test/trace/Makefile

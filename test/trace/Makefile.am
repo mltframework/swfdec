@@ -362,6 +362,15 @@ EXTRA_DIST = \
 	atan2-8.swf \
 	atan2-8.swf.trace \
 	atan2.as \
+	attachMovie-height-5.swf \
+	attachMovie-height-5.swf.trace \
+	attachMovie-height-6.swf \
+	attachMovie-height-6.swf.trace \
+	attachMovie-height-7.swf \
+	attachMovie-height-7.swf.trace \
+	attachMovie-height-8.swf \
+	attachMovie-height-8.swf.trace \
+	attachMovie-height.xml \
 	attachmovie-object.c \
 	attachmovie-object-5.swf \
 	attachmovie-object-5.swf.trace \

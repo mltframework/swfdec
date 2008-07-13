@@ -517,6 +517,16 @@ swfdec_net_stream_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     SWFDEC_STUB ("Netstream.bufferLength (get)");
   } else if (variable == SWFDEC_AS_STR_bufferTime) {
     SWFDEC_STUB ("Netstream.bufferTime (get)");
+  } else if (variable == SWFDEC_AS_STR_audiocodec) {
+    SWFDEC_STUB ("Netstream.audiocodec (get)");
+  } else if (variable == SWFDEC_AS_STR_currentFps) {
+    SWFDEC_STUB ("Netstream.currentFps (get)");
+  } else if (variable == SWFDEC_AS_STR_decodedFrames) {
+    SWFDEC_STUB ("Netstream.decodedFrames (get)");
+  } else if (variable == SWFDEC_AS_STR_liveDelay) {
+    SWFDEC_STUB ("Netstream.liveDelay (get)");
+  } else if (variable == SWFDEC_AS_STR_videoCodec) {
+    SWFDEC_STUB ("Netstream.videoCodec (get)");
   }
   return FALSE;
 }

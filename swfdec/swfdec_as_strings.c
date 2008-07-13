@@ -517,5 +517,10 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("Transform")
   SWFDEC_AS_CONSTANT_STRING ("bufferLength")
   SWFDEC_AS_CONSTANT_STRING ("bufferTime")
+  SWFDEC_AS_CONSTANT_STRING ("audiocodec")
+  SWFDEC_AS_CONSTANT_STRING ("currentFps")
+  SWFDEC_AS_CONSTANT_STRING ("decodedFrames")
+  SWFDEC_AS_CONSTANT_STRING ("liveDelay")
+  SWFDEC_AS_CONSTANT_STRING ("videoCodec")
   /* add more here */
 ;

@@ -29,6 +29,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
+#include "swfdec_movie.h"
 
 /**
  * SECTION:SwfdecAsFrame
@@ -557,9 +558,12 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
     SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
 {
   GSList *walk;
+  SwfdecAsContext *cx;
 
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
+
+  cx = SWFDEC_AS_OBJECT (frame)->context;
 
   for (walk = frame->scope_chain; walk; walk = walk->next) {
     if (swfdec_as_object_get_variable_and_flags (walk->data, variable, value, 
@@ -567,13 +571,21 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
       return walk->data;
   }
   /* we've walked the scope chain down. Now look in the special objects. */
-  /* 1) the target */
-  if (swfdec_as_object_get_variable_and_flags (frame->target, variable, value, 
-	flags, pobject))
-    return frame->target;
+  /* 1) the target (if removed, use original target) */
+  if (SWFDEC_IS_MOVIE (frame->target) &&
+      SWFDEC_MOVIE(frame->target)->state < SWFDEC_MOVIE_STATE_DESTROYED) {
+    if (swfdec_as_object_get_variable_and_flags (frame->target, variable,
+	  value, flags, pobject))
+      return frame->target;
+  } else {
+    if (swfdec_as_object_get_variable_and_flags (frame->original_target,
+	  variable, value, flags, pobject))
+      return frame->original_target;
+  }
   /* 2) the global object */
-  if (swfdec_as_object_get_variable_and_flags (
-	SWFDEC_AS_OBJECT (frame)->context->global, variable, value, flags, pobject))
+  /* FIXME: ignored on version 4, but should it never be created instead? */
+  if (cx->version > 4 && swfdec_as_object_get_variable_and_flags (cx->global,
+	variable, value, flags, pobject))
     return SWFDEC_AS_OBJECT (frame)->context->global;
 
   return NULL;
@@ -702,14 +714,16 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);
     }
-    swfdec_as_object_set_variable (args, SWFDEC_AS_STR_caller, &val);
+    swfdec_as_object_set_variable_and_flags (args, SWFDEC_AS_STR_caller, &val,
+	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
     if (frame->function != NULL) {
       SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (frame->function));
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);
     }
-    swfdec_as_object_set_variable (args, SWFDEC_AS_STR_callee, &val);
+    swfdec_as_object_set_variable_and_flags (args, SWFDEC_AS_STR_callee, &val,
+	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   } else {
     /* silence gcc */
     args = NULL;

@@ -336,10 +336,18 @@ void
 swfdec_as_string_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_AS_STRING (object))
+  if (object == NULL)
     return;
 
-  SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STRING (object)->string);
+  if (SWFDEC_IS_AS_STRING (object)) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STRING (object)->string);
+  } else {
+    SwfdecAsValue val;
+
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_value_to_string (cx, &val));
+  }
+
 }
 
 static void
@@ -351,16 +359,13 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *str, *end, *delim;
   int count;
 
-  if (argc < 1)
-    return;
-
   str = swfdec_as_string_object_to_string (cx, object);
   arr = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
   if (arr == NULL)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
+  if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     delim = SWFDEC_AS_STR_COMMA;
   } else {
     delim = swfdec_as_value_to_string (cx, &argv[0]);
@@ -407,24 +412,23 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
   int count;
   guint len;
 
-  if (argc < 1)
-    return;
-
   str = swfdec_as_string_object_to_string (cx, object);
   arr = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
   if (arr == NULL)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
+  if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     SWFDEC_AS_VALUE_SET_STRING (&val, str);
     swfdec_as_array_push (arr, &val);
     return;
   }
   delim = swfdec_as_value_to_string (cx, &argv[0]);
   if (str == SWFDEC_AS_STR_EMPTY) {
-    SWFDEC_AS_VALUE_SET_STRING (&val, str);
-    swfdec_as_array_push (arr, &val);
+    if (strlen (delim) > 0) {
+      SWFDEC_AS_VALUE_SET_STRING (&val, str);
+      swfdec_as_array_push (arr, &val);
+    }
     return;
   }
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))
@@ -479,7 +483,7 @@ swfdec_as_string_slice (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   str = swfdec_as_string_object_to_string (cx, object);
-  length = strlen (str);
+  length = g_utf8_strlen (str, -1);
 
   start = swfdec_as_value_to_integer (cx, &argv[0]);
   if (start < 0)
@@ -496,7 +500,7 @@ swfdec_as_string_slice (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   SWFDEC_AS_VALUE_SET_STRING (ret,
-      swfdec_as_context_give_string (cx, g_strndup (str + start, end - start)));
+      swfdec_as_str_sub (cx, str, start, end - start));
 }
 
 SWFDEC_AS_NATIVE (251, 7, swfdec_as_string_concat)

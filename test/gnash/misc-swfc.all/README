@@ -1,0 +1,19 @@
+The .sc files, from Gnash's test suite's directory with same name, have been
+imported here and compiled using the following command line:
+	cpp -P -DMEDIADIR="../media" test.sc | swfc -o test.swf -
+
+Dejagnu.sc (and check.sc) has been slightly modified, so it performs a Swfdec
+style trace test mostly without modifications to the test scripts. Where
+modifications were needed, the original file is named .sc.original and modified
+version just .sc
+
+Various .sc files were not imported, they are listed in the REMOVED
+
+Tests that are not working in Swfdec yet are in pending directory and are not
+included in make check
+
+Tests that are considered broken for some reason are not included. Most likely
+reason is producing FAIL or XFAIL on latest Adobe's Windows player
+
+The date when the tests were last imported/updated from Gnash's CVS repository
+can be found from UPDATED

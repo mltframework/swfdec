@@ -108,6 +108,15 @@ EXTRA_DIST = \
 	arguments-7.swf.trace \
 	arguments-8.swf \
 	arguments-8.swf.trace \
+	arguments-properties.as \
+	arguments-properties-5.swf \
+	arguments-properties-5.swf.trace \
+	arguments-properties-6.swf \
+	arguments-properties-6.swf.trace \
+	arguments-properties-7.swf \
+	arguments-properties-7.swf.trace \
+	arguments-properties-8.swf \
+	arguments-properties-8.swf.trace \
 	array.swf \
 	array.swf.trace \
 	array-init.xml \
@@ -923,6 +932,9 @@ EXTRA_DIST = \
 	crash-0.7.1-uncompressed-half-samples-8.swf \
 	crash-0.7.1-uncompressed-half-samples-8.swf.trace \
 	crash-0.7.1-uncompressed-half-samples.xml \
+	createEmptyMovieClip-events.sc \
+	createEmptyMovieClip-events.swf \
+	createEmptyMovieClip-events.swf.trace \
 	createTextField-returnvalue-5.swf \
 	createTextField-returnvalue-5.swf.trace \
 	createTextField-returnvalue-6.swf \
@@ -2091,6 +2103,15 @@ EXTRA_DIST = \
 	movieclip-swap-depths-7.swf.trace \
 	movieclip-swap-depths-8.swf \
 	movieclip-swap-depths-8.swf.trace \
+	movieclip-swap-depths-range.as \
+	movieclip-swap-depths-range-5.swf \
+	movieclip-swap-depths-range-5.swf.trace \
+	movieclip-swap-depths-range-6.swf \
+	movieclip-swap-depths-range-6.swf.trace \
+	movieclip-swap-depths-range-7.swf \
+	movieclip-swap-depths-range-7.swf.trace \
+	movieclip-swap-depths-range-8.swf \
+	movieclip-swap-depths-range-8.swf.trace \
 	movieclip-target.as \
 	movieclip-target-5.swf \
 	movieclip-target-5.swf.trace \
@@ -3204,6 +3225,15 @@ EXTRA_DIST = \
 	settarget-relative-7.swf.trace \
 	settarget-relative-8.swf \
 	settarget-relative-8.swf.trace \
+	settarget-remove.as \
+	settarget-remove-5.swf \
+	settarget-remove-5.swf.trace \
+	settarget-remove-6.swf \
+	settarget-remove-6.swf.trace \
+	settarget-remove-7.swf \
+	settarget-remove-7.swf.trace \
+	settarget-remove-8.swf \
+	settarget-remove-8.swf.trace \
 	settimeout.as \
 	settimeout-5.swf \
 	settimeout-5.swf.trace \
@@ -3450,6 +3480,15 @@ EXTRA_DIST = \
 	string-length-old-mb-7.swf.trace \
 	string-length-old-mb-8.swf \
 	string-length-old-mb-8.swf.trace \
+	string-non-ascii.as \
+	string-non-ascii-5.swf \
+	string-non-ascii-5.swf.trace \
+	string-non-ascii-6.swf \
+	string-non-ascii-6.swf.trace \
+	string-non-ascii-7.swf \
+	string-non-ascii-7.swf.trace \
+	string-non-ascii-8.swf \
+	string-non-ascii-8.swf.trace \
 	string-object-tostring.as \
 	string-object-tostring-5.swf \
 	string-object-tostring-5.swf.trace \
@@ -3507,6 +3546,8 @@ EXTRA_DIST = \
 	string-split-empty-6.swf.trace \
 	string-split-empty-7.swf \
 	string-split-empty-7.swf.trace \
+	string-split-empty-8.swf \
+	string-split-empty-8.swf.trace \
 	string-to-number.as \
 	string-to-number-5.swf \
 	string-to-number-5.swf.trace \
@@ -3523,6 +3564,15 @@ EXTRA_DIST = \
 	string-trace-6.swf.trace \
 	string-trace-7.swf \
 	string-trace-7.swf.trace \
+	string-valueof.as \
+	string-valueof-5.swf \
+	string-valueof-5.swf.trace \
+	string-valueof-6.swf \
+	string-valueof-6.swf.trace \
+	string-valueof-7.swf \
+	string-valueof-7.swf.trace \
+	string-valueof-8.swf \
+	string-valueof-8.swf.trace \
 	stringlength.as \
 	stringlength-5.swf \
 	stringlength-5.swf.trace \
@@ -4034,6 +4084,9 @@ EXTRA_DIST = \
 	utf-32-be-bom.txt \
 	utf-32-le-bom.txt \
 	values.as \
+	version4-global.sc \
+	version4-global.swf \
+	version4-global.swf.trace \
 	video.flv \
 	video-enumerate.c \
 	video-enumerate.swf \

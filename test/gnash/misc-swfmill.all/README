@@ -1,0 +1,14 @@
+The .xml files, from Gnash's test suite's directory with same name, have been
+imported here and compiled using the following command line:
+	swfmill xml2swf test.xml test.swf
+
+Most tests have been slightly modified so that they issue fscommand:quit at the
+end. The unmodified version of each .xml file is available as .xml.original
+
+The .xml files that were not imported are listed in REMOVED
+
+Tests that are not working in Swfdec yet are in pending directory and are not
+included in make check
+
+The date when the tests were last imported/updated from Gnash's CVS repository
+can be found from UPDATED

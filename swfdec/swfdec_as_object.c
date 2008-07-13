@@ -1704,6 +1704,29 @@ swfdec_as_object_decode (SwfdecAsObject *object, const char *str)
   g_strfreev (varlist);
 }
 
+static void
+swfdec_as_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  if (argc > 0) {
+    SwfdecAsObject *result = swfdec_as_value_to_object (cx, &argv[0]);
+    if (result != NULL) {
+      if (!cx->frame->construct) {
+	SWFDEC_AS_VALUE_SET_OBJECT (ret, result);
+      } else {
+	SWFDEC_FIXME ("new Object (x) should return x");
+	SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+      }
+      return;
+    }
+  }
+
+  if (!cx->frame->construct)
+    object = swfdec_as_object_new_empty (cx);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+}
+
 void
 swfdec_as_object_init_context (SwfdecAsContext *context)
 {
@@ -1714,7 +1737,7 @@ swfdec_as_object_init_context (SwfdecAsContext *context)
   if (!proto)
     return;
   object = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_Object, 0, NULL, 0));
+      SWFDEC_AS_STR_Object, 0, swfdec_as_object_construct, 0));
   if (!object)
     return;
   context->Object = object;

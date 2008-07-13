@@ -1210,10 +1210,10 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     char *text = swfdec_as_interpret_encode_variables (cx->frame->target);
     if (method == 1) {
       url = swfdec_as_context_give_string (cx, g_strjoin (NULL, url,
-	    strchr (url, '?') == NULL ? "?" : "&", data, NULL));
+	    strchr (url, '?') == NULL ? "?" : "&", text, NULL));
     } else {
       // don't send the nul-byte
-      buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (text)),
+      buffer = swfdec_buffer_new_for_data (g_memdup (text, strlen (text)),
 	  strlen (text));
     }
     g_free (text);

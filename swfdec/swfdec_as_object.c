@@ -237,8 +237,7 @@ swfdec_as_object_variable_enabled_in_version (SwfdecAsVariable *var,
 
 static gboolean
 swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags,
-    gboolean *ignore_pobject)
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
 
@@ -250,19 +249,14 @@ swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
 	object->context->version))
     return FALSE;
 
-  // only run get function, if we are getting the value
-  if (val != NULL) {
-    if (var->get) {
-      swfdec_as_function_call (var->get, orig, 0, NULL, val);
-      swfdec_as_context_run (object->context);
-    } else {
-      *val = var->value;
-    }
+  if (var->get) {
+    swfdec_as_function_call (var->get, orig, 0, NULL, val);
+    swfdec_as_context_run (object->context);
+    *flags = var->flags;
+  } else {
+    *val = var->value;
+    *flags = var->flags;
   }
-
-  *flags = var->flags;
-  *ignore_pobject = var->get != NULL;
-
   return TRUE;
 }
 
@@ -939,40 +933,38 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
 {
   SwfdecAsObjectClass *klass;
   guint i;
+  SwfdecAsValue tmp_val;
   guint tmp_flags;
   SwfdecAsObject *tmp_pobject, *cur;
-  gboolean ignore_pobject;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
 
+  if (value == NULL)
+    value = &tmp_val;
   if (flags == NULL)
     flags = &tmp_flags;
   if (pobject == NULL)
     pobject = &tmp_pobject;
 
-  *pobject = object;
   cur = object;
   for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && cur != NULL; i++) {
     klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
-    if (klass->get (cur, object, variable, value, flags, &ignore_pobject)) {
-      if (!ignore_pobject)
-	*pobject = cur;
+    if (klass->get (cur, object, variable, value, flags)) {
+      *pobject = cur;
       return TRUE;
     }
     cur = swfdec_as_object_get_prototype_internal (cur);
   }
   if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
-    if (value != NULL)
-      SWFDEC_AS_VALUE_SET_UNDEFINED (value);
+    SWFDEC_AS_VALUE_SET_UNDEFINED (value);
     *flags = 0;
     *pobject = NULL;
     return FALSE;
   }
   //SWFDEC_WARNING ("no such variable %s", variable);
-  if (value != NULL)
-    SWFDEC_AS_VALUE_SET_UNDEFINED (value);
+  SWFDEC_AS_VALUE_SET_UNDEFINED (value);
   *flags = 0;
   *pobject = NULL;
   return FALSE;

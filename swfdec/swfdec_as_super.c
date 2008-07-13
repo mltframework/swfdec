@@ -69,8 +69,7 @@ swfdec_as_super_call (SwfdecAsFunction *function)
 
 static gboolean
 swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags,
-    gboolean *ignore_pobject)
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
   SwfdecAsObjectClass *klass;
@@ -85,17 +84,15 @@ swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
   for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && cur != NULL; i++) {
     klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
     /* FIXME: is the orig pointer correct? */
-    if (klass->get (cur, super->object, variable, val, flags, ignore_pobject))
+    if (klass->get (cur, super->object, variable, val, flags))
       return TRUE;
     /* FIXME: need get_prototype_internal here? */
     cur = swfdec_as_object_get_prototype (cur);
   }
   if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT)
     swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
-  if (val != NULL)
-    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
+  SWFDEC_AS_VALUE_SET_UNDEFINED (val);
   *flags = 0;
-  *ignore_pobject = FALSE;
   return FALSE;
 }
 

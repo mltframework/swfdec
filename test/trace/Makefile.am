@@ -84,15 +84,6 @@ EXTRA_DIST = \
 	addProperty-set-prototypes-7.swf.trace \
 	addProperty-set-prototypes-8.swf \
 	addProperty-set-prototypes-8.swf.trace \
-	addProperty-with.as \
-	addProperty-with-5.swf \
-	addProperty-with-5.swf.trace \
-	addProperty-with-6.swf \
-	addProperty-with-6.swf.trace \
-	addProperty-with-7.swf \
-	addProperty-with-7.swf.trace \
-	addProperty-with-8.swf \
-	addProperty-with-8.swf.trace \
 	and-or-5.swf \
 	and-or-5.swf.trace \
 	and-or-6.swf \

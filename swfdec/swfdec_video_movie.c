@@ -104,58 +104,43 @@ swfdec_video_movie_set_ratio (SwfdecMovie *movie)
 
 static gboolean
 swfdec_video_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags,
-    gboolean *ignore_pobject)
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   guint version = object->context->version;
   SwfdecVideoMovie *video;
 
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_video_movie_parent_class)->get (
-	object, orig, variable, val, flags, ignore_pobject))
-    return TRUE;
-
-  *flags = 0;
-  *ignore_pobject = FALSE;
-
   video = SWFDEC_VIDEO_MOVIE (object);
 
   if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_width) == 0) {
-    if (val != NULL) {
-      guint w;
-      if (video->provider) {
-	w = swfdec_video_provider_get_width (video->provider);
-      } else {
-	w = 0;
-      }
-      SWFDEC_AS_VALUE_SET_INT (val, w);
+    guint w;
+    if (video->provider) {
+      w = swfdec_video_provider_get_width (video->provider);
+    } else {
+      w = 0;
     }
+    SWFDEC_AS_VALUE_SET_INT (val, w);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_height) == 0) {
-    if (val != NULL) {
-      guint h;
-      if (video->provider) {
-	h = swfdec_video_provider_get_height (video->provider);
-      } else {
-	h = 0;
-      }
-      SWFDEC_AS_VALUE_SET_INT (val, h);
+    guint h;
+    if (video->provider) {
+      h = swfdec_video_provider_get_height (video->provider);
+    } else {
+      h = 0;
     }
+    SWFDEC_AS_VALUE_SET_INT (val, h);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_deblocking) == 0) {
-    if (val != NULL) {
-      SWFDEC_STUB ("Video.deblocking (get)");
-      SWFDEC_AS_VALUE_SET_NUMBER (val, 0);
-    }
+    SWFDEC_STUB ("Video.deblocking (get)");
+    SWFDEC_AS_VALUE_SET_NUMBER (val, 0);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_smoothing) == 0) {
-    if (val != NULL) {
-      SWFDEC_STUB ("Video.smoothing (get)");
-      SWFDEC_AS_VALUE_SET_BOOLEAN (val, FALSE);
-    }
+    SWFDEC_STUB ("Video.smoothing (get)");
+    SWFDEC_AS_VALUE_SET_BOOLEAN (val, FALSE);
     return TRUE;
+  } else {
+    return SWFDEC_AS_OBJECT_CLASS (swfdec_video_movie_parent_class)->get (
+	object, orig, variable, val, flags);
   }
-
-  return FALSE;
 }
 
 static void

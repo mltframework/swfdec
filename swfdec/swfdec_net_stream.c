@@ -464,54 +464,47 @@ swfdec_net_stream_dispose (GObject *object)
 
 static gboolean
 swfdec_net_stream_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags,
-    gboolean *ignore_pobject)
+    const char *variable, SwfdecAsValue *val, guint *flags)
 {
   SwfdecNetStream *stream;
 
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->get (object, orig, variable, val, flags, ignore_pobject))
+  if (SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->get (object, orig, variable, val, flags))
     return TRUE;
-
-  *flags = 0;
-  *ignore_pobject = FALSE;
 
   stream = SWFDEC_NET_STREAM (object);
   /* FIXME: need case insensitive comparisons? */
   if (variable == SWFDEC_AS_STR_time) {
     guint msecs;
-    if (val != NULL) {
-      if (stream->flvdecoder == NULL ||
-	  !swfdec_flv_decoder_get_video_info (stream->flvdecoder, &msecs, NULL)) {
-	SWFDEC_AS_VALUE_SET_INT (val, 0);
-      } else {
-	if (msecs >= stream->current_time)
-	  msecs = 0;
-	else 
-	  msecs = stream->current_time - msecs;
-	SWFDEC_AS_VALUE_SET_NUMBER (val, msecs / 1000.);
-      }
+    if (stream->flvdecoder == NULL ||
+	!swfdec_flv_decoder_get_video_info (stream->flvdecoder, &msecs, NULL)) {
+      SWFDEC_AS_VALUE_SET_INT (val, 0);
+    } else {
+      if (msecs >= stream->current_time)
+	msecs = 0;
+      else 
+	msecs = stream->current_time - msecs;
+      SWFDEC_AS_VALUE_SET_NUMBER (val, msecs / 1000.);
     }
+    *flags = 0;
     return TRUE;
   } else if (variable == SWFDEC_AS_STR_bytesLoaded) {
-    if (val != NULL) {
-      if (stream->loader == NULL)
-	SWFDEC_AS_VALUE_SET_INT (val, 0);
-      else
-	SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_loader_get_loaded (stream->loader));
-    }
+    if (stream->loader == NULL)
+      SWFDEC_AS_VALUE_SET_INT (val, 0);
+    else
+      SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_loader_get_loaded (stream->loader));
+    *flags = 0;
     return TRUE;
   } else if (variable == SWFDEC_AS_STR_bytesTotal) {
-    if (val != NULL) {
-      glong bytes;
-      if (stream->loader == NULL) {
-	bytes = 0;
-      } else { 
-	bytes = swfdec_loader_get_size (stream->loader);
-	if (bytes < 0)
-	  bytes = swfdec_loader_get_loaded (stream->loader);
-      }
-      SWFDEC_AS_VALUE_SET_NUMBER (val, bytes);
+    glong bytes;
+    if (stream->loader == NULL) {
+      bytes = 0;
+    } else { 
+      bytes = swfdec_loader_get_size (stream->loader);
+      if (bytes < 0)
+	bytes = swfdec_loader_get_loaded (stream->loader);
     }
+    SWFDEC_AS_VALUE_SET_NUMBER (val, bytes);
+    *flags = 0;
     return TRUE;
   } else if (variable == SWFDEC_AS_STR_bufferLength) {
     SWFDEC_STUB ("Netstream.bufferLength (get)");

@@ -932,6 +932,15 @@ EXTRA_DIST = \
 	crash-0.7.1-uncompressed-half-samples-8.swf \
 	crash-0.7.1-uncompressed-half-samples-8.swf.trace \
 	crash-0.7.1-uncompressed-half-samples.xml \
+	crash-0.7.2-TextField-replace-infloop-5.swf \
+	crash-0.7.2-TextField-replace-infloop-5.swf.trace \
+	crash-0.7.2-TextField-replace-infloop-6.swf \
+	crash-0.7.2-TextField-replace-infloop-6.swf.trace \
+	crash-0.7.2-TextField-replace-infloop-7.swf \
+	crash-0.7.2-TextField-replace-infloop-7.swf.trace \
+	crash-0.7.2-TextField-replace-infloop-8.swf \
+	crash-0.7.2-TextField-replace-infloop-8.swf.trace \
+	crash-0.7.2-TextField-replace-infloop.as \
 	createEmptyMovieClip-events.sc \
 	createEmptyMovieClip-events.swf \
 	createEmptyMovieClip-events.swf.trace \

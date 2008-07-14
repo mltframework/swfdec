@@ -74,6 +74,7 @@ swfdec_text_buffer_dispose (GObject *object)
     buffer->text = NULL;
   }
   g_sequence_free (buffer->attributes);
+  swfdec_text_attributes_reset (&buffer->default_attributes);
 
   G_OBJECT_CLASS (swfdec_text_buffer_parent_class)->dispose (object);
 }
@@ -94,11 +95,11 @@ swfdec_text_buffer_class_init (SwfdecTextBufferClass *klass)
 }
 
 static void
-swfdec_text_buffer_init (SwfdecTextBuffer *text)
+swfdec_text_buffer_init (SwfdecTextBuffer *buffer)
 {
-  text->text = g_string_new ("");
-  text->attributes = g_sequence_new ((GDestroyNotify) swfdec_text_buffer_format_free);
-  g_sequence_append (text->attributes, swfdec_text_buffer_format_new ());
+  buffer->text = g_string_new ("");
+  buffer->attributes = g_sequence_new ((GDestroyNotify) swfdec_text_buffer_format_free);
+  swfdec_text_attributes_reset (&buffer->default_attributes);
 }
 
 SwfdecTextBuffer *
@@ -147,42 +148,33 @@ swfdec_text_buffer_get_iter_for_pos (SwfdecTextBuffer *buffer, guint pos)
   return iter;
 }
 
-void
-swfdec_text_buffer_insert_text (SwfdecTextBuffer *buffer,
-    gsize pos, const char *text)
+#ifdef G_DISABLE_ASSERT
+#define CHECK_ATTRIBUTES(x)
+#else
+static void
+CHECK_ATTRIBUTES (SwfdecTextBuffer *buffer)
 {
-  gsize len;
+  guint last;
   GSequenceIter *iter;
   SwfdecTextBufferFormat *format;
 
-  g_return_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer));
-  g_return_if_fail (pos <= buffer->text->len);
-  g_return_if_fail (text != NULL);
-
-  len = strlen (text);
-  if (len == 0)
+  iter = g_sequence_get_begin_iter (buffer->attributes);
+  if (g_sequence_iter_is_end (iter)) {
+    g_assert (buffer->text->len == 0);
     return;
-  g_string_insert_len (buffer->text, pos, text, len);
-  iter = g_sequence_get_end_iter (buffer->attributes);
-  for (;;) {
-    iter = g_sequence_iter_prev (iter);
-    format = g_sequence_get (iter);
-    if (format->start <= pos)
-      break;
-    format->start += len;
   }
-
-  /* adapt cursor */
-  if (buffer->cursor_start >= pos)
-    buffer->cursor_start += len;
-  if (buffer->cursor_end >= pos)
-    buffer->cursor_end += len;
-
-  g_signal_emit (buffer, signals[TEXT_CHANGED], 0);
-  g_signal_emit (buffer, signals[CURSOR_CHANGED], 0,
-      (gulong) MIN (buffer->cursor_start, buffer->cursor_end),
-      (gulong) MAX (buffer->cursor_start, buffer->cursor_end));
+  format = g_sequence_get (iter);
+  g_assert (format->start == 0);
+  g_assert (buffer->text->len > 0);
+  last = 0;
+  for (iter = g_sequence_iter_next (iter); !g_sequence_iter_is_end (iter); iter = g_sequence_iter_next (iter)) {
+    format = g_sequence_get (iter);
+    g_assert (format->start > last);
+    g_assert (format->start < buffer->text->len);
+    last = format->start;
+  }
 }
+#endif
 
 /* removes duplicates in the range [iter, end) */
 static void
@@ -206,6 +198,55 @@ swfdec_text_buffer_remove_duplicates (GSequenceIter *iter, GSequenceIter *end)
 }
 
 void
+swfdec_text_buffer_insert_text (SwfdecTextBuffer *buffer,
+    gsize pos, const char *text)
+{
+  gsize len;
+  GSequenceIter *iter;
+  SwfdecTextBufferFormat *format;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer));
+  g_return_if_fail (pos <= buffer->text->len);
+  g_return_if_fail (text != NULL);
+
+  len = strlen (text);
+  if (len == 0)
+    return;
+  if (pos == buffer->text->len) {
+    g_string_insert_len (buffer->text, pos, text, len);
+    format = swfdec_text_buffer_format_new ();
+    format->start = pos;
+    swfdec_text_attributes_copy (&format->attr, 
+	&buffer->default_attributes, SWFDEC_TEXT_ATTRIBUTES_MASK);
+    iter = g_sequence_append (buffer->attributes, format);
+    swfdec_text_buffer_remove_duplicates (g_sequence_iter_prev (iter),
+	g_sequence_iter_next (iter));
+  } else {
+    g_string_insert_len (buffer->text, pos, text, len);
+    iter = g_sequence_get_end_iter (buffer->attributes);
+    for (;;) {
+      iter = g_sequence_iter_prev (iter);
+      format = g_sequence_get (iter);
+      if (format->start <= pos)
+	break;
+      format->start += len;
+    }
+  }
+  CHECK_ATTRIBUTES (buffer);
+
+  /* adapt cursor */
+  if (buffer->cursor_start >= pos)
+    buffer->cursor_start += len;
+  if (buffer->cursor_end >= pos)
+    buffer->cursor_end += len;
+
+  g_signal_emit (buffer, signals[TEXT_CHANGED], 0);
+  g_signal_emit (buffer, signals[CURSOR_CHANGED], 0,
+      (gulong) MIN (buffer->cursor_start, buffer->cursor_end),
+      (gulong) MAX (buffer->cursor_start, buffer->cursor_end));
+}
+
+void
 swfdec_text_buffer_delete_text (SwfdecTextBuffer *buffer, 
     gsize pos, gsize length)
 {
@@ -219,23 +260,25 @@ swfdec_text_buffer_delete_text (SwfdecTextBuffer *buffer,
 
   g_string_erase (buffer->text, pos, length);
   end = pos + length;
-  iter = g_sequence_get_end_iter (buffer->attributes);
-  for (;;) {
-    iter = g_sequence_iter_prev (iter);
+  prev = NULL;
+  for (iter = swfdec_text_buffer_get_iter_for_pos (buffer, pos);
+      !g_sequence_iter_is_end (iter);
+      iter = g_sequence_iter_next (iter)) {
     format = g_sequence_get (iter);
-    if (format->start <= end) {
-      format->start = pos;
-      break;
-    }
-    format->start -= length;
-  }
-  while (!g_sequence_iter_is_begin (iter)) {
-    prev = g_sequence_iter_prev (iter);
-    format = g_sequence_get (prev);
     if (format->start < pos)
-      break;
-    g_sequence_remove (prev);
+      continue;
+    if (format->start > end) {
+      format->start -= length;
+      continue;
+    }
+    if (prev)
+      g_sequence_remove (prev);
+    format->start = pos;
+    prev = iter;
   }
+  if (prev && pos == buffer->text->len)
+    g_sequence_remove (prev);
+  CHECK_ATTRIBUTES (buffer);
 
   /* adapt cursor */
   if (buffer->cursor_start > end)
@@ -278,6 +321,9 @@ swfdec_text_buffer_get_attributes (SwfdecTextBuffer *buffer, gsize pos)
   g_return_val_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer), NULL);
   g_return_val_if_fail (pos <= buffer->text->len, NULL);
 
+  if (pos == buffer->text->len)
+    return &buffer->default_attributes;
+
   iter = swfdec_text_buffer_get_iter_for_pos (buffer, pos);
   format = g_sequence_get (iter);
   return &format->attr;
@@ -294,6 +340,9 @@ swfdec_text_buffer_get_unique (SwfdecTextBuffer *buffer,
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer), 0);
   g_return_val_if_fail (start + length <= buffer->text->len, 0);
+
+  if (start == buffer->text->len)
+    return result;
 
   end = start + length;
   iter = swfdec_text_buffer_get_iter_for_pos (buffer, start);
@@ -327,47 +376,71 @@ swfdec_text_buffer_set_attributes (SwfdecTextBuffer *buffer, gsize start,
     gsize length, const SwfdecTextAttributes *attr, guint mask)
 {
   SwfdecTextBufferFormat *format;
-  GSequenceIter *start_iter, *iter;
+  GSequenceIter *start_iter, *iter, *end_iter;
   gsize end;
-  gboolean need_new_format, last;
 
   g_return_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer));
   g_return_if_fail (start + length <= buffer->text->len);
-  g_return_if_fail (length > 0 || start == buffer->text->len);
+  g_return_if_fail (length > 0);
   g_return_if_fail (attr != NULL);
   g_return_if_fail (mask != 0);
 
+  /* ensure start and end position have an attribtues entry. If not, create one */
   end = start + length;
   start_iter = swfdec_text_buffer_get_iter_for_pos (buffer, start);
   format = g_sequence_get (start_iter);
   if (format->start < start) {
-    iter = swfdec_text_buffer_copy_format (buffer, start_iter, start);
-  } else {
-    iter = start_iter;
+    start_iter = swfdec_text_buffer_copy_format (buffer, start_iter, start);
   }
-  last = FALSE;
-  for (;;) {
-    format = g_sequence_get (iter);
-    iter = g_sequence_iter_next (iter);
-    if (g_sequence_iter_is_end (iter)) {
-      need_new_format = end < buffer->text->len;
-      last = TRUE;
-    } else {
-      SwfdecTextBufferFormat *next = g_sequence_get (iter);
-      need_new_format = next->start > end;
-      last = next->start >= end;
+  if (end == buffer->text->len) {
+    end_iter = g_sequence_get_end_iter (buffer->attributes);
+  } else {
+    end_iter = swfdec_text_buffer_get_iter_for_pos (buffer, end);
+    format = g_sequence_get (end_iter);
+    if (format->start < end) {
+      end_iter = swfdec_text_buffer_copy_format (buffer, end_iter, end);
     }
-    if (last)
-      break;
+  }
+  /* start_iter points to first item to modify, end_iter points after last item to modify */
+
+  /* modify all formats in range [start_iter, end_iter) */
+  for (iter = start_iter; iter != end_iter; iter = g_sequence_iter_next (iter)) {
+    format = g_sequence_get (iter);
     swfdec_text_attributes_copy (&format->attr, attr, mask);
   }
-  if (need_new_format) {
-    swfdec_text_buffer_copy_format (buffer, g_sequence_iter_prev (iter), end);
-  }
-  swfdec_text_attributes_copy (&format->attr, attr, mask);
-  swfdec_text_buffer_remove_duplicates (start_iter, iter);
+
+  /* remove entries that are identical now */
+  swfdec_text_buffer_remove_duplicates (g_sequence_iter_prev (start_iter), 
+      g_sequence_iter_next (end_iter));
+  CHECK_ATTRIBUTES (buffer);
 
   g_signal_emit (buffer, signals[TEXT_CHANGED], 0);
+}
+
+const SwfdecTextAttributes *
+swfdec_text_buffer_get_default_attributes (SwfdecTextBuffer *buffer)
+{
+  g_return_val_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer), NULL);
+
+  return &buffer->default_attributes;
+}
+
+void
+swfdec_text_buffer_set_default_attributes (SwfdecTextBuffer *buffer, 
+    const SwfdecTextAttributes *attr, guint mask)
+{
+  g_return_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer));
+  g_return_if_fail (attr != NULL);
+
+  swfdec_text_attributes_copy (&buffer->default_attributes, attr, mask);
+}
+
+void
+swfdec_text_buffer_reset_default_attributes (SwfdecTextBuffer *buffer)
+{
+  g_return_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer));
+
+  swfdec_text_attributes_reset (&buffer->default_attributes);
 }
 
 /*** ITERATOR ***/
@@ -377,6 +450,9 @@ swfdec_text_buffer_get_iter (SwfdecTextBuffer *buffer, gsize pos)
 {
   g_return_val_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer), NULL);
   g_return_val_if_fail (pos <= buffer->text->len, NULL);
+
+  if (pos == buffer->text->len)
+    return NULL;
 
   return swfdec_text_buffer_get_iter_for_pos (buffer, pos);
 }
@@ -397,7 +473,9 @@ swfdec_text_buffer_iter_get_attributes (SwfdecTextBuffer *buffer, SwfdecTextBuff
   SwfdecTextBufferFormat *format;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_BUFFER (buffer), NULL);
-  g_return_val_if_fail (iter != NULL, NULL);
+
+  if (iter == NULL)
+    return &buffer->default_attributes;
 
   format = g_sequence_get (iter);
   return &format->attr;

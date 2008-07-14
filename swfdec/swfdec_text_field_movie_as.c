@@ -941,7 +941,8 @@ swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->default_attributes.color);
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, 
+      swfdec_text_buffer_get_default_attributes (text->text)->color);
 }
 
 // This doesn't work the same way as TextFormat's color setting
@@ -955,7 +956,8 @@ swfdec_text_field_movie_set_textColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "i", &value);
 
-  text->default_attributes.color = swfdec_text_field_movie_int_to_color (cx, value);
+  /* FIXME: don't access private variables, you lazy hacker! */
+  text->text->default_attributes.color = swfdec_text_field_movie_int_to_color (cx, value);
 }
 
 SWFDEC_AS_NATIVE (104, 300, swfdec_text_field_movie_get_gridFitType)
@@ -1066,7 +1068,8 @@ swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
   if (format == NULL)
     return;
 
-  swfdec_text_attributes_copy (&format->attr, &text->default_attributes,
+  swfdec_text_attributes_copy (&format->attr, 
+      swfdec_text_buffer_get_default_attributes (text->text),
       SWFDEC_TEXT_ATTRIBUTES_MASK);
   format->values_set = SWFDEC_TEXT_ATTRIBUTES_MASK;
 
@@ -1087,8 +1090,8 @@ swfdec_text_field_movie_setNewTextFormat (SwfdecAsContext *cx,
   if (!SWFDEC_IS_TEXT_FORMAT (format))
     return;
 
-  swfdec_text_attributes_copy (&text->default_attributes, &format->attr,
-      format->values_set);
+  swfdec_text_buffer_set_default_attributes (text->text, 
+      &format->attr, format->values_set);
 }
 
 SWFDEC_AS_NATIVE (104, 102, swfdec_text_field_movie_setTextFormat)

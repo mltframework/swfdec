@@ -522,7 +522,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
   // close remaining tags
   while (data.tags_open != NULL) {
     /* yes, this really appends to the default format */
-    swfdec_text_attributes_copy (&text->default_attributes,
+    swfdec_text_buffer_set_default_attributes (text->text,
 	&((ParserTag *)data.tags_open->data)->format->attr,
 	((ParserTag *)data.tags_open->data)->format->values_set);
     swfdec_text_field_movie_html_parse_close_tag (&data,

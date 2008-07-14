@@ -40,11 +40,12 @@ struct _SwfdecTextBuffer
 {
   GObject		object;
 
-  GString *		text;		/* the text in this buffer */
-  GSequence *		attributes;	/* the attributes that apply to this text */
+  GString *		text;			/* the text in this buffer */
+  GSequence *		attributes;		/* the attributes that apply to this text */
+  SwfdecTextAttributes	default_attributes;	/* the attributes applied to new text */
 
-  gsize			cursor_start;	/* byte offset into text for start of cursor */
-  gsize			cursor_end;	/* if some text is selected smaller or bigger */
+  gsize			cursor_start;		/* byte offset into text for start of cursor */
+  gsize			cursor_end;		/* if some text is selected smaller or bigger */
 };
 
 struct _SwfdecTextBufferClass
@@ -79,6 +80,12 @@ void			swfdec_text_buffer_set_attributes	(SwfdecTextBuffer *	buffer,
 guint			swfdec_text_buffer_get_unique		(SwfdecTextBuffer *	buffer, 
 								 gsize			start,
 								 gsize			length);
+const SwfdecTextAttributes *
+			swfdec_text_buffer_get_default_attributes(SwfdecTextBuffer *	buffer);
+void			swfdec_text_buffer_set_default_attributes(SwfdecTextBuffer *	buffer, 
+								 const SwfdecTextAttributes *attr,
+								 guint			mask);
+void			swfdec_text_buffer_reset_default_attributes(SwfdecTextBuffer *	buffer);
 
 SwfdecTextBufferIter *	swfdec_text_buffer_get_iter		(SwfdecTextBuffer *	buffer,
 								 gsize			pos);

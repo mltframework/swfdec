@@ -73,8 +73,6 @@ struct _SwfdecTextFieldMovie {
 
   const char *		variable;
 
-  SwfdecTextAttributes	default_attributes;
-
   gboolean		condense_white;
 
   SwfdecAsObject *	style_sheet;

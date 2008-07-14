@@ -821,7 +821,7 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   buffer = swfdec_text_buffer_new ();
-  swfdec_text_buffer_set_attributes (buffer, 0, 0, 
+  swfdec_text_buffer_set_default_attributes (buffer,
       &format->attr, format->values_set);
   swfdec_text_buffer_append_text (buffer, text);
   layout = swfdec_text_layout_new (buffer);

@@ -286,8 +286,6 @@ swfdec_text_field_movie_dispose (GObject *object)
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
-  swfdec_text_attributes_reset (&text->default_attributes);
-
   if (text->style_sheet) {
     if (SWFDEC_IS_STYLESHEET (text->style_sheet)) {
       g_signal_handlers_disconnect_matched (text->style_sheet, 
@@ -424,17 +422,17 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);
 
   if (text_field) {
-    text->default_attributes.color = text_field->color;
-    text->default_attributes.align = text_field->align;
+    text->text->default_attributes.color = text_field->color;
+    text->text->default_attributes.align = text_field->align;
     if (text_field->font != NULL)  {
-      text->default_attributes.font =
+      text->text->default_attributes.font =
 	swfdec_as_context_get_string (cx, text_field->font);
     }
-    text->default_attributes.size = text_field->size / 20;
-    text->default_attributes.left_margin = text_field->left_margin / 20;
-    text->default_attributes.right_margin = text_field->right_margin / 20;
-    text->default_attributes.indent = text_field->indent / 20;
-    text->default_attributes.leading = text_field->leading / 20;
+    text->text->default_attributes.size = text_field->size / 20;
+    text->text->default_attributes.left_margin = text_field->left_margin / 20;
+    text->text->default_attributes.right_margin = text_field->right_margin / 20;
+    text->text->default_attributes.indent = text_field->indent / 20;
+    text->text->default_attributes.leading = text_field->leading / 20;
   }
 
   // text
@@ -912,8 +910,6 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
 
   text->mouse_wheel_enabled = TRUE;
   text->character_pressed = -1;
-
-  swfdec_text_attributes_reset (&text->default_attributes);
 }
 
 static void
@@ -1114,13 +1110,11 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
 
   /* Flash 7 resets to default style here */
   if (html && SWFDEC_AS_OBJECT (text)->context->version < 8)
-    swfdec_text_attributes_reset (&text->default_attributes);
+    swfdec_text_buffer_reset_default_attributes (text->text);
 
   length = swfdec_text_buffer_get_length (text->text);
   if (length)
     swfdec_text_buffer_delete_text (text->text, 0, length);
-  swfdec_text_buffer_set_attributes (text->text, 0, 0, &text->default_attributes,
-      SWFDEC_TEXT_ATTRIBUTES_MASK);
 
   if (SWFDEC_AS_OBJECT (text)->context->version >= 7 &&
       text->style_sheet != NULL)

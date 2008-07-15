@@ -2115,7 +2115,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
 	  -1, G_MAXLONG, -1, G_PARAM_READABLE));
   g_object_class_install_property (object_class, PROP_CACHE_SIZE,
       g_param_spec_ulong ("cache-size", "cache size", "maximum cache size in bytes",
-	  0, G_MAXULONG, 50 * 1024 * 1024, G_PARAM_READWRITE));
+	  0, G_MAXULONG, 32 * 1024 * 1024, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
       g_param_spec_uint ("background-color", "background color", "ARGB color used to draw the background",
          0, G_MAXUINT, SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF), G_PARAM_READABLE));

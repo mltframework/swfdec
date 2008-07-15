@@ -710,10 +710,19 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (initObject == NULL || SWFDEC_IS_AS_OBJECT (initObject));
 
-  swfdec_movie_initialize (movie);
   if (initObject != NULL) {
-    swfdec_as_object_foreach (initObject,
-	swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
+    SwfdecAsContext *cx = SWFDEC_AS_OBJECT (movie)->context;
+    if (cx->version <= 6) {
+      swfdec_as_object_foreach (initObject,
+	  swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
+      swfdec_movie_initialize (movie);
+    } else {
+      swfdec_movie_initialize (movie);
+      swfdec_as_object_foreach (initObject,
+	  swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
+    }
+  } else {
+    swfdec_movie_initialize (movie);
   }
 
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {

@@ -1197,12 +1197,17 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
       SwfdecRenderer *renderer = swfdec_renderer_get (cr);
       cairo_surface_t *surface;
       cairo_pattern_t *pattern;
+      double alpha = 1.0;
       
-      if (swfdec_color_transform_is_mask (ctrans))
+      if (swfdec_color_transform_is_mask (ctrans)) {
 	surface = NULL;
-      else
+      } else if (swfdec_color_transform_is_alpha (ctrans)) {
+	surface = swfdec_image_create_surface (movie->image, renderer);
+	alpha = ctrans->aa / 256.0;
+      } else {
 	surface = swfdec_image_create_surface_transformed (movie->image,
 	  renderer, ctrans);
+      }
       if (surface) {
 	static const cairo_matrix_t matrix = { 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 0, 0 };
 	pattern = cairo_pattern_create_for_surface (surface);
@@ -1212,7 +1217,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
 	pattern = cairo_pattern_create_rgb (1.0, 0.0, 0.0);
       }
       cairo_set_source (cr, pattern);
-      cairo_paint (cr);
+      cairo_paint_with_alpha (cr, alpha);
       cairo_pattern_destroy (pattern);
       cairo_surface_destroy (surface);
     }

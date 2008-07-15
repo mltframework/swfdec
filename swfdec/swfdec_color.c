@@ -177,6 +177,23 @@ swfdec_color_transform_is_identity (const SwfdecColorTransform * trans)
 }
 
 /**
+ * swfdec_color_transform_is_alpha:
+ * @trans: a color transform
+ *
+ * Checks if the color transform is an alpha transform. Note that the identity
+ * transform is not considered an alpha transform.
+ *
+ * Returns: %TRUE if the color transform is an alpha transform
+ **/
+gboolean
+swfdec_color_transform_is_alpha (const SwfdecColorTransform * trans)
+{
+  return trans->mask == FALSE && 
+      trans->ra == 256 && trans->ga == 256 && trans->ba == 256 && trans->aa != 256 &&
+      trans->rb == 0 && trans->gb == 0 && trans->bb == 0 && trans->ab == 0;
+}
+
+/**
  * swfdec_color_transform_chain:
  * @dest: #SwfdecColorTransform to take the result
  * @last: a #SwfdecColorTransform

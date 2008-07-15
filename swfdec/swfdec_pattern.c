@@ -211,6 +211,32 @@ swfdec_image_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
   SWFDEC_DRAW_CLASS (swfdec_image_pattern_parent_class)->morph (dest, source, ratio);
 }
 
+static void
+swfdec_image_pattern_paint (SwfdecDraw *draw, cairo_t *cr, const SwfdecColorTransform *trans)
+{
+  cairo_pattern_t *pattern;
+
+  if (swfdec_color_transform_is_alpha (trans)) {
+    SwfdecColorTransform identity;
+    swfdec_color_transform_init_identity (&identity);
+    pattern = swfdec_pattern_get_pattern (SWFDEC_PATTERN (draw),
+	swfdec_renderer_get (cr), &identity);
+    if (pattern == NULL)
+      return;
+    cairo_save (cr);
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+    cairo_append_path (cr, &draw->path);
+    cairo_clip (cr);
+    cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
+    cairo_paint_with_alpha (cr, trans->aa / 256.0);
+    cairo_restore (cr);
+  } else {
+    SWFDEC_DRAW_CLASS (swfdec_image_pattern_parent_class)->paint (draw, cr, trans);
+  }
+}
+
 static cairo_pattern_t *
 swfdec_image_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
     const SwfdecColorTransform *trans)
@@ -236,6 +262,7 @@ static void
 swfdec_image_pattern_class_init (SwfdecImagePatternClass *klass)
 {
   SWFDEC_DRAW_CLASS (klass)->morph = swfdec_image_pattern_morph;
+  SWFDEC_DRAW_CLASS (klass)->paint = swfdec_image_pattern_paint;
 
   SWFDEC_PATTERN_CLASS (klass)->get_pattern = swfdec_image_pattern_get_pattern;
 }

@@ -1,10 +1,11 @@
 // makeswf -v 7 -r 1 -o text-field-replace-text-7.swf text-field-replace-text.as
 
 function check() {
-  str = "";
-  size = -1;
+  var fmt = t.getNewTextFormat();
+  var str = fmt.size + ": ";
+  var size = -1;
   for (var i = 0; i < t.length; i++) {
-    var fmt = t.getTextFormat (i);
+    fmt = t.getTextFormat (i);
     if (fmt.size != size) {
       size = fmt.size;
       str = str + size;
@@ -39,9 +40,13 @@ t.replaceText (-1, 5, "Hi");
 check ();
 t.replaceText (50, 45, "Hi");
 check ();
+t.replaceText (10, 10, "");
+check ();
 
 // will work:
 t.replaceText (3, 6, "Hi");
+check ();
+t.replaceText (1, 2, "");
 check ();
 t.replaceText (7, 8, "Hi");
 check ();
@@ -49,5 +54,7 @@ t.replaceText (50, 55, "Hi");
 check ();
 t.replaceText (10, 20, "Hi");
 check ();
+t.replaceText (0, 3, "Yo!");
+check ();
 
-loadMovie ("FSCommand:quit", "");
+getURL ("FSCommand:quit", "");

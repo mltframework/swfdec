@@ -1242,6 +1242,10 @@ swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
     return;
   if (end_index < start_index)
     return;
+  /* if there was a style sheet set when setting the text, modifications are
+   * not allowed */
+  if (text->style_sheet_input)
+    return;
 
   string = swfdec_text_buffer_get_text (text->text);
   start = end = g_utf8_strlen (string, -1);
@@ -1250,7 +1254,15 @@ swfdec_text_field_movie_replaceText (SwfdecAsContext *cx,
   start = g_utf8_offset_to_pointer (string, start) - string;
   end = g_utf8_offset_to_pointer (string, end) - string;
 
-  swfdec_text_field_movie_replace_text (text, start, end, str);
+  /* anyone explain to me why Flash 7 has this special case plz */
+  if (end > start && (str != SWFDEC_AS_STR_EMPTY || cx->version != 7))
+    swfdec_text_buffer_delete_text (text->text, start, end - start);
+
+  swfdec_text_buffer_insert_text (text->text, start, str);
+  /* yes, modifying text changes the default format */
+  swfdec_text_buffer_set_default_attributes (text->text,
+      swfdec_text_buffer_get_attributes (text->text, 0),
+      SWFDEC_TEXT_ATTRIBUTES_MASK);
 }
 
 // static

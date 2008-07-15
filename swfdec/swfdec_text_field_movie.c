@@ -1068,38 +1068,6 @@ swfdec_text_field_movie_get_text (SwfdecTextFieldMovie *text)
 }
 
 void
-swfdec_text_field_movie_replace_text (SwfdecTextFieldMovie *text,
-    guint start_index, guint end_index, const char *str)
-{
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (end_index <= swfdec_text_buffer_get_length (text->text));
-  g_return_if_fail (start_index <= end_index);
-  g_return_if_fail (str != NULL);
-
-  /* if there was a style sheet set when setting the text, modifications are
-   * not allowed */
-  if (text->style_sheet_input)
-    return;
-
-  if (end_index > start_index)
-    swfdec_text_buffer_delete_text (text->text, start_index, end_index - start_index);
-
-  if (start_index == swfdec_text_buffer_get_length (text->text) &&
-      start_index > 0) {
-    const SwfdecTextAttributes *attr = swfdec_text_buffer_get_attributes (text->text, 0);
-    if (SWFDEC_AS_OBJECT (text)->context->version < 8) {
-      SWFDEC_FIXME ("replaceText to the end of the TextField might use wrong text format on version 7");
-    }
-    swfdec_text_buffer_insert_text (text->text, start_index, str);
-    swfdec_text_buffer_set_attributes (text->text, start_index, 
-	swfdec_text_buffer_get_length (text->text) - start_index, attr, 
-	SWFDEC_TEXT_ATTRIBUTES_MASK);
-  } else {
-    swfdec_text_buffer_insert_text (text->text, start_index, str);
-  }
-}
-
-void
 swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
     gboolean html)
 {

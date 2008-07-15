@@ -110,10 +110,6 @@ void		swfdec_text_field_movie_set_listen_variable
 void		swfdec_text_field_movie_set_listen_variable_text 
 							(SwfdecTextFieldMovie *	text,
 							 const char *		value);
-void		swfdec_text_field_movie_replace_text	(SwfdecTextFieldMovie *	text,
-							 guint			start_index,
-							 guint			end_index,
-							 const char *		str);
 
 guint		swfdec_text_field_movie_get_hscroll_max (SwfdecTextFieldMovie *	text);
 

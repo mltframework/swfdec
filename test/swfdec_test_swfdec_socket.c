@@ -94,7 +94,7 @@ swfdec_test_swfdec_socket_finish (SwfdecTestPluginSocket *plugin, int error)
   if (error) {
     swfdec_stream_error (SWFDEC_STREAM (sock), "error %d", error);
   } else {
-    swfdec_stream_eof (SWFDEC_STREAM (sock));
+    swfdec_stream_close (SWFDEC_STREAM (sock));
   }
   g_object_unref (sock);
 }

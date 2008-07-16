@@ -21,10 +21,11 @@ SWFDEC_AUDIO_GET_CLASS
 <TITLE>SwfdecStream</TITLE>
 SwfdecStream
 SwfdecStreamClass
-swfdec_stream_open
 swfdec_stream_is_open
+swfdec_stream_is_complete
+swfdec_stream_open
 swfdec_stream_push
-swfdec_stream_eof
+swfdec_stream_close
 swfdec_stream_error
 swfdec_stream_errorv
 <SUBSECTION Standard>

@@ -87,9 +87,9 @@ struct _SwfdecStreamPrivate
 
 enum {
   PROP_0,
+  PROP_COMPLETE,
   PROP_ERROR,
   PROP_OPEN,
-  PROP_EOF
 };
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecStream, swfdec_stream, G_TYPE_OBJECT)
@@ -107,7 +107,7 @@ swfdec_stream_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_OPEN:
       g_value_set_boolean (value, stream->state == SWFDEC_STREAM_STATE_OPEN);
       break;
-    case PROP_EOF:
+    case PROP_COMPLETE:
       g_value_set_boolean (value, stream->state == SWFDEC_STREAM_STATE_CLOSED);
       break;
     default:
@@ -163,8 +163,8 @@ swfdec_stream_class_init (SwfdecStreamClass *klass)
   g_object_class_install_property (object_class, PROP_OPEN,
       g_param_spec_boolean ("open", "open", "TRUE while data is flowing",
 	  FALSE, G_PARAM_READABLE));
-  g_object_class_install_property (object_class, PROP_EOF,
-      g_param_spec_boolean ("eof", "eof", "TRUE when all data has been transmitted",
+  g_object_class_install_property (object_class, PROP_COMPLETE,
+      g_param_spec_boolean ("complete", "complete", "TRUE when all data has been transmitted",
 	  FALSE, G_PARAM_READABLE));
 }
 
@@ -413,6 +413,23 @@ swfdec_stream_is_open (SwfdecStream *stream)
 }
 
 /**
+ * swfdec_stream_is_complete:
+ * @stream: a #SwfdecStream
+ *
+ * Checks if all data has successfully been transmitted through the @stream 
+ * and it has been closed.
+ *
+ * Returns: %TRUE if the stream is completed, %FALSE otherwise.
+ **/
+gboolean
+swfdec_stream_is_complete (SwfdecStream *stream)
+{
+  g_return_val_if_fail (SWFDEC_IS_STREAM (stream), FALSE);
+
+  return stream->priv->state == SWFDEC_STREAM_STATE_CLOSED;
+}
+
+/**
  * swfdec_stream_push:
  * @stream: a #SwfdecStream
  * @buffer: new data to make available. The stream takes the reference
@@ -436,20 +453,20 @@ swfdec_stream_push (SwfdecStream *stream, SwfdecBuffer *buffer)
 }
 
 /**
- * swfdec_stream_eof:
+ * swfdec_stream_close:
  * @stream: a #SwfdecStream
  *
  * Indicates to @stream that no more data will follow. The stream must be open.
  **/
 void
-swfdec_stream_eof (SwfdecStream *stream)
+swfdec_stream_close (SwfdecStream *stream)
 {
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
   g_return_if_fail (stream->priv->state == SWFDEC_STREAM_STATE_OPEN);
 
   stream->priv->state = SWFDEC_STREAM_STATE_CLOSED;
   g_object_notify (G_OBJECT (stream), "open");
-  g_object_notify (G_OBJECT (stream), "eof");
+  g_object_notify (G_OBJECT (stream), "complete");
   swfdec_stream_queue_processing (stream);
 }
 

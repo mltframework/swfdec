@@ -105,7 +105,7 @@ swfdec_gtk_loader_finished (SoupMessage *msg, gpointer loader)
 {
   if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code)) {
     swfdec_gtk_loader_ensure_open (loader);
-    swfdec_stream_eof (loader);
+    swfdec_stream_close (loader);
   } else {
     if (!SWFDEC_GTK_LOADER (loader)->opened) {
       char *real_uri = soup_uri_to_string (soup_message_get_uri (msg), FALSE);
@@ -182,17 +182,12 @@ swfdec_gtk_loader_close (SwfdecStream *stream)
 {
   SwfdecGtkLoader *gtk = SWFDEC_GTK_LOADER (stream);
 
-  if (gtk->message) {
-    gboolean eof;
+  if (gtk->message && !swfdec_stream_is_complete (stream)) {
+    SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
 
-    g_object_get (stream, "eof", &eof, NULL);
-    if (!eof) {
-      SwfdecGtkLoaderClass *klass = SWFDEC_GTK_LOADER_GET_CLASS (gtk);
-
-      soup_session_cancel_message (klass->session, gtk->message, SOUP_STATUS_CANCELLED);
-      g_object_unref (gtk->message);
-      gtk->message = NULL;
-    }
+    soup_session_cancel_message (klass->session, gtk->message, SOUP_STATUS_CANCELLED);
+    g_object_unref (gtk->message);
+    gtk->message = NULL;
   }
 }
 

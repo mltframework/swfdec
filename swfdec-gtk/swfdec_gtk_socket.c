@@ -82,7 +82,7 @@ swfdec_gtk_socket_do_connect (SoupSocket *sock, guint status, gpointer gtk)
 static void
 swfdec_gtk_socket_do_disconnect (SoupSocket *sock, SwfdecGtkSocket *gtk)
 {
-  swfdec_stream_eof (SWFDEC_STREAM (gtk));
+  swfdec_stream_close (SWFDEC_STREAM (gtk));
 }
 
 static void

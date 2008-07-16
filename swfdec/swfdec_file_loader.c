@@ -79,7 +79,7 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
     swfdec_loader_set_size (loader, buffer->length);
     swfdec_stream_open (stream);
     swfdec_stream_push (stream, buffer);
-    swfdec_stream_eof (stream);
+    swfdec_stream_close (stream);
   }
   swfdec_url_free (url);
 }

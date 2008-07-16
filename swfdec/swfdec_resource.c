@@ -119,28 +119,19 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
   if (resource->clip_loader == NULL)
     return;
   cx = SWFDEC_AS_OBJECT (resource->clip_loader)->context;
-  /* This feels wrong. Why do we resolve here by real name? */
-  if (resource->target) {
-    SwfdecMovie *parent = swfdec_movie_resolve (resource->target->parent);
-    if (parent)
-      movie = swfdec_movie_get_by_name (parent, resource->target->name, FALSE);
-    else
-      movie = NULL;
-  } else {
-    movie = NULL;
-  }
-  if (movie == NULL && resource->movie != NULL) {
-    SWFDEC_DEBUG ("no movie, not emitting signal");
-    return;
-  }
-  if (name == SWFDEC_AS_STR_onLoadInit &&
-      movie != SWFDEC_MOVIE (resource->movie)) {
-    SWFDEC_INFO ("not emitting onLoadInit - the movie is different");
-    return;
-  }
 
   SWFDEC_AS_VALUE_SET_STRING (&vals[0], name);
-  if (movie) {
+  if (resource->movie) {
+    movie = swfdec_movie_resolve (SWFDEC_MOVIE (resource->movie));
+    if (movie == NULL) {
+      SWFDEC_DEBUG ("no movie, not emitting signal");
+      return;
+    }
+    if (name == SWFDEC_AS_STR_onLoadInit &&
+	movie != SWFDEC_MOVIE (resource->movie)) {
+      SWFDEC_INFO ("not emitting onLoadInit - the movie is different");
+      return;
+    }
     SWFDEC_AS_VALUE_SET_OBJECT (&vals[1], SWFDEC_AS_OBJECT (movie));
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (&vals[1]);
@@ -548,10 +539,14 @@ swfdec_resource_create_movie (SwfdecResource *resource, SwfdecResourceLoad *load
       movie = NULL;
   } else {
     int level = swfdec_player_get_level (player, load->target_string);
-    if (level >= 0)
+    if (level >= 0) {
+      movie = swfdec_player_get_movie_at_level (player, level);
+      if (movie)
+	swfdec_movie_remove (SWFDEC_MOVIE (movie));
       movie = swfdec_player_create_movie_at_level (player, resource, level);
-    else
+    } else {
       movie = NULL;
+    }
   }
   if (movie == NULL) {
     SWFDEC_WARNING ("target does not reference a movie, not loading %s", load->url);
@@ -580,13 +575,15 @@ swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
     resource->clip_loader = load->loader;
     resource->clip_loader_sandbox = load->sandbox;
   }
-  resource->target = SWFDEC_MOVIE (load->target_movie);
   resource->sandbox = load->sandbox;
   if (!allowed) {
     SWFDEC_WARNING ("SECURITY: no access to %s from %s",
 	load->url, swfdec_url_get_url (load->sandbox->url));
     /* FIXME: is replacing correct? */
-    swfdec_resource_emit_error (resource, SWFDEC_AS_STR_IllegalRequest);
+    if (load->target_movie) {
+      resource->movie = SWFDEC_SPRITE_MOVIE (swfdec_movie_resolve (SWFDEC_MOVIE (load->target_movie)));
+      swfdec_resource_emit_error (resource, SWFDEC_AS_STR_IllegalRequest);
+    }
     swfdec_player_unroot (player, load);
     return;
   }
@@ -699,15 +696,33 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
     }
   }
 
-  s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), target);
+  if (loader) {
+    if (SWFDEC_AS_VALUE_IS_NUMBER (target)) {
+      int i = swfdec_as_double_to_integer (SWFDEC_AS_VALUE_GET_NUMBER (target));
+      if (i < 0)
+	return FALSE;
+      s = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (loader)->context,
+	  g_strdup_printf ("_level%d", i));
+      swfdec_resource_load_internal (player, NULL, s, url, buffer, loader);
+      return TRUE;
+    } else if (SWFDEC_AS_VALUE_IS_STRING (target) ||
+	(SWFDEC_AS_VALUE_IS_OBJECT (target) && SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (target)))) {
+      s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), target);
+    } else {
+      SWFDEC_WARNING ("target does not reference a movie, not loading %s", url);
+      return FALSE;
+    }
+  } else {
+    s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), target);
+  }
+  if (swfdec_player_get_level (player, s) >= 0) {
+    swfdec_resource_load_internal (player, NULL, s, url, buffer, NULL);
+    return TRUE;
+  }
   movie = swfdec_player_get_movie_from_string (player, s);
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
     swfdec_resource_load_internal (player, SWFDEC_SPRITE_MOVIE (movie),
 	NULL, url, buffer, loader);
-    return TRUE;
-  }
-  if (swfdec_player_get_level (player, s) >= 0) {
-    swfdec_resource_load_internal (player, NULL, s, url, buffer, NULL);
     return TRUE;
   }
   SWFDEC_WARNING ("%s does not reference a movie, not loading %s", s, url);

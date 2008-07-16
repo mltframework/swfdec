@@ -2475,6 +2475,7 @@ swfdec_player_set_background_color (SwfdecPlayer *player, SwfdecColor bgcolor)
  * swfdec_player_get_level:
  * @player: a #SwfdecPlayer
  * @name: a name that is supposed to refer to a level
+ * @version: version to use for case sensitivity checks
  *
  * Checks if the given @name refers to a level, and if so, returns the level.
  * An example for such a name is "_level5". These strings are used to refer to
@@ -2483,7 +2484,7 @@ swfdec_player_set_background_color (SwfdecPlayer *player, SwfdecColor bgcolor)
  * Returns: the level referred to by @name or -1 if none
  **/
 int
-swfdec_player_get_level (SwfdecPlayer *player, const char *name)
+swfdec_player_get_level (SwfdecPlayer *player, const char *name, guint version)
 {
   char *end;
   gulong l;
@@ -2492,7 +2493,7 @@ swfdec_player_get_level (SwfdecPlayer *player, const char *name)
   g_return_val_if_fail (name != NULL, -1);
 
   /* check name starts with "_level" */
-  if (swfdec_strncmp (SWFDEC_AS_CONTEXT (player)->version, name, "_level", 6) != 0)
+  if (swfdec_strncmp (version, name, "_level", 6) != 0)
     return -1;
   name += 6;
   /* extract depth from rest string (or fail if it's not a depth) */

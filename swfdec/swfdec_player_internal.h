@@ -247,7 +247,8 @@ void		swfdec_player_stop_sounds	(SwfdecPlayer *		player,
 						 gpointer		data);
 void		swfdec_player_stop_all_sounds	(SwfdecPlayer *		player);
 gboolean	swfdec_player_get_level		(SwfdecPlayer *		player,
-						 const char *		name);
+						 const char *		name,
+						 guint			version);
 SwfdecSpriteMovie *
 		swfdec_player_get_movie_at_level(SwfdecPlayer *		player,
 						 int			level);

@@ -950,7 +950,7 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
   guint version = SWFDEC_AS_OBJECT (movie)->context->version;
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
 
-  i = swfdec_player_get_level (player, name);
+  i = swfdec_player_get_level (player, name, version);
   if (i >= 0)
     return SWFDEC_MOVIE (swfdec_player_get_movie_at_level (player, i));
 

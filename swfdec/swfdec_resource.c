@@ -538,7 +538,7 @@ swfdec_resource_create_movie (SwfdecResource *resource, SwfdecResourceLoad *load
     else
       movie = NULL;
   } else {
-    int level = swfdec_player_get_level (player, load->target_string);
+    int level = swfdec_player_get_level (player, load->target_string, 7);
     if (level >= 0) {
       movie = swfdec_player_get_movie_at_level (player, level);
       if (movie)
@@ -642,7 +642,7 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
   }
 
   /* LAUNCH command (aka getURL) */
-  if (load->target_string && swfdec_player_get_level (player, load->target_string) < 0) {
+  if (load->target_string && swfdec_player_get_level (player, load->target_string, 7) < 0) {
     swfdec_player_launch (player, load->url, load->target_string, load->buffer);
     swfdec_player_unroot (player, load);
     return;
@@ -715,8 +715,11 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
   } else {
     s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), target);
   }
-  if (swfdec_player_get_level (player, s) >= 0) {
-    swfdec_resource_load_internal (player, NULL, s, url, buffer, NULL);
+  if (swfdec_player_get_level (player, s, SWFDEC_AS_CONTEXT (player)->version) >= 0) {
+    /* lowercase the string, so we can do case insensitive level lookups later on */
+    char *tmp = g_ascii_strdown (s, -1);
+    swfdec_resource_load_internal (player, NULL, tmp, url, buffer, NULL);
+    g_free (tmp);
     return TRUE;
   }
   movie = swfdec_player_get_movie_from_string (player, s);

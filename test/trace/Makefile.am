@@ -3726,6 +3726,10 @@ EXTRA_DIST = \
 	system-capabilities-query-7.swf.trace \
 	system-capabilities-query-8.swf \
 	system-capabilities-query-8.swf.trace \
+	system-capabilities-query.as \
+	system-onstatus-netstream.c \
+	system-onstatus-netstream.swf \
+	system-onstatus-netstream.swf.trace \
 	targetpath.as \
 	targetpath-5.swf \
 	targetpath-5.swf.trace \

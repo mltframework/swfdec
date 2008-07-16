@@ -1744,6 +1744,15 @@ EXTRA_DIST = \
 	load-4.swf.trace \
 	load-5.swf \
 	load-5.swf.trace \
+	loadClip-levels-5.swf \
+	loadClip-levels-5.swf.trace \
+	loadClip-levels-6.swf \
+	loadClip-levels-6.swf.trace \
+	loadClip-levels-7.swf \
+	loadClip-levels-7.swf.trace \
+	loadClip-levels-8.swf \
+	loadClip-levels-8.swf.trace \
+	loadClip-levels.as \
 	loadmovie-case.as \
 	loadmovie-case-5.swf \
 	loadmovie-case-5.swf.trace \

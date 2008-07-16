@@ -947,27 +947,12 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
 {
   GList *walk;
   int i;
-  gulong l;
   guint version = SWFDEC_AS_OBJECT (movie)->context->version;
-  char *end;
   SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
 
-  if ((version >= 7 && g_str_has_prefix (name, "_level")) ||
-      (version < 7 && strncasecmp (name, "_level", 6) == 0)) {
-    errno = 0;
-    l = strtoul (name + 6, &end, 10);
-    if (errno != 0 || *end != 0 || l > G_MAXINT)
-      return NULL;
-    i = l - 16384;
-    for (walk = player->priv->roots; walk; walk = walk->next) {
-      SwfdecMovie *cur = walk->data;
-      if (cur->depth < i)
-	continue;
-      if (cur->depth == i)
-	return cur;
-      break;
-    }
-  }
+  i = swfdec_player_get_level (player, name);
+  if (i >= 0)
+    return SWFDEC_MOVIE (swfdec_player_get_movie_at_level (player, i));
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;

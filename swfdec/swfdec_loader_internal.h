@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 /* swfdec_stream.c */
 SwfdecBufferQueue *	swfdec_stream_get_queue		(SwfdecStream *		stream);
 const char *		swfdec_stream_describe		(SwfdecStream *		stream);
-void			swfdec_stream_close		(SwfdecStream *		stream);
+void			swfdec_stream_ensure_closed	(SwfdecStream *		stream);
 void			swfdec_stream_set_target	(SwfdecStream *		stream,
 							 SwfdecStreamTarget *	target);
 

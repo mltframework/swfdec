@@ -647,7 +647,7 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
 
   if (stream->loader) {
     SwfdecStream *lstream = SWFDEC_STREAM (stream->loader);
-    swfdec_stream_close (lstream);
+    swfdec_stream_ensure_closed (lstream);
     swfdec_stream_set_target (lstream, NULL);
     g_object_unref (lstream);
   }

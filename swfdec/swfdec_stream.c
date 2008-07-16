@@ -249,7 +249,7 @@ swfdec_stream_queue_processing (SwfdecStream *stream)
 }
 
 void
-swfdec_stream_close (SwfdecStream *stream)
+swfdec_stream_ensure_closed (SwfdecStream *stream)
 {
   SwfdecStreamPrivate *priv;
   SwfdecStreamClass *klass;
@@ -257,7 +257,7 @@ swfdec_stream_close (SwfdecStream *stream)
   g_return_if_fail (SWFDEC_IS_STREAM (stream));
 
   priv = stream->priv;
-  if (priv->state == SWFDEC_STREAM_STATE_ERROR &&
+  if (priv->state == SWFDEC_STREAM_STATE_ERROR ||
       priv->state == SWFDEC_STREAM_STATE_CLOSED)
     return;
 

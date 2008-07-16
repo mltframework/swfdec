@@ -330,5 +330,5 @@ swfdec_xml_socket_close (SwfdecAsContext *cx, SwfdecAsObject *object,
   xml = swfdec_xml_socket_get (object);
   if (xml == NULL)
     return;
-  swfdec_stream_close (SWFDEC_STREAM (xml->socket));
+  swfdec_stream_ensure_closed (SWFDEC_STREAM (xml->socket));
 }

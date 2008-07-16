@@ -177,7 +177,7 @@ SwfdecAsFunction *swfdec_as_object_add_constructor
 						 guint			min_args,
 						 SwfdecAsObject *	prototype);
 
-void		swfdec_as_object_call		(SwfdecAsObject *       object,
+gboolean	swfdec_as_object_call		(SwfdecAsObject *       object,
 						 const char *		name,
 						 guint			argc,
 						 SwfdecAsValue *	argv,

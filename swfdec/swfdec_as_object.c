@@ -1229,31 +1229,35 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
  * <informalexample><programlisting>
  * @return_value = @object.@name (@argv[0], ..., @argv[argc-1]);
  * </programlisting></informalexample>
+ *
+ * Returns: %TRUE if @object had a function with the given name, %FALSE otherwise
  **/
-void
+gboolean
 swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc, 
     SwfdecAsValue *argv, SwfdecAsValue *return_value)
 {
   SwfdecAsValue tmp;
   SwfdecAsFunction *fun;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (name != NULL);
-  g_return_if_fail (argc == 0 || argv != NULL);
-  g_return_if_fail (object->context->global != NULL); /* for SwfdecPlayer */
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), TRUE);
+  g_return_val_if_fail (name != NULL, TRUE);
+  g_return_val_if_fail (argc == 0 || argv != NULL, TRUE);
+  g_return_val_if_fail (object->context->global != NULL, TRUE); /* for SwfdecPlayer */
 
   if (return_value)
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
   swfdec_as_object_get_variable (object, name, &tmp);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
-    return;
+    return FALSE;
   fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&tmp);
   if (!SWFDEC_IS_AS_FUNCTION (fun))
-    return;
+    return FALSE;
   swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
   if (swfdec_as_context_is_aborted (object->context))
-    return;
+    return TRUE;
   swfdec_as_context_run (object->context);
+
+  return TRUE;
 }
 
 /**

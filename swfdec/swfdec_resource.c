@@ -135,6 +135,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
     SWFDEC_AS_VALUE_SET_OBJECT (&vals[1], SWFDEC_AS_OBJECT (movie));
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (&vals[1]);
+    movie = NULL;
   }
   if (progress) {
     SwfdecResource *res;

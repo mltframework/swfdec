@@ -58,7 +58,21 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_level, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), SWFDEC_AS_STR_onStatus, 1, &val, NULL);
+  if (!swfdec_as_object_call (SWFDEC_AS_OBJECT (stream),
+        SWFDEC_AS_STR_onStatus, 1, &val, NULL)) {
+    // if it's an error message and the stream object didn't have onStatus
+    // handler, call System.onStatus
+    if (level == SWFDEC_AS_STR_error) {
+      SwfdecAsValue system;
+
+      swfdec_as_object_get_variable (SWFDEC_AS_OBJECT
+          (stream)->context->global, SWFDEC_AS_STR_System, &system);
+      if (SWFDEC_AS_VALUE_IS_OBJECT (&system)) {
+        swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (&system),
+              SWFDEC_AS_STR_onStatus, 1, &val, NULL);
+      }
+    }
+  }
   swfdec_sandbox_unuse (stream->sandbox);
 }
 

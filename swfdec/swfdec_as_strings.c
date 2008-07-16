@@ -522,5 +522,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("decodedFrames")
   SWFDEC_AS_CONSTANT_STRING ("liveDelay")
   SWFDEC_AS_CONSTANT_STRING ("videoCodec")
+  SWFDEC_AS_CONSTANT_STRING ("System")
   /* add more here */
 ;

@@ -223,7 +223,7 @@ swfdec_buffer_get_super (SwfdecBuffer *buffer)
 
 /**
  * swfdec_buffer_new_from_file:
- * @filename: file to read
+ * @filename: file to read, in filename encoding
  * @error: return location for a #GError or %NULL
  *
  * Creates a buffer containing the contents of the given file. If loading the

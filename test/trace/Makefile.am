@@ -4267,4 +4267,11 @@ EXTRA_DIST = \
 	xml-socket-properties-8.swf \
 	xml-socket-properties-8.swf.trace \
 	xscale.swf \
-	xscale.swf.trace
+	xscale.swf.trace \
+	ибражы-6.swf \
+	ибражы-6.swf.trace \
+	ибражы-7.swf \
+	ибражы-7.swf.trace \
+	ибражы-8.swf \
+	ибражы-8.swf.trace \
+	ибражы.as

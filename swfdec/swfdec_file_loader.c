@@ -44,7 +44,7 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
 {
   SwfdecStream *stream = SWFDEC_STREAM (loader);
   GError *error = NULL;
-  char *real, *unescape;
+  char *real, *unescape, *concat;
   SwfdecURL *url;
 
   if (swfdec_url_path_is_relative (url_string)) {
@@ -70,11 +70,19 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
 
   unescape = g_uri_unescape_string (swfdec_url_get_path (url), NULL);
   if (swfdec_url_get_query (url)) {
-    real = g_strconcat ("/", unescape, "?", swfdec_url_get_query (url), NULL);
+    concat = g_strconcat ("/", unescape, "?", swfdec_url_get_query (url), NULL);
   } else {
-    real = g_strconcat ("/", unescape, NULL);
+    concat = g_strconcat ("/", unescape, NULL);
   }
   g_free (unescape);
+  real = g_filename_from_utf8 (concat, -1, NULL, NULL, &error);
+  g_free (concat);
+  if (real == NULL) {
+    swfdec_stream_error (stream, "%s", error->message);
+    g_error_free (error);
+    swfdec_url_free (url);
+    return;
+  }
   buffer = swfdec_buffer_new_from_file (real, &error);
   g_free (real);
   if (buffer == NULL) {

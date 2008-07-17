@@ -38,6 +38,9 @@
  * will want to use swfdec_loader_get_url() to get its url and then use the 
  * functions in this section to access it.
  *
+ * Note that URLs inside Swfdec mirror the behavior of Flash and will therefore
+ * not miror standards behavior, but the behavior of Flash.
+ *
  * @see_also: #SwfdecLoader
  */
 

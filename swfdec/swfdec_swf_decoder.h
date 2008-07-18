@@ -68,6 +68,7 @@ struct _SwfdecSwfDecoder
   gboolean		has_metadata;	/* TRUE if this file contains metadata */
   gboolean		protection;   	/* TRUE is this file is protected and may not be edited */
   char *		password;     	/* MD5'd password to open for editing or NULL if may not be opened */
+  char *		metadata;	/* NULL if unset or contents of Metadata tag (supposed to be RDF) */
 
   SwfdecBuffer *	jpegtables;	/* jpeg tables for DefineJPEG compressed jpeg files */
 };

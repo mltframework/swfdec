@@ -374,6 +374,28 @@ tag_func_sound_stream_head (SwfdecSwfDecoder *s, guint tag)
   return tag_func_enqueue (s, tag);
 }
 
+static int
+tag_func_metadata (SwfdecSwfDecoder *s, guint tag)
+{
+  char *meta;
+
+  meta = swfdec_bits_get_string (&s->b, s->version);
+  if (meta == NULL) {
+    SWFDEC_ERROR ("invalid metadata contents");
+    return SWFDEC_STATUS_OK;
+  }
+  SWFDEC_LOG ("metadata: %s", meta);
+
+  if (s->metadata) {
+    SWFDEC_ERROR ("Duplicated metadata tag, ignoring");
+    /* FIXME: or use this one? */
+    g_free (meta);
+  } else {
+    s->metadata = meta;
+  }
+  return SWFDEC_STATUS_OK;
+}
+
 struct tag_func_struct
 {
   const char *name;
@@ -448,7 +470,7 @@ static struct tag_func_struct tag_funcs[] = {
   [SWFDEC_TAG_CSMTEXTSETTINGS] = {"CSMTextSettings", NULL, 0},
   [SWFDEC_TAG_DEFINEFONT3] = {"DefineFont3", tag_func_define_font_2, 0},
   [SWFDEC_TAG_AVM2DECL] = {"AVM2Decl", NULL, SWFDEC_TAG_DEFINE_SPRITE },
-  [SWFDEC_TAG_METADATA] = {"Metadata", NULL, 0},
+  [SWFDEC_TAG_METADATA] = {"Metadata", tag_func_metadata, 0},
   [SWFDEC_TAG_DEFINESCALINGGRID] = {"DefineScalingGrid", NULL, 0},
   [SWFDEC_TAG_AVM2ACTION] = {"AVM2Action", NULL, SWFDEC_TAG_DEFINE_SPRITE },
   [SWFDEC_TAG_DEFINESHAPE4] = {"DefineShape4", tag_define_shape_4, 0},

@@ -62,7 +62,7 @@ typedef enum {
   SWFDEC_TAG_DEFINEMOVIE          = 38,
   SWFDEC_TAG_DEFINESPRITE         = 39,      /* Define a sequence of tags that describe the behavior of a sprite. */
   SWFDEC_TAG_NAMECHARACTER        = 40,      /* Name a character definition, character id and a string, (used for buttons, bitmaps, sprites and sounds). */
-  SWFDEC_TAG_SERIALNUMBER         = 41,
+  SWFDEC_TAG_PRODUCTINFO	  = 41,
   SWFDEC_TAG_GENERATORTEXT        = 42,      /* contains an id */
   SWFDEC_TAG_FRAMELABEL           = 43,      /* A string label for the current frame. */
   SWFDEC_TAG_SOUNDSTREAMHEAD2     = 45,      /* For lossless streaming sound, should not have needed this... */

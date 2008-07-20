@@ -133,14 +133,6 @@ void		swfdec_as_context_maybe_gc	(SwfdecAsContext *	context);
 
 void		swfdec_as_context_run		(SwfdecAsContext *	context);
 
-void		swfdec_as_context_eval		(SwfdecAsContext *	context,
-						 SwfdecAsObject *	obj,
-						 const char *		str,
-						 SwfdecAsValue *	val);
-void		swfdec_as_context_eval_set	(SwfdecAsContext *	context,
-						 SwfdecAsObject *	obj,
-						 const char *		str,
-						 const SwfdecAsValue *	val);
 
 G_END_DECLS
 #endif

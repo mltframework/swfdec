@@ -429,8 +429,6 @@ swfdec_as_context_maybe_gc
 swfdec_as_context_run
 swfdec_as_context_throw
 swfdec_as_context_catch
-swfdec_as_context_eval
-swfdec_as_context_eval_set
 swfdec_as_context_get_time
 swfdec_as_context_get_frame
 swfdec_as_context_is_constructing

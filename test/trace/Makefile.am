@@ -1685,6 +1685,17 @@ EXTRA_DIST = \
 	implements-7.swf.trace \
 	implements-8.swf \
 	implements-8.swf.trace \
+	invalid-utf8-4.swf \
+	invalid-utf8-4.swf.trace \
+	invalid-utf8-5.swf \
+	invalid-utf8-5.swf.trace \
+	invalid-utf8-6.swf \
+	invalid-utf8-6.swf.trace \
+	invalid-utf8-7.swf \
+	invalid-utf8-7.swf.trace \
+	invalid-utf8-8.swf \
+	invalid-utf8-8.swf.trace \
+	invalid-utf8.as \
 	invalid-variable-name.as \
 	invalid-variable-name-5.swf \
 	invalid-variable-name-5.swf.trace \

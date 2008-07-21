@@ -590,7 +590,7 @@ swfdec_as_array_new (SwfdecAsContext *context)
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
     swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
 
-  swfdec_as_array_set_length (SWFDEC_AS_ARRAY (ret), 0);
+  swfdec_as_array_set_length_object (ret, 0);
 
   return ret;
 }

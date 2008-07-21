@@ -935,7 +935,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
   guint i;
   SwfdecAsValue tmp_val;
   guint tmp_flags;
-  SwfdecAsObject *tmp_pobject, *cur;
+  SwfdecAsObject *tmp_pobject, *cur, *resolve;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
@@ -948,11 +948,20 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     pobject = &tmp_pobject;
 
   cur = object;
+  resolve = NULL;
   for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && cur != NULL; i++) {
     klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
     if (klass->get (cur, object, variable, value, flags)) {
       *pobject = cur;
       return TRUE;
+    }
+    if (resolve == NULL) {
+      SwfdecAsVariable *var =
+	swfdec_as_object_hash_lookup (cur, SWFDEC_AS_STR___resolve);
+
+      if (var != NULL && (object->context->version <= 6 ||
+	    SWFDEC_AS_VALUE_IS_OBJECT (&var->value)))
+	resolve = cur;
     }
     cur = swfdec_as_object_get_prototype_internal (cur);
   }
@@ -962,6 +971,30 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     *flags = 0;
     *pobject = NULL;
     return FALSE;
+  }
+  if (variable != SWFDEC_AS_STR___resolve && resolve != NULL) {
+    SwfdecAsValue argv;
+    SwfdecAsVariable *var;
+    SwfdecAsFunction *fun;
+
+    *flags = 0;
+    *pobject = resolve;
+    SWFDEC_AS_VALUE_SET_UNDEFINED (value);
+
+    var = swfdec_as_object_hash_lookup (resolve, SWFDEC_AS_STR___resolve);
+    g_assert (var != NULL);
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&var->value))
+      return FALSE;
+    fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&var->value);
+    if (!SWFDEC_IS_AS_FUNCTION (fun))
+      return FALSE;
+    SWFDEC_AS_VALUE_SET_STRING (&argv, variable);
+    swfdec_as_function_call (fun, resolve, 1, &argv, value);
+    if (swfdec_as_context_is_aborted (resolve->context))
+      return TRUE;
+    swfdec_as_context_run (resolve->context);
+
+    return TRUE;
   }
   //SWFDEC_WARNING ("no such variable %s", variable);
   SWFDEC_AS_VALUE_SET_UNDEFINED (value);

@@ -2363,6 +2363,17 @@ EXTRA_DIST = \
 	object-resolve-7.swf.trace \
 	object-resolve-8.swf \
 	object-resolve-8.swf.trace \
+	object-resolve-propflags.as \
+	object-resolve-propflags-5.swf \
+	object-resolve-propflags-5.swf.trace \
+	object-resolve-propflags-6.swf \
+	object-resolve-propflags-6.swf.trace \
+	object-resolve-propflags-7.swf \
+	object-resolve-propflags-7.swf.trace \
+	object-resolve-propflags-8.swf \
+	object-resolve-propflags-8.swf.trace \
+	object-resolve-propflags-9.swf \
+	object-resolve-propflags-9.swf.trace \
 	object-valueof.as \
 	object-valueof-5.swf \
 	object-valueof-5.swf.trace \

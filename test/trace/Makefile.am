@@ -2354,6 +2354,15 @@ EXTRA_DIST = \
 	object-properties-7.swf.trace \
 	object-properties-8.swf \
 	object-properties-8.swf.trace \
+	object-resolve.as \
+	object-resolve-5.swf \
+	object-resolve-5.swf.trace \
+	object-resolve-6.swf \
+	object-resolve-6.swf.trace \
+	object-resolve-7.swf \
+	object-resolve-7.swf.trace \
+	object-resolve-8.swf \
+	object-resolve-8.swf.trace \
 	object-valueof.as \
 	object-valueof-5.swf \
 	object-valueof-5.swf.trace \

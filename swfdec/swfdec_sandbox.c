@@ -208,8 +208,7 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
   } else {
     SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
     guint size = sizeof (SwfdecSandbox);
-    if (!swfdec_as_context_use_mem (context, size))
-      size = 0;
+    swfdec_as_context_use_mem (context, size);
 
     sandbox = g_object_new (SWFDEC_TYPE_SANDBOX, NULL);
     swfdec_as_object_add (SWFDEC_AS_OBJECT (sandbox), context, size);

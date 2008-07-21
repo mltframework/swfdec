@@ -221,8 +221,7 @@ swfdec_xml_socket_create (SwfdecAsObject *target, SwfdecSandbox *sandbox, const 
   SwfdecXmlSocket *xml;
   SwfdecSocket *sock;
 
-  if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecXmlSocket)))
-    return NULL;
+  swfdec_as_context_use_mem (cx, sizeof (SwfdecXmlSocket));
 
   SWFDEC_FIXME ("implement security checks please");
   sock = swfdec_player_create_socket (SWFDEC_PLAYER (cx), hostname, port);

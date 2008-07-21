@@ -169,8 +169,8 @@ swfdec_as_context_abort (SwfdecAsContext *context, const char *reason)
 {
   g_return_if_fail (context);
 
-  SWFDEC_ERROR ("%s", reason);
   if (context->state != SWFDEC_AS_CONTEXT_ABORTED) {
+    SWFDEC_ERROR ("abort: %s", reason);
     context->state = SWFDEC_AS_CONTEXT_ABORTED;
     g_object_notify (G_OBJECT (context), "aborted");
   }
@@ -218,14 +218,16 @@ swfdec_as_context_try_use_mem (SwfdecAsContext *context, gsize bytes)
  *
  * Returns: %TRUE if the memory could be allocated. %FALSE on OOM.
  **/
-gboolean
+void
 swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
 {
-  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
-  g_return_val_if_fail (bytes > 0, FALSE);
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (bytes > 0);
 
   /* FIXME: Don't forget to abort on OOM */
-  return swfdec_as_context_try_use_mem (context, bytes);
+  if (!swfdec_as_context_try_use_mem (context, bytes)) {
+    swfdec_as_context_abort (context, "Out of memory");
+  }
 }
 
 /**
@@ -619,8 +621,10 @@ swfdec_as_context_create_string (SwfdecAsContext *context, const char *string, g
 {
   char *new;
   
-  if (!swfdec_as_context_use_mem (context, sizeof (char) * (2 + len)))
+  if (!swfdec_as_context_try_use_mem (context, sizeof (char) * (2 + len))) {
+    swfdec_as_context_abort (context, "Out of memory");
     return SWFDEC_AS_STR_EMPTY;
+  }
 
   new = g_slice_alloc (2 + len);
   memcpy (&new[1], string, len);

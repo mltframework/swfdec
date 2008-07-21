@@ -159,8 +159,7 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
   if (context->version <= 5)
     return;
 
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper)))
-    return;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper));
   super = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
   frame->super = SWFDEC_AS_OBJECT (super);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (super), context, sizeof (SwfdecAsSuper));

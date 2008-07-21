@@ -842,8 +842,6 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
 
   obj= swfdec_as_object_new_empty (cx);
-  if (obj== NULL)
-    return;
 
   swfdec_movie_update (movie);
   if (swfdec_rect_is_empty (&movie->extents)) {
@@ -936,12 +934,8 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player)
 
   movie = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_MovieClip, 0, NULL, 0));
-  if (movie == NULL)
-    return;
   SWFDEC_SANDBOX (context->global)->MovieClip = movie;
   proto = swfdec_as_object_new (context);
-  if (!proto)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (movie,
       SWFDEC_AS_STR_prototype, &val, SWFDEC_AS_VARIABLE_HIDDEN |

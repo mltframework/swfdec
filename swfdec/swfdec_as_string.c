@@ -361,8 +361,6 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   str = swfdec_as_string_object_to_string (cx, object);
   arr = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
-  if (arr == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
@@ -414,8 +412,6 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   str = swfdec_as_string_object_to_string (cx, object);
   arr = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
-  if (arr == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {

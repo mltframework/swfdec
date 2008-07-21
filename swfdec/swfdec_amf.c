@@ -97,8 +97,6 @@ swfdec_amf_parse_object (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsVal
   SwfdecAsObject *object;
   
   object = swfdec_as_object_new (context);
-  if (object == NULL)
-    return FALSE;
   if (!swfdec_amf_parse_properties (context, bits, object))
     return FALSE;
   SWFDEC_AS_VALUE_SET_OBJECT (val, object);
@@ -113,8 +111,6 @@ swfdec_amf_parse_mixed_array (SwfdecAsContext *context, SwfdecBits *bits, Swfdec
   
   len = swfdec_bits_get_bu32 (bits);
   array = swfdec_as_array_new (context);
-  if (array == NULL)
-    return FALSE;
   if (!swfdec_amf_parse_properties (context, bits, array))
     return FALSE;
   SWFDEC_AS_VALUE_SET_OBJECT (val, array);
@@ -131,8 +127,6 @@ swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValu
   
   len = swfdec_bits_get_bu32 (bits);
   array = swfdec_as_array_new (context);
-  if (array == NULL)
-    return FALSE;
   for (i = 0; i < len; i++) {
     SwfdecAsValue tmp;
     type = swfdec_bits_get_u8 (bits);

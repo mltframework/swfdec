@@ -990,11 +990,6 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
   }
 
   node->child_nodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
-
-  if (node->children == NULL || node->attributes == NULL ||
-      node->child_nodes == NULL) {
-    node->valid = FALSE;
-  }
 }
 
 static void
@@ -1059,8 +1054,7 @@ swfdec_xml_node_new_no_properties (SwfdecAsContext *context,
   g_return_val_if_fail (value != NULL, NULL);
 
   size = sizeof (SwfdecXmlNode);
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
+  swfdec_as_context_use_mem (context, size);
   node = g_object_new (SWFDEC_TYPE_XML_NODE, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (node), context, size);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XMLNode, &val);

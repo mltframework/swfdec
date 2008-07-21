@@ -405,8 +405,6 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 
   /* create _listeners array */
   array = swfdec_as_array_new (cx);
-  if (array == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (movie));
   swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);

@@ -47,10 +47,6 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
 
   swfdec_sandbox_use (stream->sandbox);
   object = swfdec_as_object_new (SWFDEC_AS_OBJECT (stream)->context);
-  if (!object) {
-    swfdec_sandbox_unuse (stream->sandbox);
-    return;
-  }
   SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
   SWFDEC_AS_VALUE_SET_STRING (&val, code);
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_code, &val);
@@ -567,24 +563,6 @@ static void
 swfdec_net_stream_init (SwfdecNetStream *stream)
 {
   stream->buffer_time = 100; /* msecs */
-}
-
-SwfdecNetStream *
-swfdec_net_stream_new (SwfdecNetConnection *conn)
-{
-  SwfdecAsContext *context;
-  SwfdecNetStream *stream;
-  
-  g_return_val_if_fail (SWFDEC_IS_NET_CONNECTION (conn), NULL);
-
-  context = SWFDEC_AS_OBJECT (conn)->context;
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecNetStream)))
-    return NULL;
-  stream = g_object_new (SWFDEC_TYPE_NET_STREAM, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (stream), context, sizeof (SwfdecNetStream));
-  stream->conn = conn;
-
-  return stream;
 }
 
 static void

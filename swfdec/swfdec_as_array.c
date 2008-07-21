@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -571,7 +571,7 @@ swfdec_as_array_init (SwfdecAsArray *array)
  *
  * Creates a new #SwfdecAsArray. 
  *
- * Returns: the new array or %NULL on OOM.
+ * Returns: the new array
  **/
 SwfdecAsObject *
 swfdec_as_array_new (SwfdecAsContext *context)
@@ -581,8 +581,7 @@ swfdec_as_array_new (SwfdecAsContext *context)
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray)))
-    return NULL;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray));
 
   ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
@@ -1373,8 +1372,7 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!cx->frame->construct) {
     SwfdecAsValue val;
-    if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecAsArray)))
-      return;
+    swfdec_as_context_use_mem (cx, sizeof (SwfdecAsArray));
     object = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
     swfdec_as_object_add (object, cx, sizeof (SwfdecAsArray));
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Array, &val);

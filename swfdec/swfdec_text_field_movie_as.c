@@ -1550,8 +1550,7 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   if (!cx->frame->construct) {
     SwfdecAsValue val;
-    if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecAsObject)))
-      return;
+    swfdec_as_context_use_mem (cx, sizeof (SwfdecAsObject));
     object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
     swfdec_as_object_add (object, cx, sizeof (SwfdecAsObject));
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);

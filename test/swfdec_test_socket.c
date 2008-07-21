@@ -207,8 +207,7 @@ swfdec_test_socket_new (SwfdecTestTest *test, SwfdecTestPluginSocket *plugin)
 
   cx = SWFDEC_AS_OBJECT (test)->context;
 
-  if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecTestSocket)))
-    return NULL;
+  swfdec_as_context_use_mem (cx, sizeof (SwfdecTestSocket));
   new = g_object_new (SWFDEC_TYPE_TEST_SOCKET, NULL);
   swfdec_as_object_add (new, cx, sizeof (SwfdecTestSocket));
   swfdec_as_object_get_variable (cx->global, 

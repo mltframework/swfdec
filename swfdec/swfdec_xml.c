@@ -947,8 +947,7 @@ swfdec_xml_new_no_properties (SwfdecAsContext *context, const char *str,
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
   size = sizeof (SwfdecXml);
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
+  swfdec_as_context_use_mem (context, size);
   xml = g_object_new (SWFDEC_TYPE_XML, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (xml), context, size);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XML, &val);

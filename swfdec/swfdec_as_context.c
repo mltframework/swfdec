@@ -227,6 +227,9 @@ swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)
   /* FIXME: Don't forget to abort on OOM */
   if (!swfdec_as_context_try_use_mem (context, bytes)) {
     swfdec_as_context_abort (context, "Out of memory");
+    /* add the memory anyway, as we're gonna make use of it. */
+    context->memory += bytes;
+    context->memory_since_gc += bytes;
   }
 }
 

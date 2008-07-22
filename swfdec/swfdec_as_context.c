@@ -215,8 +215,6 @@ swfdec_as_context_try_use_mem (SwfdecAsContext *context, gsize bytes)
  * keeps track of the memory that script code consumes. If too much memory is
  * in use, this function may decide to stop the script engine with an out of
  * memory error.
- *
- * Returns: %TRUE if the memory could be allocated. %FALSE on OOM.
  **/
 void
 swfdec_as_context_use_mem (SwfdecAsContext *context, gsize bytes)

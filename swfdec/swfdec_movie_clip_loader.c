@@ -55,8 +55,6 @@ swfdec_movie_clip_loader_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   array = swfdec_as_array_new (cx);
-  if (array == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
@@ -112,8 +110,6 @@ swfdec_movie_clip_loader_getProgress (SwfdecAsContext *cx, SwfdecAsObject *objec
   if (movie == NULL)
     return;
   ret = swfdec_as_object_new_empty (cx);
-  if (ret == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (rval, ret);
   resource = swfdec_movie_get_own_resource (movie);
   if (resource == NULL || resource->decoder == NULL) {

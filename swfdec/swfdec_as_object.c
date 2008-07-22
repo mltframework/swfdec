@@ -208,8 +208,7 @@ swfdec_as_object_hash_create (SwfdecAsObject *object, const char *variable, guin
 
   if (!swfdec_as_variable_name_is_valid (variable))
     return NULL;
-  if (!swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable)))
-    return NULL;
+  swfdec_as_context_use_mem (object->context, sizeof (SwfdecAsVariable));
   var = g_slice_new0 (SwfdecAsVariable);
   var->flags = flags;
   g_hash_table_insert (object->properties, (gpointer) variable, var);
@@ -265,9 +264,8 @@ swfdec_as_watch_new (SwfdecAsFunction *function)
 {
   SwfdecAsWatch *watch;
 
-  if (!swfdec_as_context_use_mem (SWFDEC_AS_OBJECT (function)->context, 
-	sizeof (SwfdecAsWatch)))
-    return NULL;
+  swfdec_as_context_use_mem (SWFDEC_AS_OBJECT (function)->context, 
+      sizeof (SwfdecAsWatch));
 
   watch = g_slice_new (SwfdecAsWatch);
   watch->refcount = 1;
@@ -714,7 +712,7 @@ swfdec_as_object_init (SwfdecAsObject *object)
  * swfdec_as_object_set_constructor() on the returned object yourself.
  * You may want to use swfdec_as_object_new() instead.
  *
- * Returns: A new #SwfdecAsObject adde to @context or %NULL on OOM.
+ * Returns: A new #SwfdecAsObject added to @context
  **/
 SwfdecAsObject *
 swfdec_as_object_new_empty (SwfdecAsContext *context)
@@ -723,8 +721,7 @@ swfdec_as_object_new_empty (SwfdecAsContext *context)
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsObject)))
-    return NULL;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecAsObject));
   object = g_object_new (SWFDEC_TYPE_AS_OBJECT, NULL);
   swfdec_as_object_add (object, context, sizeof (SwfdecAsObject));
   return object;
@@ -737,7 +734,7 @@ swfdec_as_object_new_empty (SwfdecAsContext *context)
  * Allocates a new Object. This does the same as the Actionscript code 
  * "new Object()".
  *
- * Returns: the new object or NULL on out of memory.
+ * Returns: the new object
  **/
 SwfdecAsObject *
 swfdec_as_object_new (SwfdecAsContext *context)
@@ -750,8 +747,6 @@ swfdec_as_object_new (SwfdecAsContext *context)
   g_assert (context->Object_prototype);
   
   object = swfdec_as_object_new_empty (context);
-  if (object == NULL)
-    return NULL;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
@@ -1160,7 +1155,7 @@ swfdec_as_object_do_nothing (SwfdecAsContext *cx, SwfdecAsObject *object,
  * Adds @native as a variable named @name to @object. The newly added variable
  * will not be enumerated.
  *
- * Returns: the newly created #SwfdecAsFunction or %NULL on error.
+ * Returns: the newly created #SwfdecAsFunction
  **/
 SwfdecAsFunction *
 swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType type,
@@ -1190,7 +1185,7 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
  * Adds @native as a constructor named @name to @object. The newly added variable
  * will not be enumerated.
  *
- * Returns: the newly created #SwfdecAsFunction or %NULL on error.
+ * Returns: the newly created #SwfdecAsFunction
  **/
 SwfdecAsFunction *
 swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GType type,
@@ -1208,8 +1203,6 @@ swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GTyp
   if (!native)
     native = swfdec_as_object_do_nothing;
   function = swfdec_as_native_function_new (object->context, name, native, min_args, prototype);
-  if (function == NULL)
-    return NULL;
   if (type != 0)
     swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (function), type);
   if (construct_type != 0)
@@ -1347,8 +1340,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);
   }
-  if (!swfdec_as_context_use_mem (context, size))
-    return;
+  swfdec_as_context_use_mem (context, size);
 
   new = g_object_new (type, NULL);
   swfdec_as_object_add (new, context, size);
@@ -1763,12 +1755,8 @@ swfdec_as_object_init_context (SwfdecAsContext *context)
   SwfdecAsObject *object, *proto;
 
   proto = swfdec_as_object_new_empty (context);
-  if (!proto)
-    return;
   object = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_Object, 0, swfdec_as_object_construct, 0));
-  if (!object)
-    return;
   context->Object = object;
   context->Object_prototype = proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);

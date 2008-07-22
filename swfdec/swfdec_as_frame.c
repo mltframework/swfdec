@@ -394,8 +394,7 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   g_return_val_if_fail (script != NULL, NULL);
   
   size = sizeof (SwfdecAsFrame) + sizeof (SwfdecAsValue) * script->n_registers;
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
+  swfdec_as_context_use_mem (context, size);
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
   frame->script = swfdec_script_ref (script);
@@ -425,8 +424,7 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   
   size = sizeof (SwfdecAsFrame);
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
+  swfdec_as_context_use_mem (context, size);
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
   SWFDEC_DEBUG ("new native frame");
   swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
@@ -697,8 +695,6 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {
     SwfdecAsFrame *next;
     args = swfdec_as_array_new (context);
-    if (!args)
-      goto out;
     for (cur = swfdec_as_stack_iterator_init_arguments (&iter, frame); cur != NULL;
 	cur = swfdec_as_stack_iterator_next (&iter)) {
       swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);

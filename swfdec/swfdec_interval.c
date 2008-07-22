@@ -123,8 +123,7 @@ swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat,
 
   context = SWFDEC_AS_CONTEXT (player);
   size = sizeof (SwfdecInterval) + n_args * sizeof (SwfdecAsValue);
-  if (!swfdec_as_context_use_mem (context, size))
-    return 0;
+  swfdec_as_context_use_mem (context, size);
   interval = g_object_new (SWFDEC_TYPE_INTERVAL, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (interval), context, size);
 

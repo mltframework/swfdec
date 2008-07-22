@@ -1399,9 +1399,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
   }
   /* register it to the VM */
   /* FIXME: It'd be nice if we'd not overuse memory here when calling this function from a script */
-  if (!swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), size)) {
-    size = 0;
-  }
+  swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), size);
   g_object_ref (movie);
   /* set essential properties */
   movie->parent = parent;

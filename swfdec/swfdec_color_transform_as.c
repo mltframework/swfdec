@@ -371,8 +371,6 @@ swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
   g_return_val_if_fail (transform != NULL, NULL);
 
   size = sizeof (SwfdecColorTransformAs);
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
   transform_as = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (transform_as), context, size);
 

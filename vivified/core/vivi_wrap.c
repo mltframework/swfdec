@@ -65,8 +65,7 @@ vivi_wrap_object (ViviApplication *app, SwfdecAsObject *object)
     return wrap;
 
   cx = SWFDEC_AS_CONTEXT (app);
-  if (!swfdec_as_context_use_mem (cx, sizeof (ViviWrap)))
-    return NULL;
+  swfdec_as_context_use_mem (cx, sizeof (ViviWrap));
   wrap = g_object_new (VIVI_TYPE_WRAP, NULL);
   swfdec_as_object_add (wrap, cx, sizeof (ViviWrap));
   /* frames are special */

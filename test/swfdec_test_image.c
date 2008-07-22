@@ -34,8 +34,7 @@ swfdec_test_image_new (SwfdecAsContext *context, guint width, guint height)
   SwfdecAsValue val;
   SwfdecAsObject *ret;
 
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecTestImage)))
-    return NULL;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecTestImage));
 
   ret = g_object_new (SWFDEC_TYPE_TEST_IMAGE, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecTestImage));

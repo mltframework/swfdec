@@ -817,8 +817,6 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FORMAT, &format, "s", &text);
 
   obj = swfdec_as_object_new_empty (cx);
-  if (obj == NULL)
-    return;
 
   buffer = swfdec_text_buffer_new ();
   swfdec_text_buffer_set_default_attributes (buffer,
@@ -1074,8 +1072,7 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecTextFormat)))
-    return NULL;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecTextFormat));
 
   ret = g_object_new (SWFDEC_TYPE_TEXT_FORMAT, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecTextFormat));

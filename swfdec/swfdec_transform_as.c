@@ -208,8 +208,7 @@ swfdec_transform_as_new (SwfdecAsContext *context, SwfdecMovie *target)
   g_return_val_if_fail (SWFDEC_IS_MOVIE (target), NULL);
 
   size = sizeof (SwfdecTransformAs);
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
+  swfdec_as_context_use_mem (context, size);
   transform = g_object_new (SWFDEC_TYPE_TRANSFORM_AS, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (transform), context, size);
 

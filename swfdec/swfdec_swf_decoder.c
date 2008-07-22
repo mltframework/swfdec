@@ -68,9 +68,13 @@ swfdec_swf_decoder_dispose (GObject *object)
 
   if (s->jpegtables) {
     swfdec_buffer_unref (s->jpegtables);
+    s->jpegtables = NULL;
   }
 
   g_free (s->password);
+  s->password = NULL;
+  g_free (s->metadata);
+  s->metadata = NULL;
 
   G_OBJECT_CLASS (swfdec_swf_decoder_parent_class)->dispose (object);
 }

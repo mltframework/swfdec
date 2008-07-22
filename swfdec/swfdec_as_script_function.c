@@ -124,19 +124,14 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
   g_return_val_if_fail (script != NULL, NULL);
 
   context = target->context;
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsScriptFunction)))
-    return NULL;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecAsScriptFunction));
   fun = g_object_new (SWFDEC_TYPE_AS_SCRIPT_FUNCTION, NULL);
-  if (fun == NULL)
-    return NULL;
   fun->scope_chain = g_slist_copy ((GSList *) scope_chain);
   fun->script = script;
   fun->target = target;
   swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsScriptFunction));
   /* set prototype */
   proto = swfdec_as_object_new_empty (context);
-  if (proto == NULL)
-    return NULL;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (fun),
       SWFDEC_AS_STR_prototype, &val,

@@ -34,8 +34,7 @@ swfdec_test_buffer_new (SwfdecAsContext *context, SwfdecBuffer *buffer)
   SwfdecAsValue val;
   SwfdecAsObject *ret;
 
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecTestBuffer)))
-    return NULL;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecTestBuffer));
 
   ret = g_object_new (SWFDEC_TYPE_TEST_BUFFER, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecTestBuffer));
@@ -208,8 +207,6 @@ swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   }
 
   buffer = swfdec_test_buffer_new (cx, b);
-  if (buffer == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (retval, buffer);
 }
 
@@ -234,8 +231,6 @@ swfdec_test_buffer_sub (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   b = swfdec_buffer_new_subbuffer (buffer->buffer, offset, length);
   o = swfdec_test_buffer_new (cx, b);
-  if (o == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
 }
 

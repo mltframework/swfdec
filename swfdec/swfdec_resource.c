@@ -447,8 +447,7 @@ swfdec_resource_new (SwfdecPlayer *player, SwfdecLoader *loader, const char *var
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
   size = sizeof (SwfdecResource);
-  if (!swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), size))
-    size = 0;
+  swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), size);
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (resource), SWFDEC_AS_CONTEXT (player), size);
   resource->version = 8;
@@ -565,10 +564,7 @@ swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
   SwfdecResource *resource;
   SwfdecLoader *loader;
   
-  if (!swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource))) {
-    swfdec_player_unroot (player, load);
-    return;
-  }
+  swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource));
   resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
   swfdec_as_object_add (SWFDEC_AS_OBJECT (resource), SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource));
   resource->version = 8;

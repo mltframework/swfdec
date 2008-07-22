@@ -182,8 +182,6 @@ swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (thisp == NULL) {
     thisp = swfdec_as_object_new_empty (cx);
-    if (thisp == NULL)
-      return;
   }
   if (argc > 0) {
     argc--;
@@ -205,11 +203,8 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "|O", &thisp);
 
-  if (thisp == NULL) {
+  if (thisp == NULL)
     thisp = swfdec_as_object_new_empty (cx);
-    if (thisp == NULL)
-      return;
-  }
 
   if (argc > 1 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
     int i;
@@ -223,8 +218,10 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     if (length > 0) {
       /* FIXME: find a smarter way to do this, like providing argv not as an array */
-      if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecAsValue) * length))
+      if (!swfdec_as_context_try_use_mem (cx, sizeof (SwfdecAsValue) * length)) {
+	swfdec_as_context_abort (cx, "too many arguments to Function.apply");
 	return;
+      }
       argv_pass = g_malloc (sizeof (SwfdecAsValue) * length);
 
       for (i = 0; i < length; i++) {
@@ -255,16 +252,12 @@ swfdec_as_function_init_context (SwfdecAsContext *context)
 
   function = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
       SWFDEC_AS_STR_Function, 0, NULL, 0));
-  if (!function)
-    return;
   swfdec_as_object_set_variable_flags (context->global, SWFDEC_AS_STR_Function, SWFDEC_AS_VARIABLE_VERSION_6_UP);
   context->Function = function;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   proto = swfdec_as_object_new_empty (context);
-  if (!proto)
-    return;
   context->Function_prototype = proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (function, SWFDEC_AS_STR_prototype,

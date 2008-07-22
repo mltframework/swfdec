@@ -326,8 +326,6 @@ swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
     h = test->plugin.height;
   }
   image = swfdec_test_image_new (cx, w, h);
-  if (image == NULL)
-    return;
 
   if (test->plugin.screenshot) {
     test->plugin.screenshot (&test->plugin, 
@@ -367,8 +365,6 @@ swfdec_test_test_get_launched (SwfdecAsContext *cx, SwfdecAsObject *object,
   len = swfdec_buffer_queue_get_depth (test->launched);
   buffer = swfdec_buffer_queue_peek (test->launched, len);
   o = swfdec_test_buffer_new (cx, buffer);
-  if (o == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
 }
 
@@ -413,8 +409,6 @@ swfdec_test_test_get_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   len = swfdec_buffer_queue_get_depth (test->trace);
   buffer = swfdec_buffer_queue_peek (test->trace, len);
   o = swfdec_test_buffer_new (cx, buffer);
-  if (o == NULL)
-    return;
   SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
 }
 

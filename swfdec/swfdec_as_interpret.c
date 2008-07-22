@@ -318,10 +318,13 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
       case 0: /* string */
 	{
 	  char *s = swfdec_bits_get_string (&bits, cx->version);
-	  if (s == NULL)
-	    return;
-	  SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
-	      swfdec_as_context_give_string (cx, s));
+	  if (s == NULL) {
+	    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
+		SWFDEC_AS_STR_EMPTY);
+	  } else {
+	    SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_push (cx), 
+		swfdec_as_context_give_string (cx, s));
+	  }
 	  break;
 	}
       case 1: /* float */
@@ -1789,8 +1792,6 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
   }
 
   object = swfdec_as_object_new (cx);
-  if (object == NULL)
-    return;
   for (i = 0; i < n_args; i++) {
     const char *s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
     swfdec_as_object_set_variable (object, s, swfdec_as_stack_peek (cx, 1));
@@ -1810,8 +1811,6 @@ swfdec_action_init_array (SwfdecAsContext *cx, guint action, const guint8 *data,
   n = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
   swfdec_as_stack_pop (cx);
   array = swfdec_as_array_new (cx);
-  if (array == NULL)
-    return;
   /* NB: we can't increase the stack here, as the number can easily be MAXINT */
   for (i = 0; i < n && swfdec_as_stack_get_size (cx) > 0; i++) {
     swfdec_as_stack_ensure_size (cx, 1);
@@ -2373,8 +2372,6 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   }
   super = SWFDEC_AS_VALUE_GET_OBJECT (superclass);
   prototype = swfdec_as_object_new_empty (cx);
-  if (prototype == NULL)
-    goto fail;
   swfdec_as_object_get_variable (super, SWFDEC_AS_STR_prototype, &proto);
   swfdec_as_object_set_variable_and_flags (prototype, SWFDEC_AS_STR___proto__, &proto,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

@@ -121,7 +121,7 @@ gboolean	swfdec_as_context_catch		(SwfdecAsContext *	context,
 
 gboolean	swfdec_as_context_try_use_mem	(SwfdecAsContext *	context,
 						 gsize			bytes);
-gboolean	swfdec_as_context_use_mem	(SwfdecAsContext *	context,
+void		swfdec_as_context_use_mem	(SwfdecAsContext *	context,
 						 gsize			bytes);
 void		swfdec_as_context_unuse_mem   	(SwfdecAsContext *	context,
 						 gsize			bytes);
@@ -133,14 +133,6 @@ void		swfdec_as_context_maybe_gc	(SwfdecAsContext *	context);
 
 void		swfdec_as_context_run		(SwfdecAsContext *	context);
 
-void		swfdec_as_context_eval		(SwfdecAsContext *	context,
-						 SwfdecAsObject *	obj,
-						 const char *		str,
-						 SwfdecAsValue *	val);
-void		swfdec_as_context_eval_set	(SwfdecAsContext *	context,
-						 SwfdecAsObject *	obj,
-						 const char *		str,
-						 const SwfdecAsValue *	val);
 
 G_END_DECLS
 #endif

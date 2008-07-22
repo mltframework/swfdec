@@ -1016,8 +1016,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!cx->frame->construct) {
     SwfdecAsValue val;
-    if (!swfdec_as_context_use_mem (cx, sizeof (SwfdecAsDate)))
-      return;
+    swfdec_as_context_use_mem (cx, sizeof (SwfdecAsDate));
     object = g_object_new (SWFDEC_TYPE_AS_DATE, NULL);
     swfdec_as_object_add (object, cx, sizeof (SwfdecAsDate));
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Date, &val);
@@ -1171,8 +1170,7 @@ swfdec_as_date_new (SwfdecAsContext *context, double milliseconds,
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsDate)))
-    return NULL;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecAsDate));
 
   ret = g_object_new (SWFDEC_TYPE_AS_DATE, NULL);
   swfdec_as_object_add (ret, context, sizeof (SwfdecAsDate));

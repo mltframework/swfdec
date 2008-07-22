@@ -84,6 +84,7 @@ main (int argc, char *argv[])
   ViviCodeAssembler *assembler;
   int version = 8;
   int rate = 15;
+  int optimize = 2;
   char *size_string = NULL;
   SwfdecRect size_rect = { 0, 0, 2000, 3000 };
   const char *output_filename = NULL;
@@ -91,10 +92,11 @@ main (int argc, char *argv[])
   GError *error = NULL;
 
   GOptionEntry options[] = {
-    { "version", 'v', 0, G_OPTION_ARG_INT, &version, "target version", NULL },
-    { "rate", 'r', 0, G_OPTION_ARG_INT, &rate, "the frame rate of the resulting Flash file", NULL },
-    { "size", 's', 0, G_OPTION_ARG_STRING, &size_string, "the size give as WxH of the resulting Flash file", NULL },
-    { "output", 'o', 0, G_OPTION_ARG_FILENAME, &output_filename, "output filename", NULL },
+    { "version", 'v', 0, G_OPTION_ARG_INT, &version, "target version", "N" },
+    { "rate", 'r', 0, G_OPTION_ARG_INT, &rate, "the frame rate of the resulting Flash file", "N" },
+    { "size", 's', 0, G_OPTION_ARG_STRING, &size_string, "the size give as WxH of the resulting Flash file", "WxH" },
+    { "output", 'o', 0, G_OPTION_ARG_FILENAME, &output_filename, "output filename", "FILE" },
+    { "optimize", 'O', 0, G_OPTION_ARG_INT, &optimize, "optimization level", "LEVEL" },
     { "asm", 'a', 0, G_OPTION_ARG_NONE, &use_asm, "output assembler instead of a Flash file", NULL },
     { NULL }
   };
@@ -187,6 +189,12 @@ main (int argc, char *argv[])
 
   assembler = g_object_ref (vivi_code_compiler_get_assembler (compiler));
   g_object_unref (compiler);
+
+  if (optimize > 0) {
+    vivi_code_assembler_pool (assembler);
+    if (optimize > 1)
+      vivi_code_assembler_merge_push (assembler, G_MAXUINT);
+  }
 
   if (use_asm) {
     ViviCodePrinter *printer = vivi_code_text_printer_new ();

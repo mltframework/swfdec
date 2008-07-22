@@ -47,8 +47,6 @@ struct _SwfdecNetConnectionClass {
 
 GType			swfdec_net_connection_get_type	(void);
 
-SwfdecNetConnection *	swfdec_net_connection_new	(SwfdecAsContext *	context);
-
 void			swfdec_net_connection_connect	(SwfdecNetConnection *	conn,
 							 const char *		url);
 

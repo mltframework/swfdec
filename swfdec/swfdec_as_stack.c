@@ -40,8 +40,7 @@ swfdec_as_stack_new (SwfdecAsContext *context, guint n_elements)
   SwfdecAsStack *stack;
 
   size = sizeof (SwfdecAsStack) + n_elements * sizeof (SwfdecAsValue);
-  if (!swfdec_as_context_use_mem (context, size))
-    return NULL;
+  swfdec_as_context_use_mem (context, size);
 
   stack = g_slice_alloc (size);
   stack->n_elements = n_elements;

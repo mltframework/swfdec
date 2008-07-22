@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_constant_pool.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 
@@ -73,15 +74,14 @@ swfdec_constant_pool_new (SwfdecAsContext *context, SwfdecBuffer *buffer, guint 
   size = sizeof (SwfdecConstantPool) + (MAX (1, n) - 1) * sizeof (char *);
   pool = g_slice_alloc0 (size);
   pool->n_strings = n;
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < n && swfdec_bits_left (&bits); i++) {
     pool->strings[i] = swfdec_bits_get_string (&bits, version);
     if (pool->strings[i] == NULL) {
-      SWFDEC_ERROR ("not enough strings available");
-      g_slice_free1 (size, pool);
-      return NULL;
-    }
-    if (context)
+      SWFDEC_ERROR ("constant pool index %u invalid, using empty string instead.", i);
+      pool->strings[i] = context ? (char *) SWFDEC_AS_STR_EMPTY : g_strdup ("");
+    } else if (context) {
       pool->strings[i] = (char *) swfdec_as_context_give_string (context, pool->strings[i]);
+    }
   }
   if (swfdec_bits_left (&bits)) {
     SWFDEC_WARNING ("constant pool didn't consume whole buffer (%u bytes leftover)", swfdec_bits_left (&bits) / 8);

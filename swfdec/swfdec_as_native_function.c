@@ -131,7 +131,7 @@ swfdec_as_native_function_init (SwfdecAsNativeFunction *function)
  * will just redurn undefined. You might want to use 
  * swfdec_as_object_add_function() instead of this function.
  *
- * Returns: a new #SwfdecAsFunction or %NULL on OOM
+ * Returns: a new #SwfdecAsFunction
  **/
 SwfdecAsFunction *
 swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
@@ -143,11 +143,8 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
   g_return_val_if_fail (native != NULL, NULL);
   g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
-  if (!swfdec_as_context_use_mem (context, sizeof (SwfdecAsNativeFunction)))
-    return NULL;
+  swfdec_as_context_use_mem (context, sizeof (SwfdecAsNativeFunction));
   fun = g_object_new (SWFDEC_TYPE_AS_NATIVE_FUNCTION, NULL);
-  if (fun == NULL)
-    return NULL;
   fun->native = native;
   fun->min_args = min_args;
   fun->name = g_strdup (name);

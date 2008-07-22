@@ -69,11 +69,17 @@ swfdec_file_loader_load (SwfdecLoader *loader, SwfdecPlayer *player,
   }
 
   unescape = g_uri_unescape_string (swfdec_url_get_path (url), NULL);
+  /* Swfdec ignores query strings, just like Flash 9.0.124.0 and onwards.
+   * Might be a useful quirk to have though */
+#ifdef QUIRKS_MODE
   if (swfdec_url_get_query (url)) {
     concat = g_strconcat ("/", unescape, "?", swfdec_url_get_query (url), NULL);
   } else {
     concat = g_strconcat ("/", unescape, NULL);
   }
+#else
+  concat = g_strconcat ("/", unescape, NULL);
+#endif
   g_free (unescape);
   real = g_filename_from_utf8 (concat, -1, NULL, NULL, &error);
   g_free (concat);

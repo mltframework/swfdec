@@ -396,6 +396,15 @@ EXTRA_DIST = \
 	bevel-filter-properties-7.swf.trace \
 	bevel-filter-properties-8.swf \
 	bevel-filter-properties-8.swf.trace \
+	bitmapdata-getters-5.swf \
+	bitmapdata-getters-5.swf.trace \
+	bitmapdata-getters-6.swf \
+	bitmapdata-getters-6.swf.trace \
+	bitmapdata-getters-7.swf \
+	bitmapdata-getters-7.swf.trace \
+	bitmapdata-getters-8.swf \
+	bitmapdata-getters-8.swf.trace \
+	bitmapdata-getters.as \
 	bitmap-filter-properties.as \
 	bitmap-filter-properties-5.swf \
 	bitmap-filter-properties-5.swf.trace \

@@ -33,14 +33,24 @@
 G_DEFINE_TYPE (SwfdecBitmapData, swfdec_bitmap_data, SWFDEC_TYPE_AS_OBJECT)
 
 static void
+swfdec_bitmap_data_clear (SwfdecBitmapData *bitmap)
+{
+  if (bitmap->surface == NULL)
+    return;
+
+  swfdec_as_context_unuse_mem (SWFDEC_AS_OBJECT (bitmap)->context, 4 * 
+      cairo_image_surface_get_width (bitmap->surface) *
+      cairo_image_surface_get_height (bitmap->surface));
+  cairo_surface_destroy (bitmap->surface);
+  bitmap->surface = NULL;
+}
+
+static void
 swfdec_bitmap_data_dispose (GObject *object)
 {
   SwfdecBitmapData *bitmap = SWFDEC_BITMAP_DATA (object);
 
-  if (bitmap->surface) {
-    cairo_surface_destroy (bitmap->surface);
-    bitmap->surface = NULL;
-  }
+  swfdec_bitmap_data_clear (bitmap);
 
   G_OBJECT_CLASS (swfdec_bitmap_data_parent_class)->dispose (object);
 }
@@ -362,10 +372,7 @@ swfdec_bitmap_data_do_dispose (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
-  if (bitmap->surface) {
-    cairo_surface_destroy (bitmap->surface);
-    bitmap->surface = NULL;
-  }
+  swfdec_bitmap_data_clear (bitmap);
 }
 
 SWFDEC_AS_NATIVE (1100, 23, swfdec_bitmap_data_generateFilterRect)
@@ -402,7 +409,12 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii|bi", 
       &w, &h, &transparent, &color);
   
-  if (w > 2880 || h > 2880)
+  if (w > 2880 || w <= 0 || h > 2880 || h <= 0) {
+    SWFDEC_FIXME ("the constructor should return undefined here");
+    return;
+  }
+
+  if (!swfdec_as_context_try_use_mem (cx, w * h * 4))
     return;
 
   bitmap->surface = cairo_image_surface_create (

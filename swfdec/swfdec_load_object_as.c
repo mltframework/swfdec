@@ -182,6 +182,8 @@ swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   const char *url, *target, *method, *data;
+  guint header_count;
+  char **header_names, **header_values;
   SwfdecAsValue val;
   SwfdecBuffer *buffer;
 
@@ -201,9 +203,10 @@ swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
 	strlen (data));
   }
 
-  SWFDEC_FIXME ("XML/LoadVars.send: Support for sending headers missing");
-
-  swfdec_player_launch (SWFDEC_PLAYER (cx), url, target, buffer);
+  swfdec_load_object_as_get_headers (object, &header_count, &header_names,
+      &header_values);
+  swfdec_player_launch_with_headers (SWFDEC_PLAYER (cx), url, target, buffer,
+      header_count, header_names, header_values);
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }

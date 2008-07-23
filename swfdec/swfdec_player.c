@@ -2559,7 +2559,7 @@ swfdec_player_get_movie_at_level (SwfdecPlayer *player, int level)
 void
 swfdec_player_launch_with_headers (SwfdecPlayer *player, const char *url,
     const char *target, SwfdecBuffer *data, guint header_count,
-    const char **header_names, const char **header_values)
+    char **header_names, char **header_values)
 {
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (url != NULL);

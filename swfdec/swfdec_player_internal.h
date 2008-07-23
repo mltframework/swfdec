@@ -264,8 +264,8 @@ void		swfdec_player_launch_with_headers (SwfdecPlayer *	player,
 						 const char *		target,
 						 SwfdecBuffer *		data,
 						 guint			header_count,
-						 const char **		header_names,
-						 const char **		header_values);
+						 char **		header_names,
+						 char **		header_values);
 void		swfdec_player_stage_to_global	(SwfdecPlayer *		player,
 						 double *		x,
 						 double *		y);

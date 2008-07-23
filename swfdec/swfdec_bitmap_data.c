@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007 Pekka Lampila <pekka.lampila@iki.fi>
+ *		 2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,8 +22,41 @@
 #include "config.h"
 #endif
 
+#include "swfdec_bitmap_data.h"
+#include "swfdec_as_context.h"
 #include "swfdec_as_internal.h"
+#include "swfdec_as_native_function.h"
+#include "swfdec_as_strings.h"
+#include "swfdec_color.h"
 #include "swfdec_debug.h"
+
+G_DEFINE_TYPE (SwfdecBitmapData, swfdec_bitmap_data, SWFDEC_TYPE_AS_OBJECT)
+
+static void
+swfdec_bitmap_data_dispose (GObject *object)
+{
+  SwfdecBitmapData *bitmap = SWFDEC_BITMAP_DATA (object);
+
+  if (bitmap->surface) {
+    cairo_surface_destroy (bitmap->surface);
+    bitmap->surface = NULL;
+  }
+
+  G_OBJECT_CLASS (swfdec_bitmap_data_parent_class)->dispose (object);
+}
+
+static void
+swfdec_bitmap_data_class_init (SwfdecBitmapDataClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->dispose = swfdec_bitmap_data_dispose;
+}
+
+static void
+swfdec_bitmap_data_init (SwfdecBitmapData *transform)
+{
+}
 
 // static
 SWFDEC_AS_NATIVE (1100, 40, swfdec_bitmap_data_loadBitmap)
@@ -39,7 +73,12 @@ void
 swfdec_bitmap_data_get_width (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.width (get)");
+  SwfdecBitmapData *bitmap;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
+
+  SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? 
+      cairo_image_surface_get_width (bitmap->surface) : -1);
 }
 
 SWFDEC_AS_NATIVE (1100, 101, swfdec_bitmap_data_set_width)
@@ -55,7 +94,12 @@ void
 swfdec_bitmap_data_get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.height (get)");
+  SwfdecBitmapData *bitmap;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
+
+  SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? 
+      cairo_image_surface_get_width (bitmap->surface) : -1);
 }
 
 SWFDEC_AS_NATIVE (1100, 103, swfdec_bitmap_data_set_height)
@@ -71,7 +115,37 @@ void
 swfdec_bitmap_data_get_rectangle (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.rectangle (get)");
+  SwfdecBitmapData *bitmap;
+  SwfdecAsObject *o;
+  SwfdecAsValue args[4];
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
+
+  SWFDEC_AS_VALUE_SET_INT (ret, -1);
+  if (bitmap->surface == NULL)
+    return;
+  
+  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_flash, args);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (args))
+    return;
+  o = SWFDEC_AS_VALUE_GET_OBJECT (args);
+  swfdec_as_object_get_variable (o, SWFDEC_AS_STR_geom, args);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (args))
+    return;
+  o = SWFDEC_AS_VALUE_GET_OBJECT (args);
+  swfdec_as_object_get_variable (o, SWFDEC_AS_STR_Rectangle, args);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (args))
+    return;
+  o = SWFDEC_AS_VALUE_GET_OBJECT (args);
+  if (!SWFDEC_IS_AS_FUNCTION (o))
+    return;
+
+  SWFDEC_AS_VALUE_SET_INT (&args[0], 0);
+  SWFDEC_AS_VALUE_SET_INT (&args[1], 0);
+  SWFDEC_AS_VALUE_SET_INT (&args[2], cairo_image_surface_get_width (bitmap->surface));
+  SWFDEC_AS_VALUE_SET_INT (&args[3], cairo_image_surface_get_width (bitmap->surface));
+  swfdec_as_object_create (SWFDEC_AS_FUNCTION (o), 4, args, ret);
+  swfdec_as_context_run (cx);
 }
 
 SWFDEC_AS_NATIVE (1100, 105, swfdec_bitmap_data_set_rectangle)
@@ -88,7 +162,16 @@ swfdec_bitmap_data_get_transparent (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.transparent (get)");
+  SwfdecBitmapData *bitmap;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
+
+  if (bitmap->surface) {
+    SWFDEC_AS_VALUE_SET_BOOLEAN (ret, 
+	cairo_image_surface_get_format (bitmap->surface) != CAIRO_FORMAT_RGB24);
+  } else {
+    SWFDEC_AS_VALUE_SET_INT (ret, -1);
+  }
 }
 
 SWFDEC_AS_NATIVE (1100, 107, swfdec_bitmap_data_set_transparent)
@@ -270,12 +353,19 @@ swfdec_bitmap_data_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("BitmapData.clone");
 }
 
-SWFDEC_AS_NATIVE (1100, 22, swfdec_bitmap_data_dispose)
+SWFDEC_AS_NATIVE (1100, 22, swfdec_bitmap_data_do_dispose)
 void
-swfdec_bitmap_data_dispose (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_bitmap_data_do_dispose (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.dispose");
+  SwfdecBitmapData *bitmap;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
+
+  if (bitmap->surface) {
+    cairo_surface_destroy (bitmap->surface);
+    bitmap->surface = NULL;
+  }
 }
 
 SWFDEC_AS_NATIVE (1100, 23, swfdec_bitmap_data_generateFilterRect)
@@ -296,11 +386,31 @@ swfdec_bitmap_data_compare (SwfdecAsContext *cx,
   SWFDEC_STUB ("BitmapData.compare");
 }
 
-// constructor
-SWFDEC_AS_NATIVE (1100, 0, swfdec_bitmap_data_construct)
+SWFDEC_AS_CONSTRUCTOR (1100, 0, swfdec_bitmap_data_construct, swfdec_bitmap_data_get_type)
 void
 swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData");
+  SwfdecBitmapData *bitmap;
+  int w, h;
+  gboolean transparent;
+  int color;
+
+  if (!swfdec_as_context_is_constructing (cx))
+    return;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii|bi", 
+      &w, &h, &transparent, &color);
+  
+  if (w > 2880 || h > 2880)
+    return;
+
+  bitmap->surface = cairo_image_surface_create (
+      transparent ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, w, h);
+  if (color) {
+    cairo_t *cr = cairo_create (bitmap->surface);
+    swfdec_color_set_source (cr, color);
+    cairo_paint (cr);
+    cairo_destroy (cr);
+  }
 }

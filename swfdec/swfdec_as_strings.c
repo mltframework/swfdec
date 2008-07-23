@@ -524,5 +524,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("videoCodec")
   SWFDEC_AS_CONSTANT_STRING ("System")
   SWFDEC_AS_CONSTANT_STRING ("__resolve")
+  SWFDEC_AS_CONSTANT_STRING ("Rectangle")
   /* add more here */
 ;

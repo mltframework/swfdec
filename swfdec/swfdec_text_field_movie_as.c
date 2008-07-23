@@ -303,6 +303,9 @@ swfdec_text_field_movie_set_restrict (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
+  if (text->restrict_ == NULL && value == SWFDEC_AS_STR_EMPTY)
+    return;
+
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
     text->restrict_ = NULL;
@@ -742,7 +745,6 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
-  SwfdecAutoSize old;
   const char *s;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
@@ -750,7 +752,6 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
   if (argc < 1)
     return;
 
-  old = text->auto_size;
   if (SWFDEC_AS_VALUE_IS_BOOLEAN (&argv[0])) {
     if (SWFDEC_AS_VALUE_GET_BOOLEAN (&argv[0])) {
       text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
@@ -761,14 +762,14 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
     swfdec_as_value_to_number (cx, &argv[0]);
     s = swfdec_as_value_to_string (cx, &argv[0]);
 
-    if (!g_ascii_strcasecmp (s, "none")) {
-      text->auto_size = SWFDEC_AUTO_SIZE_NONE;
-    } else if (!g_ascii_strcasecmp (s, "left")) {
+    if (!g_ascii_strcasecmp (s, "left")) {
       text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
     } else if (!g_ascii_strcasecmp (s, "right")) {
       text->auto_size = SWFDEC_AUTO_SIZE_RIGHT;
     } else if (!g_ascii_strcasecmp (s, "center")) {
       text->auto_size = SWFDEC_AUTO_SIZE_CENTER;
+    } else {
+      text->auto_size = SWFDEC_AUTO_SIZE_NONE;
     }
   }
 }

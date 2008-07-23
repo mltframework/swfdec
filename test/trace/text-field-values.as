@@ -17,7 +17,9 @@ names.push ("(" + (values.length - 1) + ") " + values[values.length - 1] + " (St
 values.push (-34000000);
 names.push ("(" + (values.length - 1) + ") -34000000 (number)");
 values.push ("dynamic");
-names.push ("(" + (values.length - 1) + ") input (dynamic)");
+names.push ("(" + (values.length - 1) + ") dynamic (string)");
+values.push ("true");
+names.push ("(" + (values.length - 1) + ") true (string)");
 
 // Won't test here:
 //  length
@@ -31,59 +33,65 @@ names.push ("(" + (values.length - 1) + ") input (dynamic)");
 
 var properties = [
   // text
-  "text",
-  "html",
-  "htmlText",
+  [ "text", "hello", "" ],
+  [ "html", false, true ],
+  [ "htmlText", "hello", "" ],
 
   // input
-  "condenseWhite",
-  "maxChars",
-  "multiline",
-  "restrict",
-  "selectable",
+  [ "condenseWhite", false, true ],
+  [ "maxChars", 7, 0 ],
+  [ "multiline", false, true ],
+  [ "restrict", "abc", null ],
+  [ "selectable", false, true ],
   //"tabEnabled",
   //"tabIndex",
-  "type",
-  "variable",
+  [ "type", "input", "dynamic" ],
+  [ "variable", "test", null ],
 
   // border & background
-  "background",
-  "backgroundColor",
-  "border",
-  "borderColor",
+  [ "background", false, true ],
+  [ "backgroundColor", 0x00CC00, 0 ],
+  [ "border", false, true ],
+  [ "borderColor", 0x00CC00, 0 ],
 
   // scrolling
-  "mouseWheelEnabled",
+  [ "mouseWheelEnabled", false, true ],
 
   // display
-  "autoSize",
-  "password",
-  "wordWrap",
+  [ "autoSize", "center", false ],
+  [ "password", false, true ],
+  [ "wordWrap", false, true ],
 
   // format
   //"antiAliasType",
-  "embedFonts",
+  [ "embedFonts", false, true ],
   //"gridFitType",
   //"sharpness",
-  "styleSheet",
-  "textColor"//,
+  [ "styleSheet", null, new TextField.StyleSheet () ],
+  [ "textColor", 0x00CC00, 0 ]//,
   //"thickness",
 
   // misc
   //"menu",
   //"filters"
-  ];
+];
 
 this.createTextField ("field", 1, 0, 0, 50, 50);
 
 for (var i = 0; i < properties.length; i++) {
-  var prop = properties[i];
+  var prop = properties[i][0];
+  field[prop] = properties[i][1];
   trace ("Testing: " + prop + " (default: " + field[prop] + ")");
   for (var j = 0; j < values.length; j++) {
+    field[prop] = properties[i][1];
+    field[prop] = values[j];
+    trace (prop + ": " + names[j] + " = " + field[prop] + " (" +
+	typeof (field[prop]) + ")");
+    field[prop] = properties[i][2];
     field[prop] = values[j];
     trace (prop + ": " + names[j] + " = " + field[prop] + " (" +
 	typeof (field[prop]) + ")");
   }
 }
 
-loadMovie ("FSCommand:quit", "");
+getURL ("FSCommand:quit", "");

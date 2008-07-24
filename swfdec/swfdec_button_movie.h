@@ -39,7 +39,6 @@ typedef struct _SwfdecButtonMovieClass SwfdecButtonMovieClass;
 struct _SwfdecButtonMovie {
   SwfdecActor		actor;
 
-  SwfdecButton *	button;		/* button we render */
   SwfdecButtonState	state;		/* current state we're in */
 };
 

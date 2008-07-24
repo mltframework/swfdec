@@ -36,20 +36,20 @@
 G_DEFINE_TYPE (SwfdecInterval, swfdec_interval, SWFDEC_TYPE_AS_OBJECT)
 
 static void
-swfdec_interval_mark (SwfdecAsObject *object)
+swfdec_interval_mark (SwfdecGcObject *object)
 {
   guint i;
   SwfdecInterval *interval = SWFDEC_INTERVAL (object);
 
-  swfdec_as_object_mark (interval->object);
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (interval->sandbox));
+  swfdec_gc_object_mark (interval->object);
+  swfdec_gc_object_mark (interval->sandbox);
   if (interval->fun_name)
     swfdec_as_string_mark (interval->fun_name);
   for (i = 0; i < interval->n_args; i++) {
     swfdec_as_value_mark (&interval->args[i]);
   }
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_interval_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_interval_parent_class)->mark (object);
 }
 
 static void
@@ -57,11 +57,16 @@ swfdec_interval_dispose (GObject *object)
 {
   SwfdecInterval *interval = SWFDEC_INTERVAL (object);
 
-  g_free (interval->args);
-  interval->args = NULL;
+  if (interval->n_args) {
+    swfdec_as_context_unuse_mem (swfdec_gc_object_get_context (interval),
+	interval->n_args * sizeof (SwfdecAsValue));
+    g_free (interval->args);
+    interval->args = NULL;
+    interval->n_args = 0;
+  }
   /* needed here when GC'ed by closing the player */
   if (interval->timeout.callback != NULL) {
-    swfdec_player_remove_timeout (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (object)->context), &interval->timeout);
+    swfdec_player_remove_timeout (SWFDEC_PLAYER (swfdec_gc_object_get_context (object)), &interval->timeout);
     interval->timeout.callback = NULL;
   }
 
@@ -72,11 +77,11 @@ static void
 swfdec_interval_class_init (SwfdecIntervalClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_interval_dispose;
 
-  asobject_class->mark = swfdec_interval_mark;
+  gc_class->mark = swfdec_interval_mark;
 }
 
 static void
@@ -90,7 +95,7 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
   SwfdecAsValue ret;
   SwfdecInterval *interval = SWFDEC_INTERVAL ((void *) (((guchar *) timeout) 
       - G_STRUCT_OFFSET (SwfdecInterval, timeout)));
-  SwfdecAsContext *context = SWFDEC_AS_OBJECT (interval)->context;
+  SwfdecAsContext *context = swfdec_gc_object_get_context (interval);
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
 
   if (interval->repeat) {
@@ -119,13 +124,14 @@ swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat,
 {
   SwfdecAsContext *context;
   SwfdecInterval *interval;
-  guint size;
 
   context = SWFDEC_AS_CONTEXT (player);
-  size = sizeof (SwfdecInterval) + n_args * sizeof (SwfdecAsValue);
-  swfdec_as_context_use_mem (context, size);
-  interval = g_object_new (SWFDEC_TYPE_INTERVAL, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (interval), context, size);
+  if (n_args && !swfdec_as_context_try_use_mem (context, n_args * sizeof (SwfdecAsValue))) {
+    swfdec_as_context_abort (context,
+	"Too many arguments passed to setInterval/setTimeout");
+    return 0;
+  }
+  interval = g_object_new (SWFDEC_TYPE_INTERVAL, "context", context, NULL);
 
   interval->id = ++player->priv->interval_id;
   interval->sandbox = SWFDEC_SANDBOX (context->global);

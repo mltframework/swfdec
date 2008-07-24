@@ -32,7 +32,7 @@ vivi_wrap_dispose (GObject *object)
   ViviWrap *wrap = VIVI_WRAP (object);
 
   if (wrap->wrap) {
-    g_hash_table_remove (VIVI_APPLICATION (SWFDEC_AS_OBJECT (wrap)->context)->wraps, wrap->wrap);
+    g_hash_table_remove (VIVI_APPLICATION (swfdec_gc_object_get_context (wrap))->wraps, wrap->wrap);
     wrap->wrap = NULL;
   }
 
@@ -65,9 +65,7 @@ vivi_wrap_object (ViviApplication *app, SwfdecAsObject *object)
     return wrap;
 
   cx = SWFDEC_AS_CONTEXT (app);
-  swfdec_as_context_use_mem (cx, sizeof (ViviWrap));
-  wrap = g_object_new (VIVI_TYPE_WRAP, NULL);
-  swfdec_as_object_add (wrap, cx, sizeof (ViviWrap));
+  wrap = g_object_new (VIVI_TYPE_WRAP, "context", cx, NULL);
   /* frames are special */
   if (SWFDEC_IS_AS_FRAME (object))
     name = "Frame";

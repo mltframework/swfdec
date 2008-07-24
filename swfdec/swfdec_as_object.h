@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_gc_object.h>
 
 G_BEGIN_DECLS
 
@@ -57,25 +58,18 @@ typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object,
 
 struct _SwfdecAsObject {
   /*< protected >*/
-  GObject		object;
-  SwfdecAsContext *	context;	/* context the object belongs to */
+  SwfdecGcObject      	object;
   /*< private >*/
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
   guint			prototype_flags; /* propflags for the prototype object */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
   GHashTable *		watches;	/* string->WatchData mapping or NULL when not watching anything */
-  guint8		flags;		/* GC flags */
-  gsize			size;		/* size reserved in GC */
   GSList *		interfaces;	/* list of interfaces this object implements */
 };
 
 struct _SwfdecAsObjectClass {
-  GObjectClass		object_class;
+  SwfdecGcObjectClass	object_class;
 
-  /* mark everything that should survive during GC */
-  void			(* mark)		(SwfdecAsObject *	object);
-  /* object was added to the context */
-  void			(* add)			(SwfdecAsObject *	object);
   /* get the value and flags for a variables */
   gboolean	      	(* get)			(SwfdecAsObject *       object,
 						 SwfdecAsObject *	orig,
@@ -117,10 +111,6 @@ void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
 						 SwfdecAsObject *	construct);
 SwfdecAsObject *swfdec_as_object_resolve	(SwfdecAsObject *	object);
 char *		swfdec_as_object_get_debug	(SwfdecAsObject *	object);
-
-void		swfdec_as_object_add		(SwfdecAsObject *     	object,
-						 SwfdecAsContext *    	context,
-						 gsize			size);
 
 /* I'd like to name these [gs]et_property, but binding authors will complain
  * about overlap with g_object_[gs]et_property then */

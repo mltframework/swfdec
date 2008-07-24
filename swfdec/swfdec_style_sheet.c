@@ -68,7 +68,7 @@ swfdec_style_sheet_get_selector_object (SwfdecAsObject *object,
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  empty = swfdec_as_object_new_empty (object->context);
+  empty = swfdec_as_object_new_empty (swfdec_gc_object_get_context (object));
   SWFDEC_AS_VALUE_SET_OBJECT (&val, empty);
   swfdec_as_object_unset_variable_flags (object, name,
       SWFDEC_AS_VARIABLE_CONSTANT);
@@ -363,5 +363,5 @@ swfdec_style_sheet_get_class_format (SwfdecStyleSheet *style, const char *name)
   memcpy (name_full + 1, name, strlen (name) + 1);
 
   return swfdec_style_sheet_get_format (style, swfdec_as_context_give_string (
-	SWFDEC_AS_OBJECT (style)->context, name_full));
+	swfdec_gc_object_get_context (style), name_full));
 }

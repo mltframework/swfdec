@@ -84,7 +84,7 @@ swfdec_as_array_length_as_integer (SwfdecAsObject *object)
   g_return_val_if_fail (object != NULL, 0);
 
   swfdec_as_object_get_variable (object, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (object->context, &val);
+  length = swfdec_as_value_to_integer (swfdec_gc_object_get_context (object), &val);
 
   return length;
 }
@@ -196,8 +196,8 @@ swfdec_as_array_remove_range (SwfdecAsArray *array, gint32 start_index,
 
   // to avoid foreach loop, use special case when removing just one variable
   if (num == 1) {
-    swfdec_as_object_delete_variable (object,
-	swfdec_as_integer_to_string (object->context, start_index));
+    swfdec_as_object_delete_variable (object, swfdec_as_integer_to_string (
+	  swfdec_gc_object_get_context (object), start_index));
   } else {
     ForeachRemoveRangeData fdata = { start_index, num };
     swfdec_as_object_foreach_remove (object,
@@ -223,7 +223,7 @@ swfdec_as_array_foreach_move_range (SwfdecAsObject *object,
     return variable;
 
   if (idx >= fdata->start_index && idx < fdata->start_index + fdata->num) {
-    return swfdec_as_integer_to_string (object->context,
+    return swfdec_as_integer_to_string (swfdec_gc_object_get_context (object),
 	fdata->to_index + idx - fdata->start_index);
   } else if (idx >= fdata->to_index && idx < fdata->to_index + fdata->num) {
     return NULL;
@@ -268,7 +268,7 @@ swfdec_as_array_set_range_with_flags (SwfdecAsObject *object,
   g_return_if_fail (num == 0 || value != NULL);
 
   for (i = 0; i < num; i++) {
-    var = swfdec_as_integer_to_string (object->context, start_index + i);
+    var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (object), start_index + i);
     swfdec_as_object_set_variable_and_flags (object, var, &value[i], flags);
   }
 }
@@ -424,7 +424,7 @@ swfdec_as_array_get_value (SwfdecAsArray *array, gint32 idx,
   g_assert (idx >= 0);
   g_assert (value != NULL);
 
-  var = swfdec_as_integer_to_string (SWFDEC_AS_OBJECT (array)->context, idx);
+  var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (array), idx);
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (array), var, value);
 }
 
@@ -447,7 +447,7 @@ swfdec_as_array_set_value (SwfdecAsArray *array, gint32 idx,
   g_assert (idx >= 0);
   g_assert (SWFDEC_IS_AS_VALUE (value));
 
-  var = swfdec_as_integer_to_string (SWFDEC_AS_OBJECT (array)->context, idx);
+  var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (array), idx);
   swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (array), var, value);
 }
 
@@ -468,7 +468,7 @@ swfdec_as_array_foreach_append_array_range (SwfdecAsObject *object,
 
   idx = swfdec_as_array_to_index (variable);
   if (idx >= fdata->start_index && idx < fdata->start_index + fdata->num) {
-    var = swfdec_as_integer_to_string (fdata->object_to->context,
+    var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (fdata->object_to),
 	fdata->offset + (idx - fdata->start_index));
     swfdec_as_object_set_variable (fdata->object_to, var, value);
   }
@@ -527,11 +527,11 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
   // if we changed to smaller length, destroy all values that are outside it
   //
   if (SWFDEC_AS_ARRAY (object)->check_length &&
-      !swfdec_strcmp (object->context->version, variable,
+      !swfdec_strcmp (swfdec_gc_object_get_context (object)->version, variable,
 	SWFDEC_AS_STR_length))
   {
     gint32 length_old = swfdec_as_array_length (object);
-    gint32 length_new = swfdec_as_value_to_integer (object->context, val);
+    gint32 length_new = swfdec_as_value_to_integer (swfdec_gc_object_get_context (object), val);
     length_new = MAX (0, length_new);
     if (length_old > length_new) {
       swfdec_as_array_remove_range (SWFDEC_AS_ARRAY (object), length_new,
@@ -581,10 +581,7 @@ swfdec_as_array_new (SwfdecAsContext *context)
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  swfdec_as_context_use_mem (context, sizeof (SwfdecAsArray));
-
-  ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
-  swfdec_as_object_add (ret, context, sizeof (SwfdecAsArray));
+  ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, "context", context, NULL);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Array, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
     swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
@@ -681,7 +678,7 @@ swfdec_as_array_do_pop (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (length == 0)
     return;
 
-  var = swfdec_as_integer_to_string (object->context, length - 1);
+  var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (object), length - 1);
   swfdec_as_object_get_variable (object, var, ret);
 
   swfdec_as_object_delete_variable (object, var);
@@ -742,12 +739,12 @@ swfdec_as_array_do_shift (SwfdecAsContext *cx, SwfdecAsObject *object,
     // we have to put the last element back, because we used move, not copy
     SwfdecAsValue val;
     if (length > 1) {
-      var = swfdec_as_integer_to_string (object->context, length - 2);
+      var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (object), length - 2);
       swfdec_as_object_get_variable (object, var, &val);
     } else {
       val = *ret;
     }
-    var = swfdec_as_integer_to_string (object->context, length - 1);
+    var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (object), length - 1);
     swfdec_as_object_set_variable (object, var, &val);
   }
 }
@@ -763,7 +760,7 @@ swfdec_as_array_foreach_reverse (SwfdecAsObject *object, const char *variable,
   if (idx == -1 || idx >= *length)
     return variable;
 
-  return swfdec_as_integer_to_string (object->context, *length - 1 - idx);
+  return swfdec_as_integer_to_string (swfdec_gc_object_get_context (object), *length - 1 - idx);
 }
 
 SWFDEC_AS_NATIVE (252, 11, swfdec_as_array_reverse)
@@ -812,7 +809,7 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
     else
     {
-      var = swfdec_as_integer_to_string (object->context,
+      var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (object),
 	  swfdec_as_array_length (object_new));
       swfdec_as_object_set_variable (object_new, var, &argv[j]);
     }
@@ -941,10 +938,10 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
   {
     SwfdecAsValue argv[2] = { *a, *b };
     SwfdecAsValue ret;
+    SwfdecAsContext *context = swfdec_gc_object_get_context (custom_function);
     swfdec_as_function_call (custom_function, NULL, 2, argv, &ret);
-    swfdec_as_context_run (SWFDEC_AS_OBJECT (custom_function)->context);
-    retval = swfdec_as_value_to_integer (
-	SWFDEC_AS_OBJECT (custom_function)->context, &ret);
+    swfdec_as_context_run (context);
+    retval = swfdec_as_value_to_integer (context, &ret);
   }
   else if (options & SORT_OPTION_NUMERIC &&
       (SWFDEC_AS_VALUE_IS_NUMBER (a) ||
@@ -1372,9 +1369,7 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!cx->frame->construct) {
     SwfdecAsValue val;
-    swfdec_as_context_use_mem (cx, sizeof (SwfdecAsArray));
-    object = g_object_new (SWFDEC_TYPE_AS_ARRAY, NULL);
-    swfdec_as_object_add (object, cx, sizeof (SwfdecAsArray));
+    object = g_object_new (SWFDEC_TYPE_AS_ARRAY, "context", cx, NULL);
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Array, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
       swfdec_as_object_set_constructor (object,

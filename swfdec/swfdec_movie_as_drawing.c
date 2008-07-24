@@ -107,7 +107,7 @@ swfdec_sprite_movie_gradient_fill_get_length (SwfdecAsObject *o)
   SwfdecAsValue val;
 
   swfdec_as_object_get_variable (o, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (o->context, &val);
+  length = swfdec_as_value_to_integer (swfdec_gc_object_get_context (o), &val);
   return MAX (length, 0);
 }
 
@@ -127,7 +127,7 @@ swfdec_sprite_movie_gradient_fill_check_length (SwfdecAsObject *colors, SwfdecAs
 static void
 swfdec_sprite_movie_extract_matrix (SwfdecAsObject *o, cairo_matrix_t *mat)
 {
-  SwfdecAsContext *cx = o->context;
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (o);
   SwfdecAsValue val;
 
   /* FIXME: This function does not call valueOf in the right order */

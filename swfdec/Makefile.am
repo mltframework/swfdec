@@ -80,6 +80,7 @@ libswfdec_source_files = \
 	swfdec_flv_decoder.c \
 	swfdec_font.c \
 	swfdec_function_list.c \
+	swfdec_gc_object.c \
 	swfdec_glow_filter.c \
 	swfdec_gradient_filter.c \
 	swfdec_gradient_pattern.c \
@@ -201,6 +202,7 @@ public_headers = \
 	swfdec_audio.h \
 	swfdec_buffer.h \
 	swfdec_file_loader.h \
+	swfdec_gc_object.h \
 	swfdec_keys.h \
 	swfdec_loader.h \
 	swfdec_player.h \

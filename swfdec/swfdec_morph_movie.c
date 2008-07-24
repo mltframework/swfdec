@@ -34,8 +34,7 @@ swfdec_morph_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
   guint ratio = movie->original_ratio;
-  SwfdecMorphMovie *mmovie = SWFDEC_MORPH_MOVIE (movie);
-  SwfdecMorphShape *morph = mmovie->morph;
+  SwfdecMorphShape *morph = SWFDEC_MORPH_SHAPE (movie->graphic);
   SwfdecGraphic *graphic = SWFDEC_GRAPHIC (morph);
   extents->x0 = ((65535 - ratio) * graphic->extents.x0 + ratio * morph->end_extents.x0) / 65535;
   extents->x1 = ((65535 - ratio) * graphic->extents.x1 + ratio * morph->end_extents.x1) / 65535;
@@ -58,7 +57,7 @@ swfdec_morph_movie_set_ratio (SwfdecMovie *movie)
 static void
 swfdec_morph_movie_create_morphs (SwfdecMorphMovie *mmovie)
 {
-  SwfdecShape *shape = SWFDEC_SHAPE (mmovie->morph);
+  SwfdecShape *shape = SWFDEC_SHAPE (SWFDEC_MOVIE (mmovie)->graphic);
   guint ratio = SWFDEC_MOVIE (mmovie)->original_ratio;
   GSList *walk;
 
@@ -97,7 +96,7 @@ swfdec_morph_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix,
   SwfdecRect rect;
   
   swfdec_rect_transform (&rect, &movie->original_extents, matrix);
-  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
 }
 
 static void
@@ -108,7 +107,6 @@ swfdec_morph_movie_dispose (GObject *object)
   g_slist_foreach (morph->draws, (GFunc) g_object_unref, NULL);
   g_slist_free (morph->draws);
   morph->draws = NULL;
-  g_object_unref (morph->morph);
 
   G_OBJECT_CLASS (swfdec_morph_movie_parent_class)->dispose (object);
 }

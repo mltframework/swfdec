@@ -61,20 +61,6 @@ swfdec_button_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_button_parent_class)->dispose (G_OBJECT (button));
 }
 
-static SwfdecMovie *
-swfdec_button_create_movie (SwfdecGraphic *graphic, gsize *size)
-{
-  SwfdecButton *button = SWFDEC_BUTTON (graphic);
-  SwfdecButtonMovie *movie = g_object_new (SWFDEC_TYPE_BUTTON_MOVIE, NULL);
-
-  movie->button = g_object_ref (button);
-  *size = sizeof (SwfdecButtonMovie);
-  if (button->events)
-    SWFDEC_ACTOR (movie)->events = swfdec_event_list_copy (button->events);
-
-  return SWFDEC_MOVIE (movie);
-}
-
 static void
 swfdec_button_class_init (SwfdecButtonClass * g_class)
 {
@@ -83,7 +69,7 @@ swfdec_button_class_init (SwfdecButtonClass * g_class)
 
   object_class->dispose = swfdec_button_dispose;
 
-  graphic_class->create_movie = swfdec_button_create_movie;
+  graphic_class->movie_type = SWFDEC_TYPE_BUTTON_MOVIE;
 }
 
 static guint

@@ -27,28 +27,10 @@
 #include "swfdec_swf_decoder.h"
 #include "swfdec_video_decoder.h"
 #include "swfdec_video_movie.h"
-#include "swfdec_video_video_provider.h"
 
 /*** SWFDEC_VIDEO ***/
 
 G_DEFINE_TYPE (SwfdecVideo, swfdec_video, SWFDEC_TYPE_GRAPHIC)
-
-static SwfdecMovie *
-swfdec_video_create_movie (SwfdecGraphic *graphic, gsize *size)
-{
-  SwfdecVideo *video = SWFDEC_VIDEO (graphic);
-  SwfdecVideoMovie *movie = g_object_new (SWFDEC_TYPE_VIDEO_MOVIE, NULL);
-
-  movie->video = video;
-  g_object_ref (video);
-  if (video->n_frames > 0) {
-    SwfdecVideoProvider *provider = swfdec_video_video_provider_new (video);
-    swfdec_video_movie_set_provider (movie, provider);
-    g_object_unref (provider);
-  }
-  *size = sizeof (SwfdecVideoMovie);
-  return SWFDEC_MOVIE (movie);
-}
 
 static void
 swfdec_video_dispose (GObject *object)
@@ -71,7 +53,7 @@ swfdec_video_class_init (SwfdecVideoClass * g_class)
 
   object_class->dispose = swfdec_video_dispose;
 
-  graphic_class->create_movie = swfdec_video_create_movie;
+  graphic_class->movie_type = SWFDEC_TYPE_VIDEO_MOVIE;
 }
 
 static void

@@ -34,6 +34,9 @@ G_BEGIN_DECLS
 
 #define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
+#define SWFDEC_AS_GC_MARK (1 << 0)		/* only valid during GC */
+#define SWFDEC_AS_GC_ROOT (1 << 1)		/* for objects: rooted, for strings: static */
+
 void		swfdec_as_function_set_constructor	(SwfdecAsFunction *	fun);
 void		swfdec_as_function_init_context		(SwfdecAsContext *	context);
 SwfdecAsFrame *	swfdec_as_function_call_no_preload	(SwfdecAsFunction *	function, 
@@ -56,7 +59,6 @@ typedef const char *(* SwfdecAsVariableForeachRename) (SwfdecAsObject *object,
 
 SwfdecAsValue *	swfdec_as_object_peek_variable	(SwfdecAsObject *       object,
 						 const char *		name);
-void		swfdec_as_object_collect	(SwfdecAsObject *     	object);
 guint		swfdec_as_object_foreach_remove	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeach func,
 						 gpointer		data);

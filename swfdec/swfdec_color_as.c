@@ -140,7 +140,7 @@ parse_property (SwfdecAsObject *obj, const char *name, int *target, gboolean sca
 
   if (!swfdec_as_object_get_variable (obj, name, &val))
     return;
-  d = swfdec_as_value_to_number (obj->context, &val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (obj), &val);
   if (scale) {
     *target = d * 256.0 / 100.0;
   } else {

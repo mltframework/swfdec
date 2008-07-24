@@ -84,7 +84,7 @@ swfdec_as_function_set_constructor (SwfdecAsFunction *fun)
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));
 
   object = SWFDEC_AS_OBJECT (fun);
-  context = object->context;
+  context = swfdec_gc_object_get_context (fun);
   if (context->Function == NULL)
     return;
   

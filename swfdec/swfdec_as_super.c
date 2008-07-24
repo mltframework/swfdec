@@ -89,8 +89,10 @@ swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
     /* FIXME: need get_prototype_internal here? */
     cur = swfdec_as_object_get_prototype (cur);
   }
-  if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT)
-    swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+  if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
+    swfdec_as_context_abort (swfdec_gc_object_get_context (object),
+	"Prototype recursion limit exceeded");
+  }
   SWFDEC_AS_VALUE_SET_UNDEFINED (val);
   *flags = 0;
   return FALSE;
@@ -155,14 +157,12 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
   
   if (frame->super != NULL)
     return;
-  context = SWFDEC_AS_OBJECT (frame)->context;
+  context = swfdec_gc_object_get_context (frame);
   if (context->version <= 5)
     return;
 
-  swfdec_as_context_use_mem (context, sizeof (SwfdecAsSuper));
-  super = g_object_new (SWFDEC_TYPE_AS_SUPER, NULL);
+  super = g_object_new (SWFDEC_TYPE_AS_SUPER, "context", context, NULL);
   frame->super = SWFDEC_AS_OBJECT (super);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (super), context, sizeof (SwfdecAsSuper));
   super->thisp = thisp;
   if (context->version <= 5) {
     super->object = NULL;
@@ -199,7 +199,7 @@ swfdec_as_super_new_chain (SwfdecAsFrame *frame, SwfdecAsSuper *super,
   ref = super->object->prototype;
   if (ref == NULL)
     return;
-  context = SWFDEC_AS_OBJECT (frame)->context;
+  context = swfdec_gc_object_get_context (frame);
   if (function_name && context->version > 6) {
     /* skip prototypes to find the next one that has this function defined */
     SwfdecAsObject *res;

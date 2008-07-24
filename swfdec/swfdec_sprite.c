@@ -91,18 +91,6 @@ swfdec_sprite_get_action (SwfdecSprite *sprite, guint n, guint *tag, SwfdecBuffe
   return TRUE;
 }
 
-static SwfdecMovie *
-swfdec_sprite_create_movie (SwfdecGraphic *graphic, gsize *size)
-{
-  SwfdecSpriteMovie *ret = g_object_new (SWFDEC_TYPE_SPRITE_MOVIE, NULL);
-
-  ret->sprite = SWFDEC_SPRITE (graphic);
-  ret->n_frames = ret->sprite->n_frames;
-  *size = sizeof (SwfdecSpriteMovie);
-
-  return SWFDEC_MOVIE (ret);
-}
-
 static void
 swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
 {
@@ -111,7 +99,7 @@ swfdec_sprite_class_init (SwfdecSpriteClass * g_class)
 
   object_class->dispose = swfdec_sprite_dispose;
 
-  graphic_class->create_movie = swfdec_sprite_create_movie;
+  graphic_class->movie_type = SWFDEC_TYPE_SPRITE_MOVIE;
 }
 
 static void

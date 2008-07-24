@@ -39,7 +39,7 @@
 G_DEFINE_TYPE (SwfdecXmlNode, swfdec_xml_node, SWFDEC_TYPE_AS_OBJECT)
 
 static void
-swfdec_xml_node_do_mark (SwfdecAsObject *object)
+swfdec_xml_node_mark (SwfdecGcObject *object)
 {
   SwfdecXmlNode *node = SWFDEC_XML_NODE (object);
 
@@ -48,23 +48,23 @@ swfdec_xml_node_do_mark (SwfdecAsObject *object)
   if (node->value != NULL)
     swfdec_as_string_mark (node->value);
   if (node->parent != NULL)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (node->parent));
+    swfdec_gc_object_mark (node->parent);
   if (node->children != NULL)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (node->children));
+    swfdec_gc_object_mark (node->children);
   if (node->attributes != NULL)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (node->attributes));
+    swfdec_gc_object_mark (node->attributes);
   if (node->child_nodes != NULL)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (node->child_nodes));
+    swfdec_gc_object_mark (node->child_nodes);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_xml_node_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_xml_node_parent_class)->mark (object);
 }
 
 static void
 swfdec_xml_node_class_init (SwfdecXmlNodeClass *klass)
 {
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
 
-  asobject_class->mark = swfdec_xml_node_do_mark;
+  gc_class->mark = swfdec_xml_node_mark;
 }
 
 static void
@@ -154,7 +154,7 @@ swfdec_xml_node_get_attribute (SwfdecXmlNode *node, const char *name)
   g_return_val_if_fail (name != NULL, NULL);
 
   if (swfdec_as_object_get_variable (node->attributes, name, &val)) {
-    return swfdec_as_value_to_string (SWFDEC_AS_OBJECT (node)->context, &val);
+    return swfdec_as_value_to_string (swfdec_gc_object_get_context (node), &val);
   } else {
     return NULL;
   }
@@ -169,17 +169,17 @@ swfdec_xml_node_getNamespaceForPrefix (SwfdecXmlNode *node, const char *prefix)
   g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (node), NULL);
 
   if (prefix == NULL || strlen (prefix) == 0) {
-    var = swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context,
+    var = swfdec_as_context_get_string (swfdec_gc_object_get_context (node),
 	"xmlns");
   } else {
-    var = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
+    var = swfdec_as_context_give_string (swfdec_gc_object_get_context (node),
 	g_strconcat ("xmlns:", prefix, NULL));
   }
 
   do {
     swfdec_as_object_get_variable (node->attributes, var, &val);
     if (!SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
-      return swfdec_as_value_to_string (SWFDEC_AS_OBJECT (node)->context, &val);
+      return swfdec_as_value_to_string (swfdec_gc_object_get_context (node), &val);
     }
     node = node->parent;
   } while (node != NULL);
@@ -210,7 +210,7 @@ swfdec_xml_node_foreach_find_namespace (SwfdecAsObject *object,
     return TRUE;
 
   // ok, now check if the uri is the one we are searching for
-  uri = swfdec_as_value_to_string (object->context, value);
+  uri = swfdec_as_value_to_string (swfdec_gc_object_get_context (object), value);
   if (!g_ascii_strcasecmp (uri, fdata->namespace)) {
     fdata->variable = variable;
     return FALSE;
@@ -244,7 +244,7 @@ swfdec_xml_node_getPrefixForNamespace (SwfdecXmlNode *node,
     if (p == NULL || *(p + 1) == '\0')
       return SWFDEC_AS_STR_EMPTY;
 
-    return swfdec_as_context_get_string (SWFDEC_AS_OBJECT (node)->context,
+    return swfdec_as_context_get_string (swfdec_gc_object_get_context (node),
 	p + 1);
   } else {
     return NULL;
@@ -343,7 +343,7 @@ swfdec_xml_node_get_prefix (SwfdecXmlNode *node)
   if (p == NULL || *(p + 1) == '\0')
     return NULL;
 
-  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (node)->context,
+  return swfdec_as_context_give_string (swfdec_gc_object_get_context (node),
       g_strndup (node->name, p - node->name));
 }
 
@@ -742,7 +742,7 @@ swfdec_xml_node_insertAt (SwfdecXmlNode *node, SwfdecXmlNode *child, gint32 ind)
   g_assert (SWFDEC_IS_VALID_XML_NODE (child));
   g_assert (ind >= 0);
 
-  if (SWFDEC_AS_OBJECT (node)->context->version >= 8) {
+  if (swfdec_gc_object_get_context (node)->version >= 8) {
     SwfdecXmlNode *parent = node;
     while (parent != NULL) {
       if (parent == child)
@@ -871,7 +871,7 @@ swfdec_xml_node_foreach_string_append_attribute (SwfdecAsObject *object,
   string = g_string_append (string, variable);
   string = g_string_append (string, "=\"");
   escaped =
-    swfdec_xml_escape (swfdec_as_value_to_string (object->context, value));
+    swfdec_xml_escape (swfdec_as_value_to_string (swfdec_gc_object_get_context (object), value));
   string = g_string_append (string, escaped);
   g_free (escaped);
   string = g_string_append (string, "\"");
@@ -952,7 +952,7 @@ swfdec_xml_node_toString (SwfdecXmlNode *node)
       }
   }
 
-  return swfdec_as_context_give_string (object->context,
+  return swfdec_as_context_give_string (swfdec_gc_object_get_context (object),
       g_string_free (string, FALSE));
 }
 
@@ -980,8 +980,8 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
 
   node->valid = TRUE;
   node->parent = NULL;
-  node->children = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
-  node->attributes = swfdec_as_object_new_empty (object->context);
+  node->children = SWFDEC_AS_ARRAY (swfdec_as_array_new (swfdec_gc_object_get_context (object)));
+  node->attributes = swfdec_as_object_new_empty (swfdec_gc_object_get_context (object));
   node->type = type;
   if (node->type == SWFDEC_XML_NODE_ELEMENT) {
     node->name = value;
@@ -989,7 +989,7 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
     node->value = value;
   }
 
-  node->child_nodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (object->context));
+  node->child_nodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (swfdec_gc_object_get_context (object)));
 }
 
 static void
@@ -1048,15 +1048,11 @@ swfdec_xml_node_new_no_properties (SwfdecAsContext *context,
 {
   SwfdecAsValue val;
   SwfdecXmlNode *node;
-  guint size;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (value != NULL, NULL);
 
-  size = sizeof (SwfdecXmlNode);
-  swfdec_as_context_use_mem (context, size);
-  node = g_object_new (SWFDEC_TYPE_XML_NODE, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (node), context, size);
+  node = g_object_new (SWFDEC_TYPE_XML_NODE, "context", context, NULL);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XMLNode, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
     swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (node),

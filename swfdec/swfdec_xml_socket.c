@@ -44,7 +44,7 @@ swfdec_xml_socket_ensure_closed (SwfdecXmlSocket *xml)
   g_object_unref (xml->socket);
   xml->socket = NULL;
 
-  swfdec_player_unroot (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (xml)->context), xml);
+  swfdec_player_unroot (SWFDEC_PLAYER (swfdec_gc_object_get_context (xml)), xml);
   if (xml->target_owner) {
     g_object_steal_qdata (G_OBJECT (xml->target), xml_socket_quark);
     xml->target_owner = FALSE;
@@ -57,7 +57,7 @@ swfdec_xml_socket_ensure_closed (SwfdecXmlSocket *xml)
 static SwfdecPlayer *
 swfdec_xml_socket_stream_target_get_player (SwfdecStreamTarget *target)
 {
-  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
+  return SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
 }
 
 static void
@@ -124,7 +124,7 @@ swfdec_xml_socket_stream_target_parse (SwfdecStreamTarget *target,
 	SwfdecAsValue val;
 
 	SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (
-	      SWFDEC_AS_OBJECT (xml)->context, (char *) buffer->data));
+	      swfdec_gc_object_get_context (xml), (char *) buffer->data));
 	swfdec_sandbox_use (xml->sandbox);
 	swfdec_as_object_call (xml->target, SWFDEC_AS_STR_onData, 1, &val, NULL);
 	swfdec_sandbox_unuse (xml->sandbox);
@@ -167,12 +167,14 @@ G_DEFINE_TYPE_WITH_CODE (SwfdecXmlSocket, swfdec_xml_socket, SWFDEC_TYPE_AS_OBJE
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_xml_socket_stream_target_init))
 
 static void
-swfdec_xml_socket_mark (SwfdecAsObject *object)
+swfdec_xml_socket_mark (SwfdecGcObject *object)
 {
-  swfdec_as_object_mark (SWFDEC_XML_SOCKET (object)->target);
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (SWFDEC_XML_SOCKET (object)->sandbox));
+  SwfdecXmlSocket *sock = SWFDEC_XML_SOCKET (object);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_xml_socket_parent_class)->mark (object);
+  swfdec_gc_object_mark (sock->target);
+  swfdec_gc_object_mark (sock->sandbox);
+
+  SWFDEC_GC_OBJECT_CLASS (swfdec_xml_socket_parent_class)->mark (object);
 }
 
 static void
@@ -193,11 +195,11 @@ static void
 swfdec_xml_socket_class_init (SwfdecXmlSocketClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *as_object_class = SWFDEC_AS_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_xml_socket_dispose;
 
-  as_object_class->mark = swfdec_xml_socket_mark;
+  gc_class->mark = swfdec_xml_socket_mark;
 }
 
 static void
@@ -217,20 +219,17 @@ swfdec_xml_socket_target_gone (gpointer xmlp)
 static SwfdecXmlSocket *
 swfdec_xml_socket_create (SwfdecAsObject *target, SwfdecSandbox *sandbox, const char *hostname, guint port)
 {
-  SwfdecAsContext *cx = target->context;
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (target);
   SwfdecXmlSocket *xml;
   SwfdecSocket *sock;
-
-  swfdec_as_context_use_mem (cx, sizeof (SwfdecXmlSocket));
 
   SWFDEC_FIXME ("implement security checks please");
   sock = swfdec_player_create_socket (SWFDEC_PLAYER (cx), hostname, port);
   if (sock == NULL)
     return NULL;
 
-  xml = g_object_new (SWFDEC_TYPE_XML_SOCKET, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (xml), cx, sizeof (SwfdecXmlSocket));
-  swfdec_player_root (SWFDEC_PLAYER (cx), xml, (GFunc) swfdec_as_object_mark);
+  xml = g_object_new (SWFDEC_TYPE_XML_SOCKET, "context", cx, NULL);
+  swfdec_player_root (SWFDEC_PLAYER (cx), xml, (GFunc) swfdec_gc_object_mark);
 
   if (xml_socket_quark == 0)
     xml_socket_quark = g_quark_from_static_string ("swfdec-xml-socket");

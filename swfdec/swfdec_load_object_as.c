@@ -112,7 +112,7 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
   const char *name;
   SwfdecAsContext *cx;
 
-  cx = object->context;
+  cx = swfdec_gc_object_get_context (object);
 
   array_names = g_ptr_array_new ();
   array_values = g_ptr_array_new ();

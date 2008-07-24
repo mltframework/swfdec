@@ -37,7 +37,7 @@ swfdec_as_script_function_call (SwfdecAsFunction *function)
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (function);
   SwfdecAsFrame *frame;
 
-  frame = swfdec_as_frame_new (SWFDEC_AS_OBJECT (function)->context, script->script);
+  frame = swfdec_as_frame_new (swfdec_gc_object_get_context (function), script->script);
   if (frame == NULL)
     return NULL;
   frame->scope_chain = g_slist_concat (frame->scope_chain, g_slist_copy (script->scope_chain));
@@ -63,13 +63,13 @@ swfdec_as_script_function_dispose (GObject *object)
 }
 
 static void
-swfdec_as_script_function_mark (SwfdecAsObject *object)
+swfdec_as_script_function_mark (SwfdecGcObject *object)
 {
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (object);
 
-  g_slist_foreach (script->scope_chain, (GFunc) swfdec_as_object_mark, NULL);
+  g_slist_foreach (script->scope_chain, (GFunc) swfdec_gc_object_mark, NULL);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_as_script_function_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_as_script_function_parent_class)->mark (object);
 }
 
 static char *
@@ -96,12 +96,14 @@ static void
 swfdec_as_script_function_class_init (SwfdecAsScriptFunctionClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
   SwfdecAsFunctionClass *function_class = SWFDEC_AS_FUNCTION_CLASS (klass);
 
   object_class->dispose = swfdec_as_script_function_dispose;
 
-  asobject_class->mark = swfdec_as_script_function_mark;
+  gc_class->mark = swfdec_as_script_function_mark;
+
   asobject_class->debug = swfdec_as_script_function_debug;
 
   function_class->call = swfdec_as_script_function_call;
@@ -123,13 +125,11 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), NULL);
   g_return_val_if_fail (script != NULL, NULL);
 
-  context = target->context;
-  swfdec_as_context_use_mem (context, sizeof (SwfdecAsScriptFunction));
-  fun = g_object_new (SWFDEC_TYPE_AS_SCRIPT_FUNCTION, NULL);
+  context = swfdec_gc_object_get_context (target);
+  fun = g_object_new (SWFDEC_TYPE_AS_SCRIPT_FUNCTION, "context", context, NULL);
   fun->scope_chain = g_slist_copy ((GSList *) scope_chain);
   fun->script = script;
   fun->target = target;
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsScriptFunction));
   /* set prototype */
   proto = swfdec_as_object_new_empty (context);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);

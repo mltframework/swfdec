@@ -64,21 +64,21 @@ static int property_offsets[] = {
 };
 
 static void
-swfdec_text_format_do_mark (SwfdecAsObject *object)
+swfdec_text_format_mark (SwfdecGcObject *object)
 {
   SwfdecTextFormat *format = SWFDEC_TEXT_FORMAT (object);
 
   swfdec_text_attributes_mark (&format->attr);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_text_format_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_text_format_parent_class)->mark (object);
 }
 
 static void
 swfdec_text_format_class_init (SwfdecTextFormatClass *klass)
 {
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
 
-  asobject_class->mark = swfdec_text_format_do_mark;
+  gc_class->mark = swfdec_text_format_mark;
 }
 
 static void
@@ -111,6 +111,7 @@ swfdec_text_format_set_string (SwfdecAsObject *object,
     SwfdecTextAttribute property, guint argc, SwfdecAsValue *argv)
 {
   SwfdecTextFormat *format;
+  SwfdecAsContext *context;
   const char *s;
 
   if (!SWFDEC_IS_TEXT_FORMAT (object))
@@ -120,9 +121,10 @@ swfdec_text_format_set_string (SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  swfdec_as_value_to_integer (object->context, &argv[0]);
-  swfdec_as_value_to_number (object->context, &argv[0]);
-  s = swfdec_as_value_to_string (object->context, &argv[0]);
+  context = swfdec_gc_object_get_context (format);
+  swfdec_as_value_to_integer (context, &argv[0]);
+  swfdec_as_value_to_number (context, &argv[0]);
+  s = swfdec_as_value_to_string (context, &argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
@@ -162,6 +164,7 @@ swfdec_text_format_set_boolean (SwfdecAsObject *object,
     SwfdecTextAttribute property, guint argc, SwfdecAsValue *argv)
 {
   SwfdecTextFormat *format;
+  SwfdecAsContext *context;
 
   if (!SWFDEC_IS_TEXT_FORMAT (object))
     return;
@@ -170,16 +173,17 @@ swfdec_text_format_set_boolean (SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  swfdec_as_value_to_integer (object->context, &argv[0]);
-  swfdec_as_value_to_number (object->context, &argv[0]);
-  swfdec_as_value_to_string (object->context, &argv[0]);
+  context = swfdec_gc_object_get_context (format);
+  swfdec_as_value_to_integer (context, &argv[0]);
+  swfdec_as_value_to_number (context, &argv[0]);
+  swfdec_as_value_to_string (context, &argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, property);
   } else {
     G_STRUCT_MEMBER (gboolean, format, property_offsets[property]) =
-      swfdec_as_value_to_boolean (object->context, &argv[0]);
+      swfdec_as_value_to_boolean (context, &argv[0]);
     SWFDEC_TEXT_ATTRIBUTE_SET (format->values_set, property);
   }
 }
@@ -262,8 +266,8 @@ swfdec_text_format_set_integer (SwfdecAsObject *object,
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, property);
   } else {
     G_STRUCT_MEMBER (int, format, property_offsets[property]) =
-      swfdec_text_format_value_to_integer (object->context, &argv[0],
-	  allow_negative);
+      swfdec_text_format_value_to_integer (swfdec_gc_object_get_context (format),
+	  &argv[0], allow_negative);
     SWFDEC_TEXT_ATTRIBUTE_SET (format->values_set, property);
   }
 }
@@ -904,7 +908,7 @@ swfdec_text_format_set_defaults (SwfdecTextFormat *format)
   swfdec_text_attributes_reset (&format->attr);
   format->values_set = SWFDEC_TEXT_ATTRIBUTES_MASK;
 
-  if (SWFDEC_AS_OBJECT (format)->context->version < 8) {
+  if (swfdec_gc_object_get_context (format)->version < 8) {
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_KERNING);
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_LETTER_SPACING);
   }
@@ -1044,7 +1048,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 SwfdecTextFormat *
-swfdec_text_format_copy (const SwfdecTextFormat *copy_from)
+swfdec_text_format_copy (SwfdecTextFormat *copy_from)
 {
   SwfdecAsObject *object_to;
   SwfdecTextFormat *copy_to;
@@ -1052,7 +1056,7 @@ swfdec_text_format_copy (const SwfdecTextFormat *copy_from)
   g_return_val_if_fail (SWFDEC_IS_TEXT_FORMAT (copy_from), NULL);
 
   object_to = swfdec_text_format_new_no_properties (
-      SWFDEC_AS_OBJECT (copy_from)->context);
+      swfdec_gc_object_get_context (copy_from));
   if (object_to == NULL)
     return NULL;
   copy_to = SWFDEC_TEXT_FORMAT (object_to);
@@ -1072,10 +1076,7 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  swfdec_as_context_use_mem (context, sizeof (SwfdecTextFormat));
-
-  ret = g_object_new (SWFDEC_TYPE_TEXT_FORMAT, NULL);
-  swfdec_as_object_add (ret, context, sizeof (SwfdecTextFormat));
+  ret = g_object_new (SWFDEC_TYPE_TEXT_FORMAT, "context", context, NULL);
 
   swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (ret));
 

@@ -454,7 +454,7 @@ swfdec_sprite_movie_do_goto (SwfdecSpriteMovie *movie, SwfdecAsValue *target)
       return;
     frame++;
   } else {
-    frame = swfdec_as_value_to_integer (SWFDEC_AS_OBJECT (movie)->context, target);
+    frame = swfdec_as_value_to_integer (swfdec_gc_object_get_context (movie), target);
   }
   /* FIXME: how to handle overflow? */
   frame = CLAMP (frame, 1, (int) movie->n_frames);
@@ -711,7 +711,7 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
   g_return_if_fail (initObject == NULL || SWFDEC_IS_AS_OBJECT (initObject));
 
   if (initObject != NULL) {
-    SwfdecAsContext *cx = SWFDEC_AS_OBJECT (movie)->context;
+    SwfdecAsContext *cx = swfdec_gc_object_get_context (movie);
     if (cx->version <= 6) {
       swfdec_as_object_foreach (initObject,
 	  swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
@@ -769,7 +769,8 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
   ret = swfdec_movie_find (movie, depth);
   if (ret)
     swfdec_movie_remove (ret);
-  ret = swfdec_movie_new (SWFDEC_PLAYER (object->context), depth, movie, movie->resource, sprite, name);
+  ret = swfdec_movie_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (object)),
+      depth, movie, movie->resource, sprite, name);
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
       ret->name, ret->depth);
   /* run init and construct */

@@ -365,15 +365,11 @@ swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
 {
   SwfdecAsValue val;
   SwfdecColorTransformAs *transform_as;
-  guint size;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (transform != NULL, NULL);
 
-  size = sizeof (SwfdecColorTransformAs);
-  swfdec_as_context_use_mem (context, size);
-  transform_as = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (transform_as), context, size);
+  transform_as = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, "context", context, NULL);
 
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_flash, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {

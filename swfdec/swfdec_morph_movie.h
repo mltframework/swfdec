@@ -39,7 +39,6 @@ typedef struct _SwfdecMorphMovieClass SwfdecMorphMovieClass;
 struct _SwfdecMorphMovie {
   SwfdecMovie		movie;
 
-  SwfdecMorphShape *	morph;
   GSList *		draws;		/* drawing operations to use or NULL if not yet created */
 };
 

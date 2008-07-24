@@ -39,31 +39,6 @@ swfdec_text_field_mouse_in (SwfdecGraphic *graphic, double x, double y)
   return swfdec_rect_contains (&graphic->extents, x, y);
 }
 
-static SwfdecMovie *
-swfdec_text_field_create_movie (SwfdecGraphic *graphic, gsize *size)
-{
-  SwfdecTextField *text = SWFDEC_TEXT_FIELD (graphic);
-  SwfdecTextFieldMovie *ret =
-    g_object_new (SWFDEC_TYPE_TEXT_FIELD_MOVIE, NULL);
-
-  ret->extents = graphic->extents;
-
-  ret->html = text->html;
-  ret->editable = text->editable;
-  swfdec_text_layout_set_password (ret->layout, text->password);
-  ret->max_chars = text->max_chars;
-  ret->selectable = text->selectable;
-  ret->embed_fonts = text->embed_fonts;
-  swfdec_text_layout_set_word_wrap (ret->layout, text->word_wrap);
-  ret->multiline = text->multiline;
-  ret->auto_size = text->auto_size;
-  ret->border = text->border;
-
-  *size = sizeof (SwfdecTextFieldMovie);
-
-  return SWFDEC_MOVIE (ret);
-}
-
 static void
 swfdec_text_field_dispose (GObject *object)
 {
@@ -92,7 +67,8 @@ swfdec_text_field_class_init (SwfdecTextFieldClass * g_class)
   SwfdecGraphicClass *graphic_class = SWFDEC_GRAPHIC_CLASS (g_class);
 
   object_class->dispose = swfdec_text_field_dispose;
-  graphic_class->create_movie = swfdec_text_field_create_movie;
+
+  graphic_class->movie_type = SWFDEC_TYPE_TEXT_FIELD_MOVIE;
   graphic_class->mouse_in = swfdec_text_field_mouse_in;
 }
 

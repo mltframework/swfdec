@@ -51,7 +51,7 @@ mc_x_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   SwfdecTwips x;
 
-  if (!swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val, FALSE, &x))
+  if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), val, FALSE, &x))
     return;
   movie->modified = TRUE;
   if (x != movie->matrix.x0) {
@@ -76,7 +76,7 @@ mc_y_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   SwfdecTwips y;
 
-  if (!swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val, FALSE, &y))
+  if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), val, FALSE, &y))
     return;
   movie->modified = TRUE;
   if (y != movie->matrix.y0) {
@@ -97,7 +97,7 @@ mc_xscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   double d;
 
-  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
     return;
@@ -121,7 +121,7 @@ mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   double d;
 
-  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set yscale to a non-finite value, ignoring");
     return;
@@ -143,7 +143,7 @@ mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 static void
 mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  movie->name = swfdec_as_value_to_string (SWFDEC_AS_OBJECT (movie)->context, val);
+  movie->name = swfdec_as_value_to_string (swfdec_gc_object_get_context (movie), val);
 }
 
 static void
@@ -159,7 +159,7 @@ mc_alpha_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   double d;
   int alpha;
 
-  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set alpha to a non-finite value, ignoring");
     return;
@@ -182,7 +182,7 @@ mc_visible_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   gboolean b;
 
-  b = swfdec_as_value_to_boolean (SWFDEC_AS_OBJECT (movie)->context, val);
+  b = swfdec_as_value_to_boolean (swfdec_gc_object_get_context (movie), val);
   if (b != movie->visible) {
     movie->visible = b;
     swfdec_movie_invalidate_last (movie);
@@ -206,9 +206,9 @@ mc_width_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   double d, cur;
 
   /* property was readonly in Flash 4 and before */
-  if (SWFDEC_AS_OBJECT (movie)->context->version < 5)
+  if (swfdec_gc_object_get_context (movie)->version < 5)
     return;
-  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set width to a non-finite value, ignoring");
     return;
@@ -248,9 +248,9 @@ mc_height_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   double d, cur;
 
   /* property was readonly in Flash 4 and before */
-  if (SWFDEC_AS_OBJECT (movie)->context->version < 5)
+  if (swfdec_gc_object_get_context (movie)->version < 5)
     return;
-  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
     return;
@@ -285,7 +285,7 @@ mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   double d;
 
   /* FIXME: Flash 4 handles this differently */
-  d = swfdec_as_value_to_number (SWFDEC_AS_OBJECT (movie)->context, val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (isnan (d)) {
     SWFDEC_WARNING ("setting rotation to NaN - not allowed");
     return;
@@ -295,7 +295,7 @@ mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
     d -= 360.0;
   if (d < -180.0)
     d += 360.0;
-  if (SWFDEC_AS_OBJECT (movie)->context->version < 5) {
+  if (swfdec_gc_object_get_context (movie)->version < 5) {
     if (!isfinite (d))
       return;
     SWFDEC_FIXME ("implement correct rounding errors here");
@@ -361,7 +361,7 @@ mc_target_get (SwfdecMovie *movie, SwfdecAsValue *rval)
     g_string_free (s, TRUE);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_give_string (
-	  SWFDEC_AS_OBJECT (movie)->context, g_string_free (s, FALSE)));
+	  swfdec_gc_object_get_context (movie), g_string_free (s, FALSE)));
   }
 }
 
@@ -369,7 +369,7 @@ static void
 mc_url_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_get_string (
-	SWFDEC_AS_OBJECT (movie)->context,
+	swfdec_gc_object_get_context (movie),
 	swfdec_url_get_url (swfdec_loader_get_url (movie->resource->loader))));
 }
 
@@ -384,7 +384,7 @@ mc_focusrect_get (SwfdecMovie *movie, SwfdecAsValue *rval)
     return;
   }
   actor = SWFDEC_ACTOR (movie);
-  cx = SWFDEC_AS_OBJECT (actor)->context;
+  cx = swfdec_gc_object_get_context (actor);
 
   switch (actor->focusrect) {
     case SWFDEC_FLASH_YES:
@@ -418,7 +418,7 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
     SWFDEC_FIXME ("should not be possible to get _focusrect on non-actors");
     return;
   }
-  cx = SWFDEC_AS_OBJECT (movie)->context;
+  cx = swfdec_gc_object_get_context (movie);
   actor = SWFDEC_ACTOR (movie);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (val) ||

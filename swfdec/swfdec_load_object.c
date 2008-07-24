@@ -38,7 +38,7 @@
 static SwfdecPlayer *
 swfdec_load_object_stream_target_get_player (SwfdecStreamTarget *target)
 {
-  return SWFDEC_PLAYER (SWFDEC_LOAD_OBJECT (target)->target->context);
+  return SWFDEC_PLAYER (swfdec_gc_object_get_context (SWFDEC_LOAD_OBJECT (target)->target));
 }
 
 static gboolean
@@ -76,7 +76,7 @@ swfdec_load_object_stream_target_error (SwfdecStreamTarget *target,
 
   /* unroot */
   swfdec_player_unroot (SWFDEC_PLAYER (
-	SWFDEC_AS_OBJECT (load_object->sandbox)->context), load_object);
+	swfdec_gc_object_get_context (load_object->sandbox)), load_object);
 }
 
 static void
@@ -98,7 +98,7 @@ swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
   swfdec_sandbox_use (load_object->sandbox);
   if (text != NULL) {
     load_object->finish (load_object->target, 
-	swfdec_as_context_give_string (load_object->target->context, text));
+	swfdec_as_context_give_string (swfdec_gc_object_get_context (load_object->target), text));
   } else {
     load_object->finish (load_object->target, SWFDEC_AS_STR_EMPTY);
   }
@@ -106,7 +106,7 @@ swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
 
   /* unroot */
   swfdec_player_unroot (SWFDEC_PLAYER (
-	SWFDEC_AS_OBJECT (load_object->sandbox)->context), load_object);
+	swfdec_gc_object_get_context (load_object->sandbox)), load_object);
 }
 
 static void
@@ -206,10 +206,10 @@ swfdec_load_object_mark (gpointer object, gpointer player)
 {
   SwfdecLoadObject *load = object;
 
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (load->sandbox));
+  swfdec_gc_object_mark (load->sandbox);
   if (load->url)
     swfdec_as_string_mark (load->url);
-  swfdec_as_object_mark (load->target);
+  swfdec_gc_object_mark (load->target);
 }
 
 void
@@ -227,7 +227,7 @@ swfdec_load_object_create (SwfdecAsObject *target, const char *url,
   g_return_if_fail (header_count == 0 || header_values != NULL);
   g_return_if_fail (finish != NULL);
 
-  player = SWFDEC_PLAYER (target->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
   load = g_object_new (SWFDEC_TYPE_LOAD_OBJECT, NULL);
   swfdec_player_root_full (player, load, swfdec_load_object_mark, g_object_unref);
 

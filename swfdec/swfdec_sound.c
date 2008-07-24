@@ -45,7 +45,7 @@ swfdec_sound_sound_provider_start (SwfdecSoundProvider *provider,
   SwfdecSound *sound = SWFDEC_SOUND (provider);
   SwfdecAudio *audio;
 
-  audio = swfdec_audio_event_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context),
+  audio = swfdec_audio_event_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (actor)),
       sound, samples_offset, loops);
   swfdec_audio_set_actor (audio, actor);
   g_object_unref (audio);
@@ -75,7 +75,7 @@ swfdec_sound_sound_provider_stop (SwfdecSoundProvider *provider, SwfdecActor *ac
 {
   RemoveData data = { actor, SWFDEC_SOUND (provider) };
 
-  swfdec_player_stop_sounds (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context), 
+  swfdec_player_stop_sounds (SWFDEC_PLAYER (swfdec_gc_object_get_context (actor)), 
       swfdec_sound_object_should_stop, &data);
 }
 

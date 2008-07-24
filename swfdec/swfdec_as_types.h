@@ -49,6 +49,7 @@ typedef void (* SwfdecAsNative) (SwfdecAsContext *	context,
 				 guint			argc,
 				 SwfdecAsValue *	argv,
 				 SwfdecAsValue *	retval);
+typedef struct _SwfdecGcObject SwfdecGcObject;
 typedef struct _SwfdecScript SwfdecScript;
 
 

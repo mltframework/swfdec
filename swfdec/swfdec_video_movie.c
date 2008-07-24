@@ -29,6 +29,7 @@
 #include "swfdec_renderer_internal.h"
 #include "swfdec_utils.h"
 #include "swfdec_video_provider.h"
+#include "swfdec_video_video_provider.h"
 
 G_DEFINE_TYPE (SwfdecVideoMovie, swfdec_video_movie, SWFDEC_TYPE_MOVIE)
 
@@ -36,10 +37,10 @@ static void
 swfdec_video_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
-  SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (movie);
+  SwfdecVideo *org = SWFDEC_VIDEO (movie->graphic);
   SwfdecRect rect = { 0, 0, 
-    SWFDEC_TWIPS_SCALE_FACTOR * video->video->width, 
-    SWFDEC_TWIPS_SCALE_FACTOR * video->video->height };
+    SWFDEC_TWIPS_SCALE_FACTOR * org->width, 
+    SWFDEC_TWIPS_SCALE_FACTOR * org->height };
   
   swfdec_rect_union (extents, extents, &rect);
 }
@@ -88,8 +89,6 @@ swfdec_video_movie_dispose (GObject *object)
     movie->provider = NULL;
   }
 
-  g_object_unref (movie->video);
-
   G_OBJECT_CLASS (swfdec_video_movie_parent_class)->dispose (object);
 }
 
@@ -106,7 +105,7 @@ static gboolean
 swfdec_video_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     const char *variable, SwfdecAsValue *val, guint *flags)
 {
-  guint version = object->context->version;
+  guint version = swfdec_gc_object_get_context (object)->version;
   SwfdecVideoMovie *video;
 
   video = SWFDEC_VIDEO_MOVIE (object);
@@ -147,7 +146,7 @@ static void
 swfdec_video_movie_set_variable (SwfdecAsObject *object, const char *variable,
     const SwfdecAsValue *val, guint flags)
 {
-  guint version = object->context->version;
+  guint version = swfdec_gc_object_get_context (object)->version;
 
   if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_deblocking) == 0) {
     SWFDEC_STUB ("Video.deblocking (set)");
@@ -180,19 +179,38 @@ swfdec_video_movie_foreach_variable (SwfdecAsObject *object, SwfdecAsVariableFor
 static void
 swfdec_video_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
 {
-  SwfdecVideoMovie *video = SWFDEC_VIDEO_MOVIE (movie);
+  SwfdecVideo *org = SWFDEC_VIDEO (movie->graphic);
   SwfdecRect rect = { 0, 0, 
-    SWFDEC_TWIPS_SCALE_FACTOR * video->video->width, 
-    SWFDEC_TWIPS_SCALE_FACTOR * video->video->height };
+    SWFDEC_TWIPS_SCALE_FACTOR * org->width, 
+    SWFDEC_TWIPS_SCALE_FACTOR * org->height };
 
   swfdec_rect_transform (&rect, &rect, matrix);
-  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
 }
 
-static void
-swfdec_video_movie_init_movie (SwfdecMovie *movie)
+static GObject *
+swfdec_video_movie_constructor (GType type, guint n_construct_properties,
+    GObjectConstructParam *construct_properties)
 {
+  GObject *object;
+  SwfdecMovie *movie;
+  SwfdecVideo *video;
+
+  object = G_OBJECT_CLASS (swfdec_video_movie_parent_class)->constructor (type, 
+      n_construct_properties, construct_properties);
+
+  movie = SWFDEC_MOVIE (object);
   swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), movie->resource->sandbox->Video);
+
+  video = SWFDEC_VIDEO (movie->graphic);
+
+  if (video->n_frames > 0) {
+    SwfdecVideoProvider *provider = swfdec_video_video_provider_new (video);
+    swfdec_video_movie_set_provider (SWFDEC_VIDEO_MOVIE (movie), provider);
+    g_object_unref (provider);
+  }
+
+  return object;
 }
 
 static void
@@ -202,6 +220,7 @@ swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
+  object_class->constructor = swfdec_video_movie_constructor;
   object_class->dispose = swfdec_video_movie_dispose;
 
   asobject_class->get = swfdec_video_movie_get_variable;
@@ -211,7 +230,6 @@ swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
   movie_class->update_extents = swfdec_video_movie_update_extents;
   movie_class->render = swfdec_video_movie_render;
   movie_class->invalidate = swfdec_video_movie_invalidate;
-  movie_class->init_movie = swfdec_video_movie_init_movie;
   movie_class->set_ratio = swfdec_video_movie_set_ratio;
 }
 

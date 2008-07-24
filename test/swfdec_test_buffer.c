@@ -34,10 +34,7 @@ swfdec_test_buffer_new (SwfdecAsContext *context, SwfdecBuffer *buffer)
   SwfdecAsValue val;
   SwfdecAsObject *ret;
 
-  swfdec_as_context_use_mem (context, sizeof (SwfdecTestBuffer));
-
-  ret = g_object_new (SWFDEC_TYPE_TEST_BUFFER, NULL);
-  swfdec_as_object_add (ret, context, sizeof (SwfdecTestBuffer));
+  ret = g_object_new (SWFDEC_TYPE_TEST_BUFFER, "context", context, NULL);
   swfdec_as_object_get_variable (context->global, 
       swfdec_as_context_get_string (context, "Buffer"), &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val))

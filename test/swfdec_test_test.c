@@ -54,7 +54,7 @@ swfdec_test_test_error (SwfdecTestPlugin *plugin, const char *description)
   if (test->plugin_error)
     return;
   test->plugin_error = TRUE;
-  swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, description);
+  swfdec_test_throw (swfdec_gc_object_get_context (test), description);
 }
 
 static void
@@ -119,7 +119,7 @@ swfdec_test_test_load_plugin (SwfdecTestTest *test, const char *filename)
     g_free (dir);
     test->module = g_module_open (name, G_MODULE_BIND_LOCAL);
     if (test->module == NULL) {
-      swfdec_test_throw (SWFDEC_AS_OBJECT (test)->context, "could not find player \"%s\"",
+      swfdec_test_throw (swfdec_gc_object_get_context (test), "could not find player \"%s\"",
 	  swfdec_test_plugin_name);
       return;
     }

@@ -46,7 +46,7 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   SwfdecAsObject *object;
 
   swfdec_sandbox_use (stream->sandbox);
-  object = swfdec_as_object_new (SWFDEC_AS_OBJECT (stream)->context);
+  object = swfdec_as_object_new (swfdec_gc_object_get_context (stream));
   SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
   SWFDEC_AS_VALUE_SET_STRING (&val, code);
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_code, &val);
@@ -61,8 +61,8 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
     if (level == SWFDEC_AS_STR_error) {
       SwfdecAsValue system;
 
-      swfdec_as_object_get_variable (SWFDEC_AS_OBJECT
-          (stream)->context->global, SWFDEC_AS_STR_System, &system);
+      swfdec_as_object_get_variable (swfdec_gc_object_get_context (stream)->global,
+          SWFDEC_AS_STR_System, &system);
       if (SWFDEC_AS_VALUE_IS_OBJECT (&system)) {
         swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (&system),
               SWFDEC_AS_STR_onStatus, 1, &val, NULL);
@@ -215,7 +215,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       process_events_from++; /* increase so we get the next event next time */
       swfdec_bits_init (&bits, event);
       swfdec_sandbox_use (stream->sandbox);
-      if (swfdec_amf_parse (SWFDEC_AS_OBJECT (stream)->context, &bits, 2, 
+      if (swfdec_amf_parse (swfdec_gc_object_get_context (stream), &bits, 2, 
 	    SWFDEC_AMF_STRING, &name, SWFDEC_AMF_MIXED_ARRAY, &value) != 2) {
 	SWFDEC_ERROR ("could not parse data tag");
       } else {
@@ -240,14 +240,14 @@ swfdec_net_stream_timeout (SwfdecTimeout *timeout)
       stream->timeout.callback) {
     SWFDEC_LOG ("readding timeout");
     stream->timeout.timestamp += SWFDEC_MSECS_TO_TICKS (stream->next_time - stream->current_time);
-    swfdec_player_add_timeout (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), &stream->timeout);
+    swfdec_player_add_timeout (SWFDEC_PLAYER (swfdec_gc_object_get_context (stream)), &stream->timeout);
   }
 }
 
 static void
 swfdec_net_stream_update_playing (SwfdecNetStream *stream)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (stream));
   gboolean should_play;
     
   should_play = stream->playing; /* checks user-set play/pause */
@@ -287,7 +287,7 @@ swfdec_net_stream_update_playing (SwfdecNetStream *stream)
 static SwfdecPlayer *
 swfdec_net_stream_stream_target_get_player (SwfdecStreamTarget *target)
 {
-  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
+  return SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
 }
 
 static void
@@ -333,7 +333,7 @@ swfdec_net_stream_stream_target_parse (SwfdecStreamTarget *target,
     /* FIXME: add mp3 support */
     ns->flvdecoder = g_object_new (SWFDEC_TYPE_FLV_DECODER, NULL);
     g_signal_connect_swapped (ns->flvdecoder, "missing-plugin", 
-	G_CALLBACK (swfdec_player_add_missing_plugin), SWFDEC_AS_OBJECT (ns)->context);
+	G_CALLBACK (swfdec_player_add_missing_plugin), swfdec_gc_object_get_context (ns));
     swfdec_net_stream_onstatus (ns, SWFDEC_AS_STR_NetStream_Play_Start,
 	SWFDEC_AS_STR_status);
     swfdec_loader_set_data_type (SWFDEC_LOADER (stream), SWFDEC_LOADER_DATA_FLV);
@@ -535,28 +535,30 @@ swfdec_net_stream_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 }
 
 static void
-swfdec_net_stream_mark (SwfdecAsObject *object)
+swfdec_net_stream_mark (SwfdecGcObject *object)
 {
   SwfdecNetStream *stream = SWFDEC_NET_STREAM (object);
 
   if (stream->conn)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (stream->conn));
+    swfdec_gc_object_mark (stream->conn);
   if (stream->sandbox)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (stream->sandbox));
+    swfdec_gc_object_mark (stream->sandbox);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_net_stream_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_net_stream_parent_class)->mark (object);
 }
 
 static void
 swfdec_net_stream_class_init (SwfdecNetStreamClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_net_stream_dispose;
 
+  gc_class->mark = swfdec_net_stream_mark;
+
   asobject_class->get = swfdec_net_stream_get_variable;
-  asobject_class->mark = swfdec_net_stream_mark;
 }
 
 static void
@@ -601,7 +603,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url_string)
   g_return_if_fail (SWFDEC_IS_NET_STREAM (stream));
   g_return_if_fail (url_string != NULL);
 
-  cx = SWFDEC_AS_OBJECT (stream)->context;
+  cx = swfdec_gc_object_get_context (stream);
   player = SWFDEC_PLAYER (cx);
 
   if (stream->requested_url != NULL) {
@@ -631,7 +633,7 @@ swfdec_net_stream_set_loader (SwfdecNetStream *stream, SwfdecLoader *loader)
   }
   if (stream->flvdecoder) {
     g_signal_handlers_disconnect_by_func (stream->flvdecoder,
-	  swfdec_player_add_missing_plugin, SWFDEC_AS_OBJECT (stream)->context);
+	  swfdec_player_add_missing_plugin, swfdec_gc_object_get_context (stream));
     g_object_unref (stream->flvdecoder);
     stream->flvdecoder = NULL;
   }
@@ -718,7 +720,7 @@ swfdec_net_stream_seek (SwfdecNetStream *stream, double secs)
     SWFDEC_WARNING ("FIXME: restarting audio after seek");
     swfdec_audio_remove (stream->audio);
     g_object_unref (stream->audio);
-    stream->audio = swfdec_audio_flv_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (stream)->context), 
+    stream->audio = swfdec_audio_flv_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (stream)), 
 	stream->flvdecoder, stream->current_time);
   }
 }

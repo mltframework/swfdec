@@ -56,7 +56,7 @@ GType		swfdec_text_format_get_type	(void);
 SwfdecAsObject * swfdec_text_format_new		(SwfdecAsContext *	context);
 SwfdecAsObject * swfdec_text_format_new_no_properties (SwfdecAsContext *	context);
 void		swfdec_text_format_set_defaults	(SwfdecTextFormat *	format);
-SwfdecTextFormat * swfdec_text_format_copy	(const SwfdecTextFormat *copy_from);
+SwfdecTextFormat * swfdec_text_format_copy	(SwfdecTextFormat *	copy_from);
 void		swfdec_text_format_add		(SwfdecTextFormat *	format,
 						 const SwfdecTextFormat *from);
 gboolean	swfdec_text_format_equal	(const SwfdecTextFormat *a,

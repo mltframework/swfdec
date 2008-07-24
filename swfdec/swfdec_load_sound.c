@@ -52,7 +52,7 @@ swfdec_load_sound_sound_provider_start (SwfdecSoundProvider *provider,
     SWFDEC_FIXME ("implement starting at offset %"G_GSIZE_FORMAT" with %u loops",
 	samples_offset, loops);
   }
-  sound->audio = swfdec_audio_load_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context), sound);
+  sound->audio = swfdec_audio_load_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (actor)), sound);
   swfdec_audio_set_matrix (sound->audio, &sound->sound_matrix);
 }
 
@@ -91,7 +91,7 @@ swfdec_load_sound_sound_provider_init (SwfdecSoundProviderInterface *iface)
 static SwfdecPlayer *
 swfdec_load_sound_stream_target_get_player (SwfdecStreamTarget *target)
 {
-  return SWFDEC_PLAYER (SWFDEC_LOAD_SOUND (target)->target->context);
+  return SWFDEC_PLAYER (swfdec_gc_object_get_context (SWFDEC_LOAD_SOUND (target)->target));
 }
 
 static gboolean
@@ -401,24 +401,26 @@ SwfdecLoadSound *
 swfdec_load_sound_new (SwfdecAsObject *target, const char *url)
 {
   SwfdecLoadSound *sound;
+  SwfdecAsContext *context;
   char *missing;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
+  context = swfdec_gc_object_get_context (target);
   sound = g_object_new (SWFDEC_TYPE_LOAD_SOUND, NULL);
   sound->target = target;
-  sound->sandbox = SWFDEC_SANDBOX (target->context->global);
+  sound->sandbox = SWFDEC_SANDBOX (context->global);
   sound->url = g_strdup (url);
   g_assert (sound->sandbox);
-  swfdec_player_allow_by_matrix (SWFDEC_PLAYER (target->context), sound->sandbox,
+  swfdec_player_allow_by_matrix (SWFDEC_PLAYER (context), sound->sandbox,
       url, swfdec_load_sound_matrix, swfdec_load_sound_load, sound);
   /* tell missing plugins stuff we want MP3 */
   missing = NULL;
   swfdec_audio_decoder_prepare (SWFDEC_AUDIO_CODEC_MP3, 
       swfdec_audio_format_new (44100, 2, TRUE), &missing);
   if (missing) {
-    swfdec_player_add_missing_plugin (SWFDEC_PLAYER (target->context),
+    swfdec_player_add_missing_plugin (SWFDEC_PLAYER (context),
 	missing);
     g_free (missing);
   }

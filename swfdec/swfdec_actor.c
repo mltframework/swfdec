@@ -81,7 +81,7 @@ swfdec_actor_mouse_events (SwfdecActor *actor)
 static void
 swfdec_actor_mouse_in (SwfdecActor *actor)
 {
-  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context)))
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (swfdec_gc_object_get_context (actor))))
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_DRAG_OVER);
   else
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_ROLL_OVER);
@@ -90,7 +90,7 @@ swfdec_actor_mouse_in (SwfdecActor *actor)
 static void
 swfdec_actor_mouse_out (SwfdecActor *actor)
 {
-  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context)))
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (swfdec_gc_object_get_context (actor))))
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_DRAG_OUT);
   else
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_ROLL_OUT);
@@ -112,7 +112,7 @@ swfdec_actor_mouse_release (SwfdecActor *actor, guint button)
   if (button != 0)
     return;
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (actor));
   if (player->priv->mouse_below == actor)
     swfdec_actor_queue_script (actor, SWFDEC_EVENT_RELEASE);
   else
@@ -165,7 +165,7 @@ static void
 swfdec_sprite_movie_set_constructor (SwfdecSpriteMovie *movie)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
-  SwfdecAsContext *context = SWFDEC_AS_OBJECT (movie)->context;
+  SwfdecAsContext *context = swfdec_gc_object_get_context (movie);
   SwfdecAsObject *constructor = NULL;
 
   g_assert (mov->resource != NULL);
@@ -309,7 +309,7 @@ swfdec_actor_queue_script_with_key (SwfdecActor *actor,
       g_return_if_reached ();
   }
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (actor));
   swfdec_player_add_action (player, actor, condition, key, importance);
 }
 

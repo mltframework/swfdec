@@ -35,13 +35,13 @@
 G_DEFINE_TYPE (SwfdecAsString, swfdec_as_string, SWFDEC_TYPE_AS_OBJECT)
 
 static void
-swfdec_as_string_do_mark (SwfdecAsObject *object)
+swfdec_as_string_do_mark (SwfdecGcObject *object)
 {
   SwfdecAsString *string = SWFDEC_AS_STRING (object);
 
   swfdec_as_string_mark (string->string);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_as_string_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_as_string_parent_class)->mark (object);
 }
 
 static char *
@@ -55,9 +55,11 @@ swfdec_as_string_debug (SwfdecAsObject *object)
 static void
 swfdec_as_string_class_init (SwfdecAsStringClass *klass)
 {
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
-  asobject_class->mark = swfdec_as_string_do_mark;
+  gc_class->mark = swfdec_as_string_do_mark;
+
   asobject_class->debug = swfdec_as_string_debug;
 }
 

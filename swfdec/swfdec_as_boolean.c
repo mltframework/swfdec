@@ -52,7 +52,7 @@ swfdec_as_boolean_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   gboolean b;
 
   if (argc > 0) {
-    b = swfdec_as_value_to_boolean (object->context, &argv[0]);
+    b = swfdec_as_value_to_boolean (swfdec_gc_object_get_context (object), &argv[0]);
   } else {
     if (!swfdec_as_context_is_constructing (cx))
       return;

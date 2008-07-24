@@ -31,26 +31,12 @@
 
 G_DEFINE_TYPE (SwfdecMorphShape, swfdec_morph_shape, SWFDEC_TYPE_SHAPE)
 
-static SwfdecMovie *
-swfdec_graphic_create_movie (SwfdecGraphic *graphic, gsize *size)
-{
-  SwfdecMorphShape *morph = SWFDEC_MORPH_SHAPE (graphic);
-  SwfdecMorphMovie *movie = g_object_new (SWFDEC_TYPE_MORPH_MOVIE, NULL);
-
-  movie->morph = morph;
-  g_object_ref (morph);
-
-  *size = sizeof (SwfdecMorphMovie);
-
-  return SWFDEC_MOVIE (movie);
-}
-
 static void
 swfdec_morph_shape_class_init (SwfdecMorphShapeClass * g_class)
 {
   SwfdecGraphicClass *graphic_class = SWFDEC_GRAPHIC_CLASS (g_class);
   
-  graphic_class->create_movie = swfdec_graphic_create_movie;
+  graphic_class->movie_type = SWFDEC_TYPE_MORPH_MOVIE;
 }
 
 static void

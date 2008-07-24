@@ -59,7 +59,7 @@ swfdec_as_native_function_call (SwfdecAsFunction *function)
   SwfdecAsFrame *frame;
   SwfdecAsContext *cx;
 
-  cx = SWFDEC_AS_OBJECT (function)->context;
+  cx = swfdec_gc_object_get_context (function);
   frame = swfdec_as_frame_new_native (cx);
   if (frame == NULL)
     return NULL;
@@ -143,12 +143,10 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
   g_return_val_if_fail (native != NULL, NULL);
   g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
-  swfdec_as_context_use_mem (context, sizeof (SwfdecAsNativeFunction));
-  fun = g_object_new (SWFDEC_TYPE_AS_NATIVE_FUNCTION, NULL);
+  fun = g_object_new (SWFDEC_TYPE_AS_NATIVE_FUNCTION, "context", context, NULL);
   fun->native = native;
   fun->min_args = min_args;
   fun->name = g_strdup (name);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (fun), context, sizeof (SwfdecAsNativeFunction));
   /* need to set prototype before setting the constructor or Function.constructor 
    * being CONSTANT disallows setting it. */
   if (prototype) {

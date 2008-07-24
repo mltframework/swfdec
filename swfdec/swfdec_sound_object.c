@@ -39,14 +39,14 @@
 G_DEFINE_TYPE (SwfdecSoundObject, swfdec_sound_object, SWFDEC_TYPE_AS_OBJECT)
 
 static void
-swfdec_sound_object_mark (SwfdecAsObject *object)
+swfdec_sound_object_mark (SwfdecGcObject *object)
 {
   SwfdecSoundObject *sound = SWFDEC_SOUND_OBJECT (object);
 
   if (sound->target != NULL)
     swfdec_as_string_mark (sound->target);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_sound_object_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_sound_object_parent_class)->mark (object);
 }
 
 static void
@@ -66,11 +66,11 @@ static void
 swfdec_sound_object_class_init (SwfdecSoundObjectClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_sound_object_dispose;
 
-  asobject_class->mark = swfdec_sound_object_mark;
+  gc_class->mark = swfdec_sound_object_mark;
 }
 
 static void
@@ -81,7 +81,7 @@ swfdec_sound_object_init (SwfdecSoundObject *sound)
 static SwfdecActor *
 swfdec_sound_object_get_actor (SwfdecSoundObject *sound)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (sound)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (sound));
   SwfdecMovie *movie;
 
   movie = swfdec_player_get_movie_from_string (player, 
@@ -114,7 +114,7 @@ swfdec_sound_object_get_matrix (SwfdecSoundObject *sound)
   }
 
   if (sound->target == NULL) {
-    return &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (sound)->context)->priv->sound_matrix;
+    return &SWFDEC_PLAYER (swfdec_gc_object_get_context (sound))->priv->sound_matrix;
   } else {
     SwfdecActor *actor = swfdec_sound_object_get_actor (sound);
     if (actor)

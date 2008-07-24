@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,13 +38,11 @@
 #include "swfdec_as_types.h"
 #include "swfdec_constant_pool.h"
 #include "swfdec_debug.h"
+#include "swfdec_gc_object.h"
 #include "swfdec_internal.h" /* for swfdec_player_preinit_global() */
 #include "swfdec_script.h"
 
 /*** GARBAGE COLLECTION DOCS ***/
-
-#define SWFDEC_AS_GC_MARK (1 << 0)		/* only valid during GC */
-#define SWFDEC_AS_GC_ROOT (1 << 1)		/* for objects: rooted, for strings: static */
 
 /**
  * SECTION:Internals
@@ -281,23 +279,18 @@ swfdec_as_context_remove_strings (gpointer key, gpointer value, gpointer data)
 static gboolean
 swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugger)
 {
-  SwfdecAsObject *object;
+  SwfdecGcObject *gc;
 
-  object = key;
+  gc = key;
   /* we only check for mark here, not root, since this works on destroy, too */
-  if (object->flags & SWFDEC_AS_GC_MARK) {
-    object->flags &= ~SWFDEC_AS_GC_MARK;
-    SWFDEC_LOG ("%s: %s %p", (object->flags & SWFDEC_AS_GC_ROOT) ? "rooted" : "marked",
-	G_OBJECT_TYPE_NAME (object), object);
+  if (gc->flags & SWFDEC_AS_GC_MARK) {
+    gc->flags &= ~SWFDEC_AS_GC_MARK;
+    SWFDEC_LOG ("%s: %s %p", (gc->flags & SWFDEC_AS_GC_ROOT) ? "rooted" : "marked",
+	G_OBJECT_TYPE_NAME (gc), gc);
     return FALSE;
   } else {
-    SWFDEC_LOG ("deleted: %s %p", G_OBJECT_TYPE_NAME (object), object);
-    if (debugger) {
-      SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (debugger);
-      if (klass->remove)
-	klass->remove (debugger, object->context, object);
-    }
-    swfdec_as_object_collect (object);
+    SWFDEC_LOG ("deleted: %s %p", G_OBJECT_TYPE_NAME (gc), gc);
+    g_object_unref (gc);
     return TRUE;
   }
 }
@@ -312,28 +305,6 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   g_hash_table_foreach_remove (context->objects, 
     swfdec_as_context_remove_objects, context->debugger);
   SWFDEC_INFO (">> done collecting garbage");
-}
-
-/**
- * swfdec_as_object_mark:
- * @object: a #SwfdecAsObject
- *
- * Mark @object as being in use. Calling this function is only valid during
- * the marking phase of garbage collection.
- **/
-void
-swfdec_as_object_mark (SwfdecAsObject *object)
-{
-  SwfdecAsObjectClass *klass;
-
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-
-  if (object->flags & SWFDEC_AS_GC_MARK)
-    return;
-  object->flags |= SWFDEC_AS_GC_MARK;
-  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  g_assert (klass->mark);
-  klass->mark (object);
 }
 
 /**
@@ -369,7 +340,7 @@ swfdec_as_value_mark (SwfdecAsValue *value)
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
-    swfdec_as_object_mark (SWFDEC_AS_VALUE_GET_OBJECT (value));
+    swfdec_gc_object_mark (SWFDEC_AS_VALUE_GET_OBJECT (value));
   } else if (SWFDEC_AS_VALUE_IS_STRING (value)) {
     swfdec_as_string_mark (SWFDEC_AS_VALUE_GET_STRING (value));
   }
@@ -378,10 +349,10 @@ swfdec_as_value_mark (SwfdecAsValue *value)
 static void
 swfdec_as_context_mark_roots (gpointer key, gpointer value, gpointer data)
 {
-  SwfdecAsObject *object = key;
+  SwfdecGcObject *object = key;
 
   if ((object->flags & (SWFDEC_AS_GC_MARK | SWFDEC_AS_GC_ROOT)) == SWFDEC_AS_GC_ROOT)
-    swfdec_as_object_mark (object);
+    swfdec_gc_object_mark (object);
 }
 
 /* FIXME: replace this with refcounted strings? */
@@ -401,11 +372,11 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   /* This if is needed for SwfdecPlayer */
   if (context->global) {
-    swfdec_as_object_mark (context->global);
-    swfdec_as_object_mark (context->Function);
-    swfdec_as_object_mark (context->Function_prototype);
-    swfdec_as_object_mark (context->Object);
-    swfdec_as_object_mark (context->Object_prototype);
+    swfdec_gc_object_mark (context->global);
+    swfdec_gc_object_mark (context->Function);
+    swfdec_gc_object_mark (context->Function_prototype);
+    swfdec_gc_object_mark (context->Object);
+    swfdec_gc_object_mark (context->Object_prototype);
   }
   if (context->exception)
     swfdec_as_value_mark (&context->exception_value);

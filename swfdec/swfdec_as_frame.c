@@ -87,7 +87,7 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
     iter->current = NULL;
     return NULL;
   }
-  context = SWFDEC_AS_OBJECT (frame)->context;
+  context = swfdec_gc_object_get_context (frame);
   if (frame->argv) {
     iter->stack = NULL;
     iter->current = (SwfdecAsValue *) frame->argv;
@@ -134,7 +134,7 @@ swfdec_as_stack_iterator_init (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame
   g_return_val_if_fail (iter != NULL, NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
 
-  context = SWFDEC_AS_OBJECT (frame)->context;
+  context = swfdec_gc_object_get_context (frame);
   iter->i = 0;
   stack = context->stack;
   if (context->frame == frame) {
@@ -293,27 +293,27 @@ swfdec_as_frame_dispose (GObject *object)
 }
 
 static void
-swfdec_as_frame_mark (SwfdecAsObject *object)
+swfdec_as_frame_mark (SwfdecGcObject *object)
 {
   SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
   guint i;
 
   if (frame->next)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->next));
-  g_slist_foreach (frame->scope_chain, (GFunc) swfdec_as_object_mark, NULL);
+    swfdec_gc_object_mark (frame->next);
+  g_slist_foreach (frame->scope_chain, (GFunc) swfdec_gc_object_mark, NULL);
   if (frame->thisp)
-    swfdec_as_object_mark (frame->thisp);
+    swfdec_gc_object_mark (frame->thisp);
   if (frame->super)
-    swfdec_as_object_mark (frame->super);
-  swfdec_as_object_mark (frame->target);
-  swfdec_as_object_mark (frame->original_target);
+    swfdec_gc_object_mark (frame->super);
+  swfdec_gc_object_mark (frame->target);
+  swfdec_gc_object_mark (frame->original_target);
   if (frame->function)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (frame->function));
+    swfdec_gc_object_mark (frame->function);
   for (i = 0; i < frame->n_registers; i++) {
     swfdec_as_value_mark (&frame->registers[i]);
   }
   /* don't mark argv, it's const, others have to take care of it */
-  SWFDEC_AS_OBJECT_CLASS (swfdec_as_frame_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_as_frame_parent_class)->mark (object);
 }
 
 static char *
@@ -356,11 +356,13 @@ static void
 swfdec_as_frame_class_init (SwfdecAsFrameClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_as_frame_dispose;
 
-  asobject_class->mark = swfdec_as_frame_mark;
+  gc_class->mark = swfdec_as_frame_mark;
+
   asobject_class->debug = swfdec_as_frame_debug;
 }
 
@@ -375,7 +377,7 @@ swfdec_as_frame_init (SwfdecAsFrame *frame)
 static void
 swfdec_as_frame_load (SwfdecAsFrame *frame)
 {
-  SwfdecAsContext *context = SWFDEC_AS_OBJECT (frame)->context;
+  SwfdecAsContext *context = swfdec_gc_object_get_context (frame);
 
   frame->stack_begin = context->cur;
   context->base = frame->stack_begin;
@@ -394,9 +396,7 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   g_return_val_if_fail (script != NULL, NULL);
   
   size = sizeof (SwfdecAsFrame) + sizeof (SwfdecAsValue) * script->n_registers;
-  swfdec_as_context_use_mem (context, size);
-  frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
+  frame = g_object_new (SWFDEC_TYPE_AS_FRAME, "context", context, NULL);
   frame->script = swfdec_script_ref (script);
   frame->function_name = script->name;
   SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
@@ -424,10 +424,8 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   
   size = sizeof (SwfdecAsFrame);
-  swfdec_as_context_use_mem (context, size);
-  frame = g_object_new (SWFDEC_TYPE_AS_FRAME, NULL);
+  frame = g_object_new (SWFDEC_TYPE_AS_FRAME, "context", context, NULL);
   SWFDEC_DEBUG ("new native frame");
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (frame), context, size);
   swfdec_as_frame_load (frame);
   return frame;
 }
@@ -450,7 +448,7 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
   SwfdecAsFrame *next;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  context = SWFDEC_AS_OBJECT (frame)->context;
+  context = swfdec_gc_object_get_context (frame);
   g_return_if_fail (frame == context->frame);
 
   /* save return value in case it was on the stack somewhere */
@@ -561,7 +559,7 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
 
-  cx = SWFDEC_AS_OBJECT (frame)->context;
+  cx = swfdec_gc_object_get_context (frame);
 
   for (walk = frame->scope_chain; walk; walk = walk->next) {
     if (swfdec_as_object_get_variable_and_flags (walk->data, variable, value, 
@@ -584,7 +582,7 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
   /* FIXME: ignored on version 4, but should it never be created instead? */
   if (cx->version > 4 && swfdec_as_object_get_variable_and_flags (cx->global,
 	variable, value, flags, pobject))
-    return SWFDEC_AS_OBJECT (frame)->context->global;
+    return swfdec_gc_object_get_context (frame)->global;
 
   return NULL;
 }
@@ -645,7 +643,7 @@ swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
   if (ret)
     return ret;
   /* 2) the global object */
-  return swfdec_as_object_delete_variable (SWFDEC_AS_OBJECT (frame)->context->global, variable);
+  return swfdec_as_object_delete_variable (swfdec_gc_object_get_context (frame)->global, variable);
 }
 
 /**
@@ -686,7 +684,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   /* setup */
   object = SWFDEC_AS_OBJECT (frame);
-  context = object->context;
+  context = swfdec_gc_object_get_context (frame);
   script = frame->script;
   if (frame->script == NULL)
     goto out;
@@ -826,7 +824,7 @@ swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
   SwfdecAsContext *cx;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  cx = SWFDEC_AS_OBJECT (frame)->context;
+  cx = swfdec_gc_object_get_context (frame);
   g_return_if_fail (cx->exception);
 
   /* pop blocks in the hope that we are inside a Try block */

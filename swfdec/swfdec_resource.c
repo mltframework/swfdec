@@ -57,19 +57,19 @@ swfdec_resource_is_root (SwfdecResource *resource)
   g_return_val_if_fail (SWFDEC_IS_RESOURCE (resource), FALSE);
 
   return
-    resource->movie == SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource)->context)->priv->roots->data;
+    resource->movie == SWFDEC_PLAYER (swfdec_gc_object_get_context (resource))->priv->roots->data;
 }
 
 static SwfdecPlayer *
 swfdec_resource_stream_target_get_player (SwfdecStreamTarget *target)
 {
-  return SWFDEC_PLAYER (SWFDEC_AS_OBJECT (target)->context);
+  return SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
 }
 
 static void
 swfdec_resource_stream_target_image (SwfdecResource *instance)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (instance)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (instance));
   SwfdecSpriteMovie *movie = instance->movie;
 
   if (movie->sprite != NULL)
@@ -118,7 +118,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
 
   if (resource->clip_loader == NULL)
     return;
-  cx = SWFDEC_AS_OBJECT (resource->clip_loader)->context;
+  cx = swfdec_gc_object_get_context (resource->clip_loader);
 
   SWFDEC_AS_VALUE_SET_STRING (&vals[0], name);
   if (resource->movie) {
@@ -180,7 +180,7 @@ swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resourc
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecMovie *copy;
   
-  copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), 
+  copy = swfdec_movie_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), 
       mov->depth, mov->parent, resource, NULL, mov->name);
   if (copy == NULL)
     return FALSE;
@@ -246,7 +246,7 @@ swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *s
       glong total;
       resource->decoder = dec;
       g_signal_connect_swapped (dec, "missing-plugin", 
-	  G_CALLBACK (swfdec_player_add_missing_plugin), SWFDEC_AS_OBJECT (resource)->context);
+	  G_CALLBACK (swfdec_player_add_missing_plugin), swfdec_gc_object_get_context (resource));
       total = swfdec_loader_get_size (loader);
       if (total >= 0)
 	dec->bytes_total = total;
@@ -282,7 +282,7 @@ swfdec_resource_stream_target_parse (SwfdecStreamTarget *target, SwfdecStream *s
       if (SWFDEC_IS_SWF_DECODER (dec))
 	resource->version = SWFDEC_SWF_DECODER (dec)->version;
       if (swfdec_resource_is_root (resource)) {
-	swfdec_player_initialize (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource)->context),
+	swfdec_player_initialize (SWFDEC_PLAYER (swfdec_gc_object_get_context (resource)),
 	    dec->rate, dec->width, dec->height);
       }
     }
@@ -301,7 +301,7 @@ swfdec_resource_abort_if_not_initialized (SwfdecResource *resource)
   if (resource->sandbox)
     return FALSE;
 
-  swfdec_as_context_abort (SWFDEC_AS_OBJECT (resource)->context,
+  swfdec_as_context_abort (swfdec_gc_object_get_context (resource),
       "This is not a Flash file");
   return TRUE;
 }
@@ -366,20 +366,20 @@ swfdec_resource_stream_target_init (SwfdecStreamTargetInterface *iface)
 }
 
 static void
-swfdec_resource_mark (SwfdecAsObject *object)
+swfdec_resource_mark (SwfdecGcObject *object)
 {
   SwfdecResource *resource = SWFDEC_RESOURCE (object);
 
   if (resource->clip_loader) {
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->clip_loader));
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->clip_loader_sandbox));
+    swfdec_gc_object_mark (resource->clip_loader);
+    swfdec_gc_object_mark (resource->clip_loader_sandbox);
   }
   if (resource->sandbox)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->sandbox));
+    swfdec_gc_object_mark (resource->sandbox);
   if (resource->target)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (resource->target));
+    swfdec_gc_object_mark (resource->target);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_resource_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_resource_parent_class)->mark (object);
 }
 
 static void
@@ -394,7 +394,7 @@ swfdec_resource_dispose (GObject *object)
   }
   if (resource->decoder) {
     g_signal_handlers_disconnect_by_func (resource->decoder,
-	  swfdec_player_add_missing_plugin, SWFDEC_AS_OBJECT (resource)->context);
+	  swfdec_player_add_missing_plugin, swfdec_gc_object_get_context (resource));
     g_object_unref (resource->decoder);
     resource->decoder = NULL;
   }
@@ -409,11 +409,11 @@ static void
 swfdec_resource_class_init (SwfdecResourceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_resource_dispose;
 
-  asobject_class->mark = swfdec_resource_mark;
+  gc_class->mark = swfdec_resource_mark;
 }
 
 static void
@@ -441,15 +441,11 @@ SwfdecResource *
 swfdec_resource_new (SwfdecPlayer *player, SwfdecLoader *loader, const char *variables)
 {
   SwfdecResource *resource;
-  guint size;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (SWFDEC_IS_LOADER (loader), NULL);
 
-  size = sizeof (SwfdecResource);
-  swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), size);
-  resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (resource), SWFDEC_AS_CONTEXT (player), size);
+  resource = g_object_new (SWFDEC_TYPE_RESOURCE, "context", player, NULL);
   resource->version = 8;
   resource->variables = g_strdup (variables);
   swfdec_resource_set_loader (resource, loader);
@@ -515,11 +511,11 @@ swfdec_resource_load_mark (gpointer loadp, gpointer playerp)
 {
   SwfdecResourceLoad *load = loadp;
 
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (load->sandbox));
+  swfdec_gc_object_mark (load->sandbox);
   if (load->loader)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (load->loader));
+    swfdec_gc_object_mark (load->loader);
   if (load->target_movie)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (load->target_movie));
+    swfdec_gc_object_mark (load->target_movie);
 }
 
 static gboolean
@@ -530,7 +526,7 @@ swfdec_resource_create_movie (SwfdecResource *resource, SwfdecResourceLoad *load
 
   if (resource->movie)
     return TRUE;
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (resource)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (resource));
   if (load->target_movie) {
     movie = (SwfdecSpriteMovie *) swfdec_movie_resolve (SWFDEC_MOVIE (load->target_movie));
     if (SWFDEC_IS_SPRITE_MOVIE (movie))
@@ -564,9 +560,7 @@ swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
   SwfdecResource *resource;
   SwfdecLoader *loader;
   
-  swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource));
-  resource = g_object_new (SWFDEC_TYPE_RESOURCE, NULL);
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (resource), SWFDEC_AS_CONTEXT (player), sizeof (SwfdecResource));
+  resource = g_object_new (SWFDEC_TYPE_RESOURCE, "context", player, NULL);
   resource->version = 8;
   if (load->loader) {
     resource->clip_loader = load->loader;
@@ -698,7 +692,7 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
       int i = swfdec_as_double_to_integer (SWFDEC_AS_VALUE_GET_NUMBER (target));
       if (i < 0)
 	return FALSE;
-      s = swfdec_as_context_give_string (SWFDEC_AS_OBJECT (loader)->context,
+      s = swfdec_as_context_give_string (swfdec_gc_object_get_context (loader),
 	  g_strdup_printf ("_level%d", i));
       swfdec_resource_load_internal (player, NULL, s, url, buffer, loader);
       return TRUE;

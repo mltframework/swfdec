@@ -38,7 +38,7 @@ swfdec_bitmap_data_clear (SwfdecBitmapData *bitmap)
   if (bitmap->surface == NULL)
     return;
 
-  swfdec_as_context_unuse_mem (SWFDEC_AS_OBJECT (bitmap)->context, 4 * 
+  swfdec_as_context_unuse_mem (swfdec_gc_object_get_context (bitmap), 4 * 
       cairo_image_surface_get_width (bitmap->surface) *
       cairo_image_surface_get_height (bitmap->surface));
   cairo_surface_destroy (bitmap->surface);

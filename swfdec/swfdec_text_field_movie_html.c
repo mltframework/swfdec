@@ -129,7 +129,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
 
   object = SWFDEC_AS_OBJECT (tag->format);
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
-	object->context, g_strndup (value, value_length)));
+	swfdec_gc_object_get_context (object), g_strndup (value, value_length)));
 
   if (tag->name_length == 10 && !g_strncasecmp (tag->name, "textformat", 10))
   {
@@ -494,7 +494,7 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
   g_return_if_fail (str != NULL);
 
-  data.cx = SWFDEC_AS_OBJECT (text)->context;
+  data.cx = swfdec_gc_object_get_context (text);
   data.multiline = (data.cx->version < 7 || text->multiline);
   data.condense_white = text->condense_white;
   if (text->style_sheet != NULL && SWFDEC_IS_STYLESHEET (text->style_sheet)) {
@@ -811,6 +811,6 @@ swfdec_text_field_movie_get_html_text (SwfdecTextFieldMovie *text)
     if (*p != '\0') p++;
   }
 
-  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context,
+  return swfdec_as_context_give_string (swfdec_gc_object_get_context (text),
       g_string_free (string, FALSE));
 }

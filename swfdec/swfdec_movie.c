@@ -52,7 +52,11 @@
 
 enum {
   PROP_0,
-  PROP_DEPTH
+  PROP_DEPTH,
+  PROP_GRAPHIC,
+  PROP_NAME,
+  PROP_PARENT,
+  PROP_RESOURCE
 };
 
 enum {
@@ -111,7 +115,7 @@ swfdec_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *parent_to_glo
     if (movie->invalidate_last)
       return;
     movie->invalidate_last = TRUE;
-    player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+    player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
     player->priv->invalid_pending = g_slist_prepend (player->priv->invalid_pending, movie);
   }
   g_assert (movie->cache_state <= SWFDEC_MOVIE_INVALID_CHILDREN);
@@ -164,7 +168,7 @@ swfdec_movie_invalidate_next (SwfdecMovie *movie)
 
   swfdec_movie_invalidate_last (movie);
   movie->invalidate_next = TRUE;
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   if (movie == SWFDEC_MOVIE (player->priv->focus))
     swfdec_player_invalidate_focusrect (player);
 }
@@ -349,7 +353,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
 
   SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   while (movie->list) {
     GList *walk = movie->list;
     while (walk && SWFDEC_MOVIE (walk->data)->state >= SWFDEC_MOVIE_STATE_REMOVED)
@@ -410,7 +414,7 @@ void
 swfdec_movie_destroy (SwfdecMovie *movie)
 {
   SwfdecMovieClass *klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
 
   g_assert (movie->state < SWFDEC_MOVIE_STATE_DESTROYED);
   SWFDEC_LOG ("destroying movie %s", movie->name);
@@ -590,7 +594,7 @@ swfdec_movie_get_mouse (SwfdecMovie *movie, double *x, double *y)
   g_return_if_fail (x != NULL);
   g_return_if_fail (y != NULL);
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   *x = player->priv->mouse_x;
   *y = player->priv->mouse_y;
   swfdec_player_stage_to_global (player, x, y);
@@ -861,6 +865,12 @@ swfdec_movie_get_property (GObject *object, guint param_id, GValue *value,
     case PROP_DEPTH:
       g_value_set_int (value, movie->depth);
       break;
+    case PROP_PARENT:
+      g_value_set_object (value, movie->parent);
+      break;
+    case PROP_RESOURCE:
+      g_value_set_object (value, movie->resource);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
       break;
@@ -872,10 +882,59 @@ swfdec_movie_set_property (GObject *object, guint param_id, const GValue *value,
     GParamSpec * pspec)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (movie);
+
+  /* The context must be set before all movie-related properties */
+  g_assert (cx);
 
   switch (param_id) {
     case PROP_DEPTH:
+      /* parent must be set after depth */
+      g_assert (movie->parent == NULL);
       movie->depth = g_value_get_int (value);
+      break;
+    case PROP_GRAPHIC:
+      movie->graphic = g_value_get_object (value);
+      if (movie->graphic)
+	g_object_ref (movie->graphic);
+      break;
+    case PROP_NAME:
+      movie->name = g_value_get_string (value);
+      if (movie->name) {
+	movie->name = swfdec_as_context_get_string (cx, movie->name);
+	movie->original_name = movie->name;
+      } else {
+	movie->original_name = SWFDEC_AS_STR_EMPTY;
+	if (SWFDEC_IS_SPRITE_MOVIE (movie) || SWFDEC_IS_BUTTON_MOVIE (movie)) {
+	  movie->name = swfdec_as_context_give_string (cx,
+	      g_strdup_printf ("instance%u", ++SWFDEC_PLAYER (cx)->priv->unnamed_count));
+	} else {
+	  movie->name = SWFDEC_AS_STR_EMPTY;
+	}
+      }
+      break;
+    case PROP_PARENT:
+      movie->parent = g_value_get_object (value);
+      /* parent holds a reference */
+      g_object_ref (movie);
+      if (movie->parent) {
+	movie->parent->list = g_list_insert_sorted (movie->parent->list, movie, swfdec_movie_compare_depths);
+	SWFDEC_DEBUG ("inserting %s %p into %s %p", G_OBJECT_TYPE_NAME (movie), movie,
+	    G_OBJECT_TYPE_NAME (movie->parent), movie->parent);
+	/* invalidate the parent, so it gets visible */
+	swfdec_movie_queue_update (movie->parent, SWFDEC_MOVIE_INVALID_CHILDREN);
+      } else {
+	SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
+	priv->roots = g_list_insert_sorted (priv->roots, movie, swfdec_movie_compare_depths);
+      }
+      break;
+    case PROP_RESOURCE:
+      movie->resource = g_value_get_object (value);
+      /* NB: the resource assumes it can access the player via the movie */
+      if (movie->resource->movie == NULL) {
+	g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
+	movie->resource->movie = SWFDEC_SPRITE_MOVIE (movie);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
@@ -914,27 +973,27 @@ swfdec_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_movie_mark (SwfdecAsObject *object)
+swfdec_movie_mark (SwfdecGcObject *object)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
   GList *walk;
   GSList *iter;
 
   if (movie->parent)
-    swfdec_as_object_mark (SWFDEC_AS_OBJECT (movie->parent));
+    swfdec_gc_object_mark (movie->parent);
   swfdec_as_string_mark (movie->original_name);
   swfdec_as_string_mark (movie->name);
   for (walk = movie->list; walk; walk = walk->next) {
-    swfdec_as_object_mark (walk->data);
+    swfdec_gc_object_mark (walk->data);
   }
   for (iter = movie->variable_listeners; iter != NULL; iter = iter->next) {
     SwfdecMovieVariableListener *listener = iter->data;
-    swfdec_as_object_mark (listener->object);
+    swfdec_gc_object_mark (listener->object);
     swfdec_as_string_mark (listener->name);
   }
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (movie->resource));
+  swfdec_gc_object_mark (movie->resource);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
 }
 
 #define swfdec_movie_is_scriptable(mov) \
@@ -947,8 +1006,8 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
 {
   GList *walk;
   int i;
-  guint version = SWFDEC_AS_OBJECT (movie)->context->version;
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  guint version = swfdec_gc_object_get_context (movie)->version;
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
 
   i = swfdec_player_get_level (player, name, version);
   if (i >= 0)
@@ -1005,7 +1064,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     return TRUE;
 
   /* FIXME: check that this is correct */
-  if (object->context->version > 5 && variable == SWFDEC_AS_STR__global) {
+  if (swfdec_gc_object_get_context (object)->version > 5 && variable == SWFDEC_AS_STR__global) {
     SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie->resource->sandbox));
     *flags = 0;
     return TRUE;
@@ -1086,7 +1145,7 @@ swfdec_movie_call_variable_listeners (SwfdecMovie *movie, const char *name,
     SwfdecMovieVariableListener *listener = iter->data;
 
     if (listener->name != name &&
-	(SWFDEC_AS_OBJECT (movie)->context->version >= 7 ||
+	(swfdec_gc_object_get_context (movie)->version >= 7 ||
 	 !swfdec_str_case_equal (listener->name, name)))
       continue;
 
@@ -1269,7 +1328,7 @@ swfdec_movie_do_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gb
   }
   swfdec_rect_union (&rect, &rect, &movie->draw_extents);
   swfdec_rect_transform (&rect, &rect, matrix);
-  swfdec_player_invalidate (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
 
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_movie_invalidate (walk->data, matrix, last);
@@ -1280,13 +1339,15 @@ static void
 swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (movie_class);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (movie_class);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (movie_class);
 
   object_class->dispose = swfdec_movie_dispose;
   object_class->get_property = swfdec_movie_get_property;
   object_class->set_property = swfdec_movie_set_property;
 
-  asobject_class->mark = swfdec_movie_mark;
+  gc_class->mark = swfdec_movie_mark;
+
   asobject_class->get = swfdec_movie_get_variable;
   asobject_class->set = swfdec_movie_set_variable;
   asobject_class->foreach = swfdec_movie_foreach_variable;
@@ -1299,6 +1360,18 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   g_object_class_install_property (object_class, PROP_DEPTH,
       g_param_spec_int ("depth", "depth", "z order inside the parent",
 	  G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_GRAPHIC,
+      g_param_spec_object ("graphic", "graphic", "graphic represented by this movie",
+	  SWFDEC_TYPE_GRAPHIC, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_NAME,
+      g_param_spec_string ("name", "name", "the name given to this movie (can be empty)",
+	  NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_PARENT,
+      g_param_spec_object ("parent", "parent", "parent movie containing this movie",
+	  SWFDEC_TYPE_MOVIE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_RESOURCE,
+      g_param_spec_object ("resource", "resource", "the resource that spawned this movie",
+	  SWFDEC_TYPE_RESOURCE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   movie_class->render = swfdec_movie_do_render;
   movie_class->invalidate = swfdec_movie_do_invalidate;
@@ -1332,7 +1405,7 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
   if (movie->parent) {
     movie->parent->list = g_list_sort (movie->parent->list, swfdec_movie_compare_depths);
   } else {
-    SwfdecPlayerPrivate *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->priv;
+    SwfdecPlayerPrivate *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie))->priv;
     player->roots = g_list_sort (player->roots, swfdec_movie_compare_depths);
   }
   g_object_notify (G_OBJECT (movie), "depth");
@@ -1341,17 +1414,15 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
 static void
 swfdec_movie_set_version (SwfdecMovie *movie)
 {
-  SwfdecAsObject *o;
   SwfdecAsContext *cx;
   SwfdecAsValue val;
 
   if (movie->parent != NULL)
     return;
 
-  o = SWFDEC_AS_OBJECT (movie);
-  cx = o->context;
+  cx = swfdec_gc_object_get_context (movie);
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, SWFDEC_PLAYER (cx)->priv->system->version));
-  swfdec_as_object_set_variable (o, SWFDEC_AS_STR__version, &val);
+  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR__version, &val);
 }
 
 /**
@@ -1379,7 +1450,7 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
     SwfdecGraphic *graphic, const char *name)
 {
   SwfdecMovie *movie;
-  gsize size;
+  GType type;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
   g_return_val_if_fail (parent == NULL || SWFDEC_IS_MOVIE (parent), NULL);
@@ -1388,58 +1459,24 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
 
   /* create the right movie */
   if (graphic == NULL) {
-    movie = g_object_new (SWFDEC_TYPE_SPRITE_MOVIE, "depth", depth, NULL);
-    size = sizeof (SwfdecSpriteMovie);
+    type = SWFDEC_TYPE_SPRITE_MOVIE;
   } else {
     SwfdecGraphicClass *klass = SWFDEC_GRAPHIC_GET_CLASS (graphic);
-    g_return_val_if_fail (klass->create_movie != NULL, NULL);
-    movie = klass->create_movie (graphic, &size);
-    movie->graphic = g_object_ref (graphic);
-    movie->depth = depth;
+    g_return_val_if_fail (g_type_is_a (klass->movie_type, SWFDEC_TYPE_MOVIE), NULL);
+    type = klass->movie_type;
   }
-  /* register it to the VM */
-  swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), size);
-  g_object_ref (movie);
-  /* set essential properties */
-  movie->parent = parent;
-  movie->resource = resource;
-  if (parent) {
-    parent->list = g_list_insert_sorted (parent->list, movie, swfdec_movie_compare_depths);
-    SWFDEC_DEBUG ("inserting %s %s (depth %d) into %s %p", G_OBJECT_TYPE_NAME (movie), movie->name,
-	movie->depth,  G_OBJECT_TYPE_NAME (parent), parent);
-    /* invalidate the parent, so it gets visible */
-    swfdec_movie_queue_update (parent, SWFDEC_MOVIE_INVALID_CHILDREN);
-  } else {
-    player->priv->roots = g_list_insert_sorted (player->priv->roots, movie, swfdec_movie_compare_depths);
-  }
-  /* set its name */
-  if (name) {
-    movie->original_name = name;
-    movie->name = name;
-  } else {
-    movie->original_name = SWFDEC_AS_STR_EMPTY;
-    if (SWFDEC_IS_SPRITE_MOVIE (movie) || SWFDEC_IS_BUTTON_MOVIE (movie)) {
-      movie->name = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), 
-	  g_strdup_printf ("instance%u", ++player->priv->unnamed_count));
-    } else {
-      movie->name = SWFDEC_AS_STR_EMPTY;
-    }
-  }
+  movie = g_object_new (type, "context", player, "depth", depth, 
+      "parent", parent, "name", name, "resource", resource,
+      "graphic", graphic, NULL);
   /* add the movie to the global movies list */
-  /* NB: adding to the movies list happens before setting the parent.
-   * Setting the parent does a gotoAndPlay(0) for Sprites which can cause
-   * new movies to be created (and added to this list)
+  /* NB: adding to the movies list happens before swfdec_movie_initialize().
+   * swfdec_movie_initialize() does a gotoAndPlay(0) for Sprites which can
+   * cause new movies to be created (and added to this list).
    */
   if (SWFDEC_IS_ACTOR (movie))
     player->priv->actors = g_list_prepend (player->priv->actors, movie);
   /* only add the movie here, because it needs to be setup for the debugger */
-  swfdec_as_object_add (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_CONTEXT (player), size);
   swfdec_movie_set_version (movie);
-  /* only setup here, the resource assumes it can access the player via the movie */
-  if (resource->movie == NULL) {
-    g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
-    resource->movie = SWFDEC_SPRITE_MOVIE (movie);
-  }
   /* the movie is invalid already */
   player->priv->invalid_pending = g_slist_prepend (player->priv->invalid_pending, movie);
 
@@ -1537,14 +1574,14 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
     SWFDEC_LOG ("depth %d already occupied while duplicating, removing old movie", depth);
     swfdec_movie_remove (copy);
   }
-  copy = swfdec_movie_new (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), depth, 
+  copy = swfdec_movie_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), depth, 
       parent, movie->resource, movie->graphic, name);
   if (copy == NULL)
     return NULL;
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
       &movie->color_transform, movie->original_ratio, movie->clip_depth, 
       movie->blend_mode, SWFDEC_IS_ACTOR (movie) ? SWFDEC_ACTOR (movie)->events : NULL);
-  sandbox = SWFDEC_SANDBOX (SWFDEC_AS_OBJECT (movie)->context->global);
+  sandbox = SWFDEC_SANDBOX (swfdec_gc_object_get_context (movie)->global);
   swfdec_sandbox_unuse (sandbox);
   if (SWFDEC_IS_SPRITE_MOVIE (copy)) {
     SwfdecActor *actor = SWFDEC_ACTOR (copy);

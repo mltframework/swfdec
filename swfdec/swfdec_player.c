@@ -2043,7 +2043,7 @@ static void
 swfdec_player_mark_string_object (gpointer key, gpointer value, gpointer data)
 {
   swfdec_as_string_mark (key);
-  swfdec_as_object_mark (value);
+  swfdec_gc_object_mark (value);
 }
 
 static void
@@ -2054,11 +2054,11 @@ swfdec_player_mark (SwfdecAsContext *context)
 
   g_hash_table_foreach (priv->registered_classes, swfdec_player_mark_string_object, NULL);
   g_hash_table_foreach (priv->scripting_callbacks, swfdec_player_mark_string_object, NULL);
-  g_list_foreach (priv->roots, (GFunc) swfdec_as_object_mark, NULL);
-  g_list_foreach (priv->intervals, (GFunc) swfdec_as_object_mark, NULL);
-  g_slist_foreach (priv->sandboxes, (GFunc) swfdec_as_object_mark, NULL);
+  g_list_foreach (priv->roots, (GFunc) swfdec_gc_object_mark, NULL);
+  g_list_foreach (priv->intervals, (GFunc) swfdec_gc_object_mark, NULL);
+  g_slist_foreach (priv->sandboxes, (GFunc) swfdec_gc_object_mark, NULL);
   swfdec_function_list_execute (&priv->rooted, player);
-  swfdec_as_object_mark (SWFDEC_AS_OBJECT (priv->resource));
+  swfdec_gc_object_mark (priv->resource);
 
   SWFDEC_AS_CONTEXT_CLASS (swfdec_player_parent_class)->mark (context);
 }

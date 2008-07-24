@@ -945,7 +945,7 @@ swfdec_action_add2_to_primitive (SwfdecAsValue *value)
   if (SWFDEC_IS_MOVIE (object))
     return;
 
-  if (SWFDEC_IS_AS_DATE (object) && object->context->version > 5)
+  if (SWFDEC_IS_AS_DATE (object) && swfdec_gc_object_get_context (object)->version > 5)
     name = SWFDEC_AS_STR_toString;
   else
     name = SWFDEC_AS_STR_valueOf;
@@ -1152,22 +1152,24 @@ static gboolean
 swfdec_as_interpret_encode_variables_foreach (SwfdecAsObject *object,
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
 {
+  SwfdecAsContext *context;
   GString *variables = data;
   char *escaped;
 
+  context = swfdec_gc_object_get_context (object);
   // FIXME: check propflags?
 
   if (variables->len > 0)
     g_string_append_c (variables, '&');
 
-  escaped = swfdec_as_string_escape (object->context, variable);
+  escaped = swfdec_as_string_escape (context, variable);
   g_string_append (variables, escaped);
   g_free (escaped);
 
   g_string_append_c (variables, '=');
 
-  escaped = swfdec_as_string_escape (object->context,
-      swfdec_as_value_to_string (object->context, value));
+  escaped = swfdec_as_string_escape (context,
+      swfdec_as_value_to_string (context, value));
   g_string_append (variables, escaped);
   g_free (escaped);
 
@@ -2409,7 +2411,8 @@ swfdec_action_do_enumerate (SwfdecAsContext *cx, SwfdecAsObject *object)
     object = swfdec_as_object_get_prototype (object);
   }
   if (i == 256) {
-    swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+    swfdec_as_context_abort (swfdec_gc_object_get_context (object),
+	"Prototype recursion limit exceeded");
     g_slist_free (list);
     return;
   }
@@ -2600,7 +2603,7 @@ swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (SWFDEC_IS_AS_VALUE (exception_value));
 
-  cx = SWFDEC_AS_OBJECT (frame)->context;
+  cx = swfdec_gc_object_get_context (frame);
 
   // finally has ended and we had exception stored, throw it
   if (!cx->exception)
@@ -2619,7 +2622,7 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (try_data != NULL);
 
-  cx = SWFDEC_AS_OBJECT (frame)->context;
+  cx = swfdec_gc_object_get_context (frame);
 
   if (try_data->scope_object) {
     g_assert (frame->scope_chain->data == try_data->scope_object);
@@ -2664,7 +2667,7 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
     return;
   }
 
-  cx = SWFDEC_AS_OBJECT (frame)->context;
+  cx = swfdec_gc_object_get_context (frame);
 
   if (swfdec_as_context_catch (cx, &val))
   {

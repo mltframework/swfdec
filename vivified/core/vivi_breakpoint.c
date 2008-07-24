@@ -34,8 +34,8 @@ vivi_breakpoint_step (ViviDebugger *debugger, ViviBreakpoint *breakpoint)
   SwfdecAsObject *obj = SWFDEC_AS_OBJECT (breakpoint);
   SwfdecAsValue retval;
 
-  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onCommand"), 0, NULL, &retval);
-  return swfdec_as_value_to_boolean (obj->context, &retval);
+  swfdec_as_object_call (obj, swfdec_as_context_get_string (swfdec_gc_object_get_context (obj), "onCommand"), 0, NULL, &retval);
+  return swfdec_as_value_to_boolean (swfdec_gc_object_get_context (obj), &retval);
 }
 
 static gboolean
@@ -45,9 +45,9 @@ vivi_breakpoint_enter_frame (ViviDebugger *debugger, SwfdecAsFrame *frame, ViviB
   SwfdecAsValue val;
   SwfdecAsValue retval;
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, vivi_wrap_object (VIVI_APPLICATION (obj->context), SWFDEC_AS_OBJECT (frame)));
-  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onEnterFrame"), 1, &val, &retval);
-  return swfdec_as_value_to_boolean (obj->context, &retval);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, vivi_wrap_object (VIVI_APPLICATION (swfdec_gc_object_get_context (obj)), SWFDEC_AS_OBJECT (frame)));
+  swfdec_as_object_call (obj, swfdec_as_context_get_string (swfdec_gc_object_get_context (obj), "onEnterFrame"), 1, &val, &retval);
+  return swfdec_as_value_to_boolean (swfdec_gc_object_get_context (obj), &retval);
 }
 
 static gboolean
@@ -57,10 +57,10 @@ vivi_breakpoint_leave_frame (ViviDebugger *debugger, SwfdecAsFrame *frame, const
   SwfdecAsValue vals[2];
   SwfdecAsValue retval;
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&vals[0], vivi_wrap_object (VIVI_APPLICATION (obj->context), SWFDEC_AS_OBJECT (frame)));
-  vivi_wrap_value (VIVI_APPLICATION (obj->context), &vals[1], ret);
-  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onLeaveFrame"), 2, vals, &retval);
-  return swfdec_as_value_to_boolean (obj->context, &retval);
+  SWFDEC_AS_VALUE_SET_OBJECT (&vals[0], vivi_wrap_object (VIVI_APPLICATION (swfdec_gc_object_get_context (obj)), SWFDEC_AS_OBJECT (frame)));
+  vivi_wrap_value (VIVI_APPLICATION (swfdec_gc_object_get_context (obj)), &vals[1], ret);
+  swfdec_as_object_call (obj, swfdec_as_context_get_string (swfdec_gc_object_get_context (obj), "onLeaveFrame"), 2, vals, &retval);
+  return swfdec_as_value_to_boolean (swfdec_gc_object_get_context (obj), &retval);
 }
 
 static gboolean
@@ -71,11 +71,11 @@ vivi_breakpoint_set_variable (ViviDebugger *debugger, SwfdecAsObject *object,
   SwfdecAsValue vals[3];
   SwfdecAsValue retval;
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&vals[0], vivi_wrap_object (VIVI_APPLICATION (obj->context), object));
-  SWFDEC_AS_VALUE_SET_STRING (&vals[1], swfdec_as_context_get_string (obj->context, variable));
-  vivi_wrap_value (VIVI_APPLICATION (obj->context), &vals[2], value);
-  swfdec_as_object_call (obj, swfdec_as_context_get_string (obj->context, "onSetVariable"), 3, vals, &retval);
-  return swfdec_as_value_to_boolean (obj->context, &retval);
+  SWFDEC_AS_VALUE_SET_OBJECT (&vals[0], vivi_wrap_object (VIVI_APPLICATION (swfdec_gc_object_get_context (obj)), object));
+  SWFDEC_AS_VALUE_SET_STRING (&vals[1], swfdec_as_context_get_string (swfdec_gc_object_get_context (obj), variable));
+  vivi_wrap_value (VIVI_APPLICATION (swfdec_gc_object_get_context (obj)), &vals[2], value);
+  swfdec_as_object_call (obj, swfdec_as_context_get_string (swfdec_gc_object_get_context (obj), "onSetVariable"), 3, vals, &retval);
+  return swfdec_as_value_to_boolean (swfdec_gc_object_get_context (obj), &retval);
 }
 
 static const struct {
@@ -105,7 +105,7 @@ vivi_breakpoint_find_event (const char *name)
 static void
 vivi_breakpoint_add (ViviBreakpoint *breakpoint, guint i)
 {
-  ViviDebugger *debugger = VIVI_APPLICATION (SWFDEC_AS_OBJECT (breakpoint)->context)->debugger;
+  ViviDebugger *debugger = VIVI_APPLICATION (swfdec_gc_object_get_context (breakpoint))->debugger;
 
   g_assert (i != 0);
   if (breakpoint->active) {
@@ -119,7 +119,7 @@ vivi_breakpoint_add (ViviBreakpoint *breakpoint, guint i)
 static void
 vivi_breakpoint_remove (ViviBreakpoint *breakpoint, guint i)
 {
-  ViviDebugger *debugger = VIVI_APPLICATION (SWFDEC_AS_OBJECT (breakpoint)->context)->debugger;
+  ViviDebugger *debugger = VIVI_APPLICATION (swfdec_gc_object_get_context (breakpoint))->debugger;
 
   g_assert (i != 0);
   if (breakpoint->active)

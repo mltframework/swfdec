@@ -41,7 +41,6 @@ typedef struct _SwfdecVideoMovieInput SwfdecVideoMovieInput;
 struct _SwfdecVideoMovie {
   SwfdecMovie		movie;
 
-  SwfdecVideo *		video;		/* video we play back */
   SwfdecVideoProvider *	provider;	/* where we take the video from */
   gboolean		clear;		/* do not display a video image */
 };

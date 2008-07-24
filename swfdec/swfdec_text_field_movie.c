@@ -75,14 +75,14 @@ swfdec_text_field_movie_update_area (SwfdecTextFieldMovie *text)
   cairo_matrix_t *matrix, translate;
   double x, y;
 
-  if (swfdec_player_is_locked (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)))
+  if (swfdec_player_is_locked (SWFDEC_PLAYER (swfdec_gc_object_get_context (text))))
     swfdec_movie_invalidate_next (movie);
 
   /* check if we indeed want to render */
   matrix = &text->to_layout;
   swfdec_movie_local_to_global_matrix (movie, matrix);
   cairo_matrix_multiply (matrix, matrix,
-      &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context)->priv->global_to_stage);
+      &SWFDEC_PLAYER (swfdec_gc_object_get_context (movie))->priv->global_to_stage);
   if (matrix->xy != 0.0 || matrix->yx != 0.0 ||
       matrix->xx <= 0.0 || matrix->yy <= 0.0) {
     swfdec_rectangle_init_empty (&text->stage_area);
@@ -205,15 +205,15 @@ swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *ma
   }
 
   swfdec_rect_transform (&rect, &rect,
-      &SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context)->priv->stage_to_global);
+      &SWFDEC_PLAYER (swfdec_gc_object_get_context (text))->priv->stage_to_global);
   swfdec_player_invalidate (
-      SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context), &rect);
+      SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
 }
 
 static gboolean
 swfdec_text_field_movie_has_focus (SwfdecTextFieldMovie *text)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (text));
 
   return swfdec_player_has_focus (player, SWFDEC_ACTOR (text));
 }
@@ -309,7 +309,7 @@ swfdec_text_field_movie_dispose (GObject *object)
 }
 
 static void
-swfdec_text_field_movie_mark (SwfdecAsObject *object)
+swfdec_text_field_movie_mark (SwfdecGcObject *object)
 {
   SwfdecTextFieldMovie *text;
 
@@ -320,13 +320,13 @@ swfdec_text_field_movie_mark (SwfdecAsObject *object)
 
   swfdec_text_buffer_mark (text->text);
   if (text->style_sheet != NULL)
-    swfdec_as_object_mark (text->style_sheet);
+    swfdec_gc_object_mark (text->style_sheet);
   if (text->style_sheet_input != NULL)
     swfdec_as_string_mark (text->style_sheet_input);
   if (text->restrict_ != NULL)
     swfdec_as_string_mark (text->restrict_);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_text_field_movie_parent_class)->mark (object);
 }
 
 void
@@ -335,7 +335,7 @@ swfdec_text_field_movie_emit_onScroller (SwfdecTextFieldMovie *text)
   g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
 
   if (!text->onScroller_emitted && swfdec_movie_get_version (SWFDEC_MOVIE (text)) > 6) {
-    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), 
+    swfdec_player_add_action (SWFDEC_PLAYER (swfdec_gc_object_get_context (text)), 
 	SWFDEC_ACTOR (text), SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
   }
   text->onScroller_emitted = TRUE;
@@ -393,7 +393,7 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 
   needs_unuse = swfdec_sandbox_try_use (movie->resource->sandbox);
 
-  cx = SWFDEC_AS_OBJECT (movie)->context;
+  cx = swfdec_gc_object_get_context (movie);
 
   swfdec_text_field_movie_init_properties (cx);
 
@@ -420,6 +420,19 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);
 
   if (text_field) {
+    text->extents = SWFDEC_GRAPHIC (text_field)->extents;
+
+    text->html = text_field->html;
+    text->editable = text_field->editable;
+    swfdec_text_layout_set_password (text->layout, text_field->password);
+    text->max_chars = text_field->max_chars;
+    text->selectable = text_field->selectable;
+    text->embed_fonts = text_field->embed_fonts;
+    swfdec_text_layout_set_word_wrap (text->layout, text_field->word_wrap);
+    text->multiline = text_field->multiline;
+    text->auto_size = text_field->auto_size;
+    text->border = text_field->border;
+
     text->text->default_attributes.color = text_field->color;
     text->text->default_attributes.align = text_field->align;
     if (text_field->font != NULL)  {
@@ -488,13 +501,13 @@ swfdec_text_field_movie_iterate (SwfdecActor *actor)
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
 
   while (text->changed) {
-    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), 
+    swfdec_player_add_action (SWFDEC_PLAYER (swfdec_gc_object_get_context (text)), 
 	SWFDEC_ACTOR (text), SWFDEC_EVENT_CHANGED, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
     text->changed--;
   }
 
   if (text->onScroller_emitted && swfdec_movie_get_version (SWFDEC_MOVIE (text)) <= 6) {
-    swfdec_player_add_action (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), 
+    swfdec_player_add_action (SWFDEC_PLAYER (swfdec_gc_object_get_context (text)), 
 	SWFDEC_ACTOR (text), SWFDEC_EVENT_SCROLL, 0, SWFDEC_PLAYER_ACTION_QUEUE_NORMAL);
   }
   text->onScroller_emitted = FALSE;
@@ -528,7 +541,7 @@ swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
   attr = swfdec_text_buffer_get_attributes (text->text, index_);
 
   if (attr->url != SWFDEC_AS_STR_EMPTY) {
-    swfdec_player_launch (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context),
+    swfdec_player_launch (SWFDEC_PLAYER (swfdec_gc_object_get_context (text)),
 	attr->url, attr->target, NULL);
   }
 }
@@ -608,7 +621,7 @@ swfdec_text_field_movie_mouse_press (SwfdecActor *actor, guint button)
     text->character_pressed = -1;
   }
 
-  swfdec_player_grab_focus (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (text)->context), actor);
+  swfdec_player_grab_focus (SWFDEC_PLAYER (swfdec_gc_object_get_context (text)), actor);
 
   text->mouse_pressed = TRUE;
   swfdec_text_buffer_set_cursor (text->text, index_, index_);
@@ -789,12 +802,12 @@ swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id,
     const SwfdecAsValue *val)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
-  SwfdecAsContext *cx = SWFDEC_AS_OBJECT (movie)->context;
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (movie);
   SwfdecTwips twips;
 
   switch (prop_id) {
     case SWFDEC_MOVIE_PROPERTY_X:
-      if (!swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val, FALSE, &twips))
+      if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), val, FALSE, &twips))
 	return;
       movie->modified = TRUE;
       twips -= text->extents.x0;
@@ -805,7 +818,7 @@ swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id,
       }
       return;
     case SWFDEC_MOVIE_PROPERTY_Y:
-      if (!swfdec_as_value_to_twips (SWFDEC_AS_OBJECT (movie)->context, val, FALSE, &twips))
+      if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), val, FALSE, &twips))
 	return;
       movie->modified = TRUE;
       twips -= text->extents.y0;
@@ -849,13 +862,13 @@ static void
 swfdec_text_field_movie_class_init (SwfdecTextFieldMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (g_class);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
   SwfdecActorClass *actor_class = SWFDEC_ACTOR_CLASS (g_class);
 
   object_class->dispose = swfdec_text_field_movie_dispose;
 
-  asobject_class->mark = swfdec_text_field_movie_mark;
+  gc_class->mark = swfdec_text_field_movie_mark;
 
   movie_class->init_movie = swfdec_text_field_movie_init_movie;
   movie_class->finish_movie = swfdec_text_field_movie_finish_movie;
@@ -930,7 +943,7 @@ swfdec_text_field_movie_parse_listen_variable (SwfdecTextFieldMovie *text,
     return;
 
   g_assert (SWFDEC_IS_AS_OBJECT (SWFDEC_MOVIE (text)->parent));
-  cx = SWFDEC_AS_OBJECT (text)->context;
+  cx = swfdec_gc_object_get_context (text);
   parent = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
 
   p1 = strrchr (variable, '.');
@@ -980,7 +993,7 @@ swfdec_text_field_movie_variable_listener_callback (SwfdecAsObject *object,
 
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
   swfdec_text_field_movie_set_text (text,
-      swfdec_as_value_to_string (object->context, val), text->html);
+      swfdec_as_value_to_string (swfdec_gc_object_get_context (text), val), text->html);
 }
 
 void
@@ -1015,12 +1028,12 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
 	&name);
     if (object != NULL && swfdec_as_object_get_variable (object, name, &val)) {
       swfdec_text_field_movie_set_text (text,
-	  swfdec_as_value_to_string (SWFDEC_AS_OBJECT (text)->context, &val),
+	  swfdec_as_value_to_string (swfdec_gc_object_get_context (text), &val),
 	  text->html);
     } else if (text_field != NULL && text_field->input != NULL) {
       // Set to the original value from the tag, not current value
       const char *initial = swfdec_as_context_get_string (
-	  SWFDEC_AS_OBJECT (text)->context, text_field->input);
+	  swfdec_gc_object_get_context (text), text_field->input);
       swfdec_text_field_movie_set_listen_variable_text (text, initial);
       // FIXME: html value correct here?
       swfdec_text_field_movie_set_text (text, initial, text_field->html);
@@ -1062,7 +1075,7 @@ swfdec_text_field_movie_get_text (SwfdecTextFieldMovie *text)
     *p = '\r';
   }
 
-  return swfdec_as_context_give_string (SWFDEC_AS_OBJECT (text)->context, ret);
+  return swfdec_as_context_give_string (swfdec_gc_object_get_context (text), ret);
 }
 
 void
@@ -1075,14 +1088,14 @@ swfdec_text_field_movie_set_text (SwfdecTextFieldMovie *text, const char *str,
   g_return_if_fail (str != NULL);
 
   /* Flash 7 resets to default style here */
-  if (html && SWFDEC_AS_OBJECT (text)->context->version < 8)
+  if (html && swfdec_gc_object_get_context (text)->version < 8)
     swfdec_text_buffer_reset_default_attributes (text->text);
 
   length = swfdec_text_buffer_get_length (text->text);
   if (length)
     swfdec_text_buffer_delete_text (text->text, 0, length);
 
-  if (SWFDEC_AS_OBJECT (text)->context->version >= 7 &&
+  if (swfdec_gc_object_get_context (text)->version >= 7 &&
       text->style_sheet != NULL)
   {
     text->style_sheet_input = str;

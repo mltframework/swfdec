@@ -36,8 +36,7 @@ static void
 swfdec_button_movie_update_extents (SwfdecMovie *movie,
     SwfdecRect *extents)
 {
-  swfdec_rect_union (extents, extents, 
-      &SWFDEC_GRAPHIC (SWFDEC_BUTTON_MOVIE (movie)->button)->extents);
+  swfdec_rect_union (extents, extents, &movie->graphic->extents);
 }
 
 static void
@@ -72,7 +71,7 @@ swfdec_button_movie_perform_place (SwfdecButtonMovie *button, SwfdecBits *bits)
     return;
   }
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   new = swfdec_movie_new (player, depth, movie, movie->resource, graphic, NULL);
   swfdec_bits_get_matrix (bits, &trans, NULL);
   if (swfdec_bits_left (bits)) {
@@ -119,17 +118,19 @@ swfdec_button_movie_set_state (SwfdecButtonMovie *button, SwfdecButtonState stat
   GSList *walk;
   guint old, new, i;
   int depth;
+  SwfdecButton *but;
 
   if (button->state == state) {
     SWFDEC_LOG ("not changing state, it's already in %d", state);
     return;
   }
   SWFDEC_DEBUG ("changing state from %d to %d", button->state, state);
+  but = SWFDEC_BUTTON (movie->graphic);
   /* remove all movies that aren't in the new state */
   new = 1 << state;
   if (button->state >= 0) {
     old = 1 << button->state;
-    for (walk = button->button->records; walk; walk = walk->next) {
+    for (walk = but->records; walk; walk = walk->next) {
       swfdec_bits_init (&bits, walk->data);
       i = swfdec_bits_get_u8 (&bits);
       if ((i & old) && !(i & new)) {
@@ -149,7 +150,7 @@ swfdec_button_movie_set_state (SwfdecButtonMovie *button, SwfdecButtonState stat
   }
   button->state = state;
   /* add all movies that are in the new state */
-  for (walk = button->button->records; walk; walk = walk->next) {
+  for (walk = but->records; walk; walk = walk->next) {
     swfdec_bits_init (&bits, walk->data);
     i = swfdec_bits_peek_u8 (&bits);
     if ((i & old) || !(i & new))
@@ -167,7 +168,7 @@ swfdec_button_movie_mouse_events (SwfdecActor *actor)
 static void
 swfdec_button_movie_mouse_in (SwfdecActor *actor)
 {
-  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context)))
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (swfdec_gc_object_get_context (actor))))
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (actor), SWFDEC_BUTTON_DOWN);
   else
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (actor), SWFDEC_BUTTON_OVER);
@@ -180,8 +181,8 @@ swfdec_button_movie_mouse_out (SwfdecActor *actor)
 {
   SwfdecButtonMovie *button = SWFDEC_BUTTON_MOVIE (actor);
 
-  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (SWFDEC_AS_OBJECT (button)->context))) {
-    if (button->button->menubutton) {
+  if (swfdec_player_is_mouse_pressed (SWFDEC_PLAYER (swfdec_gc_object_get_context (button)))) {
+    if (SWFDEC_BUTTON (SWFDEC_MOVIE (actor)->graphic)->menubutton) {
       swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (actor), SWFDEC_BUTTON_UP);
     } else {
       swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (actor), SWFDEC_BUTTON_OVER);
@@ -210,7 +211,7 @@ swfdec_button_movie_mouse_release (SwfdecActor *actor, guint button)
 
   if (button != 0)
     return;
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (actor)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (actor));
   if (player->priv->mouse_below == actor) {
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (actor), SWFDEC_BUTTON_OVER);
 
@@ -219,7 +220,7 @@ swfdec_button_movie_mouse_release (SwfdecActor *actor, guint button)
     swfdec_button_movie_set_state (SWFDEC_BUTTON_MOVIE (actor), SWFDEC_BUTTON_UP);
 
     /* NB: We don't chain to parent here for menubuttons*/
-    if (!SWFDEC_BUTTON_MOVIE (actor)->button->menubutton) {
+    if (!SWFDEC_BUTTON (SWFDEC_MOVIE (actor)->graphic)->menubutton) {
       SWFDEC_ACTOR_CLASS (swfdec_button_movie_parent_class)->mouse_release (actor, button);
     } else {
       SWFDEC_FIXME ("use mouse_below as recipient for mouse_release events?");
@@ -243,7 +244,7 @@ swfdec_button_movie_hit_test (SwfdecButtonMovie *button, double x, double y)
   double tmpx, tmpy;
 
   dec = SWFDEC_SWF_DECODER (SWFDEC_MOVIE (button)->resource->decoder);
-  for (walk = button->button->records; walk; walk = walk->next) {
+  for (walk = SWFDEC_BUTTON (SWFDEC_MOVIE (button)->graphic)->records; walk; walk = walk->next) {
     SwfdecGraphic *graphic;
     SwfdecBits bits;
     cairo_matrix_t matrix, inverse;
@@ -288,16 +289,24 @@ swfdec_button_movie_contains (SwfdecMovie *movie, double x, double y, gboolean e
   return swfdec_button_movie_hit_test (SWFDEC_BUTTON_MOVIE (movie), x, y) ? movie : NULL;
 }
 
-static void
-swfdec_button_movie_dispose (GObject *object)
+static GObject *
+swfdec_button_movie_constructor (GType type, guint n_construct_properties,
+    GObjectConstructParam *construct_properties)
 {
-  SwfdecButtonMovie *button = SWFDEC_BUTTON_MOVIE (object);
+  SwfdecMovie *movie;
+  GObject *object;
 
-  if (button->button) {
-    g_object_unref (button->button);
-    button->button = NULL;
+  object = G_OBJECT_CLASS (swfdec_button_movie_parent_class)->constructor (type, 
+      n_construct_properties, construct_properties);
+
+  movie = SWFDEC_MOVIE (object);
+  g_assert (movie->graphic);
+  if (SWFDEC_BUTTON (movie->graphic)->events) {
+    SWFDEC_ACTOR (movie)->events = swfdec_event_list_copy (
+	SWFDEC_BUTTON (movie->graphic)->events);
   }
-  G_OBJECT_CLASS (swfdec_button_movie_parent_class)->dispose (object);
+
+  return object;
 }
 
 static void
@@ -307,7 +316,8 @@ swfdec_button_movie_class_init (SwfdecButtonMovieClass * g_class)
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
   SwfdecActorClass *actor_class = SWFDEC_ACTOR_CLASS (g_class);
 
-  object_class->dispose = swfdec_button_movie_dispose;
+  object_class->constructor = swfdec_button_movie_constructor;
+
   movie_class->init_movie = swfdec_button_movie_init_movie;
   movie_class->update_extents = swfdec_button_movie_update_extents;
   movie_class->contains = swfdec_button_movie_contains;

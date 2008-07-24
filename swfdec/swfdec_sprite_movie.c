@@ -67,7 +67,7 @@ static gboolean
 swfdec_sprite_movie_perform_old_place (SwfdecSpriteMovie *movie,
     SwfdecBits *bits, guint tag)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecMovie *cur;
   SwfdecSwfDecoder *dec;
@@ -137,7 +137,7 @@ swfdec_sprite_movie_perform_old_place (SwfdecSpriteMovie *movie,
 static gboolean
 swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, guint tag)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecMovie *cur;
   SwfdecSwfDecoder *dec;
@@ -359,7 +359,7 @@ swfdec_sprite_movie_start_sound (SwfdecMovie *movie, SwfdecBits *bits)
   chunk = swfdec_sound_parse_chunk (SWFDEC_SWF_DECODER (movie->resource->decoder), bits, id);
   if (chunk) {
     SwfdecAudio *audio = swfdec_audio_event_new_from_chunk (SWFDEC_PLAYER (
-	  SWFDEC_AS_OBJECT (movie)->context), chunk);
+	  swfdec_gc_object_get_context (movie)), chunk);
     if (audio)
       g_object_unref (audio);
   }
@@ -371,7 +371,7 @@ swfdec_sprite_movie_perform_one_action (SwfdecSpriteMovie *movie, guint tag, Swf
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecActor *actor = SWFDEC_ACTOR (movie);
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (mov));
   SwfdecBits bits;
 
   g_assert (mov->resource);
@@ -562,7 +562,7 @@ swfdec_sprite_movie_goto (SwfdecSpriteMovie *movie, guint goto_frame)
     return;
   }
 
-  player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (movie)->context);
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   SWFDEC_LOG ("doing goto %u for %p %d", goto_frame, movie, 
       SWFDEC_CHARACTER (movie->sprite)->id);
 
@@ -690,15 +690,29 @@ swfdec_sprite_movie_init_movie (SwfdecMovie *mov)
   swfdec_sprite_movie_goto (movie, 1);
 }
 
-static void
-swfdec_sprite_movie_add (SwfdecAsObject *object)
+static GObject *
+swfdec_sprite_movie_constructor (GType type, guint n_construct_properties,
+    GObjectConstructParam *construct_properties)
 {
-  SwfdecMovie *movie = SWFDEC_MOVIE (object);
+  GObject *object;
+  SwfdecMovie *movie;
 
-  if (movie->resource->sandbox)
-    swfdec_as_object_set_constructor (object, movie->resource->sandbox->MovieClip);
+  object = G_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->constructor (type, 
+      n_construct_properties, construct_properties);
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->add (object);
+  movie = SWFDEC_MOVIE (object);
+  if (movie->resource->sandbox) {
+    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), 
+	movie->resource->sandbox->MovieClip);
+  }
+
+  if (movie->graphic) {
+    SwfdecSpriteMovie *smovie = SWFDEC_SPRITE_MOVIE (object);
+    smovie->sprite = SWFDEC_SPRITE (movie->graphic);
+    smovie->n_frames = smovie->sprite->n_frames;
+  }
+
+  return object;
 }
 
 static void
@@ -729,7 +743,7 @@ static void
 swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
-  SwfdecPlayer *player = SWFDEC_PLAYER (SWFDEC_AS_OBJECT (mov)->context);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (mov));
 
   swfdec_player_remove_all_actions (player, SWFDEC_ACTOR (mov));
   if (movie->sound_stream) {
@@ -740,17 +754,17 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
 }
 
 static void
-swfdec_sprite_movie_mark (SwfdecAsObject *object)
+swfdec_sprite_movie_mark (SwfdecGcObject *object)
 {
   GList *walk;
 
   for (walk = SWFDEC_MOVIE (object)->list; walk; walk = walk->next) {
     SwfdecAsObject *child = walk->data;
     g_assert (child->properties != NULL);
-    swfdec_as_object_mark (child);
+    swfdec_gc_object_mark (child);
   }
 
-  SWFDEC_AS_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->mark (object);
+  SWFDEC_GC_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->mark (object);
 }
 
 static void
@@ -778,14 +792,14 @@ static void
 swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (g_class);
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
   SwfdecActorClass *actor_class = SWFDEC_ACTOR_CLASS (g_class);
 
   object_class->dispose = swfdec_sprite_movie_dispose;
+  object_class->constructor = swfdec_sprite_movie_constructor;
 
-  asobject_class->add = swfdec_sprite_movie_add;
-  asobject_class->mark = swfdec_sprite_movie_mark;
+  gc_class->mark = swfdec_sprite_movie_mark;
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;
@@ -821,7 +835,7 @@ swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
   g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
 
   mov = SWFDEC_MOVIE (movie);
-  swfdec_sprite_movie_clear (SWFDEC_AS_OBJECT (movie)->context, 
+  swfdec_sprite_movie_clear (swfdec_gc_object_get_context (movie), 
       SWFDEC_AS_OBJECT (movie), 0, NULL, &hack);
   /* FIXME: destroy or unload? */
   while (mov->list)

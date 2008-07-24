@@ -1016,9 +1016,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!cx->frame->construct) {
     SwfdecAsValue val;
-    swfdec_as_context_use_mem (cx, sizeof (SwfdecAsDate));
-    object = g_object_new (SWFDEC_TYPE_AS_DATE, NULL);
-    swfdec_as_object_add (object, cx, sizeof (SwfdecAsDate));
+    object = g_object_new (SWFDEC_TYPE_AS_DATE, "context", cx, NULL);
     swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Date, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
       swfdec_as_object_set_constructor (object,
@@ -1031,9 +1029,9 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   date = SWFDEC_AS_DATE (object);
 
   /* FIXME: find a general solution here */
-  if (SWFDEC_IS_PLAYER (SWFDEC_AS_OBJECT (date)->context)) {
+  if (SWFDEC_IS_PLAYER (swfdec_gc_object_get_context (date))) {
     date->utc_offset =
-      SWFDEC_PLAYER (SWFDEC_AS_OBJECT (date)->context)->priv->system->utc_offset;
+      SWFDEC_PLAYER (swfdec_gc_object_get_context (date))->priv->system->utc_offset;
   }
 
   // don't accept arguments when not constructing
@@ -1170,10 +1168,7 @@ swfdec_as_date_new (SwfdecAsContext *context, double milliseconds,
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  swfdec_as_context_use_mem (context, sizeof (SwfdecAsDate));
-
-  ret = g_object_new (SWFDEC_TYPE_AS_DATE, NULL);
-  swfdec_as_object_add (ret, context, sizeof (SwfdecAsDate));
+  ret = g_object_new (SWFDEC_TYPE_AS_DATE, "context", context, NULL);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Date, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
     swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));

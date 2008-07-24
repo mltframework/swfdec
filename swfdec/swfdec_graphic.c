@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		      2006 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,19 +29,10 @@
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecGraphic, swfdec_graphic, SWFDEC_TYPE_CHARACTER)
 
-static SwfdecMovie *
-swfdec_graphic_create_movie (SwfdecGraphic *graphic, gsize *size)
-{
-  SwfdecGraphicMovie *movie = g_object_new (SWFDEC_TYPE_GRAPHIC_MOVIE, NULL);
-
-  *size = sizeof (SwfdecGraphicMovie);
-  return SWFDEC_MOVIE (movie);
-}
-
 static void
 swfdec_graphic_class_init (SwfdecGraphicClass *klass)
 {
-  klass->create_movie = swfdec_graphic_create_movie;
+  klass->movie_type = SWFDEC_TYPE_GRAPHIC_MOVIE;
 }
 
 static void

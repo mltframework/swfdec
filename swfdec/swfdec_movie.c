@@ -999,9 +999,23 @@ swfdec_movie_mark (SwfdecGcObject *object)
   SWFDEC_GC_OBJECT_CLASS (swfdec_movie_parent_class)->mark (object);
 }
 
-#define swfdec_movie_is_scriptable(mov) \
-  ((SWFDEC_IS_ACTOR (mov) || SWFDEC_IS_VIDEO_MOVIE (mov)) && \
-   (swfdec_movie_get_version (mov) > 5 || !SWFDEC_IS_TEXT_FIELD_MOVIE (mov)))
+/**
+ * swfdec_movie_is_scriptable:
+ * @movie: a movie
+ *
+ * Checks if the movie may be accessed by scripts. If not, the movie is not
+ * accessible by Actionscript and functions that would return the movie should
+ * instead return its parent.
+ *
+ * Returns: %TRUE if scripts may access this movie, %FALSE if the parent 
+ *          should be used.
+ **/
+gboolean
+swfdec_movie_is_scriptable (SwfdecMovie *movie)
+{
+  return (SWFDEC_IS_ACTOR (movie) || SWFDEC_IS_VIDEO_MOVIE (movie)) &&
+   (swfdec_movie_get_version (movie) > 5 || !SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
+}
 
 /* FIXME: This function can definitely be implemented easier */
 SwfdecMovie *

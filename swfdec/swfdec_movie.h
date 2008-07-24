@@ -282,6 +282,7 @@ char *		swfdec_movie_get_path		(SwfdecMovie *		movie,
 void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans);
+gboolean	swfdec_movie_is_scriptable	(SwfdecMovie *		movie);
 SwfdecMovie *	swfdec_movie_resolve		(SwfdecMovie *		movie);
 guint		swfdec_movie_get_version	(SwfdecMovie *		movie);
 

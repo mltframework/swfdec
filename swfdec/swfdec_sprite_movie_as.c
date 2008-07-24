@@ -321,8 +321,11 @@ swfdec_sprite_movie_getInstanceAtDepth (SwfdecAsContext *cx,
     return;
 
   movie = swfdec_movie_find (movie, depth);
-  if (movie != NULL)
+  if (movie != NULL) {
+    if (!swfdec_movie_is_scriptable (movie))
+      movie = movie->parent;
     SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
+  }
 }
 
 SWFDEC_AS_NATIVE (900, 24, swfdec_sprite_movie_getSWFVersion)

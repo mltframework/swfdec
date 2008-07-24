@@ -245,6 +245,7 @@ noinst_HEADERS = \
 	swfdec_audio_load.h \
 	swfdec_audio_stream.h \
 	swfdec_audio_swf_stream.h \
+	swfdec_bitmap_data.h \
 	swfdec_bits.h \
 	swfdec_bots.h \
 	swfdec_button.h \

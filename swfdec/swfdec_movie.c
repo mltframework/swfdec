@@ -1398,7 +1398,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
     movie->depth = depth;
   }
   /* register it to the VM */
-  /* FIXME: It'd be nice if we'd not overuse memory here when calling this function from a script */
   swfdec_as_context_use_mem (SWFDEC_AS_CONTEXT (player), size);
   g_object_ref (movie);
   /* set essential properties */

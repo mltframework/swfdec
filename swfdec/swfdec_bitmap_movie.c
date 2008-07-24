@@ -125,3 +125,18 @@ swfdec_bitmap_movie_init (SwfdecBitmapMovie * bitmap_movie)
 {
 }
 
+SwfdecMovie *
+swfdec_bitmap_movie_new (SwfdecMovie *parent, SwfdecBitmapData *bitmap, int depth)
+{
+  SwfdecBitmapMovie *movie;
+
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (parent));
+  g_return_val_if_fail (SWFDEC_IS_BITMAP_DATA (bitmap));
+
+  movie = g_object_new (SWFDEC_TYPE_BITMAP_MOVIE, 
+      "context", swfdec_gc_object_get_context (parent), "depth", depth, 
+      "parent", parent, "resource", parent->resource, NULL);
+  movie->bitmap = bitmap;
+
+  return SWFDEC_MOVIE (movie);
+}

@@ -48,6 +48,10 @@ struct _SwfdecBitmapMovieClass {
 
 GType		swfdec_bitmap_movie_get_type		(void);
 
+SwfdecMovie *	swfdec_bitmap_movie_new			(SwfdecMovie *		parent,
+							 SwfdecBitmapData *	bitmap,
+							 int			depth);
+
 
 G_END_DECLS
 #endif

@@ -367,9 +367,7 @@ swfdec_sprite_movie_attachBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (movie)
     swfdec_movie_remove (movie);
 
-  movie = g_object_new (SWFDEC_TYPE_BITMAP_MOVIE, "context", cx, "depth", depth, 
-      "parent", parent, "resource", parent->resource, NULL);
-  SWFDEC_BITMAP_MOVIE (movie)->bitmap = bitmap;
+  swfdec_bitmap_movie_new (parent, bitmap, depth);
   SWFDEC_LOG ("created new BitmapMovie to parent %s at depth %d", 
       parent->name, depth);
 }

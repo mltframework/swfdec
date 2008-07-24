@@ -29,18 +29,39 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
+#include "swfdec_rectangle.h"
 
+enum {
+  INVALIDATE,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL];
 G_DEFINE_TYPE (SwfdecBitmapData, swfdec_bitmap_data, SWFDEC_TYPE_AS_OBJECT)
+
+static void
+swfdec_bitmap_data_invalidate (SwfdecBitmapData *bitmap, guint x, guint y, guint w, guint h)
+{
+  SwfdecRectangle rect = { x, y, w, h };
+
+  g_return_if_fail (w > 0);
+  g_return_if_fail (h > 0);
+
+  g_signal_emit (bitmap, signals[INVALIDATE], 0, &rect);
+}
 
 static void
 swfdec_bitmap_data_clear (SwfdecBitmapData *bitmap)
 {
+  int w, h;
+
   if (bitmap->surface == NULL)
     return;
 
-  swfdec_as_context_unuse_mem (swfdec_gc_object_get_context (bitmap), 4 * 
-      cairo_image_surface_get_width (bitmap->surface) *
-      cairo_image_surface_get_height (bitmap->surface));
+  w = cairo_image_surface_get_width (bitmap->surface);
+  h = cairo_image_surface_get_height (bitmap->surface);
+  swfdec_bitmap_data_invalidate (bitmap, 0, 0, w, h);
+  swfdec_as_context_unuse_mem (swfdec_gc_object_get_context (bitmap), 4 * w * h);
   cairo_surface_destroy (bitmap->surface);
   bitmap->surface = NULL;
 }
@@ -61,6 +82,10 @@ swfdec_bitmap_data_class_init (SwfdecBitmapDataClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_bitmap_data_dispose;
+
+  signals[INVALIDATE] = g_signal_new ("invalidate", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__BOXED,
+      G_TYPE_NONE, 1, SWFDEC_TYPE_RECTANGLE);
 }
 
 static void

@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,8 @@
 #include "swfdec_movie.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_bitmap_data.h"
+#include "swfdec_bitmap_movie.h"
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
@@ -346,7 +348,30 @@ void
 swfdec_sprite_movie_attachBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.attachBitmap");
+  SwfdecMovie *parent;
+  SwfdecBitmapData *bitmap;
+  const char *snapping;
+  gboolean smoothing;
+  int depth;
+  SwfdecMovie *movie;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_SPRITE_MOVIE, &parent, "oi|sb", 
+      &bitmap, &depth, &snapping, &smoothing);
+
+  if (!SWFDEC_IS_BITMAP_DATA (bitmap))
+    return;
+  if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY)
+    return;
+
+  movie = swfdec_movie_find (parent, depth);
+  if (movie)
+    swfdec_movie_remove (movie);
+
+  movie = g_object_new (SWFDEC_TYPE_BITMAP_MOVIE, "context", cx, "depth", depth, 
+      "parent", parent, "resource", parent->resource, NULL);
+  SWFDEC_BITMAP_MOVIE (movie)->bitmap = bitmap;
+  SWFDEC_LOG ("created new BitmapMovie to parent %s at depth %d", 
+      parent->name, depth);
 }
 
 SWFDEC_AS_NATIVE (900, 26, swfdec_sprite_movie_getRect)

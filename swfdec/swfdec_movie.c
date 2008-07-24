@@ -924,8 +924,11 @@ swfdec_movie_set_property (GObject *object, guint param_id, const GValue *value,
 	/* invalidate the parent, so it gets visible */
 	swfdec_movie_queue_update (movie->parent, SWFDEC_MOVIE_INVALID_CHILDREN);
       } else {
+	SwfdecAsValue val;
 	SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
 	priv->roots = g_list_insert_sorted (priv->roots, movie, swfdec_movie_compare_depths);
+	SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, priv->system->version));
+	swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR__version, &val);
       }
       break;
     case PROP_RESOURCE:
@@ -1411,20 +1414,6 @@ swfdec_movie_set_depth (SwfdecMovie *movie, int depth)
   g_object_notify (G_OBJECT (movie), "depth");
 }
 
-static void
-swfdec_movie_set_version (SwfdecMovie *movie)
-{
-  SwfdecAsContext *cx;
-  SwfdecAsValue val;
-
-  if (movie->parent != NULL)
-    return;
-
-  cx = swfdec_gc_object_get_context (movie);
-  SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, SWFDEC_PLAYER (cx)->priv->system->version));
-  swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR__version, &val);
-}
-
 /**
  * swfdec_movie_new:
  * @player: a #SwfdecPlayer
@@ -1475,8 +1464,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
    */
   if (SWFDEC_IS_ACTOR (movie))
     player->priv->actors = g_list_prepend (player->priv->actors, movie);
-  /* only add the movie here, because it needs to be setup for the debugger */
-  swfdec_movie_set_version (movie);
   /* the movie is invalid already */
   player->priv->invalid_pending = g_slist_prepend (player->priv->invalid_pending, movie);
 

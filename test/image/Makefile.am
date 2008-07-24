@@ -2,6 +2,15 @@ check-local: ../swfdec-test
 	../swfdec-test --script $(srcdir)/default.sts $(srcdir)/*.swf
 
 EXTRA_DIST = \
+	BitmapData-creation-5.swf \
+	BitmapData-creation-5.swf.png \
+	BitmapData-creation-6.swf \
+	BitmapData-creation-6.swf.png \
+	BitmapData-creation-7.swf \
+	BitmapData-creation-7.swf.png \
+	BitmapData-creation-8.swf \
+	BitmapData-creation-8.swf.png \
+	BitmapData-creation.as \
 	README \
 	background-5.swf \
 	background-5.swf.png \

@@ -1338,6 +1338,23 @@ swfdec_movie_do_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gb
   }
 }
 
+static GObject *
+swfdec_movie_constructor (GType type, guint n_construct_properties,
+    GObjectConstructParam *construct_properties)
+{
+  GObject *object;
+  SwfdecPlayerPrivate *priv;
+
+  object = G_OBJECT_CLASS (swfdec_movie_parent_class)->constructor (type, 
+      n_construct_properties, construct_properties);
+
+  priv = SWFDEC_PLAYER (swfdec_gc_object_get_context (object))->priv;
+  /* the movie is created invalid */
+  priv->invalid_pending = g_slist_prepend (priv->invalid_pending, object);
+
+  return object;
+}
+
 static void
 swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
@@ -1345,6 +1362,7 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (movie_class);
   SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (movie_class);
 
+  object_class->constructor = swfdec_movie_constructor;
   object_class->dispose = swfdec_movie_dispose;
   object_class->get_property = swfdec_movie_get_property;
   object_class->set_property = swfdec_movie_set_property;
@@ -1457,15 +1475,6 @@ swfdec_movie_new (SwfdecPlayer *player, int depth, SwfdecMovie *parent, SwfdecRe
   movie = g_object_new (type, "context", player, "depth", depth, 
       "parent", parent, "name", name, "resource", resource,
       "graphic", graphic, NULL);
-  /* add the movie to the global movies list */
-  /* NB: adding to the movies list happens before swfdec_movie_initialize().
-   * swfdec_movie_initialize() does a gotoAndPlay(0) for Sprites which can
-   * cause new movies to be created (and added to this list).
-   */
-  if (SWFDEC_IS_ACTOR (movie))
-    player->priv->actors = g_list_prepend (player->priv->actors, movie);
-  /* the movie is invalid already */
-  player->priv->invalid_pending = g_slist_prepend (player->priv->invalid_pending, movie);
 
   return movie;
 }

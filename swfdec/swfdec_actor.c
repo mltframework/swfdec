@@ -137,11 +137,32 @@ swfdec_actor_key_release (SwfdecActor *actor, guint keycode, guint character)
   swfdec_actor_queue_script (actor, SWFDEC_EVENT_KEY_UP);
 }
 
+static GObject *
+swfdec_actor_constructor (GType type, guint n_construct_properties,
+    GObjectConstructParam *construct_properties)
+{
+  SwfdecPlayerPrivate *priv;
+  GObject *object;
+
+  object = G_OBJECT_CLASS (swfdec_actor_parent_class)->constructor (type, 
+      n_construct_properties, construct_properties);
+
+  priv = SWFDEC_PLAYER (swfdec_gc_object_get_context (object))->priv;
+  /* NB: adding to the movies list happens before swfdec_movie_initialize().
+   * swfdec_movie_initialize() does a gotoAndPlay(0) for Sprites which can
+   * cause new movies to be created (and added to this list).
+   */
+  priv->actors = g_list_prepend (priv->actors, object);
+
+  return object;
+}
+
 static void
 swfdec_actor_class_init (SwfdecActorClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  object_class->constructor = swfdec_actor_constructor;
   object_class->dispose = swfdec_actor_dispose;
 
   klass->iterate_end = swfdec_actor_iterate_end;

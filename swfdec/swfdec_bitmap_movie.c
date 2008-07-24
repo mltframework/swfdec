@@ -107,10 +107,25 @@ swfdec_bitmap_movie_mark (SwfdecGcObject *object)
 }
 
 static void
+swfdec_bitmap_movie_dispose (GObject *object)
+{
+  SwfdecBitmapMovie *bitmap = SWFDEC_BITMAP_MOVIE (object);
+
+  g_signal_handlers_disconnect_by_func (bitmap->bitmap, 
+      swfdec_movie_invalidate_last, bitmap);
+  g_object_unref (bitmap->bitmap);
+
+  G_OBJECT_CLASS (swfdec_bitmap_movie_parent_class)->dispose (object);
+}
+
+static void
 swfdec_bitmap_movie_class_init (SwfdecBitmapMovieClass * g_class)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
   SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
+
+  object_class->dispose = swfdec_bitmap_movie_dispose;
 
   gc_class->mark = swfdec_bitmap_movie_mark;
 
@@ -130,13 +145,18 @@ swfdec_bitmap_movie_new (SwfdecMovie *parent, SwfdecBitmapData *bitmap, int dept
 {
   SwfdecBitmapMovie *movie;
 
-  g_return_val_if_fail (SWFDEC_IS_MOVIE (parent));
-  g_return_val_if_fail (SWFDEC_IS_BITMAP_DATA (bitmap));
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (parent), NULL);
+  g_return_val_if_fail (SWFDEC_IS_BITMAP_DATA (bitmap), NULL);
 
   movie = g_object_new (SWFDEC_TYPE_BITMAP_MOVIE, 
       "context", swfdec_gc_object_get_context (parent), "depth", depth, 
       "parent", parent, "resource", parent->resource, NULL);
   movie->bitmap = bitmap;
+  /* we ref the bitmap here to enforce the order for destruction, which makes our signals work */
+  g_object_ref (bitmap);
+  /* FIXME: be smarter in what we invalidate, use the rectangle */
+  g_signal_connect_swapped (movie->bitmap, "invalidate", 
+      G_CALLBACK (swfdec_movie_invalidate_last), movie);
 
   return SWFDEC_MOVIE (movie);
 }

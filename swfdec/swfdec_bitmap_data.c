@@ -232,7 +232,23 @@ void
 swfdec_bitmap_data_setPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.setPixel");
+  SwfdecBitmapData *bitmap;
+  guint x, y, color;
+  cairo_t *cr;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "iii", &x, &y, &color);
+
+  if (bitmap->surface == NULL ||
+      x >= (guint) cairo_image_surface_get_width (bitmap->surface) ||
+      y >= (guint) cairo_image_surface_get_height (bitmap->surface))
+    return;
+
+  cr = cairo_create (bitmap->surface);
+  swfdec_color_set_source (cr, SWFDEC_COLOR_OPAQUE (color));
+  cairo_rectangle (cr, x, y, 1, 1);
+  cairo_fill (cr);
+  cairo_destroy (cr);
+  swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
 }
 
 SWFDEC_AS_NATIVE (1100, 3, swfdec_bitmap_data_fillRect)
@@ -304,7 +320,23 @@ void
 swfdec_bitmap_data_setPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.setPixel32");
+  SwfdecBitmapData *bitmap;
+  guint x, y, color;
+  cairo_t *cr;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "iii", &x, &y, &color);
+
+  if (bitmap->surface == NULL ||
+      x >= (guint) cairo_image_surface_get_width (bitmap->surface) ||
+      y >= (guint) cairo_image_surface_get_height (bitmap->surface))
+    return;
+
+  cr = cairo_create (bitmap->surface);
+  swfdec_color_set_source (cr, color);
+  cairo_rectangle (cr, x, y, 1, 1);
+  cairo_fill (cr);
+  cairo_destroy (cr);
+  swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
 }
 
 SWFDEC_AS_NATIVE (1100, 12, swfdec_bitmap_data_floodFill)

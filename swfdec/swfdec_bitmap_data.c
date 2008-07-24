@@ -426,7 +426,7 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecBitmapData *bitmap;
   int w, h;
   gboolean transparent;
-  int color;
+  guint color;
 
   if (!swfdec_as_context_is_constructing (cx))
     return;
@@ -446,7 +446,7 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       transparent ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, w, h);
   if (color) {
     cairo_t *cr = cairo_create (bitmap->surface);
-    swfdec_color_set_source (cr, color);
+    swfdec_color_set_source (cr, transparent ? color : SWFDEC_COLOR_OPAQUE (color));
     cairo_paint (cr);
     cairo_destroy (cr);
   }

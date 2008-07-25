@@ -93,6 +93,40 @@ swfdec_bitmap_data_init (SwfdecBitmapData *transform)
 {
 }
 
+SwfdecBitmapData *
+swfdec_bitmap_data_new (SwfdecAsContext *context, gboolean transparent, guint width, guint height)
+{
+  SwfdecBitmapData *bitmap;
+  SwfdecAsValue val;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  g_return_val_if_fail (width > 0, NULL);
+  g_return_val_if_fail (height > 0, NULL);
+
+  if (!swfdec_as_context_try_use_mem (context, width * height * 4))
+    return NULL;
+
+  bitmap = g_object_new (SWFDEC_TYPE_BITMAP_DATA, "context", context, NULL);
+  bitmap->surface = cairo_image_surface_create (
+      transparent ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, width, height);
+
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_flash, &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val), 
+	SWFDEC_AS_STR_display, &val);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+      swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val), 
+	  SWFDEC_AS_STR_BitmapData, &val);
+      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (bitmap),
+	    SWFDEC_AS_VALUE_GET_OBJECT (&val));
+      }
+    }
+  }
+
+  return bitmap;
+}
+
 // static
 SWFDEC_AS_NATIVE (1100, 40, swfdec_bitmap_data_loadBitmap)
 void
@@ -467,7 +501,26 @@ void
 swfdec_bitmap_data_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.clone");
+  SwfdecBitmapData *bitmap, *clone;
+  cairo_t *cr;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
+
+  if (bitmap->surface == NULL)
+    return;
+
+  clone = swfdec_bitmap_data_new (cx,
+      cairo_image_surface_get_format (bitmap->surface) != CAIRO_FORMAT_RGB24,
+      cairo_image_surface_get_width (bitmap->surface),
+      cairo_image_surface_get_height (bitmap->surface));
+  if (clone == NULL)
+    return;
+
+  cr = cairo_create (clone->surface);
+  cairo_set_source_surface (cr, bitmap->surface, 0, 0);
+  cairo_paint (cr);
+  cairo_destroy (cr);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (clone));
 }
 
 SWFDEC_AS_NATIVE (1100, 22, swfdec_bitmap_data_do_dispose)

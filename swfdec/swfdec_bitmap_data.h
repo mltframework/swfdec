@@ -46,6 +46,11 @@ struct _SwfdecBitmapDataClass {
 
 GType			swfdec_bitmap_data_get_type		(void);
 
+SwfdecBitmapData *	swfdec_bitmap_data_new			(SwfdecAsContext *	context,
+								 gboolean		transparent,
+								 guint			width,
+								 guint			height);
+
 
 G_END_DECLS
 #endif

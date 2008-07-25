@@ -32,5 +32,12 @@ trace (t.text);
 t.text = 9;
 trace (n.test);
 
-loadMovie ("FSCommand:quit", "");
+// creating variable afterwards, re-setting t.variable
+t.variable = "o.test2";
+trace (t.text);
+o.test2 = 1;
+trace (t.text);
+t.variable = "o.test2";
+trace (t.text);
 
+getURL ("FSCommand:quit", "");

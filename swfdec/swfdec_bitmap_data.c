@@ -219,22 +219,42 @@ swfdec_bitmap_data_set_transparent (SwfdecAsContext *cx,
 }
 
 #define SWFDEC_COLOR_MULTIPLY(color) SWFDEC_COLOR_COMBINE ( \
-    SWFDEC_COLOR_ALPHA (color) * SWFDEC_COLOR_RED (color) / 255, \
-    SWFDEC_COLOR_ALPHA (color) * SWFDEC_COLOR_GREEN (color) / 255, \
-    SWFDEC_COLOR_ALPHA (color) * SWFDEC_COLOR_BLUE (color) / 255, \
+    (SWFDEC_COLOR_ALPHA (color) * SWFDEC_COLOR_RED (color) + 128) / 255, \
+    (SWFDEC_COLOR_ALPHA (color) * SWFDEC_COLOR_GREEN (color) + 128) / 255, \
+    (SWFDEC_COLOR_ALPHA (color) * SWFDEC_COLOR_BLUE (color) + 128) / 255, \
     SWFDEC_COLOR_ALPHA (color))
-#define SWFDEC_COLOR_UNMULTIPLY(color) SWFDEC_COLOR_COMBINE ( \
-    SWFDEC_COLOR_RED (color) * 255 / SWFDEC_COLOR_ALPHA (color), \
-    SWFDEC_COLOR_GREEN (color) * 255 / SWFDEC_COLOR_ALPHA (color), \
-    SWFDEC_COLOR_BLUE (color) * 255 / SWFDEC_COLOR_ALPHA (color), \
-    SWFDEC_COLOR_ALPHA (color))
+
+/* FIXME: This algorithm rounds wrong, no idea how though */
+#define SWFDEC_COLOR_UNMULTIPLY(color) (SWFDEC_COLOR_ALPHA (color) ? (\
+    SWFDEC_COLOR_ALPHA (color) == 0xFF ? color : SWFDEC_COLOR_COMBINE ( \
+    (SWFDEC_COLOR_RED (color) * 255 + SWFDEC_COLOR_ALPHA (color) / 2) / SWFDEC_COLOR_ALPHA (color), \
+    (SWFDEC_COLOR_GREEN (color) * 255 + SWFDEC_COLOR_ALPHA (color) / 2) / SWFDEC_COLOR_ALPHA (color), \
+    (SWFDEC_COLOR_BLUE (color) * 255 + SWFDEC_COLOR_ALPHA (color) / 2) / SWFDEC_COLOR_ALPHA (color), \
+    SWFDEC_COLOR_ALPHA (color))) : 0)
 
 SWFDEC_AS_NATIVE (1100, 1, swfdec_bitmap_data_getPixel)
 void
 swfdec_bitmap_data_getPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.getPixel");
+  SwfdecBitmapData *bitmap;
+  guint x, y, color;
+  guint8 *addr;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii", &x, &y);
+
+  if (bitmap->surface == NULL ||
+      x >= (guint) cairo_image_surface_get_width (bitmap->surface) ||
+      y >= (guint) cairo_image_surface_get_height (bitmap->surface))
+    return;
+
+  addr = cairo_image_surface_get_data (bitmap->surface);
+  addr += cairo_image_surface_get_stride (bitmap->surface) * y;
+  addr += 4 * x;
+  color = *(SwfdecColor *) addr;
+  color = SWFDEC_COLOR_UNMULTIPLY (color);
+  color &= SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0);
+  SWFDEC_AS_VALUE_SET_INT (ret, color);
 }
 
 SWFDEC_AS_NATIVE (1100, 2, swfdec_bitmap_data_setPixel)
@@ -326,7 +346,23 @@ void
 swfdec_bitmap_data_getPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.getPixel32");
+  SwfdecBitmapData *bitmap;
+  guint x, y, color;
+  guint8 *addr;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii", &x, &y);
+
+  if (bitmap->surface == NULL ||
+      x >= (guint) cairo_image_surface_get_width (bitmap->surface) ||
+      y >= (guint) cairo_image_surface_get_height (bitmap->surface))
+    return;
+
+  addr = cairo_image_surface_get_data (bitmap->surface);
+  addr += cairo_image_surface_get_stride (bitmap->surface) * y;
+  addr += 4 * x;
+  color = *(SwfdecColor *) addr;
+  color = SWFDEC_COLOR_UNMULTIPLY (color);
+  SWFDEC_AS_VALUE_SET_INT (ret, color);
 }
 
 SWFDEC_AS_NATIVE (1100, 11, swfdec_bitmap_data_setPixel32)

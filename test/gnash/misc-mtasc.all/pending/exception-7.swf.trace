@@ -1,0 +1,24 @@
+Test constructor called [exception.as:33]
+PASSED: number == number  [exception.as:97]
+PASSED: 1 == 1  [exception.as:98]
+PASSED: string == string  [exception.as:110]
+PASSED: thrown_finally == thrown_finally  [exception.as:111]
+PASSED: number == number  [exception.as:122]
+PASSED: 3 == 3  [exception.as:123]
+PASSED: finally == finally  [exception.as:128]
+PASSED: 2 == 2  [exception.as:129]
+PASSED: catch == catch  [exception.as:132]
+PASSED: 3 == 3  [exception.as:133]
+PASSED: catch == catch  [exception.as:140]
+PASSED: 4 == 4  [exception.as:141]
+Catch inside, throwing again (not expected to survive after finally)! [exception.as:69]
+PASSED: finally == finally  [exception.as:150]
+PASSED: 5 == 5  [exception.as:151]
+Catch inside, throwing again! [exception.as:83]
+Catch outside [exception.as:156]
+PASSED: throw == throw  [exception.as:159]
+PASSED: Test run 15 [ [exception.as:167]]
+#passed: 16
+#failed: 0
+#total tests run: 16
+__END_OF_TEST__

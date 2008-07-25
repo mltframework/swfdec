@@ -1,0 +1,16 @@
+The .as files, from Gnash's test suite's directory with same name, have been
+imported here and compiled using the following command line, where $v is the
+target version:
+	cpp -x c -P -D__SWF_VERSION__=$v -I. test.as pp_test.as && \
+	mtasc -version $v -header 800:600:20 -cp /usr/share/mtasc/std -cp . \
+	  -swf test-$v.swf -main pp_test.as
+
+Some files where slightly modified to make them work better on different
+versions and with Swfdec's test suite. If a file has been modified, the
+original file is named .as.original and modified version just .as
+
+Tests that are not working in Swfdec yet are in pending directory and are not
+included in make check
+
+The date when the tests were last imported/updated from Gnash's CVS repository
+can be found from UPDATED

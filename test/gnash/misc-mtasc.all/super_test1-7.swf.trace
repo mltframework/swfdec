@@ -1,0 +1,11 @@
+PASSED: true == true  [super_test1.as:47]
+PASSED: true == true  [super_test1.as:48]
+PASSED: true == true  [super_test1.as:49]
+PASSED: [object Object] == [object Object]  [super_test1.as:52]
+PASSED: [object Object] == [object Object]  [super_test1.as:53]
+PASSED: [object Object] == [object Object]  [super_test1.as:54]
+PASSED: Test run 6 [ [super_test1.as:56]]
+#passed: 7
+#failed: 0
+#total tests run: 7
+__END_OF_TEST__

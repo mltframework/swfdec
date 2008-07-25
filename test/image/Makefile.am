@@ -191,6 +191,15 @@ EXTRA_DIST = \
 	image-jpeg-alpha.swf.png \
 	image-lossless-alpha.swf \
 	image-lossless-alpha.swf.png \
+	loadBitmap-clone-5.swf \
+	loadBitmap-clone-5.swf.png \
+	loadBitmap-clone-6.swf \
+	loadBitmap-clone-6.swf.png \
+	loadBitmap-clone-7.swf \
+	loadBitmap-clone-7.swf.png \
+	loadBitmap-clone-8.swf \
+	loadBitmap-clone-8.swf.png \
+	loadBitmap-clone.xml \
 	load-jpeg.as \
 	load-jpeg-5.swf \
 	load-jpeg-5.swf.png \

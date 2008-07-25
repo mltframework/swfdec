@@ -1,0 +1,422 @@
+<?xml version="1.0"?>
+<swf version="8" compressed="1">
+  <Header framerate="1" frames="2">
+    <size>
+      <Rectangle left="0" right="4000" top="0" bottom="3000"/>
+    </size>
+    <tags>
+      <FileAttributes hasMetaData="0" useNetwork="0"/>
+      <DefineBitsJPEG2 objectID="1">
+        <data>
+          <data>/9j/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAAyADIDAREAAhEBAxEB/8QAHQAAAgMAAgMAAAAAAAAAAAAAAAcICQoFBgIEC//EACsQAAEFAQACAQQBAgcAAAAAAAUBAgMEBgcACBEJEhMhFDEyFRYXIiQmQf/EAB4BAAIBBAMBAAAAAAAAAAAAAAAFCAIDBAkBBgcK/8QAMxEAAgEDAwMCAwgCAgMAAAAAAQIDBAURAAYhBxIxCBMUQVEiIzJCYXGBoRUzJbFSgsH/2gAMAwEAAhEDEQA/AN/Hho0eGjSE6z7Tet/CUi/1j7jy7mr50ctevsdoBBWrP2f3NrVb96GxYei/pGQxve53+1rVcqJ4vuF2tdpjE10uVBbojkiSurKekQ4+jVEkYP0wCTnVt5Yose5JHHnx3uqZx5x3EZxpcYD6gnpH1EzWzmE9p+Hn9DdmbXogYeh5ysavzPcjGR0Bd69Wu3XPcqNZ/FhlRzlajVVXNRV1Bu3a11k9m27jslfMSAIaS6UU8xJOBiKOZpDzxwp51QlVTSHtSeJm8YEikn9hnn+NS/jkjlYyWJ7JI3tRzJI3I9j2r+0c1zVVrkVP6Kiqi+dh1f15+GjR4aNH9P6+GjWcD6o/1SNqC3RD1O9VT0YTU1VhodR6vUbBat5eW+xjosvk2ztlpt0ktWaKzeJWop4Q9SzUWKtPcvwy0Iu+oTr6vTOmO39urFVbtq4FlaRwskVohnGIHeM5V6ufPdFG/wBmOLErK3coVVXVzI/w1OfvcAySYB9oHBAUEEGQgg8ghQVOCWGEjwv1q9eOV5Az2XtUVbanq8FQjuOl9A/7vrdAeIKraAYNNpp7kt04VtJJVERPnSylWG0QJ3oRAwhbpx+6X7JuPVe9S1+6bjV32pVhUXS4XKSSqp6RS2OynppWMKMz98dLGEDuQ8jFYo3MfFPSRk9zj3ZCAzySZcn9e5skEfID5eTgDTIoAPWL2NF3f80+rY6LlzHWRk+ng0+eQ9fKNrtlaAx9eLlVacgVqx2Ks50hGXEB82OmjtFSEdy+DEmfed49DOktis1Rdq57zQGkjdqZ7bW26hrZZ1UlIaedLUZIy7doZx3BBhirntQ5UtJTMp9xFIxwMKD/AAcZz+xzqOPH/dnpv01u31ufEtLrOo+oBa3XfJhtQTn1Ou5Xn7luaqwpgDMsbLksedbE7+djGQxhDFCt858YBM2HIQ8O6Veoq77O3Km0t311XeNp1Eii33CvmFXdbPSyzPDF71WsUJrEpmQpUAxRh0X4iGKAO0MaxamSglCFnlpWOSrEu8Sk8GNjyQB+T8JA+xhj9rWrltRn9tmgGxyhaiezGpDjdBnzY2dloeWDF6kV4aRpWYldHPVuVJ4p4JWKrXxva5F+F82LwzRVEMVRBIksE8aTQyxsGjlilUPHIjDIZHRgysCQVII4OnysGVWUgqwDKQQQQRkEEZBBByCODrnvLmudIv2Z6WnHuB9X6T9yskyeKOFIHIvw5tiKnKkLm/Kon3Nkcjm/tP2ifvyxUzpS089VLkRU0Ms8hHkRwo0jkZI57VOOfP6apdgis58IrMf2UEn+hr5/+Bi0+5013Xl5p7JvSmLmmPkXve+aybN3JCpGVsrvlyMbbtSMgaq/ENeOKCNGsiYjdGfVbecl7vl/v1xmL1t1uNZVgFjiJHlb4eNckFVhiEccajAVVGABrqVP3yv7jg90jd7c/mbLEeRhQT2j5AAKBgYHOe0f1FeX1vaLC+qPXS/TQ/GfXiUe3tZLk2Yp6vW6zrRALWI7wWGF3jQQfWNY50tPjscugvNGZY2I3OoHMJxGpQt/aL0A2xNsjpvt+lvCdu47zSU993GwTEkVfcIUmhtpUn7v/F0rQ0U0QZohXLXTx4Wcg9qhXsjUHz2gnH1x9fnj+/rqXpr69H0+sYCH5wfg/aMOAGDoQwamH49ho0Ehq7pH1x4sUX7TVrthZLPPbsvv6uUkWKWbxs2SKnCJEjZX7+6Ybh3y9TNU9RjQ9/etJSxbU76OkjyeyFYzuVHbtyA8zSGR2JkYE4U1NGG8t/HP9Yx+mfkSMj5aTXb9MJ71mMT7Bc2N2dVzDq2btncGUthSeeIMFhdKfyZoKbBlI0nF6HP6kCdFF4a1koIsWoEIATRkHdGlLOt3qLs7cXTDfYsG7qy317V1uhudjudtaX4astMtTV0qFop0Sanqoqqmqo6ymk7/AG5gZIZZqaSCZ0NwhZX+RyMjGTkEnx9DkHI+RGc4ONaRfoOdgLbz1H0HNDdmWzY4X0ovkATrD3STMx58aL2YWr9zlX7awq8dNAx0CKjaowXTrRtbDFGnmzz0ybnqNydLbdHVytNUWGsqrJ7jks700AiqKNmYk9wWCpWBc8hYQPAB1mWiUvTNGTn2JWjH17CqyKP2UuyADwFA4xjV3fkhNNdRN96MVd6F6l90yY9r3XCmCNMiYxFc53467pHoiIiqq/jR6/CIvz8fHwvmJcKUV1BW0RbtFZSVNKWPhRUQvF3HHPHfnVEie5HJH470dM/TuUr/APdY6/WHHsMCKNVGVqxKWitR7LkTpYqpSKJ1eeC3CxzHOStdZJDaiR7H/McjUc1378+c/qdXVO196yU13o3lFh3EFuNukPYahLdXgz0jllbtWdYmiLFWwr5wRxpHbkDLGGADAAMpA4Zfsuh/VWBUnnwfPztVz3qD6r5Sz1DuWgwfIsJVKl9j1vqO0Nc+zHQSLL54zc0Oj0VrUdhGdN1bDJEsTkiqUchfz0JUvepiAIGCxfqD3So2V6u+vXXbqFQbO2Badt7VjulRNUTyRW83VbLZ4GD114u9yuHuuIaKFl7zTw0vxdVJBR0kHxNVTQN2QIO3uY8YGMfPP4Rnjz4yfGR4xqAI30Kx/uv1q/7G7DkwbnfrtJCMrc45jXCDciT62JBRfwqWw6CzIVgkA0EdkgkJasrnYRpfZ3HyZbD3x9CsS6FmZidc/URtToBtakS9Vzbo3tU21EsliLQQXC7yxx+019vaUoRLVaZKhXkdkRJKtwaO3BhHNU0/Cxl/ngDyfIH6eeeMePHzxpv995Zn8qKSgMigjq1R1QdTqVqlQYKEjBFKEaICZ0CMgqhczmQo6tXGgsyBo0AocfBFVo042I9z9Ll46u7x6pb8q92btuLVtxrHWKKKMCKkt9FG7NTW+ggXCwUdOsjLFEv2QWZs5Y6XVsYxk88fr/A/Tjz8xnzzxZp9B7nt7O8X7tuJ4Xwjdz2R9QFIrVSK5Qx+bEhb1mJfhEd+LRKcHSK35aklFyfP3fcibxvR1a6uj6QU9yrEZDfbxW11N3Ajvo4UgoopBnk98tPUDPghV5znWPakKx1L/leoIQjwVjjRCR+0gkX/ANdXueSs0116t2nWI07VC5EyepdrzVbMMiI5ksFiN0Usb2r+la9jnNVF/wDF8NGsm/tt61af0k7sa148Xdt8I3puyfGnadeWatji1+Z09+mTSFrvwDLUr3WJp1aiUbj57thXU7dicfrB9bnpfuu5JavqlsO3PX1EkPubrstJGXqi8KYa80cKDvnDRKPj4lBkVkNThkZxGpnRqKdqlVJppW75iASaeQ/ikI5xBJ+KRgPupS0j5jd2jb1cxy3t+Eww/Z6OI3khGusac/y9kU7RHQS4UeDnwFzbk/llYtz7OWCB8vHjR8tqntdQ4VZ1D6QrE1xesiH0e6w7X9N/SXcNfY6BL91t3re62g+Gq6OZaDaW3rRHBFbJLtJIqGcSV89fcEtFHJ/ydQlF/lGp4LVBHWtI545FUhu5SAwwVIIOOQfHIxg5z9POpAabswauMe1LdWONsSNRkKxtajIomRRxsjjRkcbIoY44IIWMZDBDFFXhZHDFHGyG+6dw7o3xfbjuLclxrr3fbtUPU19xr5GkmnlfgDwEhhiQJFT08KRU9PAiQ08UcUcaLkNOvaQCABnA/wCj/wBf39car9Lj937W9Qp8e47RkKniNmGA0cZC+wDwQaZ6JaP6Ky3/AI8csNdXSiwzpW3S9hImIyAely/Uk96XPTVuzq3uOllWjqbftWjqI5L3uGaF1poYFYNJTUbMFFTXTqCkMEZ4yZJGREd1SVEz1MrU1NzIf9kmO6OmU/nl5wXwcxQ575D5xGHdNSXr9xbL+vXIMNyHIRKwPjQtcf8AyJFR1olfVPzEy16VEati8TvST3blh6fknsTSSvVXvXz6D7HZbdtyz2yw2inWltlooqegooFx93T00axp3EABnYL3yPgF5GZzyx0xhiSCJIo89kahRk5Y48sx/M7HLOx5ZiWPJ05PGurmjw0a6vsMXld+BvZjZAh2hBEYnQ2xxKtHYgka5qt+5qPRVjkaiqrJGK17V/aKi+GjVTnQvo48dKFbhjkm+23IZLs8tl4oJcW2BZPK9XyPiE2HOoI97lVXySVJJXr/AHSL8r54Tvz01dFeo1TJX7k2Pbf8nMSZbpavctFdKTnLTPQtFFO5P2jLPDJKW57+Wzgvb6csXjElO5JJNPI0SknksYgTAzMeWZoixPJOus5r6NoKS7E/pXsH0vYCo3tWQSOkp5llmNFRVjmtAoB1lzHon2vasjmvaqtejkVfnpFh9FXp4sNYlamzJLrJG4kjivV0ra6nV1PcpMAkhjkAOD2SiSM4wyMMg0i3Rn/bUVcw/wDFphEP5+GSBmHyIZiCMhgcnVo/EvXnkXrzmYsryjGisuPRPutTVa8f+IEZ3fuWzfuq389meZ6rJK+Ryq97nOd8uVVWTtrtVsslDT2yz2+itdupUEdNQ2+mhpKWBBwFjggSONBxyQuWPLEkk6zI4o4UEcUaRoucIihVGeScAAZJ5J8k8nnTq8YauaPDRo8NGjw0aPDRo8NGjw0aPDRo8NGv/9k=</data>
+        </data>
+      </DefineBitsJPEG2>
+      <Export>
+        <symbols>
+          <Symbol objectID="1" name="image"/>
+        </symbols>
+      </Export>
+      <!--
+bd = flash.display.BitmapData.loadBitmap ("image");
+trace (bd);
+
+for (x = 0; x < 50; x++) {
+  bd.setPixel32 (x, 49, 0xFF000000);
+  bd.setPixel32 (49, x, 0xFF000000);
+};
+
+for (y = 0; y < 3; y++) {
+  for (x = 0; x < 4; x++) {
+    for (i = 0; i < 85; i++) {
+      bd.setPixel32 (random (49), random (49), 0xFF000000 | (0x30000 * i) | (0xFF - 0x3 * i));
+    }
+    a = createEmptyMovieClip ("a" + getNextHighestDepth (), getNextHighestDepth ());
+    a.attachBitmap (bd, 0);
+    a._x = x * 50;
+    a._y = y * 50;
+    bd = bd.clone ();
+  }
+}
+-->
+      <DoAction>
+        <actions>
+          <Dictionary>
+            <strings>
+              <String value="bd"/>
+              <String value="flash"/>
+              <String value="display"/>
+              <String value="BitmapData"/>
+              <String value="image"/>
+              <String value="loadBitmap"/>
+              <String value="x"/>
+              <String value="setPixel32"/>
+              <String value="y"/>
+              <String value="i"/>
+              <String value="a"/>
+              <String value="getNextHighestDepth"/>
+              <String value="createEmptyMovieClip"/>
+              <String value="attachBitmap"/>
+              <String value="_x"/>
+              <String value="_y"/>
+              <String value="clone"/>
+            </strings>
+          </Dictionary>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="0"/>
+              <StackDictionaryLookup index="4"/>
+              <StackInteger value="1"/>
+              <StackDictionaryLookup index="1"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="2"/>
+            </items>
+          </PushData>
+          <GetMember/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="3"/>
+            </items>
+          </PushData>
+          <GetMember/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="5"/>
+            </items>
+          </PushData>
+          <CallMethod/>
+          <SetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="0"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <Trace/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="6"/>
+              <StackInteger value="0"/>
+            </items>
+          </PushData>
+          <SetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="6"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="50"/>
+            </items>
+          </PushData>
+          <LessThanTyped/>
+          <LogicalNOT/>
+          <BranchIfTrue byteOffset="90"/>
+          <PushData>
+            <items>
+              <StackDouble value="4278190080.000000"/>
+              <StackInteger value="49"/>
+              <StackDictionaryLookup index="6"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="3"/>
+              <StackDictionaryLookup index="0"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="7"/>
+            </items>
+          </PushData>
+          <CallMethod/>
+          <Pop/>
+          <PushData>
+            <items>
+              <StackDouble value="4278190080.000000"/>
+              <StackDictionaryLookup index="6"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="49"/>
+              <StackInteger value="3"/>
+              <StackDictionaryLookup index="0"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="7"/>
+            </items>
+          </PushData>
+          <CallMethod/>
+          <Pop/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="6"/>
+            </items>
+          </PushData>
+          <Duplicate/>
+          <GetVariable/>
+          <Increment/>
+          <SetVariable/>
+          <BranchAlways byteOffset="65425"/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="8"/>
+              <StackInteger value="0"/>
+            </items>
+          </PushData>
+          <SetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="8"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="3"/>
+            </items>
+          </PushData>
+          <LessThanTyped/>
+          <LogicalNOT/>
+          <BranchIfTrue byteOffset="319"/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="6"/>
+              <StackInteger value="0"/>
+            </items>
+          </PushData>
+          <SetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="6"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="4"/>
+            </items>
+          </PushData>
+          <LessThanTyped/>
+          <LogicalNOT/>
+          <BranchIfTrue byteOffset="273"/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="9"/>
+              <StackInteger value="0"/>
+            </items>
+          </PushData>
+          <SetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="9"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="85"/>
+            </items>
+          </PushData>
+          <LessThanTyped/>
+          <LogicalNOT/>
+          <BranchIfTrue byteOffset="91"/>
+          <PushData>
+            <items>
+              <StackDouble value="4278190080.000000"/>
+              <StackInteger value="196608"/>
+              <StackDictionaryLookup index="9"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <Mulitply/>
+          <OR/>
+          <PushData>
+            <items>
+              <StackInteger value="255"/>
+              <StackInteger value="3"/>
+              <StackDictionaryLookup index="9"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <Mulitply/>
+          <Substract/>
+          <OR/>
+          <PushData>
+            <items>
+              <StackInteger value="49"/>
+            </items>
+          </PushData>
+          <Random/>
+          <PushData>
+            <items>
+              <StackInteger value="49"/>
+            </items>
+          </PushData>
+          <Random/>
+          <PushData>
+            <items>
+              <StackInteger value="3"/>
+              <StackDictionaryLookup index="0"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="7"/>
+            </items>
+          </PushData>
+          <CallMethod/>
+          <Pop/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="9"/>
+            </items>
+          </PushData>
+          <Duplicate/>
+          <GetVariable/>
+          <Increment/>
+          <SetVariable/>
+          <BranchAlways byteOffset="65424"/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="10"/>
+              <StackInteger value="0"/>
+              <StackDictionaryLookup index="11"/>
+            </items>
+          </PushData>
+          <CallFunction/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="10"/>
+              <StackInteger value="0"/>
+              <StackDictionaryLookup index="11"/>
+            </items>
+          </PushData>
+          <CallFunction/>
+          <AddTyped/>
+          <PushData>
+            <items>
+              <StackInteger value="2"/>
+              <StackDictionaryLookup index="12"/>
+            </items>
+          </PushData>
+          <CallFunction/>
+          <SetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="0"/>
+              <StackDictionaryLookup index="0"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="2"/>
+              <StackDictionaryLookup index="10"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="13"/>
+            </items>
+          </PushData>
+          <CallMethod/>
+          <Pop/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="10"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="14"/>
+              <StackDictionaryLookup index="6"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="50"/>
+            </items>
+          </PushData>
+          <Mulitply/>
+          <SetMember/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="10"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="15"/>
+              <StackDictionaryLookup index="8"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackInteger value="50"/>
+            </items>
+          </PushData>
+          <Mulitply/>
+          <SetMember/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="0"/>
+              <StackInteger value="0"/>
+              <StackDictionaryLookup index="0"/>
+            </items>
+          </PushData>
+          <GetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="16"/>
+            </items>
+          </PushData>
+          <CallMethod/>
+          <SetVariable/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="6"/>
+            </items>
+          </PushData>
+          <Duplicate/>
+          <GetVariable/>
+          <Increment/>
+          <SetVariable/>
+          <BranchAlways byteOffset="65242"/>
+          <PushData>
+            <items>
+              <StackDictionaryLookup index="8"/>
+            </items>
+          </PushData>
+          <Duplicate/>
+          <GetVariable/>
+          <Increment/>
+          <SetVariable/>
+          <BranchAlways byteOffset="65196"/>
+          <EndAction/>
+        </actions>
+      </DoAction>
+      <ShowFrame/>
+      <End/>
+    </tags>
+  </Header>
+</swf>

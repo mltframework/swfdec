@@ -134,7 +134,7 @@ swfdec_bitmap_data_get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
   SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? 
-      cairo_image_surface_get_width (bitmap->surface) : -1);
+      cairo_image_surface_get_height (bitmap->surface) : -1);
 }
 
 SWFDEC_AS_NATIVE (1100, 103, swfdec_bitmap_data_set_height)

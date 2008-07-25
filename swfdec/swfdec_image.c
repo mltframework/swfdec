@@ -706,7 +706,7 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
   for (i = 0; i < n; i++) {
     tdata[i] = swfdec_color_apply_transform_premultiplied (sdata[i], trans);
     /* optimization: check for alpha channel to speed up compositing */
-    has_alpha |= SWFDEC_COLOR_A (tdata[i]) != 0xFF;
+    has_alpha |= SWFDEC_COLOR_ALPHA (tdata[i]) != 0xFF;
   }
   cairo_surface_destroy (source);
   surface = swfdec_image_create_surface_for_data (renderer, (guchar *) tdata,

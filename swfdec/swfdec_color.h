@@ -48,10 +48,10 @@ struct _SwfdecColorTransform {
 
 #define SWFDEC_COLOR_COMBINE(r,g,b,a)	((SwfdecColor) (((a)<<24) | ((r)<<16) | ((g)<<8) | (b)))
 #define SWFDEC_COLOR_OPAQUE(color)	((SwfdecColor) ((color) | SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF)))
-#define SWFDEC_COLOR_A(x)		(((x)>>24)&0xff)
-#define SWFDEC_COLOR_R(x)		(((x)>>16)&0xff)
-#define SWFDEC_COLOR_G(x)		(((x)>>8)&0xff)
-#define SWFDEC_COLOR_B(x)		((x)&0xff)
+#define SWFDEC_COLOR_ALPHA(x)		(((x)>>24)&0xff)
+#define SWFDEC_COLOR_RED(x)		(((x)>>16)&0xff)
+#define SWFDEC_COLOR_GREEN(x)		(((x)>>8)&0xff)
+#define SWFDEC_COLOR_BLUE(x)		((x)&0xff)
 
 #define SWFDEC_COLOR_WHITE		SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF)
 

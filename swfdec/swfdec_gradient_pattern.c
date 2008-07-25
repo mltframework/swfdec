@@ -100,8 +100,8 @@ swfdec_gradient_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *rendere
     ratio = MAX (ratio, gradient->gradient[i].ratio);
     offset = ratio / 255.0;
     cairo_pattern_add_color_stop_rgba (pattern, offset,
-	SWFDEC_COLOR_R(color) / 255.0, SWFDEC_COLOR_G(color) / 255.0,
-	SWFDEC_COLOR_B(color) / 255.0, SWFDEC_COLOR_A(color) / 255.0);
+	SWFDEC_COLOR_RED (color) / 255.0, SWFDEC_COLOR_GREEN (color) / 255.0,
+	SWFDEC_COLOR_BLUE (color) / 255.0, SWFDEC_COLOR_ALPHA (color) / 255.0);
     if (++ratio > 255)
       break;
   }

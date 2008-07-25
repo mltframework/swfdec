@@ -40,10 +40,10 @@ swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, guint ratio)
     return end;
   start_ratio = 65535 - ratio;
   end_ratio = ratio;
-  r = (SWFDEC_COLOR_R (start) * start_ratio + SWFDEC_COLOR_R (end) * end_ratio) / 65535;
-  g = (SWFDEC_COLOR_G (start) * start_ratio + SWFDEC_COLOR_G (end) * end_ratio) / 65535;
-  b = (SWFDEC_COLOR_B (start) * start_ratio + SWFDEC_COLOR_B (end) * end_ratio) / 65535;
-  a = (SWFDEC_COLOR_A (start) * start_ratio + SWFDEC_COLOR_A (end) * end_ratio) / 65535;
+  r = (SWFDEC_COLOR_RED (start) * start_ratio + SWFDEC_COLOR_RED (end) * end_ratio) / 65535;
+  g = (SWFDEC_COLOR_GREEN (start) * start_ratio + SWFDEC_COLOR_GREEN (end) * end_ratio) / 65535;
+  b = (SWFDEC_COLOR_BLUE (start) * start_ratio + SWFDEC_COLOR_BLUE (end) * end_ratio) / 65535;
+  a = (SWFDEC_COLOR_ALPHA (start) * start_ratio + SWFDEC_COLOR_ALPHA (end) * end_ratio) / 65535;
 
   return SWFDEC_COLOR_COMBINE (r, g, b, a);
 }
@@ -52,8 +52,8 @@ void
 swfdec_color_set_source (cairo_t *cr, SwfdecColor color)
 {
   cairo_set_source_rgba (cr, 
-      SWFDEC_COLOR_R (color) / 255.0, SWFDEC_COLOR_G (color) / 255.0,
-      SWFDEC_COLOR_B (color) / 255.0, SWFDEC_COLOR_A (color) / 255.0);
+      SWFDEC_COLOR_RED (color) / 255.0, SWFDEC_COLOR_GREEN (color) / 255.0,
+      SWFDEC_COLOR_BLUE (color) / 255.0, SWFDEC_COLOR_ALPHA (color) / 255.0);
 }
 
 SwfdecColor
@@ -65,16 +65,16 @@ swfdec_color_apply_transform_premultiplied (SwfdecColor in,
   if (trans->mask)
     return SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
 
-  aold = SWFDEC_COLOR_A (in);
+  aold = SWFDEC_COLOR_ALPHA (in);
   if (aold == 0)
     return 0;
 
   a = (aold * trans->aa >> 8) + trans->ab;
   a = CLAMP (a, 0, 255);
 
-  r = SWFDEC_COLOR_R (in);
-  g = SWFDEC_COLOR_G (in);
-  b = SWFDEC_COLOR_B (in);
+  r = SWFDEC_COLOR_RED (in);
+  g = SWFDEC_COLOR_GREEN (in);
+  b = SWFDEC_COLOR_BLUE (in);
   r = (r * trans->ra * a / aold >> 8) + trans->rb * a / 255;
   r = CLAMP (r, 0, a);
   g = (g * trans->ga * a / aold >> 8) + trans->gb * a / 255;
@@ -93,10 +93,10 @@ swfdec_color_apply_transform (SwfdecColor in, const SwfdecColorTransform * trans
   if (trans->mask)
     return SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
 
-  r = SWFDEC_COLOR_R (in);
-  g = SWFDEC_COLOR_G (in);
-  b = SWFDEC_COLOR_B (in);
-  a = SWFDEC_COLOR_A (in);
+  r = SWFDEC_COLOR_RED (in);
+  g = SWFDEC_COLOR_GREEN (in);
+  b = SWFDEC_COLOR_BLUE (in);
+  a = SWFDEC_COLOR_ALPHA (in);
 
   SWFDEC_LOG ("in rgba %d,%d,%d,%d", r, g, b, a);
 
@@ -159,13 +159,13 @@ swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor colo
 {
   trans->mask = FALSE;
   trans->ra = 0;
-  trans->rb = SWFDEC_COLOR_R (color);
+  trans->rb = SWFDEC_COLOR_RED (color);
   trans->ga = 0;
-  trans->gb = SWFDEC_COLOR_G (color);
+  trans->gb = SWFDEC_COLOR_GREEN (color);
   trans->ba = 0;
-  trans->bb = SWFDEC_COLOR_B (color);
+  trans->bb = SWFDEC_COLOR_BLUE (color);
   trans->aa = 0;
-  trans->ab = SWFDEC_COLOR_A (color);
+  trans->ab = SWFDEC_COLOR_ALPHA (color);
 }
 
 gboolean

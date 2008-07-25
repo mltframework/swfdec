@@ -42,8 +42,8 @@ swfdec_text_attribute_apply_bold (SwfdecTextLayout *layout, const SwfdecTextAttr
 static PangoAttribute *
 swfdec_text_attribute_create_color (SwfdecTextLayout *layout, const SwfdecTextAttributes *attr)
 {
-  return pango_attr_foreground_new (SWFDEC_COLOR_R (attr->color) * 255,
-      SWFDEC_COLOR_G (attr->color) * 255, SWFDEC_COLOR_B (attr->color) * 255);
+  return pango_attr_foreground_new (SWFDEC_COLOR_RED (attr->color) * 255,
+      SWFDEC_COLOR_GREEN (attr->color) * 255, SWFDEC_COLOR_BLUE (attr->color) * 255);
 }
 
 static void
@@ -873,25 +873,25 @@ swfdec_text_layout_modify_attributes (SwfdecTextLayout *layout,
     color = swfdec_color_apply_transform (color, ctrans);
     /* We differentiate three ranges: before selection, in selection and after selection */
     if (cur_start < sel_start) {
-      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_R (color) * 0x101,
-	  SWFDEC_COLOR_G (color) * 0x101, SWFDEC_COLOR_B (color) * 0x101);
+      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_RED (color) * 0x101,
+	  SWFDEC_COLOR_GREEN (color) * 0x101, SWFDEC_COLOR_BLUE (color) * 0x101);
       fg->start_index = cur_start;
       fg->end_index = MIN (cur_end, sel_start);
       pango_attr_list_change (new, fg);
     }
     if (sel_start < cur_end && sel_end > cur_start) {
-      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_R (focus) * 0x101,
-	  SWFDEC_COLOR_G (focus) * 0x101, SWFDEC_COLOR_B (focus) * 0x101);
-      PangoAttribute *bg = pango_attr_background_new (SWFDEC_COLOR_R (color) * 0x101,
-	  SWFDEC_COLOR_G (color) * 0x101, SWFDEC_COLOR_B (color) * 0x101);
+      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_RED (focus) * 0x101,
+	  SWFDEC_COLOR_GREEN (focus) * 0x101, SWFDEC_COLOR_BLUE (focus) * 0x101);
+      PangoAttribute *bg = pango_attr_background_new (SWFDEC_COLOR_RED (color) * 0x101,
+	  SWFDEC_COLOR_GREEN (color) * 0x101, SWFDEC_COLOR_BLUE (color) * 0x101);
       fg->start_index = bg->start_index = MAX (cur_start, sel_start);
       fg->end_index = bg->end_index = MIN (cur_end, sel_end);
       pango_attr_list_change (new, fg);
       pango_attr_list_change (new, bg);
     }
     if (cur_end > sel_end) {
-      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_R (color) * 0x101,
-	  SWFDEC_COLOR_G (color) * 0x101, SWFDEC_COLOR_B (color) * 0x101);
+      PangoAttribute *fg = pango_attr_foreground_new (SWFDEC_COLOR_RED (color) * 0x101,
+	  SWFDEC_COLOR_GREEN (color) * 0x101, SWFDEC_COLOR_BLUE (color) * 0x101);
       fg->start_index = MAX (sel_end, cur_start);
       fg->end_index = cur_end;
       pango_attr_list_change (new, fg);

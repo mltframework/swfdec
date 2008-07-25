@@ -432,9 +432,9 @@ swfdec_bots_put_rgb (SwfdecBots *bots, SwfdecColor color)
 {
   g_return_if_fail (bots != NULL);
 
-  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_R (color));
-  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_G (color));
-  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_B (color));
+  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_RED (color));
+  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_GREEN (color));
+  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_BLUE (color));
 }
 
 void
@@ -442,9 +442,9 @@ swfdec_bots_put_rgba (SwfdecBots *bots, SwfdecColor color)
 {
   g_return_if_fail (bots != NULL);
 
-  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_R (color));
-  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_G (color));
-  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_B (color));
-  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_A (color));
+  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_RED (color));
+  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_GREEN (color));
+  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_BLUE (color));
+  swfdec_bots_put_u8 (bots, SWFDEC_COLOR_ALPHA (color));
 }
 

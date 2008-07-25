@@ -152,8 +152,8 @@ swfdec_color_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
 
   color = swfdec_color_apply_transform (color, trans);
   return cairo_pattern_create_rgba ( 
-      SWFDEC_COLOR_R (color) / 255.0, SWFDEC_COLOR_G (color) / 255.0,
-      SWFDEC_COLOR_B (color) / 255.0, SWFDEC_COLOR_A (color) / 255.0);
+      SWFDEC_COLOR_RED (color) / 255.0, SWFDEC_COLOR_GREEN (color) / 255.0,
+      SWFDEC_COLOR_BLUE (color) / 255.0, SWFDEC_COLOR_ALPHA (color) / 255.0);
 }
 
 static void

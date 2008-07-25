@@ -24,12 +24,15 @@
 
 #include "swfdec_bitmap_data.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_frame_internal.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
+#include "swfdec_image.h"
 #include "swfdec_rectangle.h"
+#include "swfdec_resource.h"
 
 enum {
   INVALIDATE,
@@ -127,13 +130,45 @@ swfdec_bitmap_data_new (SwfdecAsContext *context, gboolean transparent, guint wi
   return bitmap;
 }
 
-// static
 SWFDEC_AS_NATIVE (1100, 40, swfdec_bitmap_data_loadBitmap)
 void
 swfdec_bitmap_data_loadBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.loadBitmap (static)");
+  SwfdecBitmapData *bitmap;
+  SwfdecImage *image;
+  const char *name;
+  cairo_surface_t *isurface;
+  cairo_t *cr;
+
+  SWFDEC_AS_CHECK (0, NULL, "s", &name);
+
+  g_assert (SWFDEC_IS_MOVIE (cx->frame->target));
+  image = swfdec_resource_get_export (SWFDEC_MOVIE (cx->frame->target)->resource, name);
+  if (!SWFDEC_IS_IMAGE (image)) {
+    SWFDEC_ERROR ("loadBitmap cannot find image with name %s", name);
+    return;
+  }
+
+  /* FIXME: improve this to not create an image if there is one cached */
+  isurface = swfdec_image_create_surface (image, NULL);
+  if (isurface == NULL)
+    return;
+
+  /* FIXME: use image directly instead of doing a copy and then deleting it */
+  bitmap = swfdec_bitmap_data_new (cx, 
+      cairo_image_surface_get_format (isurface) != CAIRO_FORMAT_RGB24,
+      cairo_image_surface_get_width (isurface),
+      cairo_image_surface_get_height (isurface));
+  if (bitmap == NULL)
+    return;
+
+  cr = cairo_create (bitmap->surface);
+  cairo_set_source_surface (cr, isurface, 0, 0);
+  cairo_paint (cr);
+  cairo_destroy (cr);
+  cairo_surface_destroy (isurface);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (bitmap));
 }
 
 // properties

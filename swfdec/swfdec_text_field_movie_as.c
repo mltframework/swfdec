@@ -1344,6 +1344,8 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   SwfdecAsValue val;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &parent, "siiiii", &name, &depth, &x, &y, &width, &height);
+  width = ABS (width);
+  height = ABS (height);
 
   edittext = g_object_new (SWFDEC_TYPE_TEXT_FIELD, NULL);
   edittext->html = FALSE;

@@ -1003,10 +1003,6 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
   SwfdecAsObject *object;
   const char *name;
 
-  // FIXME: case-insensitive when v < 7?
-  if (text->variable == value)
-    return;
-
   if (text->variable != NULL) {
     swfdec_text_field_movie_parse_listen_variable (text, text->variable,
 	&object, &name);

@@ -405,6 +405,15 @@ EXTRA_DIST = \
 	setMask-matrices-8.swf \
 	setMask-matrices-8.swf.png \
 	setMask-matrices.as \
+	setPixel-5.swf \
+	setPixel-5.swf.png \
+	setPixel-6.swf \
+	setPixel-6.swf.png \
+	setPixel-7.swf \
+	setPixel-7.swf.png \
+	setPixel-8.swf \
+	setPixel-8.swf.png \
+	setPixel.as \
 	swfdec.jpg \
 	text-field-align-5.swf \
 	text-field-align-5.swf.png \

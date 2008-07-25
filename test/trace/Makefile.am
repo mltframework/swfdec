@@ -3901,6 +3901,15 @@ EXTRA_DIST = \
 	text-field-tag-variable-change.swf \
 	text-field-tag-variable-change.swf.trace \
 	text-field-tag-variable-change.xml \
+	text-field-type-of.as \
+	text-field-type-of-5.swf \
+	text-field-type-of-5.swf.trace \
+	text-field-type-of-6.swf \
+	text-field-type-of-6.swf.trace \
+	text-field-type-of-7.swf \
+	text-field-type-of-7.swf.trace \
+	text-field-type-of-8.swf \
+	text-field-type-of-8.swf.trace \
 	text-field-values.as \
 	text-field-values-5.swf \
 	text-field-values-5.swf.trace \

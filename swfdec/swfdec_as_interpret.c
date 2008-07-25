@@ -2172,7 +2172,9 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
       {
 	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
 	if (SWFDEC_IS_MOVIE (obj)) {
-	  if (SWFDEC_IS_TEXT_FIELD_MOVIE (obj)) {
+	  SwfdecMovie *movie = swfdec_movie_resolve (SWFDEC_MOVIE (obj));
+	  if (movie != NULL && SWFDEC_IS_TEXT_FIELD_MOVIE (movie) &&
+	      movie->state == SWFDEC_MOVIE_STATE_RUNNING) {
 	    type = SWFDEC_AS_STR_object;
 	  } else {
 	    type = SWFDEC_AS_STR_movieclip;

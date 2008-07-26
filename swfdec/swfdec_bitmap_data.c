@@ -32,6 +32,7 @@
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_color.h"
+#include "swfdec_color_transform_as.h"
 #include "swfdec_debug.h"
 #include "swfdec_image.h"
 #include "swfdec_player_internal.h"
@@ -443,13 +444,14 @@ void
 swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsObject *o, *matrix;
+  SwfdecAsObject *o, *matrix, *trans;
   cairo_t *cr;
   SwfdecColorTransform ctrans;
   SwfdecBitmapData *bitmap;
+  SwfdecRenderer *renderer;
   cairo_matrix_t mat;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "o|O", &o, &matrix);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "o|OO", &o, &matrix, &trans);
 
   if (argc >= 2) {
     if (matrix == NULL || !swfdec_matrix_from_as_object (&mat, matrix))
@@ -457,20 +459,33 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
   } else {
     cairo_matrix_init_identity (&mat);
   }
-  if (argc > 2) {
-    SWFDEC_FIXME ("only the first 2 arguments to Bitmap.draw() are implemented");
+  if (SWFDEC_IS_COLOR_TRANSFORM_AS (trans)) {
+    swfdec_color_transform_get_transform (SWFDEC_COLOR_TRANSFORM_AS (trans), &ctrans);
+  } else {
+    swfdec_color_transform_init_identity (&ctrans);
   }
-  swfdec_color_transform_init_identity (&ctrans);
+
+  if (argc > 3) {
+    SWFDEC_FIXME ("only the first 3 arguments to Bitmap.draw() are implemented");
+  }
 
   cr = cairo_create (bitmap->surface);
   /* FIXME: Do we have a better renderer? */
-  swfdec_renderer_attach (SWFDEC_PLAYER (cx)->priv->renderer, cr);
+  renderer = SWFDEC_PLAYER (cx)->priv->renderer;
+  swfdec_renderer_attach (renderer, cr);
   cairo_transform (cr, &mat);
 
   if (SWFDEC_IS_BITMAP_DATA (o)) {
     SwfdecBitmapData *src = SWFDEC_BITMAP_DATA (o);
     if (src->surface) {
-      cairo_set_source_surface (cr, SWFDEC_BITMAP_DATA (o)->surface, 0, 0);
+      if (swfdec_color_transform_is_identity (&ctrans)) {
+	cairo_set_source_surface (cr, SWFDEC_BITMAP_DATA (o)->surface, 0, 0);
+      } else {
+	cairo_surface_t *transformed = swfdec_renderer_transform (renderer,
+	    SWFDEC_BITMAP_DATA (o)->surface, &ctrans);
+	cairo_set_source_surface (cr, transformed, 0, 0);
+	cairo_surface_destroy (transformed);
+      }
       cairo_paint (cr);
     }
   } else if (SWFDEC_IS_MOVIE (o)) {

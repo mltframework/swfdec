@@ -658,10 +658,6 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
   SwfdecColorTransform mask;
   SwfdecCachedImage *cached;
   cairo_surface_t *surface, *source;
-  guint32 *tdata;
-  const guint32 *sdata;
-  guint i, n;
-  gboolean has_alpha = FALSE;
 
   g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
   g_return_val_if_fail (renderer == NULL || SWFDEC_IS_RENDERER (renderer), NULL);
@@ -693,26 +689,9 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
     }
   }
 
-  tdata = g_try_malloc (image->width * image->height * 4);
-  if (!tdata) {
-    SWFDEC_ERROR ("failed to allocate memory for transformed image");
-    cairo_surface_destroy (source);
-    return NULL;
-  }
-  /* FIXME: This code assumes a rowstride of 4 * width */
-  /* FIXME: This code assumes an alignment of 4 */
-  sdata = (void *) cairo_image_surface_get_data (source);
-  n = image->width * image->height;
-  for (i = 0; i < n; i++) {
-    tdata[i] = swfdec_color_apply_transform_premultiplied (sdata[i], trans);
-    /* optimization: check for alpha channel to speed up compositing */
-    has_alpha |= SWFDEC_COLOR_ALPHA (tdata[i]) != 0xFF;
-  }
-  cairo_surface_destroy (source);
-  surface = swfdec_image_create_surface_for_data (renderer, (guchar *) tdata,
-      has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, 
-      image->width, image->height, image->width * 4);
+  surface = swfdec_renderer_transform (renderer, surface, trans);
   if (renderer) {
+    surface = swfdec_renderer_create_similar (renderer, surface);
     /* FIXME: The size is just an educated guess */
     cached = swfdec_cached_image_new (surface, image->width * image->height * 4);
     swfdec_cached_image_set_color_transform (cached, trans);

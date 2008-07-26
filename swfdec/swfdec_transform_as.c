@@ -101,7 +101,6 @@ swfdec_transform_as_set_colorTransform (SwfdecAsContext *cx,
 {
   SwfdecTransformAs *self;
   SwfdecColorTransformAs *transform_as;
-  SwfdecColorTransform *transform;
   SwfdecAsObject *color;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TRANSFORM_AS, &self, "o", &color);
@@ -113,17 +112,8 @@ swfdec_transform_as_set_colorTransform (SwfdecAsContext *cx,
     return;
 
   transform_as = SWFDEC_COLOR_TRANSFORM_AS (color);
-  transform = &self->target->color_transform;
 
-  SWFDEC_FIXME ("This conversion needs serious testing with NaN and overflows");
-  transform->ra = transform_as->ra * 256.0;
-  transform->ga = transform_as->ga * 256.0;
-  transform->ba = transform_as->ba * 256.0;
-  transform->aa = transform_as->aa * 256.0;
-  transform->rb = transform_as->rb;
-  transform->gb = transform_as->gb;
-  transform->bb = transform_as->bb;
-  transform->ab = transform_as->ab;
+  swfdec_color_transform_get_transform (transform_as, &self->target->color_transform);
 }
 
 SWFDEC_AS_NATIVE (1106, 107, swfdec_transform_as_get_concatenatedColorTransform)

@@ -396,3 +396,23 @@ swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
 
   return transform_as;
 }
+
+void
+swfdec_color_transform_get_transform (SwfdecColorTransformAs *trans,
+    SwfdecColorTransform *ctrans)
+{
+  g_return_if_fail (SWFDEC_IS_COLOR_TRANSFORM_AS (trans));
+  g_return_if_fail (ctrans != NULL);
+
+  SWFDEC_FIXME ("This conversion needs serious testing with NaN and overflows");
+  ctrans->mask = FALSE;
+  ctrans->ra = trans->ra * 256.0;
+  ctrans->ga = trans->ga * 256.0;
+  ctrans->ba = trans->ba * 256.0;
+  ctrans->aa = trans->aa * 256.0;
+  ctrans->rb = trans->rb;
+  ctrans->gb = trans->gb;
+  ctrans->bb = trans->bb;
+  ctrans->ab = trans->ab;
+}
+

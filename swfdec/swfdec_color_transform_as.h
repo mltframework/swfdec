@@ -51,6 +51,8 @@ GType			swfdec_color_transform_as_get_type		(void);
 
 SwfdecColorTransformAs *swfdec_color_transform_as_new_from_transform	(SwfdecAsContext *		context,
 									 const SwfdecColorTransform *	transform);
+void			swfdec_color_transform_get_transform		(SwfdecColorTransformAs *	trans,
+									 SwfdecColorTransform *		ctrans);
 
 G_END_DECLS
 #endif

@@ -115,6 +115,7 @@ swfdec_transform_as_set_colorTransform (SwfdecAsContext *cx,
   transform_as = SWFDEC_COLOR_TRANSFORM_AS (color);
   transform = &self->target->color_transform;
 
+  SWFDEC_FIXME ("This conversion needs serious testing with NaN and overflows");
   transform->ra = transform_as->ra * 256.0;
   transform->ga = transform_as->ga * 256.0;
   transform->ba = transform_as->ba * 256.0;

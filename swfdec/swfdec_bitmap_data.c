@@ -31,7 +31,9 @@
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
 #include "swfdec_image.h"
+#include "swfdec_player_internal.h"
 #include "swfdec_rectangle.h"
+#include "swfdec_renderer_internal.h"
 #include "swfdec_resource.h"
 
 enum {
@@ -399,7 +401,36 @@ void
 swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.draw");
+  SwfdecAsObject *o;
+  cairo_t *cr;
+  SwfdecColorTransform ctrans;
+  SwfdecBitmapData *bitmap;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "o", &o);
+
+  if (argc > 1) {
+    SWFDEC_FIXME ("only the first argument to Bitmap.draw() is implemented");
+  }
+  swfdec_color_transform_init_identity (&ctrans);
+
+  cr = cairo_create (bitmap->surface);
+  /* FIXME: Do we have a better renderer? */
+  swfdec_renderer_attach (SWFDEC_PLAYER (cx)->priv->renderer, cr);
+
+  if (SWFDEC_IS_BITMAP_DATA (o)) {
+    SwfdecBitmapData *src = SWFDEC_BITMAP_DATA (o);
+    if (src->surface) {
+      cairo_set_source_surface (cr, SWFDEC_BITMAP_DATA (o)->surface, 0, 0);
+      cairo_paint (cr);
+    }
+  } else if (SWFDEC_IS_MOVIE (o)) {
+    cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
+    swfdec_movie_render (SWFDEC_MOVIE (o), cr, &ctrans);
+  } else {
+    SWFDEC_FIXME ("BitmapData.draw() with a %s?", G_OBJECT_TYPE_NAME (o));
+  }
+
+  cairo_destroy (cr);
 }
 
 SWFDEC_AS_NATIVE (1100, 9, swfdec_bitmap_data_pixelDissolve)

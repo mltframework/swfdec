@@ -3089,7 +3089,9 @@ swfdec_player_render_with_renderer (SwfdecPlayer *player, cairo_t *cr,
   cairo_transform (cr, &priv->global_to_stage);
 
   for (walk = priv->roots; walk; walk = walk->next) {
-    swfdec_movie_render (walk->data, cr, &trans);
+    SwfdecMovie *movie = walk->data;
+    if (movie->visible)
+      swfdec_movie_render (movie, cr, &trans);
   }
   cairo_restore (cr);
   /* NB: we render the focusrect after restoring, so the focusrect doesn't scale */

@@ -782,11 +782,6 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 	G_OBJECT_TYPE_NAME (movie), movie->name);
     return;
   }
-  if (!movie->visible) {
-    SWFDEC_LOG ("not rendering %s %p, movie is invisible",
-	G_OBJECT_TYPE_NAME (movie), movie->name);
-    return;
-  }
 
   if (movie->masked_by != NULL) {
     cairo_push_group (cr);
@@ -1313,7 +1308,8 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
     }
 
     SWFDEC_LOG ("rendering %p with depth %d", child, child->depth);
-    swfdec_movie_render (child, cr, ctrans);
+    if (child->visible)
+      swfdec_movie_render (child, cr, ctrans);
   }
   while (clip) {
     cairo_pattern_t *mask;

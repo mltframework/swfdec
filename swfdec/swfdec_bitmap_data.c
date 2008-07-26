@@ -23,6 +23,9 @@
 #endif
 
 #include "swfdec_bitmap_data.h"
+
+#include <math.h>
+
 #include "swfdec_as_context.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_internal.h"
@@ -396,26 +399,73 @@ swfdec_bitmap_data_threshold (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("BitmapData.threshold");
 }
 
+static gboolean
+swfdec_matrix_from_as_object (cairo_matrix_t *matrix, SwfdecAsObject *object)
+{
+  SwfdecAsValue *val;
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (object);
+
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_a);
+  if (val == NULL ||
+      !isfinite (matrix->xx = swfdec_as_value_to_number (cx, val)))
+    return FALSE;
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_b);
+  if (val == NULL ||
+      !isfinite (matrix->yx = swfdec_as_value_to_number (cx, val)))
+    return FALSE;
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_c);
+  if (val == NULL ||
+      !isfinite (matrix->xy = swfdec_as_value_to_number (cx, val)))
+    return FALSE;
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_d);
+  if (val == NULL ||
+      !isfinite (matrix->yy = swfdec_as_value_to_number (cx, val)))
+    return FALSE;
+
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_tx);
+  if (val == NULL)
+      return FALSE;
+  matrix->x0 = swfdec_as_value_to_number (cx, val);
+  if (!isfinite (matrix->x0))
+    matrix->x0 = 0;
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_ty);
+  if (val == NULL)
+      return FALSE;
+  matrix->y0 = swfdec_as_value_to_number (cx, val);
+  if (!isfinite (matrix->y0))
+    matrix->y0 = 0;
+
+  return TRUE;
+}
+
 SWFDEC_AS_NATIVE (1100, 8, swfdec_bitmap_data_draw)
 void
 swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsObject *o;
+  SwfdecAsObject *o, *matrix;
   cairo_t *cr;
   SwfdecColorTransform ctrans;
   SwfdecBitmapData *bitmap;
+  cairo_matrix_t mat;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "o", &o);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "o|O", &o, &matrix);
 
-  if (argc > 1) {
-    SWFDEC_FIXME ("only the first argument to Bitmap.draw() is implemented");
+  if (argc >= 2) {
+    if (matrix == NULL || !swfdec_matrix_from_as_object (&mat, matrix))
+      return;
+  } else {
+    cairo_matrix_init_identity (&mat);
+  }
+  if (argc > 2) {
+    SWFDEC_FIXME ("only the first 2 arguments to Bitmap.draw() are implemented");
   }
   swfdec_color_transform_init_identity (&ctrans);
 
   cr = cairo_create (bitmap->surface);
   /* FIXME: Do we have a better renderer? */
   swfdec_renderer_attach (SWFDEC_PLAYER (cx)->priv->renderer, cr);
+  cairo_transform (cr, &mat);
 
   if (SWFDEC_IS_BITMAP_DATA (o)) {
     SwfdecBitmapData *src = SWFDEC_BITMAP_DATA (o);

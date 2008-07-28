@@ -136,6 +136,8 @@ swfdec_bitmap_data_new (SwfdecAsContext *context, gboolean transparent, guint wi
   return bitmap;
 }
 
+#define swfdec_surface_has_alpha(surface) (cairo_surface_get_content (surface) & CAIRO_CONTENT_ALPHA)
+
 SWFDEC_AS_NATIVE (1100, 40, swfdec_bitmap_data_loadBitmap)
 void
 swfdec_bitmap_data_loadBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
@@ -163,7 +165,7 @@ swfdec_bitmap_data_loadBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   /* FIXME: use image directly instead of doing a copy and then deleting it */
   bitmap = swfdec_bitmap_data_new (cx, 
-      cairo_image_surface_get_format (isurface) != CAIRO_FORMAT_RGB24,
+      swfdec_surface_has_alpha (isurface),
       cairo_image_surface_get_width (isurface),
       cairo_image_surface_get_height (isurface));
   if (bitmap == NULL)
@@ -277,8 +279,7 @@ swfdec_bitmap_data_get_transparent (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
   if (bitmap->surface) {
-    SWFDEC_AS_VALUE_SET_BOOLEAN (ret, 
-	cairo_image_surface_get_format (bitmap->surface) != CAIRO_FORMAT_RGB24);
+    SWFDEC_AS_VALUE_SET_BOOLEAN (ret, swfdec_surface_has_alpha (bitmap->surface));
   } else {
     SWFDEC_AS_VALUE_SET_INT (ret, -1);
   }
@@ -643,7 +644,7 @@ swfdec_bitmap_data_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   clone = swfdec_bitmap_data_new (cx,
-      cairo_image_surface_get_format (bitmap->surface) != CAIRO_FORMAT_RGB24,
+      swfdec_surface_has_alpha (bitmap->surface),
       cairo_image_surface_get_width (bitmap->surface),
       cairo_image_surface_get_height (bitmap->surface));
   if (clone == NULL)

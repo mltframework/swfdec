@@ -418,8 +418,8 @@ swfdec_renderer_transform (SwfdecRenderer *renderer, cairo_surface_t *surface,
   h = cairo_image_surface_get_height (surface);
   sdata = cairo_image_surface_get_data (surface);
   sstride = cairo_image_surface_get_stride (surface);
-  mask = cairo_image_surface_get_format (surface) == CAIRO_FORMAT_RGB24 ? 
-    SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF) : 0;
+  mask = cairo_surface_get_content (surface) | CAIRO_CONTENT_ALPHA ? 
+    0 : SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF);
 
   target = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
   tdata = cairo_image_surface_get_data (target);

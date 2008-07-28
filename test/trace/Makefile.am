@@ -754,6 +754,15 @@ EXTRA_DIST = \
 	crash-0.6.6-date-8.swf \
 	crash-0.6.6-date-8.swf.trace \
 	crash-0.6.6-date.as \
+	crash-0.6.6-native-constructor-5.swf \
+	crash-0.6.6-native-constructor-5.swf.trace \
+	crash-0.6.6-native-constructor-6.swf \
+	crash-0.6.6-native-constructor-6.swf.trace \
+	crash-0.6.6-native-constructor-7.swf \
+	crash-0.6.6-native-constructor-7.swf.trace \
+	crash-0.6.6-native-constructor-8.swf \
+	crash-0.6.6-native-constructor-8.swf.trace \
+	crash-0.6.6-native-constructor.as \
 	crash-0.6.6-prototype-recursion-5.swf \
 	crash-0.6.6-prototype-recursion-5.swf.trace \
 	crash-0.6.6-prototype-recursion-6.swf \

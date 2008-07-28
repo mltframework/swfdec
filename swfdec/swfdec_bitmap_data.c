@@ -483,6 +483,8 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
       } else {
 	cairo_surface_t *transformed = swfdec_renderer_transform (renderer,
 	    SWFDEC_BITMAP_DATA (o)->surface, &ctrans);
+	SWFDEC_FIXME ("unmodified pixels will be treated as -1, not as 0 as in our "
+	    "transform code, but we don't know if a pixel is unmodified.");
 	cairo_set_source_surface (cr, transformed, 0, 0);
 	cairo_surface_destroy (transformed);
       }

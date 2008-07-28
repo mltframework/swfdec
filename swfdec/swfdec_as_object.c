@@ -1291,6 +1291,10 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));
 
+  // FIXME: The way we decide object's type is wrong
+  // It seems to be actually possible to change the type inside a constructor
+  // (many times) by changing this.__proto__.__constructor__ and calling super
+
   context = swfdec_gc_object_get_context (fun);
   cur = fun;
   i = 0;

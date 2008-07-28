@@ -552,7 +552,11 @@ swfdec_bitmap_data_setPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
   addr = cairo_image_surface_get_data (bitmap->surface);
   addr += cairo_image_surface_get_stride (bitmap->surface) * y;
   addr += 4 * x;
-  *(SwfdecColor *) addr = SWFDEC_COLOR_MULTIPLY ((SwfdecColor) color);
+  if (swfdec_surface_has_alpha (bitmap->surface)) {
+    *(SwfdecColor *) addr = SWFDEC_COLOR_MULTIPLY ((SwfdecColor) color);
+  } else {
+    *(SwfdecColor *) addr = SWFDEC_COLOR_OPAQUE ((SwfdecColor) color);
+  }
   cairo_surface_mark_dirty_rectangle (bitmap->surface, x, y, 1, 1);
   swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
 }

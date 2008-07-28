@@ -1286,13 +1286,14 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   SwfdecAsContext *context;
   SwfdecAsFunction *cur;
   SwfdecAsFrame *frame;
-  guint size = 0;
+  guint i, size = 0;
   GType type = 0;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));
 
   context = swfdec_gc_object_get_context (fun);
   cur = fun;
+  i = 0;
   do {
     if (SWFDEC_IS_AS_NATIVE_FUNCTION (cur)) {
       SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (cur);
@@ -1302,6 +1303,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
 	break;
       }
     }
+    i++;
     swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cur), SWFDEC_AS_STR_prototype, &val);
     if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
       SwfdecAsObject *proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
@@ -1314,7 +1316,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
       }
     }
     cur = NULL;
-  } while (type == 0 && cur != NULL);
+  } while (type == 0 && cur != NULL && i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT);
   if (type == 0) {
     type = SWFDEC_TYPE_AS_OBJECT;
     size = sizeof (SwfdecAsObject);

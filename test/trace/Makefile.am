@@ -887,6 +887,15 @@ EXTRA_DIST = \
 	crash-0.6.2-try-and-exception-on-dispose-8.swf \
 	crash-0.6.2-try-and-exception-on-dispose-8.swf.trace \
 	crash-0.6.2-try-and-exception-on-dispose.as \
+	crash-0.6.6-create-object-5.swf \
+	crash-0.6.6-create-object-5.swf.trace \
+	crash-0.6.6-create-object-6.swf \
+	crash-0.6.6-create-object-6.swf.trace \
+	crash-0.6.6-create-object-7.swf \
+	crash-0.6.6-create-object-7.swf.trace \
+	crash-0.6.6-create-object-8.swf \
+	crash-0.6.6-create-object-8.swf.trace \
+	crash-0.6.6-create-object.as \
 	crash-0.6.6-date-5.swf \
 	crash-0.6.6-date-5.swf.trace \
 	crash-0.6.6-date-6.swf \
@@ -896,6 +905,15 @@ EXTRA_DIST = \
 	crash-0.6.6-date-8.swf \
 	crash-0.6.6-date-8.swf.trace \
 	crash-0.6.6-date.as \
+	crash-0.6.6-native-constructor-5.swf \
+	crash-0.6.6-native-constructor-5.swf.trace \
+	crash-0.6.6-native-constructor-6.swf \
+	crash-0.6.6-native-constructor-6.swf.trace \
+	crash-0.6.6-native-constructor-7.swf \
+	crash-0.6.6-native-constructor-7.swf.trace \
+	crash-0.6.6-native-constructor-8.swf \
+	crash-0.6.6-native-constructor-8.swf.trace \
+	crash-0.6.6-native-constructor.as \
 	crash-0.6.6-prototype-recursion-5.swf \
 	crash-0.6.6-prototype-recursion-5.swf.trace \
 	crash-0.6.6-prototype-recursion-6.swf \

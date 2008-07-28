@@ -833,7 +833,9 @@ start:
     SwfdecAsValue rval = { 0, };
     if (frame->argc >= native->min_args && 
 	(native->type == 0 || 
-	 g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type))) {
+	 g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type)) &&
+	(!frame->construct || native->construct_type == 0 ||
+	 g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->construct_type))) {
       SwfdecAsValue *argv;
       /* accumulate argv */
       if (frame->argc == 0 || frame->argv != NULL) {
@@ -864,6 +866,11 @@ start:
 	  argv, &rval);
       if (argv != frame->argv)
 	g_free (argv);
+    } else {
+      if (frame->construct && native->construct_type != 0 &&
+	 !g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->construct_type)) {
+	SWFDEC_FIXME ("Ignoring call to native constructor with invalid type");
+      }
     }
     swfdec_as_frame_return (frame, &rval);
     goto start;

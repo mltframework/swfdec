@@ -370,12 +370,104 @@ swfdec_bitmap_data_fillRect (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("BitmapData.fillRect");
 }
 
+static gboolean
+swfdec_rectangle_from_as_object (SwfdecRectangle *rect, SwfdecAsObject *object)
+{
+  SwfdecAsValue *val;
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (object);
+
+  /* FIXME: This function is untested */
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_x);
+  rect->x = swfdec_as_value_to_integer (cx, val);
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_y);
+  rect->y = swfdec_as_value_to_integer (cx, val);
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_width);
+  rect->width = swfdec_as_value_to_integer (cx, val);
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_height);
+  rect->height = swfdec_as_value_to_integer (cx, val);
+  return rect->width > 0 && rect->height > 0;
+}
+
+static void
+swfdec_point_from_as_object (int *x, int *y, SwfdecAsObject *object)
+{
+  SwfdecAsValue *val;
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (object);
+
+  /* FIXME: This function is untested */
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_x);
+  *x = swfdec_as_value_to_integer (cx, val);
+  val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_y);
+  *y = swfdec_as_value_to_integer (cx, val);
+}
+
 SWFDEC_AS_NATIVE (1100, 4, swfdec_bitmap_data_copyPixels)
 void
 swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.copyPixels");
+  SwfdecBitmapData *bitmap, *source, *alpha;
+  SwfdecAsObject *recto, *apt, *pt;
+  SwfdecRectangle rect;
+  gboolean copy_alpha;
+  cairo_t *cr;
+  int x, y;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ooo|OOb", &source, &recto, &pt,
+      &alpha, &apt, &copy_alpha);
+
+  if (bitmap->surface == NULL ||
+      !SWFDEC_IS_BITMAP_DATA (source) ||
+      source->surface == NULL ||
+      (argc > 3 && (!SWFDEC_IS_BITMAP_DATA (alpha) || alpha->surface == NULL)) ||
+      !swfdec_rectangle_from_as_object (&rect, recto))
+    return;
+
+  x = rect.x;
+  y = rect.y;
+  swfdec_point_from_as_object (&rect.x, &rect.y, pt);
+  cr = cairo_create (bitmap->surface);
+  if (bitmap == source) {
+    cairo_surface_t *copy = cairo_surface_create_similar (source->surface,
+	cairo_surface_get_content (source->surface),
+	rect.width, rect.height);
+    cairo_t *cr2 = cairo_create (copy);
+    cairo_set_source_surface (cr2, source->surface, x, y);
+    cairo_paint (cr2);
+    cairo_destroy (cr2);
+    cairo_set_source_surface (cr, copy, rect.x, rect.y);
+    cairo_surface_destroy (copy);
+  } else {
+    cairo_set_source_surface (cr, source->surface, rect.x - x, rect.y - y);
+  }
+
+  if (swfdec_surface_has_alpha (bitmap->surface) && !copy_alpha) {
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  }
+
+  cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+  if (alpha) {
+    cairo_surface_t *mask = cairo_surface_create_similar (alpha->surface,
+	CAIRO_CONTENT_COLOR_ALPHA, rect.width, rect.height);
+    cairo_t *cr2 = cairo_create (mask);
+
+    cairo_surface_set_device_offset (mask, -rect.x, -rect.y);
+    cairo_set_source (cr2, cairo_get_source (cr));
+    if (apt) {
+      swfdec_point_from_as_object (&x, &y, apt);
+    } else {
+      x = y = 0;
+    }
+    cairo_mask_surface (cr2, alpha->surface, rect.x - x, rect.y - y);
+    cairo_destroy (cr2);
+    cairo_surface_write_to_png (mask, "foo.png");
+    cairo_set_source_surface (cr, mask, 0, 0);
+    cairo_surface_destroy (mask);
+  }
+  cairo_fill (cr);
+  cairo_destroy (cr);
+  cairo_surface_mark_dirty_rectangle (bitmap->surface, rect.x, rect.y, 
+      rect.width, rect.height);
 }
 
 SWFDEC_AS_NATIVE (1100, 5, swfdec_bitmap_data_applyFilter)

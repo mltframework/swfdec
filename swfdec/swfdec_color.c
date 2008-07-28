@@ -66,13 +66,12 @@ swfdec_color_apply_transform_premultiplied (SwfdecColor in,
     return SWFDEC_COLOR_COMBINE (0, 0, 0, 255);
 
   aold = SWFDEC_COLOR_ALPHA (in);
-  if (aold == 0) {
-    aold = r = g = b = 0xFF;
-  } else {
-    r = SWFDEC_COLOR_RED (in);
-    g = SWFDEC_COLOR_GREEN (in);
-    b = SWFDEC_COLOR_BLUE (in);
-  }
+  if (aold == 0)
+    return 0;
+    
+  r = SWFDEC_COLOR_RED (in);
+  g = SWFDEC_COLOR_GREEN (in);
+  b = SWFDEC_COLOR_BLUE (in);
 
   a = (aold * trans->aa >> 8) + trans->ab;
   a = CLAMP (a, 0, 255);

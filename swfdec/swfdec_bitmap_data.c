@@ -279,7 +279,8 @@ swfdec_bitmap_data_get_transparent (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
   if (bitmap->surface) {
-    SWFDEC_AS_VALUE_SET_BOOLEAN (ret, swfdec_surface_has_alpha (bitmap->surface));
+    SWFDEC_AS_VALUE_SET_BOOLEAN (ret, 
+	swfdec_surface_has_alpha (bitmap->surface) ? TRUE : FALSE);
   } else {
     SWFDEC_AS_VALUE_SET_INT (ret, -1);
   }

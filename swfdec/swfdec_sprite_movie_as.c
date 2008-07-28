@@ -640,6 +640,9 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, (gpointer)&movie, "v", &value);
 
+  if (movie->parent == NULL)
+    SWFDEC_FIXME ("swapDepths on root movie, should do something weird");
+
   if (SWFDEC_AS_VALUE_IS_OBJECT (&value)) {
     other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&value);
     if (!SWFDEC_IS_MOVIE (other) ||

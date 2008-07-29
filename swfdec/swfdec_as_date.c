@@ -1102,7 +1102,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	    &num)) {
 	brokentime.day_of_month = num;
       } else {
-	date->milliseconds = d;
+	date->milliseconds += d;
       }
     } else {
       brokentime.day_of_month = 1;
@@ -1113,7 +1113,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	    &num)) {
 	brokentime.hours = num;
       } else {
-	date->milliseconds = d;
+	date->milliseconds += d;
       }
     }
 
@@ -1122,7 +1122,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	    &num)) {
 	brokentime.minutes = num;
       } else {
-	date->milliseconds = d;
+	date->milliseconds += d;
       }
     }
 
@@ -1131,7 +1131,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	    &num)) {
 	brokentime.seconds = num;
       } else {
-	date->milliseconds = d;
+	date->milliseconds += d;
       }
     }
 
@@ -1146,7 +1146,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 	    &num)) {
 	brokentime.milliseconds += num;
       } else {
-	date->milliseconds = d;
+	date->milliseconds += d;
       }
     }
 

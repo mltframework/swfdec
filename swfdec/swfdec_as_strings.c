@@ -528,5 +528,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("BitmapData")
   SWFDEC_AS_CONSTANT_STRING ("tx")
   SWFDEC_AS_CONSTANT_STRING ("ty")
+  SWFDEC_AS_CONSTANT_STRING ("Invalid Date")
   /* add more here */
 ;

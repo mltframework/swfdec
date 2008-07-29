@@ -1,4 +1,16 @@
 
+ 0.6.8 ("Mario Rush")
+
+And another bugfix release.
+- fix a crash when decoding 1x1 JPEG images
+- fix a crash in XMLSocket.send
+- fix crashes when FLV decoding was aborted
+- fix a crash in exception handling code
+- fix some infinite loops with prototype loops
+- fix crasher when handling broken dates
+- fix crashers with native constructors found in testing
+- compatibility fixes: compile with gold linker, make includes work from C++
+
  0.6.6 ("Faith Fighter")
 
 Here's another bugfix release.

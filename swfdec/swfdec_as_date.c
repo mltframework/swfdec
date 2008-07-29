@@ -793,6 +793,9 @@ swfdec_as_date_setSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_SECONDS, FALSE);
+
+  if (argc > 1)
+    swfdec_as_date_setMilliseconds (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 128 + 14, swfdec_as_date_setUTCSeconds)
@@ -801,6 +804,9 @@ swfdec_as_date_setUTCSeconds (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_SECONDS, TRUE);
+
+  if (argc > 1)
+    swfdec_as_date_setUTCMilliseconds (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 13, swfdec_as_date_setMinutes)
@@ -809,6 +815,9 @@ swfdec_as_date_setMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MINUTES, FALSE);
+
+  if (argc > 1)
+    swfdec_as_date_setSeconds (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 128 + 13, swfdec_as_date_setUTCMinutes)
@@ -817,6 +826,9 @@ swfdec_as_date_setUTCMinutes (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MINUTES, TRUE);
+
+  if (argc > 1)
+    swfdec_as_date_setUTCSeconds (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 12, swfdec_as_date_setHours)
@@ -825,6 +837,9 @@ swfdec_as_date_setHours (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_HOURS, FALSE);
+
+  if (argc > 1)
+    swfdec_as_date_setMinutes (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 128 + 12, swfdec_as_date_setUTCHours)
@@ -833,6 +848,9 @@ swfdec_as_date_setUTCHours (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_HOURS, TRUE);
+
+  if (argc > 1)
+    swfdec_as_date_setUTCMinutes (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 11, swfdec_as_date_setDate)
@@ -859,6 +877,9 @@ swfdec_as_date_setMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MONTHS, FALSE);
+
+  if (argc > 1)
+    swfdec_as_date_setDate (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 128 + 10, swfdec_as_date_setUTCMonth)
@@ -867,6 +888,9 @@ swfdec_as_date_setUTCMonth (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_MONTHS, TRUE);
+
+  if (argc > 1)
+    swfdec_as_date_setUTCDate (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 20, swfdec_as_date_setYear)
@@ -875,6 +899,9 @@ swfdec_as_date_setYear (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_YEAR, FALSE);
+
+  if (argc > 1)
+    swfdec_as_date_setMonth (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 9, swfdec_as_date_setFullYear)
@@ -884,6 +911,9 @@ swfdec_as_date_setFullYear (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_FULL_YEAR,
       FALSE);
+
+  if (argc > 1)
+    swfdec_as_date_setMonth (cx, object, argc - 1, argv + 1, ret);
 }
 
 SWFDEC_AS_NATIVE (103, 128 + 9, swfdec_as_date_setUTCFullYear)
@@ -893,6 +923,9 @@ swfdec_as_date_setUTCFullYear (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   swfdec_as_date_set_field (cx, object, argc, argv, ret, FIELD_FULL_YEAR,
       TRUE);
+
+  if (argc > 1)
+    swfdec_as_date_setUTCMonth (cx, object, argc - 1, argv + 1, ret);
 }
 
 // Static methods

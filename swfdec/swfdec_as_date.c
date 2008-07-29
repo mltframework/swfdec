@@ -553,7 +553,7 @@ swfdec_as_date_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   if (!swfdec_as_date_is_valid (date)) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, "Invalid Date");
+    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_Invalid_Date);
     return;
   }
 

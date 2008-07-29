@@ -491,5 +491,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("height")
   SWFDEC_AS_CONSTANT_STRING ("deblocking")
   SWFDEC_AS_CONSTANT_STRING ("smoothing")
+  SWFDEC_AS_CONSTANT_STRING ("Invalid Date")
   /* add more here */
 ;

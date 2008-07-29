@@ -32,14 +32,17 @@
 
 /*** AS CODE ***/
 
+// Note: All Math function call valueOf for two arguments, whether those are
+// needed or not
+
 #define MATH_FUN(name) \
 void \
 swfdec_as_math_ ## name (SwfdecAsContext *cx, SwfdecAsObject *object, \
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret) \
 { \
-  double d; \
+  double d, unused; \
 \
-  SWFDEC_AS_CHECK (0, NULL, "n", &d); \
+  SWFDEC_AS_CHECK (0, NULL, "n|n", &d, &unused); \
 \
   d = name (d); \
   SWFDEC_AS_VALUE_SET_NUMBER (ret, d); \
@@ -73,9 +76,9 @@ void
 swfdec_as_math_abs (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double d;
+  double d, unused;
 
-  SWFDEC_AS_CHECK (0, NULL, "n", &d);
+  SWFDEC_AS_CHECK (0, NULL, "n|n", &d, &unused);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, fabs (d));
 }
@@ -133,6 +136,11 @@ void
 swfdec_as_math_random (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  double unused, unused2;
+
+  // generate valueOf
+  SWFDEC_AS_CHECK (0, NULL, "|nn", &unused, &unused2);
+
   SWFDEC_AS_VALUE_SET_NUMBER (ret, g_rand_double (cx->rand));
 }
 
@@ -141,9 +149,9 @@ void
 swfdec_as_math_round (SwfdecAsContext *cx, SwfdecAsObject *object, 
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  double d;
+  double d, unused;
 
-  SWFDEC_AS_CHECK (0, NULL, "n", &d);
+  SWFDEC_AS_CHECK (0, NULL, "n|n", &d, &unused);
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, floor (d + 0.5));
 }

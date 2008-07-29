@@ -286,6 +286,9 @@ merge_alpha (SwfdecImage * image, unsigned char *image_data,
     p = image_data + y * image->width * 4;
     for (x = 0; x < image->width; x++) {
       p[SWFDEC_COLOR_INDEX_ALPHA] = *alpha;
+      p[SWFDEC_COLOR_INDEX_RED] = MIN (*alpha, p[SWFDEC_COLOR_INDEX_RED]);
+      p[SWFDEC_COLOR_INDEX_GREEN] = MIN (*alpha, p[SWFDEC_COLOR_INDEX_GREEN]);
+      p[SWFDEC_COLOR_INDEX_BLUE] = MIN (*alpha, p[SWFDEC_COLOR_INDEX_BLUE]);
       p += 4;
       alpha++;
     }

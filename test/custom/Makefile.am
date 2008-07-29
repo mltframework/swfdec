@@ -1,6 +1,6 @@
 check-local: ../swfdec-test
 	for file in $(srcdir)/*.sts; do \
-	  ../swfdec-test --script $$file $(srcdir)/`basename $$file .sts`*.swf || exit $?; \
+	  ../swfdec-test --script $$file `cd $(srcdir) && pwd`/`basename $$file .sts`*.swf || exit $?; \
 	done
 
 EXTRA_DIST = \

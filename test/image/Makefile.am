@@ -2,6 +2,15 @@ check-local: ../swfdec-test
 	../swfdec-test --script $(srcdir)/default.sts `cd $(srcdir) && pwd`/*.swf
 
 EXTRA_DIST = \
+	BitmapData-copyPixels-5.swf \
+	BitmapData-copyPixels-5.swf.png \
+	BitmapData-copyPixels-6.swf \
+	BitmapData-copyPixels-6.swf.png \
+	BitmapData-copyPixels-7.swf \
+	BitmapData-copyPixels-7.swf.png \
+	BitmapData-copyPixels-8.swf \
+	BitmapData-copyPixels-8.swf.png \
+	BitmapData-copyPixels.as \
 	BitmapData-creation-5.swf \
 	BitmapData-creation-5.swf.png \
 	BitmapData-creation-6.swf \

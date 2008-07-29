@@ -363,7 +363,9 @@ swfdec_as_context_mark_constant_pools (gpointer key, gpointer value, gpointer un
   guint i;
 
   for (i = 0; i < swfdec_constant_pool_size (pool); i++) {
-    swfdec_as_string_mark (swfdec_constant_pool_get (pool, i));
+    const char *s = swfdec_constant_pool_get (pool, i);
+    if (s)
+      swfdec_as_string_mark (s);
   }
 }
 

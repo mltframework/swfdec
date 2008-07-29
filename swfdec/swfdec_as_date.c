@@ -758,12 +758,20 @@ swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsDate *date;
+  double d;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
-  if (argc > 0) {
-    swfdec_as_date_set_milliseconds_utc (date,
-	trunc (swfdec_as_value_to_number (cx, &argv[0])));
+  if (argc > 0 &&
+      (cx->version > 6 || !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))) {
+    d = swfdec_as_value_to_number (cx, &argv[0]);
+  } else {
+    d = NAN;
+  }
+  if (isfinite (d)) {
+    swfdec_as_date_set_milliseconds_utc (date, trunc (d));
+  } else {
+    swfdec_as_date_set_milliseconds_utc (date, NAN);
   }
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, date->milliseconds);

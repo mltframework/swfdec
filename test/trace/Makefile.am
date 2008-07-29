@@ -1036,6 +1036,15 @@ EXTRA_DIST = \
 	date-properties-7.swf.trace \
 	date-properties-8.swf \
 	date-properties-8.swf.trace \
+	date-set-time.as \
+	date-set-time-5.swf \
+	date-set-time-5.swf.trace \
+	date-set-time-6.swf \
+	date-set-time-6.swf.trace \
+	date-set-time-7.swf \
+	date-set-time-7.swf.trace \
+	date-set-time-8.swf \
+	date-set-time-8.swf.trace \
 	default.stas \
 	default.sts \
 	definefunction2-arguments.swf \

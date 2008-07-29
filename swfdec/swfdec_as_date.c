@@ -762,7 +762,7 @@ swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc > 0) {
     swfdec_as_date_set_milliseconds_utc (date,
-	swfdec_as_value_to_integer (cx, &argv[0]));
+	trunc (swfdec_as_value_to_number (cx, &argv[0])));
   }
 
   SWFDEC_AS_VALUE_SET_NUMBER (ret, date->milliseconds);

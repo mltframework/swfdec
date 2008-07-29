@@ -470,10 +470,11 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object,
 	break;
       case FIELD_YEAR:
 	// NOTE: Test against double, not the integer
-	if (d >= 100 || d < 0)
-	  number -= 1900;
+	if (d >= 0 && d < 100)
+	  number += 1900;
 	// fall trough
       case FIELD_FULL_YEAR:
+	number -= 1900;
 	if (!isfinite (d)) {
 	  swfdec_as_date_set_brokentime_value (date, utc, field_offsets[field],
 	      cx, 0 - 1900);

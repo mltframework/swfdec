@@ -2010,6 +2010,15 @@ EXTRA_DIST = \
 	math-constants-6.swf.trace \
 	math-constants-7.swf \
 	math-constants-7.swf.trace \
+	math-function-valueOf.as \
+	math-function-valueOf-5.swf \
+	math-function-valueOf-5.swf.trace \
+	math-function-valueOf-6.swf \
+	math-function-valueOf-6.swf.trace \
+	math-function-valueOf-7.swf \
+	math-function-valueOf-7.swf.trace \
+	math-function-valueOf-8.swf \
+	math-function-valueOf-8.swf.trace \
 	math-properties.as \
 	math-properties-5.swf \
 	math-properties-5.swf.trace \

@@ -426,7 +426,7 @@ swfdec_gtk_widget_update_cursor (SwfdecGtkWidget *widget)
 
   if (window == NULL)
     return;
-  if (priv->interactive)
+  if (priv->interactive && priv->player)
     g_object_get (priv->player, "mouse-cursor", &swfcursor, NULL);
   else
     swfcursor = SWFDEC_MOUSE_CURSOR_NORMAL;

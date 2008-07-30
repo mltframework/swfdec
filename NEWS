@@ -1,4 +1,16 @@
 
+ 0.7.4 ("Diablo")
+
+Yay, we returned to monthly releases! Here it goes:
+- rework rendering API to rely on Cairo's clipping instead
+- remove unused and broken swfdec_as_context_eval() API
+- Swfdec does no longer ship an icon
+- Transform and ColorTransform implemented
+- BitmapData partially implemented
+- simplify internal memory handling APIs
+- start porting the Gnash testsuite to Swfdec
+- lots of small performance bug fixes
+
  0.7.2 ("Rock You")
 
 Here is - roughly 3 months too late - the first development release of the 

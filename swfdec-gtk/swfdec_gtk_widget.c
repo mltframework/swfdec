@@ -260,7 +260,6 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   cairo_surface_t *surface = NULL;
 
   if (event->window != gtkwidget->window ||
-      priv->player == NULL ||
       priv->fullscreen_window != NULL)
     return FALSE;
 
@@ -278,8 +277,12 @@ swfdec_gtk_widget_expose (GtkWidget *gtkwidget, GdkEventExpose *event)
   }
   gdk_cairo_region (cr, event->region);
   cairo_clip (cr);
-  swfdec_player_render (priv->player, cr);
-  cairo_show_page (cr);
+  if (priv->player == NULL) {
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
+  } else {
+    swfdec_player_render (priv->player, cr);
+  }
   cairo_destroy (cr);
 
   if (surface) {

@@ -142,7 +142,7 @@ swfdec_as_math_pow (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
   SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, pow (x, y));
+  SWFDEC_AS_VALUE_SET_NUMBER (ret, isfinite (x) ? pow (x, y): NAN);
 }
 
 SWFDEC_AS_NATIVE (200, 11, swfdec_as_math_random)

@@ -493,8 +493,9 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	if (context->version > 5 && s[0] == '0' &&
 	    (s[1] == 'x' || s[1] == 'X')) {
 	  d = g_ascii_strtoll (s + 2, &end, 16);
-	} else if (context->version > 5 && s[0] == '0' &&
-	    s[strspn (s, "01234567")] == '\0') {
+	} else if (context->version > 5 &&
+	    (s[0] == '0' || ((s[0] == '+' || s[0] == '-') && s[1] == '0')) &&
+	    s[strspn (s+1, "01234567")+1] == '\0') {
 	  d = g_ascii_strtoll (s, &end, 8);
 	} else {
 	  if (strpbrk (s, "xXiI") != NULL)

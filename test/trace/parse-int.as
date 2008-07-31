@@ -19,6 +19,10 @@ tests = [
   "00x123",
   "+0x123",
   "-0x123",
+  " +0x123",
+  " -0x123",
+  "+ 0x123",
+  "- 0x123",
   "+0y123",
   "-0 x123",
   "0x+123",
@@ -36,15 +40,27 @@ tests = [
   "+-0",
   "A09C",
   "4294967296",
-  "8589934592"
+  "8589934592",
+  "0123",
+  " 0123",
+  "+0123",
+  "-0123",
+  " +0123",
+  " -0123",
+  "+ 0123",
+  "- 0123",
+  "Infinity",
+  "-Infinity"
   ];
 
 for (var i = 0; i < tests.length; i++) {
-  trace ("Testing: " + tests[i]);
+  trace ("Testing: '" + tests[i] + "'");
   trace (parseInt (tests[i]));
   trace (parseInt (tests[i], 5));
   trace (parseInt (tests[i], 8));
+  trace (parseInt (tests[i], 10));
   trace (parseInt (tests[i], 16));
+  trace (int (tests[i]));
 }
 
-loadMovie ("FSCommand:quit", "");
+getURL ("FSCommand:quit", "");

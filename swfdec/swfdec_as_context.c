@@ -1113,31 +1113,11 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   int radix;
   gint64 i;
 
-  if (argc < 1)
+  SWFDEC_AS_CHECK (0, NULL, "s|i", &s, &radix);
+
+  if (argc >= 2 && (radix < 2 || radix > 36)) {
+    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
     return;
-
-  s = swfdec_as_value_to_string (cx, &argv[0]);
-
-  if (argc >= 2) {
-    radix = swfdec_as_value_to_integer (cx, &argv[1]);
-
-    if (radix < 2 || radix > 36) {
-      SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
-      return;
-    }
-
-    // special case, strtol parses things that we shouldn't parse
-    if (radix == 16) {
-      const char *end = s + strspn (s, " \t\r\n");
-      if (end != s && (end[0] == '-' || end[0] == '+'))
-	end++;
-      if (end != s && end[0] == '0' && (end[1] == 'x' || end[1] == 'X')) {
-	SWFDEC_AS_VALUE_SET_NUMBER (retval, 0);
-	return;
-      }
-    }
-  } else {
-    radix = 0;
   }
 
   // special case, don't allow sign in front of the 0x
@@ -1147,14 +1127,34 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
-    s = s + 2;
-    i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 16));
-  } else if (s[0] == '0' && s[strspn (s, "01234567")] == '\0') {
-    i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 8));
-  } else {
-    i = g_ascii_strtoll (s, &tail, (radix != 0 ? radix : 10));
+  // automatic radix
+  if (radix == 0) {
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+      radix = 16;
+    } else if ((s[0] == '0' || ((s[0] == '+' || s[0] == '-') && s[1] == '0')) &&
+	s[strspn (s+1, "01234567") + 1] == '\0') {
+      radix = 8;
+    } else {
+      radix = 10;
+    }
   }
+
+  // skip 0x at the start
+  if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
+    s += 2;
+
+  // strtoll parses strings with 0x when given radix 16, but we don't want that
+  if (radix == 16) {
+    const char *skip = s + strspn (s, " \t\r\n");
+    if (skip != s && (skip[0] == '-' || skip[0] == '+'))
+      skip++;
+    if (skip != s && skip[0] == '0' && (skip[1] == 'x' || skip[1] == 'X')) {
+      SWFDEC_AS_VALUE_SET_NUMBER (retval, 0);
+      return;
+    }
+  }
+
+  i = g_ascii_strtoll (s, &tail, radix);
 
   if (tail == s) {
     SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);

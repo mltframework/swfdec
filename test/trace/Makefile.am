@@ -2521,6 +2521,8 @@ EXTRA_DIST = \
 	parse-int-6.swf.trace \
 	parse-int-7.swf \
 	parse-int-7.swf.trace \
+	parse-int-8.swf \
+	parse-int-8.swf.trace \
 	place-object.c \
 	place-object-5.swf \
 	place-object-5.swf.trace \

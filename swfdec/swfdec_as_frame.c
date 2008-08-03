@@ -332,7 +332,9 @@ swfdec_as_frame_debug (SwfdecAsObject *object)
     g_string_append (string, ".");
     g_free (s);
   }
-  g_string_append (string, frame->function_name);
+  s = swfdec_as_object_get_debug (SWFDEC_AS_OBJECT (frame->function));
+  g_string_append (string, s);
+  g_free (s);
   g_string_append (string, " (");
   i = 0;
   for (val = swfdec_as_stack_iterator_init_arguments (&iter, frame); val && i < 4;
@@ -369,7 +371,6 @@ swfdec_as_frame_class_init (SwfdecAsFrameClass *klass)
 static void
 swfdec_as_frame_init (SwfdecAsFrame *frame)
 {
-  frame->function_name = "unnamed";
   frame->blocks = g_array_new (FALSE, FALSE, sizeof (SwfdecAsFrameBlock));
   frame->block_end = (gpointer) -1;
 }
@@ -398,8 +399,7 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   size = sizeof (SwfdecAsFrame) + sizeof (SwfdecAsValue) * script->n_registers;
   frame = g_object_new (SWFDEC_TYPE_AS_FRAME, "context", context, NULL);
   frame->script = swfdec_script_ref (script);
-  frame->function_name = script->name;
-  SWFDEC_DEBUG ("new frame for function %s", frame->function_name);
+  SWFDEC_DEBUG ("new frame for function %s", script->name);
   frame->pc = script->main;
   frame->scope_chain = g_slist_prepend (frame->scope_chain, frame);
   frame->n_registers = script->n_registers;
@@ -852,24 +852,6 @@ swfdec_as_frame_get_next (SwfdecAsFrame *frame)
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
 
   return frame->next;
-}
-
-/**
- * swfdec_as_frame_get_function_name:
- * @frame: a #SwfdecAsFrame
- *
- * Gets the name of the function that is currently executing. This function is
- * intended for debugging purposes.
- *
- * Returns: a string. Do not free.
- **/
-const char *
-swfdec_as_frame_get_function_name (SwfdecAsFrame *frame)
-{
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
-
-  g_assert (frame->function_name);
-  return frame->function_name;
 }
 
 /**

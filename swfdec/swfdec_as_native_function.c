@@ -64,7 +64,6 @@ swfdec_as_native_function_call (SwfdecAsFunction *function)
   if (frame == NULL)
     return NULL;
   g_assert (native->name);
-  frame->function_name = native->name;
   frame->function = function;
   /* We copy the target here so we have a proper SwfdecMovie reference inside native 
    * functions. This is for example necessary for swfdec_player_get_movie_by_value()

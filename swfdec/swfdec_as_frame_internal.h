@@ -38,8 +38,6 @@ struct _SwfdecAsFrame {
   SwfdecAsValue *	return_value;	/* pointer to where to store the return value */
   guint			argc;		/* number of arguments */
   const SwfdecAsValue *	argv;		/* arguments or %NULL if taken from stack */
-  /* debugging */
-  const char *		function_name;	/* name of function */
   /* script execution */
   SwfdecScript *	script;		/* script being executed */
   GSList *		scope_chain;  	/* the scope chain (with objects etc) */

@@ -45,21 +45,26 @@ swfdec_net_stream_close (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 static void
-swfdec_net_stream_play (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_net_stream_play (SwfdecAsContext *cx, SwfdecAsObject *object, 
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
+  SwfdecNetStream *stream;
   const char *url;
 
-  url = swfdec_as_value_to_string (cx, &argv[0]);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_STREAM, &stream, "s", &url);
+
   swfdec_net_stream_set_url (stream, url);
   swfdec_net_stream_set_playing (stream, TRUE);
 }
 
 static void
-swfdec_net_stream_pause (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_net_stream_pause (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
+  SwfdecNetStream *stream;
   gboolean playing;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_STREAM, &stream, "");
 
   if (argc == 0) {
     playing = !swfdec_net_stream_get_playing (stream);
@@ -126,13 +131,15 @@ swfdec_net_stream_set_checkPolicyFile (SwfdecAsContext *cx,
 }
 
 static void
-swfdec_net_stream_do_seek (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+swfdec_net_stream_do_seek (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
+  SwfdecNetStream *stream;
   SwfdecSandbox *cur;
   double d;
 
-  d = swfdec_as_value_to_number (cx, &argv[0]);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_STREAM, &stream, "n", &d);
+
   cur = SWFDEC_SANDBOX (cx->global);
   swfdec_sandbox_unuse (cur);
   /* FIXME: perform security check if seeking is allowed here? */
@@ -174,12 +181,12 @@ swfdec_net_stream_init_context (SwfdecPlayer *player)
       SWFDEC_AS_STR_NetStream, SWFDEC_TYPE_NET_STREAM, SWFDEC_TYPE_NET_STREAM,
       swfdec_net_stream_construct, 1, proto));
   /* set the right properties on the NetStream.prototype object */
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_pause, SWFDEC_TYPE_NET_STREAM,
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_pause, 0,
       swfdec_net_stream_pause, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, SWFDEC_TYPE_NET_STREAM,
-      swfdec_net_stream_play, 1);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_seek, SWFDEC_TYPE_NET_STREAM,
-      swfdec_net_stream_do_seek, 1);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, 0,
+      swfdec_net_stream_play, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_seek, 0,
+      swfdec_net_stream_do_seek, 0);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, stream);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

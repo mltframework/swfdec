@@ -143,13 +143,14 @@ swfdec_net_stream_do_seek (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc,
 static void
 swfdec_net_stream_construct (SwfdecAsContext *cx, SwfdecAsObject *obj, guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SwfdecNetStream *stream = SWFDEC_NET_STREAM (obj);
+  SwfdecNetStream *stream;
   SwfdecNetConnection *conn;
   
   if (!swfdec_as_context_is_constructing (cx)) {
     SWFDEC_FIXME ("What do we do if not constructing?");
     return;
   }
+  stream = SWFDEC_NET_STREAM (obj);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) || 
       !SWFDEC_IS_NET_CONNECTION ((conn = (SwfdecNetConnection *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))) {
     SWFDEC_WARNING ("no connection passed to NetStream ()");

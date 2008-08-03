@@ -72,7 +72,7 @@ swfdec_video_movie_init_context (SwfdecPlayer *player)
 
   context = SWFDEC_AS_CONTEXT (player);
   video = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_Video, 0, NULL, 0));
+      SWFDEC_AS_STR_Video, NULL));
   SWFDEC_SANDBOX (context->global)->Video = video;
   proto = swfdec_as_object_new_empty (context);
   /* set the right properties on the Video object */

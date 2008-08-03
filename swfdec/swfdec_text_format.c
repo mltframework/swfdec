@@ -1035,7 +1035,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   tmp = cx->Function;
   cx->Function = NULL;
   function = swfdec_as_native_function_new (cx, SWFDEC_AS_STR_getTextExtent,
-      swfdec_text_format_getTextExtent, 0, NULL);
+      swfdec_text_format_getTextExtent, NULL);
   cx->Function = tmp;
   if (function != NULL) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
@@ -1090,7 +1090,7 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
   tmp = context->Function;
   context->Function = NULL;
   function = swfdec_as_native_function_new (context, SWFDEC_AS_STR_getTextExtent,
-      swfdec_text_format_getTextExtent, 0, NULL);
+      swfdec_text_format_getTextExtent, NULL);
   context->Function = tmp;
   if (function != NULL) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));

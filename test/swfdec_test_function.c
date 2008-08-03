@@ -68,7 +68,7 @@ swfdec_test_function_init_context (SwfdecAsContext *cx)
     GType type = functions[i].type ? functions[i].type () : 0;
     swfdec_as_object_add_constructor (obj,
       swfdec_as_context_get_string (cx, functions[i].name),
-      type, type, functions[i].fun, 0, NULL);
+      type, functions[i].fun, NULL);
   }
 }
 

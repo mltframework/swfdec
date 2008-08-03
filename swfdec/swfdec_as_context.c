@@ -833,11 +833,8 @@ start:
   if (SWFDEC_IS_AS_NATIVE_FUNCTION (frame->function)) {
     SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
     SwfdecAsValue rval = { 0, };
-    if (frame->argc >= native->min_args && 
-	(native->type == 0 || 
-	 g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->type)) &&
-	(!frame->construct || native->construct_type == 0 ||
-	 g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->construct_type))) {
+    if (!frame->construct || native->construct_type == 0 ||
+	g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->construct_type)) {
       SwfdecAsValue *argv;
       /* accumulate argv */
       if (frame->argc == 0 || frame->argv != NULL) {

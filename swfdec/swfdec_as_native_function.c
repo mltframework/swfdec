@@ -121,21 +121,17 @@ swfdec_as_native_function_init (SwfdecAsNativeFunction *function)
  * @context: a #SwfdecAsContext
  * @name: name of the function
  * @native: function to call when executed
- * @min_args: minimum number of arguments required
  * @prototype: The object to be used as "prototype" property for the created 
  *             function or %NULL for none.
  *
- * Creates a new native function, that will execute @native when called. The
- * @min_args parameter sets a requirement for the minimum number of arguments
- * to pass to @native. If the function gets called with less arguments, it
- * will just redurn undefined. You might want to use 
- * swfdec_as_object_add_function() instead of this function.
+ * Creates a new native function, that will execute @native when called. You 
+ * might want to use swfdec_as_object_add_function() instead of this function.
  *
  * Returns: a new #SwfdecAsFunction
  **/
 SwfdecAsFunction *
 swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
-    SwfdecAsNative native, guint min_args, SwfdecAsObject *prototype)
+    SwfdecAsNative native, SwfdecAsObject *prototype)
 {
   SwfdecAsNativeFunction *fun;
 
@@ -145,7 +141,6 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
 
   fun = g_object_new (SWFDEC_TYPE_AS_NATIVE_FUNCTION, "context", context, NULL);
   fun->native = native;
-  fun->min_args = min_args;
   fun->name = g_strdup (name);
   /* need to set prototype before setting the constructor or Function.constructor 
    * being CONSTANT disallows setting it. */
@@ -158,27 +153,6 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
   swfdec_as_function_set_constructor (SWFDEC_AS_FUNCTION (fun));
 
   return SWFDEC_AS_FUNCTION (fun);
-}
-
-/**
- * swfdec_as_native_function_set_object_type:
- * @function: a #SwfdecAsNativeFunction
- * @type: required #GType for the this object
- *
- * Sets the required type for the this object to @type. If the this object 
- * isn't of the required type, the function will not be called and its
- * return value will be undefined.
- **/
-void
-swfdec_as_native_function_set_object_type (SwfdecAsNativeFunction *function, GType type)
-{
-  GTypeQuery query;
-
-  g_return_if_fail (SWFDEC_IS_AS_NATIVE_FUNCTION (function));
-  g_return_if_fail (g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT));
-
-  g_type_query (type, &query);
-  function->type = type;
 }
 
 /**

@@ -251,7 +251,7 @@ swfdec_as_function_init_context (SwfdecAsContext *context)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
 
   function = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_Function, 0, NULL, 0));
+      SWFDEC_AS_STR_Function, NULL));
   swfdec_as_object_set_variable_flags (context->global, SWFDEC_AS_STR_Function, SWFDEC_AS_VARIABLE_VERSION_6_UP);
   context->Function = function;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);

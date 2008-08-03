@@ -158,7 +158,8 @@ swfdec_net_stream_construct (SwfdecAsContext *cx, SwfdecAsObject *obj, guint arg
     return;
   }
   stream = SWFDEC_NET_STREAM (obj);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) || 
+  if (argc == 0 ||
+      !SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) || 
       !SWFDEC_IS_NET_CONNECTION ((conn = (SwfdecNetConnection *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))) {
     SWFDEC_WARNING ("no connection passed to NetStream ()");
     return;
@@ -178,15 +179,12 @@ swfdec_net_stream_init_context (SwfdecPlayer *player)
   context = SWFDEC_AS_CONTEXT (player);
   proto = swfdec_as_object_new_empty (context);
   stream = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global, 
-      SWFDEC_AS_STR_NetStream, SWFDEC_TYPE_NET_STREAM, SWFDEC_TYPE_NET_STREAM,
-      swfdec_net_stream_construct, 1, proto));
+      SWFDEC_AS_STR_NetStream, SWFDEC_TYPE_NET_STREAM, 
+      swfdec_net_stream_construct, proto));
   /* set the right properties on the NetStream.prototype object */
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_pause, 0,
-      swfdec_net_stream_pause, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, 0,
-      swfdec_net_stream_play, 0);
-  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_seek, 0,
-      swfdec_net_stream_do_seek, 0);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_pause, swfdec_net_stream_pause);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, swfdec_net_stream_play);
+  swfdec_as_object_add_function (proto, SWFDEC_AS_STR_seek, swfdec_net_stream_do_seek);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, stream);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

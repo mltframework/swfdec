@@ -68,12 +68,12 @@ vivi_function_init_context (ViviApplication *app)
   for (i = 0; functions[i].name; i++) {
     swfdec_as_object_add_function (obj,
       swfdec_as_context_get_string (cx, functions[i].name),
-      0, functions[i].fun, 0);
+      functions[i].fun);
   }
   /* FIXME: find a better solution than this */
   fun = swfdec_as_object_add_function (obj,
     swfdec_as_context_get_string (cx, "Breakpoint"),
-    0, functions[i].fun, 0);
+    functions[i].fun);
   swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (fun),
       VIVI_TYPE_BREAKPOINT);
   obj = swfdec_as_object_new (cx);

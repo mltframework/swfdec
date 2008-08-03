@@ -155,16 +155,12 @@ gboolean	swfdec_as_object_foreach	(SwfdecAsObject *       object,
 
 SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
 						 const char *		name,
-						 GType			type,
-						 SwfdecAsNative		native,
-						 guint			min_args);
+						 SwfdecAsNative		native);
 SwfdecAsFunction *swfdec_as_object_add_constructor
 						(SwfdecAsObject *	object,
 						 const char *		name,
-						 GType			type,
 						 GType			construct_type,
 						 SwfdecAsNative		native,
-						 guint			min_args,
 						 SwfdecAsObject *	prototype);
 
 gboolean	swfdec_as_object_call		(SwfdecAsObject *       object,

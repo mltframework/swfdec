@@ -171,7 +171,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
       x_exists = TRUE;
     if (native_funcs[i].x == x && native_funcs[i].y == y) {
       SwfdecAsFunction *fun = swfdec_as_native_function_new (cx, native_funcs[i].name,
-	  native_funcs[i].func, 0, NULL);
+	  native_funcs[i].func, NULL);
       if (native_funcs[i].get_type) {
 	swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (fun),
 	    native_funcs[i].get_type ());
@@ -184,7 +184,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
     SwfdecAsFunction *func;
     char *name = g_strdup_printf ("ASnative (%u, %u)", x, y);
     func = swfdec_as_native_function_new (cx, name, swfdec_player_do_nothing,
-	0, NULL);
+	NULL);
     g_free (name);
     return func;
   } else {
@@ -353,11 +353,10 @@ swfdec_player_preinit_global (SwfdecAsContext *context)
   /* init these two before swfdec_as_context_startup, so they won't get
    * __proto__ and constructor properties */
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASnative, 
-      0, swfdec_player_ASnative, 2);
+      swfdec_player_ASnative);
   swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASconstructor,
-      0, swfdec_player_ASconstructor, 2);
+      swfdec_player_ASconstructor);
   // FIXME: is this only the debug player?
   swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_enableDebugConsole, 0, swfdec_player_enableDebugConsole,
-      2);
+      SWFDEC_AS_STR_enableDebugConsole, swfdec_player_enableDebugConsole);
 }

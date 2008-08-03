@@ -1126,10 +1126,7 @@ swfdec_as_object_do_nothing (SwfdecAsContext *cx, SwfdecAsObject *object,
  * @object: a #SwfdecAsObject
  * @name: name of the function. The string does not have to be 
  *        garbage-collected.
- * @type: the required type of the this Object to make this function execute.
- *        May be 0 to accept any type.
  * @native: a native function or %NULL to just not do anything
- * @min_args: minimum number of arguments to pass to @native
  *
  * Adds @native as a variable named @name to @object. The newly added variable
  * will not be enumerated.
@@ -1137,14 +1134,12 @@ swfdec_as_object_do_nothing (SwfdecAsContext *cx, SwfdecAsObject *object,
  * Returns: the newly created #SwfdecAsFunction
  **/
 SwfdecAsFunction *
-swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType type,
-    SwfdecAsNative native, guint min_args)
+swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, SwfdecAsNative native)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
-  g_return_val_if_fail (type == 0 || g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT), NULL);
 
-  return swfdec_as_object_add_constructor (object, name, type, 0, native, min_args, NULL);
+  return swfdec_as_object_add_constructor (object, name, 0, native, NULL);
 }
 
 /**
@@ -1152,12 +1147,9 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
  * @object: a #SwfdecAsObject
  * @name: name of the function. The string does not have to be 
  *        garbage-collected.
- * @type: the required type of the this Object to make this function execute.
- *        May be 0 to accept any type.
  * @construct_type: type used when using this function as a constructor. May 
  *                  be 0 to use the default type.
  * @native: a native function or %NULL to just not do anything
- * @min_args: minimum number of arguments to pass to @native
  * @prototype: An optional object to be set as the "prototype" property of the
  *             new function. The prototype will be hidden and constant.
  *
@@ -1167,23 +1159,20 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, GType t
  * Returns: the newly created #SwfdecAsFunction
  **/
 SwfdecAsFunction *
-swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name, GType type,
-    GType construct_type, SwfdecAsNative native, guint min_args, SwfdecAsObject *prototype)
+swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name,
+    GType construct_type, SwfdecAsNative native, SwfdecAsObject *prototype)
 {
   SwfdecAsFunction *function;
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
-  g_return_val_if_fail (type == 0 || g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT), NULL);
   g_return_val_if_fail (construct_type == 0 || g_type_is_a (construct_type, SWFDEC_TYPE_AS_OBJECT), NULL);
   g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
   if (!native)
     native = swfdec_as_object_do_nothing;
-  function = swfdec_as_native_function_new (swfdec_gc_object_get_context (object), name, native, min_args, prototype);
-  if (type != 0)
-    swfdec_as_native_function_set_object_type (SWFDEC_AS_NATIVE_FUNCTION (function), type);
+  function = swfdec_as_native_function_new (swfdec_gc_object_get_context (object), name, native, prototype);
   if (construct_type != 0)
     swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (function), construct_type);
   name = swfdec_as_context_get_string (swfdec_gc_object_get_context (object), name);
@@ -1426,13 +1415,13 @@ swfdec_as_object_add_native_variable (SwfdecAsObject *object,
   g_return_if_fail (get != NULL);
 
   get_func =
-    swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, get, 0, NULL);
+    swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, get, NULL);
   if (get_func == NULL)
     return;
 
   if (set != NULL) {
     set_func =
-      swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, set, 0, NULL);
+      swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, set, NULL);
   } else {
     set_func = NULL;
   }
@@ -1739,7 +1728,7 @@ swfdec_as_object_init_context (SwfdecAsContext *context)
 
   proto = swfdec_as_object_new_empty (context);
   object = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_Object, 0, swfdec_as_object_construct, 0));
+      SWFDEC_AS_STR_Object, swfdec_as_object_construct));
   context->Object = object;
   context->Object_prototype = proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);

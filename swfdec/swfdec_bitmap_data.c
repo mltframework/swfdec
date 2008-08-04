@@ -257,7 +257,6 @@ swfdec_bitmap_data_get_rectangle (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_INT (&args[2], cairo_image_surface_get_width (bitmap->surface));
   SWFDEC_AS_VALUE_SET_INT (&args[3], cairo_image_surface_get_width (bitmap->surface));
   swfdec_as_object_create (SWFDEC_AS_FUNCTION (o), 4, args, ret);
-  swfdec_as_context_run (cx);
 }
 
 SWFDEC_AS_NATIVE (1100, 105, swfdec_bitmap_data_set_rectangle)

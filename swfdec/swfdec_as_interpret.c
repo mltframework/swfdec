@@ -1732,7 +1732,6 @@ swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data,
 
   swfdec_as_stack_pop_n (cx, 2);
   swfdec_as_object_create (fun, n_args, NULL, NULL);
-  swfdec_as_context_run (cx);
   return;
 
 fail:
@@ -1772,7 +1771,6 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
 
   swfdec_as_stack_pop_n (cx, 3);
   swfdec_as_object_create (fun, n_args, NULL, NULL);
-  swfdec_as_context_run (cx);
   return;
 
 fail:

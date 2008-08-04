@@ -606,7 +606,6 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
     return NULL;
   swfdec_as_object_create (fun, 1, value, &val);
-  swfdec_as_context_run (context);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
     return SWFDEC_AS_VALUE_GET_OBJECT (&val);
   } else {

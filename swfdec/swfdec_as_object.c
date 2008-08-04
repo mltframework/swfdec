@@ -1262,9 +1262,7 @@ swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc,
  * @return_value: pointer for return value or %NULL to push the return value to 
  *                the stack
  *
- * Creates a new object for the given constructor and pushes the constructor on
- * top of the stack. To actually run the constructor, you need to call 
- * swfdec_as_context_run().
+ * Creates a new object for the given constructor and runs the constructor.
  **/
 void
 swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args, 
@@ -1333,6 +1331,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   frame->construct = TRUE;
   swfdec_as_super_new (frame, new, new->prototype);
   swfdec_as_frame_preload (frame);
+  swfdec_as_context_run (context);
 }
 
 /**

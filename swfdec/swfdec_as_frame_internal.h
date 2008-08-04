@@ -28,8 +28,6 @@ G_BEGIN_DECLS
 typedef void (* SwfdecAsFrameBlockFunc) (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpointer data);
 
 struct _SwfdecAsFrame {
-  SwfdecAsObject	object;
-
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
   SwfdecAsObject *	thisp;		/* this object in current frame or NULL if none */
@@ -53,10 +51,6 @@ struct _SwfdecAsFrame {
   SwfdecAsValue *	stack_begin;	/* beginning of stack */
   const guint8 *	pc;		/* program counter on stack */
   /* native function */
-};
-
-struct _SwfdecAsFrameClass {
-  SwfdecAsObjectClass	object_class;
 };
 
 SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsContext *	context,

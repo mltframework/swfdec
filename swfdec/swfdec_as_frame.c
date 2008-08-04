@@ -79,7 +79,7 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
   SwfdecAsContext *context;
 
   g_return_val_if_fail (iter != NULL, NULL);
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_val_if_fail (frame != NULL, NULL);
 
   if (frame->argc == 0) {
     iter->i = iter->n = 0;
@@ -132,7 +132,7 @@ swfdec_as_stack_iterator_init (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame
   SwfdecAsStack *stack;
 
   g_return_val_if_fail (iter != NULL, NULL);
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_val_if_fail (frame != NULL, NULL);
 
   context = swfdec_gc_object_get_context (frame->target);
   iter->i = 0;
@@ -226,7 +226,7 @@ swfdec_as_frame_push_block (SwfdecAsFrame *frame, const guint8 *start,
 {
   SwfdecAsFrameBlock block = { start, end, func, data };
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
   g_return_if_fail (start <= end);
   g_return_if_fail (start >= frame->block_start);
   g_return_if_fail (end <= frame->block_end);
@@ -244,7 +244,7 @@ swfdec_as_frame_pop_block (SwfdecAsFrame *frame, SwfdecAsContext *cx)
   gpointer data;
   SwfdecAsFrameBlock *block;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
   g_return_if_fail (frame->blocks->len > 0);
 
   block = &g_array_index (frame->blocks, SwfdecAsFrameBlock, frame->blocks->len - 1);
@@ -265,16 +265,12 @@ swfdec_as_frame_pop_block (SwfdecAsFrame *frame, SwfdecAsContext *cx)
 
 /*** FRAME ***/
 
-G_DEFINE_TYPE (SwfdecAsFrame, swfdec_as_frame, SWFDEC_TYPE_AS_OBJECT)
-
 static void
-swfdec_as_frame_dispose (GObject *object)
+swfdec_as_frame_free (SwfdecAsFrame *frame)
 {
-  SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
-
   /* pop blocks while state is intact */
   while (frame->blocks->len > 0)
-    swfdec_as_frame_pop_block (frame, swfdec_gc_object_get_context (frame));
+    swfdec_as_frame_pop_block (frame, swfdec_gc_object_get_context (frame->target));
 
   /* clean up */
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
@@ -288,91 +284,6 @@ swfdec_as_frame_dispose (GObject *object)
     swfdec_script_unref (frame->script);
     frame->script = NULL;
   }
-
-  G_OBJECT_CLASS (swfdec_as_frame_parent_class)->dispose (object);
-}
-
-static void
-swfdec_as_frame_mark (SwfdecGcObject *object)
-{
-  SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
-  guint i;
-
-  if (frame->next)
-    swfdec_gc_object_mark (frame->next);
-  g_slist_foreach (frame->scope_chain, (GFunc) swfdec_gc_object_mark, NULL);
-  if (frame->thisp)
-    swfdec_gc_object_mark (frame->thisp);
-  if (frame->super)
-    swfdec_gc_object_mark (frame->super);
-  swfdec_gc_object_mark (frame->target);
-  swfdec_gc_object_mark (frame->original_target);
-  if (frame->function)
-    swfdec_gc_object_mark (frame->function);
-  for (i = 0; i < frame->n_registers; i++) {
-    swfdec_as_value_mark (&frame->registers[i]);
-  }
-  /* don't mark argv, it's const, others have to take care of it */
-  SWFDEC_GC_OBJECT_CLASS (swfdec_as_frame_parent_class)->mark (object);
-}
-
-static char *
-swfdec_as_frame_debug (SwfdecAsObject *object)
-{
-  SwfdecAsFrame *frame = SWFDEC_AS_FRAME (object);
-  GString *string = g_string_new ("");
-  SwfdecAsStackIterator iter;
-  SwfdecAsValue *val;
-  char *s;
-  guint i;
-
-  if (frame->thisp) {
-    s = swfdec_as_object_get_debug (frame->thisp);
-    g_string_append (string, s);
-    g_string_append (string, ".");
-    g_free (s);
-  }
-  s = swfdec_as_object_get_debug (SWFDEC_AS_OBJECT (frame->function));
-  g_string_append (string, s);
-  g_free (s);
-  g_string_append (string, " (");
-  i = 0;
-  for (val = swfdec_as_stack_iterator_init_arguments (&iter, frame); val && i < 4;
-      val = swfdec_as_stack_iterator_next (&iter)) {
-    if (i > 0)
-      g_string_append (string, ", ");
-    i++;
-    if (i == 3 && frame->argc > 4) {
-      g_string_append (string, "...");
-    } else {
-      s = swfdec_as_value_to_debug (val);
-      g_string_append (string, s);
-      g_free (s);
-    }
-  }
-  g_string_append (string, ")");
-  return g_string_free (string, FALSE);
-}
-
-static void
-swfdec_as_frame_class_init (SwfdecAsFrameClass *klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
-
-  object_class->dispose = swfdec_as_frame_dispose;
-
-  gc_class->mark = swfdec_as_frame_mark;
-
-  asobject_class->debug = swfdec_as_frame_debug;
-}
-
-static void
-swfdec_as_frame_init (SwfdecAsFrame *frame)
-{
-  frame->blocks = g_array_new (FALSE, FALSE, sizeof (SwfdecAsFrameBlock));
-  frame->block_end = (gpointer) -1;
 }
 
 static void
@@ -395,7 +306,9 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   g_return_val_if_fail (script != NULL, NULL);
   
   size = sizeof (SwfdecAsFrame) + sizeof (SwfdecAsValue) * script->n_registers;
-  frame = g_object_new (SWFDEC_TYPE_AS_FRAME, "context", context, NULL);
+  frame = g_new0 (SwfdecAsFrame, 1);
+  frame->blocks = g_array_new (FALSE, FALSE, sizeof (SwfdecAsFrameBlock));
+  frame->block_end = (gpointer) -1;
   frame->script = swfdec_script_ref (script);
   SWFDEC_DEBUG ("new frame for function %s", script->name);
   frame->pc = script->main;
@@ -421,7 +334,9 @@ swfdec_as_frame_new_native (SwfdecAsContext *context)
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   
   size = sizeof (SwfdecAsFrame);
-  frame = g_object_new (SWFDEC_TYPE_AS_FRAME, "context", context, NULL);
+  frame = g_new0 (SwfdecAsFrame, 1);
+  frame->blocks = g_array_new (FALSE, FALSE, sizeof (SwfdecAsFrameBlock));
+  frame->block_end = (gpointer) -1;
   SWFDEC_DEBUG ("new native frame");
   swfdec_as_frame_load (frame, context);
   return frame;
@@ -444,8 +359,8 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
   SwfdecAsValue retval;
   SwfdecAsFrame *next;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  context = swfdec_gc_object_get_context (frame->target);
+  g_return_if_fail (frame != NULL);
+  context = swfdec_gc_object_get_context (frame->target ? (gpointer) frame->target : (gpointer) frame->function);
   g_return_if_fail (frame == context->frame);
 
   /* save return value in case it was on the stack somewhere */
@@ -503,6 +418,7 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
     swfdec_as_stack_ensure_free (context, 1);
     *swfdec_as_stack_push (context) = retval;
   }
+  swfdec_as_frame_free (frame);
 }
 
 /**
@@ -518,7 +434,7 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
 void
 swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
 {
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
   g_return_if_fail (frame->thisp == NULL);
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
 
@@ -553,7 +469,7 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
   GSList *walk;
   SwfdecAsContext *cx;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_val_if_fail (frame != NULL, NULL);
   g_return_val_if_fail (variable != NULL, NULL);
 
   cx = swfdec_gc_object_get_context (frame->target);
@@ -591,7 +507,7 @@ swfdec_as_frame_set_variable_and_flags (SwfdecAsFrame *frame, const char *variab
   SwfdecAsObject *pobject, *set;
   GSList *walk;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
   g_return_if_fail (variable != NULL);
 
   set = NULL;
@@ -626,7 +542,7 @@ swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
   GSList *walk;
   SwfdecAsDeleteReturn ret;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), FALSE);
+  g_return_val_if_fail (frame != NULL, FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
 
   for (walk = frame->scope_chain; walk; walk = walk->next) {
@@ -655,7 +571,7 @@ swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
 void
 swfdec_as_frame_set_target (SwfdecAsFrame *frame, SwfdecAsObject *target)
 {
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
   g_return_if_fail (target == NULL || SWFDEC_IS_AS_OBJECT (target));
 
   if (target) {
@@ -676,10 +592,10 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   SwfdecAsContext *context;
   SwfdecAsStackIterator iter;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
 
   /* setup */
-  context = swfdec_gc_object_get_context (frame->target);
+  context = swfdec_gc_object_get_context (frame->target ? (gpointer) frame->target : (gpointer) frame->function);
   script = frame->script;
   if (frame->script == NULL)
     goto out;
@@ -821,7 +737,7 @@ swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
 {
   SwfdecAsContext *cx;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
   cx = swfdec_gc_object_get_context (frame->target);
   g_return_if_fail (cx->exception);
 
@@ -847,7 +763,7 @@ swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
 SwfdecAsFrame *
 swfdec_as_frame_get_next (SwfdecAsFrame *frame)
 {
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_val_if_fail (frame != NULL, NULL);
 
   return frame->next;
 }
@@ -864,7 +780,7 @@ swfdec_as_frame_get_next (SwfdecAsFrame *frame)
 SwfdecScript *
 swfdec_as_frame_get_script (SwfdecAsFrame *frame)
 {
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_val_if_fail (frame != NULL, NULL);
 
   return frame->script;
 }
@@ -881,7 +797,7 @@ swfdec_as_frame_get_script (SwfdecAsFrame *frame)
 SwfdecAsObject *
 swfdec_as_frame_get_this (SwfdecAsFrame *frame)
 {
-  g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
+  g_return_val_if_fail (frame != NULL, NULL);
 
   return frame->thisp;
 }

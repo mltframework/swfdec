@@ -186,10 +186,10 @@ vivi_debugger_class_init (ViviDebuggerClass *klass)
       G_TYPE_BOOLEAN, 0);
   signals[ENTER_FRAME] = g_signal_new ("enter-frame", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__OBJECT,
-      G_TYPE_BOOLEAN, 1, SWFDEC_TYPE_AS_FRAME);
+      G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
   signals[LEAVE_FRAME] = g_signal_new ("leave-frame", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__OBJECT_POINTER,
-      G_TYPE_BOOLEAN, 2, SWFDEC_TYPE_AS_FRAME, G_TYPE_POINTER);
+      G_TYPE_BOOLEAN, 2, G_TYPE_POINTER, G_TYPE_POINTER);
   signals[SET_VARIABLE] = g_signal_new ("set-variable", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, vivi_accumulate_or, NULL, vivi_marshal_BOOLEAN__OBJECT_STRING_POINTER,
       G_TYPE_BOOLEAN, 3, SWFDEC_TYPE_AS_OBJECT, G_TYPE_STRING, G_TYPE_POINTER);

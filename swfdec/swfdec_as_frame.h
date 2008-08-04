@@ -37,15 +37,6 @@ struct _SwfdecAsStackIterator {
 };
 
 
-#define SWFDEC_TYPE_AS_FRAME                    (swfdec_as_frame_get_type())
-#define SWFDEC_IS_AS_FRAME(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_FRAME))
-#define SWFDEC_IS_AS_FRAME_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AS_FRAME))
-#define SWFDEC_AS_FRAME(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AS_FRAME, SwfdecAsFrame))
-#define SWFDEC_AS_FRAME_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AS_FRAME, SwfdecAsFrameClass))
-#define SWFDEC_AS_FRAME_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_FRAME, SwfdecAsFrameClass))
-
-GType		swfdec_as_frame_get_type	(void);
-
 SwfdecAsFrame *	swfdec_as_frame_get_next	(SwfdecAsFrame *		frame);
 SwfdecScript *	swfdec_as_frame_get_script	(SwfdecAsFrame *		frame);
 SwfdecAsObject *swfdec_as_frame_get_this	(SwfdecAsFrame *		frame);

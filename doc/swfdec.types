@@ -4,7 +4,6 @@
 swfdec_as_array_get_type
 swfdec_as_context_get_type
 swfdec_as_debugger_get_type
-swfdec_as_frame_get_type
 swfdec_as_function_get_type
 swfdec_as_native_function_get_type
 swfdec_as_object_get_type

@@ -151,7 +151,7 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
   SwfdecAsContext *context;
   SwfdecAsSuper *super;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
   g_return_if_fail (ref == NULL || SWFDEC_IS_AS_OBJECT (ref));
   
@@ -188,7 +188,7 @@ swfdec_as_super_new_chain (SwfdecAsFrame *frame, SwfdecAsSuper *super,
   SwfdecAsObject *ref;
   SwfdecAsContext *context;
 	  
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
+  g_return_if_fail (frame != NULL);
   g_return_if_fail (SWFDEC_IS_AS_SUPER (super));
 
   if (frame->super != NULL)

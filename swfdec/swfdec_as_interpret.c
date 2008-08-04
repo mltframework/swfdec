@@ -2603,11 +2603,10 @@ swfdec_action_try_end_finally (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpoint
 {
   SwfdecAsValue *exception_value = data;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (SWFDEC_IS_AS_VALUE (exception_value));
 
   // finally has ended and we had exception stored, throw it
-  if (!cx->exception)
+  if (!cx->exception && cx->frame == frame)
     swfdec_as_context_throw (cx, exception_value);
 
   g_free (data);
@@ -2619,7 +2618,6 @@ swfdec_action_try_end_catch (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpointer
   TryData *try_data = data;
   SwfdecAsValue *exception_value, val;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (try_data != NULL);
 
   if (try_data->scope_object) {
@@ -2654,7 +2652,6 @@ swfdec_action_try_end_try (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpointer d
   TryData *try_data = data;
   SwfdecAsValue val;
 
-  g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (try_data != NULL);
 
   // if we don't have a catch block, we handle try block exactly like it was

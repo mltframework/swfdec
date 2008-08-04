@@ -74,6 +74,7 @@ void
 vivi_wrap_name_get (SwfdecAsContext *cx, SwfdecAsObject *this,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+#if 0
   ViviWrap *wrap;
   char *s;
 
@@ -81,12 +82,11 @@ vivi_wrap_name_get (SwfdecAsContext *cx, SwfdecAsObject *this,
     return;
   
   wrap = VIVI_WRAP (this);
-  if (!SWFDEC_IS_AS_FRAME (wrap->wrap))
-    return;
   
   /* FIXME: improve */
   s = swfdec_as_object_get_debug (wrap->wrap);
   SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_give_string (cx, s));
+#endif
 }
 
 VIVI_FUNCTION ("frame_code_get", vivi_wrap_code_get)
@@ -94,6 +94,7 @@ void
 vivi_wrap_code_get (SwfdecAsContext *cx, SwfdecAsObject *this,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+#if 0
   ViviWrap *wrap;
   SwfdecScript *script;
 
@@ -108,6 +109,7 @@ vivi_wrap_code_get (SwfdecAsContext *cx, SwfdecAsObject *this,
   /* FIXME: wrap scripts */
   if (script)
     SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
+#endif
 }
 
 VIVI_FUNCTION ("frame_next_get", vivi_wrap_next_get)
@@ -115,6 +117,7 @@ void
 vivi_wrap_next_get (SwfdecAsContext *cx, SwfdecAsObject *this,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+#if 0
   ViviWrap *wrap;
   SwfdecAsObject *obj;
 
@@ -128,6 +131,7 @@ vivi_wrap_next_get (SwfdecAsContext *cx, SwfdecAsObject *this,
   obj = SWFDEC_AS_OBJECT (swfdec_as_frame_get_next (SWFDEC_AS_FRAME (wrap->wrap)));
   if (obj)
     SWFDEC_AS_VALUE_SET_OBJECT (retval, vivi_wrap_object (VIVI_APPLICATION (cx), obj));
+#endif
 }
 
 VIVI_FUNCTION ("frame_this_get", vivi_wrap_this_get)
@@ -135,6 +139,7 @@ void
 vivi_wrap_this_get (SwfdecAsContext *cx, SwfdecAsObject *this,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
+#if 0
   ViviWrap *wrap;
   SwfdecAsObject *obj;
 
@@ -148,6 +153,7 @@ vivi_wrap_this_get (SwfdecAsContext *cx, SwfdecAsObject *this,
   obj = SWFDEC_AS_OBJECT (swfdec_as_frame_get_this (SWFDEC_AS_FRAME (wrap->wrap)));
   if (obj)
     SWFDEC_AS_VALUE_SET_OBJECT (retval, vivi_wrap_object (VIVI_APPLICATION (cx), obj));
+#endif
 }
 
 

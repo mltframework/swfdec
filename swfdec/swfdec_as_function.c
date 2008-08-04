@@ -132,7 +132,7 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
 }
 
 /**
- * swfdec_as_function_call:
+ * swfdec_as_function_old_call:
  * @function: the #SwfdecAsFunction to call
  * @thisp: this argument to use for the call or %NULL for none
  * @n_args: number of arguments to pass to the function
@@ -147,7 +147,7 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
  * not executed. Call swfdec_as_context_run () to execute it.
  **/
 void
-swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args,
+swfdec_as_function_old_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args,
     const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
   SwfdecAsFrame *frame;
@@ -165,6 +165,30 @@ swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guin
     swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), SWFDEC_AS_OBJECT (function)->prototype);
   }
   swfdec_as_frame_preload (frame);
+}
+
+/**
+ * swfdec_as_function_old_call:
+ * @function: the #SwfdecAsFunction to call
+ * @thisp: this argument to use for the call or %NULL for none
+ * @n_args: number of arguments to pass to the function
+ * @args: the arguments to pass or %NULL to read the last @n_args stack elements.
+ *        The memory must be unchanged until the function call has completed.
+ *        This is after the call to swfdec_as_context_run () has finished.
+ * @return_value: pointer for return value or %NULL to push the return value to 
+ *                the stack
+ *
+ * Calls the given function.
+ **/
+void
+swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args,
+    const SwfdecAsValue *args, SwfdecAsValue *return_value)
+{
+  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
+  g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
+
+  swfdec_as_function_old_call (function, thisp, n_args, args, return_value);
+  swfdec_as_context_run (swfdec_gc_object_get_context (function));
 }
 
 /*** AS CODE ***/
@@ -187,7 +211,6 @@ swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
     argv++;
   }
   swfdec_as_function_call (fun, thisp, argc, argv, ret);
-  swfdec_as_context_run (cx);
 }
 
 SWFDEC_AS_NATIVE (101, 11, swfdec_as_function_apply)
@@ -233,7 +256,6 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   swfdec_as_function_call (fun, thisp, length, argv_pass, ret);
-  swfdec_as_context_run (cx);
 
   if (argv_pass) {
     swfdec_as_context_unuse_mem (cx, sizeof (SwfdecAsValue) * length);

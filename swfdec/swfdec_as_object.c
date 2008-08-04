@@ -315,7 +315,6 @@ swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
 
   if (var->get) {
     swfdec_as_function_call (var->get, orig, 0, NULL, val);
-    swfdec_as_context_run (swfdec_gc_object_get_context (object));
     *flags = var->flags;
   } else {
     *val = var->value;
@@ -506,7 +505,6 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
       args[3] = watch->watch_data;
       swfdec_as_watch_ref (watch);
       swfdec_as_function_call (watch->watch, object, 4, args, &ret);
-      swfdec_as_context_run (swfdec_gc_object_get_context (object));
       swfdec_as_watch_unref (watch);
       var = swfdec_as_object_hash_lookup_with_prototype (object, variable,
 	  NULL);
@@ -526,7 +524,6 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
     if (var->set) {
       SwfdecAsValue tmp;
       swfdec_as_function_call (var->set, object, 1, val, &tmp);
-      swfdec_as_context_run (swfdec_gc_object_get_context (object));
     }
   } else if (watch == NULL) {
     var->value = *val;
@@ -964,9 +961,6 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
       return FALSE;
     SWFDEC_AS_VALUE_SET_STRING (&argv, variable);
     swfdec_as_function_call (fun, resolve, 1, &argv, value);
-    if (swfdec_as_context_is_aborted (context))
-      return TRUE;
-    swfdec_as_context_run (context);
 
     return TRUE;
   }
@@ -1249,9 +1243,6 @@ swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc,
   if (!SWFDEC_IS_AS_FUNCTION (fun))
     return FALSE;
   swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
-  if (swfdec_as_context_is_aborted (swfdec_gc_object_get_context (object)))
-    return TRUE;
-  swfdec_as_context_run (swfdec_gc_object_get_context (object));
 
   return TRUE;
 }

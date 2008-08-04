@@ -940,7 +940,6 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
     SwfdecAsValue ret;
     SwfdecAsContext *context = swfdec_gc_object_get_context (custom_function);
     swfdec_as_function_call (custom_function, NULL, 2, argv, &ret);
-    swfdec_as_context_run (context);
     retval = swfdec_as_value_to_integer (context, &ret);
   }
   else if (options & SORT_OPTION_NUMERIC &&

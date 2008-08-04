@@ -112,7 +112,6 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
   } else {
     swfdec_as_function_call (SWFDEC_AS_FUNCTION (interval->object), NULL, 
 	interval->n_args, interval->args, &ret);
-    swfdec_as_context_run (context);
   }
   swfdec_sandbox_unuse (interval->sandbox);
 }

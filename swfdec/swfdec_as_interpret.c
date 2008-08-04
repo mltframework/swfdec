@@ -2607,7 +2607,7 @@ swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (SWFDEC_IS_AS_VALUE (exception_value));
 
-  cx = swfdec_gc_object_get_context (frame);
+  cx = swfdec_gc_object_get_context (frame->target);
 
   // finally has ended and we had exception stored, throw it
   if (!cx->exception)
@@ -2626,7 +2626,7 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (try_data != NULL);
 
-  cx = swfdec_gc_object_get_context (frame);
+  cx = swfdec_gc_object_get_context (frame->target);
 
   if (try_data->scope_object) {
     g_assert (frame->scope_chain->data == try_data->scope_object);
@@ -2671,7 +2671,7 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
     return;
   }
 
-  cx = swfdec_gc_object_get_context (frame);
+  cx = swfdec_gc_object_get_context (frame->target);
 
   if (swfdec_as_context_catch (cx, &val))
   {

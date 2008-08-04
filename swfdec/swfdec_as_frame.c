@@ -87,7 +87,7 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
     iter->current = NULL;
     return NULL;
   }
-  context = swfdec_gc_object_get_context (frame);
+  context = swfdec_gc_object_get_context (frame->target);
   if (frame->argv) {
     iter->stack = NULL;
     iter->current = (SwfdecAsValue *) frame->argv;
@@ -134,7 +134,7 @@ swfdec_as_stack_iterator_init (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame
   g_return_val_if_fail (iter != NULL, NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
 
-  context = swfdec_gc_object_get_context (frame);
+  context = swfdec_gc_object_get_context (frame->target);
   iter->i = 0;
   stack = context->stack;
   if (context->frame == frame) {
@@ -378,7 +378,7 @@ swfdec_as_frame_init (SwfdecAsFrame *frame)
 static void
 swfdec_as_frame_load (SwfdecAsFrame *frame)
 {
-  SwfdecAsContext *context = swfdec_gc_object_get_context (frame);
+  SwfdecAsContext *context = swfdec_gc_object_get_context (frame->target);
 
   frame->stack_begin = context->cur;
   context->base = frame->stack_begin;
@@ -447,7 +447,7 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
   SwfdecAsFrame *next;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  context = swfdec_gc_object_get_context (frame);
+  context = swfdec_gc_object_get_context (frame->target);
   g_return_if_fail (frame == context->frame);
 
   /* save return value in case it was on the stack somewhere */
@@ -558,7 +558,7 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
   g_return_val_if_fail (SWFDEC_IS_AS_FRAME (frame), NULL);
   g_return_val_if_fail (variable != NULL, NULL);
 
-  cx = swfdec_gc_object_get_context (frame);
+  cx = swfdec_gc_object_get_context (frame->target);
 
   for (walk = frame->scope_chain; walk; walk = walk->next) {
     if (swfdec_as_object_get_variable_and_flags (walk->data, variable, value, 
@@ -581,7 +581,7 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
   /* FIXME: ignored on version 4, but should it never be created instead? */
   if (cx->version > 4 && swfdec_as_object_get_variable_and_flags (cx->global,
 	variable, value, flags, pobject))
-    return swfdec_gc_object_get_context (frame)->global;
+    return cx->global;
 
   return NULL;
 }
@@ -642,7 +642,7 @@ swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
   if (ret)
     return ret;
   /* 2) the global object */
-  return swfdec_as_object_delete_variable (swfdec_gc_object_get_context (frame)->global, variable);
+  return swfdec_as_object_delete_variable (swfdec_gc_object_get_context (frame->target)->global, variable);
 }
 
 /**
@@ -681,7 +681,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
 
   /* setup */
-  context = swfdec_gc_object_get_context (frame);
+  context = swfdec_gc_object_get_context (frame->target);
   script = frame->script;
   if (frame->script == NULL)
     goto out;
@@ -824,7 +824,7 @@ swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
   SwfdecAsContext *cx;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
-  cx = swfdec_gc_object_get_context (frame);
+  cx = swfdec_gc_object_get_context (frame->target);
   g_return_if_fail (cx->exception);
 
   /* pop blocks in the hope that we are inside a Try block */

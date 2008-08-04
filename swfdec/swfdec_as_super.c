@@ -157,7 +157,7 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
   
   if (frame->super != NULL)
     return;
-  context = swfdec_gc_object_get_context (frame);
+  context = swfdec_gc_object_get_context (thisp);
   if (context->version <= 5)
     return;
 
@@ -199,7 +199,7 @@ swfdec_as_super_new_chain (SwfdecAsFrame *frame, SwfdecAsSuper *super,
   ref = super->object->prototype;
   if (ref == NULL)
     return;
-  context = swfdec_gc_object_get_context (frame);
+  context = swfdec_gc_object_get_context (super);
   if (function_name && context->version > 6) {
     /* skip prototypes to find the next one that has this function defined */
     SwfdecAsObject *res;

@@ -176,7 +176,7 @@ swfdec_as_function_do_call (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsFunction *fun;
-  SwfdecAsObject *thisp;
+  SwfdecAsObject *thisp = NULL;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "|O", &thisp);
 
@@ -199,7 +199,7 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsValue *argv_pass = NULL;
   int length = 0;
   SwfdecAsFunction *fun;
-  SwfdecAsObject *thisp;
+  SwfdecAsObject *thisp = NULL;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_FUNCTION, &fun, "|O", &thisp);
 

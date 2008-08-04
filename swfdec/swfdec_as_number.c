@@ -119,7 +119,7 @@ swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsNumber *num;
   SwfdecAsValue val;
   const char *s;
-  int radix;
+  int radix = 10;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_NUMBER, &num, "|i", &radix);
 

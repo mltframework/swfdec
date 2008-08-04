@@ -286,63 +286,43 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       return FALSE;
     *result = object;
   }
-  for (i = 0; *args; i++, args++) {
-    if (!optional && i >= argc && *args != '|')
-      break;
+  for (i = 0; *args && i < argc; i++, args++) {
     switch (*args) {
       case 'v':
 	{
 	  SwfdecAsValue *val = va_arg (varargs, SwfdecAsValue *);
-	  if (i < argc)
-	    *val = argv[i];
-	  else
-	    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
+	  *val = argv[i];
 	}
 	break;
       case 'b':
 	{
 	  gboolean *b = va_arg (varargs, gboolean *);
-	  if (i < argc)
-	    *b = swfdec_as_value_to_boolean (cx, &argv[i]);
-	  else
-	    *b = FALSE;
+	  *b = swfdec_as_value_to_boolean (cx, &argv[i]);
 	}
 	break;
       case 'i':
 	{
 	  int *j = va_arg (varargs, int *);
-	  if (i < argc)
-	    *j = swfdec_as_value_to_integer (cx, &argv[i]);
-	  else
-	    *j = 0;
+	  *j = swfdec_as_value_to_integer (cx, &argv[i]);
 	}
 	break;
       case 'n':
 	{
 	  double *d = va_arg (varargs, double *);
-	  if (i < argc)
-	    *d = swfdec_as_value_to_number (cx, &argv[i]);
-	  else
-	    *d = 0;
+	  *d = swfdec_as_value_to_number (cx, &argv[i]);
 	}
 	break;
       case 's':
 	{
 	  const char **s = va_arg (varargs, const char **);
-	  if (i < argc)
-	    *s = swfdec_as_value_to_string (cx, &argv[i]);
-	  else
-	    *s = SWFDEC_AS_STR_EMPTY;
+	  *s = swfdec_as_value_to_string (cx, &argv[i]);
 	}
 	break;
       case 'o':
       case 'O':
 	{
 	  SwfdecAsObject **o = va_arg (varargs, SwfdecAsObject **);
-	  if (i < argc)
-	    *o = swfdec_as_value_to_object (cx, &argv[i]);
-	  else
-	    *o = NULL;
+	  *o = swfdec_as_value_to_object (cx, &argv[i]);
 	  if (*o == NULL && *args != 'O')
 	    return FALSE;
 	}
@@ -357,7 +337,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
 	return FALSE;
     }
   }
-  if (*args)
+  if (*args && !optional && *args != '|')
     return FALSE;
   return TRUE;
 }

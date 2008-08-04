@@ -350,8 +350,8 @@ swfdec_sprite_movie_attachBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecMovie *parent;
   SwfdecBitmapData *bitmap;
-  const char *snapping;
-  gboolean smoothing;
+  const char *snapping = SWFDEC_AS_STR_auto;
+  gboolean smoothing = FALSE;
   int depth;
   SwfdecMovie *movie;
 

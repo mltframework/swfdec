@@ -119,7 +119,7 @@ swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
 {
   SwfdecTestSocket *sock;
   SwfdecBuffer *buffer;
-  gsize len, depth;
+  gsize len = 0, depth;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "|i", &len);
 

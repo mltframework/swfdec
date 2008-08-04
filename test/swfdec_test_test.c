@@ -236,7 +236,7 @@ swfdec_test_test_reset (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestTest *test;
-  const char *filename;
+  const char *filename = NULL;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
 
@@ -270,7 +270,7 @@ swfdec_test_test_mouse_press (SwfdecAsContext *cx, SwfdecAsObject *object, guint
 {
   SwfdecTestTest *test;
   double x, y;
-  int button;
+  int button = 1;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn|i", &x, &y, &button);
 
@@ -292,7 +292,7 @@ swfdec_test_test_mouse_release (SwfdecAsContext *cx, SwfdecAsObject *object, gui
 {
   SwfdecTestTest *test;
   double x, y;
-  int button;
+  int button = 1;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "nn|i", &x, &y, &button);
 
@@ -314,7 +314,7 @@ swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
 {
   SwfdecTestTest *test;
   SwfdecAsObject *image;
-  int x, y, w, h;
+  int x = 0, y = 0, w = 0, h = 0;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|iiii", &x, &y, &w, &h);
 
@@ -343,11 +343,11 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestTest *test;
-  const char *filename;
+  const char *filename = NULL;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
 
-  swfdec_test_do_reset (test, filename[0] ? filename : NULL);
+  swfdec_test_do_reset (test, filename);
 }
 
 SWFDEC_TEST_FUNCTION ("Test_get_launched", swfdec_test_test_get_launched, 0)

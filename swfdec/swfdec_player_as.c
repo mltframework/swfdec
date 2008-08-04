@@ -293,7 +293,7 @@ ASSetNativeAccessor (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsVariableFlag flags;
   const char *s;
   char **names;
-  guint i, x, y;
+  guint i, x, y = 0;
 
   SWFDEC_AS_CHECK (0, NULL, "ois|i", &target, &x, &s, &y);
 

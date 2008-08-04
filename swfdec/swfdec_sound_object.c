@@ -392,8 +392,8 @@ swfdec_sound_object_start (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
 {
   SwfdecSoundObject *sound;
   SwfdecActor *actor;
-  double offset;
-  int loops;
+  double offset = 0;
+  int loops = 1;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SOUND_OBJECT, &sound, "|ni", &offset, &loops);
   actor = swfdec_sound_object_get_actor (sound);
@@ -404,7 +404,7 @@ swfdec_sound_object_start (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
     SWFDEC_INFO ("no sound attached when calling Sound.start()");
     return;
   }
-  if (argc < 2 || loops <= 0)
+  if (loops <= 0)
     loops = 1;
   if (offset < 0 || !isfinite (offset))
     offset = 0;
@@ -418,7 +418,7 @@ swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecSoundObject *sound;
-  const char *name;
+  const char *name = NULL;
   SwfdecSound *stopme;
   SwfdecActor *actor;
 
@@ -427,7 +427,7 @@ swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
   if (actor == NULL)
     return;
 
-  if (argc > 0) {
+  if (name) {
     stopme = swfdec_sound_object_get_sound (sound, name);
     if (stopme == NULL)
       return;

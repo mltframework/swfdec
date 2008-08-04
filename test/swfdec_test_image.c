@@ -211,10 +211,7 @@ swfdec_test_image_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
   SwfdecTestImage *image;
   const char *filename;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "|s", &filename);
-
-  if (filename[0] == '\0')
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "s", &filename);
 
   image->surface = cairo_image_surface_create_from_png (filename);
 }

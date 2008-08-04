@@ -140,7 +140,7 @@ void
 swfdec_test_buffer_diff (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
-  SwfdecTestBuffer *buffer, *compare;
+  SwfdecTestBuffer *buffer, *compare = NULL;
   GError *error = NULL;
   char *ret;
   
@@ -215,7 +215,7 @@ swfdec_test_buffer_sub (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SwfdecBuffer *b;
   SwfdecTestBuffer *buffer;
   SwfdecAsObject *o;
-  guint offset, length;
+  guint offset, length = 0;
   
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "i|i", &offset, &length);
 

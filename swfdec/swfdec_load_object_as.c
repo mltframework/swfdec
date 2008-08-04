@@ -181,7 +181,7 @@ void
 swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  const char *url, *target, *method, *data;
+  const char *url, *target = SWFDEC_AS_STR_EMPTY, *method = NULL, *data;
   guint header_count;
   char **header_names, **header_values;
   SwfdecAsValue val;
@@ -216,7 +216,7 @@ void
 swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  const char *url, *data, *method;
+  const char *url, *data, *method = NULL;
   guint header_count;
   char **header_names, **header_values;
   SwfdecAsObject *target;

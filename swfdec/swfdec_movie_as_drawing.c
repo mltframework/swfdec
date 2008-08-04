@@ -81,7 +81,7 @@ swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecMovie *movie;
   SwfdecDraw *draw;
-  int color, alpha;
+  int color, alpha = 100;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|ii", &color, &alpha);
   movie->draw_fill = NULL;
@@ -90,9 +90,6 @@ swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
     color = 0;
   } else {
     color = color & 0xFFFFFF;
-    if (argc <= 1) {
-      alpha = 255;
-    }
     color = SWFDEC_COLOR_FROM_COLOR_ALPHA (color, alpha);
   }
   draw = SWFDEC_DRAW (swfdec_pattern_new_color (color));
@@ -188,13 +185,9 @@ swfdec_sprite_movie_beginGradientFill (SwfdecAsContext *cx, SwfdecAsObject *obje
   gboolean radial;
   int i, len;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|sOOOO", &s, &colors, &alphas, &ratios, &matrix);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "soooo", &s, &colors, &alphas, &ratios, &matrix);
   movie->draw_fill = NULL;
   
-  if (colors == NULL || alphas == NULL || ratios == NULL || matrix == NULL) {
-    SWFDEC_ERROR ("could not convert one of the parameters to an object");
-    return;
-  }
   if (s == SWFDEC_AS_STR_linear) {
     radial = FALSE;
   } else if (s == SWFDEC_AS_STR_radial) {
@@ -268,7 +261,7 @@ swfdec_sprite_movie_moveTo (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie;
-  double x, y;
+  double x = 0, y = 0;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|nn", &x, &y);
 
@@ -357,15 +350,13 @@ swfdec_sprite_movie_lineStyle (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecMovie *movie;
   SwfdecStroke *stroke;
-  int width, color, alpha;
+  int width, color = 0, alpha = 100;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|iii", &width, &color, &alpha);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "i|ii", &width, &color, &alpha);
 
   movie->draw_line = NULL;
-  if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
-  if (argc < 3)
-    alpha = 100;
   if (argc > 3) {
     SWFDEC_FIXME ("implement Flash 8 arguments to lineStyle");
   }

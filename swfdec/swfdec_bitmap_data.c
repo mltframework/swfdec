@@ -406,10 +406,10 @@ void
 swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecBitmapData *bitmap, *source, *alpha;
-  SwfdecAsObject *recto, *apt, *pt;
+  SwfdecBitmapData *bitmap, *source, *alpha = NULL;
+  SwfdecAsObject *recto, *pt, *apt = NULL;
   SwfdecRectangle rect;
-  gboolean copy_alpha;
+  gboolean copy_alpha = FALSE;
   cairo_t *cr;
   int x, y;
 
@@ -538,7 +538,7 @@ void
 swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsObject *o, *matrix, *trans;
+  SwfdecAsObject *o, *matrix = NULL, *trans = NULL;
   cairo_t *cr;
   SwfdecColorTransform ctrans;
   SwfdecBitmapData *bitmap;
@@ -791,8 +791,8 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecBitmapData *bitmap;
   int w, h;
-  gboolean transparent;
-  guint color;
+  gboolean transparent = TRUE;
+  guint color = 0;
 
   if (!swfdec_as_context_is_constructing (cx))
     return;
@@ -804,8 +804,6 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     SWFDEC_FIXME ("the constructor should return undefined here");
     return;
   }
-  if (argc < 3)
-    transparent = TRUE;
 
   if (!swfdec_as_context_try_use_mem (cx, w * h * 4))
     return;

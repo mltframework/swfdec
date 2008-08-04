@@ -764,10 +764,9 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 
 /* stack looks like this: [ function, this, arg1, arg2, ... ] */
 /* stack must be at least 2 elements big */
-static SwfdecAsFrame *
-swfdec_action_call (SwfdecAsContext *cx, guint n_args)
+static gboolean
+swfdec_action_call (SwfdecAsContext *cx, guint n_args, SwfdecAsObject *super)
 {
-  SwfdecAsFrame *frame;
   SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
@@ -785,14 +784,12 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args)
   /* sanitize argument count */
   if (n_args >= swfdec_as_stack_get_size (cx))
     n_args = swfdec_as_stack_get_size (cx);
-  frame = swfdec_as_function_call_no_preload (fun, thisp, n_args, NULL, NULL);
-  if (frame == NULL)
-    return NULL;
-  if (SWFDEC_IS_AS_SUPER (fun)) {
+  if (super == NULL && SWFDEC_IS_AS_SUPER (fun)) {
     SWFDEC_LOG ("replacing super object on frame");
-    swfdec_as_super_new_chain (frame, SWFDEC_AS_SUPER (fun), NULL);
+    super = swfdec_as_super_resolve_property (SWFDEC_AS_SUPER (fun), NULL);
   }
-  return frame;
+  swfdec_as_function_call_full (fun, thisp, FALSE, super, n_args, NULL, NULL);
+  return TRUE;
 
 error:
   n_args += 2;
@@ -800,7 +797,7 @@ error:
     n_args = swfdec_as_stack_get_size (cx);
   swfdec_as_stack_pop_n (cx, n_args);
   SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_push (cx));
-  return NULL;
+  return FALSE;
 }
 
 static void
@@ -824,11 +821,7 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
     SWFDEC_AS_VALUE_SET_NULL (thisp);
     SWFDEC_AS_VALUE_SET_UNDEFINED (fun);
   }
-  frame = swfdec_action_call (cx, n_args);
-  if (frame) {
-    swfdec_as_frame_preload (frame);
-    swfdec_as_context_run (cx);
-  } else {
+  if (!swfdec_action_call (cx, n_args, NULL)) {
     SWFDEC_WARNING ("no function named %s", name);
   }
 }
@@ -836,9 +829,8 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
 static void
 swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsFrame *frame = cx->frame;
   SwfdecAsValue *val;
-  SwfdecAsObject *obj;
+  SwfdecAsObject *obj, *super;
   SwfdecAsObject *pobj = NULL;
   guint n_args;
   const char *name;
@@ -868,20 +860,19 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 2));
   }
   swfdec_as_stack_pop (cx);
-  frame = swfdec_action_call (cx, n_args);
-  if (frame) {
-    /* setup super to point to the right prototype */
-    if (SWFDEC_IS_AS_SUPER (obj)) {
-      swfdec_as_super_new_chain (frame, SWFDEC_AS_SUPER (obj), name);
-    } else if (cx->version > 6) {
-      swfdec_as_super_new (frame, obj, pobj == obj ? obj->prototype : pobj);
-    } else {
-      swfdec_as_super_new (frame, obj, obj->prototype);
-    }
-    swfdec_as_frame_preload (frame);
-    swfdec_as_context_run (cx);
+  /* setup super to point to the right prototype */
+  if (SWFDEC_IS_AS_SUPER (obj)) {
+    super = swfdec_as_super_resolve_property (SWFDEC_AS_SUPER (obj), name);
+  } else if (cx->version > 6 && pobj != obj) {
+    super = pobj;
+  } else if (obj) {
+    super = obj->prototype;
   } else {
-    SWFDEC_WARNING ("no function named \"%s\" on object %s", name, obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
+    super = NULL;
+  }
+  if (!swfdec_action_call (cx, n_args, super)) {
+    SWFDEC_WARNING ("no function named \"%s\" on object %s", name, 
+	obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
   }
 }
 

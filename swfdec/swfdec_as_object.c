@@ -1319,7 +1319,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
-  swfdec_as_function_call_full (fun, new, TRUE, NULL, n_args, args, return_value);
+  swfdec_as_function_call_full (fun, new, TRUE, new->prototype, n_args, args, return_value);
 }
 
 /**

@@ -209,12 +209,13 @@ swfdec_as_function_call_full (SwfdecAsFunction *function, SwfdecAsObject *thisp,
   if (frame == NULL)
     return;
   frame->construct = construct;
-  if (thisp != NULL) {
-    swfdec_as_super_new (frame, thisp, super_reference ? super_reference : thisp->prototype);
+  if (super_reference == NULL) {
+    /* don't create a super object */
+  } else if (thisp != NULL) {
+    swfdec_as_super_new (frame, thisp, super_reference);
   } else {
     // FIXME: Does the super object really reference the function when thisp is NULL?
-    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), 
-	super_reference ? super_reference : SWFDEC_AS_OBJECT (function)->prototype);
+    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), super_reference);
   }
   swfdec_as_frame_preload (frame);
   swfdec_as_context_run (swfdec_gc_object_get_context (function));

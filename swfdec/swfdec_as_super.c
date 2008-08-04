@@ -163,7 +163,7 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
 
   super = g_object_new (SWFDEC_TYPE_AS_SUPER, "context", context, NULL);
   frame->super = SWFDEC_AS_OBJECT (super);
-  super->thisp = thisp;
+  super->thisp = swfdec_as_object_resolve (thisp);
   if (context->version <= 5) {
     super->object = NULL;
   } else {
@@ -171,46 +171,31 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
   }
 }
 
-/**
- * swfdec_as_super_new_chain:
- * @frame: the frame that is called
- * @super: the super object to chain from
- * @chain_to: object to chain to. Must be in the prototype chain of @super. Or
- *            %NULL to just use the super object's prototype
- *
- * This function creates a super object relative to the given @super object. It
- * is only needed when calling functions on the @super object.
- **/
-void
-swfdec_as_super_new_chain (SwfdecAsFrame *frame, SwfdecAsSuper *super,
-    const char *function_name)
+SwfdecAsObject *
+swfdec_as_super_resolve_property (SwfdecAsSuper *super, const char *name)
 {
   SwfdecAsObject *ref;
   SwfdecAsContext *context;
 	  
-  g_return_if_fail (frame != NULL);
-  g_return_if_fail (SWFDEC_IS_AS_SUPER (super));
+  g_return_val_if_fail (SWFDEC_IS_AS_SUPER (super), NULL);
 
-  if (frame->super != NULL)
-    return;
-  
   if (super->object == NULL)
-    return;
+    return NULL;
   ref = super->object->prototype;
   if (ref == NULL)
-    return;
+    return NULL;
   context = swfdec_gc_object_get_context (super);
-  if (function_name && context->version > 6) {
+  if (name && context->version > 6) {
     /* skip prototypes to find the next one that has this function defined */
     SwfdecAsObject *res;
     if (swfdec_as_object_get_variable_and_flags (ref, 
-         function_name, NULL, NULL, &res) && ref != res) {
+         name, NULL, NULL, &res) && ref != res) {
       while (ref->prototype != res) {
         ref = ref->prototype;
-        g_return_if_fail (ref);
+        g_assert (ref);
       }
     }
   }
-  swfdec_as_super_new (frame, super->thisp, ref);
+  return ref;
 }
 

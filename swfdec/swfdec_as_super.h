@@ -51,9 +51,9 @@ GType		swfdec_as_super_get_type	(void);
 void		swfdec_as_super_new		(SwfdecAsFrame *	frame,
 						 SwfdecAsObject *	thisp,
 						 SwfdecAsObject *	ref);
-void		swfdec_as_super_new_chain	(SwfdecAsFrame *	frame,
-						 SwfdecAsSuper *	super,
-						 const char *		function_name);
+SwfdecAsObject *swfdec_as_super_resolve_property(SwfdecAsSuper *	super,
+						 const char *		name);
+
 
 G_END_DECLS
 #endif

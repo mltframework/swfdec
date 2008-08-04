@@ -168,9 +168,27 @@ swfdec_as_function_old_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, 
 }
 
 /**
- * swfdec_as_function_old_call:
+ * swfdec_as_function_call:
  * @function: the #SwfdecAsFunction to call
  * @thisp: this argument to use for the call or %NULL for none
+ * @n_args: number of arguments to pass to the function
+ * @args: the arguments to pass or %NULL to read the last @n_args stack elements.
+ *        The memory must be unchanged until the function call has completed.
+ *        This is after the call to swfdec_as_context_run () has finished.
+ * @return_value: pointer for return value or %NULL to push the return value to 
+ *                the stack
+ *
+ * Calls the given function. This is a macro that resolves to 
+ * swfdec_as_function_call_full().
+ **/
+/**
+ * swfdec_as_function_call_full:
+ * @function: the #SwfdecAsFunction to call
+ * @thisp: this argument to use for the call or %NULL for none
+ * @construct: call this function as a constructor. This is only relevant for 
+ *             native functions.
+ * @super_reference: The object to be referenced by the super object in this 
+ *                   function call or %NULL to use the default.
  * @n_args: number of arguments to pass to the function
  * @args: the arguments to pass or %NULL to read the last @n_args stack elements.
  *        The memory must be unchanged until the function call has completed.
@@ -181,13 +199,28 @@ swfdec_as_function_old_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, 
  * Calls the given function.
  **/
 void
-swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args,
+swfdec_as_function_call_full (SwfdecAsFunction *function, SwfdecAsObject *thisp, 
+    gboolean construct, SwfdecAsObject *super_reference, guint n_args, 
     const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
+  SwfdecAsFrame *frame;
+
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
   g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
+  g_return_if_fail (super_reference == NULL || SWFDEC_IS_AS_OBJECT (super_reference));
 
-  swfdec_as_function_old_call (function, thisp, n_args, args, return_value);
+  frame = swfdec_as_function_call_no_preload (function, thisp, n_args, args, return_value);
+  if (frame == NULL)
+    return;
+  frame->construct = construct;
+  if (thisp != NULL) {
+    swfdec_as_super_new (frame, thisp, super_reference ? super_reference : thisp->prototype);
+  } else {
+    // FIXME: Does the super object really reference the function when thisp is NULL?
+    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), 
+	super_reference ? super_reference : SWFDEC_AS_OBJECT (function)->prototype);
+  }
+  swfdec_as_frame_preload (frame);
   swfdec_as_context_run (swfdec_gc_object_get_context (function));
 }
 

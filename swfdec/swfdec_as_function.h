@@ -55,8 +55,12 @@ void			swfdec_as_function_old_call	(SwfdecAsFunction *	function,
 							 guint			n_args,
 							 const SwfdecAsValue *	args,
 							 SwfdecAsValue *	return_value);
-void			swfdec_as_function_call	(SwfdecAsFunction *	function,
+#define swfdec_as_function_call(function, thisp, n_args, args, return_value) \
+  swfdec_as_function_call_full (function, thisp, FALSE, NULL, n_args, args, return_value)
+void			swfdec_as_function_call_full	(SwfdecAsFunction *	function,
 							 SwfdecAsObject *	thisp,
+							 gboolean		construct,
+							 SwfdecAsObject *	super_reference,
 							 guint			n_args,
 							 const SwfdecAsValue *	args,
 							 SwfdecAsValue *	return_value);

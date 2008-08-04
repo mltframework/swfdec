@@ -53,7 +53,7 @@
 G_DEFINE_TYPE (SwfdecAsNativeFunction, swfdec_as_native_function, SWFDEC_TYPE_AS_FUNCTION)
 
 static SwfdecAsFrame *
-swfdec_as_native_function_call (SwfdecAsFunction *function)
+swfdec_as_native_function_old_call (SwfdecAsFunction *function)
 {
   SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (function);
   SwfdecAsFrame *frame;
@@ -107,7 +107,7 @@ swfdec_as_native_function_class_init (SwfdecAsNativeFunctionClass *klass)
 
   asobject_class->debug = swfdec_as_native_function_debug;
 
-  function_class->call = swfdec_as_native_function_call;
+  function_class->old_call = swfdec_as_native_function_old_call;
 }
 
 static void

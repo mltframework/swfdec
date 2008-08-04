@@ -32,7 +32,7 @@
 G_DEFINE_TYPE (SwfdecAsScriptFunction, swfdec_as_script_function, SWFDEC_TYPE_AS_FUNCTION)
 
 static SwfdecAsFrame *
-swfdec_as_script_function_call (SwfdecAsFunction *function)
+swfdec_as_script_function_old_call (SwfdecAsFunction *function)
 {
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (function);
   SwfdecAsFrame *frame;
@@ -106,7 +106,7 @@ swfdec_as_script_function_class_init (SwfdecAsScriptFunctionClass *klass)
 
   asobject_class->debug = swfdec_as_script_function_debug;
 
-  function_class->call = swfdec_as_script_function_call;
+  function_class->old_call = swfdec_as_script_function_old_call;
 }
 
 static void

@@ -35,7 +35,7 @@
 G_DEFINE_TYPE (SwfdecAsSuper, swfdec_as_super, SWFDEC_TYPE_AS_FUNCTION)
 
 static SwfdecAsFrame *
-swfdec_as_super_call (SwfdecAsFunction *function)
+swfdec_as_super_old_call (SwfdecAsFunction *function)
 {
   SwfdecAsSuper *super = SWFDEC_AS_SUPER (function);
   SwfdecAsValue val;
@@ -54,7 +54,7 @@ swfdec_as_super_call (SwfdecAsFunction *function)
     return NULL;
 
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (fun);
-  frame = klass->call (fun);
+  frame = klass->old_call (fun);
   if (frame == NULL)
     return NULL;
   /* We set the real function here. 1) swfdec_as_context_run() requires it. 
@@ -137,7 +137,7 @@ swfdec_as_super_class_init (SwfdecAsSuperClass *klass)
   asobject_class->del = swfdec_as_super_delete;
   asobject_class->resolve = swfdec_as_super_resolve;
 
-  function_class->call = swfdec_as_super_call;
+  function_class->old_call = swfdec_as_super_old_call;
 }
 
 static void

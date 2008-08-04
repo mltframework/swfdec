@@ -114,8 +114,8 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
 
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
-  g_assert (klass->call);
-  frame = klass->call (function);
+  g_assert (klass->old_call);
+  frame = klass->old_call (function);
   /* FIXME: figure out what to do in these situations?
    * It's a problem when called inside swfdec_as_function_call () as the
    * user of that function expects success, but super may fail here */

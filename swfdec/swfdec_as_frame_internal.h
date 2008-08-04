@@ -46,7 +46,7 @@ struct _SwfdecAsFrame {
   GArray *		blocks;		/* blocks we have entered (like With) */
   SwfdecAsObject *	target;		/* target to use as last object in scope chain or for SetVariable */
   SwfdecAsObject *	original_target;/* original target (used when resetting target) */
-  gboolean		is_local;	/* TRUE if this frame takes local variables */
+  SwfdecAsObject *	activation;	/* activation object or NULL if the frame takes no local variables */
   SwfdecAsValue *	registers;	/* the registers */
   guint			n_registers;	/* number of allocated registers */
   SwfdecConstantPool *	constant_pool;	/* constant pool currently in use */

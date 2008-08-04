@@ -1205,6 +1205,8 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
     return;
   swfdec_as_frame_set_this (frame, object);
   swfdec_as_frame_preload (frame);
+  /* we take no prisoners */
+  frame->activation = NULL;
   swfdec_as_context_run (context);
   swfdec_as_stack_pop (context);
 }

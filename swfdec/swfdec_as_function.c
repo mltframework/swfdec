@@ -125,7 +125,6 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
   if (thisp != NULL && frame->thisp == NULL) {
     swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
   }
-  frame->is_local = TRUE;
   frame->argc = n_args;
   frame->argv = args;
   frame->return_value = return_value;

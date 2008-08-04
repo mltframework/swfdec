@@ -401,7 +401,6 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
   frame->script = swfdec_script_ref (script);
   SWFDEC_DEBUG ("new frame for function %s", script->name);
   frame->pc = script->main;
-  frame->scope_chain = g_slist_prepend (frame->scope_chain, frame);
   frame->n_registers = script->n_registers;
   frame->registers = g_slice_alloc0 (sizeof (SwfdecAsValue) * frame->n_registers);
   if (script->constant_pool) {
@@ -608,8 +607,8 @@ swfdec_as_frame_set_variable_and_flags (SwfdecAsFrame *frame, const char *variab
     }
   }
   if (set == NULL) {
-    if (local && frame->is_local) {
-      set = SWFDEC_AS_OBJECT (frame);
+    if (local && frame->activation) {
+      set = frame->activation;
     } else {
       set = frame->target;
     }
@@ -682,11 +681,13 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
 
   /* setup */
-  object = SWFDEC_AS_OBJECT (frame);
   context = swfdec_gc_object_get_context (frame);
   script = frame->script;
   if (frame->script == NULL)
     goto out;
+  frame->activation = swfdec_as_object_new_empty (context);
+  object = frame->activation;
+  frame->scope_chain = g_slist_prepend (frame->scope_chain, object);
 
   /* create arguments and super object if necessary */
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {

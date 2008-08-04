@@ -286,29 +286,15 @@ swfdec_as_frame_free (SwfdecAsFrame *frame)
   }
 }
 
-static void
-swfdec_as_frame_load (SwfdecAsFrame *frame, SwfdecAsContext *context)
-{
-  frame->stack_begin = context->cur;
-  context->base = frame->stack_begin;
-  frame->next = context->frame;
-  context->frame = frame;
-  context->call_depth++;
-}
-
 SwfdecAsFrame *
 swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
 {
   SwfdecAsFrame *frame;
-  gsize size;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (script != NULL, NULL);
   
-  size = sizeof (SwfdecAsFrame) + sizeof (SwfdecAsValue) * script->n_registers;
-  frame = g_new0 (SwfdecAsFrame, 1);
-  frame->blocks = g_array_new (FALSE, FALSE, sizeof (SwfdecAsFrameBlock));
-  frame->block_end = (gpointer) -1;
+  frame = swfdec_as_frame_new_native (context);
   frame->script = swfdec_script_ref (script);
   SWFDEC_DEBUG ("new frame for function %s", script->name);
   frame->pc = script->main;
@@ -321,7 +307,6 @@ swfdec_as_frame_new (SwfdecAsContext *context, SwfdecScript *script)
       SWFDEC_ERROR ("couldn't create constant pool");
     }
   }
-  swfdec_as_frame_load (frame, context);
   return frame;
 }
 
@@ -329,16 +314,19 @@ SwfdecAsFrame *
 swfdec_as_frame_new_native (SwfdecAsContext *context)
 {
   SwfdecAsFrame *frame;
-  gsize size;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   
-  size = sizeof (SwfdecAsFrame);
   frame = g_new0 (SwfdecAsFrame, 1);
+
   frame->blocks = g_array_new (FALSE, FALSE, sizeof (SwfdecAsFrameBlock));
   frame->block_end = (gpointer) -1;
-  SWFDEC_DEBUG ("new native frame");
-  swfdec_as_frame_load (frame, context);
+  frame->stack_begin = context->cur;
+  context->base = frame->stack_begin;
+  frame->next = context->frame;
+  context->frame = frame;
+  context->call_depth++;
+
   return frame;
 }
 

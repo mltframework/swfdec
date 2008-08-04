@@ -2057,6 +2057,12 @@ swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *da
 }
 
 static void
+swfdec_action_end (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
+{
+  swfdec_as_frame_return (cx->frame, NULL);
+}
+
+static void
 swfdec_action_return (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   swfdec_as_frame_return (cx->frame, swfdec_as_stack_pop (cx));
@@ -3148,6 +3154,7 @@ swfdec_action_print_wait_for_frame (guint action, const guint8 *data, guint len)
 
 const SwfdecActionSpec swfdec_as_actions[256] = {
   /* version 1 */
+  [SWFDEC_AS_ACTION_END] = { "End", NULL, 0, 0, swfdec_action_end, 1 },
   [SWFDEC_AS_ACTION_NEXT_FRAME] = { "NextFrame", NULL, 0, 0, swfdec_action_next_frame, 1 },
   [SWFDEC_AS_ACTION_PREVIOUS_FRAME] = { "PreviousFrame", NULL, 0, 0, swfdec_action_previous_frame, 1 },
   [SWFDEC_AS_ACTION_PLAY] = { "Play", NULL, 0, 0, swfdec_action_play, 1 },

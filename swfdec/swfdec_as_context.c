@@ -912,10 +912,6 @@ swfdec_as_context_run (SwfdecAsContext *context)
 
     /* decode next action */
     action = *pc;
-    if (action == 0) {
-      swfdec_as_frame_return (frame, NULL);
-      goto out;
-    }
     /* invoke debugger if there is one */
     if (step) {
       frame->pc = pc;

@@ -1265,7 +1265,6 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   SwfdecAsObject *new;
   SwfdecAsContext *context;
   SwfdecAsFunction *cur;
-  SwfdecAsFrame *frame;
   guint i, size = 0;
   GType type = 0;
 
@@ -1320,11 +1319,7 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___constructor__, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
-  frame = swfdec_as_function_call_no_preload (fun, new, n_args, args, return_value);
-  frame->construct = TRUE;
-  swfdec_as_super_new (frame, new, new->prototype);
-  swfdec_as_frame_preload (frame);
-  swfdec_as_context_run (context);
+  swfdec_as_function_call_full (fun, new, TRUE, NULL, n_args, args, return_value);
 }
 
 /**

@@ -2599,15 +2599,12 @@ swfdec_action_try_data_free (gpointer data)
 }
 
 static void
-swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
+swfdec_action_try_end_finally (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpointer data)
 {
   SwfdecAsValue *exception_value = data;
-  SwfdecAsContext *cx;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (SWFDEC_IS_AS_VALUE (exception_value));
-
-  cx = swfdec_gc_object_get_context (frame->target);
 
   // finally has ended and we had exception stored, throw it
   if (!cx->exception)
@@ -2617,16 +2614,13 @@ swfdec_action_try_end_finally (SwfdecAsFrame *frame, gpointer data)
 }
 
 static void
-swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
+swfdec_action_try_end_catch (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpointer data)
 {
   TryData *try_data = data;
-  SwfdecAsContext *cx;
   SwfdecAsValue *exception_value, val;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
   g_return_if_fail (try_data != NULL);
-
-  cx = swfdec_gc_object_get_context (frame->target);
 
   if (try_data->scope_object) {
     g_assert (frame->scope_chain->data == try_data->scope_object);
@@ -2655,10 +2649,9 @@ swfdec_action_try_end_catch (SwfdecAsFrame *frame, gpointer data)
 }
 
 static void
-swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
+swfdec_action_try_end_try (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpointer data)
 {
   TryData *try_data = data;
-  SwfdecAsContext *cx;
   SwfdecAsValue val;
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
@@ -2667,11 +2660,9 @@ swfdec_action_try_end_try (SwfdecAsFrame *frame, gpointer data)
   // if we don't have a catch block, we handle try block exactly like it was
   // catch block
   if (!try_data->catch_start) {
-    swfdec_action_try_end_catch (frame, try_data);
+    swfdec_action_try_end_catch (cx, frame, try_data);
     return;
   }
-
-  cx = swfdec_gc_object_get_context (frame->target);
 
   if (swfdec_as_context_catch (cx, &val))
   {
@@ -2762,7 +2753,7 @@ swfdec_action_try (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
 }
 
 static void
-swfdec_action_pop_with (SwfdecAsFrame *frame, gpointer with_object)
+swfdec_action_pop_with (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpointer with_object)
 {
   g_assert (frame->scope_chain->data == with_object);
   frame->scope_chain = g_slist_delete_link (frame->scope_chain, frame->scope_chain);

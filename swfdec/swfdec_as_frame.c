@@ -238,7 +238,7 @@ swfdec_as_frame_push_block (SwfdecAsFrame *frame, const guint8 *start,
 }
 
 void
-swfdec_as_frame_pop_block (SwfdecAsFrame *frame)
+swfdec_as_frame_pop_block (SwfdecAsFrame *frame, SwfdecAsContext *cx)
 {
   SwfdecAsFrameBlockFunc func;
   gpointer data;
@@ -260,7 +260,7 @@ swfdec_as_frame_pop_block (SwfdecAsFrame *frame)
     frame->block_end = frame->script->buffer->data + frame->script->buffer->length;
   }
   /* only call function after we popped the block, so the block can push a new one */
-  func (frame, data);
+  func (cx, frame, data);
 }
 
 /*** FRAME ***/
@@ -274,7 +274,7 @@ swfdec_as_frame_dispose (GObject *object)
 
   /* pop blocks while state is intact */
   while (frame->blocks->len > 0)
-    swfdec_as_frame_pop_block (frame);
+    swfdec_as_frame_pop_block (frame, swfdec_gc_object_get_context (frame));
 
   /* clean up */
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
@@ -829,7 +829,7 @@ swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
 
   /* pop blocks in the hope that we are inside a Try block */
   while (cx->exception && frame->blocks->len) {
-    swfdec_as_frame_pop_block (frame);
+    swfdec_as_frame_pop_block (frame, cx);
   }
   /* no Try blocks caught it, exit frame */
   if (cx->exception) {

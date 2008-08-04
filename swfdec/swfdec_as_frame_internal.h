@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-typedef void (* SwfdecAsFrameBlockFunc) (SwfdecAsFrame *frame, gpointer data);
+typedef void (* SwfdecAsFrameBlockFunc) (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpointer data);
 
 struct _SwfdecAsFrame {
   SwfdecAsObject	object;
@@ -97,7 +97,8 @@ void		swfdec_as_frame_push_block	(SwfdecAsFrame *	frame,
 						 const guint8 *		end,
 						 SwfdecAsFrameBlockFunc	func,
 						 gpointer		data);
-void		swfdec_as_frame_pop_block	(SwfdecAsFrame *	frame);
+void		swfdec_as_frame_pop_block	(SwfdecAsFrame *	frame,
+						 SwfdecAsContext *	context);
 void		swfdec_as_frame_handle_exception(SwfdecAsFrame *	frame);
 
 

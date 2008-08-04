@@ -46,6 +46,14 @@ struct _SwfdecAsFunctionClass {
 
   /* return a frame that calls this function or NULL if uncallable */
   SwfdecAsFrame *	(* old_call)			(SwfdecAsFunction *	function);
+  /* call this function - see swfdec_as_function_call_full() for meaning of arguments */
+  void			(* call)			(SwfdecAsFunction *	function,
+							 SwfdecAsObject *	thisp,
+							 gboolean		construct,
+							 SwfdecAsObject *	super_reference,
+							 guint			n_args,
+							 const SwfdecAsValue *	args,
+							 SwfdecAsValue *	return_value);
 };
 
 GType			swfdec_as_function_get_type	(void);

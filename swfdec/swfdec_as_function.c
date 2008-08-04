@@ -58,8 +58,32 @@ G_DEFINE_ABSTRACT_TYPE (SwfdecAsFunction, swfdec_as_function, SWFDEC_TYPE_AS_OBJ
  */
 
 static void
+swfdec_as_function_do_call_full (SwfdecAsFunction *function, SwfdecAsObject *thisp, 
+    gboolean construct, SwfdecAsObject *super_reference, guint n_args, 
+    const SwfdecAsValue *args, SwfdecAsValue *return_value)
+{
+  SwfdecAsFrame *frame;
+
+  frame = swfdec_as_function_call_no_preload (function, thisp, n_args, args, return_value);
+  if (frame == NULL)
+    return;
+  frame->construct = construct;
+  if (super_reference == NULL) {
+    /* don't create a super object */
+  } else if (thisp != NULL) {
+    swfdec_as_super_new (frame, thisp, super_reference);
+  } else {
+    // FIXME: Does the super object really reference the function when thisp is NULL?
+    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), super_reference);
+  }
+  swfdec_as_frame_preload (frame);
+  swfdec_as_context_run (swfdec_gc_object_get_context (function));
+}
+
+static void
 swfdec_as_function_class_init (SwfdecAsFunctionClass *klass)
 {
+  klass->call = swfdec_as_function_do_call_full;
 }
 
 static void
@@ -199,26 +223,14 @@ swfdec_as_function_call_full (SwfdecAsFunction *function, SwfdecAsObject *thisp,
     gboolean construct, SwfdecAsObject *super_reference, guint n_args, 
     const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
-  SwfdecAsFrame *frame;
+  SwfdecAsFunctionClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
   g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
   g_return_if_fail (super_reference == NULL || SWFDEC_IS_AS_OBJECT (super_reference));
 
-  frame = swfdec_as_function_call_no_preload (function, thisp, n_args, args, return_value);
-  if (frame == NULL)
-    return;
-  frame->construct = construct;
-  if (super_reference == NULL) {
-    /* don't create a super object */
-  } else if (thisp != NULL) {
-    swfdec_as_super_new (frame, thisp, super_reference);
-  } else {
-    // FIXME: Does the super object really reference the function when thisp is NULL?
-    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), super_reference);
-  }
-  swfdec_as_frame_preload (frame);
-  swfdec_as_context_run (swfdec_gc_object_get_context (function));
+  klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
+  klass->call (function, thisp, construct, super_reference, n_args, args, return_value);
 }
 
 /*** AS CODE ***/

@@ -827,6 +827,7 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   frame = swfdec_action_call (cx, n_args);
   if (frame) {
     swfdec_as_frame_preload (frame);
+    swfdec_as_context_run (cx);
   } else {
     SWFDEC_WARNING ("no function named %s", name);
   }
@@ -878,6 +879,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
       swfdec_as_super_new (frame, obj, obj->prototype);
     }
     swfdec_as_frame_preload (frame);
+    swfdec_as_context_run (cx);
   } else {
     SWFDEC_WARNING ("no function named \"%s\" on object %s", name, obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
   }
@@ -1730,6 +1732,7 @@ swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data,
 
   swfdec_as_stack_pop_n (cx, 2);
   swfdec_as_object_create (fun, n_args, NULL, NULL);
+  swfdec_as_context_run (cx);
   return;
 
 fail:
@@ -1769,6 +1772,7 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
 
   swfdec_as_stack_pop_n (cx, 3);
   swfdec_as_object_create (fun, n_args, NULL, NULL);
+  swfdec_as_context_run (cx);
   return;
 
 fail:

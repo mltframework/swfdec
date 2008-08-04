@@ -681,7 +681,6 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   g_return_if_fail (SWFDEC_IS_AS_FRAME (frame));
 
-
   /* setup */
   object = SWFDEC_AS_OBJECT (frame);
   context = swfdec_gc_object_get_context (frame);

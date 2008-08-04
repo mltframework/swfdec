@@ -34,37 +34,31 @@
 
 G_DEFINE_TYPE (SwfdecAsSuper, swfdec_as_super, SWFDEC_TYPE_AS_FUNCTION)
 
-static SwfdecAsFrame *
-swfdec_as_super_old_call (SwfdecAsFunction *function)
+static void
+swfdec_as_super_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, 
+    gboolean construct, SwfdecAsObject *super_reference, guint n_args, 
+    const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
   SwfdecAsSuper *super = SWFDEC_AS_SUPER (function);
-  SwfdecAsValue val;
   SwfdecAsFunction *fun;
-  SwfdecAsFunctionClass *klass;
-  SwfdecAsFrame *frame;
+  SwfdecAsValue val;
 
   if (super->object == NULL) {
     SWFDEC_WARNING ("super () called without an object.");
-    return NULL;
+    return;
   }
 
   swfdec_as_object_get_variable (super->object, SWFDEC_AS_STR___constructor__, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
-    return NULL;
+    return;
 
-  klass = SWFDEC_AS_FUNCTION_GET_CLASS (fun);
-  frame = klass->old_call (fun);
-  if (frame == NULL)
-    return NULL;
-  /* We set the real function here. 1) swfdec_as_context_run() requires it. 
-   * And b) it makes more sense reading the constructor's name than reading "super" 
-   * in a debugger
-   */
-  frame->function = fun;
-  frame->construct = frame->next->construct;
-  swfdec_as_frame_set_this (frame, super->thisp);
-  return frame;
+  if (construct) {
+    SWFDEC_FIXME ("What happens with \"new super()\"?");
+  }
+  swfdec_as_function_call_full (fun, super->thisp, construct || 
+      swfdec_as_context_is_constructing (swfdec_gc_object_get_context (super)),
+      super->object->prototype, n_args, args, return_value);
 }
 
 static gboolean
@@ -137,7 +131,7 @@ swfdec_as_super_class_init (SwfdecAsSuperClass *klass)
   asobject_class->del = swfdec_as_super_delete;
   asobject_class->resolve = swfdec_as_super_resolve;
 
-  function_class->old_call = swfdec_as_super_old_call;
+  function_class->call = swfdec_as_super_call;
 }
 
 static void

@@ -789,7 +789,7 @@ swfdec_as_context_get_time (SwfdecAsContext *context, GTimeVal *tv)
 void
 swfdec_as_context_run (SwfdecAsContext *context)
 {
-  SwfdecAsFrame *frame, *last_frame;
+  SwfdecAsFrame *frame;
   SwfdecScript *script;
   const SwfdecActionSpec *spec;
   const guint8 *startpc, *pc, *endpc, *nextpc, *exitpc;
@@ -803,9 +803,23 @@ swfdec_as_context_run (SwfdecAsContext *context)
   gboolean check_block; /* some opcodes avoid a scope check */
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (context->frame != NULL);
+  g_return_if_fail (context->global); /* check here because of swfdec_sandbox_(un)use() */
 
-  if (context->frame == NULL || context->state == SWFDEC_AS_CONTEXT_ABORTED)
-    return;
+  /* setup data */
+  frame = context->frame;
+  original_version = context->version;
+
+  /* sanity checks */
+  if (context->state == SWFDEC_AS_CONTEXT_ABORTED)
+    goto error;
+  if (!swfdec_as_context_check_continue (context))
+    goto error;
+  if (context->call_depth > 256) {
+    /* we've exceeded our maximum call depth, throw an error and abort */
+    swfdec_as_context_abort (context, "Stack overflow");
+    goto error;
+  }
 
   if (context->debugger) {
     SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
@@ -814,22 +828,6 @@ swfdec_as_context_run (SwfdecAsContext *context)
     step = NULL;
   }
 
-  last_frame = context->last_frame;
-  context->last_frame = context->frame->next;
-  original_version = context->version;
-start:
-  g_return_if_fail (context->global); /* check here because of swfdec_sandbox_(un)use() */
-  if (!swfdec_as_context_check_continue (context))
-    goto error;
-  /* setup data */
-  frame = context->frame;
-  if (frame == context->last_frame)
-    goto out;
-  if (context->call_depth > 256) {
-    /* we've exceeded our maximum call depth, throw an error and abort */
-    swfdec_as_context_abort (context, "Stack overflow");
-    goto error;
-  }
   if (SWFDEC_IS_AS_NATIVE_FUNCTION (frame->function)) {
     SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
     SwfdecAsValue rval = { 0, };
@@ -872,7 +870,7 @@ start:
       }
     }
     swfdec_as_frame_return (frame, &rval);
-    goto start;
+    goto out;
   }
   g_assert (frame->script);
   g_assert (frame->target);
@@ -888,13 +886,13 @@ start:
     if (context->exception) {
       swfdec_as_frame_handle_exception (frame);
       if (frame != context->frame)
-	goto start;
+	goto out;
       pc = frame->pc;
       continue;
     }
     if (pc == exitpc) {
       swfdec_as_frame_return (frame, NULL);
-      goto start;
+      goto out;
     }
     if (pc < startpc || pc >= endpc) {
       SWFDEC_ERROR ("pc %p not in valid range [%p, %p) anymore", pc, startpc, endpc);
@@ -905,7 +903,7 @@ start:
       swfdec_as_frame_pop_block (frame);
       pc = frame->pc;
       if (frame != context->frame)
-	goto start;
+	goto out;
       if (context->exception)
 	break;
     }
@@ -916,16 +914,16 @@ start:
     action = *pc;
     if (action == 0) {
       swfdec_as_frame_return (frame, NULL);
-      goto start;
+      goto out;
     }
     /* invoke debugger if there is one */
     if (step) {
       frame->pc = pc;
       (* step) (context->debugger, context);
-      if (frame != context->frame || 
-	  frame->pc != pc) {
-	goto start;
-      }
+      if (frame != context->frame)
+	goto out;
+      if (frame->pc != pc)
+	continue;
     }
     /* prepare action */
     spec = swfdec_as_actions + action;
@@ -998,15 +996,14 @@ start:
 #endif
     } else {
       /* someone called/returned from a function, reread variables */
-      goto start;
+      goto out;
     }
   }
 
 error:
-  while (context->frame != context->last_frame)
-    swfdec_as_frame_return (context->frame, NULL);
+  if (context->frame == frame)
+    swfdec_as_frame_return (frame, NULL);
 out:
-  context->last_frame = last_frame;
   context->version = original_version;
   return;
 }

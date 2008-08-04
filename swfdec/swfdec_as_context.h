@@ -64,7 +64,6 @@ struct _SwfdecAsContext {
   unsigned int	      	version;	/* currently active version */
   unsigned int		call_depth;   	/* current depth of call stack (equals length of frame list) */
   SwfdecAsFrame *	frame;		/* topmost stack frame */
-  SwfdecAsFrame *	last_frame;   	/* last frame before calling context_run */
   gboolean		exception;	/* whether we are throwing an exception */
   SwfdecAsValue		exception_value; /* value of the exception being thrown, can be anything including undefined */
 

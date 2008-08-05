@@ -58,11 +58,6 @@ struct _SwfdecAsFunctionClass {
 
 GType			swfdec_as_function_get_type	(void);
 
-void			swfdec_as_function_old_call	(SwfdecAsFunction *	function,
-							 SwfdecAsObject *	thisp,
-							 guint			n_args,
-							 const SwfdecAsValue *	args,
-							 SwfdecAsValue *	return_value);
 void			swfdec_as_function_call_full	(SwfdecAsFunction *	function,
 							 SwfdecAsObject *	thisp,
 							 gboolean		construct,

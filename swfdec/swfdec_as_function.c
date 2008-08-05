@@ -156,42 +156,6 @@ swfdec_as_function_call_no_preload (SwfdecAsFunction *function,
 }
 
 /**
- * swfdec_as_function_old_call:
- * @function: the #SwfdecAsFunction to call
- * @thisp: this argument to use for the call or %NULL for none
- * @n_args: number of arguments to pass to the function
- * @args: the arguments to pass or %NULL to read the last @n_args stack elements.
- *        The memory must be unchanged until the function call has completed.
- *        This is after the call to swfdec_as_context_run () has finished.
- * @return_value: pointer for return value or %NULL to push the return value to 
- *                the stack
- *
- * Calls the given function. This means a #SwfdecAsFrame is created for the 
- * function and pushed on top of the execution stack. The function is however
- * not executed. Call swfdec_as_context_run () to execute it.
- **/
-void
-swfdec_as_function_old_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args,
-    const SwfdecAsValue *args, SwfdecAsValue *return_value)
-{
-  SwfdecAsFrame *frame;
-
-  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
-  g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
-
-  frame = swfdec_as_function_call_no_preload (function, thisp, n_args, args, return_value);
-  if (frame == NULL)
-    return;
-  if (thisp != NULL) {
-    swfdec_as_super_new (frame, thisp, thisp->prototype);
-  } else {
-    // FIXME: Does the super object really reference the function when thisp is NULL?
-    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), SWFDEC_AS_OBJECT (function)->prototype);
-  }
-  swfdec_as_frame_preload (frame);
-}
-
-/**
  * swfdec_as_function_call:
  * @function: the #SwfdecAsFunction to call
  * @thisp: this argument to use for the call or %NULL for none

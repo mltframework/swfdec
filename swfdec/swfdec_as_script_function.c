@@ -27,24 +27,49 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_TYPE (SwfdecAsScriptFunction, swfdec_as_script_function, SWFDEC_TYPE_AS_FUNCTION)
 
-static SwfdecAsFrame *
-swfdec_as_script_function_old_call (SwfdecAsFunction *function)
+static void
+swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, 
+    gboolean construct, SwfdecAsObject *super_reference, guint n_args, 
+    const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (function);
   SwfdecAsFrame *frame;
 
+  /* just to be sure... */
+  if (return_value)
+    SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+
   frame = swfdec_as_frame_new (swfdec_gc_object_get_context (function), script->script);
-  if (frame == NULL)
-    return NULL;
   frame->scope_chain = g_slist_concat (frame->scope_chain, g_slist_copy (script->scope_chain));
   frame->function = function;
   frame->target = script->target;
   frame->original_target = script->target;
-  return frame;
+  /* FIXME: figure out what to do in these situations?
+   * It's a problem when called inside swfdec_as_function_call () as the
+   * user of that function expects success, but super may fail here */
+  /* second check especially for super object */
+  if (thisp != NULL && frame->thisp == NULL) {
+    swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
+  }
+  frame->argc = n_args;
+  frame->argv = args;
+  frame->return_value = return_value;
+  frame->construct = construct;
+  if (super_reference == NULL) {
+    /* don't create a super object */
+  } else if (thisp != NULL) {
+    swfdec_as_super_new (frame, thisp, super_reference);
+  } else {
+    // FIXME: Does the super object really reference the function when thisp is NULL?
+    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), super_reference);
+  }
+  swfdec_as_frame_preload (frame);
+  swfdec_as_context_run (swfdec_gc_object_get_context (function));
 }
 
 static void
@@ -106,7 +131,7 @@ swfdec_as_script_function_class_init (SwfdecAsScriptFunctionClass *klass)
 
   asobject_class->debug = swfdec_as_script_function_debug;
 
-  function_class->old_call = swfdec_as_script_function_old_call;
+  function_class->call = swfdec_as_script_function_call;
 }
 
 static void

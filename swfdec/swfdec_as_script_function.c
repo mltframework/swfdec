@@ -38,37 +38,37 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (function);
-  SwfdecAsFrame *frame;
+  SwfdecAsFrame frame = { NULL, };
 
   /* just to be sure... */
   if (return_value)
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
 
-  frame = swfdec_as_frame_new (swfdec_gc_object_get_context (function), script->script);
-  frame->scope_chain = g_slist_concat (frame->scope_chain, g_slist_copy (script->scope_chain));
-  frame->function = function;
-  frame->target = script->target;
-  frame->original_target = script->target;
+  swfdec_as_frame_init (&frame, swfdec_gc_object_get_context (function), script->script);
+  frame.scope_chain = g_slist_concat (frame.scope_chain, g_slist_copy (script->scope_chain));
+  frame.function = function;
+  frame.target = script->target;
+  frame.original_target = script->target;
   /* FIXME: figure out what to do in these situations?
    * It's a problem when called inside swfdec_as_function_call () as the
    * user of that function expects success, but super may fail here */
   /* second check especially for super object */
-  if (thisp != NULL && frame->thisp == NULL) {
-    swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
+  if (thisp != NULL && frame.thisp == NULL) {
+    swfdec_as_frame_set_this (&frame, swfdec_as_object_resolve (thisp));
   }
-  frame->argc = n_args;
-  frame->argv = args;
-  frame->return_value = return_value;
-  frame->construct = construct;
+  frame.argc = n_args;
+  frame.argv = args;
+  frame.return_value = return_value;
+  frame.construct = construct;
   if (super_reference == NULL) {
     /* don't create a super object */
   } else if (thisp != NULL) {
-    swfdec_as_super_new (frame, thisp, super_reference);
+    swfdec_as_super_new (&frame, thisp, super_reference);
   } else {
     // FIXME: Does the super object really reference the function when thisp is NULL?
-    swfdec_as_super_new (frame, SWFDEC_AS_OBJECT (function), super_reference);
+    swfdec_as_super_new (&frame, SWFDEC_AS_OBJECT (function), super_reference);
   }
-  swfdec_as_frame_preload (frame);
+  swfdec_as_frame_preload (&frame);
   swfdec_as_context_run (swfdec_gc_object_get_context (function));
 }
 

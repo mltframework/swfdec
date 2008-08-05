@@ -53,9 +53,11 @@ struct _SwfdecAsFrame {
   /* native function */
 };
 
-SwfdecAsFrame *	swfdec_as_frame_new		(SwfdecAsContext *	context,
+void		swfdec_as_frame_init		(SwfdecAsFrame *	frame,
+						 SwfdecAsContext *	context,
 						 SwfdecScript *		script);
-SwfdecAsFrame *	swfdec_as_frame_new_native	(SwfdecAsContext *	context);
+void		swfdec_as_frame_init_native	(SwfdecAsFrame *	frame,
+						 SwfdecAsContext *	context);
 void		swfdec_as_frame_return		(SwfdecAsFrame *	frame,
 						 SwfdecAsValue *	return_value);
 

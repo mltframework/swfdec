@@ -59,8 +59,8 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
 {
   SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (function);
   SwfdecAsContext *cx = swfdec_gc_object_get_context (function);
+  SwfdecAsFrame frame = { NULL, };
   SwfdecAsValue rval = { 0, };
-  SwfdecAsFrame *frame;
   SwfdecAsValue *argv;
 
   if (construct && native->construct_type != 0 &&
@@ -69,42 +69,43 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     return;
   }
 
-  frame = swfdec_as_frame_new_native (cx);
   g_assert (native->name);
-  frame->construct = construct;
-  frame->function = function;
+
+  swfdec_as_frame_init_native (&frame, cx);
+  frame.construct = construct;
+  frame.function = function;
   /* We copy the target here so we have a proper SwfdecMovie reference inside native 
    * functions. This is for example necessary for swfdec_player_get_movie_by_value()
    * and probably other stuff that does variable lookups inside native functions.
    */
   /* FIXME: copy target or original target? */
-  if (frame->next) {
-    frame->target = frame->next->original_target;
-    frame->original_target = frame->target;
+  if (frame.next) {
+    frame.target = frame.next->original_target;
+    frame.original_target = frame.target;
   }
   if (thisp)
-    swfdec_as_frame_set_this (frame, swfdec_as_object_resolve (thisp));
-  frame->argc = n_args;
-  frame->argv = args;
-  frame->return_value = return_value;
-  frame->construct = construct;
+    swfdec_as_frame_set_this (&frame, swfdec_as_object_resolve (thisp));
+  frame.argc = n_args;
+  frame.argv = args;
+  frame.return_value = return_value;
+  frame.construct = construct;
 
-  if (frame->argc == 0 || frame->argv != NULL) {
+  if (frame.argc == 0 || frame.argv != NULL) {
     /* FIXME FIXME FIXME: no casting here please! */
-    argv = (SwfdecAsValue *) frame->argv;
+    argv = (SwfdecAsValue *) frame.argv;
   } else {
     SwfdecAsStack *stack;
     SwfdecAsValue *cur;
     guint i;
-    if (frame->argc > 128) {
+    if (frame.argc > 128) {
       SWFDEC_FIXME ("allow calling native functions with more than 128 args (this one has %u)",
-	  frame->argc);
-      frame->argc = 128;
+	  frame.argc);
+      frame.argc = 128;
     }
-    argv = g_new (SwfdecAsValue, frame->argc);
+    argv = g_new (SwfdecAsValue, frame.argc);
     stack = cx->stack;
     cur = cx->cur;
-    for (i = 0; i < frame->argc; i++) {
+    for (i = 0; i < frame.argc; i++) {
       if (cur <= &stack->elements[0]) {
 	stack = stack->next;
 	cur = &stack->elements[stack->used_elements];
@@ -113,10 +114,10 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
       argv[i] = *cur;
     }
   }
-  native->native (cx, frame->thisp, frame->argc, argv, &rval);
-  if (argv != frame->argv)
+  native->native (cx, frame.thisp, frame.argc, argv, &rval);
+  if (argv != frame.argv)
     g_free (argv);
-  swfdec_as_frame_return (frame, &rval);
+  swfdec_as_frame_return (&frame, &rval);
 }
 
 static char *

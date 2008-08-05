@@ -1187,20 +1187,18 @@ swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name,
 void
 swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
 {
+  SwfdecAsFrame frame = { NULL, };
   SwfdecAsContext *context;
-  SwfdecAsFrame *frame;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (script != NULL);
 
   context = swfdec_gc_object_get_context (object);
-  frame = swfdec_as_frame_new (context, script);
-  if (frame == NULL)
-    return;
-  swfdec_as_frame_set_this (frame, object);
-  swfdec_as_frame_preload (frame);
+  swfdec_as_frame_init (&frame, context, script);
+  swfdec_as_frame_set_this (&frame, object);
+  swfdec_as_frame_preload (&frame);
   /* we take no prisoners */
-  frame->activation = NULL;
+  frame.activation = NULL;
   swfdec_as_context_run (context);
   swfdec_as_stack_pop (context);
 }

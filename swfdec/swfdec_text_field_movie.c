@@ -395,6 +395,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 
   cx = swfdec_gc_object_get_context (movie);
 
+  text->sandbox = SWFDEC_SANDBOX (cx->global);
+
   swfdec_text_field_movie_init_properties (cx);
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
@@ -530,6 +532,90 @@ swfdec_text_field_movie_contains (SwfdecMovie *movie, double x, double y,
 }
 
 static void
+swfdec_text_field_movie_parse_listen_variable (SwfdecTextFieldMovie *text,
+    const char *variable, SwfdecAsObject **object, const char **name)
+{
+  SwfdecAsContext *cx;
+  SwfdecAsObject *parent;
+  const char *p1, *p2;
+
+  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
+  g_return_if_fail (variable != NULL);
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (name != NULL);
+
+  *object = NULL;
+  *name = NULL;
+
+  if (SWFDEC_MOVIE (text)->parent == NULL)
+    return;
+
+  g_assert (SWFDEC_IS_AS_OBJECT (SWFDEC_MOVIE (text)->parent));
+  cx = swfdec_gc_object_get_context (text);
+  parent = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
+
+  p1 = strrchr (variable, '.');
+  p2 = strrchr (variable, ':');
+  if (p1 == NULL && p2 == NULL) {
+    *object = parent;
+    *name = variable;
+  } else {
+    if (p1 == NULL || (p2 != NULL && p2 > p1))
+      p1 = p2;
+    if (strlen (p1) == 1)
+      return;
+    *object = swfdec_action_lookup_object (cx, parent, variable, p1);
+    if (*object == NULL)
+      return;
+    *name = swfdec_as_context_get_string (cx, p1 + 1);
+  }
+}
+
+static void
+swfdec_text_field_movie_asfunction (SwfdecTextFieldMovie *text,
+    const char *url)
+{
+  char **parts;
+  SwfdecAsObject *object;
+  const char *name;
+  SwfdecAsContext *cx;
+
+  g_return_if_fail (g_ascii_strncasecmp (url, "asfunction:",
+	strlen ("asfunction:")) == 0);
+
+  cx = swfdec_gc_object_get_context (text);
+
+  parts = g_strsplit (url + strlen ("asfunction:"), ",", 2);
+  if (parts[0] == NULL) {
+    SWFDEC_ERROR ("asfunction link without function name clicked");
+    g_strfreev (parts);
+    return;
+  }
+
+  swfdec_text_field_movie_parse_listen_variable (text,
+      swfdec_as_context_get_string (cx, parts[0]), &object, &name);
+
+  if (object == NULL || name == NULL) {
+    SWFDEC_ERROR ("Function in asfunction link not found: %s", parts[0]);
+    g_strfreev (parts);
+    return;
+  }
+
+  swfdec_sandbox_use (text->sandbox);
+  if (parts[1] != NULL) {
+    SwfdecAsValue val;
+    SWFDEC_AS_VALUE_SET_STRING (&val,
+	swfdec_as_context_get_string (cx, parts[1]));
+    swfdec_as_object_call (object, name, 1, &val, NULL);
+  } else {
+    swfdec_as_object_call (object, name, 0, NULL, NULL);
+  }
+  swfdec_sandbox_unuse (text->sandbox);
+
+  g_strfreev (parts);
+}
+
+static void
 swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
     guint index_)
 {
@@ -541,8 +627,13 @@ swfdec_text_field_movie_letter_clicked (SwfdecTextFieldMovie *text,
   attr = swfdec_text_buffer_get_attributes (text->text, index_);
 
   if (attr->url != SWFDEC_AS_STR_EMPTY) {
-    swfdec_player_launch (SWFDEC_PLAYER (swfdec_gc_object_get_context (text)),
-	attr->url, attr->target, NULL);
+    if (g_ascii_strncasecmp (attr->url, "asfunction:",
+	  strlen ("asfunction:")) == 0) {
+      swfdec_text_field_movie_asfunction (text, attr->url);
+    } else {
+      swfdec_player_launch (SWFDEC_PLAYER (swfdec_gc_object_get_context (text)),
+	  attr->url, attr->target, NULL);
+    }
   }
 }
 
@@ -921,46 +1012,6 @@ swfdec_text_field_movie_init (SwfdecTextFieldMovie *text)
 
   text->mouse_wheel_enabled = TRUE;
   text->character_pressed = -1;
-}
-
-static void
-swfdec_text_field_movie_parse_listen_variable (SwfdecTextFieldMovie *text,
-    const char *variable, SwfdecAsObject **object, const char **name)
-{
-  SwfdecAsContext *cx;
-  SwfdecAsObject *parent;
-  const char *p1, *p2;
-
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (text));
-  g_return_if_fail (variable != NULL);
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (name != NULL);
-
-  *object = NULL;
-  *name = NULL;
-
-  if (SWFDEC_MOVIE (text)->parent == NULL)
-    return;
-
-  g_assert (SWFDEC_IS_AS_OBJECT (SWFDEC_MOVIE (text)->parent));
-  cx = swfdec_gc_object_get_context (text);
-  parent = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
-
-  p1 = strrchr (variable, '.');
-  p2 = strrchr (variable, ':');
-  if (p1 == NULL && p2 == NULL) {
-    *object = parent;
-    *name = variable;
-  } else {
-    if (p1 == NULL || (p2 != NULL && p2 > p1))
-      p1 = p2;
-    if (strlen (p1) == 1)
-      return;
-    *object = swfdec_action_lookup_object (cx, parent, variable, p1);
-    if (*object == NULL)
-      return;
-    *name = swfdec_as_context_get_string (cx, p1 + 1);
-  }
 }
 
 void

@@ -13,7 +13,7 @@ vivi_parser_scanner_lex.c: vivi_parser_scanner_lex.l
 	$(LEX) vivi_parser_scanner_lex.l
 
 # we create own .la for lex generated code, so we can disable some warnings
-libvivified_parser_lex_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) -Wno-switch-default -Wno-missing-declarations -Wno-missing-prototypes -Wno-sign-compare -Wno-unused-function -Wno-missing-noreturn
+libvivified_parser_lex_la_CFLAGS = $(GLOBAL_CFLAGS) $(SWFDEC_CFLAGS) -Wno-switch-default -Wno-missing-declarations -Wno-missing-prototypes -Wno-sign-compare -Wno-unused-function -Wno-missing-noreturn -Wno-inline
 libvivified_parser_lex_la_LDFLAGS = $(SWFDEC_LIBS)
 
 libvivified_parser_lex_la_SOURCES = \

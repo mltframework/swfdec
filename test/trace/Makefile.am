@@ -2010,6 +2010,15 @@ EXTRA_DIST = \
 	math-constants-6.swf.trace \
 	math-constants-7.swf \
 	math-constants-7.swf.trace \
+	math-function.as \
+	math-function-5.swf \
+	math-function-5.swf.trace \
+	math-function-6.swf \
+	math-function-6.swf.trace \
+	math-function-7.swf \
+	math-function-7.swf.trace \
+	math-function-8.swf \
+	math-function-8.swf.trace \
 	math-function-valueOf.as \
 	math-function-valueOf-5.swf \
 	math-function-valueOf-5.swf.trace \
@@ -2512,6 +2521,8 @@ EXTRA_DIST = \
 	parse-int-6.swf.trace \
 	parse-int-7.swf \
 	parse-int-7.swf.trace \
+	parse-int-8.swf \
+	parse-int-8.swf.trace \
 	place-object.c \
 	place-object-5.swf \
 	place-object-5.swf.trace \

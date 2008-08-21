@@ -459,7 +459,6 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
     cairo_mask_surface (cr2, alpha->surface, rect.x - x, rect.y - y);
     cairo_destroy (cr2);
-    cairo_surface_write_to_png (mask, "foo.png");
     cairo_set_source_surface (cr, mask, 0, 0);
     cairo_surface_destroy (mask);
   }

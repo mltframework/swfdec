@@ -70,16 +70,6 @@ swfdec_gtk_socket_close (SwfdecStream *stream)
 }
 
 static void
-swfdec_gtk_socket_do_connect (SoupSocket *sock, guint status, gpointer gtk)
-{
-  if (SOUP_STATUS_IS_SUCCESSFUL (status))
-    swfdec_stream_open (gtk);
-  else
-    swfdec_stream_error (gtk, "error connecting");
-
-}
-
-static void
 swfdec_gtk_socket_do_disconnect (SoupSocket *sock, SwfdecGtkSocket *gtk)
 {
   swfdec_stream_close (SWFDEC_STREAM (gtk));
@@ -96,8 +86,8 @@ swfdec_gtk_socket_do_read (SoupSocket *sock, SwfdecGtkSocket *gtk)
 
   do {
     buffer = swfdec_buffer_new (SWFDEC_GTK_SOCKET_BLOCK_SIZE);
-    status = soup_socket_read (sock, buffer, SWFDEC_GTK_SOCKET_BLOCK_SIZE, 
-	&len, NULL, &error);
+    status = soup_socket_read (sock, buffer->data,
+	SWFDEC_GTK_SOCKET_BLOCK_SIZE, &len, NULL, &error);
     buffer->length = len;
     switch (status) {
       case SOUP_SOCKET_OK:
@@ -153,6 +143,19 @@ swfdec_gtk_socket_do_write (SoupSocket *sock, SwfdecGtkSocket *gtk)
 }
 
 static void
+swfdec_gtk_socket_do_connect (SoupSocket *sock, guint status, gpointer gtk)
+{
+  if (SOUP_STATUS_IS_SUCCESSFUL (status)) {
+    swfdec_stream_open (gtk);
+    // need to read here, since readable signal will only be launched once the
+    // socket has been read until it's empty once
+    swfdec_gtk_socket_do_read (sock, gtk);
+  } else {
+    swfdec_stream_error (gtk, "error connecting");
+  }
+}
+
+static void
 swfdec_gtk_socket_connect (SwfdecSocket *sock_, SwfdecPlayer *player, 
     const char *hostname, guint port)
 {
@@ -164,11 +167,11 @@ swfdec_gtk_socket_connect (SwfdecSocket *sock_, SwfdecPlayer *player,
       SOUP_SOCKET_FLAG_NONBLOCKING, TRUE,
       SOUP_SOCKET_REMOTE_ADDRESS, addr, NULL);
   g_signal_connect (sock->sock, "disconnected", 
-      G_CALLBACK (swfdec_gtk_socket_do_disconnect), socket);
+      G_CALLBACK (swfdec_gtk_socket_do_disconnect), sock);
   g_signal_connect (sock->sock, "readable", 
-      G_CALLBACK (swfdec_gtk_socket_do_read), socket);
+      G_CALLBACK (swfdec_gtk_socket_do_read), sock);
   g_signal_connect (sock->sock, "writable", 
-      G_CALLBACK (swfdec_gtk_socket_do_write), socket);
+      G_CALLBACK (swfdec_gtk_socket_do_write), sock);
   soup_socket_connect_async (sock->sock, NULL, swfdec_gtk_socket_do_connect, sock);
 }
 

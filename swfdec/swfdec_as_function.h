@@ -63,13 +63,12 @@ void			swfdec_as_function_call_full	(SwfdecAsFunction *	function,
 							 guint			n_args,
 							 const SwfdecAsValue *	args,
 							 SwfdecAsValue *	return_value);
-static inline void
-swfdec_as_function_call (SwfdecAsFunction *function, SwfdecAsObject *thisp, guint n_args, 
-    const SwfdecAsValue *args, SwfdecAsValue *return_value)
-{
-  swfdec_as_function_call_full (function, thisp, FALSE, 
-      thisp ? thisp->prototype : SWFDEC_AS_OBJECT (function)->prototype, n_args, args, return_value);
-}
+#define swfdec_as_function_call(function, thisp, n_args, args, return_value) G_STMT_START{ \
+  SwfdecAsObject *__thisp = (thisp); \
+  swfdec_as_function_call_full (function, __thisp, FALSE, \
+      __thisp ? __thisp->prototype : SWFDEC_AS_OBJECT (function)->prototype, \
+      n_args, args, return_value); \
+}G_STMT_END
 
 
 G_END_DECLS

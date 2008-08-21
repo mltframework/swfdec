@@ -395,8 +395,6 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 
   cx = swfdec_gc_object_get_context (movie);
 
-  text->sandbox = SWFDEC_SANDBOX (cx->global);
-
   swfdec_text_field_movie_init_properties (cx);
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
@@ -601,7 +599,7 @@ swfdec_text_field_movie_asfunction (SwfdecTextFieldMovie *text,
     return;
   }
 
-  swfdec_sandbox_use (text->sandbox);
+  swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
   if (parts[1] != NULL) {
     SwfdecAsValue val;
     SWFDEC_AS_VALUE_SET_STRING (&val,
@@ -610,7 +608,7 @@ swfdec_text_field_movie_asfunction (SwfdecTextFieldMovie *text,
   } else {
     swfdec_as_object_call (object, name, 0, NULL, NULL);
   }
-  swfdec_sandbox_unuse (text->sandbox);
+  swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
 
   g_strfreev (parts);
 }

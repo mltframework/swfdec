@@ -43,8 +43,6 @@ typedef struct _SwfdecTextFieldMovieClass SwfdecTextFieldMovieClass;
 struct _SwfdecTextFieldMovie {
   SwfdecActor		actor;
 
-  SwfdecSandbox		*sandbox;
-
   SwfdecRect		extents;		/* original extents (copied from graphic) - queue extents update when modifying */
   /* these are updated with the movie's extents - so call swfdec_movie_update() */
   cairo_matrix_t	to_layout;		/* matrix to go from movie => layout */

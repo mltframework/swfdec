@@ -679,16 +679,18 @@ swfdec_url_new_from_input (const char *input)
 
   /* FIXME: split at '?' for query? */
   if (g_path_is_absolute (input)) {
-    url = swfdec_url_new_components ("file", NULL, 0,
-	input[0] == '/' ? &input[1] : &input[0], NULL);
+    char *escaped =
+      g_uri_escape_string (input[0] == '/' ? &input[1] : &input[0], "/", TRUE);
+    url = swfdec_url_new_components ("file", NULL, 0, escaped, NULL);
   } else {
     char *absolute, *cur;
     cur = g_get_current_dir ();
     absolute = g_build_filename (cur, input, NULL);
     g_free (cur);
-    url = swfdec_url_new_components ("file", NULL, 0,
-	absolute, NULL);
+    cur = g_uri_escape_string (absolute, "/", TRUE);
     g_free (absolute);
+    url = swfdec_url_new_components ("file", NULL, 0, cur, NULL);
+    g_free (cur);
   }
 
   g_return_val_if_fail (url != NULL, NULL);

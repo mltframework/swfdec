@@ -1353,6 +1353,15 @@ EXTRA_DIST = \
 	external-interface-properties-7.swf.trace \
 	external-interface-properties-8.swf \
 	external-interface-properties-8.swf.trace \
+	filename-with-%-character.as \
+	filename-with-%-character-5.swf \
+	filename-with-%-character-5.swf.trace \
+	filename-with-%-character-6.swf \
+	filename-with-%-character-6.swf.trace \
+	filename-with-%-character-7.swf \
+	filename-with-%-character-7.swf.trace \
+	filename-with-%-character-8.swf \
+	filename-with-%-character-8.swf.trace \
 	file-reference-constructor.as \
 	file-reference-constructor-7.swf \
 	file-reference-constructor-7.swf.trace \

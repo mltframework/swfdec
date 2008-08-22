@@ -785,6 +785,7 @@ swfdec_as_string_unescape_6 (SwfdecAsContext *cx, const char *s)
   const guchar invalid[3] = { 0xEF, 0xBF, 0xBD };
 
 /* attention: c is a char* */
+/* can't use break inside G_STMT_START */
 #define APPEND(chr) G_STMT_START{ \
   guchar c = *chr; \
   if (utf8left) { \
@@ -807,7 +808,7 @@ swfdec_as_string_unescape_6 (SwfdecAsContext *cx, const char *s)
       g_byte_array_append (array, &__foo, 1); \
       g_byte_array_append (array, &c, 1); \
     } else if (c > 0xF7) { \
-      break; \
+      s = strchr (s, '\0'); \
     } else { \
       g_byte_array_append (array, &c, 1); \
       utf8left = (c < 0xE0) ? 1 : ((c < 0xF0) ? 2 : 3); \

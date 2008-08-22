@@ -1841,6 +1841,15 @@ EXTRA_DIST = \
 	loadobject-6.swf.trace \
 	loadobject-7.swf \
 	loadobject-7.swf.trace \
+	loadobject-00.as \
+	loadobject-00-5.swf \
+	loadobject-00-5.swf.trace \
+	loadobject-00-6.swf \
+	loadobject-00-6.swf.trace \
+	loadobject-00-7.swf \
+	loadobject-00-7.swf.trace \
+	loadobject-00-8.swf \
+	loadobject-00-8.swf.trace \
 	loadobject-addrequestheader.as \
 	loadobject-addrequestheader-5.swf \
 	loadobject-addrequestheader-5.swf.trace \

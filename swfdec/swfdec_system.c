@@ -269,7 +269,7 @@ swfdec_system_class_init (SwfdecSystemClass *klass)
 	  "StandAlone", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, PROP_VERSION,
       g_param_spec_string ("version", "version", "version string",
-	  "WIN 9,0,100,0", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	  "WIN 9,0,999,0", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (object_class, PROP_LANGUAGE,
       g_param_spec_string ("language", "language", "ISO 639-1 language code",
 	  "en", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));

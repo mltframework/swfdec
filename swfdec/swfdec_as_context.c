@@ -1100,7 +1100,7 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   const char *s;
   char *tail;
-  int radix;
+  int radix = 10;
   gint64 i;
 
   SWFDEC_AS_CHECK (0, NULL, "s|i", &s, &radix);

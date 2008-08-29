@@ -2198,18 +2198,15 @@ static void
 swfdec_action_get_time (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   GTimeVal tv;
-  gulong diff;
+  double diff;
 
   swfdec_as_context_get_time (cx, &tv);
   /* we assume here that swfdec_as_context_get_time always returns a tv > start_time */
   diff = tv.tv_sec - cx->start_time.tv_sec;
-  if (diff > G_MAXULONG / 1000 - 1) {
-    SWFDEC_ERROR ("FIXME: time overflow");
-  }
   diff *= 1000;
-  diff = diff + (tv.tv_usec - cx->start_time.tv_usec) / 1000;
+  diff += (tv.tv_usec - cx->start_time.tv_usec) / 1000;
 
-  SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_push (cx), diff);
+  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (cx), diff);
 }
 
 static gboolean

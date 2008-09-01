@@ -105,6 +105,22 @@ write_player (Stream *stream, const snd_pcm_channel_area_t *dst,
   return rendered;
 }
 
+static void swfdec_playback_stream_start (Stream *stream);
+
+static snd_pcm_sframes_t
+swfdec_playback_stream_avail_update (Stream *stream)
+{
+  snd_pcm_sframes_t avail;
+
+  avail = snd_pcm_avail_update (stream->pcm);
+  if (avail == -EPIPE) {
+    /* We don't do a while (avail == -EPIPE) here, we don't want infloops on weird situations */
+    swfdec_playback_stream_start (stream);
+    avail = snd_pcm_avail_update (stream->pcm);
+  }
+  return avail;
+}
+
 static gboolean
 try_write_mmap (Stream *stream)
 {
@@ -113,7 +129,7 @@ try_write_mmap (Stream *stream)
   const snd_pcm_channel_area_t *dst;
 
   do {
-    avail_result = snd_pcm_avail_update (stream->pcm);
+    avail_result = swfdec_playback_stream_avail_update (stream);
     ALSA_ERROR (avail_result, "snd_pcm_avail_update failed", FALSE);
     if (avail_result == 0)
       return TRUE;
@@ -141,7 +157,7 @@ try_write_so_pa_gets_it (Stream *stream)
   snd_pcm_sframes_t avail, step, written;
   gboolean finish = FALSE;
 
-  avail = snd_pcm_avail_update (stream->pcm);
+  avail = swfdec_playback_stream_avail_update (stream);
   ALSA_ERROR (avail, "snd_pcm_avail_update failed", FALSE);
 
   while (avail > 0 && !finish) {
@@ -165,7 +181,6 @@ try_write_so_pa_gets_it (Stream *stream)
 
 #define try_write(stream) ((stream)->write (stream))
 
-static void swfdec_playback_stream_start (Stream *stream);
 static gboolean
 handle_stream (GIOChannel *source, GIOCondition cond, gpointer data)
 {

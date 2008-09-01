@@ -290,14 +290,21 @@ replace_random (ViviCodeAssembler *assembler, guint init)
 static void
 rewrite_getters (ViviCodeAssembler *assembler)
 {
-  guint i;
+  guint i, count;
+  char *s;
 
+  count = 0;
   for (i = 0; i < vivi_code_assembler_get_n_codes (assembler); i++) {
     ViviCodeAsm *code = vivi_code_assembler_get_code (assembler, i);
     if (VIVI_IS_CODE_ASM_GET_VARIABLE (code) ||
 	VIVI_IS_CODE_ASM_GET_MEMBER (code)) {
       i++;
       INSERT_CODE (assembler, i, vivi_code_asm_push_duplicate_new ());
+      s = g_strdup_printf ("%u: ", ++count);
+      INSERT_PUSH_STRING (assembler, i, s);
+      g_free (s);
+      INSERT_CODE (assembler, i, vivi_code_asm_swap_new ());
+      INSERT_CODE (assembler, i, vivi_code_asm_add2_new ());
       INSERT_CODE (assembler, i, vivi_code_asm_trace_new ());
       i--;
     }

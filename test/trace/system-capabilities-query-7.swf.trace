@@ -28,6 +28,6 @@ local.o = object
   screenDPI = number : 96
   screenResolutionX = number : 1024
   screenResolutionY = number : 768
-  serverString = string : "A=t&SA=t&SV=t&EV=t&MP3=t&AE=f&VE=f&ACC=f&PR=f&SP=f&SB=f&DEB=f&V=WIN%209%2C0%2C100%2C0&M=Adobe%20Windows&R=1024x768&DP=96&COL=color&AR=1.0&OS=Windows%20XP&L=en&IME=f&PT=StandAlone&AVD=f&LFD=f&WD=f&TLS=f"
-  version = string : "WIN 9,0,100,0"
+  serverString = string : "A=t&SA=t&SV=t&EV=t&MP3=t&AE=f&VE=f&ACC=f&PR=f&SP=f&SB=f&DEB=f&V=WIN%209%2C0%2C999%2C0&M=Adobe%20Windows&R=1024x768&DP=96&COL=color&AR=1.0&OS=Windows%20XP&L=en&IME=f&PT=StandAlone&AVD=f&LFD=f&WD=f&TLS=f"
+  version = string : "WIN 9,0,999,0"
   windowlessDisable = boolean : false

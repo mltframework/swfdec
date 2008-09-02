@@ -1118,7 +1118,7 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   // automatic radix
-  if (radix == 0) {
+  if (argc < 2) {
     if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
       radix = 16;
     } else if ((s[0] == '0' || ((s[0] == '+' || s[0] == '-') && s[1] == '0')) &&

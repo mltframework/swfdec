@@ -239,6 +239,15 @@ EXTRA_DIST = \
 	array-sort-unique-abort-7.swf.trace \
 	array-sort-unique-abort-8.swf \
 	array-sort-unique-abort-8.swf.trace \
+	array-splice-5.swf \
+	array-splice-5.swf.trace \
+	array-splice-6.swf \
+	array-splice-6.swf.trace \
+	array-splice-7.swf \
+	array-splice-7.swf.trace \
+	array-splice-8.swf \
+	array-splice-8.swf.trace \
+	array-splice.as \
 	array2.as \
 	array2-5.swf \
 	array2-5.swf.trace \

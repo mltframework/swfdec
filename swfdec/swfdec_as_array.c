@@ -182,12 +182,9 @@ swfdec_as_array_foreach_remove_range (SwfdecAsObject *object,
 }
 
 static void
-swfdec_as_array_remove_range (SwfdecAsArray *array, gint32 start_index,
+swfdec_as_array_remove_range (SwfdecAsObject *object, gint32 start_index,
     gint32 num)
 {
-  SwfdecAsObject *object = SWFDEC_AS_OBJECT (array);
-
-  g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
   g_return_if_fail (start_index >= 0);
   g_return_if_fail (num >= 0);
 
@@ -534,7 +531,7 @@ swfdec_as_array_set (SwfdecAsObject *object, const char *variable,
     gint32 length_new = swfdec_as_value_to_integer (swfdec_gc_object_get_context (object), val);
     length_new = MAX (0, length_new);
     if (length_old > length_new) {
-      swfdec_as_array_remove_range (SWFDEC_AS_ARRAY (object), length_new,
+      swfdec_as_array_remove_range (object, length_new,
 	  length_old - length_new);
     }
   }
@@ -864,7 +861,7 @@ void
 swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  gint32 length, start_index, num_remove, num_add;
+  gint32 length, start_index, num_remove, num_add, at_end;
   SwfdecAsArray *array_new;
 
   if (object == NULL || SWFDEC_IS_MOVIE (object) || argc == 0)
@@ -887,21 +884,27 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   num_add = (argc > 2 ? argc - 2 : 0);
+  at_end = length - num_remove - start_index;
 
+  /* create return value */
   array_new = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
-  if (array_new == NULL)
-    return;
-
   swfdec_as_array_append_array_range (array_new, object, start_index,
       num_remove);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (array_new));
+
+  /* move old data to the right spot */
   swfdec_as_array_move_range (object, start_index + num_remove,
-      length - (start_index + num_remove), start_index + num_add);
+      at_end, start_index + num_add);
+  if (num_remove > at_end) {
+    swfdec_as_array_remove_range (object, start_index + at_end + num_add,
+	length - (start_index + at_end + num_add));
+  }
   if (num_remove > num_add)
     swfdec_as_array_set_length_object (object, length - (num_remove - num_add));
+
+  /* add new data */
   if (argc > 2)
     swfdec_as_array_set_range (object, start_index, argc - 2, argv + 2);
-
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (array_new));
 }
 
 // Sorting

@@ -808,7 +808,7 @@ swfdec_as_string_unescape_6 (SwfdecAsContext *cx, const char *s)
       g_byte_array_append (array, &__foo, 1); \
       g_byte_array_append (array, &c, 1); \
     } else if (c > 0xF7) { \
-      s = strchr (s, '\0'); \
+      goto out; \
     } else { \
       g_byte_array_append (array, &c, 1); \
       utf8left = (c < 0xE0) ? 1 : ((c < 0xF0) ? 2 : 3); \
@@ -848,6 +848,7 @@ swfdec_as_string_unescape_6 (SwfdecAsContext *cx, const char *s)
     }
     s++;
   }
+out:
   cur = 0;
   /* loop for break statement in APPEND macro */
   if (utf8left) {

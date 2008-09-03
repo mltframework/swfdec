@@ -1095,20 +1095,48 @@ flash.geom.Matrix.prototype.clone = function () {
       this.ty);
 };
 
-flash.geom.Matrix.prototype.concat = function () {
-  var o = {}; o["Implement Matrix.concat"] ();
+flash.geom.Matrix.prototype.concat = function (other) {
+  var a = this.a * other.a;
+  var d = this.d * other.d;
+  var b = 0;
+  var c = 0;
+  var tx = this.tx * other.a + other.tx;
+  var ty = this.ty * other.d + other.ty;
+  if (this.b != 0 || this.c != 0 || other.b != 0 || other.c != 0) {
+    a += this.b * other.c;
+    d += this.c * other.b;
+    b = this.a * other.b + this.b * other.d;
+    c = this.c * other.a + this.d * other.c;
+    tx += this.ty * other.c;
+    ty += this.tx * other.b;
+  }
+  this.a = a;
+  this.b = b;
+  this.c = c;
+  this.d = d;
+  this.tx = tx;
+  this.ty = ty;
 };
 
-flash.geom.Matrix.prototype.createBox = function () {
-  var o = {}; o["Implement Matrix.createBox"] ();
+flash.geom.Matrix.prototype.createBox = function (scaleX, scaleY, rotation, x, y) {
+  this.identity ();
+  this.rotate (arguments.length > 2 ? rotation : 0);
+  this.scale (scaleX, scaleY);
+  if (arguments.length > 3)
+    this.tx = x;
+  if (arguments.length > 4)
+    this.ty = y;
 };
 
-flash.geom.Matrix.prototype.createGradientBox = function () {
-  var o = {}; o["Implement Matrix.createGradientBox"] ();
+flash.geom.Matrix.prototype.createGradientBox = function (width, height, rotation, x, y) {
+  this.createBox (width / 1638.4, height / 1638.4,
+      arguments.length > 2 ? rotation : 0,
+      arguments.length > 3 ? x : 0,
+      arguments.length > 4 ? y : 0);
 };
 
-flash.geom.Matrix.prototype.deltaTransformPoint = function () {
-  var o = {}; o["Implement Matrix.deltaTransformPoint"] ();
+flash.geom.Matrix.prototype.deltaTransformPoint = function (p) {
+  return new flash.geom.Point (this.a * p.x + this.c * p.y, this.d * p.y + this.b * p.x);
 };
 
 flash.geom.Matrix.prototype.identity = function () {
@@ -1117,24 +1145,54 @@ flash.geom.Matrix.prototype.identity = function () {
 };
 
 flash.geom.Matrix.prototype.invert = function () {
-  var o = {}; o["Implement Matrix.invert"] ();
+  if (this.b == 0 && this.c == 0) {
+    this.a = 1 / this.a;
+    this.d = 1 / this.d;
+    this.b = this.c = 0;
+    this.tx = -this.a * this.tx;
+    this.ty = -this.d * this.ty;
+    return;
+  }
+
+  var a = this.a;
+  var b = this.b;
+  var c = this.c;
+  var d = this.d;
+  var det = a * d - b * c;
+  if (det == 0) {
+      this.identity();
+      return;
+  }
+
+  det = 1 / det;
+  this.a = d * det;
+  this.b = -b * det;
+  this.c = -c * det;
+  this.d = a * det;
+  var p = this.deltaTransformPoint (new flash.geom.Point(this.tx, this.ty));
+  this.tx = -p.x;
+  this.ty = -p.y;
 };
 
-flash.geom.Matrix.prototype.rotate = function () {
-  var o = {}; o["Implement Matrix.rotate"] ();
+flash.geom.Matrix.prototype.rotate = function (amount) {
+  var cos = Math.cos (amount);
+  var sin = Math.sin (amount);
+  this.concat (new flash.geom.Matrix (cos, sin, -sin, cos, 0, 0));
 };
 
-flash.geom.Matrix.prototype.scale = function () {
-  var o = {}; o["Implement Matrix.scale"] ();
+flash.geom.Matrix.prototype.scale = function (x, y) {
+  this.concat (new flash.geom.Matrix (x, 0, 0, y, 0, 0));
 };
 
-flash.geom.Matrix.prototype.transformPoint = function () {
-  var o = {}; o["Implement Matrix.transformPoint"] ();
+flash.geom.Matrix.prototype.transformPoint = function (p) {
+  return new flash.geom.Point (this.a * p.x + this.c * p.y + this.tx, this.d * p.y + this.b * p.x + this.ty);
 };
 
-flash.geom.Matrix.prototype.translate = function () {
-  var o = {}; o["Implement Matrix.translate"] ();
+flash.geom.Matrix.prototype.translate = function (dx, dy) {
+  this.tx += dx;
+  this.ty += dy;
 };
+
 
 flash.geom.Matrix.prototype.toString = function () {
   return "(a=" + this.a + ", b=" + this.b + ", c=" + this.c + ", d=" + this.d +
@@ -1146,14 +1204,14 @@ flash.geom.Matrix.prototype.toString = function () {
 flash.geom.ColorTransform = ASconstructor (1105, 0);
 
 flash.geom.ColorTransform.prototype.toString = function () {
-  return "(redMultiplier=" + this.redMultiplier +
-    ", greenMultiplier=" + this.greenMultiplier +
-    ", blueMultiplier=" + this.blueMultiplier +
-    ", alphaMultiplier=" + this.alphaMultiplier +
-    ", redOffset=" + this.redOffset +
-    ", greenOffset=" + this.greenOffset +
-    ", blueOffset=" + this.blueOffset +
-    ", alphaOffset=" + this.alphaOffset + ")";
+return "(redMultiplier=" + this.redMultiplier +
+  ", greenMultiplier=" + this.greenMultiplier +
+  ", blueMultiplier=" + this.blueMultiplier +
+  ", alphaMultiplier=" + this.alphaMultiplier +
+  ", redOffset=" + this.redOffset +
+  ", greenOffset=" + this.greenOffset +
+  ", blueOffset=" + this.blueOffset +
+  ", alphaOffset=" + this.alphaOffset + ")";
 };
 
 ASSetNative (flash.geom.ColorTransform.prototype, 1105, "8concat", 1);
@@ -1188,139 +1246,139 @@ flash.external.ExternalInterface = function () {
 };
 
 flash.external.ExternalInterface.addCallback = function (name, instance, method) {
-  if (!method || !flash.external.ExternalInterface.available)
-    return false;
+if (!method || !flash.external.ExternalInterface.available)
+  return false;
 
-  flash.external.ExternalInterface._initJS ();
-  return flash.external.ExternalInterface._addCallback (name, function (request) {
-    return flash.external.ExternalInterface._callIn (instance, method, request);
-  });
+flash.external.ExternalInterface._initJS ();
+return flash.external.ExternalInterface._addCallback (name, function (request) {
+  return flash.external.ExternalInterface._callIn (instance, method, request);
+});
 };
 
 flash.external.ExternalInterface.call = function (name) {
-  if (!flash.external.ExternalInterface.available)
-    return null;
+if (!flash.external.ExternalInterface.available)
+  return null;
 
-  flash.external.ExternalInterface._initJS ();
-  var request = "try { ";
-  var id = flash.external.ExternalInterface._objectID ();
-  if (id != null)
-    request += id + ".SetReturnValue(";
-  request += "__flash__toXML (" + name + "(";
-  for (var i = 1; i < arguments.length; i++) {
-    if (i > 1)
-      request += ",";
-    request += flash.external.ExternalInterface._toJS (arguments[i]);
-  }
-  request += ")) ";
-  if (id != null)
-    request += ")";
-  request += "; } catch (e) { ";
-  if (id != null) {
-    request += id + ".SetReturnValue(\"<undefined/>\"); }";
-  } else {
-    request += "\"<undefined/>\"; }";
-  }
-  var result = flash.external.ExternalInterface._evalJS (request);
-  if (result == null) {
-    request = "<invoke name=\"" + name + "\" returntype=\"xml\">" + flash.external.ExternalInterface._argumentsToXML (arguments) + "</invoke>";
-    result = flash.external.ExternalInterface._callOut (request);
-  }
-  if (result == null)
-    return null;
+flash.external.ExternalInterface._initJS ();
+var request = "try { ";
+var id = flash.external.ExternalInterface._objectID ();
+if (id != null)
+  request += id + ".SetReturnValue(";
+request += "__flash__toXML (" + name + "(";
+for (var i = 1; i < arguments.length; i++) {
+  if (i > 1)
+    request += ",";
+  request += flash.external.ExternalInterface._toJS (arguments[i]);
+}
+request += ")) ";
+if (id != null)
+  request += ")";
+request += "; } catch (e) { ";
+if (id != null) {
+  request += id + ".SetReturnValue(\"<undefined/>\"); }";
+} else {
+  request += "\"<undefined/>\"; }";
+}
+var result = flash.external.ExternalInterface._evalJS (request);
+if (result == null) {
+  request = "<invoke name=\"" + name + "\" returntype=\"xml\">" + flash.external.ExternalInterface._argumentsToXML (arguments) + "</invoke>";
+  result = flash.external.ExternalInterface._callOut (request);
+}
+if (result == null)
+  return null;
 
-  var xml = new XML ();
-  xml.ignoreWhite = true;
-  xml.parseXML (result);
-  return flash.external.ExternalInterface._toAS (xml.firstChild);
+var xml = new XML ();
+xml.ignoreWhite = true;
+xml.parseXML (result);
+return flash.external.ExternalInterface._toAS (xml.firstChild);
 };
 
 flash.external.ExternalInterface._callIn = function (instance, method, request) {
-  var xml = new XML();
-  xml.ignoreWhite = true;
-  xml.parseXML (request);
-  var args = null;
-  for (var i = 0; i < xml.firstChild.childNodes.length; i++) {
-    if (xml.firstChild.childNodes[i].nodeName == "arguments") {
-      args = xml.firstChild.childNodes[i];
-      break;
-    }
+var xml = new XML();
+xml.ignoreWhite = true;
+xml.parseXML (request);
+var args = null;
+for (var i = 0; i < xml.firstChild.childNodes.length; i++) {
+  if (xml.firstChild.childNodes[i].nodeName == "arguments") {
+    args = xml.firstChild.childNodes[i];
+    break;
   }
-  var result = method.apply (instance, flash.external.ExternalInterface._argumentsToAS (args));
-  if (xml.firstChild.attributes.returntype == "javascript")
-    return flash.external.ExternalInterface._toJS (result);
-  else
-    return flash.external.ExternalInterface._toXML (result);
+}
+var result = method.apply (instance, flash.external.ExternalInterface._argumentsToAS (args));
+if (xml.firstChild.attributes.returntype == "javascript")
+  return flash.external.ExternalInterface._toJS (result);
+else
+  return flash.external.ExternalInterface._toXML (result);
 };
 
 flash.external.ExternalInterface._arrayToXML = function (array) {
-  var s = "<array>";
-  for (var i = 0; i < array.length; i++) {
-    s += "<property id=\"" + i + "\">" + flash.external.ExternalInterface._toXML (array[i]) + "</property>";
-  }
-  return s + "</array>";
+var s = "<array>";
+for (var i = 0; i < array.length; i++) {
+  s += "<property id=\"" + i + "\">" + flash.external.ExternalInterface._toXML (array[i]) + "</property>";
+}
+return s + "</array>";
 };
 
 flash.external.ExternalInterface._argumentsToXML = function (args) {
-  var s = "<arguments>";
-  for (var i = 0; i < args.length; i++) {
-    s += flash.external.ExternalInterface._toXML (args[i]);
-  }
-  return s + "</arguments>";
+var s = "<arguments>";
+for (var i = 0; i < args.length; i++) {
+  s += flash.external.ExternalInterface._toXML (args[i]);
+}
+return s + "</arguments>";
 };
 
 flash.external.ExternalInterface._objectToXML = function (obj) {
-  var s = "<object>";
-  for (var prop in obj) {
-      s += "<property id=\"" + prop + "\">" + flash.external.ExternalInterface._toXML (obj[prop]) + "</property>";
-  }
-  return s + "</object>";
+var s = "<object>";
+for (var prop in obj) {
+    s += "<property id=\"" + prop + "\">" + flash.external.ExternalInterface._toXML (obj[prop]) + "</property>";
+}
+return s + "</object>";
 };
 
 flash.external.ExternalInterface._toXML = function (value) {
-  var type = typeof(value);
-  if (type == "string") {
-    return "<string>" + flash.external.ExternalInterface._escapeXML(value) + "</string>";
-  } else if (type == "undefined") {
-    return "<undefined/>";
-  } else if (type == "number") {
-    return "<number>" + value + "</number>";
-  } else if (value == null) {
-    return "<null/>";
-  } else if (type == "boolean") {
-    return value ? "<true/>" : "<false/>";
-  } else if (value.hasOwnProperty ("length")) {
-    return flash.external.ExternalInterface._arrayToXML (value);
-  } else if (type == "object") {
-    return flash.external.ExternalInterface._objectToXML (value);
-  } else {
-    return "<null/>";
-  }
+var type = typeof(value);
+if (type == "string") {
+  return "<string>" + flash.external.ExternalInterface._escapeXML(value) + "</string>";
+} else if (type == "undefined") {
+  return "<undefined/>";
+} else if (type == "number") {
+  return "<number>" + value + "</number>";
+} else if (value == null) {
+  return "<null/>";
+} else if (type == "boolean") {
+  return value ? "<true/>" : "<false/>";
+} else if (value.hasOwnProperty ("length")) {
+  return flash.external.ExternalInterface._arrayToXML (value);
+} else if (type == "object") {
+  return flash.external.ExternalInterface._objectToXML (value);
+} else {
+  return "<null/>";
+}
 };
 
 flash.external.ExternalInterface._objectToAS = function (xml) {
-  var o = {};
-  for (i = 0; i < xml.childNodes.length; i++) {
-    if (xml.childNodes[i].nodeName == "property")
-      o[xml.childNodes[i].attributes.id] = flash.external.ExternalInterface._toAS (xml.childNodes[i].firstChild);
-  }
-  return o;
+var o = {};
+for (i = 0; i < xml.childNodes.length; i++) {
+  if (xml.childNodes[i].nodeName == "property")
+    o[xml.childNodes[i].attributes.id] = flash.external.ExternalInterface._toAS (xml.childNodes[i].firstChild);
+}
+return o;
 };
 
 flash.external.ExternalInterface._arrayToAS = function (xml) {
-  var a = [];
-  for (i = 0; i < xml.childNodes.length; i++) {
-    if (xml.childNodes[i].nodeName == "property")
-      a[xml.childNodes[i].attributes.id] = flash.external.ExternalInterface._toAS (xml.childNodes[i].firstChild);
-  }
-  return a;
+var a = [];
+for (i = 0; i < xml.childNodes.length; i++) {
+  if (xml.childNodes[i].nodeName == "property")
+    a[xml.childNodes[i].attributes.id] = flash.external.ExternalInterface._toAS (xml.childNodes[i].firstChild);
+}
+return a;
 };
 
 flash.external.ExternalInterface._toAS = function (xml) {
-  var type = xml.nodeName;
-  if (type == "number") {
-    return Number (xml.firstChild.toString());
-  } else if (type == "string") {
+var type = xml.nodeName;
+if (type == "number") {
+  return Number (xml.firstChild.toString());
+} else if (type == "string") {
     return flash.external.ExternalInterface._unescapeXML (String (xml.firstChild));
   } else if (type == "false") {
     return false;

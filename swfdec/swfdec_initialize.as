@@ -1131,8 +1131,8 @@ flash.geom.Matrix.prototype.createBox = function (scaleX, scaleY, rotation, x, y
 flash.geom.Matrix.prototype.createGradientBox = function (width, height, rotation, x, y) {
   this.createBox (width / 1638.4, height / 1638.4,
       arguments.length > 2 ? rotation : 0,
-      arguments.length > 3 ? x : 0,
-      arguments.length > 4 ? y : 0);
+      (arguments.length > 3 ? x : 0) + width / 2,
+      (arguments.length > 4 ? y : 0) + height / 2);
 };
 
 flash.geom.Matrix.prototype.deltaTransformPoint = function (p) {

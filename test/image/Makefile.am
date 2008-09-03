@@ -57,6 +57,15 @@ EXTRA_DIST = \
 	background-set-and-load-8.swf \
 	background-set-and-load-8.swf.png \
 	background-set-and-load.xml \
+	beginBitmapFill-5.swf \
+	beginBitmapFill-5.swf.png \
+	beginBitmapFill-6.swf \
+	beginBitmapFill-6.swf.png \
+	beginBitmapFill-7.swf \
+	beginBitmapFill-7.swf.png \
+	beginBitmapFill-8.swf \
+	beginBitmapFill-8.swf.png \
+	beginBitmapFill.as \
 	beginFill-values-5.swf \
 	beginFill-values-5.swf.png \
 	beginFill-values-6.swf \

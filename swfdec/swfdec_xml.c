@@ -940,18 +940,13 @@ SwfdecXml *
 swfdec_xml_new_no_properties (SwfdecAsContext *context, const char *str,
     gboolean ignore_white)
 {
-  SwfdecAsValue val;
   SwfdecXml *xml;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
   xml = g_object_new (SWFDEC_TYPE_XML, "context", context, NULL);
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XML, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (xml),
-	SWFDEC_AS_VALUE_GET_OBJECT (&val));
-  }
 
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (xml), SWFDEC_AS_STR_XML, NULL);
   xml->ignore_white = ignore_white;
 
   swfdec_xml_node_init_values (SWFDEC_XML_NODE (xml),

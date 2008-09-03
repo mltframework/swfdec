@@ -1320,6 +1320,33 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   swfdec_as_function_call_full (fun, new, TRUE, new->prototype, n_args, args, return_value);
 }
 
+void
+swfdec_as_object_set_constructor_by_name (SwfdecAsObject *object, const char *name, ...)
+{
+  SwfdecAsContext *context;
+  SwfdecAsObject *cur;
+  SwfdecAsValue val;
+  va_list args;
+
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (name != NULL);
+
+  context = swfdec_gc_object_get_context (object);
+  va_start (args, name);
+  cur = context->global;
+  do {
+    if (!swfdec_as_object_get_variable (cur, name, &val) || 
+	!SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+      SWFDEC_WARNING ("could not find constructor %s", name);
+      return;
+    }
+    cur = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+    name = va_arg (args, const char *);
+  } while (name != NULL);
+  va_end (args);
+  swfdec_as_object_set_constructor (object, cur);
+}
+
 /**
  * swfdec_as_object_set_constructor:
  * @object: a #SwfdecAsObject

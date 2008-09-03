@@ -363,7 +363,6 @@ SwfdecColorTransformAs *
 swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
     const SwfdecColorTransform *transform)
 {
-  SwfdecAsValue val;
   SwfdecColorTransformAs *transform_as;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
@@ -371,19 +370,8 @@ swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
 
   transform_as = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, "context", context, NULL);
 
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_flash, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
-	SWFDEC_AS_STR_geom, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
-	  SWFDEC_AS_STR_ColorTransform, &val);
-      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (transform_as),
-	    SWFDEC_AS_VALUE_GET_OBJECT (&val));
-      }
-    }
-  }
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (transform_as),
+      SWFDEC_AS_STR_flash, SWFDEC_AS_STR_geom, SWFDEC_AS_STR_ColorTransform, NULL);
 
   transform_as->ra = transform->ra / 256.0;
   transform_as->ga = transform->ga / 256.0;

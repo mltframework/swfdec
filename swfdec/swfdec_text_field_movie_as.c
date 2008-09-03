@@ -1550,15 +1550,8 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   if (!cx->frame->construct) {
-    SwfdecAsValue val;
     object = swfdec_as_object_new_empty (cx);
-    swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_set_constructor (object,
-	  SWFDEC_AS_VALUE_GET_OBJECT (&val));
-    } else {
-      SWFDEC_INFO ("\"TextField\" is not an object");
-    }
+    swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_TextField, NULL);
   }
 
   swfdec_text_field_movie_init_properties (cx);

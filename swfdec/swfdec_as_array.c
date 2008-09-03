@@ -574,14 +574,11 @@ SwfdecAsObject *
 swfdec_as_array_new (SwfdecAsContext *context)
 {
   SwfdecAsObject *ret;
-  SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
   ret = g_object_new (SWFDEC_TYPE_AS_ARRAY, "context", context, NULL);
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Array, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  swfdec_as_object_set_constructor_by_name (ret, SWFDEC_AS_STR_Array, NULL);
 
   swfdec_as_array_set_length_object (ret, 0);
 
@@ -1370,15 +1367,8 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsArray *array;
 
   if (!cx->frame->construct) {
-    SwfdecAsValue val;
     object = g_object_new (SWFDEC_TYPE_AS_ARRAY, "context", cx, NULL);
-    swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Array, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_set_constructor (object,
-	  SWFDEC_AS_VALUE_GET_OBJECT (&val));
-    } else {
-      SWFDEC_INFO ("\"Array\" is not an object");
-    }
+    swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Array, NULL);
   }
 
   array = SWFDEC_AS_ARRAY (object);

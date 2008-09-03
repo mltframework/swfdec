@@ -22,11 +22,13 @@
 #endif
 
 #include "swfdec_transform_as.h"
+
 #include "swfdec_color_transform_as.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
+#include "swfdec_utils.h"
 
 G_DEFINE_TYPE (SwfdecTransformAs, swfdec_transform_as, SWFDEC_TYPE_AS_OBJECT)
 
@@ -191,7 +193,6 @@ swfdec_transform_as_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 SwfdecTransformAs *
 swfdec_transform_as_new (SwfdecAsContext *context, SwfdecMovie *target)
 {
-  SwfdecAsValue val;
   SwfdecTransformAs *transform;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
@@ -199,20 +200,8 @@ swfdec_transform_as_new (SwfdecAsContext *context, SwfdecMovie *target)
 
   transform = g_object_new (SWFDEC_TYPE_TRANSFORM_AS, "context", context, NULL);
 
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_flash, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
-	SWFDEC_AS_STR_geom, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
-	  SWFDEC_AS_STR_Transform, &val);
-      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (transform),
-	    SWFDEC_AS_VALUE_GET_OBJECT (&val));
-      }
-    }
-  }
-
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (transform),
+      SWFDEC_AS_STR_flash, SWFDEC_AS_STR_geom, SWFDEC_AS_STR_Transform, NULL);
   transform->target = target;
 
   return transform;

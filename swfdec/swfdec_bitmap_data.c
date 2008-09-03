@@ -107,7 +107,6 @@ SwfdecBitmapData *
 swfdec_bitmap_data_new (SwfdecAsContext *context, gboolean transparent, guint width, guint height)
 {
   SwfdecBitmapData *bitmap;
-  SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (width > 0, NULL);
@@ -120,19 +119,8 @@ swfdec_bitmap_data_new (SwfdecAsContext *context, gboolean transparent, guint wi
   bitmap->surface = cairo_image_surface_create (
       transparent ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, width, height);
 
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_flash, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val), 
-	SWFDEC_AS_STR_display, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val), 
-	  SWFDEC_AS_STR_BitmapData, &val);
-      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-	swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (bitmap),
-	    SWFDEC_AS_VALUE_GET_OBJECT (&val));
-      }
-    }
-  }
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (bitmap),
+      SWFDEC_AS_STR_flash, SWFDEC_AS_STR_display, SWFDEC_AS_STR_BitmapData, NULL);
 
   return bitmap;
 }

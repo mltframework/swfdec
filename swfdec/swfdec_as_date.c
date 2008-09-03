@@ -1057,15 +1057,8 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsDate *date;
 
   if (!cx->frame->construct) {
-    SwfdecAsValue val;
     object = g_object_new (SWFDEC_TYPE_AS_DATE, "context", cx, NULL);
-    swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Date, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      swfdec_as_object_set_constructor (object,
-	  SWFDEC_AS_VALUE_GET_OBJECT (&val));
-    } else {
-      SWFDEC_INFO ("\"Date\" is not an object");
-    }
+    swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Date, NULL);
   }
 
   date = SWFDEC_AS_DATE (object);
@@ -1206,14 +1199,11 @@ swfdec_as_date_new (SwfdecAsContext *context, double milliseconds,
     int utc_offset)
 {
   SwfdecAsObject *ret;
-  SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
   ret = g_object_new (SWFDEC_TYPE_AS_DATE, "context", context, NULL);
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Date, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  swfdec_as_object_set_constructor_by_name (ret, SWFDEC_AS_STR_Date, NULL);
 
   SWFDEC_AS_DATE (ret)->milliseconds = milliseconds;
   SWFDEC_AS_DATE (ret)->utc_offset = utc_offset;

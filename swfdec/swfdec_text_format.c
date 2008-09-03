@@ -1079,12 +1079,7 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
   ret = g_object_new (SWFDEC_TYPE_TEXT_FORMAT, "context", context, NULL);
 
   swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (ret));
-
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_TextFormat,
-      &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    return ret;
-  swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  swfdec_as_object_set_constructor_by_name (ret, SWFDEC_AS_STR_TextFormat, NULL);
 
   // FIXME: Need better way to create function without prototype/constructor
   tmp = context->Function;

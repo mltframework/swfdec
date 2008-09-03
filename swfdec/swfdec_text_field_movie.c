@@ -28,8 +28,9 @@
 
 #include "swfdec_text_field_movie.h"
 #include "swfdec_as_context.h"
-#include "swfdec_as_strings.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_interpret.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
@@ -397,11 +398,8 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 
   swfdec_text_field_movie_init_properties (cx);
 
-  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie),
-	SWFDEC_AS_VALUE_GET_OBJECT (&val));
-  }
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie),
+      SWFDEC_AS_STR_TextField, NULL);
 
   /* create _listeners array */
   array = swfdec_as_array_new (cx);

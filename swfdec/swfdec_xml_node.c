@@ -1046,19 +1046,14 @@ SwfdecXmlNode *
 swfdec_xml_node_new_no_properties (SwfdecAsContext *context,
     SwfdecXmlNodeType type, const char* value)
 {
-  SwfdecAsValue val;
   SwfdecXmlNode *node;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (value != NULL, NULL);
 
   node = g_object_new (SWFDEC_TYPE_XML_NODE, "context", context, NULL);
-  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_XMLNode, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (node),
-	SWFDEC_AS_VALUE_GET_OBJECT (&val));
-  }
-
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (node),
+      SWFDEC_AS_STR_XMLNode, NULL);
   swfdec_xml_node_init_values (node, type, value);
 
   return node;

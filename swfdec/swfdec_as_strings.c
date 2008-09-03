@@ -530,5 +530,6 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("ty")
   SWFDEC_AS_CONSTANT_STRING ("Invalid Date")
   SWFDEC_AS_CONSTANT_STRING ("auto")
+  SWFDEC_AS_CONSTANT_STRING ("Matrix")
   /* add more here */
 ;

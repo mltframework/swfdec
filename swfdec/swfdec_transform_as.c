@@ -48,7 +48,37 @@ void
 swfdec_transform_as_get_matrix (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Transform.matrix (get)");
+  SwfdecTransformAs *transform;
+  SwfdecAsObject *o;
+  cairo_matrix_t *matrix;
+  SwfdecAsValue val;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TRANSFORM_AS, &transform, "");
+  if (transform->target == NULL)
+    return;
+
+  swfdec_movie_update (transform->target);
+  matrix = &transform->target->matrix;
+  o = swfdec_as_object_new_empty (cx);
+  swfdec_as_object_set_constructor_by_name (o, SWFDEC_AS_STR_flash,
+	SWFDEC_AS_STR_geom, SWFDEC_AS_STR_Matrix, NULL);
+
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, matrix->xx);
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_a, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, matrix->yx);
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_b, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, matrix->xy);
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_c, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, matrix->yy);
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_d, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, matrix->yy);
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_d, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, SWFDEC_TWIPS_TO_DOUBLE (matrix->x0));
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_tx, &val);
+  SWFDEC_AS_VALUE_SET_NUMBER (&val, SWFDEC_TWIPS_TO_DOUBLE (matrix->y0));
+  swfdec_as_object_set_variable (o, SWFDEC_AS_STR_ty, &val);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, o);
 }
 
 SWFDEC_AS_NATIVE (1106, 102, swfdec_transform_as_set_matrix)
@@ -56,7 +86,29 @@ void
 swfdec_transform_as_set_matrix (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("Transform.matrix (set)");
+  cairo_matrix_t tmp;
+  SwfdecTransformAs *transform;
+  SwfdecAsObject *o;
+  SwfdecMovie *movie;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TRANSFORM_AS, &transform, "o", &o);
+  if (transform->target == NULL ||
+      !swfdec_matrix_from_as_object (&tmp, o))
+    return;
+
+  tmp.x0 = SWFDEC_DOUBLE_TO_TWIPS (tmp.x0);
+  tmp.y0 = SWFDEC_DOUBLE_TO_TWIPS (tmp.y0);
+
+  /* NB: We don't use begin/end_update_matrix() here, because Flash is
+   * broken enough to not want that. */
+  movie = transform->target;
+  swfdec_movie_invalidate_next (movie);
+
+  movie->matrix = tmp;
+
+  swfdec_movie_queue_update (movie, SWFDEC_MOVIE_INVALID_EXTENTS);
+  swfdec_matrix_ensure_invertible (&movie->matrix, &movie->inverse_matrix);
+  g_signal_emit_by_name (movie, "matrix-changed");
 }
 
 SWFDEC_AS_NATIVE (1106, 103, swfdec_transform_as_get_concatenatedMatrix)

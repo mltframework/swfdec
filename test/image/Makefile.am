@@ -75,6 +75,15 @@ EXTRA_DIST = \
 	beginFill-values-8.swf \
 	beginFill-values-8.swf.png \
 	beginFill-values.as \
+	bitmapFill-update-5.swf \
+	bitmapFill-update-5.swf.png \
+	bitmapFill-update-6.swf \
+	bitmapFill-update-6.swf.png \
+	bitmapFill-update-7.swf \
+	bitmapFill-update-7.swf.png \
+	bitmapFill-update-8.swf \
+	bitmapFill-update-8.swf.png \
+	bitmapFill-update.as \
 	bw.jpg \
 	clip-change.c \
 	clip-change-backward-5.swf \

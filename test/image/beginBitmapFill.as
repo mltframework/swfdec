@@ -41,11 +41,11 @@ rectangle (a);
 
 a.beginBitmapFill (bd, null, true, false);
 rectangle (a);
-a.beginBitmapFill (bd, null, true, true);
+a.beginBitmapFill (bd, undefined, true, true);
 rectangle (a);
-a.beginBitmapFill (bd, null, false, false);
+a.beginBitmapFill (bd, 42, false, false);
 rectangle (a);
-a.beginBitmapFill (bd, null, false, true);
+a.beginBitmapFill (bd, {}, false, true);
 rectangle (a);
 
 
@@ -59,6 +59,8 @@ m.translate (50, 0);
 a.beginBitmapFill (bd, m);
 rectangle (a);
 
-a.beginBitmapFill (bd, {});
+bd = bd.clone ();
+a.beginBitmapFill (bd);
 rectangle (a);
+bd.dispose ();
 

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,12 +24,14 @@
 #include "swfdec_movie.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_bitmap_pattern.h"
 #include "swfdec_color.h"
 #include "swfdec_debug.h"
 #include "swfdec_gradient_pattern.h"
 #include "swfdec_path.h"
 #include "swfdec_pattern.h"
 #include "swfdec_stroke.h"
+#include "swfdec_utils.h"
 
 /* FIXME: This whole code assumes it works for MovieClip, Button and TextField
  * objects. If it only works for MovieClip objects, fix this. */
@@ -427,7 +429,43 @@ swfdec_sprite_movie_beginBitmapFill (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.beginBitmapFill");
+  SwfdecMovie *movie;
+  SwfdecBitmapData *bitmap;
+  SwfdecPattern *pattern;
+  SwfdecDraw *draw;
+  SwfdecAsObject *mat = NULL;
+  gboolean repeat = TRUE;
+  gboolean smoothing = FALSE;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "O|Obb", 
+      &bitmap, &mat, &repeat, &smoothing);
+  movie->draw_fill = NULL;
+  if (!SWFDEC_IS_BITMAP_DATA (bitmap))
+    return;
+  
+  pattern = swfdec_bitmap_pattern_new (bitmap);
+  /* NB: This signal assumes that the pattern is destroyed before the movie is,
+   * because it is never removed anywhere */
+  g_signal_connect_swapped (pattern, "invalidate", G_CALLBACK (swfdec_movie_invalidate_last), movie);
+
+  if (mat != NULL && !swfdec_matrix_from_as_object (&pattern->start_transform, mat))
+    cairo_matrix_init_identity (&pattern->start_transform);
+  cairo_matrix_scale (&pattern->start_transform, SWFDEC_TWIPS_SCALE_FACTOR, SWFDEC_TWIPS_SCALE_FACTOR);
+  pattern->start_transform.x0 *= SWFDEC_TWIPS_SCALE_FACTOR;
+  pattern->start_transform.y0 *= SWFDEC_TWIPS_SCALE_FACTOR;
+  pattern->transform = pattern->start_transform;
+  if (cairo_matrix_invert (&pattern->transform) != CAIRO_STATUS_SUCCESS) {
+    SWFDEC_ERROR ("non-invertible matrix used for transform");
+    cairo_matrix_init_scale (&pattern->transform, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR,
+	1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
+  }
+  /* FIXME: or use FAST/GOOD? */
+  SWFDEC_BITMAP_PATTERN (pattern)->filter = smoothing ? CAIRO_FILTER_NEAREST : CAIRO_FILTER_BILINEAR;
+  SWFDEC_BITMAP_PATTERN (pattern)->extend = repeat ? CAIRO_EXTEND_REPEAT : CAIRO_EXTEND_PAD;
+
+  draw = SWFDEC_DRAW (pattern);
+  swfdec_path_move_to (&draw->path, movie->draw_x, movie->draw_y);
+  swfdec_sprite_movie_end_fill (movie, draw);
 }
 
 SWFDEC_AS_NATIVE (901, 12, swfdec_sprite_movie_get_scale9Grid)

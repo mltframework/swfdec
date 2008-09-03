@@ -460,7 +460,7 @@ swfdec_sprite_movie_beginBitmapFill (SwfdecAsContext *cx,
 	1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
   }
   /* FIXME: or use FAST/GOOD? */
-  SWFDEC_BITMAP_PATTERN (pattern)->filter = smoothing ? CAIRO_FILTER_NEAREST : CAIRO_FILTER_BILINEAR;
+  SWFDEC_BITMAP_PATTERN (pattern)->filter = smoothing ? CAIRO_FILTER_BILINEAR : CAIRO_FILTER_NEAREST;
   SWFDEC_BITMAP_PATTERN (pattern)->extend = repeat ? CAIRO_EXTEND_REPEAT : CAIRO_EXTEND_PAD;
 
   draw = SWFDEC_DRAW (pattern);

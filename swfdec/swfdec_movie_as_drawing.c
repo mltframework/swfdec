@@ -154,6 +154,9 @@ swfdec_sprite_movie_extract_matrix (SwfdecAsObject *o, cairo_matrix_t *mat)
     } else {
       SWFDEC_WARNING ("my friend, there's no other matrixType than \"box\"");
     }
+  } else if (cx->version >= 8 && swfdec_matrix_from_as_object (mat, o)) {
+    mat->x0 *= SWFDEC_TWIPS_SCALE_FACTOR;
+    mat->y0 *= SWFDEC_TWIPS_SCALE_FACTOR;
   } else {
     cairo_matrix_t input;
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_a, &val);

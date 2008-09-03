@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,21 +20,25 @@
 #ifndef _SWFDEC_UTILS_H_
 #define _SWFDEC_UTILS_H_
 
-#include <glib.h>
+#include <cairo.h>
+#include <swfdec/swfdec_as_types.h>
 
 G_BEGIN_DECLS
 
-gboolean	swfdec_str_case_equal		(gconstpointer	v1,
-						 gconstpointer	v2);
-guint		swfdec_str_case_hash		(gconstpointer	v);
+gboolean	swfdec_str_case_equal		(gconstpointer		v1,
+						 gconstpointer		v2);
+guint		swfdec_str_case_hash		(gconstpointer		v);
 
-int		swfdec_strcmp			(guint		version,
-						 const char *	s1,
-						 const char *	s2);
-int		swfdec_strncmp			(guint		version,
-						 const char *	s1,
-						 const char *	s2,
-						 guint		n);
+int		swfdec_strcmp			(guint			version,
+						 const char *		s1,
+						 const char *		s2);
+int		swfdec_strncmp			(guint			version,
+						 const char *		s1,
+						 const char *		s2,
+						 guint			n);
+
+gboolean	swfdec_matrix_from_as_object	(cairo_matrix_t *	matrix,
+						 SwfdecAsObject *	object);
 
 
 G_END_DECLS

@@ -22,7 +22,10 @@
 #endif
 #include "swfdec_gtk_keys.h"
 
-static const guint8 flash_keycodes[] = {
+#include <gdk/gdk.h>
+#include <gdk/gdkkeysyms.h>
+
+static const guint8 flash_keycodes_old[] = {
   /*   0 */ 0, 0, 0, 0, 0, 
   /*   5 */ 0, 0, 0, 0, SWFDEC_KEY_ESCAPE,
   /*  10 */ SWFDEC_KEY_1, SWFDEC_KEY_2, SWFDEC_KEY_3, SWFDEC_KEY_4, SWFDEC_KEY_5, 
@@ -36,9 +39,9 @@ static const guint8 flash_keycodes[] = {
   /*  50 */ SWFDEC_KEY_SHIFT, SWFDEC_KEY_BACKSLASH, SWFDEC_KEY_Z, SWFDEC_KEY_X, SWFDEC_KEY_C, 
   /*  55 */ SWFDEC_KEY_V, SWFDEC_KEY_B, SWFDEC_KEY_N, SWFDEC_KEY_M, SWFDEC_KEY_COMMA, 
   /*  60 */ SWFDEC_KEY_DOT, SWFDEC_KEY_SLASH, SWFDEC_KEY_SHIFT, SWFDEC_KEY_NUMPAD_MULTIPLY, SWFDEC_KEY_ALT,
-  /*  65 */ SWFDEC_KEY_SPACE, 0, SWFDEC_KEY_F1, SWFDEC_KEY_F2, SWFDEC_KEY_F3, 
+  /*  65 */ SWFDEC_KEY_SPACE, SWFDEC_KEY_CAPS_LOCK, SWFDEC_KEY_F1, SWFDEC_KEY_F2, SWFDEC_KEY_F3, 
   /*  70 */ SWFDEC_KEY_F4, SWFDEC_KEY_F5, SWFDEC_KEY_F6, SWFDEC_KEY_F7, SWFDEC_KEY_F8,
-  /*  75 */ SWFDEC_KEY_F9, SWFDEC_KEY_F10, SWFDEC_KEY_NUM_LOCK, 0, SWFDEC_KEY_NUMPAD_7,
+  /*  75 */ SWFDEC_KEY_F9, SWFDEC_KEY_F10, SWFDEC_KEY_NUM_LOCK, SWFDEC_KEY_SCROLL_LOCK, SWFDEC_KEY_NUMPAD_7,
   /*  80 */ SWFDEC_KEY_NUMPAD_8, SWFDEC_KEY_NUMPAD_9, SWFDEC_KEY_NUMPAD_SUBTRACT, SWFDEC_KEY_NUMPAD_4, SWFDEC_KEY_NUMPAD_5,
   /*  85 */ SWFDEC_KEY_NUMPAD_6, SWFDEC_KEY_NUMPAD_ADD, SWFDEC_KEY_NUMPAD_1, SWFDEC_KEY_NUMPAD_2, SWFDEC_KEY_NUMPAD_3,
   /*  90 */ SWFDEC_KEY_NUMPAD_0, SWFDEC_KEY_NUMPAD_DECIMAL, 0, 0, 0,
@@ -49,12 +52,60 @@ static const guint8 flash_keycodes[] = {
   /* 115 */ 0, 0, 0, 0, 0
 };
 /*
-SWFDEC_KEY_SCROLL_LOCK 78
 SWFDEC_KEY_BREAK 110
 SWFDEC_KEY_META 115
 SWFDEC_KEY_META_R 116
 SWFDEC_KEY_MENU 117
 */
+static const guint8 flash_keycodes_evdev[] = {
+  /*   0 */ 0, SWFDEC_KEY_ESCAPE, SWFDEC_KEY_1, SWFDEC_KEY_2, SWFDEC_KEY_3, 
+  /*   5 */ SWFDEC_KEY_4, SWFDEC_KEY_5, SWFDEC_KEY_6, SWFDEC_KEY_7, SWFDEC_KEY_8, 
+  /*  10 */ SWFDEC_KEY_9, SWFDEC_KEY_0, SWFDEC_KEY_MINUS, SWFDEC_KEY_EQUAL, SWFDEC_KEY_BACKSPACE, 
+  /*  15 */ SWFDEC_KEY_TAB, SWFDEC_KEY_Q, SWFDEC_KEY_W, SWFDEC_KEY_E, SWFDEC_KEY_R, 
+  /*  20 */ SWFDEC_KEY_T, SWFDEC_KEY_Y, SWFDEC_KEY_U, SWFDEC_KEY_I, SWFDEC_KEY_O, 
+  /*  25 */ SWFDEC_KEY_P, SWFDEC_KEY_LEFT_BRACKET, SWFDEC_KEY_RIGHT_BRACKET, SWFDEC_KEY_ENTER, SWFDEC_KEY_CONTROL, 
+  /*  30 */ SWFDEC_KEY_A, SWFDEC_KEY_S, SWFDEC_KEY_D, SWFDEC_KEY_F, SWFDEC_KEY_G, 
+  /*  35 */ SWFDEC_KEY_H, SWFDEC_KEY_J, SWFDEC_KEY_K, SWFDEC_KEY_L, SWFDEC_KEY_SEMICOLON, 
+  /*  40 */ SWFDEC_KEY_APOSTROPHE, SWFDEC_KEY_GRAVE, SWFDEC_KEY_SHIFT, SWFDEC_KEY_BACKSLASH, SWFDEC_KEY_Z, 
+  /*  45 */ SWFDEC_KEY_X, SWFDEC_KEY_C, SWFDEC_KEY_V, SWFDEC_KEY_B, SWFDEC_KEY_N, 
+  /*  50 */ SWFDEC_KEY_M, SWFDEC_KEY_COMMA, SWFDEC_KEY_DOT, SWFDEC_KEY_SLASH, SWFDEC_KEY_SHIFT, 
+  /*  55 */ SWFDEC_KEY_NUMPAD_MULTIPLY, SWFDEC_KEY_ALT, SWFDEC_KEY_SPACE, SWFDEC_KEY_CAPS_LOCK, SWFDEC_KEY_F1, 
+  /*  60 */ SWFDEC_KEY_F2, SWFDEC_KEY_F3, SWFDEC_KEY_F4, SWFDEC_KEY_F5, SWFDEC_KEY_F6, 
+  /*  65 */ SWFDEC_KEY_F7, SWFDEC_KEY_F8, SWFDEC_KEY_F9, SWFDEC_KEY_F10, SWFDEC_KEY_NUM_LOCK, 
+  /*  70 */ SWFDEC_KEY_SCROLL_LOCK, SWFDEC_KEY_NUMPAD_7, SWFDEC_KEY_NUMPAD_8, SWFDEC_KEY_NUMPAD_9, SWFDEC_KEY_NUMPAD_SUBTRACT, 
+  /*  75 */ SWFDEC_KEY_NUMPAD_4, SWFDEC_KEY_NUMPAD_5, SWFDEC_KEY_NUMPAD_6, SWFDEC_KEY_NUMPAD_ADD, SWFDEC_KEY_NUMPAD_1, 
+  /*  80 */ SWFDEC_KEY_NUMPAD_2, SWFDEC_KEY_NUMPAD_3, SWFDEC_KEY_NUMPAD_0, SWFDEC_KEY_NUMPAD_DECIMAL, 0,
+  /*  85 */ 0, 0, SWFDEC_KEY_F11, SWFDEC_KEY_F12, 0,
+  /*  90 */ 0, 0, 0, 0, 0,
+  /*  95 */ 0, SWFDEC_KEY_ENTER, SWFDEC_KEY_CONTROL, SWFDEC_KEY_NUMPAD_DIVIDE, 0,
+  /* 100 */ SWFDEC_KEY_ALT, 0, SWFDEC_KEY_HOME, SWFDEC_KEY_UP,  SWFDEC_KEY_PAGE_UP,
+  /* 105 */ SWFDEC_KEY_LEFT, SWFDEC_KEY_RIGHT, SWFDEC_KEY_END, SWFDEC_KEY_DOWN, SWFDEC_KEY_PAGE_DOWN,
+  /* 110 */ SWFDEC_KEY_INSERT, SWFDEC_KEY_DELETE, 0, 0, 0,
+  /* 115 */ 0, 0, 0, 0, 0
+};
+
+static const guint8 *
+compute_keycodes (void)
+{
+  /* This is a huge hack, but a proper solution is probably very complicated
+   * and I'm lazy:
+   * We need a proper way to convert X keycodes to Windows virtual keycodes
+   * and according to the people in #xorg-devel noone else has succeeded there
+   * so far. */
+  static const GdkKeymapKey ten = { 10, 0, 0 };
+  guint keyval = gdk_keymap_lookup_key (gdk_keymap_get_default (), &ten);
+  
+  /* sanity check */
+  g_assert (G_N_ELEMENTS (flash_keycodes_old) == G_N_ELEMENTS (flash_keycodes_evdev));
+
+  if (keyval == GDK_1) {
+    return flash_keycodes_old;
+  } else if (keyval != GDK_9) {
+    g_printerr ("FIXME: Failed to detect proper keyboard layout, assuming evdev.\n");
+  }
+
+  return flash_keycodes_evdev;
+}
 
 /**
  * swfdec_gtk_keycode_from_hardware_keycode:
@@ -69,7 +120,12 @@ SWFDEC_KEY_MENU 117
 guint
 swfdec_gtk_keycode_from_hardware_keycode (guint hardware_keycode)
 {
-  if (hardware_keycode >= G_N_ELEMENTS (flash_keycodes))
+  static const guint8 *keycodes = NULL;
+
+  if (G_UNLIKELY (keycodes == NULL))
+    keycodes = compute_keycodes ();
+
+  if (hardware_keycode >= G_N_ELEMENTS (flash_keycodes_evdev))
     return 0;
-  return flash_keycodes[hardware_keycode];
+  return keycodes[hardware_keycode];
 }

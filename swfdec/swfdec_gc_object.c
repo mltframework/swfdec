@@ -47,7 +47,18 @@
  * SwfdecGcObject:
  *
  * If you want to add custom objects to the garbage collection lifecycle, you
- * need to subclass this object as this object is abstract. 
+ * need to subclass this object as this object is abstract. Note that you have
+ * to provide a valid #SwfdecAsContext whenever you construct objects of this
+ * type.
+ */
+
+/**
+ * SwfdecGcObjectClass:
+ * @mark: Called in the mark phase of garbage collection. Mark all the 
+ *        garbage-collected object you still use here using the marking 
+ *        functions such as swfdec_gc_object_mark() or swfdec_as_string_mark()
+ *
+ * This is the base class for garbage-collected objects.
  */
 
 enum {

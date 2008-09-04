@@ -342,7 +342,7 @@ swfdec_swf_decoder_parse_one (SwfdecSwfDecoder *s)
 	SWFDEC_WARNING ("tag %d %s must be first tag in file, ignoring",
 	    tag, swfdec_swf_decoder_get_tag_name (tag));
       } else if (func == NULL) {
-	SWFDEC_WARNING ("tag function not implemented for %d %s",
+	SWFDEC_FIXME ("tag function not implemented for %d %s",
 	    tag, swfdec_swf_decoder_get_tag_name (tag));
       } else if (s->main_sprite->parse_frame < s->main_sprite->n_frames) {
 	s->parse_sprite = s->main_sprite;

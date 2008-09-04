@@ -222,7 +222,7 @@ tag_func_define_sprite (SwfdecSwfDecoder * s, guint define_sprite_tag)
     if (tag == 0) {
       break;
     } else if (func == NULL) {
-      SWFDEC_WARNING ("tag function not implemented for %d %s",
+      SWFDEC_FIXME ("tag function not implemented for %d %s",
           tag, swfdec_swf_decoder_get_tag_name (tag));
     } else if ((swfdec_swf_decoder_get_tag_flag (tag) & 1) == 0) {
       SWFDEC_ERROR ("invalid tag %d %s during DefineSprite",

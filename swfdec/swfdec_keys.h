@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,9 @@
 G_BEGIN_DECLS
 
 typedef enum {
+  SWFDEC_KEY_LEFT_MOUSE = 1,
+  SWFDEC_KEY_RIGHT_MOUSE = 2,
+  SWFDEC_KEY_MIDDLE_MOUSE = 4,
   SWFDEC_KEY_BACKSPACE = 8,
   SWFDEC_KEY_TAB = 9,
   SWFDEC_KEY_CLEAR = 12,
@@ -111,6 +114,7 @@ typedef enum {
   SWFDEC_KEY_F14 = 125,
   SWFDEC_KEY_F15 = 126,
   SWFDEC_KEY_NUM_LOCK = 144,
+  SWFDEC_KEY_SCROLL_LOCK = 145,
   SWFDEC_KEY_SEMICOLON = 186,
   SWFDEC_KEY_EQUAL = 187,
   SWFDEC_KEY_COMMA = 188,

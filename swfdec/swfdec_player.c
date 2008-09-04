@@ -132,6 +132,9 @@
 
 /**
  * SwfdecKey:
+ * @SWFDEC_KEY_LEFT_MOUSE: the left mouse button
+ * @SWFDEC_KEY_RIGHT_MOUSE: the left mouse button
+ * @SWFDEC_KEY_MIDDLE_MOUSE: the middle mouse button
  * @SWFDEC_KEY_BACKSPACE: the backspace key
  * @SWFDEC_KEY_TAB: the tab key
  * @SWFDEC_KEY_CLEAR: the clear key
@@ -220,6 +223,7 @@
  * @SWFDEC_KEY_F14: the F14 key
  * @SWFDEC_KEY_F15: the F15 key
  * @SWFDEC_KEY_NUM_LOCK: the num lock key
+ * @SWFDEC_KEY_SCROLL_LOCK: the scroll lock key
  * @SWFDEC_KEY_SEMICOLON: the semicolon key (on English keyboards)
  * @SWFDEC_KEY_EQUAL: the equal key (on English keyboards)
  * @SWFDEC_KEY_COMMA: the comma key (on English keyboards)
@@ -233,7 +237,8 @@
  * @SWFDEC_KEY_APOSTROPHE: the apostrophe key (on English keyboards)
  *
  * Lists all known key codes in Swfdec and their meanings on an English 
- * keyboard.
+ * keyboard. Note that key codes in Flash represent virtual key codes as used
+ * in Microsoft Windows.
  */
 
 /*** timeval type mapping ***/

@@ -46,9 +46,9 @@
 
 /**
  * SECTION:Internals
- * @title: Internals and garbage collection
+ * @title: Internals of the script engine
  * @short_description: understanding internals such as garbage collection
- * @see_also: #SwfdecAsContext
+ * @see_also: #SwfdecAsContext, #SwfdecGcObject
  *
  * This section deals with the internals of the Swfdec Actionscript engine. You
  * should probably read this first when trying to write code with it. If you're
@@ -67,13 +67,10 @@
  * lookups.
  *
  * The script engine starts its life when it is initialized via 
- * swfdec_as_context_startup (). At that point, the basic objects are created.
- * After this function has been called, you can start executing code. All code
- * execution happens by creating a new #SwfdecAsFrame and then calling 
- * swfdec_as_context_run() to execute it. This function is the single entry 
- * point for code execution. Convenience functions exist that make executing 
- * code easy, most notably swfdec_as_object_run() and 
- * swfdec_as_object_call().
+ * swfdec_as_context_startup(). At that point, the basic objects are created.
+ * After this function has been called, you can start executing code. Code
+ * execution happens by calling swfdec_as_function_call_full() or convenience
+ * wrappers like swfdec_as_object_run() or swfdec_as_object_call().
  *
  * It is also easily possible to extend the environment by adding new objects.
  * In fact, without doing so, the environment is pretty bare as it just contains

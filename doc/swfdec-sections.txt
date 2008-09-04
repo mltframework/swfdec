@@ -367,6 +367,11 @@ SWFDEC_TYPE_GTK_SOCKET
 </SECTION>
 
 <SECTION>
+<FILE>Internals</FILE>
+<TITLE>Internals of the script engine</TITLE>
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecGcObject</FILE>
 <TITLE>SwfdecGcObject</TITLE>
 SwfdecGcObject
@@ -436,7 +441,6 @@ swfdec_as_context_try_use_mem
 swfdec_as_context_unuse_mem
 swfdec_as_context_gc
 swfdec_as_context_maybe_gc
-swfdec_as_context_run
 swfdec_as_context_throw
 swfdec_as_context_catch
 swfdec_as_context_get_time

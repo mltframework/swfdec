@@ -129,8 +129,6 @@ void		swfdec_as_string_mark		(const char *		string);
 void		swfdec_as_context_gc		(SwfdecAsContext *	context);
 void		swfdec_as_context_maybe_gc	(SwfdecAsContext *	context);
 
-void		swfdec_as_context_run		(SwfdecAsContext *	context);
-
 
 G_END_DECLS
 #endif

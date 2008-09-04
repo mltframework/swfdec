@@ -262,7 +262,6 @@ SWFDEC_TYPE_TIME_VAL
 SwfdecAsContextState
 SwfdecAsDeleteReturn
 SwfdecLoaderDataType
-SwfdecLoaderRequest
 swfdec_loader_data_type_get_extension
 SwfdecAlignment
 SwfdecKey
@@ -368,11 +367,22 @@ SWFDEC_TYPE_GTK_SOCKET
 </SECTION>
 
 <SECTION>
-<FILE>Internals</FILE>
-<TITLE>Internals</TITLE>
-swfdec_as_object_mark
+<FILE>SwfdecGcObject</FILE>
+<TITLE>SwfdecGcObject</TITLE>
+SwfdecGcObject
+SwfdecGcObjectClass
+swfdec_gc_object_get_context
+swfdec_gc_object_mark
 swfdec_as_string_mark
 swfdec_as_value_mark
+<SUBSECTION Standard>
+swfdec_gc_object_get_type
+SWFDEC_GC_OBJECT
+SWFDEC_GC_OBJECT_CLASS
+SWFDEC_GC_OBJECT_GET_CLASS
+SWFDEC_IS_GC_OBJECT
+SWFDEC_IS_GC_OBJECT_CLASS
+SWFDEC_TYPE_GC_OBJECT
 </SECTION>
 
 <SECTION>
@@ -450,7 +460,6 @@ SwfdecAsObject
 swfdec_as_object_new
 swfdec_as_object_new_empty
 swfdec_as_object_create
-swfdec_as_object_add
 swfdec_as_object_set_constructor
 SwfdecAsVariableFlag
 swfdec_as_object_get_variable
@@ -516,9 +525,9 @@ SwfdecAsFunction
 SwfdecAsNative
 SwfdecAsNativeFunction
 swfdec_as_function_call
+swfdec_as_function_call_full
 swfdec_as_native_function_new
 swfdec_as_native_function_set_construct_type
-swfdec_as_native_function_set_object_type
 swfdec_as_native_function_check
 swfdec_as_native_function_checkv
 SWFDEC_AS_CHECK
@@ -546,7 +555,6 @@ SWFDEC_TYPE_AS_NATIVE_FUNCTION
 <TITLE>SwfdecAsFrame</TITLE>
 SwfdecAsFrame
 swfdec_as_frame_get_next
-swfdec_as_frame_get_function_name
 swfdec_as_frame_get_script
 swfdec_as_frame_get_this
 SwfdecAsStackIterator
@@ -554,16 +562,8 @@ swfdec_as_stack_iterator_init
 swfdec_as_stack_iterator_init_arguments
 swfdec_as_stack_iterator_next
 <SUBSECTION Standard>
-swfdec_as_frame_get_type
 SwfdecAsScope
 SwfdecAsStack
-SwfdecAsFrameClass
-SWFDEC_AS_FRAME
-SWFDEC_AS_FRAME_CLASS
-SWFDEC_AS_FRAME_GET_CLASS
-SWFDEC_IS_AS_FRAME
-SWFDEC_IS_AS_FRAME_CLASS
-SWFDEC_TYPE_AS_FRAME
 </SECTION>
 
 <SECTION>

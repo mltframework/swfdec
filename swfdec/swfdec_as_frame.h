@@ -25,7 +25,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecAsFrameClass SwfdecAsFrameClass;
 typedef struct _SwfdecAsStackIterator SwfdecAsStackIterator;
 
 struct _SwfdecAsStackIterator {

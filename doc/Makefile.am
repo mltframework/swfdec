@@ -78,6 +78,9 @@ IGNORE_HFILES= \
 	swfdec_audio_load.h \
 	swfdec_audio_stream.h \
 	swfdec_audio_swf_stream.h \
+	swfdec_bitmap_data.h \
+	swfdec_bitmap_movie.h \
+	swfdec_bitmap_pattern.h \
 	swfdec_bits.h \
 	swfdec_bots.h \
 	swfdec_button.h \
@@ -90,6 +93,7 @@ IGNORE_HFILES= \
 	swfdec_codec_gst.h \
 	swfdec_color.h \
 	swfdec_color_as.h \
+	swfdec_color_transform_as.h \
 	swfdec_constant_pool.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \
@@ -153,6 +157,7 @@ IGNORE_HFILES= \
 	swfdec_text_buffer.h \
 	swfdec_text_layout.h \
 	swfdec_text_format.h \
+	swfdec_transform_as.h \
 	swfdec_types.h \
 	swfdec_utils.h \
 	swfdec_video.h \

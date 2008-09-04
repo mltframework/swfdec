@@ -642,6 +642,7 @@ enum {
   LAUNCH,
   FSCOMMAND,
   MISSING_PLUGINS,
+  QUERY_SIZE,
   LAST_SIGNAL
 };
 
@@ -865,13 +866,8 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   double scale_x, scale_y;
   GList *walk;
 
-  if (priv->fullscreen) {
-    priv->stage.width = priv->system->screen_width;
-    priv->stage.height = priv->system->screen_height;
-  } else {
-    priv->stage.width = priv->stage_width >= 0 ? priv->stage_width : (int) priv->width;
-    priv->stage.height = priv->stage_height >= 0 ? priv->stage_height : (int) priv->height;
-  }
+  priv->stage.width = priv->stage_width >= 0 ? priv->stage_width : (int) priv->width;
+  priv->stage.height = priv->stage_height >= 0 ? priv->stage_height : (int) priv->height;
 
   if (priv->stage.height == 0 || priv->stage.width == 0) {
     cairo_matrix_init_scale (&priv->stage_to_global, 
@@ -2044,6 +2040,15 @@ swfdec_accumulate_or (GSignalInvocationHint *ihint, GValue *return_accu,
   return TRUE;
 }
 
+static gboolean
+swfdec_accumulate_quit (GSignalInvocationHint *ihint, GValue *return_accu, 
+    const GValue *handler_return, gpointer data)
+{
+  if (g_value_get_boolean (handler_return))
+    g_value_set_boolean (return_accu, TRUE);
+  return FALSE;
+}
+
 static void
 swfdec_player_mark_string_object (gpointer key, gpointer value, gpointer data)
 {
@@ -2086,6 +2091,21 @@ swfdec_player_check_continue (SwfdecAsContext *context)
   if (priv->max_runtime == 0)
     return TRUE;
   return g_timer_elapsed (priv->runtime, NULL) * 1000 <= priv->max_runtime;
+}
+
+static gboolean
+swfdec_player_do_query_size (SwfdecPlayer *player, gboolean fullscreen,
+    int *width, int *height)
+{
+  if (fullscreen) {
+    SwfdecPlayerPrivate *priv = player->priv;
+    *width = priv->system->screen_width;
+    *height = priv->system->screen_height;
+  } else {
+    *width = -1;
+    *height = -1;
+  }
+  return TRUE;
 }
 
 static void
@@ -2333,6 +2353,30 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
       NULL, NULL, g_cclosure_marshal_VOID__BOXED,
       G_TYPE_NONE, 1, G_TYPE_STRV);
 
+  /**
+   * SwfdecPlayer::query-size:
+   * @player: the #SwfdecPlayer that resizes
+   * @fullscreen: %TRUE if the player queries the fullscreen size, %FALSE for 
+   *              the default size
+   * @width: pointer to an integer that takes the width to use
+   * @height: pointer to an integer that takes the height to use
+   *
+   * This signals is emitted whenever the player is (un)fullscreened. In this 
+   * case it requests the new size the Flash file will be displayed in 
+   * immediately. If you want to provide values, connect to this signal. The
+   * values don't have to be exact, you can still call swfdec_player_set_size()
+   * later on. However, it will look visually nicer if your values here are 
+   * correct. By default, the screen resolution values will be used for 
+   * fullscreen and the default size will be used otherwise.
+   *
+   * Returns: TRUE if this handler properly sets @width and @height and no 
+   *          other handlers should be invoked.
+   */
+  signals[QUERY_SIZE] = g_signal_new ("query-size", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (SwfdecPlayerClass, query_size),
+      swfdec_accumulate_quit, NULL, swfdec_marshal_BOOLEAN__BOOLEAN_POINTER_POINTER,
+      G_TYPE_BOOLEAN, 3, G_TYPE_BOOLEAN, G_TYPE_POINTER, G_TYPE_POINTER);
+
   context_class->mark = swfdec_player_mark;
   context_class->get_time = swfdec_player_get_time;
   context_class->check_continue = swfdec_player_check_continue;
@@ -2340,6 +2384,7 @@ swfdec_player_class_init (SwfdecPlayerClass *klass)
   klass->advance = swfdec_player_do_advance;
   klass->handle_key = swfdec_player_do_handle_key;
   klass->handle_mouse = swfdec_player_do_handle_mouse;
+  klass->query_size = swfdec_player_do_query_size;
 }
 
 static void
@@ -2786,13 +2831,8 @@ swfdec_player_update_size (gpointer playerp, gpointer unused)
   SwfdecPlayer *player = playerp;
   SwfdecPlayerPrivate *priv = player->priv;
 
-  if (priv->fullscreen) {
-    priv->internal_width = priv->system->screen_width;
-    priv->internal_height = priv->system->screen_height;
-  } else {
-    priv->internal_width = priv->stage_width >=0 ? (guint) priv->stage_width : priv->width;
-    priv->internal_height = priv->stage_height >=0 ? (guint) priv->stage_height : priv->height;
-  }
+  priv->internal_width = priv->stage_width >=0 ? (guint) priv->stage_width : priv->width;
+  priv->internal_height = priv->stage_height >=0 ? (guint) priv->stage_height : priv->height;
 
   if (priv->scale_mode != SWFDEC_SCALE_NONE)
     return;
@@ -2812,6 +2852,7 @@ swfdec_player_set_fullscreen (SwfdecPlayer *player, gboolean fullscreen)
 {
   SwfdecPlayerPrivate *priv;
   SwfdecAsValue val;
+  gboolean result;
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
 
@@ -2823,6 +2864,10 @@ swfdec_player_set_fullscreen (SwfdecPlayer *player, gboolean fullscreen)
     SWFDEC_INFO ("going fullscreen not allowed");
     return;
   }
+
+  result = FALSE;
+  g_signal_emit (player, signals[QUERY_SIZE], 0, fullscreen, 
+      &priv->stage_width, &priv->stage_height, &result);
 
   priv->fullscreen = fullscreen;
   g_object_notify (G_OBJECT (player), "fullscreen");

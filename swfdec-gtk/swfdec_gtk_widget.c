@@ -382,7 +382,7 @@ swfdec_gtk_widget_size_allocate (GtkWidget *gtkwidget, GtkAllocation *allocation
 
   gtkwidget->allocation = *allocation;
 
-  if (priv->player && swfdec_player_is_initialized (priv->player) && !priv->fullscreen_mode)
+  if (priv->player && swfdec_player_is_initialized (priv->player))
     swfdec_player_set_size (priv->player, allocation->width, allocation->height);
   if (GTK_WIDGET_REALIZED (gtkwidget)) {
     gdk_window_move_resize (gtkwidget->window, 
@@ -398,12 +398,6 @@ swfdec_gtk_widget_size_request (GtkWidget *gtkwidget, GtkRequisition *req)
 
   if (priv->player == NULL) {
     req->width = req->height = 0;
-#if 0
-  } else if (priv->fullscreen_mode) {
-    GdkScreen *screen = gtk_widget_has_screen (gtkwidget) ? gtk_widget_get_screen (gtkwidget) : NULL;
-    req->width = screen ? gdk_screen_get_width (screen) : 0;
-    req->height = screen ? gdk_screen_get_height (screen) : 0;
-#endif
   } else {
     guint w, h;
     swfdec_player_get_default_size (priv->player, &w, &h);
@@ -754,6 +748,37 @@ swfdec_gtk_widget_notify_cb (SwfdecPlayer *player, GParamSpec *pspec, SwfdecGtkW
   }
 }
 
+static gboolean
+swfdec_gtk_widget_query_size_cb (SwfdecPlayer *player, gboolean fullscreen,
+    int *width, int *height, SwfdecGtkWidget *widget)
+{
+  SwfdecGtkWidgetPrivate *priv = widget->priv;
+
+  /* don't connect to this signal in fullscreen mode, it reports wrong sizes */
+  if (priv->fullscreen_mode)
+    return FALSE;
+
+  if (fullscreen) {
+    GdkWindow *window = GTK_WIDGET (widget)->window;
+    GdkScreen *screen;
+    GdkRectangle rect;
+    int monitor;
+
+    if (window == NULL)
+      return FALSE;
+    screen = gdk_drawable_get_screen (GDK_DRAWABLE (window));
+    monitor = gdk_screen_get_monitor_at_window (screen, window);
+    gdk_screen_get_monitor_geometry (screen, monitor, &rect);
+    *width = rect.width;
+    *height = rect.height;
+  } else {
+    GtkWidget *gtkwidget = GTK_WIDGET (widget);
+    *width = gtkwidget->allocation.width;
+    *height = gtkwidget->allocation.height;
+  }
+  return TRUE;
+}
+
 /*** PUBLIC API ***/
 
 /**
@@ -779,6 +804,7 @@ swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
   if (player) {
     g_signal_connect (player, "invalidate", G_CALLBACK (swfdec_gtk_widget_invalidate_cb), widget);
     g_signal_connect (player, "notify", G_CALLBACK (swfdec_gtk_widget_notify_cb), widget);
+    g_signal_connect (player, "query-size", G_CALLBACK (swfdec_gtk_widget_query_size_cb), widget);
     g_object_ref (player);
     swfdec_gtk_widget_update_cursor (widget);
     swfdec_player_set_focus (player, GTK_WIDGET_HAS_FOCUS (GTK_WIDGET (widget)));
@@ -789,6 +815,7 @@ swfdec_gtk_widget_set_player (SwfdecGtkWidget *widget, SwfdecPlayer *player)
   if (priv->player) {
     g_signal_handlers_disconnect_by_func (priv->player, swfdec_gtk_widget_invalidate_cb, widget);
     g_signal_handlers_disconnect_by_func (priv->player, swfdec_gtk_widget_notify_cb, widget);
+    g_signal_handlers_disconnect_by_func (priv->player, swfdec_gtk_widget_query_size_cb, widget);
     g_object_unref (priv->player);
   }
   priv->player = player;

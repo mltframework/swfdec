@@ -95,6 +95,10 @@ struct _SwfdecPlayerClass
 						 int			button);
   void			(* missing_plugins)	(SwfdecPlayer *		player,
 						 const char **		details);
+  gboolean		(* query_size)		(SwfdecPlayer *		player,
+						 gboolean		fullscreen,
+						 int *			width,
+						 int *			height);
 };
 
 void		swfdec_init			(void);

@@ -720,7 +720,7 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
     case SWFDEC_BLEND_MODE_INVERT:
     case SWFDEC_BLEND_MODE_OVERLAY:
     case SWFDEC_BLEND_MODE_HARDLIGHT:
-      SWFDEC_WARNING ("blend mode %u unimplemented in cairo", blend_mode);
+      SWFDEC_FIXME ("blend mode %u unimplemented in cairo", blend_mode);
       return CAIRO_OPERATOR_OVER;
     default:
       SWFDEC_WARNING ("invalid blend mode %u", blend_mode);

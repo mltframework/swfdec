@@ -5,7 +5,7 @@ createEmptyMovieClip ("a", 0);
 a._x = 200;
 a._y = 150;
 a._xscale = -100;
-a._yscale = -100;
+a._yscale = -20000;
 
 m = new flash.geom.Matrix ();
 m.createGradientBox (50, 50, -1.57, 0, 70);

@@ -533,8 +533,11 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
       cairo_paint (cr);
     }
   } else if (SWFDEC_IS_MOVIE (o)) {
+    SwfdecMovie *movie = SWFDEC_MOVIE (o);
+    swfdec_movie_update (movie);
     cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
-    swfdec_movie_render (SWFDEC_MOVIE (o), cr, &ctrans);
+    cairo_transform (cr, &movie->matrix);
+    swfdec_movie_render (movie, cr, &ctrans);
   } else {
     SWFDEC_FIXME ("BitmapData.draw() with a %s?", G_OBJECT_TYPE_NAME (o));
   }

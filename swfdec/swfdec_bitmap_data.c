@@ -536,7 +536,7 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
     SwfdecMovie *movie = SWFDEC_MOVIE (o);
     swfdec_movie_update (movie);
     cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
-    cairo_transform (cr, &movie->matrix);
+    cairo_transform (cr, &movie->inverse_matrix);
     swfdec_movie_render (movie, cr, &ctrans);
   } else {
     SWFDEC_FIXME ("BitmapData.draw() with a %s?", G_OBJECT_TYPE_NAME (o));

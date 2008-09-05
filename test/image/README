@@ -8,19 +8,20 @@ the place to start.
 
 How does it work?
 
-  ./image [FILE1 [FILE2 [...]]]
-The program image in this directory takes all files on the command line or all
-files in the current directory and runs them. Running consists of instancing a
-SwfdecPlayer and advancing $FILE 10 times. After that, the current state of 
-the player is rendered to an image and compared to the reference image named
-$FILE.png. The image must be in PNG format. Comparing in this context means
-checking that the difference between the red, green, blue and alpha channel for
-every pixel isn't greater than a given threshold. Currently the threshold is
-set to 3 to account for rounding errors.
+  ../swfdec-test [FILE1 [FILE2 [...]]]
+The default script for swfdec-test in this directory takes all files on the 
+command line or all files in the current directory and runs them. Running 
+consists of instancing a SwfdecPlayer and advancing $FILE 10 times. After 
+that, the current state of the player is rendered to an image and compared 
+to the reference image named $FILE.png. The image must be in PNG format. 
+Comparing in this context means checking that the difference between the 
+red, green, blue and alpha channel for every pixel isn't greater than a 
+given threshold. Currently the threshold is set to 3 to account for rounding 
+errors.
 If the environment variable SWFDEC_TEST_DUMP is set, for every failed test the
-image containing the player's output is dumped to $FILE.dump.png. If available,
-a difference image detailing the differences between the reference image and
-the current image is saved to $FILE.diff.png.
+image containing the player's output is dumped to $FILE.dump.png. If the
+reference image is available, an image detailing the differences between the
+reference image and the current image is saved to $FILE.diff.png.
 
 
 How do I run my new test?
@@ -28,16 +29,14 @@ How do I run my new test?
 Create a file to test, say "test.swf", and create a corresponding file for the
 expected output image. In this case that would be "test.swf.png". After that, 
 just call the image application with your file, like this:
-  ./image test.swf
-You may need to build the image application if you haven't run make check 
-before, just run make image.
+  ../swfdec-test test.swf
 
 
 How do I create the expected reference image?
 
 Ideally you create a SWF file where the image doesn't change. Alternatively
-use a low frame rate. Play the file with the Adobe Flash Player in Wine and 
-take a screenshot of its output.
+use a low frame rate. Play the file with the Adobe Flash Player and take a 
+screenshot of its output.
 If the Swfdec output doesn't match exactly, but is close enough, use that 
 output as the reference image but keep the original expected output, too. Name
 it $FILE.org.png.
@@ -48,5 +47,4 @@ How do I add a test to the testsuite?
 Just put the file and its reference image - and the original reference image, 
 too, if available (see above) - into this directory and add them all
 to EXTRA_DIST in Makefile.am. It should appear in the output when running 
-make check. (Note that the order of files tested during make check is pretty 
-much random.)
+make check.

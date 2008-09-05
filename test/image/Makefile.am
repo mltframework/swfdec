@@ -29,6 +29,15 @@ EXTRA_DIST = \
 	BitmapData-draw-8.swf \
 	BitmapData-draw-8.swf.png \
 	BitmapData-draw.as \
+	BitmapData-draw-movie-transformed-5.swf \
+	BitmapData-draw-movie-transformed-5.swf.png \
+	BitmapData-draw-movie-transformed-6.swf \
+	BitmapData-draw-movie-transformed-6.swf.png \
+	BitmapData-draw-movie-transformed-7.swf \
+	BitmapData-draw-movie-transformed-7.swf.png \
+	BitmapData-draw-movie-transformed-8.swf \
+	BitmapData-draw-movie-transformed-8.swf.png \
+	BitmapData-draw-movie-transformed.as \
 	README \
 	background-5.swf \
 	background-5.swf.png \

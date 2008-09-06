@@ -986,6 +986,15 @@ EXTRA_DIST = \
 	crash-0.7.2-TextField-replace-infloop-8.swf \
 	crash-0.7.2-TextField-replace-infloop-8.swf.trace \
 	crash-0.7.2-TextField-replace-infloop.as \
+	crash-0.7.5-draw-on-disposed-bitmap-5.swf \
+	crash-0.7.5-draw-on-disposed-bitmap-5.swf.trace \
+	crash-0.7.5-draw-on-disposed-bitmap-6.swf \
+	crash-0.7.5-draw-on-disposed-bitmap-6.swf.trace \
+	crash-0.7.5-draw-on-disposed-bitmap-7.swf \
+	crash-0.7.5-draw-on-disposed-bitmap-7.swf.trace \
+	crash-0.7.5-draw-on-disposed-bitmap-8.swf \
+	crash-0.7.5-draw-on-disposed-bitmap-8.swf.trace \
+	crash-0.7.5-draw-on-disposed-bitmap.as \
 	crash-0.7.5-duplicate-5.swf \
 	crash-0.7.5-duplicate-5.swf.trace \
 	crash-0.7.5-duplicate-6.swf \

@@ -1,5 +1,19 @@
 AC_PREREQ([2.58])
-AC_INIT(swfdec,0.7.5)
+
+m4_define(swfdec_major, 0)
+m4_define(swfdec_minor, 7)
+m4_define(swfdec_micro, 5)
+AC_INIT(swfdec,[swfdec_major.swfdec_minor.swfdec_micro])
+
+SWFDEC_VERSION_MAJOR=swfdec_major
+SWFDEC_VERSION_MINOR=swfdec_minor
+SWFDEC_VERSION_MICRO=swfdec_micro
+SWFDEC_VERSION=$SWFDEC_VERSION_MAJOR.$SWFDEC_VERSION_MINOR.$SWFDEC_VERSION_MICRO
+AC_SUBST(SWFDEC_VERSION_MAJOR)
+AC_SUBST(SWFDEC_VERSION_MINOR)
+AC_SUBST(SWFDEC_VERSION_MICRO)
+AC_SUBST(SWFDEC_VERSION)
+
 
 [is_dev=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9][0-9]*\.[0-9]*[13579]/1/')]
 if test x"$is_dev" = x1 ; then
@@ -280,6 +294,7 @@ data/swfdec.pc
 data/swfdec-gtk.pc
 doc/Makefile
 swfdec/Makefile
+swfdec/swfdec_version.h
 swfdec/jpeg/Makefile
 swfdec-gtk/Makefile
 player/Makefile

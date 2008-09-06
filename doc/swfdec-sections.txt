@@ -272,6 +272,19 @@ swfdec_time_val_get_type
 </SECTION>
 
 <SECTION>
+<FILE>Version</FILE>
+<TITLE>Version Information</TITLE>
+SWFDEC_VERSION_MAJOR
+SWFDEC_VERSION_MICRO
+SWFDEC_VERSION_MINOR
+SWFDEC_VERSION_ENCODE
+SWFDEC_VERSION
+SWFDEC_VERSION_STRING
+swfdec_version
+swfdec_version_string
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecRectangle</FILE>
 <TITLE>SwfdecRectangle</TITLE>
 SwfdecRectangle

@@ -15,5 +15,6 @@ swfdec_as_strings.h
 swfdec_asnative.c
 swfdec_enums.[ch]
 swfdec_marshal.[ch]
+swfdec_version.h
 
 compiler

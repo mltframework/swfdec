@@ -46,5 +46,6 @@
 #include <swfdec/swfdec_stream.h>
 #include <swfdec/swfdec_system.h>
 #include <swfdec/swfdec_url.h>
+#include <swfdec/swfdec_version.h>
 
 #endif

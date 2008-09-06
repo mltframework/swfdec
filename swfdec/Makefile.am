@@ -161,6 +161,7 @@ libswfdec_source_files = \
 	swfdec_transform_as.c \
 	swfdec_url.c \
 	swfdec_utils.c \
+	swfdec_version.c \
 	swfdec_video.c \
 	swfdec_video_decoder.c \
 	swfdec_video_decoder_screen.c \
@@ -221,6 +222,7 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_LIBADD = jpeg/libjpeg.la
 
 libswfdec_@SWFDEC_MAJORMINOR@includedir = $(includedir)/swfdec-@SWFDEC_MAJORMINOR@/swfdec
 libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = $(public_headers) swfdec_enums.h
+nodist_libswfdec_@SWFDEC_MAJORMINOR@include_HEADERS = swfdec_version.h
 
 noinst_HEADERS = \
 	swfdec_access.h \
@@ -340,7 +342,8 @@ EXTRA_DIST = \
 	compiler.c \
 	swfdec_as_initialize.as \
 	swfdec_initialize.as \
-	swfdec_marshal.list
+	swfdec_marshal.list \
+	swfdec_version.h.in
 
 BUILT_SOURCES = \
 	swfdec_asnative.c \
@@ -352,6 +355,8 @@ BUILT_SOURCES = \
 
 CLEANFILES = \
 	$(BUILT_SOURCES)
+
+DISTCLEANFILES = swfdec_version.h
 
 swfdec_asnative.c: $(libswfdec_source_files)
 	(cd $(srcdir) \

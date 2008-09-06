@@ -1,0 +1,40 @@
+/* Swfdec
+ * Copyright (C) 2008 Benjamin Otte <otte@gnome.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * Boston, MA  02110-1301  USA
+ */
+
+#ifndef __SWFDEC_VERSION_H__
+#define __SWFDEC_VERSION_H__
+
+
+#include <glib.h>
+
+#define SWFDEC_VERSION_MAJOR (@SWFDEC_VERSION_MAJOR@)
+#define SWFDEC_VERSION_MINOR (@SWFDEC_VERSION_MINOR@)
+#define SWFDEC_VERSION_MICRO (@SWFDEC_VERSION_MICRO@)
+
+#define SWFDEC_VERSION_STRING "@SWFDEC_VERSION@"
+
+#define SWFDEC_VERSION_ENCODE(major, minor, micro) \
+    ((major) * 1000 * 1000 + (minor) * 1000 + (micro))
+
+#define SWFDEC_VERSION SWFDEC_VERSION_ENCODE (SWFDEC_VERSION_MAJOR, SWFDEC_VERSION_MINOR, SWFDEC_VERSION_MICRO)
+
+guint		swfdec_version		(void);
+const char *	swfdec_version_string	(void);
+
+#endif

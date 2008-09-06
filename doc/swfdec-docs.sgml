@@ -21,6 +21,7 @@
     <xi:include href="xml/SwfdecPlayer.xml"/>
     <xi:include href="xml/SwfdecSystem.xml"/>
     <xi:include href="xml/SwfdecAudio.xml"/>
+    <xi:include href="xml/Version.xml"/>
   </chapter>
   <chapter>
     <title>extending SwfdecPlayer</title>

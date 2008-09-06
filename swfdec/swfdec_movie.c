@@ -1704,7 +1704,7 @@ swfdec_movie_get_own_resource (SwfdecMovie *movie)
   if (!SWFDEC_IS_SPRITE_MOVIE (movie))
     return NULL;
 
-  if (SWFDEC_MOVIE (movie->resource->movie) != movie)
+  if (movie->resource->movie != SWFDEC_SPRITE_MOVIE (movie))
     return NULL;
 
   return movie->resource;

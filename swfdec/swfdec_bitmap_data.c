@@ -495,6 +495,9 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "o|OO", &o, &matrix, &trans);
 
+  if (bitmap->surface == NULL)
+    return;
+
   if (argc >= 2) {
     if (matrix == NULL || !swfdec_matrix_from_as_object (&mat, matrix))
       return;

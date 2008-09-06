@@ -4119,6 +4119,15 @@ EXTRA_DIST = \
 	transform-color-transform-7.swf.trace \
 	transform-color-transform-8.swf \
 	transform-color-transform-8.swf.trace \
+	Transform-matrix-5.swf \
+	Transform-matrix-5.swf.trace \
+	Transform-matrix-6.swf \
+	Transform-matrix-6.swf.trace \
+	Transform-matrix-7.swf \
+	Transform-matrix-7.swf.trace \
+	Transform-matrix-8.swf \
+	Transform-matrix-8.swf.trace \
+	Transform-matrix.as \
 	transform-properties.as \
 	transform-properties-5.swf \
 	transform-properties-5.swf.trace \

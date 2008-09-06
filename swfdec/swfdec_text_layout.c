@@ -343,7 +343,9 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
     attr = swfdec_text_buffer_iter_get_attributes (layout->text, iter);
     list = pango_attr_list_new ();
 
-    while (start != end) {
+    start_next = start;
+    while (start_next != end) {
+      gsize cur_start = start_next;
       g_assert (attr);
       iter = swfdec_text_buffer_iter_next (layout->text, iter);
       attr_next = iter ? swfdec_text_buffer_iter_get_attributes (layout->text, iter) : NULL;
@@ -351,14 +353,13 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
 	swfdec_text_buffer_get_length (layout->text);
       start_next = MIN (start_next, end);
       
-      swfdec_text_layout_apply_attributes (layout, list, attr, start - block->start, start_next - block->start);
+      swfdec_text_layout_apply_attributes (layout, list, attr, cur_start - block->start, start_next - block->start);
 
       if (attr_next && new_block > start_next &&
 	  (swfdec_text_attributes_diff (attr, attr_next) & SWFDEC_TEXT_ATTRIBUTES_MASK_NEW_BLOCK))
 	new_block = start_next;
 
       attr = attr_next;
-      start = start_next;
     }
     pango_layout_set_attributes (block->layout, list);
     pango_attr_list_unref (list);
@@ -368,8 +369,8 @@ swfdec_text_layout_create_paragraph (SwfdecTextLayout *layout, PangoContext *con
 
       for (i = 0; i < pango_layout_get_line_count (block->layout); i++) {
 	PangoLayoutLine *line = pango_layout_get_line_readonly (block->layout, i);
-	if ((gsize) line->start_index + line->length >= new_block) {
-	  new_block = line->start_index + line->length;
+	if ((gsize) line->start_index + line->length + start >= new_block) {
+	  new_block = line->start_index + line->length + start;
 	  /* I hope deleting lines actually works by removing text */
 	  pango_layout_set_text (block->layout, string + start, new_block - start);
 	  g_assert (i + 1 == pango_layout_get_line_count (block->layout));

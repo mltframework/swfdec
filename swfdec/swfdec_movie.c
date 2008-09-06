@@ -1606,7 +1606,7 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   }
   copy->draw_x = movie->draw_x;
   copy->draw_y = movie->draw_y;
-  g_assert (movie->cache_state >= SWFDEC_MOVIE_INVALID_EXTENTS);
+  g_assert (copy->cache_state >= SWFDEC_MOVIE_INVALID_EXTENTS);
 
   sandbox = SWFDEC_SANDBOX (swfdec_gc_object_get_context (movie)->global);
   swfdec_sandbox_unuse (sandbox);

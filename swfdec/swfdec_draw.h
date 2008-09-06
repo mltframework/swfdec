@@ -73,6 +73,7 @@ GType		swfdec_draw_get_type		(void);
 
 SwfdecDraw *	swfdec_draw_morph		(SwfdecDraw *			draw,
 						 guint				ratio);
+SwfdecDraw *	swfdec_draw_copy		(SwfdecDraw *			draw);
 void		swfdec_draw_paint		(SwfdecDraw *			draw, 
 						 cairo_t *			cr,
 						 const SwfdecColorTransform *	trans);

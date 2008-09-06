@@ -69,6 +69,7 @@ swfdec_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
 
   swfdec_matrix_morph (&dpattern->start_transform,
       &spattern->start_transform, &spattern->end_transform, ratio);
+  dpattern->end_transform = dpattern->start_transform;
   dpattern->transform = dpattern->start_transform;
   if (cairo_matrix_invert (&dpattern->transform)) {
     SWFDEC_ERROR ("morphed paint transform matrix not invertible, using default");
@@ -140,6 +141,7 @@ swfdec_color_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
   SwfdecColorPattern *spattern = SWFDEC_COLOR_PATTERN (source);
 
   dpattern->start_color = swfdec_color_apply_morph (spattern->start_color, spattern->end_color, ratio);
+  dpattern->end_color = dpattern->start_color;
 
   SWFDEC_DRAW_CLASS (swfdec_color_pattern_parent_class)->morph (dest, source, ratio);
 }

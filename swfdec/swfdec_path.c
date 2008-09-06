@@ -46,6 +46,15 @@ swfdec_path_reset (cairo_path_t *path)
 }
 
 void
+swfdec_path_copy (cairo_path_t *dest, const cairo_path_t *source)
+{
+  dest->status = source->status;
+  swfdec_path_ensure_size (dest, source->num_data);
+  memcpy (dest->data, source->data, sizeof (cairo_path_data_t) * source->num_data);
+  dest->num_data = source->num_data;
+}
+
+void
 swfdec_path_ensure_size (cairo_path_t *path, int size)
 {
 #define SWFDEC_PATH_STEPS 32

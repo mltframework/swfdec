@@ -53,6 +53,19 @@ swfdec_bitmap_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
 }
 
 static void
+swfdec_bitmap_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
+{
+  SwfdecBitmapPattern *dpattern = SWFDEC_BITMAP_PATTERN (dest);
+  SwfdecBitmapPattern *spattern = SWFDEC_BITMAP_PATTERN (source);
+
+  dpattern->bitmap = g_object_ref (spattern->bitmap);
+  dpattern->extend = spattern->extend;
+  dpattern->filter = spattern->filter;
+
+  SWFDEC_DRAW_CLASS (swfdec_bitmap_pattern_parent_class)->morph (dest, source, ratio);
+}
+
+static void
 swfdec_bitmap_pattern_invalidate (SwfdecBitmapPattern *bitmap)
 {
   g_signal_emit (bitmap, signals[INVALIDATE], 0);
@@ -74,6 +87,7 @@ static void
 swfdec_bitmap_pattern_class_init (SwfdecBitmapPatternClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  SwfdecDrawClass *draw_class = SWFDEC_DRAW_CLASS (klass);
   SwfdecPatternClass *pattern_class = SWFDEC_PATTERN_CLASS (klass);
 
   object_class->dispose = swfdec_bitmap_pattern_dispose;
@@ -83,6 +97,8 @@ swfdec_bitmap_pattern_class_init (SwfdecBitmapPatternClass *klass)
       G_TYPE_NONE, 0);
 
   pattern_class->get_pattern = swfdec_bitmap_pattern_get_pattern;
+
+  draw_class->morph = swfdec_bitmap_pattern_morph;
 }
 
 static void
@@ -101,7 +117,7 @@ swfdec_bitmap_pattern_new (SwfdecBitmapData *bitmap)
 
   pattern = g_object_new (SWFDEC_TYPE_BITMAP_PATTERN, NULL);
   pattern->bitmap = bitmap;
-  /* we ref the bitmap here to enforce the order for destruction, which makes our signals work */
+  /* we ref the bitmap here as we are not garbage-collected, and we wanna keep a reference */
   g_object_ref (bitmap);
   g_signal_connect_swapped (pattern->bitmap, "invalidate", 
       G_CALLBACK (swfdec_bitmap_pattern_invalidate), pattern);

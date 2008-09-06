@@ -134,8 +134,10 @@ swfdec_stroke_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio)
 
   dstroke->start_color = swfdec_color_apply_morph (sstroke->start_color,
       sstroke->end_color, ratio);
+  dstroke->end_color = dstroke->start_color;
   dstroke->start_width = (sstroke->start_width * ratio + 
       sstroke->end_width * (65535 - ratio)) / 65535;
+  dstroke->end_width = dstroke->start_width;
   if (sstroke->pattern) {
     dstroke->pattern = SWFDEC_PATTERN (swfdec_draw_morph (
 	  SWFDEC_DRAW (sstroke->pattern), ratio));

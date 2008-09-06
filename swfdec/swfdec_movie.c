@@ -1566,6 +1566,7 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
 {
   SwfdecMovie *parent, *copy;
   SwfdecSandbox *sandbox;
+  GSList *walk;
 
   g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), NULL);
   g_return_val_if_fail (name != NULL, NULL);
@@ -1582,11 +1583,30 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   }
   copy = swfdec_movie_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), depth, 
       parent, movie->resource, movie->graphic, name);
-  if (copy == NULL)
-    return NULL;
+  /* copy properties */
   swfdec_movie_set_static_properties (copy, &movie->original_transform,
       &movie->color_transform, movie->original_ratio, movie->clip_depth, 
       movie->blend_mode, SWFDEC_IS_ACTOR (movie) ? SWFDEC_ACTOR (movie)->events : NULL);
+  /* Copy drawing state.
+   * We can keep refs to all finalized draw objects, but need to create copies
+   * of the still active ones as their path can still change */
+  copy->draws = g_slist_copy (movie->draws);
+  g_slist_foreach (copy->draws, (GFunc) g_object_ref, NULL);
+  copy->draw_extents = movie->draw_extents;
+  for (walk = copy->draws; walk; walk = walk->next) {
+    if (walk->data == movie->draw_line) {
+      copy->draw_line = swfdec_draw_copy (walk->data);
+      g_object_unref (walk->data);
+      walk->data = copy->draw_line;
+    } else if (walk->data == movie->draw_fill) {
+      copy->draw_fill = swfdec_draw_copy (walk->data);
+      g_object_unref (walk->data);
+      walk->data = copy->draw_fill;
+    }
+  }
+  copy->draw_x = movie->draw_x;
+  copy->draw_y = movie->draw_y;
+
   sandbox = SWFDEC_SANDBOX (swfdec_gc_object_get_context (movie)->global);
   swfdec_sandbox_unuse (sandbox);
   if (SWFDEC_IS_SPRITE_MOVIE (copy)) {

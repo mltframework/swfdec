@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 void		swfdec_path_init		(cairo_path_t *		path);
 void		swfdec_path_reset		(cairo_path_t *		path);
 
+void		swfdec_path_copy		(cairo_path_t *		dest,
+						 const cairo_path_t *	source);
 #define swfdec_path_require_size(path, steps) \
   swfdec_path_ensure_size ((path), (path)->num_data + steps)
 void		swfdec_path_ensure_size		(cairo_path_t *		path,

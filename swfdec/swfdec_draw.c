@@ -32,10 +32,20 @@
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecDraw, swfdec_draw, G_TYPE_OBJECT);
 
+static gboolean
+swfdec_draw_can_morph (SwfdecDraw *draw)
+{
+  return draw->end_path.num_data > 0;
+}
+
 static void
 swfdec_draw_do_morph (SwfdecDraw* dest, SwfdecDraw *source, guint ratio)
 {
-  swfdec_path_merge (&dest->path, &source->path, &source->end_path, ratio / 65535.);
+  if (swfdec_draw_can_morph (source)) {
+    swfdec_path_merge (&dest->path, &source->path, &source->end_path, ratio / 65535.);
+  } else {
+    swfdec_path_copy (&dest->path, &source->path);
+  }
 }
 
 static void
@@ -64,12 +74,6 @@ swfdec_draw_init (SwfdecDraw *draw)
 {
   swfdec_path_init (&draw->path);
   swfdec_path_init (&draw->end_path);
-}
-
-static gboolean
-swfdec_draw_can_morph (SwfdecDraw *draw)
-{
-  return draw->end_path.num_data > 0;
 }
 
 /**
@@ -102,6 +106,22 @@ swfdec_draw_morph (SwfdecDraw *draw, guint ratio)
   g_assert (klass->morph);
   copy = g_object_new (G_OBJECT_CLASS_TYPE (klass), NULL);
   klass->morph (copy, draw, ratio);
+  swfdec_draw_recompute (copy);
+  return copy;
+}
+
+SwfdecDraw *
+swfdec_draw_copy (SwfdecDraw *draw)
+{
+  SwfdecDrawClass *klass;
+  SwfdecDraw *copy;
+
+  g_return_val_if_fail (SWFDEC_IS_DRAW (draw), NULL);
+
+  klass = SWFDEC_DRAW_GET_CLASS (draw);
+  g_assert (klass->morph);
+  copy = g_object_new (G_OBJECT_CLASS_TYPE (klass), NULL);
+  klass->morph (copy, draw, 0);
   swfdec_draw_recompute (copy);
   return copy;
 }

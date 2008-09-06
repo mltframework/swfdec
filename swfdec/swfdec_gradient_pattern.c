@@ -48,6 +48,8 @@ swfdec_gradient_pattern_morph (SwfdecDraw *dest, SwfdecDraw *source, guint ratio
 	spattern->end_gradient[i].color, ratio);
     dpattern->gradient[i].ratio = (spattern->gradient[i].ratio * (65535 - ratio) +
 	spattern->end_gradient[i].ratio * ratio) / 65535;
+    dpattern->end_gradient[i].color = dpattern->gradient[i].color;
+    dpattern->end_gradient[i].color = dpattern->gradient[i].color;
   }
 
   SWFDEC_DRAW_CLASS (swfdec_gradient_pattern_parent_class)->morph (dest, source, ratio);

@@ -44,8 +44,10 @@ struct _SwfdecGcObject {
 };
 
 struct _SwfdecGcObjectClass {
+  /*< private >*/
   GObjectClass		object_class;
 
+  /*< public >*/
   /* mark everything that should survive during GC */
   void			(* mark)			(SwfdecGcObject *	object);
 };

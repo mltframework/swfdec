@@ -995,6 +995,15 @@ EXTRA_DIST = \
 	crash-0.7.5-duplicate-8.swf \
 	crash-0.7.5-duplicate-8.swf.trace \
 	crash-0.7.5-duplicate.as \
+	crash-0.7.5-textlayout-5.swf \
+	crash-0.7.5-textlayout-5.swf.trace \
+	crash-0.7.5-textlayout-6.swf \
+	crash-0.7.5-textlayout-6.swf.trace \
+	crash-0.7.5-textlayout-7.swf \
+	crash-0.7.5-textlayout-7.swf.trace \
+	crash-0.7.5-textlayout-8.swf \
+	crash-0.7.5-textlayout-8.swf.trace \
+	crash-0.7.5-textlayout.as \
 	createEmptyMovieClip-events.sc \
 	createEmptyMovieClip-events.swf \
 	createEmptyMovieClip-events.swf.trace \

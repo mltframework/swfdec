@@ -166,13 +166,6 @@ EXTRA_DIST = \
 	definebits-palette-8.swf.png \
 	definebits-palette-base64.c \
 	definebits-palette.xml \
-	duplicate-depth.c \
-	duplicate-depth-5.swf \
-	duplicate-depth-5.swf.png \
-	duplicate-depth-6.swf \
-	duplicate-depth-6.swf.png \
-	duplicate-depth-7.swf \
-	duplicate-depth-7.swf.png \
 	drawing-zorder.as \
 	drawing-zorder-5.swf \
 	drawing-zorder-5.swf.png \
@@ -185,6 +178,25 @@ EXTRA_DIST = \
 	drawing-zorder-8.swf \
 	drawing-zorder-8.swf.org.png \
 	drawing-zorder-8.swf.png \
+	duplicate-depth.c \
+	duplicate-depth-5.swf \
+	duplicate-depth-5.swf.png \
+	duplicate-depth-6.swf \
+	duplicate-depth-6.swf.png \
+	duplicate-depth-7.swf \
+	duplicate-depth-7.swf.png \
+	duplicateMovieClip-drawingstate-5.swf \
+	duplicateMovieClip-drawingstate-5.swf.png \
+	duplicateMovieClip-drawingstate-6.swf \
+	duplicateMovieClip-drawingstate-6.swf.org.png \
+	duplicateMovieClip-drawingstate-6.swf.png \
+	duplicateMovieClip-drawingstate-7.swf \
+	duplicateMovieClip-drawingstate-7.swf.org.png \
+	duplicateMovieClip-drawingstate-7.swf.png \
+	duplicateMovieClip-drawingstate-8.swf \
+	duplicateMovieClip-drawingstate-8.swf.org.png \
+	duplicateMovieClip-drawingstate-8.swf.png \
+	duplicateMovieClip-drawingstate.as \
 	empty-gradient.swf \
 	empty-gradient.swf.png \
 	empty-gradient.xml \

@@ -103,6 +103,8 @@ swfdec_video_decoder_prepare (guint codec, char **missing)
   }
   if (missing)
     *missing = detail;
+  else
+    g_free (detail);
   return FALSE;
 }
 

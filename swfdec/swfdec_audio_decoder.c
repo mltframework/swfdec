@@ -74,6 +74,8 @@ swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **miss
   }
   if (missing)
     *missing = detail;
+  else
+    g_free (detail);
   return FALSE;
 }
 

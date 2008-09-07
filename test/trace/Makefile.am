@@ -2559,6 +2559,15 @@ EXTRA_DIST = \
 	onUnload-prototype-8.swf.trace \
 	order.swf \
 	order.swf.trace \
+	oversized-image-5.swf \
+	oversized-image-5.swf.trace \
+	oversized-image-6.swf \
+	oversized-image-6.swf.trace \
+	oversized-image-7.swf \
+	oversized-image-7.swf.trace \
+	oversized-image-8.swf \
+	oversized-image-8.swf.trace \
+	oversized-image.as \
 	parent-root.swf \
 	parent-root.swf.trace \
 	parse-float.as \

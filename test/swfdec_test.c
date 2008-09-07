@@ -33,6 +33,51 @@
 #include "swfdec_test_initialize.h"
 #include "swfdec_test_test.h"
 
+/*** VERIFICATION OF ENVIRONMENT ***/
+
+static gboolean
+check_cairo (gboolean verbose)
+{
+#define CAIRO_MIN_MAJOR 1
+#define CAIRO_MIN_MINOR 7
+#define CAIRO_MIN_MICRO 1
+  if (CAIRO_VERSION < CAIRO_VERSION_ENCODE (CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO)) {
+    g_print ("ERROR: Cairo version %s cannot be used to run tests; must be at least %u.%u.%u.\n",
+	CAIRO_VERSION_STRING, CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO);
+    return FALSE;
+  } else if (verbose) {
+    g_print ("   OK: Cairo version %s is ok; must be at least %u.%u.%u.\n",
+	CAIRO_VERSION_STRING, CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO);
+  }
+  return TRUE;
+}
+
+/* FIXME */
+#include <swfdec/swfdec_audio_decoder.h>
+static gboolean
+check_codecs (gboolean verbose)
+{
+  if (!swfdec_audio_decoder_prepare (SWFDEC_AUDIO_CODEC_MP3,
+	swfdec_audio_format_new (44100, 2, TRUE), NULL)) {
+    g_print ("ERROR: MP3 support is not available.\n");
+  } else if (verbose) {
+    g_print ("   OK: MP3 support is available.\n");
+  }
+  return TRUE;
+}
+
+static gboolean
+check_system (gboolean verbose)
+{
+  gboolean ret = TRUE;
+
+  /* We want to run all checks, so don't use && here */
+  ret &= check_cairo (verbose);
+  ret &= check_codecs (verbose);
+
+  return ret;
+}
+
 
 /* Start of script file */
 #define SWFDEC_TEST_FILE_ID "Swfdec Test Script\0\1"
@@ -79,9 +124,12 @@ main (int argc, char **argv)
   SwfdecAsValue val;
   int i, ret;
   gboolean dump = FALSE;
+  gboolean no_check = FALSE, only_check = FALSE;
 
   GOptionEntry options[] = {
-    { "dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "dump images on failure", FALSE },
+    { "dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "dump informative output on failure", FALSE },
+    { "no-check", 0, 0, G_OPTION_ARG_NONE, &no_check, "don't check if the system is ok for running the testsuite", FALSE },
+    { "self-check", 0, 0, G_OPTION_ARG_NONE, &only_check, "run a system check and exit", FALSE },
     { "player", 'p', 0, G_OPTION_ARG_STRING, &swfdec_test_plugin_name, "player to test", "NAME" },
     { "script", 's', 0, G_OPTION_ARG_STRING, &script_filename, "script to execute if not ./default.sts", "FILENAME" },
     { NULL }
@@ -106,6 +154,17 @@ main (int argc, char **argv)
     g_error_free (error);
     return EXIT_FAILURE;
   }
+
+  if (only_check || !no_check) {
+    gboolean result = check_system (only_check);
+    if (!result) {
+      g_print ("ERROR: System checked failed, aborting. Use --no-check to disable.\n");
+      return 1;
+    } else if (only_check) {
+      return 0;
+    }
+  }
+  g_assert (!only_check);
 
   /* allow env vars instead of options - eases running make check with different settings */
   if (swfdec_test_plugin_name == NULL)

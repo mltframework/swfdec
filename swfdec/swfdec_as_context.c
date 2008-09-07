@@ -801,6 +801,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (context->frame != NULL);
+  g_return_if_fail (context->frame->script != NULL);
   g_return_if_fail (context->global); /* check here because of swfdec_sandbox_(un)use() */
 
   /* setup data */
@@ -825,51 +826,6 @@ swfdec_as_context_run (SwfdecAsContext *context)
     step = NULL;
   }
 
-  if (SWFDEC_IS_AS_NATIVE_FUNCTION (frame->function)) {
-    SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (frame->function);
-    SwfdecAsValue rval = { 0, };
-    if (!frame->construct || native->construct_type == 0 ||
-	g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->construct_type)) {
-      SwfdecAsValue *argv;
-      /* accumulate argv */
-      if (frame->argc == 0 || frame->argv != NULL) {
-	/* FIXME FIXME FIXME: no casting here please! */
-	argv = (SwfdecAsValue *) frame->argv;
-      } else {
-	SwfdecAsStack *stack;
-	SwfdecAsValue *cur;
-	guint i;
-	if (frame->argc > 128) {
-	  SWFDEC_FIXME ("allow calling native functions with more than 128 args (this one has %u)",
-	      frame->argc);
-	  frame->argc = 128;
-	}
-	argv = g_new (SwfdecAsValue, frame->argc);
-	stack = context->stack;
-	cur = context->cur;
-	for (i = 0; i < frame->argc; i++) {
-	  if (cur <= &stack->elements[0]) {
-	    stack = stack->next;
-	    cur = &stack->elements[stack->used_elements];
-	  }
-	  cur--;
-	  argv[i] = *cur;
-	}
-      }
-      native->native (context, frame->thisp, frame->argc, 
-	  argv, &rval);
-      if (argv != frame->argv)
-	g_free (argv);
-    } else {
-      if (frame->construct && native->construct_type != 0 &&
-	 !g_type_is_a (G_OBJECT_TYPE (frame->thisp), native->construct_type)) {
-	SWFDEC_FIXME ("Ignoring call to native constructor with invalid type");
-      }
-    }
-    swfdec_as_frame_return (frame, &rval);
-    goto out;
-  }
-  g_assert (frame->script);
   g_assert (frame->target);
   script = frame->script;
   context->version = script->version;

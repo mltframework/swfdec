@@ -149,7 +149,7 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
     }
   }
 
- if ((2 << 30) / dec->width / dec->height < dec->n_components) {
+ if ((1 << 30) / dec->width / dec->height < dec->n_components) {
    COG_ERROR ("image is too big (width %d, height %d, %d components)",
        dec->width, dec->height, dec->n_components);
    dec->error = TRUE;

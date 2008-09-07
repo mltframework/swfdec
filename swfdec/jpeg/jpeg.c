@@ -70,6 +70,11 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
   }
 
   if (dec->width < 1) {
+    COG_ERROR("width can't be 0");
+    dec->error = TRUE;
+  }
+
+  if (dec->height < 1) {
     COG_ERROR("height can't be 0");
     dec->error = TRUE;
   }
@@ -143,6 +148,12 @@ jpeg_decoder_verify_header (JpegDecoder *dec)
       break;
     }
   }
+
+ if ((2 << 30) / dec->width / dec->height < dec->n_components) {
+   COG_ERROR ("image is too big (width %d, height %d, %d components)",
+       dec->width, dec->height, dec->n_components);
+   dec->error = TRUE;
+ }
 }
 
 static void

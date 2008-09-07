@@ -1,4 +1,14 @@
 
+ 0.8.0 ("Slide")
+
+And here is our 6monthly stable release again:
+- rework ActionScript function calls to improve performance
+- increase Flash version Swfdec reports to 9.0.999.0
+- implement flash.geom.Matrix
+- implement various native functions
+- lots of correctness fixes
+- lots of bugfixes
+
  0.7.4 ("Diablo")
 
 Yay, we returned to monthly releases! Here it goes:

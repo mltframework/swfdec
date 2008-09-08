@@ -15,17 +15,13 @@ AC_SUBST(SWFDEC_VERSION_MICRO)
 AC_SUBST(SWFDEC_VERSION)
 
 
-[is_dev=$(echo $PACKAGE_VERSION | sed 's/[0-9]\.[0-9][0-9]*\.[0-9]*[13579]/1/')]
-if test x"$is_dev" = x1 ; then
-  SWFDEC_CVS="yes"
-else
-  SWFDEC_CVS="no"
-fi
+[SWFDEC_DEVEL=$(echo $SWFDEC_VERSION_MICRO | sed 's/[0-9]*[13579]/yes/')]
+[SWFDEC_SNAPSHOT=$(echo $SWFDEC_VERSION_MINOR | sed 's/[0-9]*[13579]/yes/')]
 
 AM_INIT_AUTOMAKE(1.6)
 dnl AC_CANONICAL_TARGET([])
 
-SWFDEC_MAJORMINOR=0.7
+SWFDEC_MAJORMINOR=$SWFDEC_VERSION_MAJOR.$SWFDEC_VERSION_MINOR
 AC_SUBST(SWFDEC_MAJORMINOR)
 
 AM_CONFIG_HEADER(config.h)
@@ -37,7 +33,7 @@ dnl FIXME: I want this but stupid headers don't let me: -Wshadow
 dnl FIXME: readd -Wlogical-op when http://gcc.gnu.org/bugzilla/show_bug.cgi?id=36513 is solved
 AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wswitch-default -Winit-self -Wmissing-include-dirs -Wundef -Waddress -Waggregate-return -Wmissing-format-attribute -Wno-multichar -Wnested-externs")
 dnl if we're in nano >= 1, add -Werror if supported
-if test x$SWFDEC_CVS = xyes ; then
+if test x$SWFDEC_DEVEL = xyes ; then
   AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-Werror")
   DEFAULT_DEBUG_LEVEL="SWFDEC_LEVEL_WARNING"
 else
@@ -45,7 +41,18 @@ else
 fi
 AC_DEFINE_UNQUOTED(SWFDEC_LEVEL_DEFAULT, $DEFAULT_DEBUG_LEVEL, [Default debug level used])
 
-SWFDEC_LIBVERSION="1:0:0"
+dnl Compute the libversion automatically, so there's no need to think about it
+dnl when bumping versions.
+dnl Note that the libversions are based on Swfdec's current release mechanism 
+dnl detailed at 
+dnl http://lists.freedesktop.org/archives/swfdec/2008-January/001131.html
+dnl If this ever changes (like when Swfdec gets a stable API), don't forget to
+dnl change this
+if test x"$SWFDEC_SNAPSHOT" = xyes ; then
+  SWFDEC_LIBVERSION="$SWFDEC_MICRO:0:0"
+else
+  SWFDEC_LIBVERSION="0:0:0"
+fi
 AC_SUBST(SWFDEC_LIBVERSION)
 AM_PROG_LIBTOOL
 

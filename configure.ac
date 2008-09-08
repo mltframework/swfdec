@@ -49,7 +49,7 @@ dnl http://lists.freedesktop.org/archives/swfdec/2008-January/001131.html
 dnl If this ever changes (like when Swfdec gets a stable API), don't forget to
 dnl change this
 if test x"$SWFDEC_SNAPSHOT" = xyes ; then
-  SWFDEC_LIBVERSION="$SWFDEC_MICRO:0:0"
+  SWFDEC_LIBVERSION="$SWFDEC_VERSION_MICRO:0:0"
 else
   SWFDEC_LIBVERSION="0:0:0"
 fi

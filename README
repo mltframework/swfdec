@@ -7,11 +7,15 @@ An additional library named swfdec-gtk is provided for easy integration of
 Swfdec into Gtk applications. This library is what developers most likely want 
 to target their applications at. Building this library can be disabled.
 
-The library is still in heavy development. The intended audience are developers
-or people using it for pretested Flash animations (think embedded here). If you
-use it on unknown content, expect it to have issues and don't be surprised if 
-it crashes. If you encounter such a crash however, make sure to file a bug 
-immediately.
+Swfdec is intended to be used as a replacement for the default Flash player.
+While it is not yet a 100% complete replacement, a big focus is on stability
+and security. So it is deemed to be suitable for use in production 
+applications.
+
+The library however is still in heavy development. Because of that, the 
+Programming interface will change between major versions. No guarantees are 
+made about the API. However, during stable release cycles, the API and ABI are 
+guaranteed to stay stable.
 
 Swfdec contains some applications for testing and debugging the library. These 
 are available in the player/, test/ and tools/ directories. They are not 
@@ -46,9 +50,9 @@ Limitations:
 
  - A few rare object types are not handled at all. They are ignored.
 
- - SWF files that use Flash generally heavily depend on ActionScript features.
-   Support for ActionScript is currently incomplete. Unsupported scripts are
-   skipped.
+ - SWF files that use Flash generally heavily depend on ActionScript.
+   Support for ActionScript is currently incomplete. Unsupported functions in
+   scripts are skipped.
 
  - If any known unsupported behaviour is encountered, Swfdec will print a 
    notice to stderr and try to interpret the file nonetheless. If you 
@@ -59,15 +63,13 @@ Limitations:
 
 Dependencies:
 
-  cairo (>= 1.2.0 - >= 1.4.0 recommended) with png support enabled
+  cairo (>= 1.2.0 - >= 1.8.0 recommended) with png support enabled
   glib (>= 2.14.0)
   liboil (>= 0.3.6)
   Pangocairo (>= 1.16.0) - this is provided by Pango
   zlib (>= 1.1.4)
 
-  FFMpeg (current SVN - optional, required for various audio and video formats)
-  GStreamer (>= 0.10.11 - optional, required for various audio and video formats)
-  MAD (>= 0.15.1b - optional, required for MP3 audio format support)
+  GStreamer (>= 0.10.15 - optional, required for various audio and video formats)
 
   GTK+ (>= 2.8.0 - used by swfdec-gtk)
   libsoup (>= 2.4.0 - used by swfdec-gtk)

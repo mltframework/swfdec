@@ -6,6 +6,7 @@ And here is our 6monthly stable release again:
 - increase Flash version Swfdec reports to 9.0.999.0
 - implement flash.geom.Matrix
 - implement various native functions
+- add API to query Swfdec's version
 - lots of correctness fixes
 - lots of bugfixes
 

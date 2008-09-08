@@ -9,9 +9,11 @@ swfdec_as_native_function_get_type
 swfdec_as_object_get_type
 swfdec_audio_get_type
 swfdec_file_loader_get_type
+swfdec_gc_object_get_type
 swfdec_loader_get_type
 swfdec_player_get_type
 swfdec_player_scripting_get_type
+swfdec_renderer_get_type
 swfdec_socket_get_type
 swfdec_stream_get_type
 swfdec_system_get_type
@@ -19,4 +21,5 @@ swfdec_system_get_type
 swfdec_gtk_loader_get_type
 swfdec_gtk_player_get_type
 swfdec_gtk_socket_get_type
+swfdec_gtk_system_get_type
 swfdec_gtk_widget_get_type

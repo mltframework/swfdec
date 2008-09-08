@@ -202,7 +202,7 @@ expand_content_files=
 # signals and properties.
 # e.g. INCLUDES=-I$(top_srcdir) -I$(top_builddir) $(GTK_DEBUG_FLAGS)
 # e.g. GTKDOC_LIBS=$(top_builddir)/gtk/$(gtktargetlib)
-INCLUDES=$(SWFDEC_GTK_CFLAGS) $(CAIRO_CFLAGS)
+INCLUDES=$(SWFDEC_GTK_CFLAGS) $(CAIRO_CFLAGS) -I$(top_builddir)
 GTKDOC_LIBS=$(SWFDEC_GTK_LIBS) 
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.

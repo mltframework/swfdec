@@ -24,7 +24,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <errno.h>
 
 #include "swfdec_movie.h"

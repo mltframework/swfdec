@@ -337,7 +337,7 @@ swfdec_as_value_mark (SwfdecAsValue *value)
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
-    swfdec_gc_object_mark (value->value.object);
+    swfdec_gc_object_mark (SWFDEC_AS_VALUE_GET_OBJECT (value));
   } else if (SWFDEC_AS_VALUE_IS_STRING (value)) {
     swfdec_as_string_mark (SWFDEC_AS_VALUE_GET_STRING (value));
   }

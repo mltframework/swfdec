@@ -706,15 +706,3 @@ swfdec_as_value_to_twips (SwfdecAsContext *context, const SwfdecAsValue *val,
   return TRUE;
 }
 
-SwfdecAsObject *
-swfdec_as_value_get_object (const SwfdecAsValue *val)
-{
-  SwfdecAsObject *o = val->value.object;
-
-  if (SWFDEC_IS_MOVIE (o)) {
-    o = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (o)));
-    if (o == NULL)
-      o = val->value.object;
-  }
-  return o;
-}

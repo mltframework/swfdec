@@ -102,12 +102,7 @@ struct _SwfdecAsValue {
 #define SWFDEC_AS_VALUE_SET_NULL(val) (val)->type = SWFDEC_AS_TYPE_NULL
 
 #define SWFDEC_AS_VALUE_IS_OBJECT(val) ((val)->type == SWFDEC_AS_TYPE_OBJECT)
-#if 0
 #define SWFDEC_AS_VALUE_GET_OBJECT(val) ((val)->value.object)
-#else
-#define SWFDEC_AS_VALUE_GET_OBJECT swfdec_as_value_get_object
-SwfdecAsObject *swfdec_as_value_get_object (const SwfdecAsValue *val);
-#endif
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
   SwfdecAsObject *__o = (o); \

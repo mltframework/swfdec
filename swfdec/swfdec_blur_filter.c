@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Pekka Lampila <pekka.lampila@iki.fi>
+ * Copyright (C) 2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,62 +21,27 @@
 #include "config.h"
 #endif
 
-#include "swfdec_as_internal.h"
+#include "swfdec_blur_filter.h"
 #include "swfdec_debug.h"
 
-SWFDEC_AS_NATIVE (1102, 1, swfdec_blur_filter_get_blurX)
-void
-swfdec_blur_filter_get_blurX (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+G_DEFINE_TYPE (SwfdecBlurFilter, swfdec_blur_filter, SWFDEC_TYPE_FILTER)
+
+static void
+swfdec_blur_filter_class_init (SwfdecBlurFilterClass *klass)
 {
-  SWFDEC_STUB ("BlurFilter.blurX (get)");
 }
 
-SWFDEC_AS_NATIVE (1102, 2, swfdec_blur_filter_set_blurX)
-void
-swfdec_blur_filter_set_blurX (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+static void
+swfdec_blur_filter_init (SwfdecBlurFilter *filter)
 {
-  SWFDEC_STUB ("BlurFilter.blurX (set)");
+  filter->x = 4;
+  filter->y = 4;
+  filter->quality = 1;
 }
 
-SWFDEC_AS_NATIVE (1102, 3, swfdec_blur_filter_get_blurY)
 void
-swfdec_blur_filter_get_blurY (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+swfdec_blur_filter_invalidate (SwfdecBlurFilter *filter)
 {
-  SWFDEC_STUB ("BlurFilter.blurY (get)");
+  g_return_if_fail (SWFDEC_IS_BLUR_FILTER (filter));
 }
 
-SWFDEC_AS_NATIVE (1102, 4, swfdec_blur_filter_set_blurY)
-void
-swfdec_blur_filter_set_blurY (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  SWFDEC_STUB ("BlurFilter.blurY (set)");
-}
-
-SWFDEC_AS_NATIVE (1102, 5, swfdec_blur_filter_get_quality)
-void
-swfdec_blur_filter_get_quality (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  SWFDEC_STUB ("BlurFilter.quality (get)");
-}
-
-SWFDEC_AS_NATIVE (1102, 6, swfdec_blur_filter_set_quality)
-void
-swfdec_blur_filter_set_quality (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  SWFDEC_STUB ("BlurFilter.quality (set)");
-}
-
-// constructor
-SWFDEC_AS_NATIVE (1102, 0, swfdec_blur_filter_construct)
-void
-swfdec_blur_filter_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  SWFDEC_STUB ("BlurFilter");
-}

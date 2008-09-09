@@ -50,6 +50,7 @@ libswfdec_source_files = \
 	swfdec_bitmap_pattern.c \
 	swfdec_bits.c \
 	swfdec_blur_filter.c \
+	swfdec_blur_filter_as.c \
 	swfdec_bots.c \
 	swfdec_buffer.c \
 	swfdec_button.c \
@@ -255,6 +256,7 @@ noinst_HEADERS = \
 	swfdec_bitmap_movie.h \
 	swfdec_bitmap_pattern.h \
 	swfdec_bits.h \
+	swfdec_blur_filter.h \
 	swfdec_bots.h \
 	swfdec_button.h \
 	swfdec_button_movie.h \

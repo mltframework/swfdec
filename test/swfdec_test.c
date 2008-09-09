@@ -60,6 +60,7 @@ check_codecs (gboolean verbose)
   if (!swfdec_audio_decoder_prepare (SWFDEC_AUDIO_CODEC_MP3,
 	swfdec_audio_format_new (44100, 2, TRUE), NULL)) {
     g_print ("ERROR: MP3 support is not available.\n");
+    return FALSE;
   } else if (verbose) {
     g_print ("   OK: MP3 support is available.\n");
   }

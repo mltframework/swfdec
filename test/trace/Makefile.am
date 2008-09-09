@@ -450,6 +450,15 @@ EXTRA_DIST = \
 	blur-filter-properties-7.swf.trace \
 	blur-filter-properties-8.swf \
 	blur-filter-properties-8.swf.trace \
+	BlurFilter-construct-5.swf \
+	BlurFilter-construct-5.swf.trace \
+	BlurFilter-construct-6.swf \
+	BlurFilter-construct-6.swf.trace \
+	BlurFilter-construct-7.swf \
+	BlurFilter-construct-7.swf.trace \
+	BlurFilter-construct-8.swf \
+	BlurFilter-construct-8.swf.trace \
+	BlurFilter-construct.as \
 	boolean.as \
 	boolean-5.swf \
 	boolean-5.swf.trace \

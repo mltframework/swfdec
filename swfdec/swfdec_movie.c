@@ -690,10 +690,24 @@ swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean event
   return NULL;
 }
 
-static gboolean
+/* NB: order is important */
+typedef enum {
+  SWFDEC_GROUP_NONE = 0,
+  SWFDEC_GROUP_NORMAL,
+  SWFDEC_GROUP_CACHED,
+  SWFDEC_GROUP_BITMAP
+} SwfdecGroup;
+
+static SwfdecGroup
 swfdec_movie_needs_group (SwfdecMovie *movie)
 {
-  return (movie->blend_mode > 1);
+  if (movie->filters)
+    return SWFDEC_GROUP_BITMAP;
+  if (movie->cache_as_bitmap)
+    return SWFDEC_GROUP_CACHED;
+  if (movie->blend_mode > 1)
+    return SWFDEC_GROUP_NORMAL;
+  return SWFDEC_GROUP_NONE;
 }
 
 static cairo_operator_t
@@ -767,7 +781,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 {
   SwfdecMovieClass *klass;
   SwfdecColorTransform trans;
-  gboolean group;
+  SwfdecGroup group;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (cr != NULL);
@@ -782,12 +796,15 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     return;
   }
 
-  if (movie->masked_by != NULL) {
+  group = swfdec_movie_needs_group (movie);
+  if (group == SWFDEC_GROUP_NORMAL) {
+    SWFDEC_DEBUG ("pushing group for blend mode %u", movie->blend_mode);
+    cairo_push_group (cr);
+  } else if (group != SWFDEC_GROUP_NONE) {
+    SWFDEC_FIXME ("implement cache-as-bitmap and filters here");
     cairo_push_group (cr);
   }
-  group = swfdec_movie_needs_group (movie);
-  if (group) {
-    SWFDEC_DEBUG ("pushing group for blend mode %u", movie->blend_mode);
+  if (movie->masked_by != NULL) {
     cairo_push_group (cr);
   }
   cairo_save (cr);
@@ -820,15 +837,6 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     g_warning ("error rendering with cairo: %s", cairo_status_to_string (cairo_status (cr)));
   }
   cairo_restore (cr);
-  if (group) {
-    cairo_pattern_t *pattern;
-
-    pattern = cairo_pop_group (cr);
-    cairo_set_source (cr, pattern);
-    cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
-    cairo_paint (cr);
-    cairo_pattern_destroy (pattern);
-  }
   if (movie->masked_by) {
     cairo_pattern_t *mask;
     cairo_matrix_t mat;
@@ -846,6 +854,15 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_mask (cr, mask);
     cairo_pattern_destroy (mask);
+  }
+  if (group != SWFDEC_GROUP_NONE) {
+    cairo_pattern_t *pattern;
+
+    pattern = cairo_pop_group (cr);
+    cairo_set_source (cr, pattern);
+    cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
+    cairo_paint (cr);
+    cairo_pattern_destroy (pattern);
   }
 }
 

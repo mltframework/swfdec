@@ -156,6 +156,8 @@ struct _SwfdecMovie {
   /* drawing state */
   SwfdecMovie *		mask_of;		/* movie this movie is a mask of or NULL if none */
   SwfdecMovie *		masked_by;		/* movie we are masked by or NULL if none */
+  GSList *		filters;		/* filters to apply to movie */
+  gboolean		cache_as_bitmap;	/* the movie should be cached */
   /* FIXME: could it be that shape drawing (SwfdecGraphicMovie etc) uses these same objects? */
   SwfdecImage *		image;			/* image loaded via loadMovie */
   SwfdecRect		draw_extents;		/* extents of the items in the following list */

@@ -806,8 +806,9 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   }
   if (movie->masked_by != NULL) {
     cairo_push_group (cr);
+  } else {
+    cairo_save (cr);
   }
-  cairo_save (cr);
 
   SWFDEC_LOG ("transforming movie, transform: %g %g  %g %g   %g %g",
       movie->matrix.xx, movie->matrix.yy,
@@ -836,7 +837,6 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
     g_warning ("error rendering with cairo: %s", cairo_status_to_string (cairo_status (cr)));
   }
-  cairo_restore (cr);
   if (movie->masked_by) {
     cairo_pattern_t *mask;
     cairo_matrix_t mat;
@@ -854,6 +854,8 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_mask (cr, mask);
     cairo_pattern_destroy (mask);
+  } else {
+    cairo_restore (cr);
   }
   if (group != SWFDEC_GROUP_NONE) {
     cairo_pattern_t *pattern;

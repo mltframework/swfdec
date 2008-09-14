@@ -21,6 +21,7 @@
 #define _SWFDEC_BLUR_FILTER_H_
 
 #include <swfdec/swfdec_filter.h>
+#include <swfdec/swfdec_convolution_matrix.h>
 
 G_BEGIN_DECLS
 
@@ -41,6 +42,7 @@ struct _SwfdecBlurFilter {
   double		x;		/* blur in horizontal direction */
   double		y;		/* blur in vertical direction */
   guint			quality;	/* number of passes */
+  SwfdecConvolutionMatrix *matrix;	/* matrix if computed or NULL */
 };
 
 struct _SwfdecBlurFilterClass {
@@ -49,7 +51,7 @@ struct _SwfdecBlurFilterClass {
 
 GType			swfdec_blur_filter_get_type	(void);
 
-void			swfdec_blur_filter_invalidate	(SwfdecBlurFilter *	filter);
+void			swfdec_blur_filter_invalidate	(SwfdecBlurFilter *	blur);
 
 
 G_END_DECLS

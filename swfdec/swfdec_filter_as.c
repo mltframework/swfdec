@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,26 +22,21 @@
 #endif
 
 #include "swfdec_filter.h"
+
 #include "swfdec_as_internal.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_debug.h"
 
-SWFDEC_AS_NATIVE (1112, 1, swfdec_filter_clone)
+SWFDEC_AS_NATIVE (1112, 1, swfdec_filter_do_clone)
 void
-swfdec_filter_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_filter_do_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecFilter *filter;
-  SwfdecFilterClass *klass;
 
-  if (!SWFDEC_IS_FILTER (object))
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_FILTER, &filter, "");
 
-  filter = SWFDEC_FILTER (object);
-  klass = SWFDEC_FILTER_GET_CLASS (filter);
-  g_assert (klass->clone);
-
-  filter = klass->clone (filter);
-  if (filter)
-    SWFDEC_AS_VALUE_SET_OBJECT (retval, SWFDEC_AS_OBJECT (filter));
+  filter = swfdec_filter_clone (filter);
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, SWFDEC_AS_OBJECT (filter));
 }
 

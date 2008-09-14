@@ -159,6 +159,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   const char *name;
   guint blend_mode;
   SwfdecGraphic *graphic;
+  GSList *filters;
 
   dec = SWFDEC_SWF_DECODER (mov->resource->decoder);
   version = dec->version;
@@ -250,8 +251,9 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   }
 
   if (has_filter) {
-    GSList *filters = swfdec_filter_parse (bits);
-    g_slist_free (filters);
+    filters = swfdec_filter_parse (player, bits);
+  } else {
+    filters = NULL;
   }
 
   if (has_blend_mode) {
@@ -327,6 +329,8 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
       SWFDEC_FIXME ("character %u is not a graphic (does it even exist?), aborting", id);
       if (events)
 	swfdec_event_list_free (events);
+      g_slist_foreach (filters, (GFunc) g_object_unref, NULL);
+      g_slist_free (filters);
       return FALSE;
     }
     cur = swfdec_movie_new (player, depth, mov, mov->resource, graphic, name);
@@ -340,8 +344,15 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
     }
     swfdec_movie_initialize (cur);
   }
-
 out:
+  if (has_filter) {
+    if (cur->filters) {
+      g_slist_foreach (cur->filters, (GFunc) g_object_unref, NULL);
+      g_slist_free (cur->filters);
+    }
+    cur->filters = filters;
+  }
+
   if (events)
     swfdec_event_list_free (events);
   return TRUE;

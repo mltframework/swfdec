@@ -83,10 +83,8 @@ swfdec_button_movie_perform_place (SwfdecButtonMovie *button, SwfdecBits *bits)
     } else {
       blend_mode = 0;
     }
-    if (has_filters) {
-      GSList *filters = swfdec_filter_parse (bits);
-      g_slist_free (filters);
-    }
+    if (has_filters)
+      new->filters = swfdec_filter_parse (player, bits);
   } else {
     /* DefineButton1 record */
     v2 = FALSE;

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,17 +43,31 @@ struct _SwfdecFilter {
 struct _SwfdecFilterClass {
   SwfdecAsObjectClass	object_class;
 
-  SwfdecFilter *	(* clone)		(SwfdecFilter *		filter);
+  void			(* clone)		(SwfdecFilter *		dest,
+						 SwfdecFilter *		source);
+  void			(* get_rectangle)	(SwfdecFilter *		filter,
+						 SwfdecRectangle *	dest,
+						 const SwfdecRectangle *source);
   cairo_pattern_t *	(* apply)		(SwfdecFilter *		filter,
-						 cairo_pattern_t *	pattern);
+						 cairo_pattern_t *	pattern,
+						 const SwfdecRectangle *rect);
 };
 
 GType			swfdec_filter_get_type	(void);
 
+SwfdecFilter *		swfdec_filter_clone	(SwfdecFilter *		filter);
 cairo_pattern_t *	swfdec_filter_apply	(SwfdecFilter *		filter,
-						 cairo_pattern_t *	pattern);
-GSList *		swfdec_filter_parse	(SwfdecBits *		bits);
+						 cairo_pattern_t *	pattern,
+						 const SwfdecRectangle *source);
+void			swfdec_filter_get_rectangle
+						(SwfdecFilter *		filter,
+						 SwfdecRectangle *	dest,
+						 const SwfdecRectangle *source);
 
+GSList *		swfdec_filter_parse	(SwfdecPlayer *		player,
+						 SwfdecBits *		bits);
+void			swfdec_filter_skip	(SwfdecBits *		bits);
+						
 
 G_END_DECLS
 #endif

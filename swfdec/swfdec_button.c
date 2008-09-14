@@ -165,10 +165,8 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
 	trans.x0, trans.y0);
     swfdec_bits_get_color_transform (&bits, &ctrans);
 
-    if (has_filters) {
-      GSList *list = swfdec_filter_parse (&bits);
-      g_slist_free (list);
-    }
+    if (has_filters)
+      swfdec_filter_skip (&bits);
     if (has_blend_mode) {
       guint blend_mode = swfdec_bits_get_u8 (&bits);
       SWFDEC_LOG ("  blend mode = %u", blend_mode);

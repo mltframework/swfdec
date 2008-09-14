@@ -68,6 +68,7 @@ libswfdec_source_files = \
 	swfdec_color_transform_as.c \
 	swfdec_constant_pool.c \
 	swfdec_convolution_filter.c \
+	swfdec_convolution_matrix.c \
 	swfdec_debug.c \
 	swfdec_decoder.c \
 	swfdec_displacement_map_filter.c \
@@ -269,6 +270,7 @@ noinst_HEADERS = \
 	swfdec_color.h \
 	swfdec_color_transform_as.h \
 	swfdec_constant_pool.h \
+	swfdec_convolution_matrix.h \
 	swfdec_debug.h \
 	swfdec_decoder.h \
 	swfdec_draw.h \

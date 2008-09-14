@@ -34,6 +34,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_draw.h"
 #include "swfdec_event.h"
+#include "swfdec_filter.h"
 #include "swfdec_graphic.h"
 #include "swfdec_image.h"
 #include "swfdec_loader_internal.h"
@@ -695,14 +696,14 @@ typedef enum {
   SWFDEC_GROUP_NONE = 0,
   SWFDEC_GROUP_NORMAL,
   SWFDEC_GROUP_CACHED,
-  SWFDEC_GROUP_BITMAP
+  SWFDEC_GROUP_FILTERS
 } SwfdecGroup;
 
 static SwfdecGroup
 swfdec_movie_needs_group (SwfdecMovie *movie)
 {
   if (movie->filters)
-    return SWFDEC_GROUP_BITMAP;
+    return SWFDEC_GROUP_FILTERS;
   if (movie->cache_as_bitmap)
     return SWFDEC_GROUP_CACHED;
   if (movie->blend_mode > 1)
@@ -714,8 +715,8 @@ static cairo_operator_t
 swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
 {
   switch (blend_mode) {
+    case SWFDEC_BLEND_MODE_NONE:
     case SWFDEC_BLEND_MODE_NORMAL:
-      SWFDEC_ERROR ("shouldn't need to get operator without blend mode?!");
     case SWFDEC_BLEND_MODE_LAYER:
       return CAIRO_OPERATOR_OVER;
     case SWFDEC_BLEND_MODE_ADD:
@@ -739,6 +740,31 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
       SWFDEC_WARNING ("invalid blend mode %u", blend_mode);
       return CAIRO_OPERATOR_OVER;
   }
+}
+
+static cairo_pattern_t *
+swfdec_movie_apply_filters (SwfdecMovie *movie, cairo_pattern_t *pattern)
+{
+  SwfdecRect rect;
+  SwfdecRectangle area;
+  GSList *walk;
+
+  if (movie->filters == NULL)
+    return pattern;
+
+  rect = movie->original_extents;
+  swfdec_movie_rect_local_to_global (movie, &rect);
+  swfdec_rect_transform (&rect, &rect,
+      &SWFDEC_PLAYER (swfdec_gc_object_get_context (movie))->priv->global_to_stage);
+  swfdec_rectangle_init_rect (&area, &rect);
+  /* FIXME: hack to make textfield borders work - looks like Adobe does this, too */
+  area.width++;
+  area.height++;
+  for (walk = movie->filters; walk; walk = walk->next) {
+    pattern = swfdec_filter_apply (walk->data, pattern, &area);
+    swfdec_filter_get_rectangle (walk->data, &area, &area);
+  }
+  return pattern;
 }
 
 /**
@@ -857,14 +883,28 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   } else {
     cairo_restore (cr);
   }
-  if (group != SWFDEC_GROUP_NONE) {
+  if (group == SWFDEC_GROUP_FILTERS) {
     cairo_pattern_t *pattern;
 
     pattern = cairo_pop_group (cr);
+    cairo_save (cr);
+    swfdec_renderer_reset_matrix (cr);
+    {
+      cairo_matrix_t mat;
+      cairo_get_matrix (cr, &mat);
+      cairo_matrix_invert (&mat);
+      cairo_pattern_set_matrix (pattern, &mat);
+    }
+    pattern = swfdec_movie_apply_filters (movie, pattern);
     cairo_set_source (cr, pattern);
     cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
     cairo_paint (cr);
     cairo_pattern_destroy (pattern);
+    cairo_restore (cr);
+  } else if (group != SWFDEC_GROUP_NONE) {
+    cairo_pop_group_to_source (cr);
+    cairo_set_operator (cr, swfdec_movie_get_operator_for_blend_mode (movie->blend_mode));
+    cairo_paint (cr);
   }
 }
 
@@ -992,16 +1032,15 @@ static void
 swfdec_movie_mark (SwfdecGcObject *object)
 {
   SwfdecMovie *movie = SWFDEC_MOVIE (object);
-  GList *walk;
   GSList *iter;
 
   if (movie->parent)
     swfdec_gc_object_mark (movie->parent);
   swfdec_as_string_mark (movie->original_name);
   swfdec_as_string_mark (movie->name);
-  for (walk = movie->list; walk; walk = walk->next) {
-    swfdec_gc_object_mark (walk->data);
-  }
+  g_list_foreach (movie->list, (GFunc) swfdec_gc_object_mark, NULL);
+  g_slist_foreach (movie->filters, (GFunc) swfdec_gc_object_mark, NULL);
+
   for (iter = movie->variable_listeners; iter != NULL; iter = iter->next) {
     SwfdecMovieVariableListener *listener = iter->data;
     swfdec_gc_object_mark (listener->object);

@@ -31,6 +31,7 @@
 #include "swfdec_bits.h"
 #include "swfdec_debug.h"
 #include "swfdec_decoder.h"
+#include "swfdec_filter.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sprite.h"
@@ -143,7 +144,31 @@ void
 swfdec_sprite_movie_set_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  SWFDEC_STUB ("MovieClip.filters (set)");
+  SwfdecAsObject *array;
+  SwfdecAsValue val;
+  SwfdecFilter *filter;
+  SwfdecMovie *movie;
+  int i, length;
+  GSList *list;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "o", &array);
+
+  swfdec_as_object_get_variable (array, SWFDEC_AS_STR_length, &val);
+  length = swfdec_as_value_to_integer (cx, &val);
+
+  list = NULL;
+  for (i = 0; i < length; i++) {
+    if (!swfdec_as_object_get_variable (array, 
+	  swfdec_as_integer_to_string (cx, i), &val) ||
+	!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
+	!SWFDEC_IS_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+      continue;
+    filter = SWFDEC_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (&val));
+    filter = swfdec_filter_clone (filter);
+    list = g_slist_prepend (list, filter);
+  }
+  g_slist_free (movie->filters);
+  movie->filters = list;
 }
 
 SWFDEC_AS_NATIVE (900, 419, swfdec_sprite_movie_get_transform)

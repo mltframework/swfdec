@@ -42,18 +42,21 @@ struct _SwfdecRendererPrivate {
  * The #SwfdecRenderer object is used internally to improve rendering done by
  * Swfdec.
  *
- * The first thing #SwfdecRenderer does is provide a way to cache data relevant
- * to rendering.
+ * The first thing a #SwfdecRenderer does is provide a way to cache data relevant
+ * to rendering. This means it will cache surfaces that are expensive to create
+ * (like decoded JPEG images) in a format most suitable to quick rendering.
+ * Therefore, it's a good idea to keep renderers around as long as any drawing 
+ * to the attached surface happens.
  *
- * The second thing it does is provide access to the surface that is used for 
- * rendering, even when not in the process of rendering. This is relevant for
- * font backends, as different surfaces provide different native fonts. See
- * swfdec_player_set_default_backend() for details about this.
+ * The second thing a #SwfdecRenderer does is provide access to the surface 
+ * that is used for rendering, even when not in the process of rendering. This 
+ * is relevant for font backends, as different surfaces provide different 
+ * native fonts. See swfdec_player_set_default_backend() for details about this.
  *
- * The third thing it does is provide a list of virtual functions for critical
- * operations that you can optimize using subclasses to provide faster 
- * implementations. Note that a working default implementation is provided, so
- * you only need to override the functions you care about. 
+ * The third thing #SwfdecRenderer does is provide a list of virtual functions 
+ * for critical operations that you can optimize using subclasses to provide 
+ * faster implementations. Note that a working default implementation is 
+ * provided, so you only need to override the functions you care about. 
  * See #SwfdecRendererClass for details about these functions.
  */
 

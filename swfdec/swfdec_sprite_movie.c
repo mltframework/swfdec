@@ -346,10 +346,8 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   }
 out:
   if (has_filter) {
-    if (cur->filters) {
-      g_slist_foreach (cur->filters, (GFunc) g_object_unref, NULL);
+    if (cur->filters)
       g_slist_free (cur->filters);
-    }
     cur->filters = filters;
   }
 

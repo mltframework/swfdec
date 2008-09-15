@@ -702,7 +702,8 @@ typedef enum {
 static SwfdecGroup
 swfdec_movie_needs_group (SwfdecMovie *movie)
 {
-  if (movie->filters)
+  /* yes, masked movies don't get filters applied */
+  if (movie->filters && movie->masked_by == NULL)
     return SWFDEC_GROUP_FILTERS;
   if (movie->cache_as_bitmap)
     return SWFDEC_GROUP_CACHED;
@@ -808,6 +809,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   SwfdecMovieClass *klass;
   SwfdecColorTransform trans;
   SwfdecGroup group;
+  gboolean needs_mask;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (cr != NULL);
@@ -830,7 +832,9 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     SWFDEC_FIXME ("implement cache-as-bitmap and filters here");
     cairo_push_group (cr);
   }
-  if (movie->masked_by != NULL) {
+  /* yes, movie with filters, don't get masked */
+  needs_mask = movie->masked_by != NULL && movie->filters == NULL;
+  if (needs_mask) {
     cairo_push_group (cr);
   } else {
     cairo_save (cr);
@@ -863,7 +867,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
     g_warning ("error rendering with cairo: %s", cairo_status_to_string (cairo_status (cr)));
   }
-  if (movie->masked_by) {
+  if (needs_mask) {
     cairo_pattern_t *mask;
     cairo_matrix_t mat;
     if (movie->parent)

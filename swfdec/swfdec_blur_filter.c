@@ -114,18 +114,20 @@ swfdec_blur_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern,
       rect->width + 2 * x * blur->quality,
       rect->height + 2 * y * blur->quality);
   cairo_surface_set_device_offset (a, 
-      - rect->x + x * blur->quality, - rect->y + y * blur->quality);
+      - (double) rect->x + x * blur->quality, - (double) rect->y + y * blur->quality);
   b = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
       rect->width + 2 * x * blur->quality,
       rect->height + 2 * y * blur->quality);
   cairo_surface_set_device_offset (b, 
-      - rect->x + x * blur->quality, - rect->y + y * blur->quality);
+      - (double) rect->x + x * blur->quality, - (double) rect->y + y * blur->quality);
 
   cr = cairo_create (b);
   cairo_set_source (cr, pattern);
   cairo_rectangle (cr, rect->x, rect->y, rect->width, rect->height);
   cairo_fill (cr);
   cairo_destroy (cr);
+  cairo_surface_flush (b);
+
   adata = cairo_image_surface_get_data (a);
   astride = cairo_image_surface_get_stride (a);
   bdata = cairo_image_surface_get_data (b);
@@ -150,6 +152,7 @@ swfdec_blur_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern,
   cairo_surface_destroy (a);
   a = b;
 out:
+  cairo_surface_mark_dirty (a);
   pattern = cairo_pattern_create_for_surface (a);
   cairo_surface_destroy (a);
 

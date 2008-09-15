@@ -93,6 +93,15 @@ EXTRA_DIST = \
 	bitmapFill-update-8.swf \
 	bitmapFill-update-8.swf.png \
 	bitmapFill-update.as \
+	BlurFilter-rendering-5.swf \
+	BlurFilter-rendering-5.swf.png \
+	BlurFilter-rendering-6.swf \
+	BlurFilter-rendering-6.swf.png \
+	BlurFilter-rendering-7.swf \
+	BlurFilter-rendering-7.swf.png \
+	BlurFilter-rendering-8.swf \
+	BlurFilter-rendering-8.swf.png \
+	BlurFilter-rendering.as \
 	bw.jpg \
 	clip-change.c \
 	clip-change-backward-5.swf \

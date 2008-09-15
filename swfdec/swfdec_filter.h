@@ -55,18 +55,17 @@ struct _SwfdecFilterClass {
 
 GType			swfdec_filter_get_type	(void);
 
-SwfdecFilter *		swfdec_filter_clone	(SwfdecFilter *		filter);
-cairo_pattern_t *	swfdec_filter_apply	(SwfdecFilter *		filter,
-						 cairo_pattern_t *	pattern,
-						 const SwfdecRectangle *source);
-void			swfdec_filter_get_rectangle
-						(SwfdecFilter *		filter,
-						 SwfdecRectangle *	dest,
-						 const SwfdecRectangle *source);
+SwfdecFilter *		swfdec_filter_clone		(SwfdecFilter *		filter);
+cairo_pattern_t *	swfdec_filter_apply		(SwfdecFilter *		filter,
+							 cairo_pattern_t *	pattern,
+							 const SwfdecRectangle *source);
+void			swfdec_filter_get_rectangle	(SwfdecFilter *		filter,
+							 SwfdecRectangle *	dest,
+							 const SwfdecRectangle *source);
 
-GSList *		swfdec_filter_parse	(SwfdecPlayer *		player,
-						 SwfdecBits *		bits);
-void			swfdec_filter_skip	(SwfdecBits *		bits);
+GSList *		swfdec_filter_parse		(SwfdecPlayer *		player,
+							 SwfdecBits *		bits);
+void			swfdec_filter_skip		(SwfdecBits *		bits);
 						
 
 G_END_DECLS

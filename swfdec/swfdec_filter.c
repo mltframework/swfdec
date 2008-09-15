@@ -24,6 +24,7 @@
 #include "swfdec_filter.h"
 
 #include "swfdec_blur_filter.h"
+#include "swfdec_color_matrix_filter.h"
 #include "swfdec_debug.h"
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecFilter, swfdec_filter, SWFDEC_TYPE_AS_OBJECT)
@@ -134,8 +135,18 @@ swfdec_filter_parse (SwfdecPlayer *player, SwfdecBits *bits)
 	}
 	break;
       case 6:
-	SWFDEC_WARNING ("    color matrix");
-	swfdec_bits_skip_bytes (bits, 20 * 4);
+	{
+	  SwfdecColorMatrixFilter *filter;
+	  guint j;
+	  
+	  filter = g_object_new (SWFDEC_TYPE_COLOR_MATRIX_FILTER, 
+	      "context", player, NULL);
+	  SWFDEC_LOG ("    color matrix");
+	  for (j = 0; j < 20; j++) {
+	    filter->matrix[j] = swfdec_bits_get_float (bits);
+	  }
+	  filters = g_slist_prepend (filters, filter);
+	}
 	break;
       case 7:
 	{

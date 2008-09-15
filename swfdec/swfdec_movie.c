@@ -829,7 +829,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
     SWFDEC_DEBUG ("pushing group for blend mode %u", movie->blend_mode);
     cairo_push_group (cr);
   } else if (group != SWFDEC_GROUP_NONE) {
-    SWFDEC_FIXME ("implement cache-as-bitmap and filters here");
+    SWFDEC_FIXME ("implement cache-as-bitmap here");
     cairo_push_group (cr);
   }
   /* yes, movie with filters, don't get masked */

@@ -57,7 +57,7 @@ swfdec_filter_clone (SwfdecFilter *filter)
 
 cairo_pattern_t *
 swfdec_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern,
-    const SwfdecRectangle *rect)
+    double xscale, double yscale, const SwfdecRectangle *rect)
 {
   SwfdecFilterClass *klass;
   cairo_pattern_t *ret;
@@ -69,7 +69,7 @@ swfdec_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern,
   klass = SWFDEC_FILTER_GET_CLASS (filter);
   g_assert (klass->apply);
   
-  ret = klass->apply (filter, pattern, rect);
+  ret = klass->apply (filter, pattern, xscale, yscale, rect);
   cairo_pattern_destroy (pattern);
   return ret;
 }
@@ -223,7 +223,7 @@ swfdec_filter_skip (SwfdecBits *bits)
 
 void
 swfdec_filter_get_rectangle (SwfdecFilter *filter, SwfdecRectangle *dest,
-    const SwfdecRectangle *source)
+    double xscale, double yscale, const SwfdecRectangle *source)
 {
   SwfdecFilterClass *klass;
 
@@ -232,5 +232,5 @@ swfdec_filter_get_rectangle (SwfdecFilter *filter, SwfdecRectangle *dest,
   g_return_if_fail (source != NULL);
 
   klass = SWFDEC_FILTER_GET_CLASS (filter);
-  klass->get_rectangle (filter, dest, source);
+  klass->get_rectangle (filter, dest, xscale, yscale, source);
 }

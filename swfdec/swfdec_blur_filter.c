@@ -41,32 +41,36 @@ swfdec_blur_filter_clone (SwfdecFilter *dfilter, SwfdecFilter *sfilter)
 }
 
 static void
-swfdec_blur_filter_create_convolution_matrix (SwfdecBlurFilter *blur)
+swfdec_blur_filter_create_convolution_matrix (SwfdecBlurFilter *blur,
+    double xscale, double yscale)
 {
   guint x, y, w, h;
   double div, blurx, blury;
 
-  if (blur->matrix)
+  if (blur->matrix && xscale == blur->xscale && yscale == blur->yscale)
     return;
 
-  blurx = MAX (blur->x, 1);
-  blury = MAX (blur->y, 1);
+  blurx = MAX (blur->x * xscale, 1);
+  blury = MAX (blur->y * yscale, 1);
   w = ceil ((blurx - 1) / 2);
   w = w * 2 + 1;
   h = ceil ((blury - 1) / 2);
   h = h * 2 + 1;
 
   blur->matrix = swfdec_convolution_matrix_new (w, h);
+  blur->xscale = xscale;
+  blur->yscale = yscale;
+
   div = 1.0 / (blurx * blury);
   for (y = 0; y < h; y++) {
     double val = div;
     if (y == 0 || y == w - 1) {
-      val *= (1 - (h - MAX (blur->y, 1)) / 2);
+      val *= (1 - (h - MAX (blury, 1)) / 2);
     }
     for (x = 0; x < w; x++) {
       if (x == 0 || x == w - 1) {
 	swfdec_convolution_matrix_set (blur->matrix, x, y,
-	    val * (1 - (w - MAX (blur->x, 1)) / 2));
+	    val * (1 - (w - MAX (blurx, 1)) / 2));
       } else {
 	swfdec_convolution_matrix_set (blur->matrix, x, y, val);
       }
@@ -76,24 +80,28 @@ swfdec_blur_filter_create_convolution_matrix (SwfdecBlurFilter *blur)
 
 static void
 swfdec_blur_filter_get_rectangle (SwfdecFilter *filter, SwfdecRectangle *dest,
-    const SwfdecRectangle *source)
+    double xscale, double yscale, const SwfdecRectangle *source)
 {
   SwfdecBlurFilter *blur = SWFDEC_BLUR_FILTER (filter);
-  guint x, y;
+  double blurx, blury;
+  guint w, h;
 
-  swfdec_blur_filter_create_convolution_matrix (blur);
-  x = swfdec_convolution_matrix_get_width (blur->matrix) / 2 * blur->quality;
-  y = swfdec_convolution_matrix_get_height (blur->matrix) / 2 * blur->quality;
+  blurx = MAX (blur->x * xscale, 1);
+  blury = MAX (blur->y * yscale, 1);
+  w = ceil ((blurx - 1) / 2);
+  w *= blur->quality;
+  h = ceil ((blury - 1) / 2);
+  h *= blur->quality;
 
-  dest->x = source->x - x;
-  dest->y = source->y - y;
-  dest->width = source->width + 2 * x;
-  dest->height = source->height + 2 * y;
+  dest->x = source->x - w;
+  dest->y = source->y - h;
+  dest->width = source->width + 2 * w;
+  dest->height = source->height + 2 * h;
 }
 
 static cairo_pattern_t *
 swfdec_blur_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern,
-    const SwfdecRectangle *rect)
+    double xscale, double yscale, const SwfdecRectangle *rect)
 {
   SwfdecBlurFilter *blur = SWFDEC_BLUR_FILTER (filter);
   cairo_surface_t *a, *b;
@@ -105,7 +113,7 @@ swfdec_blur_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern,
   if (blur->x <= 1.0 && blur->y <= 1.0)
     return cairo_pattern_reference (pattern);
 
-  swfdec_blur_filter_create_convolution_matrix (blur);
+  swfdec_blur_filter_create_convolution_matrix (blur, xscale, yscale);
   x = swfdec_convolution_matrix_get_width (blur->matrix) / 2;
   y = swfdec_convolution_matrix_get_height (blur->matrix) / 2;
 

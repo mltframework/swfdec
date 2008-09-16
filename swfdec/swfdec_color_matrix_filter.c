@@ -40,7 +40,7 @@ swfdec_color_matrix_filter_clone (SwfdecFilter *dfilter, SwfdecFilter *sfilter)
 
 static void
 swfdec_color_matrix_filter_get_rectangle (SwfdecFilter *filter, SwfdecRectangle *dest,
-    const SwfdecRectangle *source)
+    double xscale, double yscale, const SwfdecRectangle *source)
 {
   if (dest != source)
     *dest = *source;
@@ -48,7 +48,7 @@ swfdec_color_matrix_filter_get_rectangle (SwfdecFilter *filter, SwfdecRectangle 
 
 static cairo_pattern_t *
 swfdec_color_matrix_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern,
-    const SwfdecRectangle *rect)
+    double xscale, double yscale, const SwfdecRectangle *rect)
 {
   SwfdecColorMatrixFilter *cm = SWFDEC_COLOR_MATRIX_FILTER (filter);
   cairo_surface_t *surface;

@@ -42,7 +42,10 @@ struct _SwfdecBlurFilter {
   double		x;		/* blur in horizontal direction */
   double		y;		/* blur in vertical direction */
   guint			quality;	/* number of passes */
+
   SwfdecConvolutionMatrix *matrix;	/* matrix if computed or NULL */
+  double		xscale;		/* xscale matrix was computed for */
+  double		yscale;		/* yscale matrix was computed for */
 };
 
 struct _SwfdecBlurFilterClass {

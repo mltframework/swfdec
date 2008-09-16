@@ -746,24 +746,29 @@ swfdec_movie_get_operator_for_blend_mode (guint blend_mode)
 static cairo_pattern_t *
 swfdec_movie_apply_filters (SwfdecMovie *movie, cairo_pattern_t *pattern)
 {
-  SwfdecRect rect;
   SwfdecRectangle area;
+  SwfdecPlayer *player;
+  SwfdecRect rect;
   GSList *walk;
+  double xscale, yscale;
 
   if (movie->filters == NULL)
     return pattern;
 
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   rect = movie->original_extents;
   swfdec_movie_rect_local_to_global (movie, &rect);
   swfdec_rect_transform (&rect, &rect,
-      &SWFDEC_PLAYER (swfdec_gc_object_get_context (movie))->priv->global_to_stage);
+      &player->priv->global_to_stage);
   swfdec_rectangle_init_rect (&area, &rect);
   /* FIXME: hack to make textfield borders work - looks like Adobe does this, too */
   area.width++;
   area.height++;
+  xscale = player->priv->global_to_stage.xx * SWFDEC_TWIPS_SCALE_FACTOR;
+  yscale = player->priv->global_to_stage.yy * SWFDEC_TWIPS_SCALE_FACTOR;
   for (walk = movie->filters; walk; walk = walk->next) {
-    pattern = swfdec_filter_apply (walk->data, pattern, &area);
-    swfdec_filter_get_rectangle (walk->data, &area, &area);
+    pattern = swfdec_filter_apply (walk->data, pattern, xscale, yscale, &area);
+    swfdec_filter_get_rectangle (walk->data, &area, xscale, yscale, &area);
   }
   return pattern;
 }

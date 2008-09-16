@@ -47,9 +47,13 @@ struct _SwfdecFilterClass {
 						 SwfdecFilter *		source);
   void			(* get_rectangle)	(SwfdecFilter *		filter,
 						 SwfdecRectangle *	dest,
+						 double			xscale,
+						 double			yscale,
 						 const SwfdecRectangle *source);
   cairo_pattern_t *	(* apply)		(SwfdecFilter *		filter,
 						 cairo_pattern_t *	pattern,
+						 double			xscale,
+						 double			yscale,
 						 const SwfdecRectangle *rect);
 };
 
@@ -58,9 +62,13 @@ GType			swfdec_filter_get_type	(void);
 SwfdecFilter *		swfdec_filter_clone		(SwfdecFilter *		filter);
 cairo_pattern_t *	swfdec_filter_apply		(SwfdecFilter *		filter,
 							 cairo_pattern_t *	pattern,
+							 double			xscale,
+							 double			yscale,
 							 const SwfdecRectangle *source);
 void			swfdec_filter_get_rectangle	(SwfdecFilter *		filter,
 							 SwfdecRectangle *	dest,
+							 double			xscale,
+							 double			yscale,
 							 const SwfdecRectangle *source);
 
 GSList *		swfdec_filter_parse		(SwfdecPlayer *		player,

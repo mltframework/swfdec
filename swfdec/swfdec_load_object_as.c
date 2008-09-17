@@ -229,7 +229,7 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   data = swfdec_as_value_to_string (cx, &val);
 
-  if (method == NULL || g_ascii_strcasecmp (method, "GET") == 0) {
+  if (method != NULL && g_ascii_strcasecmp (method, "GET") == 0) {
     url = swfdec_as_context_give_string (cx,
 	g_strjoin (NULL, url, "?", data, NULL));
     buffer = NULL;

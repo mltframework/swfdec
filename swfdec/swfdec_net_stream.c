@@ -586,12 +586,14 @@ swfdec_net_stream_load (SwfdecPlayer *player, gboolean allowed, gpointer streamp
   stream->requested_url = NULL;
 }
 
+// When checkPolicyFile is true the YES values in last column must be changed
+// to POLICY
 static const SwfdecAccessMatrix swfdec_net_stream_matrix = {
   { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
-  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_YES, SWFDEC_ACCESS_POLICY },
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_YES, SWFDEC_ACCESS_YES },
   { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO },
-  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_POLICY },
-  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_POLICY }
+  { SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_YES },
+  { SWFDEC_ACCESS_YES, SWFDEC_ACCESS_NO,  SWFDEC_ACCESS_YES }
 };
 
 void

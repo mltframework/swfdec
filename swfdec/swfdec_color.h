@@ -55,27 +55,35 @@ struct _SwfdecColorTransform {
 
 #define SWFDEC_COLOR_WHITE		SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0xFF)
 
-SwfdecColor swfdec_color_apply_morph (SwfdecColor start, SwfdecColor end, guint ratio);
-void swfdec_color_set_source (cairo_t *cr, SwfdecColor color);
-void swfdec_color_transform_init_identity (SwfdecColorTransform * trans);
-void swfdec_color_transform_init_mask (SwfdecColorTransform * trans);
-void swfdec_color_transform_init_color (SwfdecColorTransform *trans, SwfdecColor color);
-gboolean swfdec_color_transform_is_identity (const SwfdecColorTransform * trans);
-gboolean swfdec_color_transform_is_alpha (const SwfdecColorTransform * trans);
+SwfdecColor	swfdec_color_apply_morph			(SwfdecColor	      	start,
+								 SwfdecColor		end,
+								 guint			ratio);
+void		swfdec_color_set_source				(cairo_t *		cr,
+								 SwfdecColor		color);
+void		swfdec_color_transform_init_identity		(SwfdecColorTransform *	trans);
+void		swfdec_color_transform_init_mask		(SwfdecColorTransform *	trans);
+void		swfdec_color_transform_init_color		(SwfdecColorTransform *	trans,
+								 SwfdecColor		color);
+gboolean	swfdec_color_transform_is_identity		(const SwfdecColorTransform *	trans);
+gboolean	swfdec_color_transform_is_alpha			(const SwfdecColorTransform *	trans);
 #define swfdec_color_transform_is_mask(trans) ((trans)->mask)
-void swfdec_color_transform_chain (SwfdecColorTransform *dest,
-    const SwfdecColorTransform *last, const SwfdecColorTransform *first);
-SwfdecColor swfdec_color_apply_transform (SwfdecColor in,
-    const SwfdecColorTransform * trans);
-SwfdecColor swfdec_color_apply_transform_premultiplied (SwfdecColor in, 
-    const SwfdecColorTransform * trans);
+void		swfdec_color_transform_chain			(SwfdecColorTransform *	dest,
+								 const SwfdecColorTransform *	last,
+								 const SwfdecColorTransform *	first);
+SwfdecColor	swfdec_color_apply_transform			(SwfdecColor		in,
+								 const SwfdecColorTransform *	trans);
+SwfdecColor	swfdec_color_apply_transform_premultiplied	(SwfdecColor		in, 
+								 const SwfdecColorTransform *	trans);
 
-void swfdec_matrix_ensure_invertible (cairo_matrix_t *matrix, cairo_matrix_t *inverse);
-double swfdec_matrix_get_xscale (const cairo_matrix_t *matrix);
-double swfdec_matrix_get_yscale (const cairo_matrix_t *matrix);
-double swfdec_matrix_get_rotation (const cairo_matrix_t *matrix);
-void swfdec_matrix_morph (cairo_matrix_t *dest, const cairo_matrix_t *start,
-    const cairo_matrix_t *end, guint ratio);
+void		swfdec_matrix_ensure_invertible			(cairo_matrix_t *	matrix,
+								 cairo_matrix_t *	inverse);
+double		swfdec_matrix_get_xscale			(const cairo_matrix_t *	matrix);
+double		swfdec_matrix_get_yscale			(const cairo_matrix_t *	matrix);
+double		swfdec_matrix_get_rotation			(const cairo_matrix_t *	matrix);
+void		swfdec_matrix_morph				(cairo_matrix_t *	dest,
+								 const cairo_matrix_t *	start,
+								 const cairo_matrix_t *	end,
+								 guint			ratio);
 
 
 G_END_DECLS

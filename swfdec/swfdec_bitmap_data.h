@@ -38,6 +38,8 @@ struct _SwfdecBitmapData {
   SwfdecAsObject	object;
 
   cairo_surface_t *	surface;	/* An image surface or NULL */
+  guint			width;		/* width of surface */
+  guint			height;		/* height of surface */
 };
 
 struct _SwfdecBitmapDataClass {
@@ -50,6 +52,9 @@ SwfdecBitmapData *	swfdec_bitmap_data_new			(SwfdecAsContext *	context,
 								 gboolean		transparent,
 								 guint			width,
 								 guint			height);
+
+guint			swfdec_bitmap_data_get_width		(SwfdecBitmapData *	data);
+guint			swfdec_bitmap_data_get_height		(SwfdecBitmapData *	data);
 
 
 G_END_DECLS

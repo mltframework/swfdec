@@ -63,17 +63,16 @@ swfdec_bitmap_data_invalidate (SwfdecBitmapData *bitmap, guint x, guint y, guint
 static void
 swfdec_bitmap_data_clear (SwfdecBitmapData *bitmap)
 {
-  int w, h;
-
   if (bitmap->surface == NULL)
     return;
 
-  w = cairo_image_surface_get_width (bitmap->surface);
-  h = cairo_image_surface_get_height (bitmap->surface);
-  swfdec_bitmap_data_invalidate (bitmap, 0, 0, w, h);
-  swfdec_as_context_unuse_mem (swfdec_gc_object_get_context (bitmap), 4 * w * h);
+  swfdec_bitmap_data_invalidate (bitmap, 0, 0, bitmap->width, bitmap->height);
   cairo_surface_destroy (bitmap->surface);
+  swfdec_as_context_unuse_mem (swfdec_gc_object_get_context (bitmap), 
+      4 * bitmap->width * bitmap->height);
   bitmap->surface = NULL;
+  bitmap->width = 0;
+  bitmap->height = 0;
 }
 
 static void
@@ -116,6 +115,8 @@ swfdec_bitmap_data_new (SwfdecAsContext *context, gboolean transparent, guint wi
     return NULL;
 
   bitmap = g_object_new (SWFDEC_TYPE_BITMAP_DATA, "context", context, NULL);
+  bitmap->width = width;
+  bitmap->height = height;
   bitmap->surface = cairo_image_surface_create (
       transparent ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, width, height);
 
@@ -169,17 +170,16 @@ swfdec_bitmap_data_loadBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 // properties
-SWFDEC_AS_NATIVE (1100, 100, swfdec_bitmap_data_get_width)
+SWFDEC_AS_NATIVE (1100, 100, swfdec_bitmap_data_do_get_width)
 void
-swfdec_bitmap_data_get_width (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_bitmap_data_do_get_width (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecBitmapData *bitmap;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? 
-      cairo_image_surface_get_width (bitmap->surface) : -1);
+  SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? (int) bitmap->width : -1);
 }
 
 SWFDEC_AS_NATIVE (1100, 101, swfdec_bitmap_data_set_width)
@@ -190,17 +190,16 @@ swfdec_bitmap_data_set_width (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_STUB ("BitmapData.width (set)");
 }
 
-SWFDEC_AS_NATIVE (1100, 102, swfdec_bitmap_data_get_height)
+SWFDEC_AS_NATIVE (1100, 102, swfdec_bitmap_data_do_get_height)
 void
-swfdec_bitmap_data_get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
+swfdec_bitmap_data_do_get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecBitmapData *bitmap;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? 
-      cairo_image_surface_get_height (bitmap->surface) : -1);
+  SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? (int) bitmap->height : -1);
 }
 
 SWFDEC_AS_NATIVE (1100, 103, swfdec_bitmap_data_set_height)
@@ -243,8 +242,8 @@ swfdec_bitmap_data_get_rectangle (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_VALUE_SET_INT (&args[0], 0);
   SWFDEC_AS_VALUE_SET_INT (&args[1], 0);
-  SWFDEC_AS_VALUE_SET_INT (&args[2], cairo_image_surface_get_width (bitmap->surface));
-  SWFDEC_AS_VALUE_SET_INT (&args[3], cairo_image_surface_get_width (bitmap->surface));
+  SWFDEC_AS_VALUE_SET_INT (&args[2], bitmap->width);
+  SWFDEC_AS_VALUE_SET_INT (&args[3], bitmap->height);
   swfdec_as_object_create (SWFDEC_AS_FUNCTION (o), 4, args, ret);
 }
 
@@ -308,9 +307,7 @@ swfdec_bitmap_data_getPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii", &x, &y);
 
-  if (bitmap->surface == NULL ||
-      x >= (guint) cairo_image_surface_get_width (bitmap->surface) ||
-      y >= (guint) cairo_image_surface_get_height (bitmap->surface))
+  if (bitmap->surface == NULL || x >= (guint) bitmap->width || y >= (guint) bitmap->height)
     return;
 
   addr = cairo_image_surface_get_data (bitmap->surface);
@@ -334,9 +331,7 @@ swfdec_bitmap_data_setPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "iii", &x, &y, &color);
 
-  if (bitmap->surface == NULL ||
-      x >= (guint) cairo_image_surface_get_width (bitmap->surface) ||
-      y >= (guint) cairo_image_surface_get_height (bitmap->surface))
+  if (bitmap->surface == NULL || x >= bitmap->width || y >= bitmap->height)
     return;
 
   addr = cairo_image_surface_get_data (bitmap->surface);
@@ -517,8 +512,8 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
   /* FIXME: compute area from arguments */
   area.x = 0;
   area.y = 0;
-  area.width = cairo_image_surface_get_width (bitmap->surface);
-  area.height = cairo_image_surface_get_height (bitmap->surface);
+  area.width = bitmap->width;
+  area.height = bitmap->height;
 
   cr = cairo_create (bitmap->surface);
   /* FIXME: Do we have a better renderer? */
@@ -574,9 +569,7 @@ swfdec_bitmap_data_getPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii", &x, &y);
 
-  if (bitmap->surface == NULL ||
-      x >= (guint) cairo_image_surface_get_width (bitmap->surface) ||
-      y >= (guint) cairo_image_surface_get_height (bitmap->surface))
+  if (bitmap->surface == NULL || x >= bitmap->width || y >= bitmap->height)
     return;
 
   addr = cairo_image_surface_get_data (bitmap->surface);
@@ -598,9 +591,7 @@ swfdec_bitmap_data_setPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "iii", &x, &y, &color);
 
-  if (bitmap->surface == NULL ||
-      x >= (guint) cairo_image_surface_get_width (bitmap->surface) ||
-      y >= (guint) cairo_image_surface_get_height (bitmap->surface))
+  if (bitmap->surface == NULL || x >= bitmap->width || y >= bitmap->height)
     return;
 
   addr = cairo_image_surface_get_data (bitmap->surface);
@@ -667,22 +658,22 @@ swfdec_bitmap_data_colorTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (area.x < 0) {
     area.width += area.x;
     area.x = 0;
-  } else if (area.x >= cairo_image_surface_get_width (bitmap->surface)) {
+  } else if ((guint) area.x >= bitmap->width) {
     return;
   }
   if (area.y < 0) {
     area.height += area.y;
     area.y = 0;
-  } else if (area.y >= cairo_image_surface_get_height (bitmap->surface)) {
+  } else if ((guint) area.y >= bitmap->height) {
     return;
   }
-  if (area.width + area.x > cairo_image_surface_get_width (bitmap->surface)) {
-    area.width = cairo_image_surface_get_width (bitmap->surface) - area.x;
+  if (area.width + area.x > (int) bitmap->width) {
+    area.width = bitmap->width - area.x;
   } else if (area.width <= 0) {
     return;
   }
-  if (area.height + area.x > cairo_image_surface_get_height (bitmap->surface)) {
-    area.height = cairo_image_surface_get_height (bitmap->surface) - area.y;
+  if (area.height + area.y > (int) bitmap->height) {
+    area.height = bitmap->height - area.y;
   } else if (area.height <= 0) {
     return;
   }
@@ -750,10 +741,8 @@ swfdec_bitmap_data_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (bitmap->surface == NULL)
     return;
 
-  clone = swfdec_bitmap_data_new (cx,
-      swfdec_surface_has_alpha (bitmap->surface),
-      cairo_image_surface_get_width (bitmap->surface),
-      cairo_image_surface_get_height (bitmap->surface));
+  clone = swfdec_bitmap_data_new (cx, swfdec_surface_has_alpha (bitmap->surface),
+      bitmap->width, bitmap->height);
   if (clone == NULL)
     return;
 
@@ -817,6 +806,8 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!swfdec_as_context_try_use_mem (cx, w * h * 4))
     return;
+  bitmap->width = w;
+  bitmap->height = h;
   bitmap->surface = cairo_image_surface_create (
       transparent ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, w, h);
 
@@ -827,3 +818,20 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     cairo_destroy (cr);
   }
 }
+
+guint
+swfdec_bitmap_data_get_width (SwfdecBitmapData *bitmap)
+{
+  g_return_val_if_fail (SWFDEC_IS_BITMAP_DATA (bitmap), 0);
+
+  return bitmap->surface ? bitmap->width : 0;
+}
+
+guint
+swfdec_bitmap_data_get_height (SwfdecBitmapData *bitmap)
+{
+  g_return_val_if_fail (SWFDEC_IS_BITMAP_DATA (bitmap), 0);
+
+  return bitmap->surface ? bitmap->height : 0;
+}
+

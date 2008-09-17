@@ -51,8 +51,8 @@ swfdec_bitmap_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
   } else {
     /* FIXME: more caching? */
     SwfdecRectangle area = { 0, 0, 
-      cairo_image_surface_get_width (bitmap->bitmap->surface),
-      cairo_image_surface_get_height (bitmap->bitmap->surface) };
+      swfdec_bitmap_data_get_width (bitmap->bitmap),
+      swfdec_bitmap_data_get_height (bitmap->bitmap) };
     cairo_surface_t *surface = swfdec_renderer_transform (renderer,
 	bitmap->bitmap->surface, ctrans, &area);
     pattern = cairo_pattern_create_for_surface (surface);

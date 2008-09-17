@@ -37,8 +37,8 @@ swfdec_bitmap_movie_update_extents (SwfdecMovie *movie,
   if (bitmap->bitmap->surface == NULL)
     return;
 
-  rect.x1 = cairo_image_surface_get_width (bitmap->bitmap->surface) * SWFDEC_TWIPS_SCALE_FACTOR;
-  rect.y1 = cairo_image_surface_get_height (bitmap->bitmap->surface) * SWFDEC_TWIPS_SCALE_FACTOR;
+  rect.x1 = swfdec_bitmap_data_get_width (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR;
+  rect.y1 = swfdec_bitmap_data_get_height (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR;
 
   swfdec_rect_union (extents, extents, &rect);
 }
@@ -57,8 +57,8 @@ swfdec_bitmap_movie_render (SwfdecMovie *movie, cairo_t *cr,
     SWFDEC_FIXME ("does attachBitmap mask?");
     cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_rectangle (cr, 0, 0, 
-	cairo_image_surface_get_width (bitmap->bitmap->surface),
-	cairo_image_surface_get_height (bitmap->bitmap->surface));
+	swfdec_bitmap_data_get_width (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR,
+	swfdec_bitmap_data_get_height (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR);
     cairo_fill (cr);
   } else if (swfdec_color_transform_is_identity (trans)) {
     cairo_set_source_surface (cr, bitmap->bitmap->surface, 0, 0);
@@ -82,8 +82,8 @@ swfdec_bitmap_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix
   if (bitmap->bitmap->surface == NULL)
     return;
 
-  rect.x1 = cairo_image_surface_get_width (bitmap->bitmap->surface) * SWFDEC_TWIPS_SCALE_FACTOR;
-  rect.y1 = cairo_image_surface_get_height (bitmap->bitmap->surface) * SWFDEC_TWIPS_SCALE_FACTOR;
+  rect.x1 = swfdec_bitmap_data_get_width (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR;
+  rect.y1 = swfdec_bitmap_data_get_height (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR;
 
   swfdec_rect_transform (&rect, &rect, matrix);
   swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);

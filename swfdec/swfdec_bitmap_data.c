@@ -487,11 +487,12 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsObject *o, *matrix = NULL, *trans = NULL;
-  cairo_t *cr;
   SwfdecColorTransform ctrans;
   SwfdecBitmapData *bitmap;
   SwfdecRenderer *renderer;
+  SwfdecRectangle area;
   cairo_matrix_t mat;
+  cairo_t *cr;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "o|OO", &o, &matrix, &trans);
 
@@ -513,6 +514,11 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc > 3) {
     SWFDEC_FIXME ("only the first 3 arguments to Bitmap.draw() are implemented");
   }
+  /* FIXME: compute area from arguments */
+  area.x = 0;
+  area.y = 0;
+  area.width = cairo_image_surface_get_width (bitmap->surface);
+  area.height = cairo_image_surface_get_height (bitmap->surface);
 
   cr = cairo_create (bitmap->surface);
   /* FIXME: Do we have a better renderer? */
@@ -527,7 +533,7 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
 	cairo_set_source_surface (cr, SWFDEC_BITMAP_DATA (o)->surface, 0, 0);
       } else {
 	cairo_surface_t *transformed = swfdec_renderer_transform (renderer,
-	    SWFDEC_BITMAP_DATA (o)->surface, &ctrans);
+	    SWFDEC_BITMAP_DATA (o)->surface, &ctrans, &area);
 	SWFDEC_FIXME ("unmodified pixels will be treated as -1, not as 0 as in our "
 	    "transform code, but we don't know if a pixel is unmodified.");
 	cairo_set_source_surface (cr, transformed, 0, 0);
@@ -546,9 +552,7 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   cairo_destroy (cr);
-  swfdec_bitmap_data_invalidate (bitmap, 0, 0, 
-      cairo_image_surface_get_width (bitmap->surface),
-      cairo_image_surface_get_height (bitmap->surface));
+  swfdec_bitmap_data_invalidate (bitmap, area.x, area.y, area.width, area.height);
 }
 
 SWFDEC_AS_NATIVE (1100, 9, swfdec_bitmap_data_pixelDissolve)

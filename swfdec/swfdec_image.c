@@ -661,6 +661,7 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
   SwfdecColorTransform mask;
   SwfdecCachedImage *cached;
   cairo_surface_t *surface, *source;
+  SwfdecRectangle area;
 
   g_return_val_if_fail (SWFDEC_IS_IMAGE (image), NULL);
   g_return_val_if_fail (renderer == NULL || SWFDEC_IS_RENDERER (renderer), NULL);
@@ -692,7 +693,11 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
     }
   }
 
-  surface = swfdec_renderer_transform (renderer, source, trans);
+  area.x = area.y = 0;
+  area.width = image->width;
+  area.height = image->height;
+  surface = swfdec_renderer_transform (renderer, source, trans, &area);
+
   if (renderer) {
     surface = swfdec_renderer_create_similar (renderer, surface);
     /* FIXME: The size is just an educated guess */

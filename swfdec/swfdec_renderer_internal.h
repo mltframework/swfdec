@@ -21,8 +21,10 @@
 #define _SWFDEC_RENDERER_INTERNAL_H_
 
 #include <swfdec/swfdec_renderer.h>
+
 #include <swfdec/swfdec_cached.h>
 #include <swfdec/swfdec_color.h>
+#include <swfdec/swfdec_rectangle.h>
 
 G_BEGIN_DECLS
 
@@ -57,7 +59,8 @@ cairo_surface_t *	swfdec_renderer_create_for_data	(SwfdecRenderer *	renderer,
 							 guint			rowstride);
 cairo_surface_t *	swfdec_renderer_transform	(SwfdecRenderer *	renderer,
 							 cairo_surface_t *	surface,
-							 const SwfdecColorTransform *trans);
+							 const SwfdecColorTransform *trans,
+							 const SwfdecRectangle *rect);
 
 
 G_END_DECLS

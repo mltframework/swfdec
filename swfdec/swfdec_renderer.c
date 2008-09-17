@@ -402,40 +402,52 @@ swfdec_renderer_create_for_data (SwfdecRenderer *renderer, guint8 *data,
 
 cairo_surface_t *
 swfdec_renderer_transform (SwfdecRenderer *renderer, cairo_surface_t *surface,
-    const SwfdecColorTransform *trans)
+    const SwfdecColorTransform *trans, const SwfdecRectangle *rect)
 {
   cairo_surface_t *target;
-  guint w, h, x, y, sstride, tstride, color;
+  guint stride, color;
   SwfdecColor mask;
-  guint8 *sdata, *tdata;
+  guint8 *data;
+  cairo_t *cr;
+  int x, y;
 
   g_return_val_if_fail (SWFDEC_IS_RENDERER (renderer), NULL);
   g_return_val_if_fail (surface != NULL, NULL);
   g_return_val_if_fail (cairo_surface_get_type (surface) == CAIRO_SURFACE_TYPE_IMAGE, NULL);
   g_return_val_if_fail (trans != NULL, NULL);
   g_return_val_if_fail (!swfdec_color_transform_is_mask (trans), NULL);
+  g_return_val_if_fail (rect != NULL, NULL);
+  g_return_val_if_fail (rect->x >= 0, NULL);
+  g_return_val_if_fail (rect->y >= 0, NULL);
+  g_return_val_if_fail (rect->x + rect->width <= cairo_image_surface_get_width (surface), NULL);
+  g_return_val_if_fail (rect->y + rect->height <= cairo_image_surface_get_height (surface), NULL);
 
   /* FIXME: This function should likely be a vfunc. 
    * Or better: it should compile to a shader */
-  w = cairo_image_surface_get_width (surface);
-  h = cairo_image_surface_get_height (surface);
-  sdata = cairo_image_surface_get_data (surface);
-  sstride = cairo_image_surface_get_stride (surface);
-  mask = cairo_surface_get_content (surface) | CAIRO_CONTENT_ALPHA ? 
-    0 : SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF);
+  if (cairo_surface_get_content (surface) & CAIRO_CONTENT_ALPHA) {
+    target = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, rect->width, rect->height);
+    mask = 0;
+  } else {
+    target = cairo_image_surface_create (CAIRO_FORMAT_RGB24, rect->width, rect->height);
+    mask = SWFDEC_COLOR_COMBINE (0, 0, 0, 0xFF);
+  }
+  cairo_surface_set_device_offset (target, -rect->x, -rect->y);
 
-  target = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
-  tdata = cairo_image_surface_get_data (target);
-  tstride = cairo_image_surface_get_stride (target);
-  for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++) {
-      color = ((guint32 *) sdata)[x];
+  cr = cairo_create (target);
+  cairo_set_source_surface (cr, surface, 0, 0);
+  cairo_paint (cr);
+  cairo_destroy (cr);
+
+  data = cairo_image_surface_get_data (target);
+  stride = cairo_image_surface_get_stride (target);
+  for (y = 0; y < rect->height; y++) {
+    for (x = 0; x < rect->width; x++) {
+      color = ((guint32 *) data)[x];
       color |= mask;
       color = swfdec_color_apply_transform_premultiplied (color, trans);
-      ((guint32 *) tdata)[x] = color;
+      ((guint32 *) data)[x] = color;
     }
-    sdata += sstride;
-    tdata += tstride;
+    data += stride;
   }
 
   return target;

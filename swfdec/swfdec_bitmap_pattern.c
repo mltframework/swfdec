@@ -24,6 +24,7 @@
 #include "swfdec_bitmap_pattern.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_renderer_internal.h"
 
 enum {
   INVALIDATE,
@@ -35,7 +36,7 @@ static guint signals[LAST_SIGNAL];
 
 static cairo_pattern_t *
 swfdec_bitmap_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
-    const SwfdecColorTransform *trans)
+    const SwfdecColorTransform *ctrans)
 {
   SwfdecBitmapPattern *bitmap = SWFDEC_BITMAP_PATTERN (pat);
   cairo_pattern_t *pattern;
@@ -45,7 +46,18 @@ swfdec_bitmap_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
   if (bitmap->bitmap->surface == NULL)
     return NULL;
 
-  pattern = cairo_pattern_create_for_surface (bitmap->bitmap->surface);
+  if (swfdec_color_transform_is_identity (ctrans)) {
+    pattern = cairo_pattern_create_for_surface (bitmap->bitmap->surface);
+  } else {
+    /* FIXME: more caching? */
+    SwfdecRectangle area = { 0, 0, 
+      cairo_image_surface_get_width (bitmap->bitmap->surface),
+      cairo_image_surface_get_height (bitmap->bitmap->surface) };
+    cairo_surface_t *surface = swfdec_renderer_transform (renderer,
+	bitmap->bitmap->surface, ctrans, &area);
+    pattern = cairo_pattern_create_for_surface (surface);
+    cairo_surface_destroy (surface);
+  }
   cairo_pattern_set_matrix (pattern, &pat->transform);
   cairo_pattern_set_extend (pattern, bitmap->extend);
   cairo_pattern_set_filter (pattern, bitmap->filter);

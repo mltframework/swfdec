@@ -645,7 +645,56 @@ void
 swfdec_bitmap_data_colorTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SWFDEC_STUB ("BitmapData.colorTransform");
+  SwfdecBitmapData *bitmap;
+  SwfdecAsObject *rect, *trans;
+  SwfdecRectangle area;
+  SwfdecColorTransform ctrans;
+  cairo_surface_t *surface;
+  cairo_t *cr;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "oO", &rect, &trans);
+
+  if (bitmap->surface == NULL)
+    return;
+
+  if (!swfdec_rectangle_from_as_object (&area, rect))
+    return;
+  if (SWFDEC_IS_COLOR_TRANSFORM_AS (trans))
+    swfdec_color_transform_get_transform (SWFDEC_COLOR_TRANSFORM_AS (trans), &ctrans);
+  else
+    return;
+
+  if (area.x < 0) {
+    area.width += area.x;
+    area.x = 0;
+  } else if (area.x >= cairo_image_surface_get_width (bitmap->surface)) {
+    return;
+  }
+  if (area.y < 0) {
+    area.height += area.y;
+    area.y = 0;
+  } else if (area.y >= cairo_image_surface_get_height (bitmap->surface)) {
+    return;
+  }
+  if (area.width + area.x > cairo_image_surface_get_width (bitmap->surface)) {
+    area.width = cairo_image_surface_get_width (bitmap->surface) - area.x;
+  } else if (area.width <= 0) {
+    return;
+  }
+  if (area.height + area.x > cairo_image_surface_get_height (bitmap->surface)) {
+    area.height = cairo_image_surface_get_height (bitmap->surface) - area.y;
+  } else if (area.height <= 0) {
+    return;
+  }
+
+  surface = swfdec_renderer_transform (SWFDEC_PLAYER (cx)->priv->renderer,
+      bitmap->surface, &ctrans, &area);
+  cr = cairo_create (bitmap->surface);
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_source_surface (cr, surface, 0, 0);
+  cairo_paint (cr);
+  cairo_destroy (cr);
+  cairo_surface_destroy (surface);
 }
 
 SWFDEC_AS_NATIVE (1100, 16, swfdec_bitmap_data_hitTest)

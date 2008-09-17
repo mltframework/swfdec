@@ -22,6 +22,8 @@
 
 #include <cairo.h>
 #include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_renderer.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
@@ -55,6 +57,9 @@ SwfdecBitmapData *	swfdec_bitmap_data_new			(SwfdecAsContext *	context,
 
 guint			swfdec_bitmap_data_get_width		(SwfdecBitmapData *	data);
 guint			swfdec_bitmap_data_get_height		(SwfdecBitmapData *	data);
+cairo_pattern_t *	swfdec_bitmap_data_get_pattern		(SwfdecBitmapData *	data,
+								 SwfdecRenderer *	renderer,
+								 const SwfdecColorTransform *ctrans);
 
 
 G_END_DECLS

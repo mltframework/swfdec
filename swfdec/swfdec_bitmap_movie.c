@@ -24,6 +24,7 @@
 #include "swfdec_bitmap_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_renderer_internal.h"
 
 G_DEFINE_TYPE (SwfdecBitmapMovie, swfdec_bitmap_movie, SWFDEC_TYPE_MOVIE)
 
@@ -45,31 +46,42 @@ swfdec_bitmap_movie_update_extents (SwfdecMovie *movie,
 
 static void
 swfdec_bitmap_movie_render (SwfdecMovie *movie, cairo_t *cr, 
-    const SwfdecColorTransform *trans)
+    const SwfdecColorTransform *ctrans)
 {
   SwfdecBitmapMovie *bitmap = SWFDEC_BITMAP_MOVIE (movie);
+  SwfdecRenderer *renderer;
+  cairo_pattern_t *pattern;
 
-  if (bitmap->bitmap->surface == NULL)
-    return;
+  renderer = swfdec_renderer_get (cr);
 
   cairo_scale (cr, SWFDEC_TWIPS_SCALE_FACTOR, SWFDEC_TWIPS_SCALE_FACTOR);
-  if (swfdec_color_transform_is_mask (trans)) {
+  if (swfdec_color_transform_is_mask (ctrans)) {
     SWFDEC_FIXME ("does attachBitmap mask?");
     cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_rectangle (cr, 0, 0, 
-	swfdec_bitmap_data_get_width (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR,
-	swfdec_bitmap_data_get_height (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR);
+	swfdec_bitmap_data_get_width (bitmap->bitmap),
+	swfdec_bitmap_data_get_height (bitmap->bitmap));
     cairo_fill (cr);
-  } else if (swfdec_color_transform_is_identity (trans)) {
-    cairo_set_source_surface (cr, bitmap->bitmap->surface, 0, 0);
-    cairo_paint (cr);
-  } else if (swfdec_color_transform_is_alpha (trans)) {
-    cairo_set_source_surface (cr, bitmap->bitmap->surface, 0, 0);
-    cairo_paint_with_alpha (cr, trans->aa / 255.0);
+  } else if (!swfdec_color_transform_is_identity (ctrans) &&
+      swfdec_color_transform_is_alpha (ctrans)) {
+    /* optimization for alpha fills */
+    SwfdecColorTransform identity;
+    swfdec_color_transform_init_identity (&identity);
+    pattern = swfdec_bitmap_data_get_pattern (bitmap->bitmap,
+	renderer, &identity);
+    if (pattern == NULL)
+      return;
+    cairo_set_source (cr, pattern);
+    cairo_paint_with_alpha (cr, ctrans->aa / 255.0);
+    cairo_pattern_destroy (pattern);
   } else {
-    SWFDEC_FIXME ("properly color-transform bitmap");
-    cairo_set_source_surface (cr, bitmap->bitmap->surface, 0, 0);
+    pattern = swfdec_bitmap_data_get_pattern (bitmap->bitmap, 
+	renderer, ctrans);
+    if (pattern == NULL)
+      return;
+    cairo_set_source (cr, pattern);
     cairo_paint (cr);
+    cairo_pattern_destroy (pattern);
   }
 }
 

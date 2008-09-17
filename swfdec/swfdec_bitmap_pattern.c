@@ -41,23 +41,9 @@ swfdec_bitmap_pattern_get_pattern (SwfdecPattern *pat, SwfdecRenderer *renderer,
   SwfdecBitmapPattern *bitmap = SWFDEC_BITMAP_PATTERN (pat);
   cairo_pattern_t *pattern;
 
-  /* FIXME: Is this correct for the case where the surface is NULL?
-   * Do we want a red surface */
-  if (bitmap->bitmap->surface == NULL)
+  pattern = swfdec_bitmap_data_get_pattern (bitmap->bitmap, renderer, ctrans);
+  if (pattern == NULL)
     return NULL;
-
-  if (swfdec_color_transform_is_identity (ctrans)) {
-    pattern = cairo_pattern_create_for_surface (bitmap->bitmap->surface);
-  } else {
-    /* FIXME: more caching? */
-    SwfdecRectangle area = { 0, 0, 
-      swfdec_bitmap_data_get_width (bitmap->bitmap),
-      swfdec_bitmap_data_get_height (bitmap->bitmap) };
-    cairo_surface_t *surface = swfdec_renderer_transform (renderer,
-	bitmap->bitmap->surface, ctrans, &area);
-    pattern = cairo_pattern_create_for_surface (surface);
-    cairo_surface_destroy (surface);
-  }
   cairo_pattern_set_matrix (pattern, &pat->transform);
   cairo_pattern_set_extend (pattern, bitmap->extend);
   cairo_pattern_set_filter (pattern, bitmap->filter);

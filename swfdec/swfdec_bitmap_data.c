@@ -522,19 +522,12 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
   cairo_transform (cr, &mat);
 
   if (SWFDEC_IS_BITMAP_DATA (o)) {
-    SwfdecBitmapData *src = SWFDEC_BITMAP_DATA (o);
-    if (src->surface) {
-      if (swfdec_color_transform_is_identity (&ctrans)) {
-	cairo_set_source_surface (cr, SWFDEC_BITMAP_DATA (o)->surface, 0, 0);
-      } else {
-	cairo_surface_t *transformed = swfdec_renderer_transform (renderer,
-	    SWFDEC_BITMAP_DATA (o)->surface, &ctrans, &area);
-	SWFDEC_FIXME ("unmodified pixels will be treated as -1, not as 0 as in our "
-	    "transform code, but we don't know if a pixel is unmodified.");
-	cairo_set_source_surface (cr, transformed, 0, 0);
-	cairo_surface_destroy (transformed);
-      }
+    cairo_pattern_t *pattern = swfdec_bitmap_data_get_pattern (
+	SWFDEC_BITMAP_DATA (o), renderer, &ctrans);
+    if (pattern) {
+      cairo_set_source (cr, pattern);
       cairo_paint (cr);
+      cairo_pattern_destroy (pattern);
     }
   } else if (SWFDEC_IS_MOVIE (o)) {
     SwfdecMovie *movie = SWFDEC_MOVIE (o);
@@ -860,6 +853,8 @@ swfdec_bitmap_data_get_pattern (SwfdecBitmapData *bitmap, SwfdecRenderer *render
     SwfdecRectangle area = { 0, 0, bitmap->width, bitmap->height };
     cairo_surface_t *surface = swfdec_renderer_transform (renderer,
 	bitmap->surface, ctrans, &area);
+    SWFDEC_FIXME ("unmodified pixels will be treated as -1, not as 0 as in our "
+	"transform code, but we don't know if a pixel is unmodified.");
     pattern = cairo_pattern_create_for_surface (surface);
     cairo_surface_destroy (surface);
   }

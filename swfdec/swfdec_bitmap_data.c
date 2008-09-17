@@ -546,6 +546,9 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   cairo_destroy (cr);
+  swfdec_bitmap_data_invalidate (bitmap, 0, 0, 
+      cairo_image_surface_get_width (bitmap->surface),
+      cairo_image_surface_get_height (bitmap->surface));
 }
 
 SWFDEC_AS_NATIVE (1100, 9, swfdec_bitmap_data_pixelDissolve)

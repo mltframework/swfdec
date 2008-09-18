@@ -57,6 +57,8 @@ swfdec_bitmap_data_invalidate (SwfdecBitmapData *bitmap, guint x, guint y, guint
   g_return_if_fail (w > 0);
   g_return_if_fail (h > 0);
 
+  if (bitmap->surface)
+    cairo_surface_mark_dirty_rectangle (bitmap->surface, x, y, w, h);
   g_signal_emit (bitmap, signals[INVALIDATE], 0, &rect);
 }
 
@@ -341,7 +343,6 @@ swfdec_bitmap_data_setPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
   old |= SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0);
   color = old & SWFDEC_COLOR_OPAQUE (color);
   *(SwfdecColor *) addr = SWFDEC_COLOR_MULTIPLY (color);
-  cairo_surface_mark_dirty_rectangle (bitmap->surface, x, y, 1, 1);
   swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
 }
 
@@ -448,8 +449,7 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   cairo_fill (cr);
   cairo_destroy (cr);
-  cairo_surface_mark_dirty_rectangle (bitmap->surface, rect.x, rect.y, 
-      rect.width, rect.height);
+  swfdec_bitmap_data_invalidate (bitmap, rect.x, rect.y, rect.width, rect.height);
 }
 
 SWFDEC_AS_NATIVE (1100, 5, swfdec_bitmap_data_applyFilter)
@@ -595,7 +595,6 @@ swfdec_bitmap_data_setPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
   } else {
     *(SwfdecColor *) addr = SWFDEC_COLOR_OPAQUE ((SwfdecColor) color);
   }
-  cairo_surface_mark_dirty_rectangle (bitmap->surface, x, y, 1, 1);
   swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
 }
 

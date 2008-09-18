@@ -2463,9 +2463,7 @@ swfdec_player_invalidate_movie (SwfdecMovie *movie, double xscale, double yscale
   GSList *walk;
 
   while (movie != NULL) {
-    g_print ("%s\n", movie->name);
     for (walk = movie->filters; walk; walk = walk->next) {
-      g_print ("%g %g\n", xscale, yscale);
       swfdec_filter_get_rectangle (walk->data, rect, xscale, yscale, rect);
     }
     movie = movie->parent;
@@ -2504,14 +2502,10 @@ swfdec_player_invalidate (SwfdecPlayer *player, SwfdecMovie *movie, const Swfdec
 
     swfdec_rect_transform (&tmp, rect, &priv->global_to_stage);
     swfdec_rectangle_init_rect (&r, &tmp);
-    if (movie)
-      g_print ("invalidating %s: %u %u %u %u\n", movie->name, r.x, r.y, r.width, r.height);
     swfdec_player_invalidate_movie (movie, 
 	player->priv->global_to_stage.xx * SWFDEC_TWIPS_SCALE_FACTOR,
 	player->priv->global_to_stage.yy * SWFDEC_TWIPS_SCALE_FACTOR,
 	&r);
-    if (movie)
-      g_print ("invalidating %s: %u %u %u %u\n", movie->name, r.x, r.y, r.width, r.height);
 
     /* FIXME: currently we clamp the rectangle to the visible area, it might
      * be useful to allow out-of-bounds drawing. In that case this needs to be

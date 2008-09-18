@@ -154,7 +154,6 @@ swfdec_sprite_movie_set_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "o", &array);
 
   swfdec_movie_invalidate_next (movie);
-  g_print ("movie %s gets filters, w00t!\n", movie->name);
 
   swfdec_as_object_get_variable (array, SWFDEC_AS_STR_length, &val);
   length = swfdec_as_value_to_integer (cx, &val);

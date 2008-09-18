@@ -60,6 +60,13 @@ guint			swfdec_bitmap_data_get_height		(SwfdecBitmapData *	data);
 cairo_pattern_t *	swfdec_bitmap_data_get_pattern		(SwfdecBitmapData *	data,
 								 SwfdecRenderer *	renderer,
 								 const SwfdecColorTransform *ctrans);
+SwfdecColor		swfdec_bitmap_data_get_pixel		(SwfdecBitmapData *	bitmap,
+								 guint			x,
+								 guint			y);
+void			swfdec_bitmap_data_set_pixel		(SwfdecBitmapData *	bitmap,
+								 guint			x,
+								 guint			y,
+								 SwfdecColor		color);
 
 
 G_END_DECLS

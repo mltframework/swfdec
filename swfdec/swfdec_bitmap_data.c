@@ -305,17 +305,13 @@ swfdec_bitmap_data_getPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecBitmapData *bitmap;
   guint x, y, color;
-  guint8 *addr;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii", &x, &y);
 
   if (bitmap->surface == NULL || x >= (guint) bitmap->width || y >= (guint) bitmap->height)
     return;
 
-  addr = cairo_image_surface_get_data (bitmap->surface);
-  addr += cairo_image_surface_get_stride (bitmap->surface) * y;
-  addr += 4 * x;
-  color = *(SwfdecColor *) addr;
+  color = swfdec_bitmap_data_get_pixel (bitmap, x, y);
   color = SWFDEC_COLOR_UNMULTIPLY (color);
   color &= SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0);
   SWFDEC_AS_VALUE_SET_INT (ret, color);
@@ -329,21 +325,17 @@ swfdec_bitmap_data_setPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecBitmapData *bitmap;
   guint x, y, color;
   SwfdecColor old;
-  guint8 *addr;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "iii", &x, &y, &color);
 
   if (bitmap->surface == NULL || x >= bitmap->width || y >= bitmap->height)
     return;
 
-  addr = cairo_image_surface_get_data (bitmap->surface);
-  addr += cairo_image_surface_get_stride (bitmap->surface) * y;
-  addr += 4 * x;
-  old = *(SwfdecColor *) addr;
+  old = swfdec_bitmap_data_get_pixel (bitmap, x, y);
   old |= SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0);
   color = old & SWFDEC_COLOR_OPAQUE (color);
-  *(SwfdecColor *) addr = SWFDEC_COLOR_MULTIPLY (color);
-  swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
+  color = SWFDEC_COLOR_MULTIPLY (color);
+  swfdec_bitmap_data_set_pixel (bitmap, x, y, color);
 }
 
 SWFDEC_AS_NATIVE (1100, 3, swfdec_bitmap_data_fillRect)
@@ -558,17 +550,13 @@ swfdec_bitmap_data_getPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecBitmapData *bitmap;
   guint x, y, color;
-  guint8 *addr;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii", &x, &y);
 
   if (bitmap->surface == NULL || x >= bitmap->width || y >= bitmap->height)
     return;
 
-  addr = cairo_image_surface_get_data (bitmap->surface);
-  addr += cairo_image_surface_get_stride (bitmap->surface) * y;
-  addr += 4 * x;
-  color = *(SwfdecColor *) addr;
+  color = swfdec_bitmap_data_get_pixel (bitmap, x, y);
   color = SWFDEC_COLOR_UNMULTIPLY (color);
   SWFDEC_AS_VALUE_SET_INT (ret, color);
 }
@@ -580,22 +568,18 @@ swfdec_bitmap_data_setPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecBitmapData *bitmap;
   guint x, y, color;
-  guint8 *addr;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "iii", &x, &y, &color);
 
   if (bitmap->surface == NULL || x >= bitmap->width || y >= bitmap->height)
     return;
 
-  addr = cairo_image_surface_get_data (bitmap->surface);
-  addr += cairo_image_surface_get_stride (bitmap->surface) * y;
-  addr += 4 * x;
   if (swfdec_surface_has_alpha (bitmap->surface)) {
-    *(SwfdecColor *) addr = SWFDEC_COLOR_MULTIPLY ((SwfdecColor) color);
+    color = SWFDEC_COLOR_MULTIPLY ((SwfdecColor) color);
   } else {
-    *(SwfdecColor *) addr = SWFDEC_COLOR_OPAQUE ((SwfdecColor) color);
+    color = SWFDEC_COLOR_OPAQUE ((SwfdecColor) color);
   }
-  swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
+  swfdec_bitmap_data_set_pixel (bitmap, x, y, color);
 }
 
 SWFDEC_AS_NATIVE (1100, 12, swfdec_bitmap_data_floodFill)
@@ -860,3 +844,35 @@ swfdec_bitmap_data_get_pattern (SwfdecBitmapData *bitmap, SwfdecRenderer *render
 
   return pattern;
 }
+
+SwfdecColor
+swfdec_bitmap_data_get_pixel (SwfdecBitmapData *bitmap, guint x, guint y)
+{
+  guint8 *addr;
+
+  g_return_val_if_fail (SWFDEC_IS_BITMAP_DATA (bitmap), 0);
+  g_return_val_if_fail (x < bitmap->width, 0);
+  g_return_val_if_fail (y < bitmap->height, 0);
+
+  addr = cairo_image_surface_get_data (bitmap->surface);
+  addr += cairo_image_surface_get_stride (bitmap->surface) * y;
+  addr += 4 * x;
+  return *(guint32 *) addr;
+}
+
+void
+swfdec_bitmap_data_set_pixel (SwfdecBitmapData *bitmap, guint x, guint y, SwfdecColor color)
+{
+  guint8 *addr;
+
+  g_return_if_fail (SWFDEC_IS_BITMAP_DATA (bitmap));
+  g_return_if_fail (x < bitmap->width);
+  g_return_if_fail (y < bitmap->height);
+
+  addr = cairo_image_surface_get_data (bitmap->surface);
+  addr += cairo_image_surface_get_stride (bitmap->surface) * y;
+  addr += 4 * x;
+  *(guint32 *) addr = color;
+  swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
+}
+

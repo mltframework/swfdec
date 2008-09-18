@@ -185,7 +185,8 @@ swfdec_video_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix,
     SWFDEC_TWIPS_SCALE_FACTOR * org->height };
 
   swfdec_rect_transform (&rect, &rect, matrix);
-  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
+  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)),
+      movie, &rect);
 }
 
 static GObject *

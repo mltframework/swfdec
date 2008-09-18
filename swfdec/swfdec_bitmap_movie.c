@@ -98,7 +98,8 @@ swfdec_bitmap_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix
   rect.y1 = swfdec_bitmap_data_get_height (bitmap->bitmap) * SWFDEC_TWIPS_SCALE_FACTOR;
 
   swfdec_rect_transform (&rect, &rect, matrix);
-  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
+  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)),
+      movie, &rect);
 }
 
 static SwfdecMovie *

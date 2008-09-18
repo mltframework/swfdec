@@ -1408,7 +1408,8 @@ swfdec_movie_do_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gb
   }
   swfdec_rect_union (&rect, &rect, &movie->draw_extents);
   swfdec_rect_transform (&rect, &rect, matrix);
-  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
+  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)),
+      movie, &rect);
 
   for (walk = movie->list; walk; walk = walk->next) {
     swfdec_movie_invalidate (walk->data, matrix, last);

@@ -35,6 +35,7 @@
 #include "swfdec_debug.h"
 #include "swfdec_enums.h"
 #include "swfdec_event.h"
+#include "swfdec_filter.h"
 #include "swfdec_internal.h"
 #include "swfdec_loader_internal.h"
 #include "swfdec_marshal.h"
@@ -931,7 +932,7 @@ swfdec_player_update_scale (SwfdecPlayer *player)
   for (walk = priv->roots; walk; walk = walk->next) {
     g_signal_emit_by_name (walk->data, "matrix-changed");
   }
-  swfdec_player_invalidate (player, NULL);
+  swfdec_player_invalidate (player, NULL, NULL);
   if (!swfdec_player_is_locked (player))
     swfdec_player_emit_signals (player);
 }
@@ -1151,7 +1152,7 @@ swfdec_player_invalidate_focusrect (SwfdecPlayer *player)
   if (swfdec_rect_is_empty (&priv->focusrect))
     return;
 
-  swfdec_player_invalidate (player, &priv->focusrect);
+  swfdec_player_invalidate (player, NULL, &priv->focusrect);
   swfdec_rect_init_empty (&priv->focusrect);
 }
 
@@ -1942,7 +1943,7 @@ swfdec_player_update_focusrect (SwfdecPlayer *player)
   priv->focusrect = movie->extents;
   if (movie->parent)
     swfdec_movie_rect_local_to_global (movie->parent, &priv->focusrect);
-  swfdec_player_invalidate (player, &priv->focusrect);
+  swfdec_player_invalidate (player, NULL, &priv->focusrect);
 }
 
 static void
@@ -2455,9 +2456,37 @@ swfdec_player_stop_sounds (SwfdecPlayer *player, SwfdecAudioRemoveFunc func, gpo
   }
 }
 
-/* rect is in global coordinates */
+static void
+swfdec_player_invalidate_movie (SwfdecMovie *movie, double xscale, double yscale,
+    SwfdecRectangle *rect)
+{
+  GSList *walk;
+
+  while (movie != NULL) {
+    g_print ("%s\n", movie->name);
+    for (walk = movie->filters; walk; walk = walk->next) {
+      g_print ("%g %g\n", xscale, yscale);
+      swfdec_filter_get_rectangle (walk->data, rect, xscale, yscale, rect);
+    }
+    movie = movie->parent;
+  }
+}
+
+/**
+ * swfdec_player_invalidate:
+ * @player: Player to invalidate in
+ * @movie: the movie that causes the invalidation or %NULL if the invalidation
+ *         is not specific to a movie. The invalid region will be enhanced by 
+ *         the area required by filters. Also the "invalidate" signal will be
+ *         emitted on the movie and all its parents.
+ * @rect: rectangle to invalidate in global coordiantes or %NULL for the 
+ *        whole player
+ *
+ * Invalidates the given area of the player. This causes this area to be 
+ * emitted as part of the SwfdecPlayer::invalidate signal.
+ **/
 void
-swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
+swfdec_player_invalidate (SwfdecPlayer *player, SwfdecMovie *movie, const SwfdecRect *rect)
 {
   SwfdecPlayerPrivate *priv;
   SwfdecRectangle r;
@@ -2475,6 +2504,15 @@ swfdec_player_invalidate (SwfdecPlayer *player, const SwfdecRect *rect)
 
     swfdec_rect_transform (&tmp, rect, &priv->global_to_stage);
     swfdec_rectangle_init_rect (&r, &tmp);
+    if (movie)
+      g_print ("invalidating %s: %u %u %u %u\n", movie->name, r.x, r.y, r.width, r.height);
+    swfdec_player_invalidate_movie (movie, 
+	player->priv->global_to_stage.xx * SWFDEC_TWIPS_SCALE_FACTOR,
+	player->priv->global_to_stage.yy * SWFDEC_TWIPS_SCALE_FACTOR,
+	&r);
+    if (movie)
+      g_print ("invalidating %s: %u %u %u %u\n", movie->name, r.x, r.y, r.width, r.height);
+
     /* FIXME: currently we clamp the rectangle to the visible area, it might
      * be useful to allow out-of-bounds drawing. In that case this needs to be
      * changed */
@@ -2517,7 +2555,7 @@ swfdec_player_set_background_color (SwfdecPlayer *player, SwfdecColor bgcolor)
 
   SWFDEC_INFO ("setting bgcolor to %08X", bgcolor);
   priv->bgcolor = bgcolor;
-  swfdec_player_invalidate (player, NULL);
+  swfdec_player_invalidate (player, NULL, NULL);
   g_object_notify (G_OBJECT (player), "background-color");
 }
 

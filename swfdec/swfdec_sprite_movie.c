@@ -348,7 +348,9 @@ out:
   if (has_filter) {
     if (cur->filters)
       g_slist_free (cur->filters);
+    swfdec_movie_invalidate_next (cur);
     cur->filters = filters;
+    g_print ("%s: setting %u filters\n", cur->name, g_slist_length (filters));
   }
 
   if (events)

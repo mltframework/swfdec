@@ -207,8 +207,8 @@ swfdec_text_field_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *ma
 
   swfdec_rect_transform (&rect, &rect,
       &SWFDEC_PLAYER (swfdec_gc_object_get_context (text))->priv->stage_to_global);
-  swfdec_player_invalidate (
-      SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
+  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)),
+      movie, &rect);
 }
 
 static gboolean

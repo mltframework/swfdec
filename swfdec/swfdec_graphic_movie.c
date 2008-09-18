@@ -56,7 +56,8 @@ swfdec_graphic_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matri
   SwfdecRect rect;
 
   swfdec_rect_transform (&rect, &movie->graphic->extents, matrix);
-  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), &rect);
+  swfdec_player_invalidate (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), 
+      movie, &rect);
 }
 
 static SwfdecMovie *

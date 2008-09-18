@@ -859,15 +859,16 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
 #if 0
   /* code to draw a red rectangle around the area occupied by this movie clip */
   {
-    double x = 1.0, y = 0.0;
-    cairo_transform (cr, &movie->inverse_transform);
-    cairo_user_to_device_distance (cr, &x, &y);
-    cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
-    cairo_set_line_width (cr, 1 / sqrt (x * x + y * y));
-    cairo_rectangle (cr, object->extents.x0 + 10, object->extents.y0 + 10,
-	object->extents.x1 - object->extents.x0 - 20,
-	object->extents.y1 - object->extents.y0 - 20);
+    cairo_save (cr);
+    cairo_transform (cr, &movie->inverse_matrix);
+    cairo_rectangle (cr, movie->extents.x0, movie->extents.y0,
+	movie->extents.x1 - movie->extents.x0,
+	movie->extents.y1 - movie->extents.y0);
+    swfdec_renderer_reset_matrix (cr);
+    cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
+    cairo_set_line_width (cr, 2.0);
     cairo_stroke (cr);
+    cairo_restore (cr);
   }
 #endif
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {

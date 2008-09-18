@@ -87,7 +87,7 @@ swfdec_net_connection_connect (SwfdecNetConnection *conn, const char *url)
   g_free (conn->url);
   conn->url = g_strdup (url);
   if (url) {
-    SWFDEC_ERROR ("FIXME: using NetConnection with non-null URLs is not implemented");
+    SWFDEC_FIXME ("NetConnection with non-null URL %s (aka RTMP) not implemented", url);
   }
   swfdec_net_connection_onstatus (conn, SWFDEC_AS_STR_NetConnection_Connect_Success,
        SWFDEC_AS_STR_status, NULL);

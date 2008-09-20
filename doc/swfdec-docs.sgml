@@ -42,4 +42,5 @@
     <xi:include href="xml/SwfdecAsFrame.xml"/>
     <xi:include href="xml/SwfdecAsDebugger.xml"/>
   </chapter>
+  <index />
 </book>

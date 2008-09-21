@@ -403,6 +403,8 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
   y = rect.y;
   swfdec_point_from_as_object (&rect.x, &rect.y, pt);
   cr = cairo_create (bitmap->surface);
+  cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+  cairo_clip (cr);
   if (bitmap == source) {
     cairo_surface_t *copy = cairo_surface_create_similar (source->surface,
 	cairo_surface_get_content (source->surface),
@@ -421,7 +423,6 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
   }
 
-  cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
   if (alpha) {
     cairo_surface_t *mask = cairo_surface_create_similar (alpha->surface,
 	CAIRO_CONTENT_COLOR_ALPHA, rect.width, rect.height);
@@ -439,7 +440,7 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
     cairo_set_source_surface (cr, mask, 0, 0);
     cairo_surface_destroy (mask);
   }
-  cairo_fill (cr);
+  cairo_paint (cr);
   cairo_destroy (cr);
   swfdec_bitmap_data_invalidate (bitmap, rect.x, rect.y, rect.width, rect.height);
 }

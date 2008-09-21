@@ -386,6 +386,8 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsObject *recto, *pt, *apt = NULL;
   SwfdecRectangle rect;
   gboolean copy_alpha = FALSE;
+  SwfdecColorTransform ctrans;
+  cairo_pattern_t *pattern;
   cairo_t *cr;
   int x, y;
 
@@ -405,18 +407,19 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
   cr = cairo_create (bitmap->surface);
   cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
   cairo_clip (cr);
+  cairo_translate (cr, rect.x - x, rect.y - y);
+  swfdec_color_transform_init_identity (&ctrans);
+  pattern = swfdec_bitmap_data_get_pattern (source,
+	SWFDEC_PLAYER (cx)->priv->renderer,
+	&ctrans);
+  cairo_set_source (cr, pattern);
+  cairo_pattern_destroy (pattern);
   if (bitmap == source) {
-    cairo_surface_t *copy = cairo_surface_create_similar (source->surface,
-	cairo_surface_get_content (source->surface),
-	rect.width, rect.height);
-    cairo_t *cr2 = cairo_create (copy);
-    cairo_set_source_surface (cr2, source->surface, x, y);
-    cairo_paint (cr2);
-    cairo_destroy (cr2);
-    cairo_set_source_surface (cr, copy, rect.x, rect.y);
-    cairo_surface_destroy (copy);
-  } else {
-    cairo_set_source_surface (cr, source->surface, rect.x - x, rect.y - y);
+    /* FIXME Is this necessary or does Cairo handle source == target? */
+    cairo_push_group_with_content (cr, cairo_surface_get_content (source->surface));
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_paint (cr);
+    cairo_pop_group_to_source (cr);
   }
 
   if (swfdec_surface_has_alpha (bitmap->surface) && !copy_alpha) {
@@ -424,21 +427,20 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   if (alpha) {
-    cairo_surface_t *mask = cairo_surface_create_similar (alpha->surface,
-	CAIRO_CONTENT_COLOR_ALPHA, rect.width, rect.height);
-    cairo_t *cr2 = cairo_create (mask);
-
-    cairo_surface_set_device_offset (mask, -rect.x, -rect.y);
-    cairo_set_source (cr2, cairo_get_source (cr));
+    cairo_push_group_with_content (cr, cairo_surface_get_content (source->surface));
+    pattern = swfdec_bitmap_data_get_pattern (alpha,
+	  SWFDEC_PLAYER (cx)->priv->renderer,
+	  &ctrans);
     if (apt) {
-      swfdec_point_from_as_object (&x, &y, apt);
+      int mask_x, mask_y;
+      swfdec_point_from_as_object (&mask_x, &mask_y, apt);
+      cairo_translate (cr, x - mask_x, y - mask_y);
     } else {
-      x = y = 0;
+      cairo_translate (cr, x, y);
     }
-    cairo_mask_surface (cr2, alpha->surface, rect.x - x, rect.y - y);
-    cairo_destroy (cr2);
-    cairo_set_source_surface (cr, mask, 0, 0);
-    cairo_surface_destroy (mask);
+    cairo_mask (cr, pattern);
+    cairo_pattern_destroy (pattern);
+    cairo_pop_group_to_source (cr);
   }
   cairo_paint (cr);
   cairo_destroy (cr);

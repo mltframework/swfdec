@@ -264,6 +264,12 @@ huffman_table_init_jpeg (JpegDecoder *decoder, HuffmanTable *table, JpegBits * b
     n_symbols += huffsize[i];
   }
 
+  /* There may be a maximum of 256 symbols in the table. */
+  if (n_symbols > 256) {
+    jpeg_decoder_error (decoder, "%u Huffman table entries exceeds 256", n_symbols);
+    return -1;
+  }
+
   /* Build up the symbol table.  The first symbol is all 0's, with
    * the number of bits determined by the first non-zero entry in
    * huffsize[].  Subsequent symbols with the same bit length are

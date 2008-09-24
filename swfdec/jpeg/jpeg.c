@@ -559,6 +559,8 @@ jpeg_decoder_free (JpegDecoder * dec)
 
   if (dec->data)
     free (dec->data);
+  if (dec->error_message)
+    free (dec->error_message);
 
   free (dec);
 }

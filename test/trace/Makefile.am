@@ -1022,6 +1022,15 @@ EXTRA_DIST = \
 	crash-0.7.5-textlayout-8.swf \
 	crash-0.7.5-textlayout-8.swf.trace \
 	crash-0.7.5-textlayout.as \
+	crash-0.8.0-huffmann-table-5.swf \
+	crash-0.8.0-huffmann-table-5.swf.trace \
+	crash-0.8.0-huffmann-table-6.swf \
+	crash-0.8.0-huffmann-table-6.swf.trace \
+	crash-0.8.0-huffmann-table-7.swf \
+	crash-0.8.0-huffmann-table-7.swf.trace \
+	crash-0.8.0-huffmann-table-8.swf \
+	crash-0.8.0-huffmann-table-8.swf.trace \
+	crash-0.8.0-huffmann-table.xml \
 	createEmptyMovieClip-events.sc \
 	createEmptyMovieClip-events.swf \
 	createEmptyMovieClip-events.swf.trace \

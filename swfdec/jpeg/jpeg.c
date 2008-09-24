@@ -248,7 +248,7 @@ huffman_table_init_jpeg (JpegDecoder *decoder, HuffmanTable *table, JpegBits * b
 {
   int n_symbols;
   int huffsize[16];
-  int i, j, k;
+  int i, j;
   unsigned int symbol;
   int n = 0;
 
@@ -270,13 +270,11 @@ huffman_table_init_jpeg (JpegDecoder *decoder, HuffmanTable *table, JpegBits * b
    * incremented by 1.  Increasing the bit length shifts the
    * symbol 1 bit to the left. */
   symbol = 0;
-  k = 0;
   for (i = 0; i < 16; i++) {
     for (j = 0; j < huffsize[i]; j++) {
       huffman_table_add (table, symbol, i + 1, jpeg_bits_get_u8 (bits));
       n++;
       symbol++;
-      k++;
     }
     /* This checks that our symbol is actually less than the
      * number of bits we think it is.  This is only triggered

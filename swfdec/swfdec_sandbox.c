@@ -299,3 +299,13 @@ swfdec_sandbox_unuse (SwfdecSandbox *sandbox)
   context->Object_prototype = NULL;
 }
 
+gboolean
+swfdec_sandbox_allow (SwfdecSandbox *sandbox, SwfdecSandbox *other)
+{
+  g_return_val_if_fail (SWFDEC_IS_SANDBOX (sandbox), FALSE);
+  g_return_val_if_fail (SWFDEC_IS_SANDBOX (other), FALSE);
+
+  SWFDEC_FIXME ("implement script sandbox interaction");
+  return TRUE;
+}
+

@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,11 +38,24 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     const SwfdecAsValue *args, SwfdecAsValue *return_value)
 {
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (function);
+  SwfdecAsContext *context;
+  SwfdecSandbox *old_sandbox = NULL;
   SwfdecAsFrame frame = { NULL, };
 
   /* just to be sure... */
   if (return_value)
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
+
+  context = swfdec_gc_object_get_context (function);
+  /* do security checks */
+  if (SWFDEC_AS_OBJECT (script->sandbox) != context->global &&
+      script->sandbox != NULL) {
+    old_sandbox = SWFDEC_SANDBOX (context->global);
+    if (!swfdec_sandbox_allow (script->sandbox, old_sandbox))
+      return;
+    swfdec_sandbox_unuse (old_sandbox);
+    swfdec_sandbox_use (script->sandbox);
+  }
 
   swfdec_as_frame_init (&frame, swfdec_gc_object_get_context (function), script->script);
   frame.scope_chain = g_slist_concat (frame.scope_chain, g_slist_copy (script->scope_chain));
@@ -69,7 +82,12 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     swfdec_as_super_new (&frame, SWFDEC_AS_OBJECT (function), super_reference);
   }
   swfdec_as_frame_preload (&frame);
-  swfdec_as_context_run (swfdec_gc_object_get_context (function));
+  swfdec_as_context_run (context);
+
+  if (old_sandbox) {
+    swfdec_sandbox_unuse (script->sandbox);
+    swfdec_sandbox_use (old_sandbox);
+  }
 }
 
 static void
@@ -93,6 +111,8 @@ swfdec_as_script_function_mark (SwfdecGcObject *object)
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (object);
 
   g_slist_foreach (script->scope_chain, (GFunc) swfdec_gc_object_mark, NULL);
+  if (script->sandbox)
+    swfdec_gc_object_mark (script->sandbox);
 
   SWFDEC_GC_OBJECT_CLASS (swfdec_as_script_function_parent_class)->mark (object);
 }
@@ -155,6 +175,12 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
   fun->scope_chain = g_slist_copy ((GSList *) scope_chain);
   fun->script = script;
   fun->target = target;
+
+  /* if context is a flash player, copy current sandbox for security checking.
+   * FIXME: export this somehow? */
+  if (SWFDEC_IS_PLAYER (context))
+    fun->sandbox = SWFDEC_SANDBOX (context->global);
+
   /* set prototype */
   proto = swfdec_as_object_new_empty (context);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);

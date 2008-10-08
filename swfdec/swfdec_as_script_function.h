@@ -22,6 +22,7 @@
 
 #include <swfdec/swfdec_as_function.h>
 #include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_sandbox.h>
 #include <swfdec/swfdec_script.h>
 
 G_BEGIN_DECLS
@@ -44,6 +45,7 @@ struct _SwfdecAsScriptFunction {
   SwfdecScript *	script;		/* script being executed or NULL when native */
   GSList *		scope_chain;  	/* scope this script_function was defined in */
   SwfdecAsObject *	target;		/* target this object was defined in or NULL if in init script */
+  SwfdecSandbox *	sandbox;	/* sandbox this function was defined in or NULL if don't care */
 };
 
 struct _SwfdecAsScriptFunctionClass {

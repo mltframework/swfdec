@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -79,6 +79,10 @@ SwfdecSandbox *		swfdec_sandbox_get_for_url	(SwfdecPlayer *	  	player,
 void			swfdec_sandbox_use		(SwfdecSandbox *	sandbox);
 gboolean		swfdec_sandbox_try_use		(SwfdecSandbox *	sandbox);
 void			swfdec_sandbox_unuse		(SwfdecSandbox *	sandbox);
+
+gboolean		swfdec_sandbox_allow		(SwfdecSandbox *	sandbox,
+							 SwfdecSandbox *	other);
+
 
 G_END_DECLS
 #endif

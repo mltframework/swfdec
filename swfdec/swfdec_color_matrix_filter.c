@@ -71,7 +71,7 @@ swfdec_color_matrix_filter_apply (SwfdecFilter *filter, cairo_pattern_t *pattern
   data = cairo_image_surface_get_data (surface);
   stride = cairo_image_surface_get_stride (surface);
   for (y = 0; y < rect->height; y++) {
-    for (x = 0; x < rect->height; x++) {
+    for (x = 0; x < rect->width; x++) {
       a = data[x * 4 + SWFDEC_COLOR_INDEX_ALPHA];
       r = data[x * 4 + SWFDEC_COLOR_INDEX_RED];
       g = data[x * 4 + SWFDEC_COLOR_INDEX_GREEN];

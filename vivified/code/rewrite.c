@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -290,10 +290,10 @@ replace_random (ViviCodeAssembler *assembler, guint init)
 static void
 rewrite_getters (ViviCodeAssembler *assembler)
 {
-  guint i, count;
+  guint i;
+  static guint count = 0;
   char *s;
 
-  count = 0;
   for (i = 0; i < vivi_code_assembler_get_n_codes (assembler); i++) {
     ViviCodeAsm *code = vivi_code_assembler_get_code (assembler, i);
     if (VIVI_IS_CODE_ASM_GET_VARIABLE (code) ||

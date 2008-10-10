@@ -471,6 +471,17 @@ EXTRA_DIST = \
 	replace-shape-shape-6.swf.png \
 	replace-shape-shape-7.swf \
 	replace-shape-shape-7.swf.png \
+	rotated-filter-size-5.swf \
+	rotated-filter-size-5.swf.png \
+	rotated-filter-size-6.swf \
+	rotated-filter-size-6.swf.org.png \
+	rotated-filter-size-6.swf.png \
+	rotated-filter-size-7.swf \
+	rotated-filter-size-7.swf.org.png \
+	rotated-filter-size-7.swf.png \
+	rotated-filter-size-8.swf \
+	rotated-filter-size-8.swf.png \
+	rotated-filter-size.as \
 	setMask-matrices-5.swf \
 	setMask-matrices-5.swf.png \
 	setMask-matrices-6.swf \

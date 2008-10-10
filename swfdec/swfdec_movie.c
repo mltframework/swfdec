@@ -501,21 +501,13 @@ swfdec_movie_local_to_global (SwfdecMovie *movie, double *x, double *y)
 void
 swfdec_movie_rect_local_to_global (SwfdecMovie *movie, SwfdecRect *rect)
 {
+  cairo_matrix_t matrix;
+
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
   g_return_if_fail (rect != NULL);
 
-  swfdec_movie_local_to_global (movie, &rect->x0, &rect->y0);
-  swfdec_movie_local_to_global (movie, &rect->x1, &rect->y1);
-  if (rect->x0 > rect->x1) {
-    double tmp = rect->x1;
-    rect->x1 = rect->x0;
-    rect->x0 = tmp;
-  }
-  if (rect->y0 > rect->y1) {
-    double tmp = rect->y1;
-    rect->y1 = rect->y0;
-    rect->y0 = tmp;
-  }
+  swfdec_movie_local_to_global_matrix (movie, &matrix);
+  swfdec_rect_transform (rect, rect, &matrix);
 }
 
 void

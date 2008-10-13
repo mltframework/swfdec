@@ -99,10 +99,13 @@ swfdec_audio_decoder_uncompressed_decode_16bit (SwfdecBuffer *buffer)
   gint16 *src, *dest;
   guint i;
 
-  ret = swfdec_buffer_new (buffer->length);
+  if (buffer->length & 2) {
+    SWFDEC_ERROR ("buffer length not a multiple of 16bit");
+  }
+  ret = swfdec_buffer_new (buffer->length & ~1);
   src = (gint16 *) buffer->data;
   dest = (gint16 *) ret->data;
-  for (i = 0; i < buffer->length; i += 2) {
+  for (i = 0; i < ret->length; i += 2) {
     *dest = GINT16_FROM_LE (*src);
     dest++;
     src++;

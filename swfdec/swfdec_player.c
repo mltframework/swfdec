@@ -2461,9 +2461,16 @@ swfdec_player_invalidate_movie (SwfdecMovie *movie, double xscale, double yscale
     SwfdecRectangle *rect)
 {
   GSList *walk;
+  /* FIXME: We should likely always enlarge by one and not only for filters */
+  gboolean enlarge = !SWFDEC_IS_TEXT_FIELD_MOVIE (movie);
 
   while (movie != NULL) {
     for (walk = movie->filters; walk; walk = walk->next) {
+      if (enlarge) {
+	rect->width++;
+	rect->height++;
+	enlarge = FALSE;
+      }
       swfdec_filter_get_rectangle (walk->data, rect, xscale, yscale, rect);
     }
     movie = movie->parent;

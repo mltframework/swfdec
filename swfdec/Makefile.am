@@ -74,6 +74,7 @@ libswfdec_source_files = \
 	swfdec_decoder.c \
 	swfdec_displacement_map_filter.c \
 	swfdec_display_object.c \
+	swfdec_display_object_container.c \
 	swfdec_draw.c \
 	swfdec_drop_shadow_filter.c \
 	swfdec_event.c \
@@ -95,6 +96,7 @@ libswfdec_source_files = \
 	swfdec_graphic_movie.c \
 	swfdec_image.c \
 	swfdec_image_decoder.c \
+	swfdec_interactive_object.c \
 	swfdec_init.c \
 	swfdec_interval.c \
 	swfdec_key_as.c \
@@ -278,6 +280,7 @@ noinst_HEADERS = \
 	swfdec_debug.h \
 	swfdec_decoder.h \
 	swfdec_display_object.h \
+	swfdec_display_object_container.h \
 	swfdec_draw.h \
 	swfdec_text_field.h \
 	swfdec_text_field_movie.h \
@@ -293,6 +296,7 @@ noinst_HEADERS = \
 	swfdec_image.h \
 	swfdec_image_decoder.h \
 	swfdec_initialize.h \
+	swfdec_interactive_object.h \
 	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_load_object.h \

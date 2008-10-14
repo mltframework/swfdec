@@ -73,9 +73,11 @@ libswfdec_source_files = \
 	swfdec_debug.c \
 	swfdec_decoder.c \
 	swfdec_displacement_map_filter.c \
+	swfdec_display_object.c \
 	swfdec_draw.c \
 	swfdec_drop_shadow_filter.c \
 	swfdec_event.c \
+	swfdec_event_dispatcher.c \
 	swfdec_external_interface.c \
 	swfdec_file_loader.c \
 	swfdec_file_reference.c \
@@ -275,10 +277,12 @@ noinst_HEADERS = \
 	swfdec_convolution_matrix.h \
 	swfdec_debug.h \
 	swfdec_decoder.h \
+	swfdec_display_object.h \
 	swfdec_draw.h \
 	swfdec_text_field.h \
 	swfdec_text_field_movie.h \
 	swfdec_event.h \
+	swfdec_event_dispatcher.h \
 	swfdec_filter.h \
 	swfdec_flv_decoder.h \
 	swfdec_font.h \

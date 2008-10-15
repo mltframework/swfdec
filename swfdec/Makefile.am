@@ -189,15 +189,14 @@ libswfdec_@SWFDEC_MAJORMINOR@_la_SOURCES = \
 
 libswfdec_@SWFDEC_MAJORMINOR@_la_CFLAGS = \
 	$(GLOBAL_CFLAGS) $(CAIRO_CFLAGS) $(GLIB_CFLAGS) $(PANGO_CFLAGS) \
-	-I$(top_srcdir) -I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS) \
-	$(GST_CFLAGS) $(FFMPEG_CFLAGS) $(MAD_CFLAGS) \
+	-I$(top_srcdir) -I$(srcdir)/jpeg/ $(LIBOIL_CFLAGS) $(GST_CFLAGS) \ 
 	-DG_LOG_DOMAIN=\"Swfdec\"
 libswfdec_@SWFDEC_MAJORMINOR@_la_LDFLAGS = \
 	$(SYMBOLIC_LDFLAGS) \
 	-version-info $(SWFDEC_LIBVERSION) \
 	-export-symbols-regex '^(swfdec_.*)' \
-	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) $(LIBOIL_LIBS) -lz \
-	$(MAD_LIBS) $(FFMPEG_LIBS) $(GST_LIBS)
+	$(CAIRO_LIBS) $(GLIB_LIBS) $(PANGO_LIBS) \
+	$(LIBOIL_LIBS) -lz $(GST_LIBS)
 
 public_headers = \
 	swfdec.h \

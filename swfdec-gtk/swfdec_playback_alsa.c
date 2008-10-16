@@ -173,9 +173,12 @@ try_write_so_pa_gets_it (Stream *stream)
     stream->offset += step;
   }
 
-  if (finish)
+  if (finish) {
     swfdec_playback_stream_remove_handlers (stream);
-  return TRUE;
+    return FALSE;
+  } else {
+    return TRUE;
+  }
 #undef STEP
 }
 

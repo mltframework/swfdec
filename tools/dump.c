@@ -1,7 +1,7 @@
 /* Swfdec
  * Copyright (C) 2003-2006 David Schleef <ds@schleef.org>
  *		 2005-2006 Eric Anholt <eric@anholt.net>
- *		 2006-2007 Benjamin Otte <otte@gnome.org>
+ *		 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -51,14 +51,28 @@ static const char *
 get_audio_format_name (guint codec)
 {
   switch (codec) {
+    case SWFDEC_AUDIO_CODEC_UNDEFINED:
+      return "Undefined";
     case SWFDEC_AUDIO_CODEC_ADPCM:
       return "ADPCM";
     case SWFDEC_AUDIO_CODEC_MP3:
       return "MP3";
     case SWFDEC_AUDIO_CODEC_UNCOMPRESSED:
-      return "uncompressed";
+      return "Uncompressed";
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER_16KHZ:
+      return "Nellymoser 16kHz";
+    case SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ:
+      return "Nellymoser 8kHz";
     case SWFDEC_AUDIO_CODEC_NELLYMOSER:
       return "Nellymoser";
+    case SWFDEC_AUDIO_CODEC_ALAW:
+      return "a-law";
+    case SWFDEC_AUDIO_CODEC_MULAW:
+      return "u-law";
+    case SWFDEC_AUDIO_CODEC_AAC:
+      return "AAC";
+    case SWFDEC_AUDIO_CODEC_MP3_8KHZ:
+      return "MP3 8kHz";
     default:
       return "Unknown";
   }

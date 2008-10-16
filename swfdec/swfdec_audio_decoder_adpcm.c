@@ -34,7 +34,7 @@ swfdec_audio_decoder_adpcm_prepare (guint codec, SwfdecAudioFormat format, char 
 }
 
 static SwfdecAudioDecoder *
-swfdec_audio_decoder_adpcm_create (guint codec, SwfdecAudioFormat format)
+swfdec_audio_decoder_adpcm_create (guint codec, SwfdecAudioFormat format, SwfdecBuffer *data)
 {
   if (codec != SWFDEC_AUDIO_CODEC_ADPCM)
     return NULL;

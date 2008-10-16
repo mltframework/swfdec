@@ -108,7 +108,7 @@ swfdec_audio_decoder_get_resampler (void)
 }
 
 static SwfdecAudioDecoder *
-swfdec_audio_decoder_gst_create (guint type, SwfdecAudioFormat format)
+swfdec_audio_decoder_gst_create (guint type, SwfdecAudioFormat format, SwfdecBuffer *data)
 {
   SwfdecAudioDecoderGst *player;
   GstCaps *srccaps, *sinkcaps;

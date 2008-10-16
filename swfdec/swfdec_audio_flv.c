@@ -92,7 +92,7 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
       }
       flv->format = format;
       flv->in = in;
-      flv->decoder = swfdec_audio_decoder_new (flv->format, flv->in);
+      flv->decoder = swfdec_audio_decoder_new (flv->format, flv->in, NULL);
       if (flv->decoder == NULL)
 	return NULL;
     } else if (format != flv->format ||

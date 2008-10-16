@@ -83,6 +83,8 @@ swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **miss
  * swfdec_audio_decoder_new:
  * @codec: codec id
  * @format: #SwfdecAudioCodec to decode
+ * @data: setup data for the codec or %NULL for none. Setup data is only 
+ *        required for AAC audio.
  *
  * Creates a decoder suitable for decoding @format. If no decoder is available
  * for the given for mat, %NULL is returned.
@@ -90,7 +92,7 @@ swfdec_audio_decoder_prepare (guint codec, SwfdecAudioFormat format, char **miss
  * Returns: a new decoder or %NULL
  **/
 SwfdecAudioDecoder *
-swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format)
+swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format, SwfdecBuffer *data)
 {
   SwfdecAudioDecoder *ret = NULL;
   GSList *walk;
@@ -99,7 +101,7 @@ swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format)
 
   for (walk = audio_codecs; walk; walk = walk->next) {
     SwfdecAudioDecoderClass *klass = g_type_class_ref (GPOINTER_TO_SIZE (walk->data));
-    ret = klass->create (codec, format);
+    ret = klass->create (codec, format, data);
     g_type_class_unref (klass);
     if (ret)
       break;

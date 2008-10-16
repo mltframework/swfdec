@@ -100,8 +100,59 @@ swfdec_net_stream_decode_video (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffe
       decoder->width -= wsub;
       decoder->height -= hsub;
     }
+  } else if (decoder->codec == SWFDEC_VIDEO_CODEC_H264) {
+    SwfdecBits bits;
+    guint type;
+    SwfdecBuffer *data;
+    swfdec_bits_init (&bits, buffer);
+    type = swfdec_bits_get_u8 (&bits);
+    /* composition_time_offset = */ swfdec_bits_get_bu24 (&bits);
+    switch (type) {
+      case 0:
+	SWFDEC_ERROR ("new data stream?!");
+	break;
+      case 1:
+	data = swfdec_bits_get_buffer (&bits, -1);
+	if (data) {
+	  swfdec_video_decoder_decode (decoder, data);
+	} else {
+	  SWFDEC_ERROR ("no data in H264 buffer?");
+	}
+	break;
+      case 2:
+	break;
+      default:
+	SWFDEC_ERROR ("H264 data type %u not supported", type);
+	break;
+    }
   } else {
     swfdec_video_decoder_decode (decoder, buffer);
+  }
+}
+
+/* returns TRUE if the buffer was consumed */
+static gboolean
+swfdec_net_stream_new_video_decoder (SwfdecNetStream *stream, guint format, SwfdecBuffer *buffer)
+{
+  if (format == SWFDEC_VIDEO_CODEC_H264) {
+    SwfdecBits bits;
+
+    swfdec_bits_init (&bits, buffer);
+    if (swfdec_bits_get_u8 (&bits) == 0) {
+      SwfdecBuffer *data;
+      /* composition_time_offset = */ swfdec_bits_get_bu24 (&bits);
+      data = swfdec_bits_get_buffer (&bits, -1);
+      stream->decoder = swfdec_video_decoder_new (format, data);
+      if (data)
+	swfdec_buffer_unref (data);
+      return TRUE;
+    } else {
+      stream->decoder = swfdec_video_decoder_new (format, NULL);
+      return FALSE;
+    }
+  } else {
+    stream->decoder = swfdec_video_decoder_new (format, NULL);
+    return FALSE;
   }
 }
 
@@ -112,7 +163,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   SwfdecBuffer *buffer;
   guint format;
   cairo_surface_t *old;
-  gboolean process_events;
+  gboolean process_events, skip;
   guint process_events_from;
 
   SWFDEC_LOG ("goto %ums", timestamp);
@@ -146,12 +197,14 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
       stream->decoder = NULL;
     }
 
+    skip = FALSE;
     if (stream->decoder == NULL) {
       buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, 
 	  stream->current_time, TRUE, &format, &stream->decoder_time,
 	  &next);
-      stream->decoder = swfdec_video_decoder_new (format);
-    } else {
+      skip = !swfdec_net_stream_new_video_decoder (stream, format, buffer);
+    }
+    if (!skip) {
       swfdec_flv_decoder_get_video (stream->flvdecoder, 
 	  stream->decoder_time, FALSE, NULL, NULL, &next);
       if (next != stream->current_time) {
@@ -182,9 +235,10 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
     for (;;) {
       if (format != swfdec_video_decoder_get_codec (stream->decoder)) {
 	g_object_unref (stream->decoder);
-	stream->decoder = swfdec_video_decoder_new (format);
+	skip = swfdec_net_stream_new_video_decoder (stream, format, buffer);
       }
-      swfdec_net_stream_decode_video (stream->decoder, buffer);
+      if (!skip)
+	swfdec_net_stream_decode_video (stream->decoder, buffer);
       if (stream->decoder_time >= stream->current_time)
 	break;
 

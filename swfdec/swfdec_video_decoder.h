@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 #define SWFDEC_VIDEO_CODEC_VP6 4
 #define SWFDEC_VIDEO_CODEC_VP6_ALPHA 5
 #define SWFDEC_VIDEO_CODEC_SCREEN2 6
+#define SWFDEC_VIDEO_CODEC_H264 7
 
 typedef enum {
   SWFDEC_VIDEO_FORMAT_RGBA,
@@ -73,7 +74,8 @@ struct _SwfdecVideoDecoderClass
   /*< public >*/
   gboolean		(* prepare)	(guint                  codec,
 					 char **                missing);
-  SwfdecVideoDecoder *	(* create)	(guint                  codec);
+  SwfdecVideoDecoder *	(* create)	(guint                  codec,
+					 SwfdecBuffer *		data);
 
   void			(* decode)	(SwfdecVideoDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
@@ -88,7 +90,8 @@ void			swfdec_video_decoder_register	(GType			type);
 gboolean		swfdec_video_decoder_prepare	(guint			codec,
 							 char **		missing);
 
-SwfdecVideoDecoder *   	swfdec_video_decoder_new      	(guint			codec);
+SwfdecVideoDecoder *   	swfdec_video_decoder_new      	(guint			codec,
+							 SwfdecBuffer *		buffer);
 
 void			swfdec_video_decoder_decode	(SwfdecVideoDecoder *	decoder,
 							 SwfdecBuffer *		buffer);

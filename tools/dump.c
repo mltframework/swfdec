@@ -71,6 +71,8 @@ get_audio_format_name (guint codec)
       return "u-law";
     case SWFDEC_AUDIO_CODEC_AAC:
       return "AAC";
+    case SWFDEC_AUDIO_CODEC_SPEEX:
+      return "Speex";
     case SWFDEC_AUDIO_CODEC_MP3_8KHZ:
       return "MP3 8kHz";
     default:

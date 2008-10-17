@@ -1449,10 +1449,12 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   }
 
   /* else compare as numbers */
-  if (isnan (l) && isnan (r))
-    cond = ltype == rtype;
-  else
+  if (isnan (l) && isnan (r)) {
+    cond = (ltype == rtype && ltype == SWFDEC_AS_TYPE_NUMBER &&
+	lval->value.number == rval->value.number);
+  } else {
     cond = l == r;
+  }
 
 out:
   swfdec_as_stack_pop (cx);
@@ -1537,10 +1539,12 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   l = swfdec_as_value_to_number (cx, lval);
   r = swfdec_as_value_to_number (cx, rval);
 
-  if (isnan (l) && isnan (r))
-    cond = ltype == rtype;
-  else
+  if (isnan (l) && isnan (r)) {
+    cond = (ltype == rtype && ltype == SWFDEC_AS_TYPE_NUMBER &&
+	lval->value.number == rval->value.number);
+  } else {
     cond = l == r;
+  }
 
 out:
   swfdec_as_stack_pop (cx);

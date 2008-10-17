@@ -1340,6 +1340,15 @@ EXTRA_DIST = \
 	equality-7.swf.trace \
 	equality-8.swf \
 	equality-8.swf.trace \
+	equality-nan-5.swf \
+	equality-nan-5.swf.trace \
+	equality-nan-6.swf \
+	equality-nan-6.swf.trace \
+	equality-nan-7.swf \
+	equality-nan-7.swf.trace \
+	equality-nan-8.swf \
+	equality-nan-8.swf.trace \
+	equality-nan.as \
 	equality-old.as \
 	equality-old-5.swf \
 	equality-old-5.swf.trace \

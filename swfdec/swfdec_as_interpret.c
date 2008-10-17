@@ -753,7 +753,7 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   const char *s;
 
   val = swfdec_as_stack_peek (cx, 1);
-  if (val->type == SWFDEC_AS_TYPE_UNDEFINED) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
     s = SWFDEC_AS_STR_undefined;
   } else {
     s = swfdec_as_value_to_string (cx, val);
@@ -1398,7 +1398,7 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
       ro = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (ro)));
     } else if (SWFDEC_IS_MOVIE (lo)) {
       swfdec_as_value_to_primitive (rval);
-      rtype = rval->type;
+      rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
       if (rtype != SWFDEC_AS_TYPE_OBJECT) {
 	cond = FALSE;
 	goto out;
@@ -1406,7 +1406,7 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
       ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
     } else if (SWFDEC_IS_MOVIE (ro)) {
       swfdec_as_value_to_primitive (lval);
-      ltype = lval->type;
+      ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
       if (ltype != SWFDEC_AS_TYPE_OBJECT) {
 	cond = FALSE;
 	goto out;
@@ -1471,8 +1471,8 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 
   rval = swfdec_as_stack_peek (cx, 1);
   lval = swfdec_as_stack_peek (cx, 2);
-  ltype = lval->type;
-  rtype = rval->type;
+  ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
+  rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
   
   /* get objects compared */
   if (ltype == SWFDEC_AS_TYPE_OBJECT && rtype == SWFDEC_AS_TYPE_OBJECT) {
@@ -1484,7 +1484,7 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
       ro = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (ro)));
     } else if (SWFDEC_IS_MOVIE (lo)) {
       swfdec_as_value_to_primitive (rval);
-      rtype = rval->type;
+      rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
       if (rtype != SWFDEC_AS_TYPE_OBJECT) {
 	cond = FALSE;
 	goto out;
@@ -1492,7 +1492,7 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
       ro = SWFDEC_AS_VALUE_GET_OBJECT (rval);
     } else if (SWFDEC_IS_MOVIE (ro)) {
       swfdec_as_value_to_primitive (lval);
-      ltype = lval->type;
+      ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
       if (ltype != SWFDEC_AS_TYPE_OBJECT) {
 	cond = FALSE;
 	goto out;
@@ -1506,13 +1506,13 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   /* if one of the values is an object, call valueOf. 
    * If it's still an object, return FALSE */
   swfdec_as_value_to_primitive (lval);
-  ltype = lval->type;
+  ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
   if (ltype == SWFDEC_AS_TYPE_OBJECT) {
     cond = FALSE;
     goto out;
   }
   swfdec_as_value_to_primitive (rval);
-  rtype = rval->type;
+  rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
   if (rtype == SWFDEC_AS_TYPE_OBJECT) {
     cond = FALSE;
     goto out;
@@ -1570,10 +1570,10 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
   rval = swfdec_as_stack_peek (cx, 1);
   lval = swfdec_as_stack_peek (cx, 2);
 
-  if (rval->type != lval->type) {
+  if (SWFDEC_AS_VALUE_GET_TYPE (rval) != SWFDEC_AS_VALUE_GET_TYPE (lval)) {
     cond = FALSE;
   } else {
-    switch (rval->type) {
+    switch (SWFDEC_AS_VALUE_GET_TYPE (rval)) {
       case SWFDEC_AS_TYPE_UNDEFINED:
       case SWFDEC_AS_TYPE_NULL:
 	cond = TRUE;
@@ -2155,7 +2155,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   const char *type;
 
   val = swfdec_as_stack_peek (cx, 1);
-  switch (val->type) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (val)) {
     case SWFDEC_AS_TYPE_NUMBER:
       type = SWFDEC_AS_STR_number;
       break;

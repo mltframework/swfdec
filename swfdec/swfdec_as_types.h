@@ -66,12 +66,13 @@ struct _SwfdecAsValue {
   } value;
 };
 
-#define SWFDEC_IS_AS_VALUE(val) ((val) != NULL && (val)->type <= SWFDEC_TYPE_AS_OBJECT)
+#define SWFDEC_IS_AS_VALUE(val) ((val) != NULL && SWFDEC_AS_VALUE_GET_TYPE (val) <= SWFDEC_TYPE_AS_OBJECT)
+#define SWFDEC_AS_VALUE_GET_TYPE(val) ((val)->type)
 
-#define SWFDEC_AS_VALUE_IS_UNDEFINED(val) ((val)->type == SWFDEC_AS_TYPE_UNDEFINED)
+#define SWFDEC_AS_VALUE_IS_UNDEFINED(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_UNDEFINED)
 #define SWFDEC_AS_VALUE_SET_UNDEFINED(val) (val)->type = SWFDEC_AS_TYPE_UNDEFINED
 
-#define SWFDEC_AS_VALUE_IS_BOOLEAN(val) ((val)->type == SWFDEC_AS_TYPE_BOOLEAN)
+#define SWFDEC_AS_VALUE_IS_BOOLEAN(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_BOOLEAN)
 #define SWFDEC_AS_VALUE_GET_BOOLEAN(val) ((val)->value.boolean)
 #define SWFDEC_AS_VALUE_SET_BOOLEAN(val,b) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
@@ -86,10 +87,10 @@ struct _SwfdecAsDoubleValue {
   double		number;
 };
 
-#define SWFDEC_AS_VALUE_IS_NUMBER(val) ((val)->type == SWFDEC_AS_TYPE_NUMBER)
+#define SWFDEC_AS_VALUE_IS_NUMBER(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_NUMBER)
 #define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number->number)
 
-#define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_AS_TYPE_STRING)
+#define SWFDEC_AS_VALUE_IS_STRING(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_STRING)
 #define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string)
 #define SWFDEC_AS_VALUE_SET_STRING(val,s) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
@@ -97,10 +98,10 @@ struct _SwfdecAsDoubleValue {
   (__val)->type = SWFDEC_AS_TYPE_STRING; \
 } G_STMT_END
 
-#define SWFDEC_AS_VALUE_IS_NULL(val) ((val)->type == SWFDEC_AS_TYPE_NULL)
+#define SWFDEC_AS_VALUE_IS_NULL(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_NULL)
 #define SWFDEC_AS_VALUE_SET_NULL(val) (val)->type = SWFDEC_AS_TYPE_NULL
 
-#define SWFDEC_AS_VALUE_IS_OBJECT(val) ((val)->type == SWFDEC_AS_TYPE_OBJECT)
+#define SWFDEC_AS_VALUE_IS_OBJECT(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_OBJECT)
 #define SWFDEC_AS_VALUE_GET_OBJECT(val) ((val)->value.object)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
   SwfdecAsValue *__val = (val); \

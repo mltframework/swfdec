@@ -379,7 +379,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), SWFDEC_AS_STR_EMPTY);
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), SWFDEC_AS_STR_EMPTY);
 
-  switch (value->type) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_STRING:
       return SWFDEC_AS_VALUE_GET_STRING (value);
     case SWFDEC_AS_TYPE_UNDEFINED:
@@ -440,7 +440,7 @@ swfdec_as_value_to_debug (const SwfdecAsValue *value)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), NULL);
 
-  switch (value->type) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_STRING:
       return g_shell_quote (SWFDEC_AS_VALUE_GET_STRING (value));
     case SWFDEC_AS_TYPE_UNDEFINED:
@@ -592,7 +592,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), NULL);
 
-  switch (value->type) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_UNDEFINED:
     case SWFDEC_AS_TYPE_NULL:
       return NULL;
@@ -643,7 +643,7 @@ swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value
   g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), FALSE);
 
   /* FIXME: what do we do when called in flash 4? */
-  switch (value->type) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_UNDEFINED:
     case SWFDEC_AS_TYPE_NULL:
       return FALSE;

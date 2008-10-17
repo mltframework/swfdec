@@ -126,7 +126,7 @@ swfdec_as_array_set_length_object (SwfdecAsObject *object, gint32 length)
   if (SWFDEC_IS_AS_ARRAY (object))
     SWFDEC_AS_ARRAY (object)->check_length = FALSE;
 
-  SWFDEC_AS_VALUE_SET_INT (&val, length);
+  swfdec_as_value_set_integer (swfdec_gc_object_get_context (object), &val, length);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_length, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
@@ -150,7 +150,7 @@ swfdec_as_array_set_length (SwfdecAsArray *array, gint32 length)
   g_return_if_fail (SWFDEC_IS_AS_ARRAY (array));
   g_return_if_fail (length >= 0);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, length);
+  swfdec_as_value_set_integer (swfdec_gc_object_get_context (array), &val, length);
   swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (array),
       SWFDEC_AS_STR_length, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
@@ -653,7 +653,7 @@ swfdec_as_array_do_push (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_set_length_object (object, length + argc);
   }
 
-  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_length_as_integer (object));
+  swfdec_as_value_set_integer (cx, ret, swfdec_as_array_length_as_integer (object));
 }
 
 SWFDEC_AS_NATIVE (252, 2, swfdec_as_array_do_pop)
@@ -703,7 +703,7 @@ swfdec_as_array_do_unshift (SwfdecAsContext *cx, SwfdecAsObject *object,
       swfdec_as_array_set_length_object (object, length);
   }
 
-  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_as_array_length (object));
+  swfdec_as_value_set_integer (cx, ret, swfdec_as_array_length (object));
 }
 
 SWFDEC_AS_NATIVE (252, 4, swfdec_as_array_do_shift)
@@ -1201,11 +1201,11 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
 	  break;
       }
       if (i < length - 1) {
-	SWFDEC_AS_VALUE_SET_INT (ret, 0);
+	swfdec_as_value_set_integer (cx, ret, 0);
 	goto done;
       }
     } else if (compare_data.equal_found) {
-      SWFDEC_AS_VALUE_SET_INT (ret, 0);
+      swfdec_as_value_set_integer (cx, ret, 0);
       goto done;
     }
   }
@@ -1228,7 +1228,7 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     var = swfdec_as_integer_to_string (cx, (descending ? length - i - 1 : i));
     if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
-      SWFDEC_AS_VALUE_SET_INT (&val, entry->index_);
+      swfdec_as_value_set_integer (cx, &val, entry->index_);
       swfdec_as_object_set_variable (target, var, &val);
     } else {
       swfdec_as_object_set_variable (target, var, &entry->value);

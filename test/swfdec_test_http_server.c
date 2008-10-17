@@ -162,7 +162,7 @@ swfdec_test_http_server_get_port (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &server, "");
 
-  SWFDEC_AS_VALUE_SET_INT (retval, server->port);
+  swfdec_as_value_set_integer (cx, retval, server->port);
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPServer_getRequest", swfdec_test_http_server_get_request, 0)

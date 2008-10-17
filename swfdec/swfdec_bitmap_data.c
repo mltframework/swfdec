@@ -181,7 +181,7 @@ swfdec_bitmap_data_do_get_width (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? (int) bitmap->width : -1);
+  swfdec_as_value_set_integer (cx, ret, bitmap->surface ? (int) bitmap->width : -1);
 }
 
 SWFDEC_AS_NATIVE (1100, 101, swfdec_bitmap_data_set_width)
@@ -201,7 +201,7 @@ swfdec_bitmap_data_do_get_height (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, bitmap->surface ? (int) bitmap->height : -1);
+  swfdec_as_value_set_integer (cx, ret, bitmap->surface ? (int) bitmap->height : -1);
 }
 
 SWFDEC_AS_NATIVE (1100, 103, swfdec_bitmap_data_set_height)
@@ -223,7 +223,7 @@ swfdec_bitmap_data_get_rectangle (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, -1);
+  swfdec_as_value_set_integer (cx, ret, -1);
   if (bitmap->surface == NULL)
     return;
   
@@ -242,10 +242,10 @@ swfdec_bitmap_data_get_rectangle (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_IS_AS_FUNCTION (o))
     return;
 
-  SWFDEC_AS_VALUE_SET_INT (&args[0], 0);
-  SWFDEC_AS_VALUE_SET_INT (&args[1], 0);
-  SWFDEC_AS_VALUE_SET_INT (&args[2], bitmap->width);
-  SWFDEC_AS_VALUE_SET_INT (&args[3], bitmap->height);
+  swfdec_as_value_set_integer (cx, &args[0], 0);
+  swfdec_as_value_set_integer (cx, &args[1], 0);
+  swfdec_as_value_set_integer (cx, &args[2], bitmap->width);
+  swfdec_as_value_set_integer (cx, &args[3], bitmap->height);
   swfdec_as_object_create (SWFDEC_AS_FUNCTION (o), 4, args, ret);
 }
 
@@ -271,7 +271,7 @@ swfdec_bitmap_data_get_transparent (SwfdecAsContext *cx,
     SWFDEC_AS_VALUE_SET_BOOLEAN (ret, 
 	swfdec_surface_has_alpha (bitmap->surface) ? TRUE : FALSE);
   } else {
-    SWFDEC_AS_VALUE_SET_INT (ret, -1);
+    swfdec_as_value_set_integer (cx, ret, -1);
   }
 }
 
@@ -314,7 +314,7 @@ swfdec_bitmap_data_getPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
   color = swfdec_bitmap_data_get_pixel (bitmap, x, y);
   color = SWFDEC_COLOR_UNMULTIPLY (color);
   color &= SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0);
-  SWFDEC_AS_VALUE_SET_INT (ret, color);
+  swfdec_as_value_set_integer (cx, ret, color);
 }
 
 SWFDEC_AS_NATIVE (1100, 2, swfdec_bitmap_data_setPixel)
@@ -561,7 +561,7 @@ swfdec_bitmap_data_getPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   color = swfdec_bitmap_data_get_pixel (bitmap, x, y);
   color = SWFDEC_COLOR_UNMULTIPLY (color);
-  SWFDEC_AS_VALUE_SET_INT (ret, color);
+  swfdec_as_value_set_integer (cx, ret, color);
 }
 
 SWFDEC_AS_NATIVE (1100, 11, swfdec_bitmap_data_setPixel32)

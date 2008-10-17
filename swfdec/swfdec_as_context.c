@@ -295,12 +295,43 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugge
 static void
 swfdec_as_context_collect (SwfdecAsContext *context)
 {
-  SWFDEC_INFO (">> collecting garbage");
+  SwfdecAsDoubleValue *prev, *cur;
+
   /* NB: This functions is called without GC from swfdec_as_context_dispose */
+  SWFDEC_INFO (">> collecting garbage");
+  
   g_hash_table_foreach_remove (context->strings, 
     swfdec_as_context_remove_strings, context);
   g_hash_table_foreach_remove (context->objects, 
     swfdec_as_context_remove_objects, context->debugger);
+
+  prev = NULL;
+  cur = context->numbers;
+  for (;;) {
+    while (cur) {
+      gsize next = GPOINTER_TO_SIZE (cur->next);
+      if (next & SWFDEC_AS_GC_MARK) {
+	cur->next = GSIZE_TO_POINTER (next & ~SWFDEC_AS_GC_MARK);
+	break;
+      }
+      g_slice_free (SwfdecAsDoubleValue, cur);
+      cur = GSIZE_TO_POINTER (next);
+    }
+    if (prev)
+      prev->next = cur;
+    else
+      context->numbers = cur;
+    prev = cur;
+    if (prev == NULL)
+      break;
+    cur = cur->next;
+  }
+  prev = context->numbers;
+  while (prev) {
+    g_assert ((GPOINTER_TO_SIZE (prev) & 3) == 0);
+    prev = prev->next;
+  }
+
   SWFDEC_INFO (">> done collecting garbage");
 }
 
@@ -340,6 +371,9 @@ swfdec_as_value_mark (SwfdecAsValue *value)
     swfdec_gc_object_mark (SWFDEC_AS_VALUE_GET_OBJECT (value));
   } else if (SWFDEC_AS_VALUE_IS_STRING (value)) {
     swfdec_as_string_mark (SWFDEC_AS_VALUE_GET_STRING (value));
+  } else if (SWFDEC_AS_VALUE_IS_NUMBER (value)) {
+    value->value.number->next = GSIZE_TO_POINTER (
+	GPOINTER_TO_SIZE (value->value.number->next) | SWFDEC_AS_GC_MARK);
   }
 }
 
@@ -1059,14 +1093,14 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (0, NULL, "s|i", &s, &radix);
 
   if (argc >= 2 && (radix < 2 || radix > 36)) {
-    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+    swfdec_as_value_set_number (cx, retval, NAN);
     return;
   }
 
   // special case, don't allow sign in front of the 0x
   if ((s[0] == '-' || s[0] == '+') && s[1] == '0' &&
       (s[2] == 'x' || s[2] == 'X')) {
-    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+    swfdec_as_value_set_number (cx, retval, NAN);
     return;
   }
 
@@ -1092,7 +1126,7 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
     if (skip != s && (skip[0] == '-' || skip[0] == '+'))
       skip++;
     if (skip != s && skip[0] == '0' && (skip[1] == 'x' || skip[1] == 'X')) {
-      SWFDEC_AS_VALUE_SET_NUMBER (retval, 0);
+      swfdec_as_value_set_number (cx, retval, 0);
       return;
     }
   }
@@ -1100,14 +1134,14 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   i = g_ascii_strtoll (s, &tail, radix);
 
   if (tail == s) {
-    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+    swfdec_as_value_set_number (cx, retval, NAN);
     return;
   }
 
   if (i > G_MAXINT32 || i < G_MININT32) {
-    SWFDEC_AS_VALUE_SET_NUMBER (retval, i);
+    swfdec_as_value_set_number (cx, retval, i);
   } else {
-    SWFDEC_AS_VALUE_SET_INT (retval, i);
+    swfdec_as_value_set_integer (cx, retval, i);
   }
 }
 
@@ -1132,9 +1166,9 @@ swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
   d = g_ascii_strtod (s, &tail);
 
   if (tail == s) {
-    SWFDEC_AS_VALUE_SET_NUMBER (retval, NAN);
+    swfdec_as_value_set_number (cx, retval, NAN);
   } else {
-    SWFDEC_AS_VALUE_SET_NUMBER (retval, d);
+    swfdec_as_value_set_number (cx, retval, d);
   }
 
   g_free (s);
@@ -1145,9 +1179,9 @@ swfdec_as_context_init_global (SwfdecAsContext *context)
 {
   SwfdecAsValue val;
 
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, NAN);
+  swfdec_as_value_set_number (context, &val, NAN);
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_NaN, &val);
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, HUGE_VAL);
+  swfdec_as_value_set_number (context, &val, HUGE_VAL);
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_Infinity, &val);
 }
 

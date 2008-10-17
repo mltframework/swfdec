@@ -42,11 +42,11 @@ swfdec_as_math_ ## name (SwfdecAsContext *cx, SwfdecAsObject *object, \
 { \
   double d, unused; \
 \
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN); \
+  swfdec_as_value_set_number (cx, ret, NAN); \
   SWFDEC_AS_CHECK (0, NULL, "n|n", &d, &unused); \
 \
   d = name (d); \
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, d); \
+  swfdec_as_value_set_number (cx, ret, d); \
 }
 
 SWFDEC_AS_NATIVE (200, 16, swfdec_as_math_acos)
@@ -79,10 +79,10 @@ swfdec_as_math_abs (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   double d, unused;
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+  swfdec_as_value_set_number (cx, ret, NAN);
   SWFDEC_AS_CHECK (0, NULL, "n|n", &d, &unused);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, fabs (d));
+  swfdec_as_value_set_number (cx, ret, fabs (d));
 }
 
 SWFDEC_AS_NATIVE (200, 5, swfdec_as_math_atan2)
@@ -92,10 +92,10 @@ swfdec_as_math_atan2 (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   double x, y;
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+  swfdec_as_value_set_number (cx, ret, NAN);
   SWFDEC_AS_CHECK (0, NULL, "nn", &y, &x);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, atan2 (y, x));
+  swfdec_as_value_set_number (cx, ret, atan2 (y, x));
 }
 
 SWFDEC_AS_NATIVE (200, 2, swfdec_as_math_max)
@@ -106,13 +106,13 @@ swfdec_as_math_max (SwfdecAsContext *cx, SwfdecAsObject *object,
   double x, y;
 
   if (argc == 0) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, -HUGE_VAL);
+    swfdec_as_value_set_number (cx, ret, -HUGE_VAL);
   } else {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+    swfdec_as_value_set_number (cx, ret, NAN);
   }
   SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, isnan (x) || isnan (y) ? NAN : MAX (x, y));
+  swfdec_as_value_set_number (cx, ret, isnan (x) || isnan (y) ? NAN : MAX (x, y));
 }
 
 SWFDEC_AS_NATIVE (200, 1, swfdec_as_math_min)
@@ -123,13 +123,13 @@ swfdec_as_math_min (SwfdecAsContext *cx, SwfdecAsObject *object,
   double x, y;
 
   if (argc == 0) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, HUGE_VAL);
+    swfdec_as_value_set_number (cx, ret, HUGE_VAL);
   } else {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+    swfdec_as_value_set_number (cx, ret, NAN);
   }
   SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, isnan (x) || isnan (y) ? NAN : MIN (x, y));
+  swfdec_as_value_set_number (cx, ret, isnan (x) || isnan (y) ? NAN : MIN (x, y));
 }
 
 SWFDEC_AS_NATIVE (200, 17, swfdec_as_math_pow)
@@ -139,10 +139,10 @@ swfdec_as_math_pow (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   double x, y;
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+  swfdec_as_value_set_number (cx, ret, NAN);
   SWFDEC_AS_CHECK (0, NULL, "nn", &x, &y);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, isfinite (x) ? pow (x, y): NAN);
+  swfdec_as_value_set_number (cx, ret, isfinite (x) ? pow (x, y): NAN);
 }
 
 SWFDEC_AS_NATIVE (200, 11, swfdec_as_math_random)
@@ -152,10 +152,10 @@ swfdec_as_math_random (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   double unused, unused2;
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+  swfdec_as_value_set_number (cx, ret, NAN);
   SWFDEC_AS_CHECK (0, NULL, "|nn", &unused, &unused2);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, g_rand_double (cx->rand));
+  swfdec_as_value_set_number (cx, ret, g_rand_double (cx->rand));
 }
 
 SWFDEC_AS_NATIVE (200, 10, swfdec_as_math_round)
@@ -165,8 +165,8 @@ swfdec_as_math_round (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   double d, unused;
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+  swfdec_as_value_set_number (cx, ret, NAN);
   SWFDEC_AS_CHECK (0, NULL, "n|n", &d, &unused);
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, floor (d + 0.5));
+  swfdec_as_value_set_number (cx, ret, floor (d + 0.5));
 }

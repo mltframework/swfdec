@@ -48,16 +48,18 @@ static void
 swfdec_load_object_on_progress (SwfdecAsObject *target, glong size,
     glong loaded)
 {
+  SwfdecAsContext *cx;
   SwfdecAsValue val;
 
-  SWFDEC_AS_VALUE_SET_NUMBER (&val, loaded);
+  cx = swfdec_gc_object_get_context (target);
+  swfdec_as_value_set_number (cx, &val, loaded);
   swfdec_as_object_set_variable_and_flags (target, SWFDEC_AS_STR__bytesLoaded,
       &val, SWFDEC_AS_VARIABLE_HIDDEN);
 
   if (size >= 0) {
-    SWFDEC_AS_VALUE_SET_NUMBER (&val, size);
+    swfdec_as_value_set_number (cx, &val, size);
   } else {
-    SWFDEC_AS_VALUE_SET_NUMBER (&val, loaded);
+    swfdec_as_value_set_number (cx, &val, loaded);
   }
   swfdec_as_object_set_variable_and_flags (target, SWFDEC_AS_STR__bytesTotal,
       &val, SWFDEC_AS_VARIABLE_HIDDEN);
@@ -77,7 +79,7 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   swfdec_load_object_create (object, url, NULL, 0, NULL, NULL,
       swfdec_load_object_on_progress, swfdec_load_object_on_finish);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, 0);
+  swfdec_as_value_set_integer (cx, &val, 0);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__bytesLoaded,
       &val, SWFDEC_AS_VARIABLE_HIDDEN);
   SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
@@ -245,7 +247,7 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
       header_values, swfdec_load_object_on_progress,
       swfdec_load_object_on_finish);
 
-  SWFDEC_AS_VALUE_SET_INT (&val, 0);
+  swfdec_as_value_set_integer (cx, &val, 0);
   swfdec_as_object_set_variable_and_flags (target, SWFDEC_AS_STR__bytesLoaded,
       &val, SWFDEC_AS_VARIABLE_HIDDEN);
   SWFDEC_AS_VALUE_SET_UNDEFINED (&val);

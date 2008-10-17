@@ -172,19 +172,19 @@ swfdec_system_manufacturer (SwfdecPlayer *player, SwfdecAsValue *ret)
 static void
 swfdec_system_screen_width (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->system->screen_width);
+  swfdec_as_value_set_integer (SWFDEC_AS_CONTEXT (player), ret, player->priv->system->screen_width);
 }
 
 static void
 swfdec_system_screen_height (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->system->screen_height);
+  swfdec_as_value_set_integer (SWFDEC_AS_CONTEXT (player), ret, player->priv->system->screen_height);
 }
 
 static void
 swfdec_system_screen_dpi (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_INT (ret, player->priv->system->dpi);
+  swfdec_as_value_set_integer (SWFDEC_AS_CONTEXT (player), ret, player->priv->system->dpi);
 }
 
 static void
@@ -197,7 +197,7 @@ swfdec_system_screen_color (SwfdecPlayer *player, SwfdecAsValue *ret)
 static void
 swfdec_system_screen_par (SwfdecPlayer *player, SwfdecAsValue *ret)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, player->priv->system->par);
+  swfdec_as_value_set_number (SWFDEC_AS_CONTEXT (player), ret, player->priv->system->par);
 }
 
 static void

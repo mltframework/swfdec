@@ -43,7 +43,7 @@ mc_x_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0);
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, d);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, d);
 }
 
 static void
@@ -68,7 +68,7 @@ mc_y_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0);
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, d);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, d);
 }
 
 static void
@@ -89,7 +89,7 @@ mc_y_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 static void
 mc_xscale_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->xscale);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, movie->xscale);
 }
 
 static void
@@ -113,7 +113,7 @@ mc_xscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 static void
 mc_yscale_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->yscale);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, movie->yscale);
 }
 
 static void
@@ -149,7 +149,7 @@ mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 static void
 mc_alpha_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (rval,
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval,
       movie->color_transform.aa * 100.0 / 256.0);
 }
 
@@ -197,7 +197,7 @@ mc_width_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   swfdec_movie_update (movie);
   d = rint (movie->extents.x1 - movie->extents.x0);
   d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) d);
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, d);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, d);
 }
 
 static void
@@ -239,7 +239,7 @@ mc_height_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   swfdec_movie_update (movie);
   d = rint (movie->extents.y1 - movie->extents.y0);
   d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) d);
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, d);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, d);
 }
 
 static void
@@ -276,7 +276,7 @@ mc_height_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 static void
 mc_rotation_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, movie->rotation);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, movie->rotation);
 }
 
 static void
@@ -315,7 +315,7 @@ mc_xmouse_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 
   swfdec_movie_get_mouse (movie, &x, &y);
   x = SWFDEC_TWIPS_TO_DOUBLE (rint (x));
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, x);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, x);
 }
 
 static void
@@ -325,7 +325,7 @@ mc_ymouse_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 
   swfdec_movie_get_mouse (movie, &x, &y);
   y = SWFDEC_TWIPS_TO_DOUBLE (rint (y));
-  SWFDEC_AS_VALUE_SET_NUMBER (rval, y);
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, y);
 }
 
 static void
@@ -391,13 +391,13 @@ mc_focusrect_get (SwfdecMovie *movie, SwfdecAsValue *rval)
       if (cx->version > 5)
 	SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
       else
-	SWFDEC_AS_VALUE_SET_INT (rval, 1);
+	swfdec_as_value_set_integer (cx, rval, 1);
       break;
     case SWFDEC_FLASH_NO:
       if (cx->version > 5)
 	SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
       else
-	SWFDEC_AS_VALUE_SET_INT (rval, 0);
+	swfdec_as_value_set_integer (cx, rval, 0);
       break;
     case SWFDEC_FLASH_MAYBE:
       SWFDEC_AS_VALUE_SET_NULL (rval);

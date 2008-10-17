@@ -113,7 +113,7 @@ swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc == 2) {
     int offset = swfdec_as_value_to_integer (cx, &argv[1]);
     if (offset < 0) {
-      SWFDEC_AS_VALUE_SET_INT (ret, -1);
+      swfdec_as_value_set_integer (cx, ret, -1);
       return;
     }
     len = g_utf8_offset_to_pointer (string, offset + 1) - string;
@@ -122,9 +122,9 @@ swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   s = g_strrstr_len (string, len, s);
   if (s) {
-    SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_pointer_to_offset (string, s));
+    swfdec_as_value_set_integer (cx, ret, g_utf8_pointer_to_offset (string, s));
   } else {
-    SWFDEC_AS_VALUE_SET_INT (ret, -1);
+    swfdec_as_value_set_integer (cx, ret, -1);
   }
 }
 
@@ -153,7 +153,7 @@ swfdec_as_string_indexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     i = g_utf8_pointer_to_offset (string, t);
   }
 
-  SWFDEC_AS_VALUE_SET_INT (ret, i);
+  swfdec_as_value_set_integer (cx, ret, i);
 }
 
 SWFDEC_AS_NATIVE (251, 5, swfdec_as_string_charAt)
@@ -198,20 +198,20 @@ swfdec_as_string_charCodeAt (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   i = swfdec_as_value_to_integer (cx, &argv[0]);
   if (i < 0) {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+    swfdec_as_value_set_number (cx, ret, NAN);
     return;
   }
   s = swfdec_as_str_nth_char (string, i);
   if (*s == 0) {
     if (cx->version > 5) {
-      SWFDEC_AS_VALUE_SET_NUMBER (ret, NAN);
+      swfdec_as_value_set_number (cx, ret, NAN);
     } else {
-      SWFDEC_AS_VALUE_SET_INT (ret, 0);
+      swfdec_as_value_set_integer (cx, ret, 0);
     }
     return;
   }
   c = g_utf8_get_char (s);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, c);
+  swfdec_as_value_set_number (cx, ret, c);
 }
 
 static void
@@ -313,7 +313,7 @@ swfdec_as_string_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     SwfdecAsValue val;
 
     string->string = s;
-    SWFDEC_AS_VALUE_SET_INT (&val, g_utf8_strlen (string->string, -1));
+    swfdec_as_value_set_integer (cx, &val, g_utf8_strlen (string->string, -1));
     swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_length,
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);

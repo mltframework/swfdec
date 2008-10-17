@@ -437,6 +437,6 @@ swfdec_test_test_get_rate (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   if (!test->plugin_loaded)
     return;
   
-  SWFDEC_AS_VALUE_SET_NUMBER (retval, test->plugin.rate / 256.0);
+  swfdec_as_value_set_number (cx, retval, test->plugin.rate / 256.0);
 }
 

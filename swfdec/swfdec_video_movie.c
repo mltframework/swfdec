@@ -107,8 +107,10 @@ swfdec_video_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 {
   guint version = swfdec_gc_object_get_context (object)->version;
   SwfdecVideoMovie *video;
+  SwfdecAsContext *cx;
 
   video = SWFDEC_VIDEO_MOVIE (object);
+  cx = swfdec_gc_object_get_context (video);
 
   if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_width) == 0) {
     guint w;
@@ -117,7 +119,7 @@ swfdec_video_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     } else {
       w = 0;
     }
-    SWFDEC_AS_VALUE_SET_INT (val, w);
+    swfdec_as_value_set_integer (cx, val, w);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_height) == 0) {
     guint h;
@@ -126,11 +128,11 @@ swfdec_video_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
     } else {
       h = 0;
     }
-    SWFDEC_AS_VALUE_SET_INT (val, h);
+    swfdec_as_value_set_integer (cx, val, h);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_deblocking) == 0) {
     SWFDEC_STUB ("Video.deblocking (get)");
-    SWFDEC_AS_VALUE_SET_NUMBER (val, 0);
+    swfdec_as_value_set_number (cx, val, 0);
     return TRUE;
   } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_smoothing) == 0) {
     SWFDEC_STUB ("Video.smoothing (get)");

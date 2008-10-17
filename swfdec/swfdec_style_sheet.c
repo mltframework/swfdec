@@ -304,7 +304,7 @@ swfdec_style_sheet_parseColor (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (*tail != '\0')
     return;
 
-  SWFDEC_AS_VALUE_SET_INT (rval, result);
+  swfdec_as_value_set_integer (cx, rval, result);
 }
 
 SWFDEC_AS_CONSTRUCTOR (113, 0, swfdec_style_sheet_construct, swfdec_style_sheet_get_type)

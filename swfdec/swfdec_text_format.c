@@ -203,7 +203,7 @@ swfdec_text_format_get_integer (SwfdecAsObject *object,
     return;
   }
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+  swfdec_as_value_set_number (swfdec_gc_object_get_context (object), ret,
       (double)G_STRUCT_MEMBER (int, format, property_offsets[property]));
 }
 
@@ -398,7 +398,7 @@ swfdec_text_format_do_get_color (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, format->attr.color);
+  swfdec_as_value_set_number (cx, ret, format->attr.color);
 }
 
 static void
@@ -588,7 +588,7 @@ swfdec_text_format_do_get_letter_spacing (SwfdecAsContext *cx,
     return;
   }
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, format->attr.letter_spacing);
+  swfdec_as_value_set_number (cx, ret, format->attr.letter_spacing);
 }
 
 static void
@@ -676,7 +676,7 @@ swfdec_text_format_do_get_tab_stops (SwfdecAsContext *cx,
 
   array = swfdec_as_array_new (cx);
   for (i = 0; i < format->attr.n_tab_stops; i++) {
-    SWFDEC_AS_VALUE_SET_INT (&val, format->attr.tab_stops[i]);
+    swfdec_as_value_set_integer (cx, &val, format->attr.tab_stops[i]);
     swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (ret, array);
@@ -829,25 +829,25 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
   layout = swfdec_text_layout_new (buffer);
   
   i = swfdec_text_layout_get_width (layout);
-  SWFDEC_AS_VALUE_SET_INT (&val, i);
+  swfdec_as_value_set_integer (cx, &val, i);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_width, &val);
   if (i)
     i += 4;
-  SWFDEC_AS_VALUE_SET_INT (&val, i);
+  swfdec_as_value_set_integer (cx, &val, i);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_textFieldWidth, &val);
 
   i = swfdec_text_layout_get_height (layout);
-  SWFDEC_AS_VALUE_SET_INT (&val, i);
+  swfdec_as_value_set_integer (cx, &val, i);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_height, &val);
   if (i)
     i += 4;
-  SWFDEC_AS_VALUE_SET_INT (&val, i);
+  swfdec_as_value_set_integer (cx, &val, i);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_textFieldHeight, &val);
 
   swfdec_text_layout_get_ascent_descent (layout, &i, &j);
-  SWFDEC_AS_VALUE_SET_INT (&val, i);
+  swfdec_as_value_set_integer (cx, &val, i);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_ascent, &val);
-  SWFDEC_AS_VALUE_SET_INT (&val, j);
+  swfdec_as_value_set_integer (cx, &val, j);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_descent, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, obj);

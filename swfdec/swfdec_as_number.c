@@ -63,7 +63,7 @@ swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     num->number = d;
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {
-    SWFDEC_AS_VALUE_SET_NUMBER (ret, d);
+    swfdec_as_value_set_number (cx, ret, d);
   }
 }
 
@@ -125,7 +125,7 @@ swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (radix == 10 || radix < 2 || radix > 36 || isinf (num->number) ||
       isnan (num->number)) {
-    SWFDEC_AS_VALUE_SET_NUMBER (&val, num->number);
+    swfdec_as_value_set_number (cx, &val, num->number);
     s = swfdec_as_value_to_string (cx, &val);
   } else {
     s = swfdec_as_number_toStringRadix (cx, num->number, radix);
@@ -144,7 +144,7 @@ swfdec_as_number_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   num = SWFDEC_AS_NUMBER (object);
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, num->number);
+  swfdec_as_value_set_number (cx, ret, num->number);
 }
 
 // only available as ASnative

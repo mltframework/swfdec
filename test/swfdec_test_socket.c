@@ -224,7 +224,7 @@ swfdec_test_socket_new (SwfdecTestTest *test, SwfdecTestPluginSocket *plugin)
       swfdec_as_context_get_string (cx, plugin->host));
   swfdec_as_object_set_variable (new, 
       swfdec_as_context_get_string (cx, "host"), &val);
-  SWFDEC_AS_VALUE_SET_INT (&val, plugin->port);
+  swfdec_as_value_set_integer (cx, &val, plugin->port);
   swfdec_as_object_set_variable (new, 
       swfdec_as_context_get_string (cx, "port"), &val);
 

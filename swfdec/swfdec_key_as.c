@@ -34,7 +34,7 @@ swfdec_key_getAscii (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  SWFDEC_AS_VALUE_SET_INT (retval, player->priv->last_character);
+  swfdec_as_value_set_integer (cx, retval, player->priv->last_character);
 }
 
 SWFDEC_AS_NATIVE (800, 1, swfdec_key_getCode)
@@ -44,7 +44,7 @@ swfdec_key_getCode (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecPlayer *player = SWFDEC_PLAYER (cx);
 
-  SWFDEC_AS_VALUE_SET_INT (retval, player->priv->last_keycode);
+  swfdec_as_value_set_integer (cx, retval, player->priv->last_keycode);
 }
 
 SWFDEC_AS_NATIVE (800, 2, swfdec_key_isDown)

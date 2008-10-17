@@ -39,7 +39,7 @@ swfdec_amf_parse_boolean (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsVa
 static gboolean
 swfdec_amf_parse_number (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_bits_get_bdouble (bits));
+  swfdec_as_value_set_number (context, val, swfdec_bits_get_bdouble (bits));
   return TRUE;
 }
 

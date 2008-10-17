@@ -265,7 +265,7 @@ swfdec_test_http_request_get_statusCode (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_HTTP_REQUEST, &request, "");
 
-  SWFDEC_AS_VALUE_SET_INT (retval, request->message->status_code);
+  swfdec_as_value_set_integer (cx, retval, request->message->status_code);
 }
 
 SWFDEC_TEST_FUNCTION ("HTTPRequest_set_statusCode", swfdec_test_http_request_set_statusCode, 0)

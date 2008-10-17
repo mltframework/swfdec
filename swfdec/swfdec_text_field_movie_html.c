@@ -116,6 +116,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
 {
   SwfdecAsValue val;
   SwfdecAsObject *object;
+  SwfdecAsContext *cx;
 
   g_return_if_fail (data != NULL);
   g_return_if_fail (tag != NULL);
@@ -128,8 +129,9 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
     return;
 
   object = SWFDEC_AS_OBJECT (tag->format);
+  cx = swfdec_gc_object_get_context (object);
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
-	swfdec_gc_object_get_context (object), g_strndup (value, value_length)));
+	cx, g_strndup (value, value_length)));
 
   if (tag->name_length == 10 && !g_strncasecmp (tag->name, "textformat", 10))
   {
@@ -177,7 +179,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
       SwfdecAsValue val_number;
 
       if (value_length != 7 || *value != '#') {
-	SWFDEC_AS_VALUE_SET_NUMBER (&val_number, 0);
+	swfdec_as_value_set_number (cx, &val_number, 0);
       } else {
 	int number;
 	char *tail;
@@ -185,7 +187,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
 	number = g_ascii_strtoll (value + 1, &tail, 16);
 	if (tail != value + 7)
 	  number = 0;
-	SWFDEC_AS_VALUE_SET_NUMBER (&val_number, number);
+	swfdec_as_value_set_number (cx, &val_number, number);
       }
 
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_color, &val_number);

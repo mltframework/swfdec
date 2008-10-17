@@ -182,7 +182,7 @@ swfdec_text_field_movie_get_length (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, g_utf8_strlen (swfdec_text_buffer_get_text (text->text), -1));
+  swfdec_as_value_set_integer (cx, ret, g_utf8_strlen (swfdec_text_buffer_get_text (text->text), -1));
 }
 
 /*
@@ -225,7 +225,7 @@ swfdec_text_field_movie_get_maxChars (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   if (text->max_chars != 0) {
-    SWFDEC_AS_VALUE_SET_INT (ret, text->max_chars);
+    swfdec_as_value_set_integer (cx, ret, text->max_chars);
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
   }
@@ -433,7 +433,7 @@ swfdec_text_field_movie_get_textHeight (SwfdecAsContext *cx,
 
   swfdec_movie_update (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_update_layout (text);
-  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_height * 
+  swfdec_as_value_set_integer (cx, ret, floor (text->layout_height * 
 	text->from_layout.yy / SWFDEC_TWIPS_SCALE_FACTOR));
 }
 
@@ -448,7 +448,7 @@ swfdec_text_field_movie_get_textWidth (SwfdecAsContext *cx,
 
   swfdec_movie_update (SWFDEC_MOVIE (text));
   swfdec_text_field_movie_update_layout (text);
-  SWFDEC_AS_VALUE_SET_INT (ret, floor (text->layout_width *
+  swfdec_as_value_set_integer (cx, ret, floor (text->layout_width *
 	text->from_layout.xx / SWFDEC_TWIPS_SCALE_FACTOR));
 }
 
@@ -494,7 +494,7 @@ swfdec_text_field_movie_get_backgroundColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+  swfdec_as_value_set_number (cx, ret,
       SWFDEC_COLOR_RED (text->background_color) << 16 |
       SWFDEC_COLOR_GREEN (text->background_color) << 8 |
       SWFDEC_COLOR_BLUE (text->background_color));
@@ -558,7 +558,7 @@ swfdec_text_field_movie_get_borderColor (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret,
+  swfdec_as_value_set_number (cx, ret,
       SWFDEC_COLOR_RED (text->border_color) << 16 |
       SWFDEC_COLOR_GREEN (text->border_color) << 8 |
       SWFDEC_COLOR_BLUE (text->border_color));
@@ -594,7 +594,7 @@ swfdec_text_field_movie_get_bottomScroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll + text->lines_visible);
+  swfdec_as_value_set_number (cx, ret, text->scroll + text->lines_visible);
 }
 
 static void
@@ -606,7 +606,7 @@ swfdec_text_field_movie_do_get_hscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->hscroll);
+  swfdec_as_value_set_number (cx, ret, text->hscroll);
 }
 
 static void
@@ -636,7 +636,7 @@ swfdec_text_field_movie_get_maxhscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_INT (ret, swfdec_text_field_movie_get_hscroll_max (text));
+  swfdec_as_value_set_integer (cx, ret, swfdec_text_field_movie_get_hscroll_max (text));
 }
 
 static void
@@ -648,7 +648,7 @@ swfdec_text_field_movie_get_maxscroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll_max + 1);
+  swfdec_as_value_set_number (cx, ret, text->scroll_max + 1);
 }
 
 static void
@@ -687,7 +687,7 @@ swfdec_text_field_movie_do_get_scroll (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, text->scroll + 1);
+  swfdec_as_value_set_number (cx, ret, text->scroll + 1);
 }
 
 static void
@@ -942,7 +942,7 @@ swfdec_text_field_movie_get_textColor (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, 
+  swfdec_as_value_set_number (cx, ret, 
       swfdec_text_buffer_get_default_attributes (text->text)->color);
 }
 
@@ -1308,7 +1308,7 @@ swfdec_text_field_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  SWFDEC_AS_VALUE_SET_INT (rval, SWFDEC_MOVIE (text)->depth);
+  swfdec_as_value_set_integer (cx, rval, SWFDEC_MOVIE (text)->depth);
 }
 
 SWFDEC_AS_NATIVE (104, 103, swfdec_text_field_movie_removeTextField)

@@ -858,6 +858,7 @@ swfdec_text_field_movie_property_get (SwfdecMovie *movie, guint prop_id,
     SwfdecAsValue *val)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (text);
   double d;
 
   switch (prop_id) {
@@ -865,13 +866,13 @@ swfdec_text_field_movie_property_get (SwfdecMovie *movie, guint prop_id,
       swfdec_text_field_movie_autosize (text);
       swfdec_movie_update (movie);
       d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0 + text->extents.x0);
-      SWFDEC_AS_VALUE_SET_NUMBER (val, d);
+      swfdec_as_value_set_number (cx, val, d);
       return;
     case SWFDEC_MOVIE_PROPERTY_Y:
       swfdec_text_field_movie_autosize (text);
       swfdec_movie_update (movie);
       d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0 + text->extents.y0);
-      SWFDEC_AS_VALUE_SET_NUMBER (val, d);
+      swfdec_as_value_set_number (cx, val, d);
       return;
     case SWFDEC_MOVIE_PROPERTY_WIDTH:
     case SWFDEC_MOVIE_PROPERTY_HEIGHT:

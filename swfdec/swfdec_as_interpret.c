@@ -328,7 +328,7 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	  break;
 	}
       case 1: /* float */
-	SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (cx), 
+	swfdec_as_value_set_number (cx, swfdec_as_stack_push (cx), 
 	    swfdec_bits_get_float (&bits));
 	break;
       case 2: /* null */
@@ -353,11 +353,11 @@ swfdec_action_push (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 	    swfdec_bits_get_u8 (&bits) ? TRUE : FALSE);
 	break;
       case 6: /* double */
-	SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (cx), 
+	swfdec_as_value_set_number (cx, swfdec_as_stack_push (cx), 
 	    swfdec_bits_get_double (&bits));
 	break;
       case 7: /* 32bit int */
-	SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_push (cx), 
+	swfdec_as_value_set_integer (cx, swfdec_as_stack_push (cx), 
 	    swfdec_bits_get_s32 (&bits));
 	break;
       case 8: /* 8bit ConstantPool address */
@@ -923,7 +923,7 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
       break;
   }
   swfdec_as_stack_pop (cx);
-  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1), l);
+  swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), l);
 }
 
 static void
@@ -974,7 +974,7 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
     d2 = swfdec_as_value_to_number (cx, rval);
     d += d2;
     swfdec_as_stack_pop (cx);
-    SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1), d);
+    swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), d);
   }
 }
 
@@ -1050,7 +1050,7 @@ swfdec_action_not (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
 {
   if (cx->version <= 4) {
     double d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1));
-    SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1), d == 0 ? 1 : 0);
+    swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), d == 0 ? 1 : 0);
   } else {
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), 
 	!swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1)));
@@ -1090,7 +1090,7 @@ swfdec_action_decrement (SwfdecAsContext *cx, guint action, const guint8 *data, 
   SwfdecAsValue *val;
 
   val = swfdec_as_stack_peek (cx, 1);
-  SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_as_value_to_number (cx, val) - 1);
+  swfdec_as_value_set_number (cx, val, swfdec_as_value_to_number (cx, val) - 1);
 }
 
 static void
@@ -1099,7 +1099,7 @@ swfdec_action_increment (SwfdecAsContext *cx, guint action, const guint8 *data, 
   SwfdecAsValue *val;
 
   val = swfdec_as_stack_peek (cx, 1);
-  SWFDEC_AS_VALUE_SET_NUMBER (val, swfdec_as_value_to_number (cx, val) + 1);
+  swfdec_as_value_set_number (cx, val, swfdec_as_value_to_number (cx, val) + 1);
 }
 
 static void
@@ -1269,9 +1269,9 @@ swfdec_action_random_number (SwfdecAsContext *cx, guint action, const guint8 *da
   max = swfdec_as_value_to_integer (cx, val);
   
   if (max <= 0)
-    SWFDEC_AS_VALUE_SET_NUMBER (val, 0);
+    swfdec_as_value_set_number (cx, val, 0);
   else
-    SWFDEC_AS_VALUE_SET_NUMBER (val, g_rand_int_range (cx->rand, 0, max));
+    swfdec_as_value_set_number (cx, val, g_rand_int_range (cx->rand, 0, max));
 }
 
 static void
@@ -1295,7 +1295,7 @@ swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data
   }
   swfdec_as_stack_pop (cx);
   if (cx->version < 5) {
-    SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1), cond ? 1 : 0);
+    swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), cond ? 1 : 0);
   } else {
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), cond);
   }
@@ -1336,7 +1336,7 @@ swfdec_action_string_length (SwfdecAsContext *cx, guint action, const guint8 *da
 
   v = swfdec_as_stack_peek (cx, 1);
   s = swfdec_as_value_to_string (cx, v);
-  SWFDEC_AS_VALUE_SET_INT (v, g_utf8_strlen (s, -1));  
+  swfdec_as_value_set_integer (cx, v, g_utf8_strlen (s, -1));  
 }
 
 static void
@@ -1364,7 +1364,7 @@ swfdec_action_string_compare (SwfdecAsContext *cx, guint action, const guint8 *d
   }
   swfdec_as_stack_pop (cx);
   if (cx->version < 5) {
-    SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1), cond ? 1 : 0);
+    swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), cond ? 1 : 0);
   } else {
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), cond);
   }
@@ -1813,7 +1813,7 @@ swfdec_action_init_array (SwfdecAsContext *cx, guint action, const guint8 *data,
   }
   if (i != n) {
     SwfdecAsValue val;
-    SWFDEC_AS_VALUE_SET_INT (&val, n);
+    swfdec_as_value_set_integer (cx, &val, n);
     swfdec_as_object_set_variable (array, SWFDEC_AS_STR_length, &val);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (cx), array);
@@ -1969,7 +1969,7 @@ swfdec_action_bitwise (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   }
 
   swfdec_as_stack_pop (cx);
-  SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_peek (cx, 1), a);
+  swfdec_as_value_set_integer (cx, swfdec_as_stack_peek (cx, 1), a);
 }
 
 static void
@@ -1996,7 +1996,7 @@ swfdec_action_shift (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   }
 
   swfdec_as_stack_pop (cx);
-  SWFDEC_AS_VALUE_SET_INT (swfdec_as_stack_peek (cx, 1), value);
+  swfdec_as_value_set_integer (cx, swfdec_as_stack_peek (cx, 1), value);
 }
 
 static void
@@ -2004,7 +2004,7 @@ swfdec_action_to_integer (SwfdecAsContext *cx, guint action, const guint8 *data,
 {
   SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
 
-  SWFDEC_AS_VALUE_SET_INT (val, swfdec_as_value_to_integer (cx, val));
+  swfdec_as_value_set_integer (cx, val, swfdec_as_value_to_integer (cx, val));
 }
 
 static void
@@ -2121,7 +2121,7 @@ swfdec_action_modulo (SwfdecAsContext *cx, guint action, const guint8 *data, gui
     }
   }
   swfdec_as_stack_pop (cx);
-  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1), x);
+  swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), x);
 }
 
 static void
@@ -2133,7 +2133,7 @@ swfdec_action_swap (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 static void
 swfdec_action_to_number (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_peek (cx, 1),
+  swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1),
       swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1)));
 }
 
@@ -2206,7 +2206,7 @@ swfdec_action_get_time (SwfdecAsContext *cx, guint action, const guint8 *data, g
   diff *= 1000;
   diff += (tv.tv_usec - cx->start_time.tv_usec) / 1000;
 
-  SWFDEC_AS_VALUE_SET_NUMBER (swfdec_as_stack_push (cx), diff);
+  swfdec_as_value_set_number (cx, swfdec_as_stack_push (cx), diff);
 }
 
 static gboolean
@@ -2489,9 +2489,9 @@ swfdec_action_char_to_ascii (SwfdecAsContext *cx, guint action, const guint8 *da
     if (ascii == NULL) {
       /* This can happen if a Flash 5 movie gets loaded into a Flash 7 movie */
       SWFDEC_FIXME ("Someone threw unconvertible text %s at Flash <= 5", s);
-      SWFDEC_AS_VALUE_SET_INT (val, 0); /* FIXME: what to return??? */
+      swfdec_as_value_set_integer (cx, val, 0); /* FIXME: what to return??? */
     } else {
-      SWFDEC_AS_VALUE_SET_INT (val, (guchar) ascii[0]);
+      swfdec_as_value_set_integer (cx, val, (guchar) ascii[0]);
       g_free (ascii);
     }
   } else {
@@ -2500,9 +2500,9 @@ swfdec_action_char_to_ascii (SwfdecAsContext *cx, guint action, const guint8 *da
     if (uni == NULL) {
       /* This should never happen, everything is valid UTF-8 in here */
       g_warning ("conversion of character %s failed", s);
-      SWFDEC_AS_VALUE_SET_INT (val, 0);
+      swfdec_as_value_set_integer (cx, val, 0);
     } else {
-      SWFDEC_AS_VALUE_SET_INT (val, uni[0]);
+      swfdec_as_value_set_integer (cx, val, uni[0]);
       g_free (uni);
     }
   }

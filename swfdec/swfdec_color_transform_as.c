@@ -58,7 +58,7 @@ swfdec_color_transform_as_get_alphaMultiplier (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->aa);
+  swfdec_as_value_set_number (cx, ret, transform->aa);
 }
 
 SWFDEC_AS_NATIVE (1105, 102, swfdec_color_transform_as_set_alphaMultiplier)
@@ -85,7 +85,7 @@ swfdec_color_transform_as_get_redMultiplier (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->ra);
+  swfdec_as_value_set_number (cx, ret, transform->ra);
 }
 
 SWFDEC_AS_NATIVE (1105, 104, swfdec_color_transform_as_set_redMultiplier)
@@ -112,7 +112,7 @@ swfdec_color_transform_as_get_greenMultiplier (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->ga);
+  swfdec_as_value_set_number (cx, ret, transform->ga);
 }
 
 SWFDEC_AS_NATIVE (1105, 106, swfdec_color_transform_as_set_greenMultiplier)
@@ -139,7 +139,7 @@ swfdec_color_transform_as_get_blueMultiplier (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->ba);
+  swfdec_as_value_set_number (cx, ret, transform->ba);
 }
 
 SWFDEC_AS_NATIVE (1105, 108, swfdec_color_transform_as_set_blueMultiplier)
@@ -166,7 +166,7 @@ swfdec_color_transform_as_get_alphaOffset (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->ab);
+  swfdec_as_value_set_number (cx, ret, transform->ab);
 }
 
 SWFDEC_AS_NATIVE (1105, 110, swfdec_color_transform_as_set_alphaOffset)
@@ -193,7 +193,7 @@ swfdec_color_transform_as_get_redOffset (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->rb);
+  swfdec_as_value_set_number (cx, ret, transform->rb);
 }
 
 SWFDEC_AS_NATIVE (1105, 112, swfdec_color_transform_as_set_redOffset)
@@ -220,7 +220,7 @@ swfdec_color_transform_as_get_greenOffset (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->gb);
+  swfdec_as_value_set_number (cx, ret, transform->gb);
 }
 
 SWFDEC_AS_NATIVE (1105, 114, swfdec_color_transform_as_set_greenOffset)
@@ -247,7 +247,7 @@ swfdec_color_transform_as_get_blueOffset (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "");
 
-  SWFDEC_AS_VALUE_SET_NUMBER (ret, transform->bb);
+  swfdec_as_value_set_number (cx, ret, transform->bb);
 }
 
 SWFDEC_AS_NATIVE (1105, 116, swfdec_color_transform_as_set_blueOffset)
@@ -281,7 +281,7 @@ swfdec_color_transform_as_get_rgb (SwfdecAsContext *cx,
   value |= swfdec_as_double_to_integer (transform->gb) << 8;
   value |= swfdec_as_double_to_integer (transform->bb);
 
-  SWFDEC_AS_VALUE_SET_INT (ret, value);
+  swfdec_as_value_set_integer (cx, ret, value);
 }
 
 SWFDEC_AS_NATIVE (1105, 118, swfdec_color_transform_as_set_rgb)

@@ -38,6 +38,7 @@ typedef enum {
 typedef struct _SwfdecAsArray SwfdecAsArray;
 typedef struct _SwfdecAsContext SwfdecAsContext;
 typedef struct _SwfdecAsDebugger SwfdecAsDebugger;
+typedef struct _SwfdecAsDoubleValue SwfdecAsDoubleValue;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
 typedef struct _SwfdecAsObject SwfdecAsObject;
@@ -59,7 +60,7 @@ struct _SwfdecAsValue {
   /*< private >*/
   union {
     gboolean		boolean;
-    double		number;
+    SwfdecAsDoubleValue *number;
     const char *	string;
     SwfdecAsObject *	object;
   } value;
@@ -80,15 +81,13 @@ struct _SwfdecAsValue {
   (__val)->type = SWFDEC_AS_TYPE_BOOLEAN; \
 } G_STMT_END
 
-#define SWFDEC_AS_VALUE_IS_NUMBER(val) ((val)->type == SWFDEC_AS_TYPE_NUMBER)
-#define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number)
-#define SWFDEC_AS_VALUE_SET_NUMBER(val,d) G_STMT_START { \
-  SwfdecAsValue *__val = (val); \
-  (__val)->value.number = (d); \
-  (__val)->type = SWFDEC_AS_TYPE_NUMBER; \
-} G_STMT_END
+struct _SwfdecAsDoubleValue {
+  SwfdecAsDoubleValue *	next;
+  double		number;
+};
 
-#define SWFDEC_AS_VALUE_SET_INT(val,d) SWFDEC_AS_VALUE_SET_NUMBER(val,(int) (d))
+#define SWFDEC_AS_VALUE_IS_NUMBER(val) ((val)->type == SWFDEC_AS_TYPE_NUMBER)
+#define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number->number)
 
 #define SWFDEC_AS_VALUE_IS_STRING(val) ((val)->type == SWFDEC_AS_TYPE_STRING)
 #define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string)
@@ -110,6 +109,12 @@ struct _SwfdecAsValue {
   (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
   (__val)->value.object = __o; \
 } G_STMT_END
+
+/* value setters */
+#define swfdec_as_value_set_integer(cx, val, i) swfdec_as_value_set_number((cx), (val), (int) (i))
+void		swfdec_as_value_set_number	(SwfdecAsContext *	context,
+						 SwfdecAsValue *	value,
+						 double			number);
 
 /* value conversion functions */
 gboolean	swfdec_as_value_to_boolean	(SwfdecAsContext *	context,

@@ -123,25 +123,6 @@
  */
 
 /**
- * SWFDEC_AS_VALUE_SET_NUMBER:
- * @val: value to set
- * @d: double value to set
- *
- * Sets @val to the given value. If you are sure the value is a valid
- * integer value, use SWFDEC_AS_VALUE_SET_INT() instead.
- */
-
-/**
- * SWFDEC_AS_VALUE_SET_INT:
- * @val: value to set
- * @d: integer value to set
- *
- * Sets @val to the given value. Currently this macro is equivalent to
- * SWFDEC_AS_VALUE_SET_NUMBER(), but this may change in future versions of
- * Swfdec.
- */
-
-/**
  * SWFDEC_AS_VALUE_GET_STRING:
  * @val: value to get, the value must reference a string
  *
@@ -186,6 +167,36 @@
  */
 
 /*** actual code ***/
+
+/**
+ * swfdec_as_value_set_int:
+ * @val: value to set
+ * @i: integer value to set
+ *
+ * Sets @val to the given value. Currently this function is a macro that calls
+ * swfdec_as_value_set_number(), but this may change in future versions of
+ * Swfdec.
+ */
+
+/**
+ * swfdec_as_value_set_number:
+ * @context: The context to use
+ * @val: value to set
+ * @number: double value to set
+ *
+ * Sets @val to the given value. If you are sure the value is a valid
+ * integer value, use wfdec_as_value_set_int() instead.
+ */
+void
+swfdec_as_value_set_number (SwfdecAsContext *context, SwfdecAsValue *val,
+    double d)
+{
+  val->type = SWFDEC_AS_TYPE_NUMBER;
+  val->value.number = g_slice_new (SwfdecAsDoubleValue);
+  val->value.number->number = d;
+  val->value.number->next = context->numbers;
+  context->numbers = val->value.number;
+}
 
 /**
  * swfdec_as_str_concat:

@@ -25,10 +25,11 @@
 #include <string.h>
 
 #include "swfdec_as_types.h"
-#include "swfdec_as_object.h"
 #include "swfdec_as_context.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_gcable.h"
 #include "swfdec_as_number.h"
+#include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
@@ -191,11 +192,18 @@ void
 swfdec_as_value_set_number (SwfdecAsContext *context, SwfdecAsValue *val,
     double d)
 {
+  SwfdecAsDoubleValue *dval;
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (val != NULL);
+
+  dval = swfdec_as_gcable_new (context, SwfdecAsDoubleValue);
+  dval->number = d;
+  SWFDEC_AS_GCABLE_SET_NEXT (dval, context->numbers);
+  context->numbers = dval;
+
   val->type = SWFDEC_AS_TYPE_NUMBER;
-  val->value.number = g_slice_new (SwfdecAsDoubleValue);
-  val->value.number->number = d;
-  val->value.number->next = context->numbers;
-  context->numbers = val->value.number;
+  val->value.number = dval;
 }
 
 /**

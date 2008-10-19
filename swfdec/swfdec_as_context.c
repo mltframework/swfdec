@@ -28,6 +28,7 @@
 #include "swfdec_as_array.h"
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_function.h"
+#include "swfdec_as_gcable.h"
 #include "swfdec_as_initialize.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_interpret.h"
@@ -293,10 +294,14 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugge
 }
 
 static void
+swfdec_as_context_collect_double (SwfdecAsContext *context, gpointer gc)
+{
+  swfdec_as_gcable_free (context, gc, sizeof (SwfdecAsDoubleValue));
+}
+
+static void
 swfdec_as_context_collect (SwfdecAsContext *context)
 {
-  SwfdecAsDoubleValue *prev, *cur;
-
   /* NB: This functions is called without GC from swfdec_as_context_dispose */
   SWFDEC_INFO (">> collecting garbage");
   
@@ -305,32 +310,8 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   g_hash_table_foreach_remove (context->objects, 
     swfdec_as_context_remove_objects, context->debugger);
 
-  prev = NULL;
-  cur = context->numbers;
-  for (;;) {
-    while (cur) {
-      gsize next = GPOINTER_TO_SIZE (cur->next);
-      if (next & SWFDEC_AS_GC_MARK) {
-	cur->next = GSIZE_TO_POINTER (next & ~SWFDEC_AS_GC_MARK);
-	break;
-      }
-      g_slice_free (SwfdecAsDoubleValue, cur);
-      cur = GSIZE_TO_POINTER (next);
-    }
-    if (prev)
-      prev->next = cur;
-    else
-      context->numbers = cur;
-    prev = cur;
-    if (prev == NULL)
-      break;
-    cur = cur->next;
-  }
-  prev = context->numbers;
-  while (prev) {
-    g_assert ((GPOINTER_TO_SIZE (prev) & 3) == 0);
-    prev = prev->next;
-  }
+  context->numbers = swfdec_as_gcable_collect (context, context->numbers,
+      swfdec_as_context_collect_double);
 
   SWFDEC_INFO (">> done collecting garbage");
 }
@@ -372,8 +353,7 @@ swfdec_as_value_mark (SwfdecAsValue *value)
   } else if (SWFDEC_AS_VALUE_IS_STRING (value)) {
     swfdec_as_string_mark (SWFDEC_AS_VALUE_GET_STRING (value));
   } else if (SWFDEC_AS_VALUE_IS_NUMBER (value)) {
-    value->value.number->next = GSIZE_TO_POINTER (
-	GPOINTER_TO_SIZE (value->value.number->next) | SWFDEC_AS_GC_MARK);
+    SWFDEC_AS_GCABLE_SET_FLAG (value->value.number, SWFDEC_AS_GC_MARK);
   }
 }
 

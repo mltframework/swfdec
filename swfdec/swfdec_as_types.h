@@ -41,6 +41,7 @@ typedef struct _SwfdecAsDebugger SwfdecAsDebugger;
 typedef struct _SwfdecAsDoubleValue SwfdecAsDoubleValue;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
+typedef struct _SwfdecAsGcable SwfdecAsGcable;
 typedef struct _SwfdecAsObject SwfdecAsObject;
 typedef struct _SwfdecAsScope SwfdecAsScope;
 typedef struct _SwfdecAsStack SwfdecAsStack;
@@ -83,7 +84,7 @@ struct _SwfdecAsValue {
 } G_STMT_END
 
 struct _SwfdecAsDoubleValue {
-  SwfdecAsDoubleValue *	next;
+  SwfdecAsGcable *	next;
   double		number;
 };
 

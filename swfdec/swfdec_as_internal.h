@@ -20,6 +20,7 @@
 #ifndef _SWFDEC_AS_INTERNAL_H_
 #define _SWFDEC_AS_INTERNAL_H_
 
+#include <swfdec/swfdec_as_gcable.h>
 #include <swfdec/swfdec_as_object.h>
 #include <swfdec/swfdec_as_types.h>
 
@@ -34,9 +35,6 @@ G_BEGIN_DECLS
 
 #define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
-#define SWFDEC_AS_GC_MARK (1 << 0)		/* only valid during GC */
-#define SWFDEC_AS_GC_ROOT (1 << 1)		/* for objects: rooted, for strings: static */
-
 void		swfdec_as_function_set_constructor	(SwfdecAsFunction *	fun);
 void		swfdec_as_function_init_context		(SwfdecAsContext *	context);
 
@@ -47,6 +45,9 @@ void		swfdec_as_context_run_init_script (SwfdecAsContext *	context,
 						 const guint8 *		data,
 						 gsize			length,
 						 guint			version);
+void		swfdec_as_context_gc_alloc	(SwfdecAsContext *	context,
+						 gsize			size);
+#define swfdec_as_context_gc_new(context,type) ((type *)swfdec_as_context_gc_alloc ((context), sizeof (type)))
 
 /* swfdec_as_object.c */
 typedef SwfdecAsVariableForeach SwfdecAsVariableForeachRemove;

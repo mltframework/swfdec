@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 #define _SWFDEC_AS_TYPES_H_
 
 #include <glib-object.h>
+#include <swfdec/swfdec_as_string_value.h>
 
 G_BEGIN_DECLS
 
@@ -62,7 +63,7 @@ struct _SwfdecAsValue {
   union {
     gboolean		boolean;
     SwfdecAsDoubleValue *number;
-    const char *	string;
+    SwfdecAsStringValue *string;
     SwfdecAsObject *	object;
   } value;
 };
@@ -92,10 +93,10 @@ struct _SwfdecAsDoubleValue {
 #define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number->number)
 
 #define SWFDEC_AS_VALUE_IS_STRING(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_STRING)
-#define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string)
+#define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string->string)
 #define SWFDEC_AS_VALUE_SET_STRING(val,s) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  (__val)->value.string = s; \
+  (__val)->value.string = (SwfdecAsStringValue *) ((guint8 *) (s) - G_STRUCT_OFFSET (SwfdecAsStringValue, string)); \
   (__val)->type = SWFDEC_AS_TYPE_STRING; \
 } G_STMT_END
 

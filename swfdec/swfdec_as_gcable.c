@@ -84,8 +84,9 @@ swfdec_as_gcable_collect (SwfdecAsContext *context, SwfdecAsGcable *gc,
   cur = gc;
   for (;;) {
     while (cur) {
-      if (SWFDEC_AS_GCABLE_FLAG_IS_SET (cur, SWFDEC_AS_GC_MARK)) {
-	SWFDEC_AS_GCABLE_UNSET_FLAG (cur, SWFDEC_AS_GC_MARK);
+      if (SWFDEC_AS_GCABLE_FLAG_IS_SET (cur, SWFDEC_AS_GC_MARK | SWFDEC_AS_GC_ROOT)) {
+	if (SWFDEC_AS_GCABLE_FLAG_IS_SET (cur, SWFDEC_AS_GC_MARK))
+	  SWFDEC_AS_GCABLE_UNSET_FLAG (cur, SWFDEC_AS_GC_MARK);
 	break;
       }
       tmp = SWFDEC_AS_GCABLE_NEXT (cur);

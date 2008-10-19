@@ -250,31 +250,6 @@ swfdec_as_context_unuse_mem (SwfdecAsContext *context, gsize bytes)
 /*** GC ***/
 
 static gboolean
-swfdec_as_context_remove_strings (gpointer key, gpointer value, gpointer data)
-{
-  SwfdecAsContext *context = data;
-  char *string;
-
-  string = (char *) value;
-  /* it doesn't matter that rooted strings aren't destroyed, they're constant */
-  if (string[0] & SWFDEC_AS_GC_ROOT) {
-    SWFDEC_LOG ("rooted: %s", (char *) key);
-    return FALSE;
-  } else if (string[0] & SWFDEC_AS_GC_MARK) {
-    SWFDEC_LOG ("marked: %s", (char *) key);
-    string[0] &= ~SWFDEC_AS_GC_MARK;
-    return FALSE;
-  } else {
-    gsize len;
-    SWFDEC_LOG ("deleted: %s", (char *) key);
-    len = (strlen ((char *) key) + 2);
-    swfdec_as_context_unuse_mem (context, len);
-    g_slice_free1 (len, value);
-    return TRUE;
-  }
-}
-
-static gboolean
 swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugger)
 {
   SwfdecGcObject *gc;
@@ -294,6 +269,17 @@ swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugge
 }
 
 static void
+swfdec_as_context_collect_string (SwfdecAsContext *context, gpointer gc)
+{
+  SwfdecAsStringValue *string;
+  gsize size;
+
+  string = gc;
+  size = strlen (string->string) + 1 + sizeof (SwfdecAsStringValue);
+  swfdec_as_gcable_free (context, gc, size);
+}
+
+static void
 swfdec_as_context_collect_double (SwfdecAsContext *context, gpointer gc)
 {
   swfdec_as_gcable_free (context, gc, sizeof (SwfdecAsDoubleValue));
@@ -305,11 +291,11 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   /* NB: This functions is called without GC from swfdec_as_context_dispose */
   SWFDEC_INFO (">> collecting garbage");
   
-  g_hash_table_foreach_remove (context->strings, 
-    swfdec_as_context_remove_strings, context);
   g_hash_table_foreach_remove (context->objects, 
     swfdec_as_context_remove_objects, context->debugger);
 
+  context->strings = swfdec_as_gcable_collect (context, context->strings,
+      swfdec_as_context_collect_string);
   context->numbers = swfdec_as_gcable_collect (context, context->numbers,
       swfdec_as_context_collect_double);
 
@@ -326,13 +312,13 @@ swfdec_as_context_collect (SwfdecAsContext *context)
 void
 swfdec_as_string_mark (const char *string)
 {
-  char *str;
+  SwfdecAsStringValue *value;
 
   g_return_if_fail (string != NULL);
 
-  str = (char *) string - 1;
-  if (*str == 0)
-    *str = SWFDEC_AS_GC_MARK;
+  value = (SwfdecAsStringValue *) ((guint8 *) string - G_STRUCT_OFFSET (SwfdecAsStringValue, string));
+  if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value, SWFDEC_AS_GC_ROOT))
+    SWFDEC_AS_GCABLE_SET_FLAG (value, SWFDEC_AS_GC_MARK);
 }
 
 /**
@@ -351,7 +337,8 @@ swfdec_as_value_mark (SwfdecAsValue *value)
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
     swfdec_gc_object_mark (SWFDEC_AS_VALUE_GET_OBJECT (value));
   } else if (SWFDEC_AS_VALUE_IS_STRING (value)) {
-    swfdec_as_string_mark (SWFDEC_AS_VALUE_GET_STRING (value));
+    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.string, SWFDEC_AS_GC_ROOT))
+      SWFDEC_AS_GCABLE_SET_FLAG (value->value.string, SWFDEC_AS_GC_MARK);
   } else if (SWFDEC_AS_VALUE_IS_NUMBER (value)) {
     SWFDEC_AS_GCABLE_SET_FLAG (value->value.number, SWFDEC_AS_GC_MARK);
   }
@@ -527,11 +514,13 @@ swfdec_as_context_dispose (GObject *object)
   if (context->memory != 0) {
     g_critical ("%zu bytes of memory left over\n", context->memory);
   }
-  g_assert (g_hash_table_size (context->objects) == 0);
+  g_assert (context->strings == NULL);
+  g_assert (context->numbers == NULL);
   g_assert (g_hash_table_size (context->constant_pools) == 0);
+  g_assert (g_hash_table_size (context->objects) == 0);
   g_hash_table_destroy (context->constant_pools);
   g_hash_table_destroy (context->objects);
-  g_hash_table_destroy (context->strings);
+  g_hash_table_destroy (context->interned_strings);
   g_rand_free (context->rand);
   if (context->debugger) {
     g_object_unref (context->debugger);
@@ -583,18 +572,18 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
 static void
 swfdec_as_context_init (SwfdecAsContext *context)
 {
-  const char *s;
+  const SwfdecAsStringValue *s;
 
   context->version = G_MAXUINT;
 
-  context->strings = g_hash_table_new (g_str_hash, g_str_equal);
+  context->interned_strings = g_hash_table_new (g_str_hash, g_str_equal);
   context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
   context->constant_pools = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  for (s = swfdec_as_strings; *s == '\2'; s += strlen (s) + 1) {
-    g_hash_table_insert (context->strings, (char *) s + 1, (char *) s);
+  for (s = swfdec_as_strings; s->next; s = (const SwfdecAsStringValue *) 
+      ((const guint8 *) (s + 1) + strlen (s->string) + 1)) {
+    g_hash_table_insert (context->interned_strings, (gpointer) s->string, (gpointer) s);
   }
-  g_assert (*s == 0);
   context->rand = g_rand_new ();
   g_get_current_time (&context->start_time);
 }
@@ -604,20 +593,18 @@ swfdec_as_context_init (SwfdecAsContext *context)
 static const char *
 swfdec_as_context_create_string (SwfdecAsContext *context, const char *string, gsize len)
 {
-  char *new;
-  
-  if (!swfdec_as_context_try_use_mem (context, sizeof (char) * (2 + len))) {
-    swfdec_as_context_abort (context, "Out of memory");
-    return SWFDEC_AS_STR_EMPTY;
-  }
+  SwfdecAsStringValue *new;
+  gsize size;
 
-  new = g_slice_alloc (2 + len);
-  memcpy (&new[1], string, len);
-  new[len + 1] = 0;
-  new[0] = 0; /* GC flags */
-  g_hash_table_insert (context->strings, new + 1, new);
+  size = sizeof (SwfdecAsStringValue) + len + 1;
+  new = swfdec_as_gcable_alloc (context, size);
+  memcpy (new->string, string, len + 1);
+  g_assert (sizeof (SwfdecAsStringValue) == ((guint8 *) new->string - (guint8 *) new));
+  g_hash_table_insert (context->interned_strings, new->string, new);
+  SWFDEC_AS_GCABLE_SET_NEXT (new, context->strings);
+  context->strings = new;
 
-  return new + 1;
+  return new->string;
 }
 
 /**
@@ -634,14 +621,15 @@ swfdec_as_context_create_string (SwfdecAsContext *context, const char *string, g
 const char *
 swfdec_as_context_get_string (SwfdecAsContext *context, const char *string)
 {
-  const char *ret;
+  const SwfdecAsStringValue *ret;
   gsize len;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (string != NULL, NULL);
 
-  if (g_hash_table_lookup_extended (context->strings, string, (gpointer) &ret, NULL))
-    return ret;
+  ret = g_hash_table_lookup (context->interned_strings, string);
+  if (ret)
+    return ret->string;
 
   len = strlen (string);
   return swfdec_as_context_create_string (context, string, len);

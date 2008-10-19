@@ -21,8 +21,13 @@
 #include "config.h"
 #endif
 
-#define SWFDEC_AS_CONSTANT_STRING(str) "\2" str "\0"
-const char swfdec_as_strings[] = 
+#include "swfdec_as_strings.h"
+
+#include "swfdec_as_gcable.h"
+
+
+#define SWFDEC_AS_CONSTANT_STRING(str) { GSIZE_TO_POINTER (SWFDEC_AS_GC_ROOT), str },
+const SwfdecAsStringValue swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("")
   SWFDEC_AS_CONSTANT_STRING ("__proto__")
   SWFDEC_AS_CONSTANT_STRING ("this")
@@ -532,4 +537,5 @@ const char swfdec_as_strings[] =
   SWFDEC_AS_CONSTANT_STRING ("auto")
   SWFDEC_AS_CONSTANT_STRING ("Matrix")
   /* add more here */
-;
+  { 0, "" }
+};

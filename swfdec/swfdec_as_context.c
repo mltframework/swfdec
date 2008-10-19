@@ -272,11 +272,9 @@ static void
 swfdec_as_context_collect_string (SwfdecAsContext *context, gpointer gc)
 {
   SwfdecAsStringValue *string;
-  gsize size;
 
   string = gc;
-  size = strlen (string->string) + 1 + sizeof (SwfdecAsStringValue);
-  swfdec_as_gcable_free (context, gc, size);
+  swfdec_as_gcable_free (context, gc, sizeof (SwfdecAsStringValue) + string->length + 1);
 }
 
 static void
@@ -581,7 +579,7 @@ swfdec_as_context_init (SwfdecAsContext *context)
   context->constant_pools = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   for (s = swfdec_as_strings; s->next; s = (const SwfdecAsStringValue *) 
-      ((const guint8 *) (s + 1) + strlen (s->string) + 1)) {
+      ((const guint8 *) (s + 1) + s->length + 1)) {
     g_hash_table_insert (context->interned_strings, (gpointer) s->string, (gpointer) s);
   }
   context->rand = g_rand_new ();
@@ -594,12 +592,10 @@ static const char *
 swfdec_as_context_create_string (SwfdecAsContext *context, const char *string, gsize len)
 {
   SwfdecAsStringValue *new;
-  gsize size;
 
-  size = sizeof (SwfdecAsStringValue) + len + 1;
-  new = swfdec_as_gcable_alloc (context, size);
-  memcpy (new->string, string, len + 1);
-  g_assert (sizeof (SwfdecAsStringValue) == ((guint8 *) new->string - (guint8 *) new));
+  new = swfdec_as_gcable_alloc (context, sizeof (SwfdecAsStringValue) + len + 1);
+  new->length = len;
+  memcpy (new->string, string, new->length + 1);
   g_hash_table_insert (context->interned_strings, new->string, new);
   SWFDEC_AS_GCABLE_SET_NEXT (new, context->strings);
   context->strings = new;

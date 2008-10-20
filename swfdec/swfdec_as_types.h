@@ -44,6 +44,7 @@ typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
 typedef struct _SwfdecAsGcable SwfdecAsGcable;
 typedef struct _SwfdecAsObject SwfdecAsObject;
+typedef struct _SwfdecAsRelay SwfdecAsRelay;
 typedef struct _SwfdecAsScope SwfdecAsScope;
 typedef struct _SwfdecAsStack SwfdecAsStack;
 typedef struct _SwfdecAsValue SwfdecAsValue;

@@ -156,7 +156,7 @@ swfdec_sound_object_getTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (matrix == NULL)
     return;
 
-  obj = swfdec_as_object_new (cx);
+  obj = swfdec_as_object_new (cx, SWFDEC_AS_STR_Object, NULL);
 
   swfdec_as_value_set_integer (cx, &val, matrix->ll);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_ll, &val);

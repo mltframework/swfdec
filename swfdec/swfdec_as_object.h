@@ -65,6 +65,7 @@ struct _SwfdecAsObject {
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
   GHashTable *		watches;	/* string->WatchData mapping or NULL when not watching anything */
   GSList *		interfaces;	/* list of interfaces this object implements */
+  SwfdecAsRelay	*	relay;		/* object we relay data to */
 };
 
 struct _SwfdecAsObjectClass {
@@ -101,7 +102,8 @@ struct _SwfdecAsObjectClass {
 
 GType		swfdec_as_object_get_type	(void);
 
-SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context);
+SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context,
+						 ...) G_GNUC_NULL_TERMINATED;
 SwfdecAsObject *swfdec_as_object_new_empty    	(SwfdecAsContext *    	context);
 void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 						 guint			n_args,
@@ -111,6 +113,9 @@ void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
 						 SwfdecAsObject *	construct);
 SwfdecAsObject *swfdec_as_object_resolve	(SwfdecAsObject *	object);
 char *		swfdec_as_object_get_debug	(SwfdecAsObject *	object);
+
+void		swfdec_as_object_set_relay	(SwfdecAsObject *	object,
+						 SwfdecAsRelay *	relay);
 
 /* I'd like to name these [gs]et_property, but binding authors will complain
  * about overlap with g_object_[gs]et_property then */

@@ -71,10 +71,14 @@ void		swfdec_as_object_add_native_variable (SwfdecAsObject *	object,
 						 const char *		variable,
 						 SwfdecAsNative		get,
 						 SwfdecAsNative		set);
-void		swfdec_as_object_set_constructor_by_name 
+SwfdecAsObject * swfdec_as_object_set_constructor_by_name 
 						(SwfdecAsObject *	object,
 						 const char *		name,
 						 ...) G_GNUC_NULL_TERMINATED;
+SwfdecAsObject * swfdec_as_object_set_constructor_by_namev 
+						(SwfdecAsObject *	object,
+						 const char *		name,
+						 va_list		args);
 
 
 G_END_DECLS

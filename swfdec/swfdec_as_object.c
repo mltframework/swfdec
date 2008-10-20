@@ -28,6 +28,7 @@
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
+#include "swfdec_as_relay.h"
 #include "swfdec_as_stack.h"
 #include "swfdec_as_string.h"
 #include "swfdec_as_strings.h"
@@ -765,35 +766,45 @@ swfdec_as_object_new_empty (SwfdecAsContext *context)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   
-  return g_object_new (SWFDEC_TYPE_AS_OBJECT, "context", context, NULL);
+  return swfdec_as_object_new (context, NULL);
 }
 
 /**
  * swfdec_as_object_new:
  * @context: a #SwfdecAsContext
+ * @...: %NULL-terminated list of names of the constructor or %NULL for an 
+ *       empty object.
  *
- * Allocates a new Object. This does the same as the Actionscript code 
- * "new Object()".
+ * Allocates a new object and if @name is not %NULL, runs the constructor.
+ * Name is a list of variables to get from the global context as the 
+ * constructor.
  *
  * Returns: the new object
  **/
 SwfdecAsObject *
-swfdec_as_object_new (SwfdecAsContext *context)
+swfdec_as_object_new (SwfdecAsContext *context, ...)
 {
-  SwfdecAsObject *object;
-  SwfdecAsValue val;
+  SwfdecAsObject *object, *fun;
+  SwfdecAsValue rval;
+  const char *name;
+  va_list args;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-  g_assert (context->Object);
-  g_assert (context->Object_prototype);
   
-  object = swfdec_as_object_new_empty (context);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object);
-  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  object = g_object_new (SWFDEC_TYPE_AS_OBJECT, "context", context, NULL);
+  va_start (args, context);
+  name = va_arg (args, const char *);
+  if (name == NULL)
+    return object;
+
+  g_return_val_if_fail (context->global, NULL);
+
+  fun = swfdec_as_object_set_constructor_by_namev (object, name, args);
+  va_end (args);
+  if (SWFDEC_IS_AS_FUNCTION (fun)) {
+    swfdec_as_function_call_full (SWFDEC_AS_FUNCTION (fun), object,
+	TRUE, object->prototype, 0, NULL, &rval);
+  }
   return object;
 }
 
@@ -1320,31 +1331,45 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   swfdec_as_function_call_full (fun, new, TRUE, new->prototype, n_args, args, return_value);
 }
 
-void
+SwfdecAsObject *
 swfdec_as_object_set_constructor_by_name (SwfdecAsObject *object, const char *name, ...)
+{
+  SwfdecAsObject *ret;
+  va_list args;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
+  va_start (args, name);
+  ret = swfdec_as_object_set_constructor_by_namev (object, name, args);
+  va_end (args);
+  return ret;
+}
+
+SwfdecAsObject *
+swfdec_as_object_set_constructor_by_namev (SwfdecAsObject *object, 
+    const char *name, va_list args)
 {
   SwfdecAsContext *context;
   SwfdecAsObject *cur;
   SwfdecAsValue val;
-  va_list args;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
-  g_return_if_fail (name != NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
 
   context = swfdec_gc_object_get_context (object);
-  va_start (args, name);
   cur = context->global;
   do {
     if (!swfdec_as_object_get_variable (cur, name, &val) || 
 	!SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
       SWFDEC_WARNING ("could not find constructor %s", name);
-      return;
+      return NULL;
     }
     cur = SWFDEC_AS_VALUE_GET_OBJECT (&val);
     name = va_arg (args, const char *);
   } while (name != NULL);
-  va_end (args);
   swfdec_as_object_set_constructor (object, cur);
+  return cur;
 }
 
 /**
@@ -1805,3 +1830,18 @@ swfdec_as_object_resolve (SwfdecAsObject *object)
 
   return klass->resolve (object);
 }
+
+void
+swfdec_as_object_set_relay (SwfdecAsObject *object, SwfdecAsRelay *relay)
+{
+  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (SWFDEC_IS_AS_RELAY (relay));
+  g_return_if_fail (relay->relay == NULL);
+
+  if (object->relay) {
+    object->relay->relay = NULL;
+  }
+  object->relay = relay;
+  relay->relay = object;
+}
+

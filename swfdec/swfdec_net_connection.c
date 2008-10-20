@@ -66,7 +66,7 @@ swfdec_net_connection_onstatus (SwfdecNetConnection *conn, const char *code,
   SwfdecAsValue value;
   SwfdecAsObject *info;
 
-  info = swfdec_as_object_new (swfdec_gc_object_get_context (conn));
+  info = swfdec_as_object_new (swfdec_gc_object_get_context (conn), SWFDEC_AS_STR_Object, NULL);
   SWFDEC_AS_VALUE_SET_STRING (&value, code);
   swfdec_as_object_set_variable (info, SWFDEC_AS_STR_code, &value);
   SWFDEC_AS_VALUE_SET_STRING (&value, level);

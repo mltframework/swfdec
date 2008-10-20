@@ -325,9 +325,13 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   /* check that we got a valid type */
   if (type) {
-    if (!G_TYPE_CHECK_INSTANCE_TYPE (object, type))
-      return FALSE;
-    *result = object;
+    if (G_TYPE_CHECK_INSTANCE_TYPE (object, type)) {
+      *result = object;
+    } else if (object && G_TYPE_CHECK_INSTANCE_TYPE (object->relay, type)) {
+      *result = object->relay;
+    } else {
+	return FALSE;
+    }
   }
   for (i = 0; *args && i < argc; i++, args++) {
     switch (*args) {

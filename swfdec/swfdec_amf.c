@@ -24,6 +24,7 @@
 #include "swfdec_amf.h"
 #include "swfdec_as_array.h"
 #include "swfdec_as_date.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 
 typedef gboolean (* SwfdecAmfParseFunc) (SwfdecAsContext *cx, SwfdecBits *bits, SwfdecAsValue *val);
@@ -96,7 +97,7 @@ swfdec_amf_parse_object (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsVal
 {
   SwfdecAsObject *object;
   
-  object = swfdec_as_object_new (context);
+  object = swfdec_as_object_new (context, SWFDEC_AS_STR_Object, NULL);
   if (!swfdec_amf_parse_properties (context, bits, object))
     return FALSE;
   SWFDEC_AS_VALUE_SET_OBJECT (val, object);
@@ -151,14 +152,17 @@ fail:
 static gboolean
 swfdec_amf_parse_date (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue *val)
 {
-  double milliseconds = swfdec_bits_get_bdouble (bits);
-  int utc_offset = swfdec_bits_get_bu16 (bits);
+  SwfdecAsDate *date;
+  SwfdecAsObject *object;
 
-  if (utc_offset > 12 * 60)
-    utc_offset -= 12 * 60;
+  object = swfdec_as_object_new (context, SWFDEC_AS_STR_Date, NULL);
+  date = SWFDEC_AS_DATE (object->relay);
+  date->milliseconds = swfdec_bits_get_bdouble (bits);
+  date->utc_offset = swfdec_bits_get_bu16 (bits);
+  if (date->utc_offset > 12 * 60)
+    date->utc_offset -= 12 * 60;
+  SWFDEC_AS_VALUE_SET_OBJECT (val, object);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (val,
-      swfdec_as_date_new (context, milliseconds, utc_offset));
   return TRUE;
 }
 

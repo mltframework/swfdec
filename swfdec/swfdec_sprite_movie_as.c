@@ -992,7 +992,7 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player)
   movie = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_MovieClip, NULL));
   SWFDEC_SANDBOX (context->global)->MovieClip = movie;
-  proto = swfdec_as_object_new (context);
+  proto = swfdec_as_object_new (context, SWFDEC_AS_STR_Object, NULL);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (movie,
       SWFDEC_AS_STR_prototype, &val, SWFDEC_AS_VARIABLE_HIDDEN |

@@ -174,7 +174,7 @@ swfdec_gc_object_init (SwfdecGcObject *object)
  *          save you from having to cast it manually. For language bindings, 
  *          please treat this argument as having the #SwfdecGcObject type.
  *
- * Gets the cotext that garbage-collects this object.
+ * Gets the context that garbage-collects this object.
  *
  * Returns: the context this object belongs to
  **/

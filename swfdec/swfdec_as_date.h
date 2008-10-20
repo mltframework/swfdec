@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -21,9 +21,8 @@
 #ifndef _SWFDEC_AS_DATE_H_
 #define _SWFDEC_AS_DATE_H_
 
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_as_types.h>
-#include <swfdec/swfdec_script.h>
 
 G_BEGIN_DECLS
 
@@ -38,7 +37,7 @@ typedef struct _SwfdecAsDateClass SwfdecAsDateClass;
 #define SWFDEC_AS_DATE_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_DATE, SwfdecAsDateClass))
 
 struct _SwfdecAsDate {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   // time from epoch in UTC
   double		milliseconds;
@@ -48,14 +47,10 @@ struct _SwfdecAsDate {
 };
 
 struct _SwfdecAsDateClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType		swfdec_as_date_get_type	(void);
-
-SwfdecAsObject *swfdec_as_date_new		(SwfdecAsContext *	context,
-						 double			milliseconds,
-						 int			utc_offset);
 
 
 G_END_DECLS

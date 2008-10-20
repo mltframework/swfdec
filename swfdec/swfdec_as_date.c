@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -38,7 +38,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_TYPE (SwfdecAsDate, swfdec_as_date, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecAsDate, swfdec_as_date, SWFDEC_TYPE_AS_RELAY)
 
 /*
  * Class functions
@@ -1048,7 +1048,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
 // Constructor
 
-SWFDEC_AS_CONSTRUCTOR (103, 256, swfdec_as_date_construct, swfdec_as_date_get_type)
+SWFDEC_AS_NATIVE (103, 256, swfdec_as_date_construct)
 void
 swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -1057,11 +1057,12 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsDate *date;
 
   if (!cx->frame->construct) {
-    object = g_object_new (SWFDEC_TYPE_AS_DATE, "context", cx, NULL);
+    object = swfdec_as_object_new_empty (cx);
     swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Date, NULL);
   }
 
-  date = SWFDEC_AS_DATE (object);
+  date = g_object_new (SWFDEC_TYPE_AS_DATE, "context", cx, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (date));
 
   /* FIXME: find a general solution here */
   if (SWFDEC_IS_PLAYER (swfdec_gc_object_get_context (date))) {
@@ -1194,19 +1195,3 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
-SwfdecAsObject *
-swfdec_as_date_new (SwfdecAsContext *context, double milliseconds,
-    int utc_offset)
-{
-  SwfdecAsObject *ret;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
-
-  ret = g_object_new (SWFDEC_TYPE_AS_DATE, "context", context, NULL);
-  swfdec_as_object_set_constructor_by_name (ret, SWFDEC_AS_STR_Date, NULL);
-
-  SWFDEC_AS_DATE (ret)->milliseconds = milliseconds;
-  SWFDEC_AS_DATE (ret)->utc_offset = utc_offset;
-
-  return ret;
-}

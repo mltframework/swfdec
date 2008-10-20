@@ -92,7 +92,7 @@ swfdec_movie_color_getTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (movie == NULL)
     return;
 
-  ret = swfdec_as_object_new (cx);
+  ret = swfdec_as_object_new (cx, SWFDEC_AS_STR_Object, NULL);
 
   add_variable (ret, SWFDEC_AS_STR_ra, movie->color_transform.ra * 100.0 / 256.0);
   add_variable (ret, SWFDEC_AS_STR_ga, movie->color_transform.ga * 100.0 / 256.0);

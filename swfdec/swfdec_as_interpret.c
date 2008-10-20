@@ -938,7 +938,7 @@ swfdec_action_add2_to_primitive (SwfdecAsValue *value)
   if (SWFDEC_IS_MOVIE (object))
     return;
 
-  if (SWFDEC_IS_AS_DATE (object) && swfdec_gc_object_get_context (object)->version > 5)
+  if (SWFDEC_IS_AS_DATE (object->relay) && swfdec_gc_object_get_context (object)->version > 5)
     name = SWFDEC_AS_STR_toString;
   else
     name = SWFDEC_AS_STR_valueOf;
@@ -1790,7 +1790,8 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
     size = 0;
   }
 
-  object = swfdec_as_object_new (cx);
+  object = swfdec_as_object_new (cx, NULL);
+  swfdec_as_object_set_constructor (object, cx->Object);
   for (i = 0; i < n_args; i++) {
     const char *s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
     swfdec_as_object_set_variable (object, s, swfdec_as_stack_peek (cx, 1));

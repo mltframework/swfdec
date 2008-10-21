@@ -128,7 +128,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
   if (!tag->format)
     return;
 
-  object = SWFDEC_AS_OBJECT (tag->format);
+  object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (tag->format));
   cx = swfdec_gc_object_get_context (object);
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
 	cx, g_strndup (value, value_length)));
@@ -381,14 +381,14 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
     tag = g_new0 (ParserTag, 1);
     tag->name = name;
     tag->name_length = name_length;
-    tag->format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (data->cx));
+    tag->format = swfdec_text_format_new (data->cx);
     tag->index = swfdec_text_buffer_get_length (data->text);
 
     data->tags_open = g_slist_prepend (data->tags_open, tag);
 
     // set format based on tag
     if (tag->format != NULL) {
-      object = SWFDEC_AS_OBJECT (tag->format);
+      object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (tag->format));
       SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
 
       if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {

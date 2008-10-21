@@ -39,7 +39,7 @@
 #include "swfdec_text_buffer.h"
 #include "swfdec_text_layout.h"
 
-G_DEFINE_TYPE (SwfdecTextFormat, swfdec_text_format, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecTextFormat, swfdec_text_format, SWFDEC_TYPE_AS_RELAY)
 
 static int property_offsets[] = {
   G_STRUCT_OFFSET (SwfdecTextFormat, attr.align),
@@ -93,9 +93,9 @@ swfdec_text_format_get_string (SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, property)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -114,9 +114,9 @@ swfdec_text_format_set_string (SwfdecAsObject *object,
   SwfdecAsContext *context;
   const char *s;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (argc < 1)
     return;
@@ -143,9 +143,9 @@ swfdec_text_format_get_boolean (SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, property)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -166,9 +166,9 @@ swfdec_text_format_set_boolean (SwfdecAsObject *object,
   SwfdecTextFormat *format;
   SwfdecAsContext *context;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (argc < 1)
     return;
@@ -194,9 +194,9 @@ swfdec_text_format_get_integer (SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, property)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -254,9 +254,9 @@ swfdec_text_format_set_integer (SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (argc < 1)
     return;
@@ -278,9 +278,9 @@ swfdec_text_format_do_get_align (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_ALIGN)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -312,9 +312,9 @@ swfdec_text_format_do_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecTextFormat *format;
   const char *s;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (argc < 1)
     return;
@@ -389,9 +389,9 @@ swfdec_text_format_do_get_color (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_COLOR)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -407,9 +407,9 @@ swfdec_text_format_do_set_color (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (argc < 1)
     return;
@@ -432,9 +432,9 @@ swfdec_text_format_do_get_display (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_DISPLAY))
   {
@@ -464,9 +464,9 @@ swfdec_text_format_do_set_display (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecTextFormat *format;
   const char *s;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   swfdec_as_value_to_integer (cx, &argv[0]);
   swfdec_as_value_to_number (cx, &argv[0]);
@@ -579,9 +579,9 @@ swfdec_text_format_do_get_letter_spacing (SwfdecAsContext *cx,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_LETTER_SPACING)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -599,9 +599,9 @@ swfdec_text_format_do_set_letter_spacing (SwfdecAsContext *cx,
   SwfdecTextFormat *format;
   double d;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (argc < 1)
     return;
@@ -665,9 +665,9 @@ swfdec_text_format_do_get_tab_stops (SwfdecAsContext *cx,
   SwfdecAsValue val;
   SwfdecAsObject *array;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS)) {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -689,9 +689,9 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
 {
   SwfdecTextFormat *format;
 
-  if (!SWFDEC_IS_TEXT_FORMAT (object))
+  if (object == NULL || !SWFDEC_IS_TEXT_FORMAT (object->relay))
     return;
-  format = SWFDEC_TEXT_FORMAT (object);
+  format = SWFDEC_TEXT_FORMAT (object->relay);
 
   if (argc < 1)
     return;
@@ -994,7 +994,7 @@ swfdec_text_format_init_properties (SwfdecAsContext *cx)
       swfdec_text_format_do_get_url, swfdec_text_format_do_set_url);
 }
 
-SWFDEC_AS_CONSTRUCTOR (110, 0, swfdec_text_format_construct, swfdec_text_format_get_type)
+SWFDEC_AS_NATIVE (110, 0, swfdec_text_format_construct)
 void
 swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -1015,6 +1015,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     SWFDEC_AS_STR_leading,
     NULL
   };
+  SwfdecTextFormat *format;
   SwfdecAsFunction *function;
   SwfdecAsObject *tmp;
   SwfdecAsValue val;
@@ -1025,11 +1026,11 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  g_assert (SWFDEC_IS_TEXT_FORMAT (object));
-
   swfdec_text_format_init_properties (cx);
 
-  swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (object));
+  format = g_object_new (SWFDEC_TYPE_TEXT_FORMAT, "context", cx, NULL);
+  swfdec_text_format_clear (format);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (format));
 
   // FIXME: Need better way to create function without prototype/constructor
   tmp = cx->Function;
@@ -1050,16 +1051,12 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 SwfdecTextFormat *
 swfdec_text_format_copy (SwfdecTextFormat *copy_from)
 {
-  SwfdecAsObject *object_to;
   SwfdecTextFormat *copy_to;
 
   g_return_val_if_fail (SWFDEC_IS_TEXT_FORMAT (copy_from), NULL);
 
-  object_to = swfdec_text_format_new_no_properties (
+  copy_to = swfdec_text_format_new_no_properties (
       swfdec_gc_object_get_context (copy_from));
-  if (object_to == NULL)
-    return NULL;
-  copy_to = SWFDEC_TEXT_FORMAT (object_to);
 
   swfdec_text_attributes_copy (&copy_to->attr, &copy_from->attr, -1);
   copy_to->values_set = copy_from->values_set;
@@ -1067,10 +1064,11 @@ swfdec_text_format_copy (SwfdecTextFormat *copy_from)
   return copy_to;
 }
 
-SwfdecAsObject *
+SwfdecTextFormat *
 swfdec_text_format_new_no_properties (SwfdecAsContext *context)
 {
-  SwfdecAsObject *tmp, *ret;
+  SwfdecAsObject *tmp, *object;
+  SwfdecTextFormat *ret;
   SwfdecAsFunction *function;
   SwfdecAsValue val;
 
@@ -1078,8 +1076,10 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
 
   ret = g_object_new (SWFDEC_TYPE_TEXT_FORMAT, "context", context, NULL);
 
-  swfdec_text_format_clear (SWFDEC_TEXT_FORMAT (ret));
-  swfdec_as_object_set_constructor_by_name (ret, SWFDEC_AS_STR_TextFormat, NULL);
+  swfdec_text_format_clear (ret);
+  object = swfdec_as_object_new (context, NULL);
+  swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_TextFormat, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (ret));
 
   // FIXME: Need better way to create function without prototype/constructor
   tmp = context->Function;
@@ -1089,13 +1089,13 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
   context->Function = tmp;
   if (function != NULL) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
-    swfdec_as_object_set_variable (ret, SWFDEC_AS_STR_getTextExtent, &val);
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
   }
 
   return ret;
 }
 
-SwfdecAsObject *
+SwfdecTextFormat *
 swfdec_text_format_new (SwfdecAsContext *context)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);

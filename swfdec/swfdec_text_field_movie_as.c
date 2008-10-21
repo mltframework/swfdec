@@ -1065,16 +1065,14 @@ swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
-  format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
-  if (format == NULL)
-    return;
+  format = swfdec_text_format_new (cx);
 
   swfdec_text_attributes_copy (&format->attr, 
       swfdec_text_buffer_get_default_attributes (text->text),
       SWFDEC_TEXT_ATTRIBUTES_MASK);
   format->values_set = SWFDEC_TEXT_ATTRIBUTES_MASK;
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (format)));
 }
 
 SWFDEC_AS_NATIVE (104, 105, swfdec_text_field_movie_setNewTextFormat)
@@ -1084,13 +1082,15 @@ swfdec_text_field_movie_setNewTextFormat (SwfdecAsContext *cx,
     SwfdecAsValue *ret)
 {
   SwfdecTextFieldMovie *text;
+  SwfdecAsObject *format_object;
   SwfdecTextFormat *format;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "o", &format);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "o", &format_object);
 
-  if (!SWFDEC_IS_TEXT_FORMAT (format))
+  if (!SWFDEC_IS_TEXT_FORMAT (format_object->relay))
     return;
 
+  format = SWFDEC_TEXT_FORMAT (format_object->relay);
   swfdec_text_buffer_set_default_attributes (text->text, 
       &format->attr, format->values_set);
 }
@@ -1142,10 +1142,10 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[i]))
     return;
-  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i])))
+  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i])->relay))
     return;
 
-  format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i]));
+  format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i])->relay);
   start = g_utf8_offset_to_pointer (string, start) - string;
   end = g_utf8_offset_to_pointer (string, end) - string;
 
@@ -1182,8 +1182,8 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
   string = swfdec_text_buffer_get_text (text->text);
   length = g_utf8_strlen (string, -1);
 
-  format = SWFDEC_TEXT_FORMAT (swfdec_text_format_new (cx));
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (format));
+  format = swfdec_text_format_new (cx);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (format)));
 
   if (argc == 0) {
     start = 0;

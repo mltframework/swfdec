@@ -21,11 +21,9 @@
 #ifndef _SWFDEC_TEXT_FORMAT_H_
 #define _SWFDEC_TEXT_FORMAT_H_
 
-#include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_as_array.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_text_attributes.h>
 #include <swfdec/swfdec_types.h>
-#include <swfdec/swfdec_script.h>
 
 G_BEGIN_DECLS
 
@@ -40,7 +38,7 @@ typedef struct _SwfdecTextFormatClass SwfdecTextFormatClass;
 #define SWFDEC_TEXT_FORMAT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_TEXT_FORMAT, SwfdecTextFormatClass))
 
 struct _SwfdecTextFormat {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   SwfdecTextAttributes	attr;
 
@@ -48,24 +46,24 @@ struct _SwfdecTextFormat {
 };
 
 struct _SwfdecTextFormatClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType		swfdec_text_format_get_type	(void);
 
-SwfdecAsObject * swfdec_text_format_new		(SwfdecAsContext *	context);
-SwfdecAsObject * swfdec_text_format_new_no_properties (SwfdecAsContext *	context);
-void		swfdec_text_format_set_defaults	(SwfdecTextFormat *	format);
-SwfdecTextFormat * swfdec_text_format_copy	(SwfdecTextFormat *	copy_from);
-void		swfdec_text_format_add		(SwfdecTextFormat *	format,
-						 const SwfdecTextFormat *from);
-gboolean	swfdec_text_format_equal	(const SwfdecTextFormat *a,
-						 const SwfdecTextFormat *b);
-gboolean	swfdec_text_format_equal_or_undefined	(const SwfdecTextFormat *a,
-						 const SwfdecTextFormat *b);
-void		swfdec_text_format_remove_different (SwfdecTextFormat *		format,
-						 const SwfdecTextFormat *	from);
-void		swfdec_text_format_init_properties (SwfdecAsContext *		cx);
+SwfdecTextFormat *	swfdec_text_format_new			(SwfdecAsContext *	context);
+SwfdecTextFormat *	swfdec_text_format_new_no_properties	(SwfdecAsContext *	context);
+void			swfdec_text_format_set_defaults		(SwfdecTextFormat *	format);
+SwfdecTextFormat *	swfdec_text_format_copy			(SwfdecTextFormat *	copy_from);
+void	 		swfdec_text_format_add			(SwfdecTextFormat *	format,
+								 const SwfdecTextFormat *from);
+gboolean		swfdec_text_format_equal		(const SwfdecTextFormat *a,
+								 const SwfdecTextFormat *b);
+gboolean		swfdec_text_format_equal_or_undefined	(const SwfdecTextFormat *a,
+								 const SwfdecTextFormat *b);
+void			swfdec_text_format_remove_different	(SwfdecTextFormat *	format,
+								 const SwfdecTextFormat *from);
+void			swfdec_text_format_init_properties	(SwfdecAsContext *	cx);
 
 G_END_DECLS
 #endif

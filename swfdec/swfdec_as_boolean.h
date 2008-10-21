@@ -20,8 +20,7 @@
 #ifndef _SWFDEC_AS_BOOLEAN_H_
 #define _SWFDEC_AS_BOOLEAN_H_
 
-#include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_as_relay.h>
 
 G_BEGIN_DECLS
 
@@ -36,13 +35,13 @@ typedef struct _SwfdecAsBooleanClass SwfdecAsBooleanClass;
 #define SWFDEC_AS_BOOLEAN_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_BOOLEAN, SwfdecAsBooleanClass))
 
 struct _SwfdecAsBoolean {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   gboolean		boolean;		/* boolean represented by this boolean object */
 };
 
 struct _SwfdecAsBooleanClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType		swfdec_as_boolean_get_type	(void);

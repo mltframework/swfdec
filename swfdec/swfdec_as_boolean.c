@@ -28,9 +28,10 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_strings.h"
+#include "swfdec_as_types.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_TYPE (SwfdecAsBoolean, swfdec_as_boolean, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecAsBoolean, swfdec_as_boolean, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_as_boolean_class_init (SwfdecAsBooleanClass *klass)
@@ -44,25 +45,19 @@ swfdec_as_boolean_init (SwfdecAsBoolean *boolean)
 
 /*** AS CODE ***/
 
-SWFDEC_AS_CONSTRUCTOR (107, 2, swfdec_as_boolean_construct, swfdec_as_boolean_get_type)
+SWFDEC_AS_NATIVE (107, 2, swfdec_as_boolean_construct)
 void
 swfdec_as_boolean_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  gboolean b;
-
-  if (argc > 0) {
-    b = swfdec_as_value_to_boolean (swfdec_gc_object_get_context (object), &argv[0]);
-  } else {
-    if (!swfdec_as_context_is_constructing (cx))
-      return;
-    b = FALSE;
-  }
-
   if (swfdec_as_context_is_constructing (cx)) {
-    SWFDEC_AS_BOOLEAN (object)->boolean = b;
+    SwfdecAsBoolean *b = g_object_new (SWFDEC_TYPE_AS_BOOLEAN, "context", cx, NULL);
+    b->boolean = argc > 0 ? swfdec_as_value_to_boolean (cx, &argv[0]) : FALSE;
+    swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (b));
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {
+    gboolean b;
+    SWFDEC_AS_CHECK (0, NULL, "b", &b);
     SWFDEC_AS_VALUE_SET_BOOLEAN (ret, b);
   }
 }
@@ -74,10 +69,8 @@ swfdec_as_boolean_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecAsBoolean *b;
   
-  if (!SWFDEC_IS_AS_BOOLEAN (object))
-    return;
-  b = SWFDEC_AS_BOOLEAN (object);
-  
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_BOOLEAN, &b, "");
+
   SWFDEC_AS_VALUE_SET_STRING (ret, b->boolean ? SWFDEC_AS_STR_true : SWFDEC_AS_STR_false);
 }
 
@@ -88,9 +81,7 @@ swfdec_as_boolean_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecAsBoolean *b;
 
-  if (!SWFDEC_IS_AS_BOOLEAN (object))
-    return;
-  b = SWFDEC_AS_BOOLEAN (object);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_BOOLEAN, &b, "");
   
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, b->boolean);
 }

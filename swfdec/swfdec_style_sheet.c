@@ -41,7 +41,7 @@ enum {
   LAST_SIGNAL
 };
 
-G_DEFINE_TYPE (SwfdecStyleSheet, swfdec_style_sheet, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecStyleSheet, swfdec_style_sheet, SWFDEC_TYPE_AS_RELAY)
 static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
@@ -234,7 +234,7 @@ swfdec_style_sheet_update (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecStyleSheet *style;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_STYLESHEET, &style, "");
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_STYLE_SHEET, &style, "");
 
   g_signal_emit (style, signals[UPDATE], 0);
 }
@@ -246,12 +246,11 @@ swfdec_style_sheet_parseCSSInternal (SwfdecAsContext *cx,
     SwfdecAsValue *rval)
 {
   SwfdecAsObject *values;
+  const char *s;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
 
-  values =
-    swfdec_style_sheet_parse (cx, swfdec_as_value_to_string (cx, &argv[0]));
+  values = swfdec_style_sheet_parse (cx, s);
 
   if (values == NULL) {
     SWFDEC_AS_VALUE_SET_NULL (rval);
@@ -307,17 +306,21 @@ swfdec_style_sheet_parseColor (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_value_set_integer (cx, rval, result);
 }
 
-SWFDEC_AS_CONSTRUCTOR (113, 0, swfdec_style_sheet_construct, swfdec_style_sheet_get_type)
+SWFDEC_AS_NATIVE (113, 0, swfdec_style_sheet_construct)
 void
 swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  SwfdecStyleSheet *sheet;
+
   if (!swfdec_as_context_is_constructing (cx)) {
     SWFDEC_FIXME ("What do we do if not constructing?");
     return;
   }
 
-  g_assert (SWFDEC_IS_STYLESHEET (object));
+  sheet = g_object_new (SWFDEC_TYPE_STYLE_SHEET, "context", cx, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (sheet));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 static SwfdecTextFormat *
@@ -326,7 +329,7 @@ swfdec_style_sheet_get_format (SwfdecStyleSheet *style, const char *name)
   SwfdecAsObject *styles;
   SwfdecAsValue val;
 
-  g_return_val_if_fail (SWFDEC_IS_STYLESHEET (style), NULL);
+  g_return_val_if_fail (SWFDEC_IS_STYLE_SHEET (style), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (style),
@@ -355,7 +358,7 @@ swfdec_style_sheet_get_class_format (SwfdecStyleSheet *style, const char *name)
 {
   char *name_full;
 
-  g_return_val_if_fail (SWFDEC_IS_STYLESHEET (style), NULL);
+  g_return_val_if_fail (SWFDEC_IS_STYLE_SHEET (style), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
   name_full = g_malloc (1 + strlen (name) + 1);

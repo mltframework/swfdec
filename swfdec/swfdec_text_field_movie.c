@@ -288,8 +288,8 @@ swfdec_text_field_movie_dispose (GObject *object)
   text = SWFDEC_TEXT_FIELD_MOVIE (object);
 
   if (text->style_sheet) {
-    if (SWFDEC_IS_STYLESHEET (text->style_sheet)) {
-      g_signal_handlers_disconnect_matched (text->style_sheet, 
+    if (SWFDEC_IS_STYLE_SHEET (text->style_sheet->relay)) {
+      g_signal_handlers_disconnect_matched (text->style_sheet->relay, 
 	  G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, text);
     }
     text->style_sheet = NULL;

@@ -18,12 +18,10 @@
  * Boston, MA  02110-1301  USA
  */
 
-#ifndef _SWFDEC_STYLESHEET_H_
-#define _SWFDEC_STYLESHEET_H_
+#ifndef _SWFDEC_STYLE_SHEET_H_
+#define _SWFDEC_STYLE_SHEET_H_
 
-#include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_types.h>
-#include <swfdec/swfdec_script.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_text_format.h>
 
 G_BEGIN_DECLS
@@ -31,19 +29,19 @@ G_BEGIN_DECLS
 typedef struct _SwfdecStyleSheet SwfdecStyleSheet;
 typedef struct _SwfdecStyleSheetClass SwfdecStyleSheetClass;
 
-#define SWFDEC_TYPE_STYLESHEET                    (swfdec_style_sheet_get_type())
-#define SWFDEC_IS_STYLESHEET(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_STYLESHEET))
-#define SWFDEC_IS_STYLESHEET_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_STYLESHEET))
-#define SWFDEC_STYLESHEET(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_STYLESHEET, SwfdecStyleSheet))
-#define SWFDEC_STYLESHEET_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_STYLESHEET, SwfdecStyleSheetClass))
-#define SWFDEC_STYLESHEET_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_STYLESHEET, SwfdecStyleSheetClass))
+#define SWFDEC_TYPE_STYLE_SHEET                    (swfdec_style_sheet_get_type())
+#define SWFDEC_IS_STYLE_SHEET(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_STYLE_SHEET))
+#define SWFDEC_IS_STYLE_SHEET_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_STYLE_SHEET))
+#define SWFDEC_STYLE_SHEET(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_STYLE_SHEET, SwfdecStyleSheet))
+#define SWFDEC_STYLE_SHEET_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_STYLE_SHEET, SwfdecStyleSheetClass))
+#define SWFDEC_STYLE_SHEET_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_STYLE_SHEET, SwfdecStyleSheetClass))
 
 struct _SwfdecStyleSheet {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 };
 
 struct _SwfdecStyleSheetClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType		swfdec_style_sheet_get_type	(void);

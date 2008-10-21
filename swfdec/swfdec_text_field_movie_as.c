@@ -914,19 +914,19 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
   if (text->style_sheet == value)
     return;
 
-  if (text->style_sheet != NULL && SWFDEC_IS_STYLESHEET (text->style_sheet)) {
-    g_signal_handlers_disconnect_by_func (text->style_sheet,
+  if (text->style_sheet != NULL && SWFDEC_IS_STYLE_SHEET (text->style_sheet->relay)) {
+    g_signal_handlers_disconnect_by_func (text->style_sheet->relay,
 	 swfdec_text_field_movie_style_sheet_update, text);
-    g_object_remove_weak_pointer (G_OBJECT (text->style_sheet), 
+    g_object_remove_weak_pointer (G_OBJECT (text->style_sheet->relay), 
 	(gpointer) &text->style_sheet);
   }
 
   text->style_sheet = value;
 
-  if (SWFDEC_IS_STYLESHEET (value)) {
-    g_signal_connect_swapped (value, "update",
+  if (value && SWFDEC_IS_STYLE_SHEET (value->relay)) {
+    g_signal_connect_swapped (value->relay, "update",
 	G_CALLBACK (swfdec_text_field_movie_style_sheet_update), text);
-    g_object_add_weak_pointer (G_OBJECT (text->style_sheet), 
+    g_object_add_weak_pointer (G_OBJECT (text->style_sheet->relay), 
 	(gpointer) &text->style_sheet);
 
     swfdec_text_field_movie_style_sheet_update (text);

@@ -499,8 +499,8 @@ swfdec_text_field_movie_html_parse (SwfdecTextFieldMovie *text, const char *str)
   data.cx = swfdec_gc_object_get_context (text);
   data.multiline = (data.cx->version < 7 || text->multiline);
   data.condense_white = text->condense_white;
-  if (text->style_sheet != NULL && SWFDEC_IS_STYLESHEET (text->style_sheet)) {
-    data.style_sheet = SWFDEC_STYLESHEET (text->style_sheet);
+  if (text->style_sheet != NULL && SWFDEC_IS_STYLE_SHEET (text->style_sheet->relay)) {
+    data.style_sheet = SWFDEC_STYLE_SHEET (text->style_sheet->relay);
   } else {
     data.style_sheet = NULL;
   }

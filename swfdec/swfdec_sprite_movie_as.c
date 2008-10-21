@@ -178,12 +178,13 @@ void
 swfdec_sprite_movie_get_transform (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
+  SwfdecTransformAs *trans;
   SwfdecMovie *movie;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
 
-  SWFDEC_AS_VALUE_SET_OBJECT (rval,
-      SWFDEC_AS_OBJECT (swfdec_transform_as_new (cx, movie)));
+  trans = swfdec_transform_as_new (cx, movie);
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (trans)));
 }
 
 SWFDEC_AS_NATIVE (900, 420, swfdec_sprite_movie_set_transform)

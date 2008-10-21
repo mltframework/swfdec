@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2008 Pekka Lampila <pekka.lampila@iki.fi>
+ *		 2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,8 +22,7 @@
 #define _SWFDEC_TRANSFORM_H_
 
 #include <swfdec/swfdec_movie.h>
-#include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_as_relay.h>
 
 G_BEGIN_DECLS
 
@@ -37,13 +37,13 @@ typedef struct _SwfdecTransformAsClass SwfdecTransformAsClass;
 #define SWFDEC_TRANSFORM_AS_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_TRANSFORM_AS, SwfdecTransformAsClass))
 
 struct _SwfdecTransformAs {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   SwfdecMovie *		target;
 };
 
 struct _SwfdecTransformAsClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType			swfdec_transform_as_get_type	(void);

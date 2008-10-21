@@ -1,5 +1,6 @@
 /* Swfdec
  * Copyright (C) 2007-2008 Pekka Lampila <pekka.lampila@iki.fi>
+ *		 2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,17 +25,30 @@
 #include "swfdec_transform_as.h"
 
 #include "swfdec_color_transform_as.h"
-#include "swfdec_as_strings.h"
 #include "swfdec_as_internal.h"
-#include "swfdec_as_frame_internal.h"
+#include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_utils.h"
 
-G_DEFINE_TYPE (SwfdecTransformAs, swfdec_transform_as, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecTransformAs, swfdec_transform_as, SWFDEC_TYPE_AS_RELAY)
+
+static void
+swfdec_transform_as_mark (SwfdecGcObject *object)
+{
+  SwfdecTransformAs *trans = SWFDEC_TRANSFORM_AS (object);
+
+  if (trans->target != NULL)
+    swfdec_gc_object_mark (trans->target);
+
+  SWFDEC_GC_OBJECT_CLASS (swfdec_transform_as_parent_class)->mark (object);
+}
 
 static void
 swfdec_transform_as_class_init (SwfdecTransformAsClass *klass)
 {
+  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
+
+  gc_class->mark = swfdec_transform_as_mark;
 }
 
 static void
@@ -225,12 +239,14 @@ swfdec_transform_as_set_pixelBounds (SwfdecAsContext *cx,
 }
 
 // constructor
-SWFDEC_AS_CONSTRUCTOR (1106, 0, swfdec_transform_as_construct, swfdec_transform_as_get_type)
+SWFDEC_AS_NATIVE (1106, 0, swfdec_transform_as_construct)
 void
 swfdec_transform_as_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!cx->frame->construct)
+  SwfdecTransformAs *trans;
+
+  if (!swfdec_as_context_is_constructing (cx))
     return;
 
   if (argc < 1 ||
@@ -240,23 +256,29 @@ swfdec_transform_as_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  SWFDEC_TRANSFORM_AS (object)->target =
-    SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
+  trans = g_object_new (SWFDEC_TYPE_TRANSFORM_AS, "context", cx, NULL);
+  trans->target = SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (trans));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 SwfdecTransformAs *
 swfdec_transform_as_new (SwfdecAsContext *context, SwfdecMovie *target)
 {
   SwfdecTransformAs *transform;
+  SwfdecAsObject *object;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (SWFDEC_IS_MOVIE (target), NULL);
 
   transform = g_object_new (SWFDEC_TYPE_TRANSFORM_AS, "context", context, NULL);
-
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (transform),
-      SWFDEC_AS_STR_flash, SWFDEC_AS_STR_geom, SWFDEC_AS_STR_Transform, NULL);
   transform->target = target;
+
+  object = swfdec_as_object_new (context, NULL);
+  swfdec_as_object_set_constructor_by_name (object,
+      SWFDEC_AS_STR_flash, SWFDEC_AS_STR_geom, SWFDEC_AS_STR_Transform, NULL);
+
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (transform));
 
   return transform;
 }

@@ -752,6 +752,15 @@ EXTRA_DIST = \
 	constructor-madness-8.swf.trace \
 	constructor-prototype.swf \
 	constructor-prototype.swf.trace \
+	constructor-relay-5.swf \
+	constructor-relay-5.swf.trace \
+	constructor-relay-6.swf \
+	constructor-relay-6.swf.trace \
+	constructor-relay-7.swf \
+	constructor-relay-7.swf.trace \
+	constructor-relay-8.swf \
+	constructor-relay-8.swf.trace \
+	constructor-relay.as \
 	context-menu.as \
 	context-menu-5.swf \
 	context-menu-5.swf.trace \

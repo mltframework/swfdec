@@ -47,7 +47,7 @@ enum {
 };
 
 static guint signals[LAST_SIGNAL];
-G_DEFINE_TYPE (SwfdecBitmapData, swfdec_bitmap_data, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecBitmapData, swfdec_bitmap_data, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_bitmap_data_invalidate (SwfdecBitmapData *bitmap, guint x, guint y, guint w, guint h)
@@ -108,6 +108,7 @@ SwfdecBitmapData *
 swfdec_bitmap_data_new (SwfdecAsContext *context, gboolean transparent, guint width, guint height)
 {
   SwfdecBitmapData *bitmap;
+  SwfdecAsObject *object;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (width > 0, NULL);
@@ -122,8 +123,10 @@ swfdec_bitmap_data_new (SwfdecAsContext *context, gboolean transparent, guint wi
   bitmap->surface = cairo_image_surface_create (
       transparent ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24, width, height);
 
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (bitmap),
+  object = swfdec_as_object_new (context, NULL);
+  swfdec_as_object_set_constructor_by_name (object,
       SWFDEC_AS_STR_flash, SWFDEC_AS_STR_display, SWFDEC_AS_STR_BitmapData, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (bitmap));
 
   return bitmap;
 }
@@ -168,7 +171,7 @@ swfdec_bitmap_data_loadBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
   cairo_paint (cr);
   cairo_destroy (cr);
   cairo_surface_destroy (isurface);
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (bitmap));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (bitmap)));
 }
 
 // properties
@@ -383,7 +386,7 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecBitmapData *bitmap, *source, *alpha = NULL;
-  SwfdecAsObject *recto, *pt, *apt = NULL;
+  SwfdecAsObject *recto, *pt, *apt = NULL, *so, *ao = NULL;
   SwfdecRectangle rect;
   gboolean copy_alpha = FALSE;
   SwfdecColorTransform ctrans;
@@ -391,13 +394,14 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
   cairo_t *cr;
   int x, y;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ooo|OOb", &source, &recto, &pt,
-      &alpha, &apt, &copy_alpha);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ooo|OOb", &so, &recto, &pt,
+      &ao, &apt, &copy_alpha);
 
   if (bitmap->surface == NULL ||
-      !SWFDEC_IS_BITMAP_DATA (source) ||
-      source->surface == NULL ||
-      (argc > 3 && (!SWFDEC_IS_BITMAP_DATA (alpha) || alpha->surface == NULL)) ||
+      !SWFDEC_IS_BITMAP_DATA (so->relay) ||
+      (source = SWFDEC_BITMAP_DATA (so->relay))->surface == NULL ||
+      (argc > 3 && (!SWFDEC_IS_BITMAP_DATA (ao->relay) || 
+		    (alpha = SWFDEC_BITMAP_DATA (ao->relay))->surface == NULL)) ||
       !swfdec_rectangle_from_as_object (&rect, recto))
     return;
 
@@ -516,9 +520,9 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_renderer_attach (renderer, cr);
   cairo_transform (cr, &mat);
 
-  if (SWFDEC_IS_BITMAP_DATA (o)) {
+  if (SWFDEC_IS_BITMAP_DATA (o->relay)) {
     cairo_pattern_t *pattern = swfdec_bitmap_data_get_pattern (
-	SWFDEC_BITMAP_DATA (o), renderer, &ctrans);
+	SWFDEC_BITMAP_DATA (o->relay), renderer, &ctrans);
     if (pattern) {
       cairo_set_source (cr, pattern);
       cairo_paint (cr);
@@ -729,7 +733,7 @@ swfdec_bitmap_data_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
   cairo_set_source_surface (cr, bitmap->surface, 0, 0);
   cairo_paint (cr);
   cairo_destroy (cr);
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (clone));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (clone)));
 }
 
 SWFDEC_AS_NATIVE (1100, 22, swfdec_bitmap_data_do_dispose)
@@ -762,7 +766,7 @@ swfdec_bitmap_data_compare (SwfdecAsContext *cx,
   SWFDEC_STUB ("BitmapData.compare");
 }
 
-SWFDEC_AS_CONSTRUCTOR (1100, 0, swfdec_bitmap_data_construct, swfdec_bitmap_data_get_type)
+SWFDEC_AS_NATIVE (1100, 0, swfdec_bitmap_data_construct)
 void
 swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -775,7 +779,7 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!swfdec_as_context_is_constructing (cx))
     return;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ii|bi", 
+  SWFDEC_AS_CHECK (0, NULL, "ii|bi", 
       &w, &h, &transparent, &color);
   
   if (w > 2880 || w <= 0 || h > 2880 || h <= 0) {
@@ -785,6 +789,7 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!swfdec_as_context_try_use_mem (cx, w * h * 4))
     return;
+  bitmap = g_object_new (SWFDEC_TYPE_BITMAP_DATA, "context", cx, NULL);
   bitmap->width = w;
   bitmap->height = h;
   bitmap->surface = cairo_image_surface_create (
@@ -796,6 +801,8 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     cairo_paint (cr);
     cairo_destroy (cr);
   }
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (bitmap));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 /*** PUBLIC API ***/

@@ -433,7 +433,7 @@ swfdec_sprite_movie_beginBitmapFill (SwfdecAsContext *cx,
     SwfdecAsValue *rval)
 {
   SwfdecMovie *movie;
-  SwfdecBitmapData *bitmap;
+  SwfdecAsObject *bitmap;
   SwfdecPattern *pattern;
   SwfdecDraw *draw;
   SwfdecAsObject *mat = NULL;
@@ -443,10 +443,10 @@ swfdec_sprite_movie_beginBitmapFill (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "O|Obb", 
       &bitmap, &mat, &repeat, &smoothing);
   movie->draw_fill = NULL;
-  if (!SWFDEC_IS_BITMAP_DATA (bitmap))
+  if (!SWFDEC_IS_BITMAP_DATA (bitmap->relay))
     return;
   
-  pattern = swfdec_bitmap_pattern_new (bitmap);
+  pattern = swfdec_bitmap_pattern_new (SWFDEC_BITMAP_DATA (bitmap->relay));
   /* NB: This signal assumes that the pattern is destroyed before the movie is,
    * because it is never removed anywhere */
   g_signal_connect_swapped (pattern, "invalidate", G_CALLBACK (swfdec_movie_invalidate_last), movie);

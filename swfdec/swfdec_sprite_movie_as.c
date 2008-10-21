@@ -376,7 +376,7 @@ swfdec_sprite_movie_attachBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *parent;
-  SwfdecBitmapData *bitmap;
+  SwfdecAsObject *bitmap;
   const char *snapping = SWFDEC_AS_STR_auto;
   gboolean smoothing = FALSE;
   int depth;
@@ -385,7 +385,7 @@ swfdec_sprite_movie_attachBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SPRITE_MOVIE, &parent, "oi|sb", 
       &bitmap, &depth, &snapping, &smoothing);
 
-  if (!SWFDEC_IS_BITMAP_DATA (bitmap))
+  if (!SWFDEC_IS_BITMAP_DATA (bitmap->relay))
     return;
   if (swfdec_depth_classify (depth) == SWFDEC_DEPTH_CLASS_EMPTY)
     return;
@@ -394,7 +394,7 @@ swfdec_sprite_movie_attachBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (movie)
     swfdec_movie_remove (movie);
 
-  swfdec_bitmap_movie_new (parent, bitmap, depth);
+  swfdec_bitmap_movie_new (parent, SWFDEC_BITMAP_DATA (bitmap->relay), depth);
   SWFDEC_LOG ("created new BitmapMovie to parent %s at depth %d", 
       parent->name, depth);
 }

@@ -51,28 +51,22 @@ swfdec_as_relay_init (SwfdecAsRelay *object)
 {
 }
 
-#if 0
 /**
  * swfdec_as_relay_get_as_object:
- * @object: a #SwfdecAsRelay. This function takes a gpointer argument only to
- *          save you from having to cast it manually. For language bindings, 
- *          please treat this argument as having the #SwfdecAsRelay type.
+ * @object: a #SwfdecAsRelay.
  *
  * Gets the Actionscript object associated with this object.
  *
  * Returns: The #SwfdecAsObject associated with this relay.
  **/
-static SwfdecAsObject *
-swfdec_as_relay_get_as_object (gpointer object)
+SwfdecAsObject *
+swfdec_as_relay_get_as_object (SwfdecAsRelay *relay)
 {
-  SwfdecAsRelay *relay = object;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_RELAY (object), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_RELAY (relay), NULL);
   g_return_val_if_fail (relay->relay != NULL, NULL);
 
   return relay->relay;
 }
-#endif
 
 /**
  * swfdec_as_relay_call:

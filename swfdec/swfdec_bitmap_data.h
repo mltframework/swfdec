@@ -21,9 +21,9 @@
 #define _SWFDEC_BITMAP_DATA_H_
 
 #include <cairo.h>
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
+#include <swfdec/swfdec_color.h>
 #include <swfdec/swfdec_renderer.h>
-#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
@@ -37,7 +37,7 @@ typedef struct _SwfdecBitmapDataClass SwfdecBitmapDataClass;
 #define SWFDEC_BITMAP_DATA_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_BITMAP_DATA, SwfdecBitmapDataClass))
 
 struct _SwfdecBitmapData {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   cairo_surface_t *	surface;	/* An image surface or NULL */
   guint			width;		/* width of surface */
@@ -45,7 +45,7 @@ struct _SwfdecBitmapData {
 };
 
 struct _SwfdecBitmapDataClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType			swfdec_bitmap_data_get_type		(void);

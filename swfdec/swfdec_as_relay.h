@@ -47,6 +47,7 @@ struct _SwfdecAsRelayClass {
 
 GType		swfdec_as_relay_get_type	(void);
 
+SwfdecAsObject *swfdec_as_relay_get_as_object	(SwfdecAsRelay *	relay);
 
 gboolean	swfdec_as_relay_call		(SwfdecAsRelay *	relay,
 						 const char *		name,

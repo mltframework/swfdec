@@ -31,7 +31,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_TYPE (SwfdecAsNumber, swfdec_as_number, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecAsNumber, swfdec_as_number, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_as_number_class_init (SwfdecAsNumberClass *klass)
@@ -45,7 +45,7 @@ swfdec_as_number_init (SwfdecAsNumber *number)
 
 /*** AS CODE ***/
 
-SWFDEC_AS_CONSTRUCTOR (106, 2, swfdec_as_number_construct, swfdec_as_number_get_type)
+SWFDEC_AS_NATIVE (106, 2, swfdec_as_number_construct)
 void
 swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -53,14 +53,15 @@ swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   double d;
 
   if (argc > 0) {
-    d = swfdec_as_value_to_number (swfdec_gc_object_get_context (object), &argv[0]);
+    d = swfdec_as_value_to_number (cx, &argv[0]);
   } else {
     d = NAN;
   }
 
   if (swfdec_as_context_is_constructing (cx)) {
-    SwfdecAsNumber *num = SWFDEC_AS_NUMBER (object);
+    SwfdecAsNumber *num = g_object_new (SWFDEC_TYPE_AS_NUMBER, "context", cx, NULL);
     num->number = d;
+    swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (num));
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {
     swfdec_as_value_set_number (cx, ret, d);
@@ -140,10 +141,8 @@ swfdec_as_number_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecAsNumber *num;
 
-  if (!SWFDEC_IS_AS_NUMBER (object))
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_NUMBER, &num, "");
 
-  num = SWFDEC_AS_NUMBER (object);
   swfdec_as_value_set_number (cx, ret, num->number);
 }
 

@@ -20,8 +20,7 @@
 #ifndef _SWFDEC_AS_NUMBER_H_
 #define _SWFDEC_AS_NUMBER_H_
 
-#include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_as_relay.h>
 
 G_BEGIN_DECLS
 
@@ -36,13 +35,13 @@ typedef struct _SwfdecAsNumberClass SwfdecAsNumberClass;
 #define SWFDEC_AS_NUMBER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_NUMBER, SwfdecAsNumberClass))
 
 struct _SwfdecAsNumber {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   double		number;		/* number represented by this number object */
 };
 
 struct _SwfdecAsNumberClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType		swfdec_as_number_get_type	(void);

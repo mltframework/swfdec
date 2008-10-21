@@ -80,6 +80,11 @@ SwfdecAsObject * swfdec_as_object_set_constructor_by_namev
 						 const char *		name,
 						 va_list		args);
 
+/* swfdec_as_array.h */
+void		swfdec_as_array_remove_range	(SwfdecAsObject *	object,
+						 gint32			start_index,
+						 gint32			num);
+
 
 G_END_DECLS
 #endif

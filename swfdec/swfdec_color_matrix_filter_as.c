@@ -48,7 +48,7 @@ swfdec_color_matrix_filter_get_matrix (SwfdecAsContext *cx,
     swfdec_as_value_set_number (cx, &val[i], cm->matrix[i]);
   }
   array = swfdec_as_array_new (cx);
-  swfdec_as_array_append (SWFDEC_AS_ARRAY (array), 20, val);
+  swfdec_as_array_append (array, 20, val);
   SWFDEC_AS_VALUE_SET_OBJECT (ret, array);
 }
 
@@ -60,7 +60,7 @@ swfdec_color_matrix_filter_do_set_matrix (SwfdecColorMatrixFilter *cm,
   SwfdecAsValue val;
   int i;
 
-  if (!SWFDEC_IS_AS_ARRAY (array)) {
+  if (!array->array) {
     memset (cm->matrix, 0, sizeof (double) * 20);
     return;
   }

@@ -356,13 +356,13 @@ static void
 swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsArray *arr;
+  SwfdecAsObject *arr;
   SwfdecAsValue val;
   const char *str, *end, *delim;
   int count;
 
   str = swfdec_as_string_object_to_string (cx, object);
-  arr = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+  arr = swfdec_as_array_new (cx);
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
@@ -406,14 +406,14 @@ static void
 swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  SwfdecAsArray *arr;
+  SwfdecAsObject *arr;
   SwfdecAsValue val;
   const char *str, *end, *delim;
   int count;
   guint len;
 
   str = swfdec_as_string_object_to_string (cx, object);
-  arr = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+  arr = swfdec_as_array_new (cx);
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {

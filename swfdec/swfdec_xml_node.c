@@ -980,7 +980,7 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
 
   node->valid = TRUE;
   node->parent = NULL;
-  node->children = SWFDEC_AS_ARRAY (swfdec_as_array_new (swfdec_gc_object_get_context (object)));
+  node->children = swfdec_as_array_new (swfdec_gc_object_get_context (object));
   node->attributes = swfdec_as_object_new_empty (swfdec_gc_object_get_context (object));
   node->type = type;
   if (node->type == SWFDEC_XML_NODE_ELEMENT) {
@@ -989,7 +989,7 @@ swfdec_xml_node_init_values (SwfdecXmlNode *node, int type, const char* value)
     node->value = value;
   }
 
-  node->child_nodes = SWFDEC_AS_ARRAY (swfdec_as_array_new (swfdec_gc_object_get_context (object)));
+  node->child_nodes = swfdec_as_array_new (swfdec_gc_object_get_context (object));
 }
 
 static void

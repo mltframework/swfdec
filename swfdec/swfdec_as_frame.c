@@ -590,7 +590,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     args = swfdec_as_array_new (context);
     for (cur = swfdec_as_stack_iterator_init_arguments (&iter, frame); cur != NULL;
 	cur = swfdec_as_stack_iterator_next (&iter)) {
-      swfdec_as_array_push (SWFDEC_AS_ARRAY (args), cur);
+      swfdec_as_array_push (args, cur);
     }
 
     next = frame->next;

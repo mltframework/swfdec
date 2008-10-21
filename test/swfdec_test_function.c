@@ -57,7 +57,7 @@ swfdec_test_function_init_context (SwfdecAsContext *cx)
   SwfdecAsValue val;
   guint i;
 
-  obj = swfdec_as_object_new (cx);
+  obj = swfdec_as_object_new (cx, NULL);
   if (obj == NULL)
     return;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, obj);

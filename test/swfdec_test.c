@@ -200,13 +200,13 @@ main (int argc, char **argv)
       if (!g_str_has_suffix (file, ".swf"))
 	continue;
       SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (context, file));
-      swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+      swfdec_as_array_push (array, &val);
     }
     g_dir_close (dir);
   } else {
     for (i = 1; i < argc; i++) {
       SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (context, argv[i]));
-      swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+      swfdec_as_array_push (array, &val);
     }
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);

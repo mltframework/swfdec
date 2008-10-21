@@ -26,29 +26,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _SwfdecAsArrayClass SwfdecAsArrayClass;
-
-#define SWFDEC_TYPE_AS_ARRAY                    (swfdec_as_array_get_type())
-#define SWFDEC_IS_AS_ARRAY(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_ARRAY))
-#define SWFDEC_IS_AS_ARRAY_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AS_ARRAY))
-#define SWFDEC_AS_ARRAY(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AS_ARRAY, SwfdecAsArray))
-#define SWFDEC_AS_ARRAY_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AS_ARRAY, SwfdecAsArrayClass))
-#define SWFDEC_AS_ARRAY_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_ARRAY, SwfdecAsArrayClass))
-
-struct _SwfdecAsArray {
-  /*< private >*/
-  SwfdecAsObject	object;
-
-  // whether to remove elements if length property is changed
-  // disabled internally sometimes to not create extra valueOf calls
-  gboolean		check_length;
-};
-
-struct _SwfdecAsArrayClass {
-  SwfdecAsObjectClass	object_class;
-};
-
-GType		swfdec_as_array_get_type	(void);
 
 SwfdecAsObject *swfdec_as_array_new		(SwfdecAsContext *	context);
 
@@ -58,29 +35,29 @@ SwfdecAsObject *swfdec_as_array_new		(SwfdecAsContext *	context);
   swfdec_as_array_append_with_flags ((array), 1, (value), (flags))
 #define		swfdec_as_array_append(array,n,values) \
   swfdec_as_array_append_with_flags ((array), (n), (values), 0)
-void		swfdec_as_array_append_with_flags (SwfdecAsArray *	array,
+void		swfdec_as_array_append_with_flags (SwfdecAsObject *	array,
 						 guint			n,
 						 const SwfdecAsValue *	values,
 						 SwfdecAsVariableFlag	flags);
-void		swfdec_as_array_insert		(SwfdecAsArray *	array,
+void		swfdec_as_array_insert		(SwfdecAsObject *	array,
 						 gint32			idx,
 						 SwfdecAsValue *	value);
 #define		swfdec_as_array_insert(array,idx,value) \
   swfdec_as_array_insert_with_flags ((array), (idx), (value), 0)
-void		swfdec_as_array_insert_with_flags (SwfdecAsArray *	array,
+void		swfdec_as_array_insert_with_flags (SwfdecAsObject *	array,
 						 gint32			idx,
 						 const SwfdecAsValue *	value,
 						 SwfdecAsVariableFlag	flags);
-gint32		swfdec_as_array_get_length	(SwfdecAsArray *	array);
-void		swfdec_as_array_set_length	(SwfdecAsArray *	array,
+gint32		swfdec_as_array_get_length	(SwfdecAsObject *	array);
+void		swfdec_as_array_set_length	(SwfdecAsObject *	array,
 						 gint32			length);
-void		swfdec_as_array_get_value	(SwfdecAsArray *	array,
+void		swfdec_as_array_get_value	(SwfdecAsObject *	array,
 						 gint32			idx,
 						 SwfdecAsValue *	value);
-void		swfdec_as_array_set_value	(SwfdecAsArray *	array,
+void		swfdec_as_array_set_value	(SwfdecAsObject *	array,
 						 gint32			idx,
 						 SwfdecAsValue *	value);
-void		swfdec_as_array_remove		(SwfdecAsArray *	array,
+void		swfdec_as_array_remove		(SwfdecAsObject *	array,
 						 gint32			idx);
 
 

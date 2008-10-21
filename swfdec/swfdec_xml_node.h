@@ -65,13 +65,13 @@ struct _SwfdecXmlNode {
   const char		*value;		// for type != element
 
   SwfdecXmlNode		*parent;
-  SwfdecAsArray		*children;
+  SwfdecAsObject	*children;
   SwfdecAsObject	*attributes;
 
   // visible trough childNodes property, if modified by the user directly, the
   // changes are not visible in children and will get overwritten by next
   // internal change
-  SwfdecAsArray		*child_nodes;
+  SwfdecAsObject	*child_nodes;
 };
 
 struct _SwfdecXmlNodeClass {

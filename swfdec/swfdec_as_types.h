@@ -36,7 +36,6 @@ typedef enum {
   SWFDEC_AS_TYPE_OBJECT
 } SwfdecAsValueType;
 
-typedef struct _SwfdecAsArray SwfdecAsArray;
 typedef struct _SwfdecAsContext SwfdecAsContext;
 typedef struct _SwfdecAsDebugger SwfdecAsDebugger;
 typedef struct _SwfdecAsDoubleValue SwfdecAsDoubleValue;

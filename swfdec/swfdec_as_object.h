@@ -60,6 +60,7 @@ struct _SwfdecAsObject {
   /*< protected >*/
   SwfdecGcObject      	object;
   /*< private >*/
+  gboolean		array:1;	/* TRUE if object is an array */
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
   guint			prototype_flags; /* propflags for the prototype object */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */

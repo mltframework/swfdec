@@ -677,7 +677,7 @@ swfdec_text_format_do_get_tab_stops (SwfdecAsContext *cx,
   array = swfdec_as_array_new (cx);
   for (i = 0; i < format->attr.n_tab_stops; i++) {
     swfdec_as_value_set_integer (cx, &val, format->attr.tab_stops[i]);
-    swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+    swfdec_as_array_push (array, &val);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (ret, array);
 }
@@ -709,14 +709,14 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS);
   }
   else if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) &&
-	SWFDEC_IS_AS_ARRAY (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))
+	SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])->array)
   {
-    SwfdecAsArray *array;
+    SwfdecAsObject *array;
     SwfdecAsValue val;
     guint i;
     int len;
 
-    array = SWFDEC_AS_ARRAY (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
+    array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
     len = swfdec_as_array_get_length (array);
 
     if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS)) {

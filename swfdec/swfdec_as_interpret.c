@@ -1814,7 +1814,7 @@ swfdec_action_init_array (SwfdecAsContext *cx, guint action, const guint8 *data,
   /* NB: we can't increase the stack here, as the number can easily be MAXINT */
   for (i = 0; i < n && swfdec_as_stack_get_size (cx) > 0; i++) {
     swfdec_as_stack_ensure_size (cx, 1);
-    swfdec_as_array_push (SWFDEC_AS_ARRAY (array), swfdec_as_stack_pop (cx));
+    swfdec_as_array_push (array, swfdec_as_stack_pop (cx));
   }
   if (i != n) {
     SwfdecAsValue val;

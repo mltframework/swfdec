@@ -1,7 +1,6 @@
 #include <swfdec/swfdec.h>
 #include <swfdec-gtk/swfdec-gtk.h>
 
-swfdec_as_array_get_type
 swfdec_as_context_get_type
 swfdec_as_debugger_get_type
 swfdec_as_function_get_type

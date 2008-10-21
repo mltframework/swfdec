@@ -138,7 +138,7 @@ swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValu
     }
     if (!func (context, bits, &tmp))
       goto fail;
-    swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &tmp);
+    swfdec_as_array_push (array, &tmp);
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (val, array);

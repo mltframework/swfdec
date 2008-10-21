@@ -58,9 +58,7 @@ vivi_function_init_context (ViviApplication *app)
   SwfdecAsValue val;
   guint i;
 
-  obj = swfdec_as_object_new (cx);
-  if (obj == NULL)
-    return;
+  obj = swfdec_as_object_new (cx, NULL);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, obj);
   swfdec_as_object_set_variable (cx->global, 
       swfdec_as_context_get_string (cx, "Native"), &val);
@@ -76,9 +74,7 @@ vivi_function_init_context (ViviApplication *app)
     functions[i].fun);
   swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (fun),
       VIVI_TYPE_BREAKPOINT);
-  obj = swfdec_as_object_new (cx);
-  if (obj == NULL)
-    return;
+  obj = swfdec_as_object_new (cx, NULL);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, obj);
   swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (fun), 
       swfdec_as_context_get_string (cx, "prototype"), &val);

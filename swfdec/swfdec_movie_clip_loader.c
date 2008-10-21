@@ -56,7 +56,7 @@ swfdec_movie_clip_loader_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   array = swfdec_as_array_new (cx);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-  swfdec_as_array_push (SWFDEC_AS_ARRAY (array), &val);
+  swfdec_as_array_push (array, &val);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__listeners, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

@@ -1273,7 +1273,7 @@ swfdec_text_field_movie_getFontList (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
-  SwfdecAsArray *array;
+  SwfdecAsObject *array;
   SwfdecAsValue val;
   PangoFontFamily **families;
   int i, n_families;
@@ -1281,7 +1281,7 @@ swfdec_text_field_movie_getFontList (SwfdecAsContext *cx,
   pango_font_map_list_families (pango_cairo_font_map_get_default (),
       &families, &n_families);
 
-  array = SWFDEC_AS_ARRAY (swfdec_as_array_new (cx));
+  array = swfdec_as_array_new (cx);
   for (i = 0; i < n_families; i++) {
     SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx,
 	  pango_font_family_get_name (families[i])));

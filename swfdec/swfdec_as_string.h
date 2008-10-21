@@ -20,8 +20,7 @@
 #ifndef _SWFDEC_AS_STRING_H_
 #define _SWFDEC_AS_STRING_H_
 
-#include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_as_relay.h>
 
 G_BEGIN_DECLS
 
@@ -36,13 +35,13 @@ typedef struct _SwfdecAsStringClass SwfdecAsStringClass;
 #define SWFDEC_AS_STRING_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_STRING, SwfdecAsStringClass))
 
 struct _SwfdecAsString {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   const char *		string;		/* string represented by this string object */
 };
 
 struct _SwfdecAsStringClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType		swfdec_as_string_get_type	(void);

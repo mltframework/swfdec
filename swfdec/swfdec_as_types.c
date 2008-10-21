@@ -412,8 +412,8 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	    char *str = swfdec_movie_get_path (SWFDEC_MOVIE (object), TRUE);
 	    return swfdec_as_context_give_string (context, str);
 	  }
-	} else if (SWFDEC_IS_AS_STRING (object)) {
-	  return SWFDEC_AS_STRING (object)->string;
+	} else if (SWFDEC_IS_AS_STRING (object->relay)) {
+	  return SWFDEC_AS_STRING (object->relay)->string;
 	} else {
 	  SwfdecAsValue ret;
 	  swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &ret);

@@ -32,7 +32,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_TYPE (SwfdecAsString, swfdec_as_string, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecAsString, swfdec_as_string, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_as_string_do_mark (SwfdecGcObject *object)
@@ -44,23 +44,12 @@ swfdec_as_string_do_mark (SwfdecGcObject *object)
   SWFDEC_GC_OBJECT_CLASS (swfdec_as_string_parent_class)->mark (object);
 }
 
-static char *
-swfdec_as_string_debug (SwfdecAsObject *object)
-{
-  SwfdecAsString *string = SWFDEC_AS_STRING (object);
-
-  return g_strdup (string->string);
-}
-
 static void
 swfdec_as_string_class_init (SwfdecAsStringClass *klass)
 {
   SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   gc_class->mark = swfdec_as_string_do_mark;
-
-  asobject_class->debug = swfdec_as_string_debug;
 }
 
 static void
@@ -71,23 +60,17 @@ swfdec_as_string_init (SwfdecAsString *string)
 
 /*** AS CODE ***/
 
-static const char *
-swfdec_as_string_object_to_string (SwfdecAsContext *context,
-    SwfdecAsObject *object)
-{
-  SwfdecAsValue val;
-
-  g_return_val_if_fail (object == NULL || SWFDEC_IS_AS_OBJECT (object),
-      SWFDEC_AS_STR_EMPTY);
-
-  if (object == NULL) {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-  } else {
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-  }
-
-  return swfdec_as_value_to_string (context, &val);
-}
+#define SWFDEC_AS_STRING_CHECK(result,...) G_STMT_START {\
+  if (object) {\
+    SwfdecAsValue _tmp; \
+    SWFDEC_AS_VALUE_SET_OBJECT (&_tmp, object); \
+    *(result) = swfdec_as_value_to_string (cx, &_tmp);\
+  } else {\
+    *(result) = SWFDEC_AS_STR_undefined; \
+  }\
+  if (!swfdec_as_native_function_check (cx, object, 0, NULL, argc, argv, __VA_ARGS__)) \
+    return; \
+}G_STMT_END
 
 static const char *
 swfdec_as_str_nth_char (const char *s, guint n)
@@ -102,14 +85,12 @@ void
 swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   gsize len;
   const char *s;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_STRING_CHECK (&string, "s", &s);
 
-  s = swfdec_as_value_to_string (cx, &argv[0]);
   if (argc == 2) {
     int offset = swfdec_as_value_to_integer (cx, &argv[1]);
     if (offset < 0) {
@@ -133,14 +114,12 @@ void
 swfdec_as_string_indexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   int offset=0, len, i=-1;
   const char *s, *t = NULL;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_STRING_CHECK (&string, "s", &s);
 
-  s = swfdec_as_value_to_string (cx, &argv[0]);
   if (argc == 2)
     offset = swfdec_as_value_to_integer (cx, &argv[1]);
   if (offset < 0)
@@ -161,14 +140,12 @@ void
 swfdec_as_string_charAt (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   int i;
   const char *s, *t;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_STRING_CHECK (&string, "i", &i);
 
-  i = swfdec_as_value_to_integer (cx, &argv[0]);
   if (i < 0) {
     SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STR_EMPTY);
     return;
@@ -188,15 +165,13 @@ void
 swfdec_as_string_charCodeAt (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   int i;
   const char *s;
   gunichar c;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_STRING_CHECK (&string, "i", &i);
 
-  i = swfdec_as_value_to_integer (cx, &argv[0]);
   if (i < 0) {
     swfdec_as_value_set_number (cx, ret, NAN);
     return;
@@ -242,8 +217,7 @@ swfdec_as_string_fromCharCode_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   if (s) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_get_string (cx, s));
-    g_free (s);
+    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
   } else {
     SWFDEC_ERROR ("%s", error->message);
     g_error_free (error);
@@ -295,7 +269,7 @@ swfdec_as_string_fromCharCode (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 }
 
-SWFDEC_AS_CONSTRUCTOR (251, 0, swfdec_as_string_construct, swfdec_as_string_get_type)
+SWFDEC_AS_NATIVE (251, 0, swfdec_as_string_construct)
 void
 swfdec_as_string_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -309,13 +283,16 @@ swfdec_as_string_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   if (swfdec_as_context_is_constructing (cx)) {
-    SwfdecAsString *string = SWFDEC_AS_STRING (object);
+    SwfdecAsString *string = g_object_new (SWFDEC_TYPE_AS_STRING, "context", cx, NULL);
     SwfdecAsValue val;
 
     string->string = s;
+    swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (string));
+
     swfdec_as_value_set_integer (cx, &val, g_utf8_strlen (string->string, -1));
     swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_length,
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, s);
@@ -327,10 +304,11 @@ void
 swfdec_as_string_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_AS_STRING (object))
-    return;
+  SwfdecAsString *string;
 
-  SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STRING (object)->string);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_STRING, &string, "");
+
+  SWFDEC_AS_VALUE_SET_STRING (ret, string->string);
 }
 
 SWFDEC_AS_NATIVE (251, 1, swfdec_as_string_valueOf)
@@ -338,18 +316,11 @@ void
 swfdec_as_string_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (object == NULL)
-    return;
+  const char *string;
 
-  if (SWFDEC_IS_AS_STRING (object)) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_AS_STRING (object)->string);
-  } else {
-    SwfdecAsValue val;
+  SWFDEC_AS_STRING_CHECK (&string, "");
 
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-    SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_value_to_string (cx, &val));
-  }
-
+  SWFDEC_AS_VALUE_SET_STRING (ret, string);
 }
 
 static void
@@ -361,7 +332,8 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *str, *end, *delim;
   int count;
 
-  str = swfdec_as_string_object_to_string (cx, object);
+  SWFDEC_AS_STRING_CHECK (&str, "");
+
   arr = swfdec_as_array_new (cx);
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
@@ -412,7 +384,8 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
   int count;
   guint len;
 
-  str = swfdec_as_string_object_to_string (cx, object);
+  SWFDEC_AS_STRING_CHECK (&str, "");
+
   arr = swfdec_as_array_new (cx);
   SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
@@ -477,13 +450,10 @@ swfdec_as_string_slice (SwfdecAsContext *cx, SwfdecAsObject *object,
   int start, end, length;
   const char *str;
 
-  if (argc == 0)
-    return;
+  SWFDEC_AS_STRING_CHECK (&str, "i", &start);
 
-  str = swfdec_as_string_object_to_string (cx, object);
   length = g_utf8_strlen (str, -1);
 
-  start = swfdec_as_value_to_integer (cx, &argv[0]);
   if (start < 0)
     start += length;
   start = CLAMP (start, 0, length);
@@ -508,8 +478,11 @@ swfdec_as_string_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   guint i;
   GString *string;
+  const char *s;
 
-  string = g_string_new (swfdec_as_string_object_to_string (cx, object));
+  SWFDEC_AS_STRING_CHECK (&s, "");
+
+  string = g_string_new (s);
 
   for (i = 0; i < argc; i++) {
     string = g_string_append (string, swfdec_as_value_to_string (cx, &argv[i]));
@@ -535,13 +508,11 @@ void
 swfdec_as_string_substr (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   int from, to, len;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_STRING_CHECK (&string, "i", &from);
 
-  from = swfdec_as_value_to_integer (cx, &argv[0]);
   len = g_utf8_strlen (string, -1);
   
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1])) {
@@ -572,14 +543,12 @@ void
 swfdec_as_string_substring (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   int from, to, len;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_STRING_CHECK (&string, "i", &from);
 
   len = g_utf8_strlen (string, -1);
-  from = swfdec_as_value_to_integer (cx, &argv[0]);
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1])) {
     to = swfdec_as_value_to_integer (cx, &argv[1]);
   } else {
@@ -604,8 +573,10 @@ void
 swfdec_as_string_toLowerCase (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   char *s;
+
+  SWFDEC_AS_STRING_CHECK (&string, "");
 
   s = g_utf8_strdown (string, -1);
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
@@ -616,8 +587,10 @@ void
 swfdec_as_string_toUpperCase (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   char *s;
+
+  SWFDEC_AS_STRING_CHECK (&string, "");
 
   s = g_utf8_strup (string, -1);
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
@@ -629,8 +602,10 @@ void
 swfdec_as_string_old_toLowerCase (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   char *s;
+
+  SWFDEC_AS_STRING_CHECK (&string, "");
 
   s = g_ascii_strdown (string, -1);
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));
@@ -642,8 +617,10 @@ void
 swfdec_as_string_old_toUpperCase (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  const char *string = swfdec_as_string_object_to_string (cx, object);
+  const char *string;
   char *s;
+
+  SWFDEC_AS_STRING_CHECK (&string, "");
 
   s = g_ascii_strup (string, -1);
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, s));

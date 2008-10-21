@@ -1241,13 +1241,7 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
     fields = g_new (const char *, num_fields + 1);
     for (i = 0; i < num_fields; i++) {
       swfdec_as_array_get_value (array, i, &val);
-      if (SWFDEC_AS_VALUE_IS_OBJECT (&val) &&
-	  SWFDEC_IS_AS_STRING (SWFDEC_AS_VALUE_GET_OBJECT (&val))) {
-	fields[i] =
-	  SWFDEC_AS_STRING (SWFDEC_AS_VALUE_GET_OBJECT (&val))->string;
-      } else {
-	fields[i] = swfdec_as_value_to_string (cx, &val);
-      }
+      fields[i] = swfdec_as_value_to_string (cx, &val);
     }
 
     fields[i] = NULL;

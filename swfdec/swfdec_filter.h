@@ -21,7 +21,7 @@
 #define _SWFDEC_FILTER_H_
 
 #include <swfdec/swfdec.h>
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_bits.h>
 #include <swfdec/swfdec_types.h>
 
@@ -37,11 +37,11 @@ typedef struct _SwfdecFilterClass SwfdecFilterClass;
 #define SWFDEC_FILTER_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_FILTER, SwfdecFilterClass))
 
 struct _SwfdecFilter {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 };
 
 struct _SwfdecFilterClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsObjectClass	relay_class;
 
   void			(* clone)		(SwfdecFilter *		dest,
 						 SwfdecFilter *		source);

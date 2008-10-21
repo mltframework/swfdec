@@ -27,7 +27,7 @@
 #include "swfdec_color_matrix_filter.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecFilter, swfdec_filter, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (SwfdecFilter, swfdec_filter, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_filter_class_init (SwfdecFilterClass *klass)

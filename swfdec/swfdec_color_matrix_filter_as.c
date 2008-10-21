@@ -88,7 +88,7 @@ swfdec_color_matrix_filter_set_matrix (SwfdecAsContext *cx,
   swfdec_color_matrix_filter_do_set_matrix (cm, array);
 }
 
-SWFDEC_AS_CONSTRUCTOR (1110, 0, swfdec_color_matrix_filter_contruct, swfdec_color_matrix_filter_get_type)
+SWFDEC_AS_NATIVE (1110, 0, swfdec_color_matrix_filter_contruct)
 void
 swfdec_color_matrix_filter_contruct (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -100,7 +100,11 @@ swfdec_color_matrix_filter_contruct (SwfdecAsContext *cx,
   if (!swfdec_as_context_is_constructing (cx))
     return;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_MATRIX_FILTER, &cm, "o", &array);
+  SWFDEC_AS_CHECK (0, NULL, "o", &array);
 
+  cm = g_object_new (SWFDEC_TYPE_COLOR_MATRIX_FILTER, "context", cx, NULL);
   swfdec_color_matrix_filter_do_set_matrix (cm, array);
+
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (cm));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

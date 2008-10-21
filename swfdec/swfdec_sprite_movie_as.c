@@ -163,9 +163,9 @@ swfdec_sprite_movie_set_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
     if (!swfdec_as_object_get_variable (array, 
 	  swfdec_as_integer_to_string (cx, i), &val) ||
 	!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-	!SWFDEC_IS_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+	!SWFDEC_IS_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay))
       continue;
-    filter = SWFDEC_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (&val));
+    filter = SWFDEC_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay);
     filter = swfdec_filter_clone (filter);
     list = g_slist_prepend (list, filter);
   }

@@ -105,7 +105,7 @@ swfdec_blur_filter_set_quality (SwfdecAsContext *cx, SwfdecAsObject *object,
 }
 
 // constructor
-SWFDEC_AS_CONSTRUCTOR (1102, 0, swfdec_blur_filter_construct, swfdec_blur_filter_get_type)
+SWFDEC_AS_NATIVE (1102, 0, swfdec_blur_filter_construct)
 void
 swfdec_blur_filter_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
@@ -114,13 +114,16 @@ swfdec_blur_filter_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   double x = 4, y = 4;
   int quality = 1;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_BLUR_FILTER, &filter, "|nni", &x, &y, &quality);
+  SWFDEC_AS_CHECK (0, NULL, "|nni", &x, &y, &quality);
 
   if (!swfdec_as_context_is_constructing (cx))
     return;
 
+  filter = g_object_new (SWFDEC_TYPE_BLUR_FILTER, "context", cx, NULL);
   filter->x = CLAMP (x, 0, 255);
   filter->y = CLAMP (y, 0, 255);
   filter->quality = CLAMP (quality, 0, 15);
+
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (filter));
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

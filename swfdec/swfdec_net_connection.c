@@ -33,15 +33,15 @@
 
 /*** SwfdecNetConnection ***/
 
-G_DEFINE_TYPE (SwfdecNetConnection, swfdec_net_connection, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecNetConnection, swfdec_net_connection, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_net_connection_dispose (GObject *object)
 {
-  SwfdecNetConnection *net_connection = SWFDEC_NET_CONNECTION (object);
+  SwfdecNetConnection *conn = SWFDEC_NET_CONNECTION (object);
 
-  g_free (net_connection->url);
-  net_connection->url = NULL;
+  g_free (conn->url);
+  conn->url = NULL;
 
   G_OBJECT_CLASS (swfdec_net_connection_parent_class)->dispose (object);
 }
@@ -76,7 +76,7 @@ swfdec_net_connection_onstatus (SwfdecNetConnection *conn, const char *code,
     swfdec_as_object_set_variable (info, SWFDEC_AS_STR_description, &value);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&value, info);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (conn), SWFDEC_AS_STR_onStatus, 1, &value, NULL);
+  swfdec_as_relay_call (SWFDEC_AS_RELAY(conn), SWFDEC_AS_STR_onStatus, 1, &value, NULL);
 }
 
 void
@@ -111,7 +111,8 @@ swfdec_net_connection_do_connect (SwfdecAsContext *cx, SwfdecAsObject *object,
   } else if (SWFDEC_AS_VALUE_IS_NULL (&val)) {
     url = NULL;
   } else {
-    SWFDEC_FIXME ("untested argument to NetConnection.connect: type %u", val.type);
+    SWFDEC_FIXME ("untested argument to NetConnection.connect: type %u",
+	SWFDEC_AS_VALUE_GET_TYPE (&val));
     url = NULL;
   }
   swfdec_net_connection_connect (conn, url);
@@ -160,10 +161,17 @@ swfdec_net_connection_get_usingTLS (SwfdecAsContext *cx,
 }
 
 // not actually the constructor, but called from the constructor
-SWFDEC_AS_CONSTRUCTOR (2100, 200, swfdec_net_connection_construct, swfdec_net_connection_get_type)
+SWFDEC_AS_NATIVE (2100, 200, swfdec_net_connection_construct)
 void
 swfdec_net_connection_construct (SwfdecAsContext *cx, SwfdecAsObject *obj,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
+  SwfdecNetConnection *conn;
+
+  if (obj == NULL)
+    return;
+
+  conn = g_object_new (SWFDEC_TYPE_NET_CONNECTION, "context", cx, NULL);
   // FIXME: Set contentType and possible do some other stuff too
+  swfdec_as_object_set_relay (obj, SWFDEC_AS_RELAY (conn));
 }

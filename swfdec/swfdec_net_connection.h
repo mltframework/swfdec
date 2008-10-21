@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_NET_CONNECTION_H_
 #define _SWFDEC_NET_CONNECTION_H_
 
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
 
 G_BEGIN_DECLS
 
@@ -36,13 +36,13 @@ typedef struct _SwfdecNetConnectionClass SwfdecNetConnectionClass;
 #define SWFDEC_NET_CONNECTION_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_NET_CONNECTION, SwfdecNetConnectionClass))
 
 struct _SwfdecNetConnection {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   char *		url;		/* url for this net_connection or NULL for none */
 };
 
 struct _SwfdecNetConnectionClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType			swfdec_net_connection_get_type	(void);

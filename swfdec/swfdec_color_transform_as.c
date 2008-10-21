@@ -27,7 +27,7 @@
 #include "swfdec_as_frame_internal.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_TYPE (SwfdecColorTransformAs, swfdec_color_transform_as, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecColorTransformAs, swfdec_color_transform_as, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_color_transform_as_class_init (SwfdecColorTransformAsClass *klass)
@@ -316,9 +316,9 @@ swfdec_color_transform_as_concat (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_TRANSFORM_AS, &transform, "o",
       &other_object);
 
-  if (!SWFDEC_IS_COLOR_TRANSFORM_AS (other_object))
+  if (!SWFDEC_IS_COLOR_TRANSFORM_AS (other_object->relay))
     return;
-  other = SWFDEC_COLOR_TRANSFORM_AS (other_object);
+  other = SWFDEC_COLOR_TRANSFORM_AS (other_object->relay);
 
   transform->rb += (transform->ra * other->rb);
   transform->gb += (transform->ga * other->gb);
@@ -331,32 +331,27 @@ swfdec_color_transform_as_concat (SwfdecAsContext *cx,
 }
 
 // constructor
-SWFDEC_AS_CONSTRUCTOR (1105, 0, swfdec_color_transform_as_construct, swfdec_color_transform_as_get_type)
+SWFDEC_AS_NATIVE (1105, 0, swfdec_color_transform_as_construct)
 void
 swfdec_color_transform_as_construct (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
     SwfdecAsValue *ret)
 {
   SwfdecColorTransformAs *transform;
-  guint i;
 
   if (!cx->frame->construct)
     return;
 
+  transform = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, "context", cx, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (transform));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+
   if (argc < 8)
     return;
 
-  transform = SWFDEC_COLOR_TRANSFORM_AS (object);
-
-  i = 0;
-  transform->ra = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->ga = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->ba = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->aa = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->rb = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->gb = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->bb = swfdec_as_value_to_number (cx, &argv[i++]);
-  transform->ab = swfdec_as_value_to_number (cx, &argv[i++]);
+  SWFDEC_AS_CHECK (0, NULL, "nnnnnnnn", 
+      &transform->ra, &transform->ga, &transform->ba, &transform->aa,
+      &transform->rb, &transform->gb, &transform->bb, &transform->ab);
 }
 
 SwfdecColorTransformAs *
@@ -364,13 +359,16 @@ swfdec_color_transform_as_new_from_transform (SwfdecAsContext *context,
     const SwfdecColorTransform *transform)
 {
   SwfdecColorTransformAs *transform_as;
+  SwfdecAsObject *object;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (transform != NULL, NULL);
 
   transform_as = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, "context", context, NULL);
-
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (transform_as),
+  /* do it this way so the constructor isn't called */
+  object = swfdec_as_object_new (context, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (transform_as));
+  swfdec_as_object_set_constructor_by_name (object, 
       SWFDEC_AS_STR_flash, SWFDEC_AS_STR_geom, SWFDEC_AS_STR_ColorTransform, NULL);
 
   transform_as->ra = transform->ra / 256.0;

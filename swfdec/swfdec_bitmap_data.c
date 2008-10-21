@@ -499,8 +499,8 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
   } else {
     cairo_matrix_init_identity (&mat);
   }
-  if (SWFDEC_IS_COLOR_TRANSFORM_AS (trans)) {
-    swfdec_color_transform_get_transform (SWFDEC_COLOR_TRANSFORM_AS (trans), &ctrans);
+  if (trans && SWFDEC_IS_COLOR_TRANSFORM_AS (trans->relay)) {
+    swfdec_color_transform_get_transform (SWFDEC_COLOR_TRANSFORM_AS (trans->relay), &ctrans);
   } else {
     swfdec_color_transform_init_identity (&ctrans);
   }
@@ -633,8 +633,8 @@ swfdec_bitmap_data_colorTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (!swfdec_rectangle_from_as_object (&area, rect))
     return;
-  if (SWFDEC_IS_COLOR_TRANSFORM_AS (trans))
-    swfdec_color_transform_get_transform (SWFDEC_COLOR_TRANSFORM_AS (trans), &ctrans);
+  if (trans &&  SWFDEC_IS_COLOR_TRANSFORM_AS (trans->relay))
+    swfdec_color_transform_get_transform (SWFDEC_COLOR_TRANSFORM_AS (trans->relay), &ctrans);
   else
     return;
 

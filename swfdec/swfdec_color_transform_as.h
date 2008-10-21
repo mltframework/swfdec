@@ -20,9 +20,7 @@
 #ifndef _SWFDEC_COLOR_TRANSFORM_H_
 #define _SWFDEC_COLOR_TRANSFORM_H_
 
-#include <swfdec/swfdec_as_object.h>
-#include <swfdec/swfdec_as_types.h>
-#include <swfdec/swfdec_types.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_color.h>
 
 G_BEGIN_DECLS
@@ -38,13 +36,13 @@ typedef struct _SwfdecColorTransformAsClass SwfdecColorTransformAsClass;
 #define SWFDEC_COLOR_TRANSFORM_AS_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_COLOR_TRANSFORM_AS, SwfdecColorTransformAsClass))
 
 struct _SwfdecColorTransformAs {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   double		ra, rb, ga, gb, ba, bb, aa, ab;
 };
 
 struct _SwfdecColorTransformAsClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType			swfdec_color_transform_as_get_type		(void);

@@ -256,7 +256,7 @@ ASSetPropFlags(LoadVars.prototype, null, 131);
 
 /*** Sound ***/
 
-Sound = ASconstructor (500, 16);
+Sound = ASconstructor (500, 17);
 ASSetNative (Sound.prototype, 500, "getPan,getTransform,getVolume,setPan,setTransform,setVolume,stop,attachSound,start,6getDuration,6setDuration,6getPosition,6setPosition,6loadSound,6getBytesLoaded,6getBytesTotal,9areSoundsInaccessible");
 ASSetNativeAccessor (Sound.prototype, 500, "checkPolicyFile", 18);
 ASSetPropFlags (Sound.prototype, null, 7);

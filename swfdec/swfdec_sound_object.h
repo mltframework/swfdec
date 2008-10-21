@@ -20,6 +20,7 @@
 #ifndef _SWFDEC_SOUND_OBJECT_H_
 #define _SWFDEC_SOUND_OBJECT_H_
 
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_audio.h>
 #include <swfdec/swfdec_load_sound.h>
 #include <swfdec/swfdec_movie.h>
@@ -39,14 +40,14 @@ typedef struct _SwfdecSoundObjectClass SwfdecSoundObjectClass;
 #define SWFDEC_SOUND_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_SOUND_OBJECT, SwfdecSoundObjectClass))
 
 struct _SwfdecSoundObject {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   const char *		target;		/* target or NULL if global */
   SwfdecSoundProvider *	provider;	/* sound that we play */
 };
 
 struct _SwfdecSoundObjectClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType			swfdec_sound_object_get_type	(void);

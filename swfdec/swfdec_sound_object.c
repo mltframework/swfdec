@@ -36,7 +36,7 @@
 
 /*** SwfdecSoundObject ***/
 
-G_DEFINE_TYPE (SwfdecSoundObject, swfdec_sound_object, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecSoundObject, swfdec_sound_object, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_sound_object_mark (SwfdecGcObject *object)
@@ -438,24 +438,25 @@ swfdec_sound_object_stop (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
   }
 }
 
-SWFDEC_AS_CONSTRUCTOR (500, 16, swfdec_sound_object_construct, swfdec_sound_object_get_type)
+SWFDEC_AS_NATIVE (500, 17, swfdec_sound_object_construct)
 void
 swfdec_sound_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc, 
     SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecSoundObject *sound;
-  SwfdecPlayer *player;
     
   if (!swfdec_as_context_is_constructing (cx))
     return;
 
-  sound = SWFDEC_SOUND_OBJECT (object);
-  player = SWFDEC_PLAYER (cx);
+  sound = g_object_new (SWFDEC_TYPE_SOUND_OBJECT, "context", cx, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (sound));
 
   if (argc == 0 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     sound->target = NULL;
   } else {
     sound->target = swfdec_as_value_to_string (cx, &argv[0]);
   }
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 

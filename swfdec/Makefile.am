@@ -209,6 +209,7 @@ public_headers = \
 	swfdec_as_function.h \
 	swfdec_as_native_function.h \
 	swfdec_as_object.h \
+	swfdec_as_string_value.h \
 	swfdec_as_types.h \
 	swfdec_audio.h \
 	swfdec_buffer.h \

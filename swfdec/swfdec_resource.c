@@ -157,7 +157,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
     memcpy (&vals[skip], args, sizeof (SwfdecAsValue) * n_args);
   /* FIXME: what's the correct sandbox here? */
   swfdec_sandbox_use (resource->clip_loader_sandbox);
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (resource->clip_loader), SWFDEC_AS_STR_broadcastMessage, 
+  swfdec_as_relay_call (SWFDEC_AS_RELAY (resource->clip_loader), SWFDEC_AS_STR_broadcastMessage, 
       n_args + skip, vals, NULL);
   swfdec_sandbox_unuse (resource->clip_loader_sandbox);
 }

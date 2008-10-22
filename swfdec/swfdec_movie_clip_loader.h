@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_MOVIE_CLIP_LOADER_H_
 #define _SWFDEC_MOVIE_CLIP_LOADER_H_
 
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
 
 G_BEGIN_DECLS
 
@@ -36,12 +36,12 @@ typedef struct _SwfdecMovieClipLoaderClass SwfdecMovieClipLoaderClass;
 
 struct _SwfdecMovieClipLoader
 {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 };
 
 struct _SwfdecMovieClipLoaderClass
 {
-  SwfdecAsObjectClass 	object_class;
+  SwfdecAsRelayClass 	relay_class;
 };
 
 GType swfdec_movie_clip_loader_get_type (void);

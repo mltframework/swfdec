@@ -31,7 +31,7 @@
 #include "swfdec_resource.h"
 
 
-G_DEFINE_TYPE (SwfdecMovieClipLoader, swfdec_movie_clip_loader, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecMovieClipLoader, swfdec_movie_clip_loader, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_movie_clip_loader_class_init (SwfdecMovieClipLoaderClass *klass)
@@ -43,16 +43,20 @@ swfdec_movie_clip_loader_init (SwfdecMovieClipLoader *movie_clip_loader)
 {
 }
 
-SWFDEC_AS_CONSTRUCTOR (112, 0, swfdec_movie_clip_loader_construct, swfdec_movie_clip_loader_get_type)
+SWFDEC_AS_NATIVE (112, 0, swfdec_movie_clip_loader_construct)
 void 
 swfdec_movie_clip_loader_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecAsValue val;
   SwfdecAsObject *array;
+  SwfdecMovieClipLoader *loader;
 
   if (!swfdec_as_context_is_constructing (cx))
     return;
+
+  loader = g_object_new (SWFDEC_TYPE_MOVIE_CLIP_LOADER, "context", cx, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (loader));
 
   array = swfdec_as_array_new (cx);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
@@ -60,6 +64,8 @@ swfdec_movie_clip_loader_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__listeners, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 SWFDEC_AS_NATIVE (112, 100, swfdec_movie_clip_loader_loadClip)

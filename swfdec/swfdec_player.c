@@ -1111,8 +1111,8 @@ swfdec_player_dispose (GObject *object)
 }
 
 static void
-swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const char *signal,
-    guint argc, SwfdecAsValue *argv)
+swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, 
+    const char *signal_name, guint argc, SwfdecAsValue *argv)
 {
   GSList *walk;
   SwfdecAsValue vals[3];
@@ -1125,7 +1125,7 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const ch
     memcpy (&vals[1], argv, argc * sizeof (SwfdecAsValue));
   }
 
-  SWFDEC_DEBUG ("broadcasting message %s.%s", object_name, signal);
+  SWFDEC_DEBUG ("broadcasting message %s.%s", object_name, signal_name);
   /* FIXME: sandbox ordering? */
   for (walk = player->priv->sandboxes; walk; walk = walk->next) {
     SwfdecSandbox *sandbox = walk->data;
@@ -1133,7 +1133,7 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name, const ch
     if (!SWFDEC_AS_VALUE_IS_OBJECT (&vals[0]))
       return;
     obj = SWFDEC_AS_VALUE_GET_OBJECT (&vals[0]);
-    SWFDEC_AS_VALUE_SET_STRING (&vals[0], signal);
+    SWFDEC_AS_VALUE_SET_STRING (&vals[0], signal_name);
     swfdec_sandbox_use (sandbox);
     swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, argc + 1, vals, NULL);
     swfdec_sandbox_unuse (sandbox);

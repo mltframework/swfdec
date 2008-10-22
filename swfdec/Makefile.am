@@ -381,19 +381,13 @@ swfdec_asnative.c: $(libswfdec_source_files)
 	  && echo "#include \"swfdec_as_types.h\"" \
 	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) void func (SwfdecAsContext *cx, \\" \
 	  && echo "    SwfdecAsObject *object, guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret);" \
-	  && echo "#define SWFDEC_AS_CONSTRUCTOR(x,y,func,type) SWFDEC_AS_NATIVE(x,y,func) GType type (void);" \
-	  && grep -he "^SWFDEC_AS_CONSTRUCTOR" $(libswfdec_source_files) \
 	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_source_files) \
-	  && echo "#undef SWFDEC_AS_CONSTRUCTOR" \
 	  && echo "#undef SWFDEC_AS_NATIVE" \
-	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) SWFDEC_AS_CONSTRUCTOR(x,y,func,NULL)" \
-	  && echo "#define SWFDEC_AS_CONSTRUCTOR(x,y,func,type) { x, y, func, G_STRINGIFY (func), type }," \
-	  && echo "const struct { guint x, y; SwfdecAsNative func; const char *name; GType (* get_type) (void); } native_funcs[] = {" \
-	  && grep -he "^SWFDEC_AS_CONSTRUCTOR" $(libswfdec_source_files) \
+	  && echo "#define SWFDEC_AS_NATIVE(x,y,func) { x, y, func, G_STRINGIFY (func) }," \
+	  && echo "const struct { guint x, y; SwfdecAsNative func; const char *name; } native_funcs[] = {" \
 	  && grep -he "^SWFDEC_AS_NATIVE" $(libswfdec_source_files) \
 	  && echo "  { 0, 0, NULL }" \
 	  && echo "};" \
-	  && echo "#undef SWFDEC_AS_CONSTRUCTOR" \
 	  && echo "#undef SWFDEC_AS_NATIVE" \
 	 ) >> xgen-san \
 	&& (cmp -s xgen-san swfdec_asnative.c || cp xgen-san swfdec_asnative.c) \

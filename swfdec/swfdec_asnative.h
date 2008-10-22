@@ -28,7 +28,6 @@ extern const struct {
   guint x, y; 
   SwfdecAsNative func; 
   const char *name; 
-  GType (* get_type) (void); 
 } native_funcs[];
 
 G_END_DECLS

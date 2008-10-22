@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -48,6 +48,9 @@ swfdec_xml_mark (SwfdecGcObject *object)
   if (xml->doc_type_decl != NULL)
     swfdec_as_string_mark (xml->doc_type_decl);
 
+  swfdec_as_value_mark (&xml->content_type);
+  swfdec_as_value_mark (&xml->loaded);
+
   SWFDEC_GC_OBJECT_CLASS (swfdec_xml_parent_class)->mark (object);
 }
 
@@ -62,6 +65,8 @@ swfdec_xml_class_init (SwfdecXmlClass *klass)
 static void
 swfdec_xml_init (SwfdecXml *xml)
 {
+  SWFDEC_AS_VALUE_SET_STRING (&xml->content_type,
+      SWFDEC_AS_STR_application_x_www_form_urlencoded);
 }
 
 typedef struct {
@@ -170,12 +175,12 @@ void
 swfdec_xml_do_escape (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  const char *s;
   char *escaped;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
 
-  escaped = swfdec_xml_escape (swfdec_as_value_to_string (cx, &argv[0]));
+  escaped = swfdec_xml_escape (s);
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, escaped));
 }
 
@@ -183,31 +188,27 @@ static void
 swfdec_xml_get_ignoreWhite (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, SWFDEC_XML (object)->ignore_white);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "");
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (ret, xml->ignore_white);
 }
 
 static void
 swfdec_xml_set_ignoreWhite (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
+  char *ignore;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "s", &ignore);
 
   // special case
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
-  // special case, call toString of objects
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
-    swfdec_as_value_to_string (cx, &argv[0]);
-
-  SWFDEC_XML (object)->ignore_white =
+  xml->ignore_white =
     swfdec_as_value_to_boolean (cx, &argv[0]);
 }
 
@@ -215,11 +216,12 @@ static void
 swfdec_xml_get_xmlDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
 
-  if (SWFDEC_XML (object)->xml_decl != NULL) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML (object)->xml_decl);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "");
+
+  if (xml->xml_decl != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, xml->xml_decl);
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
@@ -229,28 +231,28 @@ static void
 swfdec_xml_set_xmlDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
+  const char *s;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "s", &s);
 
   // special case
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
-  SWFDEC_XML (object)->xml_decl = swfdec_as_value_to_string (cx, &argv[0]);
+  xml->xml_decl = s;
 }
 
 static void
 swfdec_xml_get_docTypeDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
 
-  if (SWFDEC_XML (object)->doc_type_decl != NULL) {
-    SWFDEC_AS_VALUE_SET_STRING (ret, SWFDEC_XML (object)->doc_type_decl);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "");
+
+  if (xml->doc_type_decl != NULL) {
+    SWFDEC_AS_VALUE_SET_STRING (ret, xml->doc_type_decl);
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
@@ -260,76 +262,70 @@ static void
 swfdec_xml_set_docTypeDecl (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
+  const char *s;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "s", &s);
 
   // special case
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
-  SWFDEC_XML (object)->doc_type_decl =
-    swfdec_as_value_to_string (cx, &argv[0]);
+  xml->doc_type_decl = s;
 }
 
 static void
 swfdec_xml_get_contentType (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
 
-  *ret = SWFDEC_XML (object)->content_type;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "");
+
+  *ret = xml->content_type;
 }
 
 static void
 swfdec_xml_set_contentType (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
+  SwfdecAsValue val;
 
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "v", &val);
 
   // special case
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val))
     return;
 
-  SWFDEC_XML (object)->content_type = argv[0];
+  xml->content_type = val;
 }
 
 static void
 swfdec_xml_get_loaded (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
 
-  *ret = SWFDEC_XML (object)->loaded;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "");
+
+  *ret = xml->loaded;
 }
 
 static void
 swfdec_xml_set_loaded (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
+  const char *ignore;
 
-  if (argc < 1)
-    return;
-
-  // special case, call toString of objects
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
-    swfdec_as_value_to_string (cx, &argv[0]);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "s", &ignore);
 
   // special case
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
-  SWFDEC_AS_VALUE_SET_BOOLEAN (&SWFDEC_XML (object)->loaded,
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&xml->loaded,
       swfdec_as_value_to_boolean (cx, &argv[0]));
 }
 
@@ -337,10 +333,11 @@ static void
 swfdec_xml_get_status (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
 
-  swfdec_as_value_set_integer (cx, ret, SWFDEC_XML (object)->status);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "");
+
+  swfdec_as_value_set_integer (cx, ret, xml->status);
 }
 
 static void
@@ -348,23 +345,20 @@ swfdec_xml_set_status (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   double d;
+  SwfdecXml *xml;
+  const char *ignore;
 
-  if (!SWFDEC_IS_XML (object))
-    return;
-
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "s", &ignore);
 
   // special case
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
-  swfdec_as_value_to_string (cx, &argv[0]);
   d = swfdec_as_value_to_number (cx, &argv[0]);
   if (!isfinite (d))
-    SWFDEC_XML (object)->status = 0;
+    xml->status = 0;
   else
-    SWFDEC_XML (object)->status = d;
+    xml->status = d;
 }
 
 static const char *
@@ -472,14 +466,17 @@ static void
 swfdec_xml_add_id_map (SwfdecXml *xml, SwfdecXmlNode *node, const char *id)
 {
   SwfdecAsObject *object;
+  SwfdecAsContext *context;
   SwfdecAsValue val;
 
   g_return_if_fail (SWFDEC_IS_XML (xml));
   g_return_if_fail (SWFDEC_IS_XML_NODE (xml));
   g_return_if_fail (id != NULL && id != SWFDEC_AS_STR_EMPTY);
 
-  if (swfdec_gc_object_get_context (xml)->version >= 8) {
-    if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (xml),
+  context = swfdec_gc_object_get_context (xml);
+  object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (xml));
+  if (context->version >= 8) {
+    if (swfdec_as_object_get_variable (object,
 	  SWFDEC_AS_STR_idMap, &val)) {
       if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
 	object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
@@ -487,22 +484,21 @@ swfdec_xml_add_id_map (SwfdecXml *xml, SwfdecXmlNode *node, const char *id)
 	return;
       }
     } else {
-      object = swfdec_as_object_new_empty (swfdec_gc_object_get_context (xml));
+      object = swfdec_as_object_new_empty (context);
       SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-      swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (xml),
+      swfdec_as_object_set_variable (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (xml)),
 	  SWFDEC_AS_STR_idMap, &val);
     }
-  } else {
-    object = SWFDEC_AS_OBJECT (xml);
   }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (node));
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
   swfdec_as_object_set_variable (object, id, &val);
 }
 
 static const char *
 swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 {
+  SwfdecAsContext *cx;
   SwfdecAsValue val;
   const char *end, *name;
   char *text;
@@ -517,9 +513,9 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
     return strchr (p, '\0');
   }
 
+  cx = swfdec_gc_object_get_context (node);
   text = g_strndup (p, end - p);
-  name = swfdec_as_context_give_string (swfdec_gc_object_get_context (node),
-      swfdec_xml_unescape (swfdec_gc_object_get_context (xml), text));
+  name = swfdec_as_context_give_string (cx, swfdec_xml_unescape (cx, text));
   g_free (text);
 
   p = end + strspn (end, " \r\n\t");
@@ -548,10 +544,8 @@ swfdec_xml_parse_attribute (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
     char *unescaped;
     const char *value;
 
-    unescaped = swfdec_xml_unescape_len (swfdec_gc_object_get_context (xml),
-	p + 1, end - (p + 1), TRUE);
-    value = swfdec_as_context_give_string (swfdec_gc_object_get_context (node),
-	unescaped);
+    unescaped = swfdec_xml_unescape_len (cx, p + 1, end - (p + 1), TRUE);
+    value = swfdec_as_context_give_string (cx, unescaped);
     SWFDEC_AS_VALUE_SET_STRING (&val, value);
 
     swfdec_as_object_set_variable (node->attributes, name, &val);
@@ -566,7 +560,8 @@ static const char *
 swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 {
   SwfdecAsObject *object;
-  SwfdecXmlNode *child = NULL; // surpress warning
+  SwfdecAsContext *cx;
+  SwfdecXmlNode *child = NULL; // supress warning
   char *name;
   const char *end;
   gboolean close;
@@ -575,7 +570,8 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   g_return_val_if_fail (*p == '<', strchr (p, '\0'));
   g_return_val_if_fail (SWFDEC_IS_XML (xml), strchr (p, '\0'));
 
-  object = SWFDEC_AS_OBJECT (xml);
+  object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (xml));
+  cx = swfdec_gc_object_get_context (xml);
 
   // closing tag or opening tag?
   if (*(p + 1) == '/') {
@@ -600,21 +596,14 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 
   name = g_strndup (p + 1 , end - (p + 1));
 
-  // create the new element
-  if (!close) {
-    child = swfdec_xml_node_new_no_properties (
-	swfdec_gc_object_get_context (*node), SWFDEC_XML_NODE_ELEMENT,
-	swfdec_as_context_give_string (swfdec_gc_object_get_context (*node),
-	  name));
-    if (child == NULL)
-      return strchr (p, '\0');
-  }
-
   if (close) {
     end = strchr (end, '>');
     if (end == NULL)
       end = strchr (p, '\0');
   } else {
+    // create the new element
+    child = swfdec_xml_node_new_no_properties (cx, SWFDEC_XML_NODE_ELEMENT,
+	swfdec_as_context_give_string (cx, name));
     end = end + strspn (end, " \r\n\t");
     while (*end != '\0' && *end != '>' && (*end != '/' || *(end + 1) != '>')) {
       end = swfdec_xml_parse_attribute (xml, child, end);
@@ -633,12 +622,10 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
   }
 
   if (close) {
-    if ((*node)->parent != NULL && !g_ascii_strcasecmp ((*node)->name, name))
-    {
+    if ((*node)->parent != NULL && !g_ascii_strcasecmp ((*node)->name, name)) {
       *node = (*node)->parent;
-    }
-    else // error
-    {
+    } else {
+      /* error */
       SwfdecXmlNode *iter = *node;
       while (iter != NULL && (iter->name == NULL || g_ascii_strcasecmp (iter->name, name))) {
 	iter = iter->parent;
@@ -673,6 +660,7 @@ swfdec_xml_parse_tag (SwfdecXml *xml, SwfdecXmlNode **node, const char *p)
 static const char *
 swfdec_xml_parse_cdata (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 {
+  SwfdecAsContext *cx;
   SwfdecXmlNode *child;
   const char *end;
   char *text;
@@ -693,11 +681,9 @@ swfdec_xml_parse_cdata (SwfdecXml *xml, SwfdecXmlNode *node, const char *p)
 
   text = g_strndup (p, end - p);
 
-  child = swfdec_xml_node_new_no_properties (
-      swfdec_gc_object_get_context (node), SWFDEC_XML_NODE_TEXT,
-      swfdec_as_context_give_string (swfdec_gc_object_get_context (xml), text));
-  if (child == NULL)
-    return strchr (p, '\0');
+  cx = swfdec_gc_object_get_context (xml);
+  child = swfdec_xml_node_new_no_properties (cx, SWFDEC_XML_NODE_TEXT,
+      swfdec_as_context_give_string (cx, text));
   swfdec_xml_node_appendChild (node, child);
 
   end += strlen("]]>");
@@ -725,15 +711,12 @@ swfdec_xml_parse_text (SwfdecXml *xml, SwfdecXmlNode *node,
 
   if (!ignore_white || strspn (p, " \t\r\n") < (gsize)(end - p))
   {
+    SwfdecAsContext *cx = swfdec_gc_object_get_context (xml);
     text = g_strndup (p, end - p);
-    unescaped = swfdec_xml_unescape (swfdec_gc_object_get_context (xml), text);
+    unescaped = swfdec_xml_unescape (cx, text);
     g_free (text);
-    child = swfdec_xml_node_new_no_properties (
-	swfdec_gc_object_get_context (node), SWFDEC_XML_NODE_TEXT,
-	swfdec_as_context_give_string (swfdec_gc_object_get_context (xml),
-	  unescaped));
-    if (child == NULL)
-      return strchr (p, '\0');
+    child = swfdec_xml_node_new_no_properties (cx, SWFDEC_XML_NODE_TEXT,
+	swfdec_as_context_give_string (cx, unescaped));
     swfdec_xml_node_appendChild (node, child);
   }
 
@@ -753,7 +736,8 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
   g_return_if_fail (SWFDEC_IS_XML (xml));
   g_return_if_fail (value != NULL);
 
-  object = SWFDEC_AS_OBJECT (xml);
+  object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (xml));
+  node = SWFDEC_XML_NODE (xml);
 
   swfdec_xml_node_removeChildren (SWFDEC_XML_NODE (xml));
   xml->xml_decl = NULL;
@@ -761,7 +745,6 @@ swfdec_xml_parseXML (SwfdecXml *xml, const char *value)
   xml->status = XML_PARSE_STATUS_OK;
 
   p = value;
-  node = SWFDEC_XML_NODE (xml);
 
   // special case: we only use the ignoreWhite set at the start
   ignore_white = xml->ignore_white;
@@ -804,20 +787,15 @@ void
 swfdec_xml_do_parseXML (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  if (!SWFDEC_IS_XML (object))
-    return;
+  SwfdecXml *xml;
+  const char *s;
 
-  if (!SWFDEC_IS_VALID_XML_NODE (object))
-    return;
-
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "s", &s);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
-  swfdec_xml_parseXML (SWFDEC_XML (object),
-      swfdec_as_value_to_string (cx, &argv[0]));
+  swfdec_xml_parseXML (xml, s);
 }
 
 SWFDEC_AS_NATIVE (253, 10, swfdec_xml_createElement)
@@ -826,23 +804,18 @@ swfdec_xml_createElement (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecXmlNode *node;
+  SwfdecXml *xml;
+  const char *s;
 
-  if (!SWFDEC_IS_XML (object))
-    return;
-
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "s", &s);
 
   // special case
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
-  node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT,
-      swfdec_as_value_to_string (cx, &argv[0]));
-  if (node == NULL)
-    return;
+  node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT, s);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
 }
 
 SWFDEC_AS_NATIVE (253, 11, swfdec_xml_createTextNode)
@@ -851,23 +824,18 @@ swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecXmlNode *node;
+  SwfdecXml *xml;
+  const char *s;
 
-  if (!SWFDEC_IS_XML (object))
-    return;
-
-  if (argc < 1)
-    return;
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "s", &s);
 
   // special case
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
     return;
 
-  node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_TEXT,
-      swfdec_as_value_to_string (cx, &argv[0]));
-  if (node == NULL)
-    return;
+  node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_TEXT, s);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (node));
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
 }
 
 static void
@@ -907,31 +875,29 @@ swfdec_xml_init_properties (SwfdecAsContext *cx)
       swfdec_xml_get_loaded, swfdec_xml_set_loaded);
 }
 
-SWFDEC_AS_CONSTRUCTOR (253, 9, swfdec_xml_construct, swfdec_xml_get_type)
+SWFDEC_AS_NATIVE (253, 9, swfdec_xml_construct)
 void
 swfdec_xml_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
+  SwfdecXml *xml;
+
   if (!swfdec_as_context_is_constructing (cx))
     return;
 
-  g_assert (SWFDEC_IS_XML (object));
-
   swfdec_xml_init_properties (cx);
 
-  swfdec_xml_node_init_values (SWFDEC_XML_NODE (object),
-      SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
+  xml = g_object_new (SWFDEC_TYPE_XML, "context", cx, NULL);
+  swfdec_xml_node_init_values (SWFDEC_XML_NODE (xml), SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
+  SWFDEC_XML_NODE (xml)->name = NULL;
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (xml));
 
-  SWFDEC_AS_VALUE_SET_STRING (&SWFDEC_XML (object)->content_type,
-      SWFDEC_AS_STR_application_x_www_form_urlencoded);
-
-  SWFDEC_XML_NODE (object)->name = NULL;
-
-  if (!SWFDEC_IS_VALID_XML_NODE (object))
+  /* ??? */
+  if (!SWFDEC_IS_VALID_XML_NODE (xml))
     return;
 
   if (argc >= 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
-    swfdec_xml_parseXML (SWFDEC_XML (object),
+    swfdec_xml_parseXML (xml,
 	swfdec_as_value_to_string (cx, &argv[0]));
   }
 }
@@ -940,20 +906,19 @@ SwfdecXml *
 swfdec_xml_new_no_properties (SwfdecAsContext *context, const char *str,
     gboolean ignore_white)
 {
+  SwfdecAsObject *object;
   SwfdecXml *xml;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
   xml = g_object_new (SWFDEC_TYPE_XML, "context", context, NULL);
-
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (xml), SWFDEC_AS_STR_XML, NULL);
   xml->ignore_white = ignore_white;
-
   swfdec_xml_node_init_values (SWFDEC_XML_NODE (xml),
       SWFDEC_XML_NODE_ELEMENT, SWFDEC_AS_STR_EMPTY);
 
-  SWFDEC_AS_VALUE_SET_STRING (&xml->content_type,
-      SWFDEC_AS_STR_application_x_www_form_urlencoded);
+  object = swfdec_as_object_new (context, NULL);
+  swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_XML, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (xml));
 
   if (str != NULL)
     swfdec_xml_parseXML (xml, str);

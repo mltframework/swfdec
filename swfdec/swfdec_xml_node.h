@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *               2007 Pekka Lampila <pekka.lampila@iki.fi>
  *
  * This library is free software; you can redistribute it and/or
@@ -22,6 +22,7 @@
 #define _SWFDEC_XML_NODE_H_
 
 #include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_types.h>
 #include <swfdec/swfdec_script.h>
 #include <swfdec/swfdec_player.h>
@@ -53,10 +54,11 @@ typedef struct _SwfdecXmlNodeClass SwfdecXmlNodeClass;
 #define SWFDEC_XML_NODE_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_XML_NODE, SwfdecXmlNodeClass))
 #define SWFDEC_XML_NODE_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_XML_NODE, SwfdecXmlNodeClass))
 
-#define SWFDEC_IS_VALID_XML_NODE(obj)           (SWFDEC_IS_XML_NODE (obj) && SWFDEC_XML_NODE (obj)->valid)
+#define SWFDEC_IS_VALID_XML_NODE(obj)		(SWFDEC_IS_XML_NODE (obj) && SWFDEC_XML_NODE (obj)->valid)
+#define SWFDEC_VALID_XML_NODE_FROM_AS_OBJECT(obj) (SWFDEC_IS_VALID_XML_NODE (SWFDEC_XML_NODE ((obj)->relay) ? SWFDEC_XML_NODE ((obj)->relay) : NULL)
 
 struct _SwfdecXmlNode {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   gboolean		valid;
 

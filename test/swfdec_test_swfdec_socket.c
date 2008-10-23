@@ -36,6 +36,8 @@ swfdec_test_swfdec_socket_close (SwfdecStream *stream)
   SwfdecTestSwfdecSocket *test = SWFDEC_TEST_SWFDEC_SOCKET (stream);
 
   test->plugin.close (&test->plugin);
+  g_free (test->plugin.host);
+  test->plugin.host = NULL;
 }
 
 static void

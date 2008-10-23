@@ -900,6 +900,7 @@ swfdec_text_layout_modify_attributes (SwfdecTextLayout *layout,
   } while (pango_attr_iterator_next (iter));
   pango_layout_set_attributes (block->layout, new);
   pango_attr_list_unref (new);
+  pango_attr_iterator_destroy (iter);
   return old;
 }
 

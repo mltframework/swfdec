@@ -469,6 +469,7 @@ swfdec_image_lossless_load (SwfdecImage *image, SwfdecRenderer *renderer)
       }
     }
     data = g_memdup (buffer->data, buffer->length);
+    swfdec_buffer_unref (buffer);
   } else {
     SWFDEC_ERROR ("unknown lossless image format %u", format);
     return NULL;

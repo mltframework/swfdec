@@ -74,9 +74,22 @@ swfdec_text_format_mark (SwfdecGcObject *object)
 }
 
 static void
+swfdec_text_format_dispose (GObject *object)
+{
+  SwfdecTextFormat *format = SWFDEC_TEXT_FORMAT (object);
+
+  swfdec_text_attributes_reset (&format->attr);
+
+  G_OBJECT_CLASS (swfdec_text_format_parent_class)->dispose (object);
+}
+
+static void
 swfdec_text_format_class_init (SwfdecTextFormatClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
+
+  object_class->dispose = swfdec_text_format_dispose;
 
   gc_class->mark = swfdec_text_format_mark;
 }

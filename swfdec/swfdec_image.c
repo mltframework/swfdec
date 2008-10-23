@@ -694,6 +694,7 @@ swfdec_image_create_surface_transformed (SwfdecImage *image, SwfdecRenderer *ren
   }
 
   surface = swfdec_renderer_transform (renderer, source, trans);
+  cairo_surface_destroy (source);
   if (renderer) {
     surface = swfdec_renderer_create_similar (renderer, surface);
     /* FIXME: The size is just an educated guess */

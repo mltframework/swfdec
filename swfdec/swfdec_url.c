@@ -682,6 +682,7 @@ swfdec_url_new_from_input (const char *input)
     char *escaped =
       g_uri_escape_string (input[0] == '/' ? &input[1] : &input[0], "/", TRUE);
     url = swfdec_url_new_components ("file", NULL, 0, escaped, NULL);
+    g_free (escaped);
   } else {
     char *absolute, *cur;
     cur = g_get_current_dir ();

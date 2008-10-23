@@ -1093,6 +1093,10 @@ swfdec_player_dispose (GObject *object)
   }
   g_array_free (priv->invalidations, TRUE);
   priv->invalidations = NULL;
+  if (priv->renderer) {
+    g_object_unref (priv->renderer);
+    priv->renderer = NULL;
+  }
   if (priv->runtime) {
     g_timer_destroy (priv->runtime);
     priv->runtime = NULL;

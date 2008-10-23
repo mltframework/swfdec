@@ -1,4 +1,14 @@
 
+ 0.8.2 ("Gametrailers")
+
+Here's the first stable release.
+- fix crash when reading invalid JPEG images
+- fix invalid memory accesses
+- fix deadlock when sound stream had no data
+- fix regression where some files weren't loaded.
+- lots of memory leaks plugged
+- various build fixes/improvements
+
  0.8.0 ("Slide")
 
 And here is our 6monthly stable release again:

@@ -93,11 +93,16 @@ swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc == 2) {
     int offset = swfdec_as_value_to_integer (cx, &argv[1]);
+    const char *tmp;
     if (offset < 0) {
       swfdec_as_value_set_integer (cx, ret, -1);
       return;
     }
-    len = g_utf8_offset_to_pointer (string, offset + 1) - string;
+    tmp = string;
+    offset++;
+    while (*tmp && offset-- != 0)
+      tmp = g_utf8_next_char (tmp);
+    len = tmp - string;
   } else {
     len = G_MAXSIZE;
   }

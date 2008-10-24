@@ -209,6 +209,7 @@ public_headers = \
 	swfdec_as_function.h \
 	swfdec_as_native_function.h \
 	swfdec_as_object.h \
+	swfdec_as_relay.h \
 	swfdec_as_string_value.h \
 	swfdec_as_types.h \
 	swfdec_audio.h \
@@ -245,7 +246,6 @@ noinst_HEADERS = \
 	swfdec_as_gcable.h \
 	swfdec_as_interpret.h \
 	swfdec_as_number.h \
-	swfdec_as_relay.h \
 	swfdec_as_script_function.h \
 	swfdec_as_stack.h \
 	swfdec_as_string.h \

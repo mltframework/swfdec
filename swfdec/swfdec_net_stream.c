@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -44,9 +44,11 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
 {
   SwfdecAsValue val;
   SwfdecAsObject *object;
+  SwfdecAsContext *cx;
 
+  cx = swfdec_gc_object_get_context (stream);
   swfdec_sandbox_use (stream->sandbox);
-  object = swfdec_as_object_new (swfdec_gc_object_get_context (stream), SWFDEC_AS_STR_Object, NULL);
+  object = swfdec_as_object_new (cx, SWFDEC_AS_STR_Object, NULL);
   SWFDEC_INFO ("emitting onStatus for %s %s", level, code);
   SWFDEC_AS_VALUE_SET_STRING (&val, code);
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_code, &val);
@@ -54,14 +56,14 @@ swfdec_net_stream_onstatus (SwfdecNetStream *stream, const char *code, const cha
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_level, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
-  if (!swfdec_as_object_call (SWFDEC_AS_OBJECT (stream),
+  if (!swfdec_as_relay_call (SWFDEC_AS_RELAY (stream),
         SWFDEC_AS_STR_onStatus, 1, &val, NULL)) {
     // if it's an error message and the stream object didn't have onStatus
     // handler, call System.onStatus
     if (level == SWFDEC_AS_STR_error) {
       SwfdecAsValue system;
 
-      swfdec_as_object_get_variable (swfdec_gc_object_get_context (stream)->global,
+      swfdec_as_object_get_variable (cx->global,
           SWFDEC_AS_STR_System, &system);
       if (SWFDEC_AS_VALUE_IS_OBJECT (&system)) {
         swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (&system),
@@ -275,7 +277,7 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
 	    SWFDEC_AMF_STRING, &name, SWFDEC_AMF_MIXED_ARRAY, &value) != 2) {
 	SWFDEC_ERROR ("could not parse data tag");
       } else {
-	swfdec_as_object_call (SWFDEC_AS_OBJECT (stream), 
+	swfdec_as_relay_call (SWFDEC_AS_RELAY (stream), 
 	    SWFDEC_AS_VALUE_GET_STRING (&name), 1, &value, NULL);
       }
       swfdec_sandbox_unuse (stream->sandbox);
@@ -502,7 +504,7 @@ swfdec_net_stream_video_provider_init (SwfdecVideoProviderInterface *iface)
 
 /*** SWFDEC_NET_STREAM ***/
 
-G_DEFINE_TYPE_WITH_CODE (SwfdecNetStream, swfdec_net_stream, SWFDEC_TYPE_AS_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (SwfdecNetStream, swfdec_net_stream, SWFDEC_TYPE_AS_RELAY,
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_net_stream_stream_target_init)
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_VIDEO_PROVIDER, swfdec_net_stream_video_provider_init))
 

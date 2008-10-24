@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 #define _SWFDEC_NET_STREAM_H_
 
 #include <swfdec/swfdec.h>
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_net_connection.h>
 #include <swfdec/swfdec_flv_decoder.h>
 #include <swfdec/swfdec_player_internal.h>
@@ -43,7 +43,7 @@ typedef struct _SwfdecNetStreamClass SwfdecNetStreamClass;
 
 struct _SwfdecNetStream
 {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   SwfdecNetConnection *	conn;		/* connection used for opening streams */
   char *		requested_url;	/* URL we have requested that isn't loaded yet */
@@ -72,7 +72,7 @@ struct _SwfdecNetStream
 
 struct _SwfdecNetStreamClass
 {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType			swfdec_net_stream_get_type	(void);

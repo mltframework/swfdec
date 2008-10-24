@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -290,7 +290,9 @@ swfdec_net_stream_construct (SwfdecAsContext *cx, SwfdecAsObject *obj, guint arg
     SWFDEC_FIXME ("What do we do if not constructing?");
     return;
   }
-  stream = SWFDEC_NET_STREAM (obj);
+  stream = g_object_new (SWFDEC_TYPE_NET_STREAM, "context", cx, NULL);
+  swfdec_as_object_set_relay (obj, SWFDEC_AS_RELAY (stream));
+
   swfdec_net_stream_setup (cx, obj, 0, NULL, rval);
   if (argc == 0 ||
       !SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) || 
@@ -313,9 +315,8 @@ swfdec_net_stream_init_context (SwfdecPlayer *player)
 
   context = SWFDEC_AS_CONTEXT (player);
   proto = swfdec_as_object_new_empty (context);
-  stream = SWFDEC_AS_OBJECT (swfdec_as_object_add_constructor (context->global, 
-      SWFDEC_AS_STR_NetStream, SWFDEC_TYPE_NET_STREAM, 
-      swfdec_net_stream_construct, proto));
+  stream = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
+      SWFDEC_AS_STR_NetStream, swfdec_net_stream_construct));
   /* set the right properties on the NetStream.prototype object */
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_pause, swfdec_net_stream_pause);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, swfdec_net_stream_play);
@@ -325,6 +326,9 @@ swfdec_net_stream_init_context (SwfdecPlayer *player)
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  swfdec_as_object_set_variable_and_flags (stream, SWFDEC_AS_STR_prototype, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 

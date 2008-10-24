@@ -40,13 +40,13 @@ swfdec_video_attach_video (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_VIDEO_MOVIE, &video, "O", &o);
 
-  if (!SWFDEC_IS_VIDEO_PROVIDER (o)) {
+  if (o == NULL || !SWFDEC_IS_VIDEO_PROVIDER (o->relay)) {
     SWFDEC_WARNING ("calling attachVideo without a NetStream object");
     swfdec_video_movie_set_provider (video, NULL);
     return;
   }
 
-  swfdec_video_movie_set_provider (video, SWFDEC_VIDEO_PROVIDER (o));
+  swfdec_video_movie_set_provider (video, SWFDEC_VIDEO_PROVIDER (o->relay));
 }
 
 SWFDEC_AS_NATIVE (667, 2, swfdec_video_clear)

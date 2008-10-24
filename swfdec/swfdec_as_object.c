@@ -1504,8 +1504,6 @@ swfdec_as_object_add_native_variable (SwfdecAsObject *object,
 
   get_func =
     swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, get, NULL);
-  if (get_func == NULL)
-    return;
 
   if (set != NULL) {
     set_func =

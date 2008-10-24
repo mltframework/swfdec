@@ -28,25 +28,26 @@
 #include "swfdec_test_function.h"
 #include "swfdec_test_utils.h"
 
-SwfdecAsObject *
+SwfdecTestBuffer *
 swfdec_test_buffer_new (SwfdecAsContext *context, SwfdecBuffer *buffer)
 {
-  SwfdecAsValue val;
-  SwfdecAsObject *ret;
+  SwfdecTestBuffer *ret;
+  SwfdecAsObject *object;
 
   ret = g_object_new (SWFDEC_TYPE_TEST_BUFFER, "context", context, NULL);
-  swfdec_as_object_get_variable (context->global, 
-      swfdec_as_context_get_string (context, "Buffer"), &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  ret->buffer = buffer;
 
-  SWFDEC_TEST_BUFFER (ret)->buffer = buffer;
+  object = swfdec_as_object_new (context, NULL);
+  swfdec_as_object_set_constructor_by_name (object,
+    swfdec_as_context_get_string (context, "Buffer"), NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (ret));
+
   return ret;
 }
 
 /*** SWFDEC_TEST_BUFFER ***/
 
-G_DEFINE_TYPE (SwfdecTestBuffer, swfdec_test_buffer, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecTestBuffer, swfdec_test_buffer, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_test_buffer_dispose (GObject *object)
@@ -141,15 +142,17 @@ swfdec_test_buffer_diff (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestBuffer *buffer, *compare = NULL;
+  SwfdecAsObject *compare_object;
   GError *error = NULL;
   char *ret;
   
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "|o", &compare);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "|o", &compare_object);
 
-  if (!SWFDEC_IS_TEST_BUFFER (compare)) {
+  if (compare_object == NULL || !SWFDEC_IS_TEST_BUFFER (compare_object->relay)) {
     swfdec_test_throw (cx, "must pass a buffer to Buffer.diff");
     return;
   }
+  compare = SWFDEC_TEST_BUFFER (compare_object->relay);
 
   ret = swfdec_test_diff_buffers (compare->buffer, buffer->buffer, &error);
   if (ret) {
@@ -190,7 +193,7 @@ swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecBuffer *b;
-  SwfdecAsObject *buffer;
+  SwfdecTestBuffer *buffer;
   const char *filename;
   GError *error = NULL;
   
@@ -204,7 +207,7 @@ swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   }
 
   buffer = swfdec_test_buffer_new (cx, b);
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, buffer);
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (buffer)));
 }
 
 SWFDEC_TEST_FUNCTION ("Buffer_sub", swfdec_test_buffer_sub, 0)
@@ -213,8 +216,7 @@ swfdec_test_buffer_sub (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecBuffer *b;
-  SwfdecTestBuffer *buffer;
-  SwfdecAsObject *o;
+  SwfdecTestBuffer *buffer, *sub;
   guint offset, length = 0;
   
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "i|i", &offset, &length);
@@ -227,8 +229,8 @@ swfdec_test_buffer_sub (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     length = buffer->buffer->length - offset;
 
   b = swfdec_buffer_new_subbuffer (buffer->buffer, offset, length);
-  o = swfdec_test_buffer_new (cx, b);
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
+  sub = swfdec_test_buffer_new (cx, b);
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (sub)));
 }
 
 SWFDEC_TEST_FUNCTION ("Buffer_toString", swfdec_test_buffer_toString, 0)
@@ -268,8 +270,8 @@ swfdec_test_buffer_from_args (SwfdecAsContext *cx, guint argc, SwfdecAsValue *ar
     SwfdecBuffer *b = NULL;
     if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[i])) {
       SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_OBJECT (&argv[i]);
-      if (SWFDEC_IS_TEST_BUFFER (o))
-	b = swfdec_buffer_ref (SWFDEC_TEST_BUFFER (o)->buffer);
+      if (SWFDEC_IS_TEST_BUFFER (o->relay))
+	b = swfdec_buffer_ref (SWFDEC_TEST_BUFFER (o->relay)->buffer);
     } else if (SWFDEC_AS_VALUE_IS_NUMBER (&argv[i])) {
       b = swfdec_buffer_new (1);
       b->data[0] = swfdec_as_value_to_integer (cx, &argv[i]);
@@ -290,19 +292,21 @@ swfdec_test_buffer_from_args (SwfdecAsContext *cx, guint argc, SwfdecAsValue *ar
   return buffer;
 }
 
-SWFDEC_TEST_FUNCTION ("Buffer", swfdec_test_buffer_create, swfdec_test_buffer_get_type)
+SWFDEC_TEST_FUNCTION ("Buffer", swfdec_test_buffer_create, NULL)
 void
 swfdec_test_buffer_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestBuffer *buffer;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "");
-
   if (!swfdec_as_context_is_constructing (cx))
     return;
 
+  buffer = g_object_new (SWFDEC_TYPE_TEST_BUFFER, "context", cx, NULL);
   buffer->buffer = swfdec_test_buffer_from_args (cx, argc, argv);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (buffer));
+
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
 }
 
 

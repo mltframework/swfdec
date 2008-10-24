@@ -139,7 +139,8 @@ swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
       buffer = swfdec_buffer_queue_pull (sock->receive_queue, depth);
     }
   }
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_test_buffer_new (cx, buffer));
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (
+	SWFDEC_AS_RELAY (swfdec_test_buffer_new (cx, buffer))));
 }
 
 SWFDEC_TEST_FUNCTION ("Socket_error", swfdec_test_socket_error, 0)

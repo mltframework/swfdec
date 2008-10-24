@@ -356,7 +356,7 @@ swfdec_test_test_get_launched (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestTest *test;
-  SwfdecAsObject *o;
+  SwfdecTestBuffer *buf;
   SwfdecBuffer *buffer;
   gsize len;
 
@@ -364,8 +364,8 @@ swfdec_test_test_get_launched (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   len = swfdec_buffer_queue_get_depth (test->launched);
   buffer = swfdec_buffer_queue_peek (test->launched, len);
-  o = swfdec_test_buffer_new (cx, buffer);
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
+  buf = swfdec_test_buffer_new (cx, buffer);
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (buf)));
 }
 
 SWFDEC_TEST_FUNCTION ("Socket_getSocket", swfdec_test_test_getSocket, 0)
@@ -400,7 +400,7 @@ swfdec_test_test_get_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestTest *test;
-  SwfdecAsObject *o;
+  SwfdecTestBuffer *buf;
   SwfdecBuffer *buffer;
   gsize len;
 
@@ -408,8 +408,8 @@ swfdec_test_test_get_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
 
   len = swfdec_buffer_queue_get_depth (test->trace);
   buffer = swfdec_buffer_queue_peek (test->trace, len);
-  o = swfdec_test_buffer_new (cx, buffer);
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, o);
+  buf = swfdec_test_buffer_new (cx, buffer);
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (buf)));
 }
 
 SWFDEC_TEST_FUNCTION ("Test_get_quit", swfdec_test_test_get_quit, 0)

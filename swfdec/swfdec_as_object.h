@@ -106,6 +106,14 @@ GType		swfdec_as_object_get_type	(void);
 SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context,
 						 ...) G_GNUC_NULL_TERMINATED;
 SwfdecAsObject *swfdec_as_object_new_empty    	(SwfdecAsContext *    	context);
+SwfdecAsObject * swfdec_as_object_set_constructor_by_name 
+						(SwfdecAsObject *	object,
+						 const char *		name,
+						 ...) G_GNUC_NULL_TERMINATED;
+SwfdecAsObject * swfdec_as_object_set_constructor_by_namev 
+						(SwfdecAsObject *	object,
+						 const char *		name,
+						 va_list		args);
 void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 						 guint			n_args,
 						 const SwfdecAsValue *	args,

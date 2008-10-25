@@ -162,7 +162,7 @@ swfdec_as_script_function_init (SwfdecAsScriptFunction *script_function)
 SwfdecAsFunction *
 swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain, SwfdecScript *script)
 {
-  SwfdecAsValue val;
+  SwfdecAsValue val, *tmp;
   SwfdecAsScriptFunction *fun;
   SwfdecAsObject *proto;
   SwfdecAsContext *context;
@@ -195,9 +195,15 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  tmp = swfdec_as_object_peek_variable (context->global, SWFDEC_AS_STR_Object);
+  if (tmp && SWFDEC_AS_VALUE_IS_OBJECT (tmp)) {
+    tmp = swfdec_as_object_peek_variable (SWFDEC_AS_VALUE_GET_OBJECT (tmp),
+	SWFDEC_AS_STR_prototype);
+    if (tmp) {
+      swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__,
+	  tmp, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+    }
+  }
 
   return SWFDEC_AS_FUNCTION (fun);
 }

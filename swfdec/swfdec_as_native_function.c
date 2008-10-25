@@ -186,7 +186,10 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
     swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, 
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
-  swfdec_as_function_set_constructor (SWFDEC_AS_FUNCTION (fun));
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (fun),
+      SWFDEC_AS_STR_Function, NULL);
+  swfdec_as_object_set_variable_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR___proto__, 
+      SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
   return SWFDEC_AS_FUNCTION (fun);
 }

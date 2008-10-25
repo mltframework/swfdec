@@ -175,7 +175,10 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
   fun->scope_chain = g_slist_copy ((GSList *) scope_chain);
   fun->script = script;
   fun->target = target;
-  swfdec_as_function_set_constructor (SWFDEC_AS_FUNCTION (fun));
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (fun),
+      SWFDEC_AS_STR_Function, NULL);
+  swfdec_as_object_set_variable_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR___proto__, 
+      SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
   /* if context is a flash player, copy current sandbox for security checking.
    * FIXME: export this somehow? */

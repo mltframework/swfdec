@@ -1343,7 +1343,7 @@ swfdec_as_object_set_constructor_by_namev (SwfdecAsObject *object,
 {
   SwfdecAsContext *context;
   SwfdecAsObject *cur;
-  SwfdecAsValue val;
+  SwfdecAsValue *val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
@@ -1351,12 +1351,13 @@ swfdec_as_object_set_constructor_by_namev (SwfdecAsObject *object,
   context = swfdec_gc_object_get_context (object);
   cur = context->global;
   do {
-    if (!swfdec_as_object_get_variable (cur, name, &val) || 
-	!SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    val = swfdec_as_object_peek_variable (cur, name);
+    if (val == NULL ||
+	!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
       SWFDEC_WARNING ("could not find constructor %s", name);
       return NULL;
     }
-    cur = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+    cur = SWFDEC_AS_VALUE_GET_OBJECT (val);
     name = va_arg (args, const char *);
   } while (name != NULL);
   swfdec_as_object_set_constructor (object, cur);

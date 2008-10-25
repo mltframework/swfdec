@@ -62,37 +62,6 @@ swfdec_as_function_init (SwfdecAsFunction *function)
 }
 
 /**
- * swfdec_as_function_set_constructor:
- * @fun: a #SwfdecAsFunction
- *
- * Sets the constructor and prototype of @fun. This is a shortcut for calling
- * swfdec_as_object_set_constructor() with the right arguments.
- **/
-void
-swfdec_as_function_set_constructor (SwfdecAsFunction *fun)
-{
-  SwfdecAsContext *context;
-  SwfdecAsObject *object;
-  SwfdecAsValue val;
-
-  g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));
-
-  object = SWFDEC_AS_OBJECT (fun);
-  context = swfdec_gc_object_get_context (fun);
-  if (context->Function == NULL)
-    return;
-  
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function);
-  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Function_prototype);
-  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT |
-      SWFDEC_AS_VARIABLE_VERSION_6_UP);
-}
-
-/**
  * swfdec_as_function_call:
  * @function: the #SwfdecAsFunction to call
  * @thisp: this argument to use for the call or %NULL for none

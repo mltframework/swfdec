@@ -30,19 +30,6 @@
 
 G_DEFINE_TYPE (SwfdecAudioLoad, swfdec_audio_load, SWFDEC_TYPE_AUDIO_STREAM)
 
-static void
-swfdec_audio_load_dispose (GObject *object)
-{
-  SwfdecAudioLoad *stream = SWFDEC_AUDIO_LOAD (object);
-
-  if (stream->load != NULL) {
-    g_object_unref (stream->load);
-    stream->load = NULL;
-  }
-
-  G_OBJECT_CLASS (swfdec_audio_load_parent_class)->dispose (object);
-}
-
 static SwfdecBuffer *
 swfdec_audio_load_pull (SwfdecAudioStream *audio)
 {
@@ -60,10 +47,7 @@ swfdec_audio_load_pull (SwfdecAudioStream *audio)
 static void
 swfdec_audio_load_class_init (SwfdecAudioLoadClass *klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecAudioStreamClass *stream_class = SWFDEC_AUDIO_STREAM_CLASS (klass);
-
-  object_class->dispose = swfdec_audio_load_dispose;
 
   stream_class->pull = swfdec_audio_load_pull;
 }
@@ -82,7 +66,7 @@ swfdec_audio_load_new (SwfdecPlayer *player, SwfdecLoadSound *load)
   g_return_val_if_fail (SWFDEC_IS_LOAD_SOUND (load), NULL);
 
   stream = g_object_new (SWFDEC_TYPE_AUDIO_LOAD, NULL);
-  stream->load = g_object_ref (load);
+  stream->load = load;
   swfdec_audio_stream_use_decoder (SWFDEC_AUDIO_STREAM (stream), 
       SWFDEC_AUDIO_CODEC_MP3, swfdec_audio_format_new (44100, TRUE, 2));
   

@@ -204,7 +204,10 @@ swfdec_video_movie_constructor (GType type, guint n_construct_properties,
       n_construct_properties, construct_properties);
 
   movie = SWFDEC_MOVIE (object);
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), movie->resource->sandbox->Video);
+  swfdec_sandbox_use (movie->resource->sandbox);
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
+      SWFDEC_AS_STR_Video, NULL);
+  swfdec_sandbox_unuse (movie->resource->sandbox);
 
   video = SWFDEC_VIDEO (movie->graphic);
 

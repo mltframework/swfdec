@@ -54,7 +54,6 @@ swfdec_sandbox_mark (SwfdecGcObject *object)
   swfdec_gc_object_mark (sandbox->Object);
   swfdec_gc_object_mark (sandbox->Object_prototype);
   swfdec_gc_object_mark (sandbox->MovieClip);
-  swfdec_gc_object_mark (sandbox->Video);
 
   SWFDEC_GC_OBJECT_CLASS (swfdec_sandbox_parent_class)->mark (object);
 }

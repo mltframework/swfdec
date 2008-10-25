@@ -59,7 +59,6 @@ struct _SwfdecSandbox
 
   /* global player objects */
   SwfdecAsObject *	MovieClip;		/* MovieClip object */
-  SwfdecAsObject *	Video;			/* Video object */
 };
 
 struct _SwfdecSandboxClass

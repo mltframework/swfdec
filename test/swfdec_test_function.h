@@ -25,7 +25,7 @@
 G_BEGIN_DECLS
 
 
-#define SWFDEC_TEST_FUNCTION(name, fun, type) \
+#define SWFDEC_TEST_FUNCTION(name, fun) \
   void fun (SwfdecAsContext *cx, SwfdecAsObject *this, guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval);
 
 void		swfdec_test_function_init_context	(SwfdecAsContext *cx);

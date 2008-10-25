@@ -136,7 +136,7 @@ buffer_diff_core (unsigned char *buf_a,
     return result;
 }
 
-SWFDEC_TEST_FUNCTION ("Image_compare", swfdec_test_image_compare, 0)
+SWFDEC_TEST_FUNCTION ("Image_compare", swfdec_test_image_compare)
 void
 swfdec_test_image_compare (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -180,7 +180,7 @@ swfdec_test_image_compare (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Image_save", swfdec_test_image_save, 0)
+SWFDEC_TEST_FUNCTION ("Image_save", swfdec_test_image_save)
 void
 swfdec_test_image_save (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -203,7 +203,7 @@ swfdec_test_image_save (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
-SWFDEC_TEST_FUNCTION ("Image", swfdec_test_image_create, NULL)
+SWFDEC_TEST_FUNCTION ("Image", swfdec_test_image_create)
 void
 swfdec_test_image_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)

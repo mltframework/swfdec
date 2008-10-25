@@ -106,7 +106,7 @@ swfdec_test_http_request_init (SwfdecTestHTTPRequest *this)
 
 /*** AS CODE ***/
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_toString", swfdec_test_http_request_toString, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_toString", swfdec_test_http_request_toString)
 void
 swfdec_test_http_request_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -127,7 +127,7 @@ swfdec_test_http_request_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
       swfdec_as_context_give_string (cx, g_string_free (string, FALSE)));
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_get_server", swfdec_test_http_request_get_server, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_server", swfdec_test_http_request_get_server)
 void
 swfdec_test_http_request_get_server (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -140,7 +140,7 @@ swfdec_test_http_request_get_server (SwfdecAsContext *cx,
   SWFDEC_AS_VALUE_SET_OBJECT (retval, SWFDEC_AS_OBJECT (request->server));
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_get_url", swfdec_test_http_request_get_url, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_url", swfdec_test_http_request_get_url)
 void
 swfdec_test_http_request_get_url (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -156,7 +156,7 @@ swfdec_test_http_request_get_url (SwfdecAsContext *cx, SwfdecAsObject *object,
       swfdec_as_context_give_string (cx, soup_uri_to_string (uri, FALSE)));
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_get_path", swfdec_test_http_request_get_path, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_path", swfdec_test_http_request_get_path)
 void
 swfdec_test_http_request_get_path (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -189,7 +189,7 @@ swfdec_test_http_request_foreach_set_headers (const char *name,
       swfdec_as_context_get_string (cx, name), &val);
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_get_headers", swfdec_test_http_request_get_headers, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_headers", swfdec_test_http_request_get_headers)
 void
 swfdec_test_http_request_get_headers (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -208,7 +208,7 @@ swfdec_test_http_request_get_headers (SwfdecAsContext *cx,
   SWFDEC_AS_VALUE_SET_OBJECT (retval, request->headers);
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_get_contentType", swfdec_test_http_request_get_contentType, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_contentType", swfdec_test_http_request_get_contentType)
 void
 swfdec_test_http_request_get_contentType (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -230,7 +230,7 @@ swfdec_test_http_request_get_contentType (SwfdecAsContext *cx,
   }
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_set_contentType", swfdec_test_http_request_set_contentType, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_set_contentType", swfdec_test_http_request_set_contentType)
 void
 swfdec_test_http_request_set_contentType (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -255,7 +255,7 @@ swfdec_test_http_request_set_contentType (SwfdecAsContext *cx,
   }
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_get_statusCode", swfdec_test_http_request_get_statusCode, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_get_statusCode", swfdec_test_http_request_get_statusCode)
 void
 swfdec_test_http_request_get_statusCode (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -268,7 +268,7 @@ swfdec_test_http_request_get_statusCode (SwfdecAsContext *cx,
   swfdec_as_value_set_integer (cx, retval, request->message->status_code);
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_set_statusCode", swfdec_test_http_request_set_statusCode, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_set_statusCode", swfdec_test_http_request_set_statusCode)
 void
 swfdec_test_http_request_set_statusCode (SwfdecAsContext *cx,
     SwfdecAsObject *object, guint argc, SwfdecAsValue *argv,
@@ -290,7 +290,7 @@ swfdec_test_http_request_set_statusCode (SwfdecAsContext *cx,
   soup_message_set_status (request->message, status_code);
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_send", swfdec_test_http_request_send, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_send", swfdec_test_http_request_send)
 void
 swfdec_test_http_request_send (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -324,7 +324,7 @@ swfdec_test_http_request_send (SwfdecAsContext *cx, SwfdecAsObject *object,
   request->state = SWFDEC_TEST_HTTP_REQUEST_STATE_SENDING;
 }
 
-SWFDEC_TEST_FUNCTION ("HTTPRequest_close", swfdec_test_http_request_close, 0)
+SWFDEC_TEST_FUNCTION ("HTTPRequest_close", swfdec_test_http_request_close)
 void
 swfdec_test_http_request_close (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)

@@ -93,7 +93,7 @@ swfdec_test_socket_init (SwfdecTestSocket *sock)
 
 /*** AS CODE ***/
 
-SWFDEC_TEST_FUNCTION ("Socket_send", swfdec_test_socket_send, 0)
+SWFDEC_TEST_FUNCTION ("Socket_send", swfdec_test_socket_send)
 void
 swfdec_test_socket_send (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -112,7 +112,7 @@ swfdec_test_socket_send (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   swfdec_buffer_unref (buffer);
 }
 
-SWFDEC_TEST_FUNCTION ("Socket_receive", swfdec_test_socket_receive, 0)
+SWFDEC_TEST_FUNCTION ("Socket_receive", swfdec_test_socket_receive)
 void
 swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -143,7 +143,7 @@ swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
 	SWFDEC_AS_RELAY (swfdec_test_buffer_new (cx, buffer))));
 }
 
-SWFDEC_TEST_FUNCTION ("Socket_error", swfdec_test_socket_error, 0)
+SWFDEC_TEST_FUNCTION ("Socket_error", swfdec_test_socket_error)
 void
 swfdec_test_socket_error (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -155,7 +155,7 @@ swfdec_test_socket_error (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
   swfdec_test_socket_do_close (sock, FALSE);
 }
 
-SWFDEC_TEST_FUNCTION ("Socket_close", swfdec_test_socket_close_as, 0)
+SWFDEC_TEST_FUNCTION ("Socket_close", swfdec_test_socket_close_as)
 void
 swfdec_test_socket_close_as (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -167,7 +167,7 @@ swfdec_test_socket_close_as (SwfdecAsContext *cx, SwfdecAsObject *object, guint 
   swfdec_test_socket_do_close (sock, TRUE);
 }
 
-SWFDEC_TEST_FUNCTION ("Socket_get_closed", swfdec_test_socket_get_closed, 0)
+SWFDEC_TEST_FUNCTION ("Socket_get_closed", swfdec_test_socket_get_closed)
 void
 swfdec_test_socket_get_closed (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)

@@ -38,15 +38,14 @@
 /* include swfdec_test_function_list with special macro definition, so we get a nice
  * way to initialize it */
 #undef SWFDEC_TEST_FUNCTION
-#define SWFDEC_TEST_FUNCTION(name, fun, type) \
-  { name, fun, type },
+#define SWFDEC_TEST_FUNCTION(name, fun) \
+  { name, fun },
 static const struct {
   const char *		name;
   SwfdecAsNative	fun;
-  GType			(* type) (void);
 } functions[] = {
 #include "swfdec_test_function_list.h"
-  { NULL, NULL, NULL }
+  { NULL, NULL }
 };
 #undef SWFDEC_TEST_FUNCTION
 
@@ -65,10 +64,9 @@ swfdec_test_function_init_context (SwfdecAsContext *cx)
       swfdec_as_context_get_string (cx, "Native"), &val);
 
   for (i = 0; functions[i].name; i++) {
-    GType type = functions[i].type ? functions[i].type () : 0;
-    swfdec_as_object_add_constructor (obj,
+    swfdec_as_object_add_function (obj,
       swfdec_as_context_get_string (cx, functions[i].name),
-      type, functions[i].fun, NULL);
+	  functions[i].fun);
   }
 }
 

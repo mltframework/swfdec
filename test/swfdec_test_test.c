@@ -210,7 +210,7 @@ swfdec_test_do_reset (SwfdecTestTest *test, const char *filename)
   swfdec_test_test_load_plugin (test, filename);
 }
 
-SWFDEC_TEST_FUNCTION ("Test_advance", swfdec_test_test_advance, 0)
+SWFDEC_TEST_FUNCTION ("Test_advance", swfdec_test_test_advance)
 void
 swfdec_test_test_advance (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -230,7 +230,7 @@ swfdec_test_test_advance (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Test_reset", swfdec_test_test_reset, 0)
+SWFDEC_TEST_FUNCTION ("Test_reset", swfdec_test_test_reset)
 void
 swfdec_test_test_reset (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -243,7 +243,7 @@ swfdec_test_test_reset (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   swfdec_test_do_reset (test, filename);
 }
 
-SWFDEC_TEST_FUNCTION ("Test_mouse_move", swfdec_test_test_mouse_move, 0)
+SWFDEC_TEST_FUNCTION ("Test_mouse_move", swfdec_test_test_mouse_move)
 void
 swfdec_test_test_mouse_move (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -263,7 +263,7 @@ swfdec_test_test_mouse_move (SwfdecAsContext *cx, SwfdecAsObject *object, guint 
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Test_mouse_press", swfdec_test_test_mouse_press, 0)
+SWFDEC_TEST_FUNCTION ("Test_mouse_press", swfdec_test_test_mouse_press)
 void
 swfdec_test_test_mouse_press (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -285,7 +285,7 @@ swfdec_test_test_mouse_press (SwfdecAsContext *cx, SwfdecAsObject *object, guint
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Test_mouse_release", swfdec_test_test_mouse_release, 0)
+SWFDEC_TEST_FUNCTION ("Test_mouse_release", swfdec_test_test_mouse_release)
 void
 swfdec_test_test_mouse_release (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -307,7 +307,7 @@ swfdec_test_test_mouse_release (SwfdecAsContext *cx, SwfdecAsObject *object, gui
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Test_render", swfdec_test_test_render, 0)
+SWFDEC_TEST_FUNCTION ("Test_render", swfdec_test_test_render)
 void
 swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -337,7 +337,7 @@ swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Test", swfdec_test_test_new, 0)
+SWFDEC_TEST_FUNCTION ("Test", swfdec_test_test_new)
 void
 swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -357,7 +357,7 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
 }
 
-SWFDEC_TEST_FUNCTION ("Test_get_launched", swfdec_test_test_get_launched, 0)
+SWFDEC_TEST_FUNCTION ("Test_get_launched", swfdec_test_test_get_launched)
 void
 swfdec_test_test_get_launched (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -375,7 +375,7 @@ swfdec_test_test_get_launched (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (buf)));
 }
 
-SWFDEC_TEST_FUNCTION ("Socket_getSocket", swfdec_test_test_getSocket, 0)
+SWFDEC_TEST_FUNCTION ("Socket_getSocket", swfdec_test_test_getSocket)
 void
 swfdec_test_test_getSocket (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -401,7 +401,7 @@ swfdec_test_test_getSocket (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Test_get_trace", swfdec_test_test_get_trace, 0)
+SWFDEC_TEST_FUNCTION ("Test_get_trace", swfdec_test_test_get_trace)
 void
 swfdec_test_test_get_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -419,7 +419,7 @@ swfdec_test_test_get_trace (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (buf)));
 }
 
-SWFDEC_TEST_FUNCTION ("Test_get_quit", swfdec_test_test_get_quit, 0)
+SWFDEC_TEST_FUNCTION ("Test_get_quit", swfdec_test_test_get_quit)
 void
 swfdec_test_test_get_quit (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -432,7 +432,7 @@ swfdec_test_test_get_quit (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, !test->plugin_loaded || test->plugin_error || test->plugin_quit);
 }
 
-SWFDEC_TEST_FUNCTION ("Test_get_rate", swfdec_test_test_get_rate, 0)
+SWFDEC_TEST_FUNCTION ("Test_get_rate", swfdec_test_test_get_rate)
 void
 swfdec_test_test_get_rate (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)

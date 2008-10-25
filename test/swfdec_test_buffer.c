@@ -136,7 +136,7 @@ swfdec_test_diff_buffers (SwfdecBuffer *buf1, SwfdecBuffer *buf2, GError **error
   return diff;
 }
 
-SWFDEC_TEST_FUNCTION ("Buffer_diff", swfdec_test_buffer_diff, 0)
+SWFDEC_TEST_FUNCTION ("Buffer_diff", swfdec_test_buffer_diff)
 void
 swfdec_test_buffer_diff (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -169,7 +169,7 @@ swfdec_test_buffer_diff (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Buffer_find", swfdec_test_buffer_find, 0)
+SWFDEC_TEST_FUNCTION ("Buffer_find", swfdec_test_buffer_find)
 void
 swfdec_test_buffer_find (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -187,7 +187,7 @@ swfdec_test_buffer_find (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
     swfdec_as_value_set_integer (cx, retval, found - buffer->buffer->data);
 }
 
-SWFDEC_TEST_FUNCTION ("Buffer_load", swfdec_test_buffer_load, 0)
+SWFDEC_TEST_FUNCTION ("Buffer_load", swfdec_test_buffer_load)
 void
 swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -210,7 +210,7 @@ swfdec_test_buffer_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (buffer)));
 }
 
-SWFDEC_TEST_FUNCTION ("Buffer_sub", swfdec_test_buffer_sub, 0)
+SWFDEC_TEST_FUNCTION ("Buffer_sub", swfdec_test_buffer_sub)
 void
 swfdec_test_buffer_sub (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -233,7 +233,7 @@ swfdec_test_buffer_sub (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (sub)));
 }
 
-SWFDEC_TEST_FUNCTION ("Buffer_toString", swfdec_test_buffer_toString, 0)
+SWFDEC_TEST_FUNCTION ("Buffer_toString", swfdec_test_buffer_toString)
 void
 swfdec_test_buffer_toString (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -292,7 +292,7 @@ swfdec_test_buffer_from_args (SwfdecAsContext *cx, guint argc, SwfdecAsValue *ar
   return buffer;
 }
 
-SWFDEC_TEST_FUNCTION ("Buffer", swfdec_test_buffer_create, NULL)
+SWFDEC_TEST_FUNCTION ("Buffer", swfdec_test_buffer_create)
 void
 swfdec_test_buffer_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)

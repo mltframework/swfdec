@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,6 @@
 #include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
-#include "swfdec_internal.h"
 #include "swfdec_net_stream.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_sandbox.h"
@@ -59,31 +58,5 @@ swfdec_video_clear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_VIDEO_MOVIE, &video, "");
 
   swfdec_video_movie_clear (video);
-}
-
-void
-swfdec_video_movie_init_context (SwfdecPlayer *player)
-{
-  SwfdecAsContext *context;
-  SwfdecAsObject *video, *proto;
-  SwfdecAsValue val;
-
-  g_return_if_fail (SWFDEC_IS_PLAYER (player));
-
-  context = SWFDEC_AS_CONTEXT (player);
-  video = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_Video, NULL));
-  proto = swfdec_as_object_new_empty (context);
-  /* set the right properties on the Video object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable_and_flags (video, SWFDEC_AS_STR_prototype, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  /* set the right properties on the Video.prototype object */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, video);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }
 

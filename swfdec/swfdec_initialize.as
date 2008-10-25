@@ -625,6 +625,7 @@ ASSetPropFlags (TextField, "StyleSheet", 1027);
 
 /* Video */
 
+Video = function () {};
 ASSetNative(Video.prototype, 667, "6attachVideo,6clear", 1);
 ASSetPropFlags(Video.prototype, null, 3);
 

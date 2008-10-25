@@ -37,21 +37,21 @@ typedef struct _SwfdecTestImageClass SwfdecTestImageClass;
 
 struct _SwfdecTestImage
 {
-  SwfdecAsObject	as_object;
+  SwfdecAsRelay		relay;
 
   cairo_surface_t *	surface;	/* surface or NULL when broken image */
 };
 
 struct _SwfdecTestImageClass
 {
-  SwfdecAsObjectClass	as_object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
-GType		swfdec_test_image_get_type	(void);
+GType			swfdec_test_image_get_type	(void);
 
-SwfdecAsObject *swfdec_test_image_new		(SwfdecAsContext *	context,
-						 guint			width,
-						 guint			height);
+SwfdecTestImage *	swfdec_test_image_new		(SwfdecAsContext *	context,
+							 guint			width,
+							 guint			height);
 
 G_END_DECLS
 #endif

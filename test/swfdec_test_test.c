@@ -313,7 +313,7 @@ swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestTest *test;
-  SwfdecAsObject *image;
+  SwfdecTestImage *image;
   int x = 0, y = 0, w = 0, h = 0;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|iiii", &x, &y, &w, &h);
@@ -331,7 +331,7 @@ swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
     test->plugin.screenshot (&test->plugin, 
 	cairo_image_surface_get_data (SWFDEC_TEST_IMAGE (image)->surface),
 	x, y, w, h);
-    SWFDEC_AS_VALUE_SET_OBJECT (retval, image);
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (image)));
   } else {
     swfdec_test_throw (cx, "plugin doesn't implement mouse_press");
   }

@@ -28,26 +28,26 @@
 #define SWFDEC_TEST_IMAGE_IS_VALID(image) ((image)->surface && \
     cairo_surface_status ((image)->surface) == CAIRO_STATUS_SUCCESS)
 
-SwfdecAsObject *
+SwfdecTestImage *
 swfdec_test_image_new (SwfdecAsContext *context, guint width, guint height)
 {
-  SwfdecAsValue val;
-  SwfdecAsObject *ret;
+  SwfdecTestImage *ret;
+  SwfdecAsObject *object;
 
   ret = g_object_new (SWFDEC_TYPE_TEST_IMAGE, "context", context, NULL);
-  swfdec_as_object_get_variable (context->global, 
-      swfdec_as_context_get_string (context, "Image"), &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    swfdec_as_object_set_constructor (ret, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  ret->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
 
-  SWFDEC_TEST_IMAGE (ret)->surface = 
-    cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+  object = swfdec_as_object_new (context, NULL);
+  swfdec_as_object_set_constructor_by_name (object,
+      swfdec_as_context_get_string (context, "Image"), NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (ret));
+
   return ret;
 }
 
 /*** SWFDEC_TEST_IMAGE ***/
 
-G_DEFINE_TYPE (SwfdecTestImage, swfdec_test_image, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecTestImage, swfdec_test_image, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_test_image_dispose (GObject *object)
@@ -142,14 +142,16 @@ swfdec_test_image_compare (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
     SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecTestImage *image, *compare, *diff;
+  SwfdecAsObject *o;
   int w, h;
   
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "O", &compare);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "o", &o);
 
-  if (!SWFDEC_IS_TEST_IMAGE (compare))
+  if (!SWFDEC_IS_TEST_IMAGE (o->relay))
     return;
+  compare = SWFDEC_TEST_IMAGE (o->relay);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, SWFDEC_AS_OBJECT (image));
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (image)));
   if (!SWFDEC_TEST_IMAGE_IS_VALID (image) ||
       !SWFDEC_TEST_IMAGE_IS_VALID (compare))
     return;
@@ -164,8 +166,6 @@ swfdec_test_image_compare (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
   if (h != cairo_image_surface_get_height (compare->surface))
     return;
   diff = SWFDEC_TEST_IMAGE (swfdec_test_image_new (cx, w, h));
-  if (!diff)
-    return;
 
   if (!buffer_diff_core (cairo_image_surface_get_data (image->surface), 
 	cairo_image_surface_get_data (compare->surface), 
@@ -203,7 +203,7 @@ swfdec_test_image_save (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, TRUE);
 }
 
-SWFDEC_TEST_FUNCTION ("Image", swfdec_test_image_create, swfdec_test_image_get_type)
+SWFDEC_TEST_FUNCTION ("Image", swfdec_test_image_create, NULL)
 void
 swfdec_test_image_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -211,8 +211,15 @@ swfdec_test_image_create (SwfdecAsContext *cx, SwfdecAsObject *object, guint arg
   SwfdecTestImage *image;
   const char *filename;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_IMAGE, &image, "s", &filename);
+  if (!swfdec_as_context_is_constructing (cx))
+    return;
 
+  SWFDEC_AS_CHECK (0, NULL, "s", &filename);
+
+  image = g_object_new (SWFDEC_TYPE_TEST_IMAGE, "context", cx, NULL);
   image->surface = cairo_image_surface_create_from_png (filename);
+
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (image));
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
 }
 

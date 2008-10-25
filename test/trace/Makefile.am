@@ -477,6 +477,15 @@ EXTRA_DIST = \
 	boolean-properties-7.swf.trace \
 	boolean-properties-8.swf \
 	boolean-properties-8.swf.trace \
+	builtin-construction-5.swf \
+	builtin-construction-5.swf.trace \
+	builtin-construction-6.swf \
+	builtin-construction-6.swf.trace \
+	builtin-construction-7.swf \
+	builtin-construction-7.swf.trace \
+	builtin-construction-8.swf \
+	builtin-construction-8.swf.trace \
+	builtin-construction.as \
 	button-properties.as \
 	button-properties-5.swf \
 	button-properties-5.swf.trace \

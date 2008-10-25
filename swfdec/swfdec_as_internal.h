@@ -68,6 +68,13 @@ void		swfdec_as_object_add_native_variable (SwfdecAsObject *	object,
 						 SwfdecAsNative		get,
 						 SwfdecAsNative		set);
 
+/* swfdec_as_native_function.h */
+SwfdecAsFunction *
+		swfdec_as_native_function_new_bare 
+						(SwfdecAsContext *	context,
+						 const char *		name,
+						 SwfdecAsNative		native,
+						 SwfdecAsObject *	prototype);
 /* swfdec_as_array.h */
 void		swfdec_as_array_remove_range	(SwfdecAsObject *	object,
 						 gint32			start_index,

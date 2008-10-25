@@ -169,6 +169,26 @@ SwfdecAsFunction *
 swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
     SwfdecAsNative native, SwfdecAsObject *prototype)
 {
+  SwfdecAsFunction *fun;
+
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  g_return_val_if_fail (native != NULL, NULL);
+  g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
+
+  fun = swfdec_as_native_function_new_bare (context, name, native, prototype);
+
+  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (fun),
+      SWFDEC_AS_STR_Function, NULL);
+  swfdec_as_object_set_variable_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR___proto__, 
+      SWFDEC_AS_VARIABLE_VERSION_6_UP);
+
+  return fun;
+}
+
+SwfdecAsFunction *
+swfdec_as_native_function_new_bare (SwfdecAsContext *context, const char *name,
+    SwfdecAsNative native, SwfdecAsObject *prototype)
+{
   SwfdecAsNativeFunction *fun;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
@@ -186,10 +206,6 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
     swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, 
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (fun),
-      SWFDEC_AS_STR_Function, NULL);
-  swfdec_as_object_set_variable_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR___proto__, 
-      SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
   return SWFDEC_AS_FUNCTION (fun);
 }

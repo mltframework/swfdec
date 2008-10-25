@@ -27,8 +27,9 @@
 #include <pango/pangocairo.h>
 
 #include "swfdec_text_format.h"
-#include "swfdec_as_native_function.h"
 #include "swfdec_as_array.h"
+#include "swfdec_as_internal.h"
+#include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
@@ -1044,15 +1045,8 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_text_format_clear (format);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (format));
 
-  // FIXME: Need better way to create function without prototype/constructor
-  function = SWFDEC_AS_OBJECT (swfdec_as_native_function_new (cx, 
+  function = SWFDEC_AS_OBJECT (swfdec_as_native_function_new_bare (cx, 
 	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL));
-  swfdec_as_object_unset_variable_flags (function, SWFDEC_AS_STR_constructor, 
-      SWFDEC_AS_VARIABLE_PERMANENT);
-  swfdec_as_object_delete_variable (function, SWFDEC_AS_STR_constructor);
-  swfdec_as_object_unset_variable_flags (function, SWFDEC_AS_STR___proto__, 
-      SWFDEC_AS_VARIABLE_PERMANENT);
-  swfdec_as_object_delete_variable (function, SWFDEC_AS_STR___proto__);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
 

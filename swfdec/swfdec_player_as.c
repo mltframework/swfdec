@@ -346,13 +346,24 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
 void
 swfdec_player_preinit_global (SwfdecAsContext *context)
 {
-  /* init these two before swfdec_as_context_startup, so they won't get
-   * __proto__ and constructor properties */
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASnative, 
-      swfdec_player_ASnative);
-  swfdec_as_object_add_function (context->global, SWFDEC_AS_STR_ASconstructor,
-      swfdec_player_ASconstructor);
-  // FIXME: is this only the debug player?
-  swfdec_as_object_add_function (context->global,
-      SWFDEC_AS_STR_enableDebugConsole, swfdec_player_enableDebugConsole);
+  SwfdecAsObject *o;
+  SwfdecAsValue val;
+
+  o = SWFDEC_AS_OBJECT (swfdec_as_native_function_new_bare (context,
+	SWFDEC_AS_STR_ASnative, swfdec_player_ASnative, NULL));
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
+  swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_ASnative,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
+  o = SWFDEC_AS_OBJECT (swfdec_as_native_function_new_bare (context,
+	SWFDEC_AS_STR_ASconstructor, swfdec_player_ASconstructor, NULL));
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
+  swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_ASconstructor,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
+  o = SWFDEC_AS_OBJECT (swfdec_as_native_function_new_bare (context,
+	SWFDEC_AS_STR_enableDebugConsole, swfdec_player_enableDebugConsole, NULL));
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
+  swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_enableDebugConsole,
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }

@@ -1387,11 +1387,8 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
   SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct),
-      SWFDEC_AS_STR_prototype, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    SwfdecAsObject *proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+  if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct),
+	  SWFDEC_AS_STR_prototype, &val)) {
     swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__, 
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   } else {

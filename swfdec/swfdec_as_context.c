@@ -274,6 +274,9 @@ swfdec_as_context_collect_string (SwfdecAsContext *context, gpointer gc)
   SwfdecAsStringValue *string;
 
   string = gc;
+  if (!g_hash_table_remove (context->interned_strings, string->string)) {
+    g_assert_not_reached ();
+  }
   swfdec_as_gcable_free (context, gc, sizeof (SwfdecAsStringValue) + string->length + 1);
 }
 

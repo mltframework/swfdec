@@ -711,8 +711,15 @@ swfdec_sprite_movie_constructor (GType type, guint n_construct_properties,
 
   movie = SWFDEC_MOVIE (object);
   if (movie->resource->sandbox) {
-    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), 
-	movie->resource->sandbox->MovieClip);
+    /* FIXME: This hack is probably wrong */
+    if (swfdec_sandbox_try_use (movie->resource->sandbox)) {
+      swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
+	  SWFDEC_AS_STR_MovieClip, NULL);
+      swfdec_sandbox_unuse (movie->resource->sandbox);
+    } else {
+      swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
+	  SWFDEC_AS_STR_MovieClip, NULL);
+    }
   }
 
   if (movie->graphic) {

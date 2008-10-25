@@ -56,9 +56,6 @@ struct _SwfdecSandbox
   /* global cached objects from context */
   SwfdecAsObject *	Object;			/* Object */
   SwfdecAsObject *	Object_prototype;	/* Object.prototype */
-
-  /* global player objects */
-  SwfdecAsObject *	MovieClip;		/* MovieClip object */
 };
 
 struct _SwfdecSandboxClass

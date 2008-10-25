@@ -203,10 +203,14 @@ swfdec_sprite_movie_set_constructor (SwfdecSpriteMovie *movie)
 	  name);
     }
   }
-  if (constructor == NULL)
-    constructor = mov->resource->sandbox->MovieClip;
-
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
+  if (constructor == NULL) {
+    swfdec_sandbox_use (SWFDEC_MOVIE (movie)->resource->sandbox);
+    swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
+	SWFDEC_AS_STR_MovieClip, NULL);
+    swfdec_sandbox_unuse (SWFDEC_MOVIE (movie)->resource->sandbox);
+  } else {
+    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
+  }
 }
 
 void

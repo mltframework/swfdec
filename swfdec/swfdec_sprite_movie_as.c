@@ -833,9 +833,12 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
       ret->name, ret->depth);
   /* run init and construct */
   constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (cx), export);
-  if (constructor == NULL)
-    constructor = movie->resource->sandbox->MovieClip;
-  swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (ret), constructor);
+  if (constructor == NULL) {
+    swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (ret),
+	SWFDEC_AS_STR_MovieClip, NULL);
+  } else {
+    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (ret), constructor);
+  }
 
   swfdec_sprite_movie_init_from_object (ret, initObject);
   SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (ret));
@@ -993,7 +996,6 @@ swfdec_sprite_movie_init_context (SwfdecPlayer *player)
 
   movie = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
       SWFDEC_AS_STR_MovieClip, NULL));
-  SWFDEC_SANDBOX (context->global)->MovieClip = movie;
   proto = swfdec_as_object_new (context, SWFDEC_AS_STR_Object, NULL);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (movie,

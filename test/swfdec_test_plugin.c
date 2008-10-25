@@ -145,7 +145,7 @@ swfdec_test_plugin_swfdec_new (SwfdecTestPlugin *plugin)
   plugin->data = player = g_object_new (SWFDEC_TYPE_PLAYER, "random-seed", 0,
       "loader-type", SWFDEC_TYPE_FILE_LOADER, "socket-type", SWFDEC_TYPE_TEST_SWFDEC_SOCKET,
       "max-runtime", 0, "start-time", &the_beginning, "allow-fullscreen", TRUE,
-      NULL);
+      "memory-until-gc", 0, NULL);
 
   g_object_set_data (G_OBJECT (player), "plugin", plugin);
   g_signal_connect (player, "fscommand", G_CALLBACK (swfdec_test_plugin_swfdec_fscommand), plugin);

@@ -54,8 +54,6 @@ struct _SwfdecSandbox
   guint			as_version;		/* Actionscript version */
 
   /* global cached objects from context */
-  SwfdecAsObject *	Function;		/* Function */
-  SwfdecAsObject *	Function_prototype;	/* Function.prototype */
   SwfdecAsObject *	Object;			/* Object */
   SwfdecAsObject *	Object_prototype;	/* Object.prototype */
 

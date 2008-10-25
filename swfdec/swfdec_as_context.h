@@ -76,8 +76,6 @@ struct _SwfdecAsContext {
   SwfdecAsStack *	stack;		/* current stack */
 
   /* magic objects - initialized during swfdec_as_context_startup() */
-  SwfdecAsObject *	Function;	/* Function */
-  SwfdecAsObject *	Function_prototype;	/* Function.prototype */
   SwfdecAsObject *	Object;		/* Object */
   SwfdecAsObject *	Object_prototype;	/* Object.prototype */
 

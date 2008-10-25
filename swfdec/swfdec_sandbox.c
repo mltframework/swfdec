@@ -51,8 +51,6 @@ swfdec_sandbox_mark (SwfdecGcObject *object)
 {
   SwfdecSandbox *sandbox = SWFDEC_SANDBOX (object);
 
-  swfdec_gc_object_mark (sandbox->Function);
-  swfdec_gc_object_mark (sandbox->Function_prototype);
   swfdec_gc_object_mark (sandbox->Object);
   swfdec_gc_object_mark (sandbox->Object_prototype);
   swfdec_gc_object_mark (sandbox->MovieClip);
@@ -108,8 +106,6 @@ swfdec_sandbox_initialize (SwfdecSandbox *sandbox, guint version)
   swfdec_as_context_run_init_script (context, swfdec_initialize, 
       sizeof (swfdec_initialize), version);
 
-  sandbox->Function = context->Function;
-  sandbox->Function_prototype = context->Function_prototype;
   sandbox->Object = context->Object;
   sandbox->Object_prototype = context->Object_prototype;
 
@@ -219,7 +215,6 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
     swfdec_sandbox_initialize (sandbox, flash_version);
   }
 
-
   return sandbox;
 }
 
@@ -245,8 +240,6 @@ swfdec_sandbox_use (SwfdecSandbox *sandbox)
   priv = SWFDEC_PLAYER (context)->priv;
   context->global = SWFDEC_AS_OBJECT (sandbox);
 
-  context->Function = sandbox->Function;
-  context->Function_prototype = sandbox->Function_prototype;
   context->Object = sandbox->Object;
   context->Object_prototype = sandbox->Object_prototype;
 }
@@ -293,8 +286,6 @@ swfdec_sandbox_unuse (SwfdecSandbox *sandbox)
 
   context = swfdec_gc_object_get_context (sandbox);
   context->global = NULL;
-  context->Function = NULL;
-  context->Function_prototype = NULL;
   context->Object = NULL;
   context->Object_prototype = NULL;
 }

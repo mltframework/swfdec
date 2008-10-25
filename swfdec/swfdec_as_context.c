@@ -374,8 +374,6 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
   /* This if is needed for SwfdecPlayer */
   if (context->global) {
     swfdec_gc_object_mark (context->global);
-    swfdec_gc_object_mark (context->Function);
-    swfdec_gc_object_mark (context->Function_prototype);
     swfdec_gc_object_mark (context->Object);
     swfdec_gc_object_mark (context->Object_prototype);
   }

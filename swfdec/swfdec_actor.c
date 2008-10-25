@@ -183,7 +183,7 @@ swfdec_actor_init (SwfdecActor *actor)
   swfdec_sound_matrix_init_identity (&actor->sound_matrix);
 }
 
-static void
+static gboolean
 swfdec_sprite_movie_set_constructor (SwfdecSpriteMovie *movie)
 {
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
@@ -208,8 +208,10 @@ swfdec_sprite_movie_set_constructor (SwfdecSpriteMovie *movie)
     swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
 	SWFDEC_AS_STR_MovieClip, NULL);
     swfdec_sandbox_unuse (SWFDEC_MOVIE (movie)->resource->sandbox);
+    return FALSE;
   } else {
     swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
+    return TRUE;
   }
 }
 
@@ -220,6 +222,7 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
   SwfdecAsObject *thisp;
   const char *name;
   guint version;
+  gboolean need_constructor = FALSE;
 
   g_return_if_fail (SWFDEC_IS_ACTOR (actor));
 
@@ -243,7 +246,7 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
   if (condition == SWFDEC_EVENT_CONSTRUCT) {
     if (version <= 5)
       return;
-    swfdec_sprite_movie_set_constructor (SWFDEC_SPRITE_MOVIE (actor));
+    need_constructor = swfdec_sprite_movie_set_constructor (SWFDEC_SPRITE_MOVIE (actor));
   } else if (condition == SWFDEC_EVENT_ENTER) {
     if (SWFDEC_MOVIE (actor)->state >= SWFDEC_MOVIE_STATE_REMOVED)
       return;
@@ -272,7 +275,7 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
     if (name != NULL) {
       swfdec_as_object_call (SWFDEC_AS_OBJECT (actor), name, 0, NULL, NULL);
     }
-    if (condition == SWFDEC_EVENT_CONSTRUCT)
+    if (condition == SWFDEC_EVENT_CONSTRUCT && need_constructor)
       swfdec_as_object_call (thisp, SWFDEC_AS_STR_constructor, 0, NULL, NULL);
   }
   swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);

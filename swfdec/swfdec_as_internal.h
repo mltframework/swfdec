@@ -34,8 +34,6 @@ G_BEGIN_DECLS
 
 #define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
-void		swfdec_as_function_init_context		(SwfdecAsContext *	context);
-
 /* swfdec_as_context.c */
 gboolean	swfdec_as_context_check_continue (SwfdecAsContext *	context);
 void		swfdec_as_context_run		(SwfdecAsContext *	context);

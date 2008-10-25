@@ -1198,7 +1198,6 @@ swfdec_as_context_startup (SwfdecAsContext *context)
   /* FIXME: remove them for normal contexts? */
   swfdec_player_preinit_global (context);
   /* get the necessary objects up to define objects and functions sanely */
-  swfdec_as_function_init_context (context);
   swfdec_as_object_init_context (context);
   /* define the global object and other important ones */
   swfdec_as_context_init_global (context);

@@ -158,7 +158,7 @@ swfdec_test_test_unload_plugin (SwfdecTestTest *test)
 
 /*** SWFDEC_TEST_TEST ***/
 
-G_DEFINE_TYPE (SwfdecTestTest, swfdec_test_test, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecTestTest, swfdec_test_test, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_test_test_dispose (GObject *object)
@@ -303,7 +303,7 @@ swfdec_test_test_mouse_release (SwfdecAsContext *cx, SwfdecAsObject *object, gui
   if (test->plugin.advance) {
     test->plugin.mouse_release (&test->plugin, x, y, button);
   } else {
-    swfdec_test_throw (cx, "plugin doesn't implement mouse_press");
+    swfdec_test_throw (cx, "plugin doesn't implement mouse_release");
   }
 }
 
@@ -333,11 +333,11 @@ swfdec_test_test_render (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
 	x, y, w, h);
     SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (image)));
   } else {
-    swfdec_test_throw (cx, "plugin doesn't implement mouse_press");
+    swfdec_test_throw (cx, "plugin doesn't implement render");
   }
 }
 
-SWFDEC_TEST_FUNCTION ("Test", swfdec_test_test_new, swfdec_test_test_get_type)
+SWFDEC_TEST_FUNCTION ("Test", swfdec_test_test_new, 0)
 void
 swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsValue *argv, SwfdecAsValue *retval)
@@ -345,9 +345,16 @@ swfdec_test_test_new (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SwfdecTestTest *test;
   const char *filename = NULL;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_TEST, &test, "|s", &filename);
+  if (!swfdec_as_context_is_constructing (cx))
+    return;
 
+  SWFDEC_AS_CHECK (0, NULL, "|s", &filename);
+
+  test = g_object_new (SWFDEC_TYPE_TEST_TEST, "context", cx, NULL);
   swfdec_test_do_reset (test, filename);
+
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (test));
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, object);
 }
 
 SWFDEC_TEST_FUNCTION ("Test_get_launched", swfdec_test_test_get_launched, 0)

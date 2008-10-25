@@ -39,7 +39,7 @@ typedef struct _SwfdecTestTestClass SwfdecTestTestClass;
 
 struct _SwfdecTestTest
 {
-  SwfdecAsObject	as_object;
+  SwfdecAsRelay		relay;
 
   SwfdecTestPlugin	plugin;		/* the plugin we use */
   GModule *		module;		/* module we loaded the plugin from or NULL */
@@ -57,7 +57,7 @@ struct _SwfdecTestTest
 
 struct _SwfdecTestTestClass
 {
-  SwfdecAsObjectClass	as_object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 extern char *swfdec_test_plugin_name;

@@ -21,7 +21,7 @@
 #define _SWFDEC_XML_SOCKET_H_
 
 #include <swfdec/swfdec.h>
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_gc_object.h>
 #include <swfdec/swfdec_sandbox.h>
 
 G_BEGIN_DECLS
@@ -38,7 +38,7 @@ typedef struct _SwfdecXmlSocketClass SwfdecXmlSocketClass;
 #define SWFDEC_XML_SOCKET_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_XML_SOCKET, SwfdecXmlSocketClass))
 
 struct _SwfdecXmlSocket {
-  SwfdecAsObject	object;
+  SwfdecGcObject	object;
 
   SwfdecSocket *	socket;		/* the socket in use */
   SwfdecSandbox *	sandbox;	/* the sandbox we run in */
@@ -49,7 +49,7 @@ struct _SwfdecXmlSocket {
 };
 
 struct _SwfdecXmlSocketClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecGcObjectClass	object_class;
 };
 
 GType		swfdec_xml_socket_get_type	(void);

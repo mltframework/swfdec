@@ -163,7 +163,7 @@ swfdec_xml_socket_stream_target_init (SwfdecStreamTargetInterface *iface)
 
 /*** SWFDEC_XML_SOCKET ***/
 
-G_DEFINE_TYPE_WITH_CODE (SwfdecXmlSocket, swfdec_xml_socket, SWFDEC_TYPE_AS_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (SwfdecXmlSocket, swfdec_xml_socket, SWFDEC_TYPE_GC_OBJECT,
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_xml_socket_stream_target_init))
 
 static void

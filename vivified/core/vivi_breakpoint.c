@@ -1,5 +1,5 @@
 /* Vivified
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 #include "vivi_function.h"
 #include "vivi_wrap.h"
 
-G_DEFINE_TYPE (ViviBreakpoint, vivi_breakpoint, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (ViviBreakpoint, vivi_breakpoint, SWFDEC_TYPE_AS_RELAY)
 
 static gboolean
 vivi_breakpoint_step (ViviDebugger *debugger, ViviBreakpoint *breakpoint)

@@ -1,5 +1,5 @@
 /* Vivified
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,7 @@ typedef struct _ViviBreakpointClass ViviBreakpointClass;
 
 struct _ViviBreakpoint
 {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   gboolean		active;		/* only active breakpoints receive events */
   gulong		handlers[5];	/* handlers for every signal of the debugger or 0 */
@@ -46,7 +46,7 @@ struct _ViviBreakpoint
 
 struct _ViviBreakpointClass
 {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 };
 
 GType			vivi_breakpoint_get_type   	(void);

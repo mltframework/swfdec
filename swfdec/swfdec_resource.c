@@ -46,7 +46,7 @@
 
 
 static void swfdec_resource_stream_target_init (SwfdecStreamTargetInterface *iface);
-G_DEFINE_TYPE_WITH_CODE (SwfdecResource, swfdec_resource, SWFDEC_TYPE_AS_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (SwfdecResource, swfdec_resource, SWFDEC_TYPE_GC_OBJECT,
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_resource_stream_target_init))
 
 /*** SWFDEC_STREAM_TARGET interface ***/

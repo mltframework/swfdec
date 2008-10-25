@@ -34,6 +34,7 @@
 #include "swfdec_filter.h"
 #include "swfdec_internal.h"
 #include "swfdec_player_internal.h"
+#include "swfdec_sandbox.h"
 #include "swfdec_sprite.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_swf_decoder.h"

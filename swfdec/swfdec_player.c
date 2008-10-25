@@ -42,6 +42,7 @@
 #include "swfdec_movie.h"
 #include "swfdec_renderer_internal.h"
 #include "swfdec_resource.h"
+#include "swfdec_sandbox.h"
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite_movie.h"
 #include "swfdec_text_field_movie.h"

@@ -27,6 +27,7 @@
 #include "swfdec_button_movie.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
+#include "swfdec_sandbox.h"
 #include "swfdec_sprite_movie.h"
 
 

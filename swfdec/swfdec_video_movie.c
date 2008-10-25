@@ -27,6 +27,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
 #include "swfdec_renderer_internal.h"
+#include "swfdec_sandbox.h"
 #include "swfdec_utils.h"
 #include "swfdec_video_provider.h"
 #include "swfdec_video_video_provider.h"

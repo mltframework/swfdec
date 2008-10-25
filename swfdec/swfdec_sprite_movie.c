@@ -35,6 +35,7 @@
 #include "swfdec_script_internal.h"
 #include "swfdec_sprite.h"
 #include "swfdec_resource.h"
+#include "swfdec_sandbox.h"
 #include "swfdec_tag.h"
 
 /*** SWFDEC_SPRITE_MOVIE ***/

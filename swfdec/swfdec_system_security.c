@@ -27,6 +27,7 @@
 #include "swfdec_resource.h"
 #include "swfdec_player_internal.h"
 #include "swfdec_policy_file.h"
+#include "swfdec_sandbox.h"
 
 // properties
 SWFDEC_AS_NATIVE (12, 0, swfdec_system_security_allowDomain)

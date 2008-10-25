@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2006-2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2006-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_RESOURCE_H_
 #define _SWFDEC_RESOURCE_H_
 
+#include <swfdec/swfdec_gc_object.h>
 #include <swfdec/swfdec_player.h>
-#include <swfdec/swfdec_sandbox.h>
 #include <swfdec/swfdec_sprite_movie.h>
 
 G_BEGIN_DECLS
@@ -45,7 +45,7 @@ typedef enum {
 
 struct _SwfdecResource
 {
-  SwfdecAsObject      	object;
+  SwfdecGcObject      	object;
 
   guint			version;	/* version of this resource */
   SwfdecSandbox *	sandbox;	/* sandbox this resource belongs to (only NULL for a short time on very first loader) */
@@ -67,7 +67,7 @@ struct _SwfdecResource
 
 struct _SwfdecResourceClass
 {
-  SwfdecAsObjectClass 	object_class;
+  SwfdecGcObjectClass 	object_class;
 };
 
 GType		swfdec_resource_get_type	  	(void);

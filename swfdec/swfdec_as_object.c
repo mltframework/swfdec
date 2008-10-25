@@ -1192,50 +1192,24 @@ swfdec_as_object_do_nothing (SwfdecAsContext *cx, SwfdecAsObject *object,
 SwfdecAsFunction *
 swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, SwfdecAsNative native)
 {
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
-  g_return_val_if_fail (name != NULL, NULL);
-
-  return swfdec_as_object_add_constructor (object, name, 0, native, NULL);
-}
-
-/**
- * swfdec_as_object_add_constructor:
- * @object: a #SwfdecAsObject
- * @name: name of the function. The string does not have to be 
- *        garbage-collected.
- * @construct_type: type used when using this function as a constructor. May 
- *                  be 0 to use the default type.
- * @native: a native function or %NULL to just not do anything
- * @prototype: An optional object to be set as the "prototype" property of the
- *             new function. The prototype will be hidden and constant.
- *
- * Adds @native as a constructor named @name to @object. The newly added variable
- * will not be enumerated.
- *
- * Returns: the newly created #SwfdecAsFunction
- **/
-SwfdecAsFunction *
-swfdec_as_object_add_constructor (SwfdecAsObject *object, const char *name,
-    GType construct_type, SwfdecAsNative native, SwfdecAsObject *prototype)
-{
   SwfdecAsFunction *function;
+  SwfdecAsContext *cx;
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
   g_return_val_if_fail (name != NULL, NULL);
-  g_return_val_if_fail (construct_type == 0 || g_type_is_a (construct_type, SWFDEC_TYPE_AS_OBJECT), NULL);
-  g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
+  cx = swfdec_gc_object_get_context (object);
   if (!native)
     native = swfdec_as_object_do_nothing;
-  function = swfdec_as_native_function_new (swfdec_gc_object_get_context (object), name, native, prototype);
-  if (construct_type != 0)
-    swfdec_as_native_function_set_construct_type (SWFDEC_AS_NATIVE_FUNCTION (function), construct_type);
-  name = swfdec_as_context_get_string (swfdec_gc_object_get_context (object), name);
+  function = swfdec_as_native_function_new (cx, name, native, NULL);
+
+  name = swfdec_as_context_get_string (cx, name);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
   /* FIXME: I'd like to make sure no such property exists yet */
   swfdec_as_object_set_variable_and_flags (object, name, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+
   return function;
 }
 
@@ -1324,48 +1298,12 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   SwfdecAsValue val;
   SwfdecAsObject *new;
   SwfdecAsContext *context;
-  SwfdecAsFunction *cur;
-  guint i, size = 0;
-  GType type = 0;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (fun));
 
-  // FIXME: The way we decide object's type is wrong
-  // It seems to be actually possible to change the type inside a constructor
-  // (many times) by changing this.__proto__.__constructor__ and calling super
-
   context = swfdec_gc_object_get_context (fun);
-  cur = fun;
-  i = 0;
-  do {
-    if (SWFDEC_IS_AS_NATIVE_FUNCTION (cur)) {
-      SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (cur);
-      if (native->construct_size) {
-	type = native->construct_type;
-	size = native->construct_size;
-	break;
-      }
-    }
-    i++;
-    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (cur), SWFDEC_AS_STR_prototype, &val);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-      SwfdecAsObject *proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
-      swfdec_as_object_get_variable (proto, SWFDEC_AS_STR___constructor__, &val);
-      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-	cur = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
-	if (SWFDEC_IS_AS_FUNCTION (cur)) {
-	  continue;
-	}
-      }
-    }
-    cur = NULL;
-  } while (type == 0 && cur != NULL && i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT);
-  if (type == 0) {
-    type = SWFDEC_TYPE_AS_OBJECT;
-    size = sizeof (SwfdecAsObject);
-  }
 
-  new = g_object_new (type, "context", context, NULL);
+  new = g_object_new (SWFDEC_TYPE_AS_OBJECT, "context", context, NULL);
   /* set initial variables */
   if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, &val)) {
       swfdec_as_object_set_variable_and_flags (new, SWFDEC_AS_STR___proto__,

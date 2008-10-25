@@ -63,12 +63,6 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
   SwfdecAsValue rval = { 0, };
   SwfdecAsValue *argv;
 
-  if (construct && native->construct_type != 0 &&
-      !g_type_is_a (G_OBJECT_TYPE (thisp), native->construct_type)) {
-    SWFDEC_FIXME ("Swfdec can't handle call to native constructor with invalid type");
-    return;
-  }
-
   g_assert (native->name);
 
   swfdec_as_frame_init_native (&frame, cx);
@@ -195,27 +189,6 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
   swfdec_as_function_set_constructor (SWFDEC_AS_FUNCTION (fun));
 
   return SWFDEC_AS_FUNCTION (fun);
-}
-
-/**
- * swfdec_as_native_function_set_construct_type:
- * @function: a #SwfdecAsNativeFunction
- * @type: #GType used when constructing an object with @function
- *
- * Sets the @type to be used when using @function as a constructor. If this is
- * not set, using @function as a constructor will create a #SwfdecAsObject.
- **/
-void
-swfdec_as_native_function_set_construct_type (SwfdecAsNativeFunction *function, GType type)
-{
-  GTypeQuery query;
-
-  g_return_if_fail (SWFDEC_IS_AS_NATIVE_FUNCTION (function));
-  g_return_if_fail (g_type_is_a (type, SWFDEC_TYPE_AS_OBJECT));
-
-  g_type_query (type, &query);
-  function->construct_type = type;
-  function->construct_size = query.instance_size;
 }
 
 /**

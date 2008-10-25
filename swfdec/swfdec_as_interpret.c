@@ -1791,7 +1791,7 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
   }
 
   object = swfdec_as_object_new (cx, NULL);
-  swfdec_as_object_set_constructor (object, cx->Object);
+  swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Object, NULL);
   for (i = 0; i < n_args; i++) {
     const char *s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
     swfdec_as_object_set_variable (object, s, swfdec_as_stack_peek (cx, 1));

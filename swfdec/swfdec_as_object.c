@@ -245,6 +245,8 @@ swfdec_as_object_mark (SwfdecGcObject *gc)
   g_hash_table_foreach (object->properties, swfdec_gc_object_mark_property, NULL);
   if (object->watches)
     g_hash_table_foreach (object->watches, swfdec_gc_object_mark_watch, NULL);
+  if (object->relay)
+    swfdec_gc_object_mark (object->relay);
   g_slist_foreach (object->interfaces, (GFunc) swfdec_gc_object_mark, NULL); 
 }
 

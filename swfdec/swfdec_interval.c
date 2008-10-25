@@ -33,7 +33,7 @@
 #include "swfdec_player_internal.h"
 #include "swfdec_resource.h"
 
-G_DEFINE_TYPE (SwfdecInterval, swfdec_interval, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecInterval, swfdec_interval, SWFDEC_TYPE_GC_OBJECT)
 
 static void
 swfdec_interval_mark (SwfdecGcObject *object)
@@ -56,9 +56,10 @@ static void
 swfdec_interval_dispose (GObject *object)
 {
   SwfdecInterval *interval = SWFDEC_INTERVAL (object);
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (interval);
 
   if (interval->n_args) {
-    swfdec_as_context_unuse_mem (swfdec_gc_object_get_context (interval),
+    swfdec_as_context_unuse_mem (cx,
 	interval->n_args * sizeof (SwfdecAsValue));
     g_free (interval->args);
     interval->args = NULL;
@@ -66,7 +67,7 @@ swfdec_interval_dispose (GObject *object)
   }
   /* needed here when GC'ed by closing the player */
   if (interval->timeout.callback != NULL) {
-    swfdec_player_remove_timeout (SWFDEC_PLAYER (swfdec_gc_object_get_context (object)), &interval->timeout);
+    swfdec_player_remove_timeout (SWFDEC_PLAYER (cx), &interval->timeout);
     interval->timeout.callback = NULL;
   }
 
@@ -100,7 +101,7 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
 
   if (interval->repeat) {
     timeout->timestamp += SWFDEC_MSECS_TO_TICKS (interval->msecs);
-    swfdec_player_add_timeout (SWFDEC_PLAYER (context), timeout);
+    swfdec_player_add_timeout (player, timeout);
   } else {
     player->priv->intervals = g_list_remove (player->priv->intervals, interval);
     interval->timeout.callback = NULL;

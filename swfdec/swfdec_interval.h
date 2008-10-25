@@ -20,8 +20,8 @@
 #ifndef _SWFDEC_INTERVAL_H_
 #define _SWFDEC_INTERVAL_H_
 
-#include <swfdec/swfdec_as_object.h>
 #include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_gc_object.h>
 #include <swfdec/swfdec_player_internal.h>
 #include <swfdec/swfdec_sandbox.h>
 
@@ -38,7 +38,7 @@ typedef struct _SwfdecIntervalClass SwfdecIntervalClass;
 #define SWFDEC_INTERVAL_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_INTERVAL, SwfdecIntervalClass))
 
 struct _SwfdecInterval {
-  SwfdecAsObject	asobject;
+  SwfdecGcObject	gc_object;
 
   SwfdecTimeout		timeout;
   SwfdecSandbox *	sandbox;	/* sandbox we run the script in */
@@ -54,7 +54,7 @@ struct _SwfdecInterval {
 };
 
 struct _SwfdecIntervalClass {
-  SwfdecAsObjectClass	asobject_class;
+  SwfdecGcObjectClass	gc_object_class;
 };
 
 GType		swfdec_interval_get_type	(void);

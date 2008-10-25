@@ -42,10 +42,6 @@ G_DEFINE_ABSTRACT_TYPE (SwfdecAsFunction, swfdec_as_function, SWFDEC_TYPE_AS_OBJ
  * If you want to create your own functions, you should create native functions.
  * The easiest way to do this is with swfdec_as_object_add_function() or
  * swfdec_as_native_function_new().
- *
- * In Actionscript, every function can be used as a constructor. If you want to
- * make a native function be used as a constructor for your own #SwfdecAsObject
- * subclass, have a look at swfdec_as_native_function_set_construct_type().
  */
 
 /**

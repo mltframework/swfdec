@@ -62,8 +62,7 @@ struct _SwfdecAsValue {
   /*< private >*/
   union {
     gboolean		boolean;
-    SwfdecAsDoubleValue *number;
-    SwfdecAsStringValue *string;
+    SwfdecAsGcable *	gcable;
     SwfdecAsObject *	object;
   } value;
 };
@@ -90,13 +89,13 @@ struct _SwfdecAsDoubleValue {
 };
 
 #define SWFDEC_AS_VALUE_IS_NUMBER(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_NUMBER)
-#define SWFDEC_AS_VALUE_GET_NUMBER(val) ((val)->value.number->number)
+#define SWFDEC_AS_VALUE_GET_NUMBER(val) (((SwfdecAsDoubleValue *) (val)->value.gcable)->number)
 
 #define SWFDEC_AS_VALUE_IS_STRING(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_STRING)
-#define SWFDEC_AS_VALUE_GET_STRING(val) ((val)->value.string->string)
+#define SWFDEC_AS_VALUE_GET_STRING(val) (((SwfdecAsStringValue *) (val)->value.gcable)->string)
 #define SWFDEC_AS_VALUE_SET_STRING(val,s) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
-  (__val)->value.string = (SwfdecAsStringValue *) ((guint8 *) (s) - G_STRUCT_OFFSET (SwfdecAsStringValue, string)); \
+  (__val)->value.gcable = (SwfdecAsGcable *) ((guint8 *) (s) - G_STRUCT_OFFSET (SwfdecAsStringValue, string)); \
   (__val)->type = SWFDEC_AS_TYPE_STRING; \
 } G_STMT_END
 

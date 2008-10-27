@@ -1451,7 +1451,7 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   /* else compare as numbers */
   if (isnan (l) && isnan (r)) {
     cond = (ltype == rtype && ltype == SWFDEC_AS_TYPE_NUMBER &&
-	lval->value.number == rval->value.number);
+	lval->value.gcable == rval->value.gcable);
   } else {
     cond = l == r;
   }
@@ -1541,7 +1541,7 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 
   if (isnan (l) && isnan (r)) {
     cond = (ltype == rtype && ltype == SWFDEC_AS_TYPE_NUMBER &&
-	lval->value.number == rval->value.number);
+	lval->value.gcable == rval->value.gcable);
   } else {
     cond = l == r;
   }

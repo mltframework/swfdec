@@ -1271,14 +1271,6 @@ swfdec_movie_foreach_variable (SwfdecAsObject *object, SwfdecAsVariableForeach f
   return ret;
 }
 
-static char *
-swfdec_movie_get_debug (SwfdecAsObject *object)
-{
-  SwfdecMovie *movie = SWFDEC_MOVIE (object);
-
-  return swfdec_movie_get_path (movie, TRUE);
-}
-
 typedef struct {
   SwfdecMovie *		movie;
   int			depth;
@@ -1445,7 +1437,6 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   asobject_class->get = swfdec_movie_get_variable;
   asobject_class->set = swfdec_movie_set_variable;
   asobject_class->foreach = swfdec_movie_foreach_variable;
-  asobject_class->debug = swfdec_movie_get_debug;
 
   signals[MATRIX_CHANGED] = g_signal_new ("matrix-changed", G_TYPE_FROM_CLASS (movie_class),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,

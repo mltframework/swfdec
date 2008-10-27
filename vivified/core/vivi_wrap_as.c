@@ -31,7 +31,6 @@ vivi_wrap_toString (SwfdecAsContext *cx, SwfdecAsObject *this,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   ViviWrap *wrap;
-  char *s;
 
   if (!VIVI_IS_WRAP (this))
     return;
@@ -40,8 +39,7 @@ vivi_wrap_toString (SwfdecAsContext *cx, SwfdecAsObject *this,
   if (wrap->wrap == NULL)
     return;
   
-  s = swfdec_as_object_get_debug (wrap->wrap);
-  SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_give_string (cx, s));
+  SWFDEC_AS_VALUE_SET_STRING (retval, swfdec_as_context_get_string (cx, "Here be debugging output"));
 }
 
 VIVI_FUNCTION ("wrap_get", vivi_wrap_get)

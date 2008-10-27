@@ -751,15 +751,6 @@ swfdec_as_object_foreach_rename (SwfdecAsObject *object, SwfdecAsVariableForeach
   object->properties = fdata.properties_new;
 }
 
-static char *
-swfdec_as_object_do_debug (SwfdecAsObject *object)
-{
-  if (G_OBJECT_TYPE (object) != SWFDEC_TYPE_AS_OBJECT)
-    return g_strdup (G_OBJECT_TYPE_NAME (object));
-
-  return g_strdup ("Object");
-}
-
 static GObject *
 swfdec_as_object_constructor (GType type, guint n_construct_properties,
     GObjectConstructParam *construct_properties)
@@ -796,7 +787,6 @@ swfdec_as_object_class_init (SwfdecAsObjectClass *klass)
   klass->set_flags = swfdec_as_object_do_set_flags;
   klass->del = swfdec_as_object_do_delete;
   klass->foreach = swfdec_as_object_do_foreach;
-  klass->debug = swfdec_as_object_do_debug;
 }
 
 static void
@@ -1813,27 +1803,6 @@ swfdec_as_object_init_context (SwfdecAsContext *context)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable_and_flags (obj_proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-}
-
-/**
- * swfdec_as_object_get_debug:
- * @object: a #SwfdecAsObject
- *
- * Gets a representation string suitable for debugging. This function is 
- * guaranteed to not modify the state of the script engine, unlike 
- * swfdec_as_value_to_string() for example.
- *
- * Returns: A newly allocated string. Free it with g_free() after use.
- **/
-char *
-swfdec_as_object_get_debug (SwfdecAsObject *object)
-{
-  SwfdecAsObjectClass *klass;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
-
-  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  return klass->debug (object);
 }
 
 /**

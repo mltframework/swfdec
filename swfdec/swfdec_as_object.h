@@ -96,8 +96,6 @@ struct _SwfdecAsObjectClass {
   gboolean		(* foreach)		(SwfdecAsObject *	object,
 						 SwfdecAsVariableForeach func,
 						 gpointer		data);
-  /* get a debug string representation for this object */
-  char *		(* debug)		(SwfdecAsObject *	object);
 };
 
 GType		swfdec_as_object_get_type	(void);
@@ -120,7 +118,6 @@ void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
 						 SwfdecAsObject *	construct);
 SwfdecAsObject *swfdec_as_object_resolve	(SwfdecAsObject *	object);
-char *		swfdec_as_object_get_debug	(SwfdecAsObject *	object);
 
 void		swfdec_as_object_set_relay	(SwfdecAsObject *	object,
 						 SwfdecAsRelay *	relay);

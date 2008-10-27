@@ -130,7 +130,6 @@ SwfdecAsObject *swfdec_as_value_to_object	(SwfdecAsContext *	context,
 void		swfdec_as_value_to_primitive	(SwfdecAsValue *	value);
 const char *	swfdec_as_value_to_string	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
-char *		swfdec_as_value_to_debug	(const SwfdecAsValue *	value);
 
 /* special conversion functions */
 const char *	swfdec_as_integer_to_string	(SwfdecAsContext *      context,

@@ -435,40 +435,6 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 }
 
 /**
- * swfdec_as_value_to_debug:
- * @value: a #SwfdecAsValue
- *
- * Converts the given @value to a string in a safe way. It will not call into
- * the scripting engine. Its intended use is for output in debuggers.
- *
- * Returns: a newly allocated string. Free with g_free().
- **/
-char *
-swfdec_as_value_to_debug (const SwfdecAsValue *value)
-{
-  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (value), NULL);
-
-  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
-    case SWFDEC_AS_TYPE_STRING:
-      return g_shell_quote (SWFDEC_AS_VALUE_GET_STRING (value));
-    case SWFDEC_AS_TYPE_UNDEFINED:
-      return g_strdup ("undefined");
-    case SWFDEC_AS_TYPE_BOOLEAN:
-      return g_strdup (SWFDEC_AS_VALUE_GET_BOOLEAN (value) ? "true" : "false");
-    case SWFDEC_AS_TYPE_NULL:
-      return g_strdup ("null");
-    case SWFDEC_AS_TYPE_NUMBER:
-      return g_strdup_printf ("%g", SWFDEC_AS_VALUE_GET_NUMBER (value));
-    case SWFDEC_AS_TYPE_OBJECT:
-      return swfdec_as_object_get_debug (SWFDEC_AS_VALUE_GET_OBJECT (value));
-    case SWFDEC_AS_TYPE_INT:
-    default:
-      g_assert_not_reached ();
-      return NULL;
-  }
-}
-
-/**
  * swfdec_as_value_to_number:
  * @context: a #SwfdecAsContext
  * @value: a #SwfdecAsValue used by context

@@ -52,10 +52,6 @@ struct _SwfdecSandbox
   SwfdecSandboxType	type;			/* type of this sandbox */
   SwfdecURL *		url;			/* URL this sandbox acts for */
   guint			as_version;		/* Actionscript version */
-
-  /* global cached objects from context */
-  SwfdecAsObject *	Object;			/* Object */
-  SwfdecAsObject *	Object_prototype;	/* Object.prototype */
 };
 
 struct _SwfdecSandboxClass

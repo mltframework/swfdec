@@ -1786,7 +1786,6 @@ swfdec_as_object_init_context (SwfdecAsContext *context)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_Object, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  context->Object = object;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
@@ -1800,7 +1799,6 @@ swfdec_as_object_init_context (SwfdecAsContext *context)
       SWFDEC_AS_VARIABLE_CONSTANT);
 
   /* initialize Object.prototype */
-  context->Object_prototype = obj_proto;
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable_and_flags (obj_proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

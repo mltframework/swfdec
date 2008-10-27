@@ -324,11 +324,15 @@ swfdec_net_stream_init_context (SwfdecPlayer *player)
   SWFDEC_AS_VALUE_SET_OBJECT (&val, stream);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, context->Object_prototype);
-  swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable_and_flags (stream, SWFDEC_AS_STR_prototype, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Object, &val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
+	SWFDEC_AS_STR_prototype, &val);
+    swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
+	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+    swfdec_as_object_set_variable_and_flags (stream, SWFDEC_AS_STR_prototype, &val,
+	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  }
 }
 

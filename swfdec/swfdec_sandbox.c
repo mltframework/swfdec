@@ -47,17 +47,6 @@
 G_DEFINE_TYPE (SwfdecSandbox, swfdec_sandbox, SWFDEC_TYPE_AS_OBJECT)
 
 static void
-swfdec_sandbox_mark (SwfdecGcObject *object)
-{
-  SwfdecSandbox *sandbox = SWFDEC_SANDBOX (object);
-
-  swfdec_gc_object_mark (sandbox->Object);
-  swfdec_gc_object_mark (sandbox->Object_prototype);
-
-  SWFDEC_GC_OBJECT_CLASS (swfdec_sandbox_parent_class)->mark (object);
-}
-
-static void
 swfdec_sandbox_dispose (GObject *object)
 {
   SwfdecSandbox *sandbox = SWFDEC_SANDBOX (object);
@@ -71,11 +60,8 @@ static void
 swfdec_sandbox_class_init (SwfdecSandboxClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
 
   object_class->dispose = swfdec_sandbox_dispose;
-
-  gc_class->mark = swfdec_sandbox_mark;
 }
 
 static void
@@ -102,9 +88,6 @@ swfdec_sandbox_initialize (SwfdecSandbox *sandbox, guint version)
 
   swfdec_as_context_run_init_script (context, swfdec_initialize, 
       sizeof (swfdec_initialize), version);
-
-  sandbox->Object = context->Object;
-  sandbox->Object_prototype = context->Object_prototype;
 
   if (context->state == SWFDEC_AS_CONTEXT_NEW)
     context->state = SWFDEC_AS_CONTEXT_RUNNING;
@@ -236,9 +219,6 @@ swfdec_sandbox_use (SwfdecSandbox *sandbox)
   context = swfdec_gc_object_get_context (sandbox);
   priv = SWFDEC_PLAYER (context)->priv;
   context->global = SWFDEC_AS_OBJECT (sandbox);
-
-  context->Object = sandbox->Object;
-  context->Object_prototype = sandbox->Object_prototype;
 }
 
 /**
@@ -283,8 +263,6 @@ swfdec_sandbox_unuse (SwfdecSandbox *sandbox)
 
   context = swfdec_gc_object_get_context (sandbox);
   context->global = NULL;
-  context->Object = NULL;
-  context->Object_prototype = NULL;
 }
 
 gboolean

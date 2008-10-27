@@ -75,10 +75,6 @@ struct _SwfdecAsContext {
   SwfdecAsValue	*	cur;		/* pointer to current top of stack */
   SwfdecAsStack *	stack;		/* current stack */
 
-  /* magic objects - initialized during swfdec_as_context_startup() */
-  SwfdecAsObject *	Object;		/* Object */
-  SwfdecAsObject *	Object_prototype;	/* Object.prototype */
-
   /* debugging */
   SwfdecAsDebugger *	debugger;	/* debugger (or NULL if none) */
 };

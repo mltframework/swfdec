@@ -372,11 +372,8 @@ static void
 swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   /* This if is needed for SwfdecPlayer */
-  if (context->global) {
+  if (context->global)
     swfdec_gc_object_mark (context->global);
-    swfdec_gc_object_mark (context->Object);
-    swfdec_gc_object_mark (context->Object_prototype);
-  }
   if (context->exception)
     swfdec_as_value_mark (&context->exception_value);
   g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);

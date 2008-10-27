@@ -1385,8 +1385,8 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   ltmp = *lval;
   swfdec_as_value_to_primitive (&rtmp);
   swfdec_as_value_to_primitive (&ltmp);
-  ltype = ltmp.type;
-  rtype = rtmp.type;
+  ltype = SWFDEC_AS_VALUE_GET_TYPE (&ltmp);
+  rtype = SWFDEC_AS_VALUE_GET_TYPE (&rtmp);
   
   /* get objects compared */
   if (ltype == SWFDEC_AS_TYPE_OBJECT && rtype == SWFDEC_AS_TYPE_OBJECT) {

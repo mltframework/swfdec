@@ -457,7 +457,7 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
   tmp = *value;
   swfdec_as_value_to_primitive (&tmp);
 
-  switch (tmp.type) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (&tmp)) {
     case SWFDEC_AS_TYPE_UNDEFINED:
     case SWFDEC_AS_TYPE_NULL:
       return (context->version >= 7) ? NAN : 0.0;

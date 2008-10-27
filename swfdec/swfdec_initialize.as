@@ -356,6 +356,7 @@ ASSetNative (TextSnapshot.prototype, 1067, "6getCount,6setSelected,6getSelected,
 
 /* MovieClip */
 
+MovieClip = function () {};
 MovieClip.prototype.useHandCursor = true;
 MovieClip.prototype.enabled = true;
 

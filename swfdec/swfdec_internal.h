@@ -33,7 +33,6 @@ G_BEGIN_DECLS
 
 void			swfdec_player_preinit_global		(SwfdecAsContext *	context);
 void			swfdec_net_stream_init_context		(SwfdecPlayer *		player);
-void			swfdec_sprite_movie_init_context	(SwfdecPlayer *		player);
 
 /* functions that shouldn't go into public headers */
 

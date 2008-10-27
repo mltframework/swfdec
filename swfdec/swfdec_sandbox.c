@@ -83,7 +83,6 @@ swfdec_sandbox_initialize (SwfdecSandbox *sandbox, guint version)
   /* reset state for initialization */
   /* FIXME: have a better way to do this */
   context->state = SWFDEC_AS_CONTEXT_NEW;
-  swfdec_sprite_movie_init_context (player);
   swfdec_net_stream_init_context (player);
 
   swfdec_as_context_run_init_script (context, swfdec_initialize, 

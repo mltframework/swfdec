@@ -597,39 +597,6 @@ swfdec_as_object_do_set (SwfdecAsObject *object, const char *variable,
   }
 }
 
-static void
-swfdec_as_object_do_set_flags (SwfdecAsObject *object, const char *variable, guint flags, guint mask)
-{
-  SwfdecAsVariable *var = swfdec_as_object_hash_lookup (object, variable);
-
-  if (var) {
-    var->flags = (var->flags & ~mask) | flags;
-
-    if (variable == SWFDEC_AS_STR___proto__)
-      object->prototype_flags = var->flags;
-  }
-}
-
-static SwfdecAsDeleteReturn
-swfdec_as_object_do_delete (SwfdecAsObject *object, const char *variable)
-{
-  SwfdecAsVariable *var;
-
-  var = g_hash_table_lookup (object->properties, variable);
-  if (var == NULL)
-    return SWFDEC_AS_DELETE_NOT_FOUND;
-  if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
-    return SWFDEC_AS_DELETE_NOT_DELETED;
-
-  // Note: We won't remove object->prototype, even if __proto__ is deleted
-
-  swfdec_as_object_free_property (NULL, var, object);
-  if (!g_hash_table_remove (object->properties, variable)) {
-    g_assert_not_reached ();
-  }
-  return SWFDEC_AS_DELETE_DELETED;
-}
-
 typedef struct {
   SwfdecAsObject *		object;
   SwfdecAsVariableForeach	func;
@@ -784,8 +751,6 @@ swfdec_as_object_class_init (SwfdecAsObjectClass *klass)
 
   klass->get = swfdec_as_object_do_get;
   klass->set = swfdec_as_object_do_set;
-  klass->set_flags = swfdec_as_object_do_set_flags;
-  klass->del = swfdec_as_object_do_delete;
   klass->foreach = swfdec_as_object_do_foreach;
 }
 
@@ -1078,13 +1043,24 @@ swfdec_as_object_has_variable (SwfdecAsObject *object, const char *variable)
 SwfdecAsDeleteReturn
 swfdec_as_object_delete_variable (SwfdecAsObject *object, const char *variable)
 {
-  SwfdecAsObjectClass *klass;
+  SwfdecAsVariable *var;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
 
-  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  return klass->del (object, variable);
+  var = g_hash_table_lookup (object->properties, variable);
+  if (var == NULL)
+    return SWFDEC_AS_DELETE_NOT_FOUND;
+  if (var->flags & SWFDEC_AS_VARIABLE_PERMANENT)
+    return SWFDEC_AS_DELETE_NOT_DELETED;
+
+  // Note: We won't remove object->prototype, even if __proto__ is deleted
+
+  swfdec_as_object_free_property (NULL, var, object);
+  if (!g_hash_table_remove (object->properties, variable)) {
+    g_assert_not_reached ();
+  }
+  return SWFDEC_AS_DELETE_DELETED;
 }
 
 /**
@@ -1114,13 +1090,19 @@ void
 swfdec_as_object_set_variable_flags (SwfdecAsObject *object, 
     const char *variable, SwfdecAsVariableFlag flags)
 {
-  SwfdecAsObjectClass *klass;
+  SwfdecAsVariable *var;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (variable != NULL);
 
-  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  klass->set_flags (object, variable, flags, flags);
+  var = swfdec_as_object_hash_lookup (object, variable);
+  if (var == NULL)
+    return;
+
+  var->flags |= flags;
+
+  if (variable == SWFDEC_AS_STR___proto__)
+    object->prototype_flags = var->flags;
 }
 
 /**
@@ -1136,13 +1118,20 @@ void
 swfdec_as_object_unset_variable_flags (SwfdecAsObject *object,
     const char *variable, SwfdecAsVariableFlag flags)
 {
-  SwfdecAsObjectClass *klass;
+  SwfdecAsVariable *var;
+  
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
   g_return_if_fail (variable != NULL);
 
-  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  klass->set_flags (object, variable, 0, flags);
+  var = swfdec_as_object_hash_lookup (object, variable);
+  if (var == NULL)
+    return;
+
+  var->flags &= ~flags;
+
+  if (variable == SWFDEC_AS_STR___proto__)
+    object->prototype_flags = var->flags;
 }
 
 /**

@@ -140,7 +140,7 @@ swfdec_net_stream_do_seek (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_STREAM, &stream, "n", &d);
 
-  cur = SWFDEC_SANDBOX (cx->global);
+  cur = swfdec_sandbox_get (SWFDEC_PLAYER (cx));
   swfdec_sandbox_unuse (cur);
   /* FIXME: perform security check if seeking is allowed here? */
   swfdec_net_stream_seek (stream, d);

@@ -1134,12 +1134,12 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name,
   /* FIXME: sandbox ordering? */
   for (walk = player->priv->sandboxes; walk; walk = walk->next) {
     SwfdecSandbox *sandbox = walk->data;
-    swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (sandbox), object_name, &vals[0]);
+    swfdec_sandbox_use (sandbox);
+    swfdec_as_object_get_variable (SWFDEC_AS_CONTEXT (player)->global, object_name, &vals[0]);
     if (!SWFDEC_AS_VALUE_IS_OBJECT (&vals[0]))
       return;
     obj = SWFDEC_AS_VALUE_GET_OBJECT (&vals[0]);
     SWFDEC_AS_VALUE_SET_STRING (&vals[0], signal_name);
-    swfdec_sandbox_use (sandbox);
     swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, argc + 1, vals, NULL);
     swfdec_sandbox_unuse (sandbox);
   }
@@ -2918,7 +2918,7 @@ swfdec_player_set_fullscreen (SwfdecPlayer *player, gboolean fullscreen)
   SWFDEC_AS_VALUE_SET_BOOLEAN (&val, fullscreen);
   swfdec_player_update_scale (player);
   if (SWFDEC_AS_CONTEXT (player)->global) {
-    SwfdecSandbox *sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
+    SwfdecSandbox *sandbox = swfdec_sandbox_get (player);
     swfdec_sandbox_unuse (sandbox);
     swfdec_player_update_size (player, NULL);
     swfdec_player_broadcast (player, SWFDEC_AS_STR_Stage, SWFDEC_AS_STR_onFullScreen, 1, &val);

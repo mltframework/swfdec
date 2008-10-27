@@ -134,7 +134,7 @@ swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat,
   interval = g_object_new (SWFDEC_TYPE_INTERVAL, "context", context, NULL);
 
   interval->id = ++player->priv->interval_id;
-  interval->sandbox = SWFDEC_SANDBOX (context->global);
+  interval->sandbox = swfdec_sandbox_get (player);
   interval->msecs = msecs;
   interval->repeat = repeat;
   interval->object = object;

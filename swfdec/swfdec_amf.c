@@ -196,7 +196,6 @@ swfdec_amf_parse_one (SwfdecAsContext *context, SwfdecBits *bits,
   guint type;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), 0);
-  g_return_val_if_fail (context->global != NULL, 0);
   g_return_val_if_fail (bits != NULL, FALSE);
   g_return_val_if_fail (rval != NULL, FALSE);
   g_return_val_if_fail (expected_type < SWFDEC_AMF_N_TYPES, FALSE);
@@ -222,7 +221,6 @@ swfdec_amf_parse (SwfdecAsContext *context, SwfdecBits *bits, guint n_items, ...
   guint i;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), 0);
-  g_return_val_if_fail (context->global != NULL, 0);
   g_return_val_if_fail (bits != NULL, 0);
 
   va_start (args, n_items);

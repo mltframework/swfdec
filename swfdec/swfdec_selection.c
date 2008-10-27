@@ -147,7 +147,7 @@ swfdec_selection_setFocus (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   /* FIXME: how is security handled here? */
-  sandbox = SWFDEC_SANDBOX (cx->global);
+  sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (cx));
   swfdec_sandbox_unuse (sandbox);
   swfdec_player_grab_focus (SWFDEC_PLAYER (cx), actor);
   swfdec_sandbox_use (sandbox);

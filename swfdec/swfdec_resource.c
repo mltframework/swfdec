@@ -658,7 +658,7 @@ swfdec_resource_load_internal (SwfdecPlayer *player,
   g_assert (SWFDEC_AS_CONTEXT (player)->frame != NULL);
   load = g_slice_new (SwfdecResourceLoad);
 
-  load->sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
+  load->sandbox = swfdec_sandbox_get (player);
   load->url = g_strdup (url);
   load->target_movie = target_movie;
   load->target_string = g_strdup (target_string);

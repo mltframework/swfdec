@@ -20,7 +20,7 @@
 #ifndef _SWFDEC_SANDBOX_H_
 #define _SWFDEC_SANDBOX_H_
 
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_url.h>
 #include <swfdec/swfdec_player.h>
 #include <swfdec/swfdec_types.h>
@@ -47,7 +47,7 @@ typedef enum {
 
 struct _SwfdecSandbox
 {
-  SwfdecAsObject      	object;
+  SwfdecAsRelay		relay;
 
   SwfdecSandboxType	type;			/* type of this sandbox */
   SwfdecURL *		url;			/* URL this sandbox acts for */
@@ -56,7 +56,7 @@ struct _SwfdecSandbox
 
 struct _SwfdecSandboxClass
 {
-  SwfdecAsObjectClass 	object_class;
+  SwfdecAsRelayClass 	relay_class;
 };
 
 GType			swfdec_sandbox_get_type		(void);
@@ -66,6 +66,7 @@ SwfdecSandbox *		swfdec_sandbox_get_for_url	(SwfdecPlayer *	  	player,
 							 guint			flash_version,
 							 gboolean		allow_network);
 
+SwfdecSandbox *		swfdec_sandbox_get		(SwfdecPlayer *		player);
 void			swfdec_sandbox_use		(SwfdecSandbox *	sandbox);
 gboolean		swfdec_sandbox_try_use		(SwfdecSandbox *	sandbox);
 void			swfdec_sandbox_unuse		(SwfdecSandbox *	sandbox);

@@ -44,7 +44,7 @@
  * it as the global object.
  */
 
-G_DEFINE_TYPE (SwfdecSandbox, swfdec_sandbox, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecSandbox, swfdec_sandbox, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_sandbox_dispose (GObject *object)
@@ -183,6 +183,7 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
       return NULL;
   } else {
     SwfdecAsContext *context = SWFDEC_AS_CONTEXT (player);
+    SwfdecAsObject *object;
 
     sandbox = g_object_new (SWFDEC_TYPE_SANDBOX, "context", context, NULL);
     sandbox->url = real;
@@ -192,10 +193,31 @@ swfdec_sandbox_get_for_url (SwfdecPlayer *player, const SwfdecURL *url,
     if (!swfdec_sandbox_set_allow_network (sandbox, allow_network))
       return NULL;
 
+    object = swfdec_as_object_new_empty (context);
+    swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (sandbox));
+
     swfdec_sandbox_initialize (sandbox, flash_version);
   }
 
   return sandbox;
+}
+
+/**
+ * swfdec_sandbox_get:
+ * @player: a SwfdecPlayer
+ *
+ * Gets the currently in-use sandbox.
+ *
+ * Returns: A #SwfdecSandbox
+ **/
+SwfdecSandbox *
+swfdec_sandbox_get (SwfdecPlayer *player)
+{
+  g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
+  g_return_val_if_fail (SWFDEC_AS_CONTEXT (player)->global != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_SANDBOX (SWFDEC_AS_CONTEXT (player)->global->relay), NULL);
+
+  return SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global->relay);
 }
 
 /**
@@ -218,7 +240,7 @@ swfdec_sandbox_use (SwfdecSandbox *sandbox)
 
   context = swfdec_gc_object_get_context (sandbox);
   priv = SWFDEC_PLAYER (context)->priv;
-  context->global = SWFDEC_AS_OBJECT (sandbox);
+  context->global = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (sandbox));
 }
 
 /**
@@ -259,7 +281,8 @@ swfdec_sandbox_unuse (SwfdecSandbox *sandbox)
   SwfdecAsContext *context;
 
   g_return_if_fail (SWFDEC_IS_SANDBOX (sandbox));
-  g_return_if_fail (swfdec_gc_object_get_context (sandbox)->global == SWFDEC_AS_OBJECT (sandbox));
+  g_return_if_fail (swfdec_gc_object_get_context (sandbox)->global != NULL);
+  g_return_if_fail (swfdec_gc_object_get_context (sandbox)->global->relay == SWFDEC_AS_RELAY (sandbox));
 
   context = swfdec_gc_object_get_context (sandbox);
   context->global = NULL;

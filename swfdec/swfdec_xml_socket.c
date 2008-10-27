@@ -286,7 +286,7 @@ swfdec_xml_socket_connect (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (SWFDEC_IS_MOVIE (object) || object == NULL)
     return;
 
-  swfdec_xml_socket_create (object, SWFDEC_SANDBOX (cx->global), host, port);
+  swfdec_xml_socket_create (object, swfdec_sandbox_get (SWFDEC_PLAYER (cx)), host, port);
 }
 
 SWFDEC_AS_NATIVE (400, 1, swfdec_xml_socket_send)

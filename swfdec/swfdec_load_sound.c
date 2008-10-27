@@ -410,7 +410,7 @@ swfdec_load_sound_new (SwfdecAsObject *target, const char *url)
   context = swfdec_gc_object_get_context (target);
   sound = g_object_new (SWFDEC_TYPE_LOAD_SOUND, NULL);
   sound->target = target;
-  sound->sandbox = SWFDEC_SANDBOX (context->global);
+  sound->sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (context));
   sound->url = g_strdup (url);
   g_assert (sound->sandbox);
   swfdec_player_allow_by_matrix (SWFDEC_PLAYER (context), sound->sandbox,

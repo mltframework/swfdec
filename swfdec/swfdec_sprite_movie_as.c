@@ -716,7 +716,7 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
   movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, parent->resource, NULL, name);
 
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    SwfdecSandbox *sandbox = SWFDEC_SANDBOX (cx->global);
+    SwfdecSandbox *sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (cx));
     SwfdecActor *actor = SWFDEC_ACTOR (movie);
     swfdec_sandbox_unuse (sandbox);
     swfdec_movie_initialize (movie);

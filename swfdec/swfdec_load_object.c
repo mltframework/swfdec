@@ -241,7 +241,7 @@ swfdec_load_object_create (SwfdecAsObject *target, const char *url,
   load->finish = finish;
   /* get the current security */
   g_assert (SWFDEC_AS_CONTEXT (player)->frame);
-  load->sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
+  load->sandbox = swfdec_sandbox_get (player);
   load->version = SWFDEC_AS_CONTEXT (player)->version;
   swfdec_player_request_resource (player, swfdec_load_object_request, load, NULL);
 }

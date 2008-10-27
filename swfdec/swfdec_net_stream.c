@@ -607,7 +607,7 @@ swfdec_net_stream_set_url (SwfdecNetStream *stream, const char *url_string)
     return;
   }
   stream->requested_url = g_strdup (url_string);
-  stream->sandbox = SWFDEC_SANDBOX (SWFDEC_AS_CONTEXT (player)->global);
+  stream->sandbox = swfdec_sandbox_get (player);
 
   swfdec_player_allow_by_matrix (player, stream->sandbox, url_string, 
       swfdec_net_stream_matrix, swfdec_net_stream_load, stream);

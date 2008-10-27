@@ -48,9 +48,8 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
 
   context = swfdec_gc_object_get_context (function);
   /* do security checks */
-  if (SWFDEC_AS_OBJECT (script->sandbox) != context->global &&
-      script->sandbox != NULL) {
-    old_sandbox = SWFDEC_SANDBOX (context->global);
+  if (script->sandbox != NULL &&
+      script->sandbox != (old_sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (context)))) {
     if (!swfdec_sandbox_allow (script->sandbox, old_sandbox))
       return;
     swfdec_sandbox_unuse (old_sandbox);
@@ -183,7 +182,7 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
   /* if context is a flash player, copy current sandbox for security checking.
    * FIXME: export this somehow? */
   if (SWFDEC_IS_PLAYER (context))
-    fun->sandbox = SWFDEC_SANDBOX (context->global);
+    fun->sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (context));
 
   /* set prototype */
   proto = swfdec_as_object_new_empty (context);

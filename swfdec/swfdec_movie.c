@@ -1138,7 +1138,8 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 
   /* FIXME: check that this is correct */
   if (swfdec_gc_object_get_context (object)->version > 5 && variable == SWFDEC_AS_STR__global) {
-    SWFDEC_AS_VALUE_SET_OBJECT (val, SWFDEC_AS_OBJECT (movie->resource->sandbox));
+    SWFDEC_AS_VALUE_SET_OBJECT (val, swfdec_as_relay_get_as_object (
+	  SWFDEC_AS_RELAY (movie->resource->sandbox)));
     *flags = 0;
     return TRUE;
   }
@@ -1670,7 +1671,7 @@ swfdec_movie_duplicate (SwfdecMovie *movie, const char *name, int depth)
   copy->draw_y = movie->draw_y;
   g_assert (copy->cache_state >= SWFDEC_MOVIE_INVALID_EXTENTS);
 
-  sandbox = SWFDEC_SANDBOX (swfdec_gc_object_get_context (movie)->global);
+  sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)));
   swfdec_sandbox_unuse (sandbox);
   if (SWFDEC_IS_SPRITE_MOVIE (copy)) {
     SwfdecActor *actor = SWFDEC_ACTOR (copy);

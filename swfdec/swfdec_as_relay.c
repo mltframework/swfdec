@@ -25,6 +25,7 @@
 
 #include "swfdec_as_relay.h"
 #include "swfdec_as_context.h"
+#include "swfdec_as_object.h"
 #include "swfdec_as_function.h"
 
 G_DEFINE_ABSTRACT_TYPE (SwfdecAsRelay, swfdec_as_relay, SWFDEC_TYPE_GC_OBJECT)
@@ -108,7 +109,7 @@ swfdec_as_relay_call (SwfdecAsRelay *relay, const char *name, guint argc,
   swfdec_as_object_get_variable (relay->relay, name, &tmp);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
     return FALSE;
-  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&tmp);
+  fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&tmp)->relay);
   if (!SWFDEC_IS_AS_FUNCTION (fun))
     return FALSE;
   swfdec_as_function_call (fun, relay->relay, argc, argv, return_value ? return_value : &tmp);

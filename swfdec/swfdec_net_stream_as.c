@@ -315,8 +315,9 @@ swfdec_net_stream_init_context (SwfdecPlayer *player)
 
   context = SWFDEC_AS_CONTEXT (player);
   proto = swfdec_as_object_new_empty (context);
-  stream = SWFDEC_AS_OBJECT (swfdec_as_object_add_function (context->global, 
-      SWFDEC_AS_STR_NetStream, swfdec_net_stream_construct));
+  stream = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (
+	swfdec_as_object_add_function (context->global, 
+	  SWFDEC_AS_STR_NetStream, swfdec_net_stream_construct)));
   /* set the right properties on the NetStream.prototype object */
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_pause, swfdec_net_stream_pause);
   swfdec_as_object_add_function (proto, SWFDEC_AS_STR_play, swfdec_net_stream_play);

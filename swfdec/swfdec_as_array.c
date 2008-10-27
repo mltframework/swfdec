@@ -1190,7 +1190,7 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     SwfdecAsFunction *fun;
     if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[pos]) ||
 	!SWFDEC_IS_AS_FUNCTION (
-	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[pos])))
+	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[pos])->relay))
 	return;
     custom_function = fun;
     pos++;

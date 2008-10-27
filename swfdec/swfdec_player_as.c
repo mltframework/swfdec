@@ -56,14 +56,14 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
     return;
   }
   object = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
-  if (SWFDEC_IS_AS_FUNCTION (object)) {
+  if (SWFDEC_IS_AS_FUNCTION (object->relay)) {
     msecs = swfdec_as_value_to_integer (cx, &argv[1]);
     if (msecs < MIN_INTERVAL_TIME) {
       SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
       msecs = MIN_INTERVAL_TIME;
     }
     id = swfdec_interval_new_function (player, msecs, repeat, 
-	SWFDEC_AS_FUNCTION (object), argc - 2, &argv[2]);
+	SWFDEC_AS_FUNCTION (object->relay), argc - 2, &argv[2]);
   } else {
     const char *name;
     if (argc < 3) {
@@ -194,7 +194,7 @@ swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecAsValue val;
-  SwfdecAsObject *proto;
+  SwfdecAsObject *proto, *func_object;
   SwfdecAsFunction *func;
   guint x, y;
 
@@ -203,17 +203,18 @@ swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *object,
   func = swfdec_get_asnative (cx, x, y);
   if (func) {
     proto = swfdec_as_object_new (cx, SWFDEC_AS_STR_Object, NULL);
+    func_object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (func));
 
     SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-    swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (func),
+    swfdec_as_object_set_variable_and_flags (func_object,
 	SWFDEC_AS_STR_prototype, &val,
 	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (func));
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, func_object);
     swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-    SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
+    SWFDEC_AS_VALUE_SET_OBJECT (rval, func_object);
   }
 }
 
@@ -228,7 +229,7 @@ swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   func = swfdec_get_asnative (cx, x, y);
   if (func) {
-    SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (func));
+    SWFDEC_AS_VALUE_SET_OBJECT (rval, swfdec_as_relay_get_as_object SWFDEC_AS_RELAY (func));
   }
 }
 
@@ -271,7 +272,7 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
     function = swfdec_get_asnative (cx, x, y);
     if (function == NULL)
       break;
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
     swfdec_as_object_set_variable_and_flags (target,
 	swfdec_as_context_get_string (cx, s), &val, flags);
     y++;
@@ -347,22 +348,26 @@ void
 swfdec_player_preinit_global (SwfdecAsContext *context)
 {
   SwfdecAsObject *o;
+  SwfdecAsFunction *f;
   SwfdecAsValue val;
 
-  o = SWFDEC_AS_OBJECT (swfdec_as_native_function_new_bare (context,
-	SWFDEC_AS_STR_ASnative, swfdec_player_ASnative, NULL));
+  f = swfdec_as_native_function_new_bare (context,
+	SWFDEC_AS_STR_ASnative, swfdec_player_ASnative, NULL);
+  o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
   SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_ASnative,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-  o = SWFDEC_AS_OBJECT (swfdec_as_native_function_new_bare (context,
-	SWFDEC_AS_STR_ASconstructor, swfdec_player_ASconstructor, NULL));
+  f = swfdec_as_native_function_new_bare (context,
+	SWFDEC_AS_STR_ASconstructor, swfdec_player_ASconstructor, NULL);
+  o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
   SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_ASconstructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-  o = SWFDEC_AS_OBJECT (swfdec_as_native_function_new_bare (context,
-	SWFDEC_AS_STR_enableDebugConsole, swfdec_player_enableDebugConsole, NULL));
+  f = swfdec_as_native_function_new_bare (context,
+	SWFDEC_AS_STR_enableDebugConsole, swfdec_player_enableDebugConsole, NULL);
+  o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
   SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_enableDebugConsole,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

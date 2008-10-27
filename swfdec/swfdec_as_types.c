@@ -419,9 +419,9 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &ret);
 	  if (SWFDEC_AS_VALUE_IS_STRING (&ret))
 	    return SWFDEC_AS_VALUE_GET_STRING (&ret);
-	  else if (SWFDEC_IS_AS_SUPER (SWFDEC_AS_VALUE_GET_OBJECT (value)))
+	  else if (SWFDEC_IS_AS_SUPER (SWFDEC_AS_VALUE_GET_OBJECT (value)->relay))
 	    return SWFDEC_AS_STR__type_Object_;
-	  else if (SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (value)))
+	  else if (SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (value)->relay))
 	    return SWFDEC_AS_STR__type_Function_;
 	  else
 	    return SWFDEC_AS_STR__type_Object_;
@@ -623,7 +623,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
 
   swfdec_as_object_get_variable (context->global, s, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay)))
     return NULL;
   swfdec_as_object_create (fun, 1, value, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {

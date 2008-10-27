@@ -28,7 +28,7 @@
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecAsFunction, swfdec_as_function, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (SwfdecAsFunction, swfdec_as_function, SWFDEC_TYPE_AS_RELAY)
 
 /**
  * SECTION:SwfdecAsFunction

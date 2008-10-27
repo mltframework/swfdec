@@ -772,7 +772,7 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args, SwfdecAsObject *super)
 
   if (!SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx, 1)))
     goto error;
-  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx, 1));
+  fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx, 1))->relay);
   if (!SWFDEC_IS_AS_FUNCTION (fun))
     goto error;
   if (!SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx, 2))) {
@@ -861,8 +861,8 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   }
   swfdec_as_stack_pop (cx);
   /* setup super to point to the right prototype */
-  if (SWFDEC_IS_AS_SUPER (obj)) {
-    super = swfdec_as_super_resolve_property (SWFDEC_AS_SUPER (obj), name);
+  if (obj && SWFDEC_IS_AS_SUPER (obj->relay)) {
+    super = swfdec_as_super_resolve_property (SWFDEC_AS_SUPER (obj->relay), name);
   } else if (cx->version > 6 && pobj != obj) {
     super = pobj;
   } else if (obj) {
@@ -1720,7 +1720,7 @@ swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data,
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
   n_args = MIN (swfdec_as_stack_get_size (cx) - 2, n_args);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor))) {
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor)->relay)) {
     SWFDEC_WARNING ("not a constructor");
     goto fail;
   }
@@ -1759,7 +1759,7 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
 	name, constructor);
   }
   if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor))) {
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor)->relay)) {
     SWFDEC_WARNING ("%s is not a constructor", name);
     goto fail;
   }
@@ -1926,8 +1926,6 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   } else {
     fun = swfdec_as_script_function_new (frame->original_target, NULL, script);
   }
-  if (fun == NULL)
-    return;
   /* This is a hack that should only trigger for functions defined in the init scripts.
    * It is supposed to ensure that those functions inherit their target when being 
    * called instead of when being defined */
@@ -1936,12 +1934,13 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   /* attach the function */
   if (*function_name == '\0') {
     swfdec_as_stack_ensure_free (cx, 1);
-    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (cx), SWFDEC_AS_OBJECT (fun));
+    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (cx), 
+	swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
   } else {
     SwfdecAsValue funval;
     /* FIXME: really varobj? Not eval or sth like that? */
     name = swfdec_as_context_get_string (cx, function_name);
-    SWFDEC_AS_VALUE_SET_OBJECT (&funval, SWFDEC_AS_OBJECT (fun));
+    SWFDEC_AS_VALUE_SET_OBJECT (&funval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
     swfdec_as_object_set_variable (frame->target, name, &funval);
   }
 
@@ -2183,7 +2182,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 	  } else {
 	    type = SWFDEC_AS_STR_movieclip;
 	  }
-	} else if (SWFDEC_IS_AS_FUNCTION (obj)) {
+	} else if (SWFDEC_IS_AS_FUNCTION (obj->relay)) {
 	  type = SWFDEC_AS_STR_function;
 	} else {
 	  type = SWFDEC_AS_STR_object;
@@ -2367,7 +2366,7 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   superclass = swfdec_as_stack_peek (cx, 1);
   subclass = swfdec_as_stack_peek (cx, 2);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (superclass) ||
-      !SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (superclass))) {
+      !SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (superclass)->relay)) {
     SWFDEC_ERROR ("superclass is not a function");
     goto fail;
   }

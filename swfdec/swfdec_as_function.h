@@ -20,9 +20,8 @@
 #ifndef _SWFDEC_AS_FUNCTION_H_
 #define _SWFDEC_AS_FUNCTION_H_
 
-#include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_relay.h>
 #include <swfdec/swfdec_as_types.h>
-#include <swfdec/swfdec_script.h>
 
 G_BEGIN_DECLS
 
@@ -38,11 +37,11 @@ typedef struct _SwfdecAsFunctionClass SwfdecAsFunctionClass;
 /* FIXME: do two obejcts, one for scripts and one for native? */
 struct _SwfdecAsFunction {
   /*< private >*/
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 };
 
 struct _SwfdecAsFunctionClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 
   /* call this function - see swfdec_as_function_call_full() for meaning of arguments */
   void			(* call)			(SwfdecAsFunction *	function,
@@ -66,7 +65,7 @@ void			swfdec_as_function_call_full	(SwfdecAsFunction *	function,
 #define swfdec_as_function_call(function, thisp, n_args, args, return_value) G_STMT_START{ \
   SwfdecAsObject *__thisp = (thisp); \
   swfdec_as_function_call_full (function, __thisp, FALSE, \
-      __thisp ? __thisp->prototype : SWFDEC_AS_OBJECT (function)->prototype, \
+      __thisp ? __thisp->prototype : swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function))->prototype, \
       n_args, args, return_value); \
 }G_STMT_END
 

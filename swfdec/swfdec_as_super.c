@@ -50,7 +50,7 @@ swfdec_as_super_call (SwfdecAsFunction *function, SwfdecAsObject *thisp,
 
   swfdec_as_object_get_variable (super->object, SWFDEC_AS_STR___constructor__, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val)))
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay)))
     return;
 
   if (construct) {
@@ -61,6 +61,7 @@ swfdec_as_super_call (SwfdecAsFunction *function, SwfdecAsObject *thisp,
       super->object->prototype, n_args, args, return_value);
 }
 
+#if 0
 static gboolean
 swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
     const char *variable, SwfdecAsValue *val, guint *flags)
@@ -118,18 +119,20 @@ swfdec_as_super_resolve (SwfdecAsObject *object)
 
   return super->thisp;
 }
+#endif
 
 static void
 swfdec_as_super_class_init (SwfdecAsSuperClass *klass)
 {
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
   SwfdecAsFunctionClass *function_class = SWFDEC_AS_FUNCTION_CLASS (klass);
 
+#if 0
   asobject_class->get = swfdec_as_super_get;
   asobject_class->set = swfdec_as_super_set;
   asobject_class->set_flags = swfdec_as_super_set_flags;
   asobject_class->del = swfdec_as_super_delete;
   asobject_class->resolve = swfdec_as_super_resolve;
+#endif
 
   function_class->call = swfdec_as_super_call;
 }
@@ -143,6 +146,7 @@ void
 swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject *ref)
 {
   SwfdecAsContext *context;
+  SwfdecAsObject *object;
   SwfdecAsSuper *super;
 
   g_return_if_fail (frame != NULL);
@@ -156,13 +160,17 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
     return;
 
   super = g_object_new (SWFDEC_TYPE_AS_SUPER, "context", context, NULL);
-  frame->super = SWFDEC_AS_OBJECT (super);
+  frame->super = super;
   super->thisp = swfdec_as_object_resolve (thisp);
   if (context->version <= 5) {
     super->object = NULL;
   } else {
     super->object = ref;
   }
+
+  object = swfdec_as_object_new_empty (context);
+  object->super = TRUE;
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (super));
 }
 
 SwfdecAsObject *

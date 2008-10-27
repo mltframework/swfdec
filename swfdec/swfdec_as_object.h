@@ -61,6 +61,7 @@ struct _SwfdecAsObject {
   SwfdecGcObject      	object;
   /*< private >*/
   gboolean		array:1;	/* TRUE if object is an array */
+  gboolean		super:1;	/* TRUE if object is a super object */
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
   guint			prototype_flags; /* propflags for the prototype object */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */
@@ -95,8 +96,6 @@ struct _SwfdecAsObjectClass {
   gboolean		(* foreach)		(SwfdecAsObject *	object,
 						 SwfdecAsVariableForeach func,
 						 gpointer		data);
-  /* get the real object referenced by this object (useful for internal objects) */
-  SwfdecAsObject *	(* resolve)		(SwfdecAsObject *	object);
   /* get a debug string representation for this object */
   char *		(* debug)		(SwfdecAsObject *	object);
 };

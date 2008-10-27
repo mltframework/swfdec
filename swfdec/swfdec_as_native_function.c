@@ -114,14 +114,6 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
   swfdec_as_frame_return (&frame, &rval);
 }
 
-static char *
-swfdec_as_native_function_debug (SwfdecAsObject *object)
-{
-  SwfdecAsNativeFunction *native = SWFDEC_AS_NATIVE_FUNCTION (object);
-
-  return g_strdup_printf ("%s ()", native->name);
-}
-
 static void
 swfdec_as_native_function_dispose (GObject *object)
 {
@@ -137,12 +129,9 @@ static void
 swfdec_as_native_function_class_init (SwfdecAsNativeFunctionClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
   SwfdecAsFunctionClass *function_class = SWFDEC_AS_FUNCTION_CLASS (klass);
 
   object_class->dispose = swfdec_as_native_function_dispose;
-
-  asobject_class->debug = swfdec_as_native_function_debug;
 
   function_class->call = swfdec_as_native_function_call;
 }
@@ -170,17 +159,17 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
     SwfdecAsNative native, SwfdecAsObject *prototype)
 {
   SwfdecAsFunction *fun;
+  SwfdecAsObject *object;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (native != NULL, NULL);
   g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
   fun = swfdec_as_native_function_new_bare (context, name, native, prototype);
+  object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun));
 
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (fun),
-      SWFDEC_AS_STR_Function, NULL);
-  swfdec_as_object_set_variable_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR___proto__, 
-      SWFDEC_AS_VARIABLE_VERSION_6_UP);
+  swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Function, NULL);
+  swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___proto__, SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
   return fun;
 }
@@ -190,6 +179,7 @@ swfdec_as_native_function_new_bare (SwfdecAsContext *context, const char *name,
     SwfdecAsNative native, SwfdecAsObject *prototype)
 {
   SwfdecAsNativeFunction *fun;
+  SwfdecAsObject *object;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (native != NULL, NULL);
@@ -198,12 +188,16 @@ swfdec_as_native_function_new_bare (SwfdecAsContext *context, const char *name,
   fun = g_object_new (SWFDEC_TYPE_AS_NATIVE_FUNCTION, "context", context, NULL);
   fun->native = native;
   fun->name = g_strdup (name);
+
+  object = swfdec_as_object_new_empty (context);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (fun));
+
   /* need to set prototype before setting the constructor or Function.constructor 
    * being CONSTANT disallows setting it. */
   if (prototype) {
     SwfdecAsValue val;
     SWFDEC_AS_VALUE_SET_OBJECT (&val, prototype);
-    swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR_prototype, 
+    swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_prototype, 
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
 

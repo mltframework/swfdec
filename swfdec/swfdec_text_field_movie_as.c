@@ -1341,6 +1341,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   int depth, x, y, width, height;
   const char *name;
   SwfdecAsFunction *fun;
+  SwfdecAsObject *fun_object;
   SwfdecAsValue val;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &parent, "siiiii", &name, &depth, &x, &y, &width, &height);
@@ -1394,18 +1395,19 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
-  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&val);
-  if (!SWFDEC_IS_AS_FUNCTION (fun))
+  fun_object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  if (!SWFDEC_IS_AS_FUNCTION (fun_object->relay))
     return;
+  fun = SWFDEC_AS_FUNCTION (fun_object->relay);
 
   /* set initial variables */
-  if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (fun),
+  if (swfdec_as_object_get_variable (fun_object,
 	SWFDEC_AS_STR_prototype, &val)) {
     swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie),
 	SWFDEC_AS_STR___proto__, &val,
 	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, fun_object);
   if (cx->version < 7) {
     swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie),
 	SWFDEC_AS_STR_constructor, &val, SWFDEC_AS_VARIABLE_HIDDEN);

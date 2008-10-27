@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 #ifndef _SWFDEC_AS_FRAME_INTERNAL_H_
 #define _SWFDEC_AS_FRAME_INTERNAL_H_
 
+#include <swfdec/swfdec_as_super.h>
 #include <swfdec/swfdec_as_types.h>
 #include <swfdec/swfdec_script_internal.h>
 
@@ -31,7 +32,7 @@ struct _SwfdecAsFrame {
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
   SwfdecAsObject *	thisp;		/* this object in current frame or NULL if none */
-  SwfdecAsObject *	super;		/* super object in current frame or NULL if none */
+  SwfdecAsSuper *	super;		/* super object in current frame or NULL if none */
   gboolean		construct;	/* TRUE if this is the constructor for thisp */
   SwfdecAsValue *	return_value;	/* pointer to where to store the return value */
   guint			argc;		/* number of arguments */

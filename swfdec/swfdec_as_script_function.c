@@ -78,7 +78,8 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     swfdec_as_super_new (&frame, thisp, super_reference);
   } else {
     // FIXME: Does the super object really reference the function when thisp is NULL?
-    swfdec_as_super_new (&frame, SWFDEC_AS_OBJECT (function), super_reference);
+    swfdec_as_super_new (&frame, 
+	swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)), super_reference);
   }
   swfdec_as_frame_preload (&frame);
   swfdec_as_context_run (context);
@@ -116,39 +117,16 @@ swfdec_as_script_function_mark (SwfdecGcObject *object)
   SWFDEC_GC_OBJECT_CLASS (swfdec_as_script_function_parent_class)->mark (object);
 }
 
-static char *
-swfdec_as_script_function_debug (SwfdecAsObject *object)
-{
-  SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (object);
-  SwfdecScript *s = script->script;
-  GString *string;
-  guint i;
-
-  string = g_string_new (s->name);
-  g_string_append (string, " (");
-  for (i = 0; i < s->n_arguments; i++) {
-    if (i > 0)
-      g_string_append (string, ", ");
-    g_string_append (string, s->arguments[i].name);
-  }
-  g_string_append (string, ")");
-
-  return g_string_free (string, FALSE);
-}
-
 static void
 swfdec_as_script_function_class_init (SwfdecAsScriptFunctionClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (klass);
   SwfdecAsFunctionClass *function_class = SWFDEC_AS_FUNCTION_CLASS (klass);
 
   object_class->dispose = swfdec_as_script_function_dispose;
 
   gc_class->mark = swfdec_as_script_function_mark;
-
-  asobject_class->debug = swfdec_as_script_function_debug;
 
   function_class->call = swfdec_as_script_function_call;
 }
@@ -163,7 +141,7 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
 {
   SwfdecAsValue val, *tmp;
   SwfdecAsScriptFunction *fun;
-  SwfdecAsObject *proto;
+  SwfdecAsObject *proto, *object;
   SwfdecAsContext *context;
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), NULL);
@@ -174,24 +152,25 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
   fun->scope_chain = g_slist_copy ((GSList *) scope_chain);
   fun->script = script;
   fun->target = target;
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (fun),
-      SWFDEC_AS_STR_Function, NULL);
-  swfdec_as_object_set_variable_flags (SWFDEC_AS_OBJECT (fun), SWFDEC_AS_STR___proto__, 
-      SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
   /* if context is a flash player, copy current sandbox for security checking.
    * FIXME: export this somehow? */
   if (SWFDEC_IS_PLAYER (context))
     fun->sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (context));
 
+  object = swfdec_as_object_new_empty (context);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (fun));
+  swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Function, NULL);
+  swfdec_as_object_set_variable_flags (object, SWFDEC_AS_STR___proto__, 
+      SWFDEC_AS_VARIABLE_VERSION_6_UP);
+
   /* set prototype */
   proto = swfdec_as_object_new_empty (context);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
-  swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (fun),
-      SWFDEC_AS_STR_prototype, &val,
-      SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_prototype, 
+      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (fun));
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   tmp = swfdec_as_object_peek_variable (context->global, SWFDEC_AS_STR_Object);

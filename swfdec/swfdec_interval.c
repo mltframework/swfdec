@@ -111,8 +111,9 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
     swfdec_as_object_call (interval->object, 
 	interval->fun_name, interval->n_args, interval->args, &ret);
   } else {
-    swfdec_as_function_call (SWFDEC_AS_FUNCTION (interval->object), NULL, 
-	interval->n_args, interval->args, &ret);
+    /* we check that the relay's type is correct upon adding the interval */
+    swfdec_as_function_call (SWFDEC_AS_FUNCTION (interval->object->relay),
+	NULL, interval->n_args, interval->args, &ret);
   }
   swfdec_sandbox_unuse (interval->sandbox);
 }
@@ -160,7 +161,8 @@ swfdec_interval_new_function (SwfdecPlayer *player, guint msecs, gboolean repeat
   g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (fun), 0);
   g_return_val_if_fail (n_args == 0 || args != NULL, 0);
 
-  return swfdec_interval_new (player, msecs, repeat, SWFDEC_AS_OBJECT (fun), NULL, n_args, args);
+  return swfdec_interval_new (player, msecs, repeat, 
+      swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)), NULL, n_args, args);
 }
 
 guint

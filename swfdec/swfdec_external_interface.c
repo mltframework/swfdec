@@ -73,10 +73,10 @@ swfdec_external_interface__addCallback (SwfdecAsContext *cx,
   const char *name;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, FALSE);
-  SWFDEC_AS_CHECK (0, NULL, "sO", &name, &fun);
+  SWFDEC_AS_CHECK (0, NULL, "so", &name, &fun);
 
   /* FIXME: do we allow setting if scripting is unsupported? */
-  if (!SWFDEC_IS_AS_FUNCTION (fun))
+  if (!SWFDEC_IS_AS_FUNCTION (fun->relay))
     return;
 
   g_hash_table_insert (priv->scripting_callbacks, (gpointer) name, fun);

@@ -1030,7 +1030,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     NULL
   };
   SwfdecTextFormat *format;
-  SwfdecAsObject *function;
+  SwfdecAsFunction *function;
   SwfdecAsValue val;
   guint i;
 
@@ -1045,9 +1045,9 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_text_format_clear (format);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (format));
 
-  function = SWFDEC_AS_OBJECT (swfdec_as_native_function_new_bare (cx, 
-	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL));
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, function);
+  function = swfdec_as_native_function_new_bare (cx, 
+	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
 
   for (i = 0; i < argc && arguments[i] != NULL; i++) {
@@ -1076,7 +1076,7 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
 {
   SwfdecAsObject *object;
   SwfdecTextFormat *ret;
-  SwfdecAsObject *function;
+  SwfdecAsFunction *function;
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
@@ -1089,16 +1089,10 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (ret));
 
   // FIXME: Need better way to create function without prototype/constructor
-  function = SWFDEC_AS_OBJECT (swfdec_as_native_function_new (context, 
-	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL));
-  swfdec_as_object_unset_variable_flags (function, SWFDEC_AS_STR_constructor, SWFDEC_AS_VARIABLE_PERMANENT);
-  swfdec_as_object_unset_variable_flags (function, SWFDEC_AS_STR___proto__, SWFDEC_AS_VARIABLE_PERMANENT);
-  swfdec_as_object_delete_variable (function, SWFDEC_AS_STR_constructor);
-  swfdec_as_object_delete_variable (function, SWFDEC_AS_STR___proto__);
-  if (function != NULL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (function));
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
-  }
+  function = swfdec_as_native_function_new_bare (context, 
+	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
+  swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
 
   return ret;
 }

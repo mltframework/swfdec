@@ -242,14 +242,14 @@ swfdec_bitmap_data_get_rectangle (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_AS_VALUE_IS_OBJECT (args))
     return;
   o = SWFDEC_AS_VALUE_GET_OBJECT (args);
-  if (!SWFDEC_IS_AS_FUNCTION (o))
+  if (!SWFDEC_IS_AS_FUNCTION (o->relay))
     return;
 
   swfdec_as_value_set_integer (cx, &args[0], 0);
   swfdec_as_value_set_integer (cx, &args[1], 0);
   swfdec_as_value_set_integer (cx, &args[2], bitmap->width);
   swfdec_as_value_set_integer (cx, &args[3], bitmap->height);
-  swfdec_as_object_create (SWFDEC_AS_FUNCTION (o), 4, args, ret);
+  swfdec_as_object_create (SWFDEC_AS_FUNCTION (o->relay), 4, args, ret);
 }
 
 SWFDEC_AS_NATIVE (1100, 105, swfdec_bitmap_data_set_rectangle)

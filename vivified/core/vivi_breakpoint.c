@@ -90,18 +90,6 @@ static const struct {
   { "onSetVariable", "set-variable", G_CALLBACK (vivi_breakpoint_set_variable) }
 };
 
-static guint
-vivi_breakpoint_find_event (const char *name)
-{
-  guint i;
-
-  for (i = 1; i < G_N_ELEMENTS (events); i++) {
-    if (g_str_equal (events[i].event, name))
-      return i;
-  }
-  return 0;
-}
-
 static void
 vivi_breakpoint_add (ViviBreakpoint *breakpoint, guint i)
 {
@@ -128,44 +116,6 @@ vivi_breakpoint_remove (ViviBreakpoint *breakpoint, guint i)
 }
 
 static void
-vivi_breakpoint_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val, guint flags)
-{
-  guint i;
-
-  i = vivi_breakpoint_find_event (variable);
-  if (i) {
-    ViviBreakpoint *breakpoint = VIVI_BREAKPOINT (object);
-    if (SWFDEC_AS_VALUE_IS_OBJECT (val) &&
-	SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (val))) {
-      if (!breakpoint->handlers[i])
-	vivi_breakpoint_add (breakpoint, i);
-    } else {
-      if (breakpoint->handlers[i])
-	vivi_breakpoint_remove (breakpoint, i);
-    }
-  }
-  SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->set (object, variable, val, flags);
-}
-
-static SwfdecAsDeleteReturn
-vivi_breakpoint_delete (SwfdecAsObject *object, const char *variable)
-{
-  ViviBreakpoint *breakpoint = VIVI_BREAKPOINT (object);
-  guint i;
-  SwfdecAsDeleteReturn ret;
-
-  ret = SWFDEC_AS_OBJECT_CLASS (vivi_breakpoint_parent_class)->del (object, variable);
-
-  if (ret == SWFDEC_AS_DELETE_DELETED) {
-    i = vivi_breakpoint_find_event (variable);
-    if (i && breakpoint->handlers[i])
-      vivi_breakpoint_remove (breakpoint, i);
-  }
-
-  return ret;
-}
-
-static void
 vivi_breakpoint_dispose (GObject *object)
 {
   ViviBreakpoint *breakpoint = VIVI_BREAKPOINT (object);
@@ -179,12 +129,8 @@ static void
 vivi_breakpoint_class_init (ViviBreakpointClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  SwfdecAsObjectClass *as_object_class = SWFDEC_AS_OBJECT_CLASS (klass);
 
   object_class->dispose = vivi_breakpoint_dispose;
-
-  as_object_class->set = vivi_breakpoint_set;
-  as_object_class->del = vivi_breakpoint_delete;
 }
 
 static void

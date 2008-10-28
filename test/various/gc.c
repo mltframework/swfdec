@@ -64,7 +64,7 @@ check_objects (void)
   swfdec_as_context_startup (context);
   g_assert (check != NULL);
 
-  object = swfdec_as_object_new (context);
+  object = swfdec_as_object_new (context, NULL);
   g_object_add_weak_pointer (G_OBJECT (object), &check);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR__root, &val);
@@ -99,8 +99,8 @@ check_object_variables (void)
   swfdec_as_context_startup (context);
   g_assert (check != NULL);
 
-  o = swfdec_as_object_new (context);
-  o2 = swfdec_as_object_new (context);
+  o = swfdec_as_object_new (context, NULL);
+  o2 = swfdec_as_object_new (context, NULL);
   g_object_add_weak_pointer (G_OBJECT (o), &check);
   g_object_add_weak_pointer (G_OBJECT (o2), &check2);
   s = swfdec_as_context_get_string (context, "foo");

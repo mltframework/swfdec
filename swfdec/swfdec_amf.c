@@ -100,7 +100,7 @@ swfdec_amf_parse_object (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsVal
   object = swfdec_as_object_new (context, SWFDEC_AS_STR_Object, NULL);
   if (!swfdec_amf_parse_properties (context, bits, object))
     return FALSE;
-  SWFDEC_AS_VALUE_SET_COMPOSITE (val, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (val, object);
   return TRUE;
 }
 
@@ -114,7 +114,7 @@ swfdec_amf_parse_mixed_array (SwfdecAsContext *context, SwfdecBits *bits, Swfdec
   array = swfdec_as_array_new (context);
   if (!swfdec_amf_parse_properties (context, bits, array))
     return FALSE;
-  SWFDEC_AS_VALUE_SET_COMPOSITE (val, array);
+  SWFDEC_AS_VALUE_SET_OBJECT (val, array);
   return TRUE;
 }
 
@@ -141,7 +141,7 @@ swfdec_amf_parse_array (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValu
     swfdec_as_array_push (array, &tmp);
   }
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (val, array);
+  SWFDEC_AS_VALUE_SET_OBJECT (val, array);
   return TRUE;
 
 fail:
@@ -161,7 +161,7 @@ swfdec_amf_parse_date (SwfdecAsContext *context, SwfdecBits *bits, SwfdecAsValue
   date->utc_offset = swfdec_bits_get_bu16 (bits);
   if (date->utc_offset > 12 * 60)
     date->utc_offset -= 12 * 60;
-  SWFDEC_AS_VALUE_SET_COMPOSITE (val, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (val, object);
 
   return TRUE;
 }

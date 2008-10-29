@@ -22,6 +22,7 @@
 #endif
 
 #include "swfdec_actor.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_debug.h"
 #include "swfdec_button_movie.h"
@@ -252,16 +253,17 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
       return;
   } else if (condition == SWFDEC_EVENT_SCROLL || condition == SWFDEC_EVENT_CHANGED) {
     SwfdecAsValue argv[2];
+    SwfdecMovie *movie = SWFDEC_MOVIE (actor);
 
     if (condition == SWFDEC_EVENT_SCROLL)
       SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
     else
       SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onChanged);
-    SWFDEC_AS_VALUE_SET_COMPOSITE (&argv[1], SWFDEC_AS_OBJECT (actor));
-    swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
+    SWFDEC_AS_VALUE_SET_MOVIE (&argv[1], movie);
+    swfdec_sandbox_use (movie->resource->sandbox);
     swfdec_as_object_call (SWFDEC_AS_OBJECT (actor),
 	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);
-    swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
+    swfdec_sandbox_unuse (movie->resource->sandbox);
     return;
   }
 

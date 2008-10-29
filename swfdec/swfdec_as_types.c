@@ -150,7 +150,7 @@
  */
 
 /**
- * SWFDEC_AS_VALUE_GET_COMPOSITE:
+ * SWFDEC_AS_VALUE_GET_OBJECT:
  * @val: value to get, the value must reference an object
  *
  * Gets the object associated with @val. If you are not sure that the value is
@@ -160,7 +160,7 @@
  */
 
 /**
- * SWFDEC_AS_VALUE_SET_COMPOSITE:
+ * SWFDEC_AS_VALUE_SET_OBJECT:
  * @val: value to set
  * @o: garbage-collected #SwfdecAsObject to use
  *
@@ -404,7 +404,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
       return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
     case SWFDEC_AS_TYPE_OBJECT:
       {
-	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_COMPOSITE (value);
+	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (value);
 	if (SWFDEC_IS_AS_STRING (object->relay)) {
 	  return SWFDEC_AS_STRING (object->relay)->string;
 	} else {
@@ -412,9 +412,9 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &ret);
 	  if (SWFDEC_AS_VALUE_IS_STRING (&ret))
 	    return SWFDEC_AS_VALUE_GET_STRING (&ret);
-	  else if (SWFDEC_IS_AS_SUPER (SWFDEC_AS_VALUE_GET_COMPOSITE (value)->relay))
+	  else if (SWFDEC_IS_AS_SUPER (object->relay))
 	    return SWFDEC_AS_STR__type_Object_;
-	  else if (SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_COMPOSITE (value)->relay))
+	  else if (SWFDEC_IS_AS_FUNCTION (object->relay))
 	    return SWFDEC_AS_STR__type_Function_;
 	  else
 	    return SWFDEC_AS_STR__type_Object_;

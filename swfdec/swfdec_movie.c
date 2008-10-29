@@ -72,7 +72,9 @@ G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_AS_OBJECT)
 static void
 swfdec_movie_init (SwfdecMovie * movie)
 {
-  movie->blend_mode = 1;
+  SWFDEC_AS_OBJECT (movie)->movie = TRUE;
+
+  movie->blend_mode = SWFDEC_BLEND_MODE_NORMAL;
 
   movie->xscale = 100;
   movie->yscale = 100;

@@ -62,6 +62,7 @@ struct _SwfdecAsObject {
   /*< private >*/
   gboolean		array:1;	/* TRUE if object is an array */
   gboolean		super:1;	/* TRUE if object is a super object */
+  gboolean		movie:1;	/* TRUE if object is really a MovieClip */
   SwfdecAsObject *	prototype;	/* prototype object (referred to as __proto__) */
   guint			prototype_flags; /* propflags for the prototype object */
   GHashTable *		properties;	/* string->SwfdecAsVariable mapping or NULL when not in GC */

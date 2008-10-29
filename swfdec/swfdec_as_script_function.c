@@ -166,16 +166,16 @@ swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain
 
   /* set prototype */
   proto = swfdec_as_object_new_empty (context);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, proto);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_prototype, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   tmp = swfdec_as_object_peek_variable (context->global, SWFDEC_AS_STR_Object);
-  if (tmp && SWFDEC_AS_VALUE_IS_COMPOSITE (tmp)) {
-    tmp = swfdec_as_object_peek_variable (SWFDEC_AS_VALUE_GET_COMPOSITE (tmp),
+  if (tmp && SWFDEC_AS_VALUE_IS_OBJECT (tmp)) {
+    tmp = swfdec_as_object_peek_variable (SWFDEC_AS_VALUE_GET_OBJECT (tmp),
 	SWFDEC_AS_STR_prototype);
     if (tmp) {
       swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__,

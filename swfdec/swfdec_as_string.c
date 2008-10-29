@@ -298,7 +298,7 @@ swfdec_as_string_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_length,
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {
     SWFDEC_AS_VALUE_SET_STRING (ret, s);
   }
@@ -340,7 +340,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_STRING_CHECK (&str, "");
 
   arr = swfdec_as_array_new (cx);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, SWFDEC_AS_OBJECT (arr));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     delim = SWFDEC_AS_STR_COMMA;
@@ -392,7 +392,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_STRING_CHECK (&str, "");
 
   arr = swfdec_as_array_new (cx);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, SWFDEC_AS_OBJECT (arr));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
   /* hi, i'm the special case */
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     SWFDEC_AS_VALUE_SET_STRING (&val, str);

@@ -39,7 +39,7 @@ typedef struct _SwfdecTransformAsClass SwfdecTransformAsClass;
 struct _SwfdecTransformAs {
   SwfdecAsRelay		relay;
 
-  SwfdecMovie *		target;
+  SwfdecMovie *		target;		/* MovieClip in use or NULL if dead */
 };
 
 struct _SwfdecTransformAsClass {

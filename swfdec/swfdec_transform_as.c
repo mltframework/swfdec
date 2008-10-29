@@ -92,7 +92,7 @@ swfdec_transform_as_get_matrix (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_value_set_number (cx, &val, SWFDEC_TWIPS_TO_DOUBLE (matrix->y0));
   swfdec_as_object_set_variable (o, SWFDEC_AS_STR_ty, &val);
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, o);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, o);
 }
 
 SWFDEC_AS_NATIVE (1106, 102, swfdec_transform_as_set_matrix)
@@ -159,7 +159,7 @@ swfdec_transform_as_get_colorTransform (SwfdecAsContext *cx,
 
   ctrans = swfdec_color_transform_as_new_from_transform (cx,
       &transform->target->color_transform);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (ctrans)));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (ctrans)));
 }
 
 SWFDEC_AS_NATIVE (1106, 106, swfdec_transform_as_set_colorTransform)
@@ -208,7 +208,7 @@ swfdec_transform_as_get_concatenatedColorTransform (SwfdecAsContext *cx,
   }
 
   ctrans = swfdec_color_transform_as_new_from_transform (cx, &chain);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (ctrans)));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (ctrans)));
 }
 
 SWFDEC_AS_NATIVE (1106, 108, swfdec_transform_as_set_concatenatedColorTransform)
@@ -245,21 +245,17 @@ swfdec_transform_as_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecTransformAs *trans;
+  SwfdecMovie *movie;
 
   if (!swfdec_as_context_is_constructing (cx))
     return;
 
-  if (argc < 1 ||
-      !SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0]) ||
-      !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]))) {
-    SWFDEC_FIXME ("new Transform without movieclip should give undefined");
-    return;
-  }
+  SWFDEC_AS_CHECK (0, NULL, "M", &movie);
 
   trans = g_object_new (SWFDEC_TYPE_TRANSFORM_AS, "context", cx, NULL);
-  trans->target = SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]));
+  trans->target = SWFDEC_AS_VALUE_GET_MOVIE (&argv[0]);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (trans));
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 SwfdecTransformAs *

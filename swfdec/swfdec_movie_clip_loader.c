@@ -59,13 +59,13 @@ swfdec_movie_clip_loader_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (loader));
 
   array = swfdec_as_array_new (cx);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
   swfdec_as_array_push (array, &val);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, array);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__listeners, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 SWFDEC_AS_NATIVE (112, 100, swfdec_movie_clip_loader_loadClip)
@@ -116,7 +116,7 @@ swfdec_movie_clip_loader_getProgress (SwfdecAsContext *cx, SwfdecAsObject *objec
   if (movie == NULL)
     return;
   ret = swfdec_as_object_new_empty (cx);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, ret);
+  SWFDEC_AS_VALUE_SET_OBJECT (rval, ret);
   resource = swfdec_movie_get_own_resource (movie);
   if (resource == NULL || resource->decoder == NULL) {
     swfdec_as_value_set_integer (cx, &loaded, 0);

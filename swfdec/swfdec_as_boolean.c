@@ -54,7 +54,7 @@ swfdec_as_boolean_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     SwfdecAsBoolean *b = g_object_new (SWFDEC_TYPE_AS_BOOLEAN, "context", cx, NULL);
     b->boolean = argc > 0 ? swfdec_as_value_to_boolean (cx, &argv[0]) : FALSE;
     swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (b));
-    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {
     gboolean b;
     SWFDEC_AS_CHECK (0, NULL, "b", &b);

@@ -1140,7 +1140,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
 
   /* FIXME: check that this is correct */
   if (swfdec_gc_object_get_context (object)->version > 5 && variable == SWFDEC_AS_STR__global) {
-    SWFDEC_AS_VALUE_SET_COMPOSITE (val, swfdec_as_relay_get_as_object (
+    SWFDEC_AS_VALUE_SET_OBJECT (val, swfdec_as_relay_get_as_object (
 	  SWFDEC_AS_RELAY (movie->resource->sandbox)));
     *flags = 0;
     return TRUE;
@@ -1148,7 +1148,7 @@ swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
   
   ret = swfdec_movie_get_by_name (movie, variable, FALSE);
   if (ret) {
-    SWFDEC_AS_VALUE_SET_COMPOSITE (val, SWFDEC_AS_OBJECT (ret));
+    SWFDEC_AS_VALUE_SET_MOVIE (val, ret);
     *flags = 0;
     return TRUE;
   }
@@ -1266,7 +1266,7 @@ swfdec_movie_foreach_variable (SwfdecAsObject *object, SwfdecAsVariableForeach f
     SwfdecMovie *cur = walk->data;
     if (cur->original_name == SWFDEC_AS_STR_EMPTY)
       continue;
-    SWFDEC_AS_VALUE_SET_COMPOSITE (&val, walk->data);
+    SWFDEC_AS_VALUE_SET_MOVIE (&val, walk->data);
     ret &= func (object, cur->name, &val, 0, data);
   }
 

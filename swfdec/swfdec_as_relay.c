@@ -107,9 +107,9 @@ swfdec_as_relay_call (SwfdecAsRelay *relay, const char *name, guint argc,
   if (return_value)
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
   swfdec_as_object_get_variable (relay->relay, name, &tmp);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&tmp))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
     return FALSE;
-  fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_COMPOSITE (&tmp)->relay);
+  fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&tmp)->relay);
   if (!SWFDEC_IS_AS_FUNCTION (fun))
     return FALSE;
   swfdec_as_function_call (fun, relay->relay, argc, argv, return_value ? return_value : &tmp);

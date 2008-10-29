@@ -33,7 +33,8 @@ typedef enum {
   SWFDEC_AS_TYPE_NUMBER,
   SWFDEC_AS_TYPE_STRING,
   SWFDEC_AS_TYPE_NULL,
-  SWFDEC_AS_TYPE_OBJECT
+  SWFDEC_AS_TYPE_OBJECT,
+  SWFDEC_AS_TYPE_MOVIE
 } SwfdecAsValueType;
 
 typedef struct _SwfdecAsContext SwfdecAsContext;
@@ -109,7 +110,7 @@ struct _SwfdecAsDoubleValue {
   SwfdecAsValue *__val = (val); \
   SwfdecAsObject *__o = (o); \
   g_assert (__o != NULL); \
-  (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
+  (__val)->type = __o->movie ? SWFDEC_AS_TYPE_MOVIE : SWFDEC_AS_TYPE_OBJECT; \
   (__val)->value.object = __o; \
 } G_STMT_END
 

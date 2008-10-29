@@ -28,6 +28,7 @@
 #include "swfdec_as_context.h"
 #include "swfdec_as_function.h"
 #include "swfdec_as_gcable.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_number.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
@@ -404,15 +405,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_OBJECT:
       {
 	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_COMPOSITE (value);
-	if (SWFDEC_IS_MOVIE (object)) {
-	  SwfdecMovie *movie = swfdec_movie_resolve (SWFDEC_MOVIE (object));
-	  if (movie == NULL) {
-	    return SWFDEC_AS_STR_EMPTY;
-	  } else {
-	    char *str = swfdec_movie_get_path (SWFDEC_MOVIE (object), TRUE);
-	    return swfdec_as_context_give_string (context, str);
-	  }
-	} else if (SWFDEC_IS_AS_STRING (object->relay)) {
+	if (SWFDEC_IS_AS_STRING (object->relay)) {
 	  return SWFDEC_AS_STRING (object->relay)->string;
 	} else {
 	  SwfdecAsValue ret;
@@ -426,6 +419,16 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  else
 	    return SWFDEC_AS_STR__type_Object_;
 	}
+      }
+    case SWFDEC_AS_TYPE_MOVIE:
+      {
+	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (value);
+	char *str;
+
+	if (movie == NULL)
+	  return SWFDEC_AS_STR_EMPTY;
+	str = swfdec_movie_get_path (movie, TRUE);
+	return swfdec_as_context_give_string (context, str);
       }
     case SWFDEC_AS_TYPE_INT:
     default:
@@ -493,6 +496,7 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  return NAN;
       }
     case SWFDEC_AS_TYPE_OBJECT:
+    case SWFDEC_AS_TYPE_MOVIE:
       return (context->version >= 5) ? NAN : 0.0;
     case SWFDEC_AS_TYPE_INT:
     default:
@@ -580,6 +584,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
       s = SWFDEC_AS_STR_Boolean;
       break;
     case SWFDEC_AS_TYPE_OBJECT:
+    case SWFDEC_AS_TYPE_MOVIE:
       return SWFDEC_AS_VALUE_GET_COMPOSITE (value);
     case SWFDEC_AS_TYPE_INT:
     default:
@@ -636,6 +641,7 @@ swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value
 	return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;
       }
     case SWFDEC_AS_TYPE_OBJECT:
+    case SWFDEC_AS_TYPE_MOVIE:
       return TRUE;
     case SWFDEC_AS_TYPE_INT:
     default:
@@ -658,8 +664,8 @@ swfdec_as_value_to_primitive (SwfdecAsValue *value)
 {
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (value) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (value))) {
-    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_COMPOSITE (value), SWFDEC_AS_STR_valueOf,
+  if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
+    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
 	0, NULL, value);
   }
 }

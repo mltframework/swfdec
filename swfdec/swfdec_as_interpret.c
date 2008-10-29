@@ -1389,7 +1389,7 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   rtype = SWFDEC_AS_VALUE_GET_TYPE (&rtmp);
   
   /* get objects compared */
-  if (ltype == SWFDEC_AS_TYPE_OBJECT && rtype == SWFDEC_AS_TYPE_OBJECT) {
+  if (ltype >= SWFDEC_AS_TYPE_OBJECT && rtype >= SWFDEC_AS_TYPE_OBJECT) {
     SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_COMPOSITE (&ltmp);
     SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_COMPOSITE (&rtmp);
 
@@ -1399,7 +1399,7 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     } else if (SWFDEC_IS_MOVIE (lo)) {
       swfdec_as_value_to_primitive (rval);
       rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
-      if (rtype != SWFDEC_AS_TYPE_OBJECT) {
+      if (rtype != SWFDEC_AS_TYPE_MOVIE) {
 	cond = FALSE;
 	goto out;
       }
@@ -1407,7 +1407,7 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     } else if (SWFDEC_IS_MOVIE (ro)) {
       swfdec_as_value_to_primitive (lval);
       ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
-      if (ltype != SWFDEC_AS_TYPE_OBJECT) {
+      if (ltype != SWFDEC_AS_TYPE_MOVIE) {
 	cond = FALSE;
 	goto out;
       }
@@ -1475,7 +1475,7 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
   
   /* get objects compared */
-  if (ltype == SWFDEC_AS_TYPE_OBJECT && rtype == SWFDEC_AS_TYPE_OBJECT) {
+  if (ltype >= SWFDEC_AS_TYPE_OBJECT && rtype >= SWFDEC_AS_TYPE_OBJECT) {
     SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_COMPOSITE (lval);
     SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_COMPOSITE (rval);
 
@@ -1485,7 +1485,7 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     } else if (SWFDEC_IS_MOVIE (lo)) {
       swfdec_as_value_to_primitive (rval);
       rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
-      if (rtype != SWFDEC_AS_TYPE_OBJECT) {
+      if (rtype != SWFDEC_AS_TYPE_MOVIE) {
 	cond = FALSE;
 	goto out;
       }
@@ -1493,7 +1493,7 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     } else if (SWFDEC_IS_MOVIE (ro)) {
       swfdec_as_value_to_primitive (lval);
       ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
-      if (ltype != SWFDEC_AS_TYPE_OBJECT) {
+      if (ltype != SWFDEC_AS_TYPE_MOVIE) {
 	cond = FALSE;
 	goto out;
       }
@@ -1593,17 +1593,10 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
 	cond = SWFDEC_AS_VALUE_GET_STRING (rval) == SWFDEC_AS_VALUE_GET_STRING (lval);
 	break;
       case SWFDEC_AS_TYPE_OBJECT:
-	{
-	  SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_COMPOSITE (lval);
-	  SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_COMPOSITE (rval);
-	  if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
-	    cond = swfdec_movie_resolve (SWFDEC_MOVIE (lo)) == swfdec_movie_resolve (SWFDEC_MOVIE (ro));
-	  } else if (!SWFDEC_IS_MOVIE (lo) && !SWFDEC_IS_MOVIE (ro)) {
-	    cond = lo == ro;
-	  } else {
-	    cond = FALSE;
-	  }
-	}
+	cond = SWFDEC_AS_VALUE_GET_OBJECT (lval) == SWFDEC_AS_VALUE_GET_OBJECT (rval);
+	break;
+      case SWFDEC_AS_TYPE_MOVIE:
+	cond = SWFDEC_AS_VALUE_GET_MOVIE (lval) == SWFDEC_AS_VALUE_GET_MOVIE (rval);
 	break;
       case SWFDEC_AS_TYPE_INT:
       default:
@@ -2173,19 +2166,22 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
       break;
     case SWFDEC_AS_TYPE_OBJECT:
       {
-	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
-	if (SWFDEC_IS_MOVIE (obj)) {
-	  SwfdecMovie *movie = swfdec_movie_resolve (SWFDEC_MOVIE (obj));
-	  if (movie != NULL && SWFDEC_IS_TEXT_FIELD_MOVIE (movie) &&
-	      movie->state == SWFDEC_MOVIE_STATE_RUNNING) {
-	    type = SWFDEC_AS_STR_object;
-	  } else {
-	    type = SWFDEC_AS_STR_movieclip;
-	  }
-	} else if (SWFDEC_IS_AS_FUNCTION (obj->relay)) {
+	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
+	if (SWFDEC_IS_AS_FUNCTION (obj->relay)) {
 	  type = SWFDEC_AS_STR_function;
 	} else {
 	  type = SWFDEC_AS_STR_object;
+	}
+      }
+      break;
+    case SWFDEC_AS_TYPE_MOVIE:
+      {
+	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (val);
+	if (movie != NULL && SWFDEC_IS_TEXT_FIELD_MOVIE (movie) &&
+	    movie->state == SWFDEC_MOVIE_STATE_RUNNING) {
+	  type = SWFDEC_AS_STR_object;
+	} else {
+	  type = SWFDEC_AS_STR_movieclip;
 	}
       }
       break;

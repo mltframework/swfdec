@@ -34,6 +34,17 @@ G_BEGIN_DECLS
 
 #define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
+/* swfdec_as_types.h */
+#define SWFDEC_AS_VALUE_IS_MOVIE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_OBJECT)
+#define SWFDEC_AS_VALUE_GET_MOVIE(val) (swfdec_movie_resolve (SWFDEC_MOVIE ((val)->value.object)))
+#define SWFDEC_AS_VALUE_SET_MOVIE(val,m) G_STMT_START { \
+  SwfdecAsValue *__val = (val); \
+  SwfdecMovie *__m = (m); \
+  g_assert (SWFDEC_IS_MOVIE (__m)); \
+  (__val)->type = SWFDEC_AS_TYPE_MOVIE; \
+  (__val)->value.object = (SwfdecAsObject *) __m; \
+} G_STMT_END
+
 /* swfdec_as_context.c */
 gboolean	swfdec_as_context_check_continue (SwfdecAsContext *	context);
 void		swfdec_as_context_run		(SwfdecAsContext *	context);

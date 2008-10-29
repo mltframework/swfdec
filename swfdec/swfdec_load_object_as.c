@@ -129,11 +129,11 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
   if (!swfdec_as_object_get_variable (object, SWFDEC_AS_STR__customHeaders,
 	&val))
     goto end;
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val)) {
     SWFDEC_WARNING ("_customHeaders is not an object");
     goto end;
   }
-  list = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  list = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
 
   swfdec_as_object_get_variable (list, SWFDEC_AS_STR_length, &val);
   length = swfdec_as_value_to_integer (cx, &val);
@@ -192,7 +192,7 @@ swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "s|ss", &url, &target, &method);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
   data = swfdec_as_value_to_string (cx, &val);
 
   if (method == NULL || g_ascii_strcasecmp (method, "GET") == 0) {
@@ -228,7 +228,7 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "sO|s", &url, &target,
       &method);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
   data = swfdec_as_value_to_string (cx, &val);
 
   if (method != NULL && g_ascii_strcasecmp (method, "GET") == 0) {

@@ -135,7 +135,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
       SWFDEC_INFO ("not emitting onLoadInit - the movie is different");
       return;
     }
-    SWFDEC_AS_VALUE_SET_OBJECT (&vals[1], SWFDEC_AS_OBJECT (movie));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&vals[1], SWFDEC_AS_OBJECT (movie));
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (&vals[1]);
     movie = NULL;
@@ -681,8 +681,8 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
   g_return_val_if_fail (url != NULL, FALSE);
   g_return_val_if_fail (loader == NULL || SWFDEC_IS_MOVIE_CLIP_LOADER (loader), FALSE);
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (target)) {
-    SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (target);
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (target)) {
+    SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_COMPOSITE (target);
     if (SWFDEC_IS_SPRITE_MOVIE (object)) {
       swfdec_resource_load_internal (player, SWFDEC_SPRITE_MOVIE (object),
 	  NULL, url, buffer, loader);
@@ -700,7 +700,7 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
       swfdec_resource_load_internal (player, NULL, s, url, buffer, loader);
       return TRUE;
     } else if (SWFDEC_AS_VALUE_IS_STRING (target) ||
-	(SWFDEC_AS_VALUE_IS_OBJECT (target) && SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (target)))) {
+	(SWFDEC_AS_VALUE_IS_COMPOSITE (target) && SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (target)))) {
       s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), target);
     } else {
       SWFDEC_WARNING ("target does not reference a movie, not loading %s", url);

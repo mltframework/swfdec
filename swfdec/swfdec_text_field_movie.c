@@ -403,14 +403,14 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
 
   /* create _listeners array */
   array = swfdec_as_array_new (cx);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (movie));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, SWFDEC_AS_OBJECT (movie));
   swfdec_as_array_push (array, &val);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, array);
   swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR__listeners, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   /* add self to listeners */
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, SWFDEC_AS_OBJECT (movie));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, SWFDEC_AS_OBJECT (movie));
   swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_addListener,
       1, &val, NULL);
 

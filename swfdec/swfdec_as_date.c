@@ -1192,6 +1192,6 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
 }
 

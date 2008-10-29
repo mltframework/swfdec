@@ -335,8 +335,8 @@ swfdec_as_value_mark (SwfdecAsValue *value)
 {
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
-    swfdec_gc_object_mark (SWFDEC_AS_VALUE_GET_OBJECT (value));
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (value)) {
+    swfdec_gc_object_mark (SWFDEC_AS_VALUE_GET_COMPOSITE (value));
   } else if (SWFDEC_AS_VALUE_IS_STRING (value) ||
       SWFDEC_AS_VALUE_IS_NUMBER (value)) {
     if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_ROOT))
@@ -987,9 +987,9 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 3)
     return;
 
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0]))
     return;
-  obj = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  obj = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]);
   flags[0] = swfdec_as_value_to_integer (cx, &argv[2]);
   flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, &argv[3]) : 0;
 

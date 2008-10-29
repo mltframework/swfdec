@@ -478,20 +478,20 @@ swfdec_xml_add_id_map (SwfdecXml *xml, SwfdecXmlNode *node, const char *id)
   if (context->version >= 8) {
     if (swfdec_as_object_get_variable (object,
 	  SWFDEC_AS_STR_idMap, &val)) {
-      if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-	object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+      if (SWFDEC_AS_VALUE_IS_COMPOSITE (&val)) {
+	object = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
       } else {
 	return;
       }
     } else {
       object = swfdec_as_object_new_empty (context);
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, object);
+      SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
       swfdec_as_object_set_variable (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (xml)),
 	  SWFDEC_AS_STR_idMap, &val);
     }
   }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
   swfdec_as_object_set_variable (object, id, &val);
 }
 
@@ -815,7 +815,7 @@ swfdec_xml_createElement (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_ELEMENT, s);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
 }
 
 SWFDEC_AS_NATIVE (253, 11, swfdec_xml_createTextNode)
@@ -835,7 +835,7 @@ swfdec_xml_createTextNode (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   node = swfdec_xml_node_new (cx, SWFDEC_XML_NODE_TEXT, s);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node)));
 }
 
 static void
@@ -851,14 +851,14 @@ swfdec_xml_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_XML, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
     return;
-  xml = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  xml = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
 
   swfdec_as_object_get_variable (xml, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  proto = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
 
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_ignoreWhite,
       swfdec_xml_get_ignoreWhite, swfdec_xml_set_ignoreWhite);

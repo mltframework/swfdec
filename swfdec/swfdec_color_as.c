@@ -41,10 +41,10 @@ swfdec_movie_color_get_movie (SwfdecAsObject *object)
     return NULL;
 
   swfdec_as_object_get_variable (object, SWFDEC_AS_STR_target, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
     return NULL;
 
-  target = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  target = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
   if (!SWFDEC_IS_MOVIE (target))
     return NULL;
 
@@ -102,7 +102,7 @@ swfdec_movie_color_getTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
   add_variable (ret, SWFDEC_AS_STR_gb, movie->color_transform.gb);
   add_variable (ret, SWFDEC_AS_STR_bb, movie->color_transform.bb);
   add_variable (ret, SWFDEC_AS_STR_ab, movie->color_transform.ab);
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, ret);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, ret);
 }
 
 SWFDEC_AS_NATIVE (700, 0, swfdec_movie_color_setRGB)
@@ -164,9 +164,9 @@ swfdec_movie_color_setTransform (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (movie == NULL)
     return;
 
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0]))
     return;
-  parse = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  parse = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]);
   parse_property (parse, SWFDEC_AS_STR_ra, &movie->color_transform.ra, TRUE);
   parse_property (parse, SWFDEC_AS_STR_ga, &movie->color_transform.ga, TRUE);
   parse_property (parse, SWFDEC_AS_STR_ba, &movie->color_transform.ba, TRUE);

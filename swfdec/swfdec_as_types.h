@@ -102,6 +102,17 @@ struct _SwfdecAsDoubleValue {
 #define SWFDEC_AS_VALUE_IS_NULL(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_NULL)
 #define SWFDEC_AS_VALUE_SET_NULL(val) (val)->type = SWFDEC_AS_TYPE_NULL
 
+#define SWFDEC_AS_VALUE_IS_COMPOSITE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) >= SWFDEC_AS_TYPE_OBJECT)
+#define SWFDEC_AS_VALUE_IS_PRIMITIVE(val) (!SWFDEC_AS_VALUE_IS_COMPOSITE(val))
+#define SWFDEC_AS_VALUE_GET_COMPOSITE(val) ((val)->value.object)
+#define SWFDEC_AS_VALUE_SET_COMPOSITE(val,o) G_STMT_START { \
+  SwfdecAsValue *__val = (val); \
+  SwfdecAsObject *__o = (o); \
+  g_assert (__o != NULL); \
+  (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
+  (__val)->value.object = __o; \
+} G_STMT_END
+
 #define SWFDEC_AS_VALUE_IS_OBJECT(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_OBJECT)
 #define SWFDEC_AS_VALUE_GET_OBJECT(val) ((val)->value.object)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \

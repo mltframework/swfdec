@@ -95,11 +95,11 @@ swfdec_xml_node_get_child (SwfdecXmlNode *node, gint32 index_)
 
   swfdec_as_array_get_value (node->children, index_, &val);
 
-  g_return_val_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val), NULL);
+  g_return_val_if_fail (SWFDEC_AS_VALUE_IS_COMPOSITE (&val), NULL);
   g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (
-	SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay), NULL);
+	SWFDEC_AS_VALUE_GET_COMPOSITE (&val)->relay), NULL);
 
-  return SWFDEC_XML_NODE (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay);
+  return SWFDEC_XML_NODE (SWFDEC_AS_VALUE_GET_COMPOSITE (&val)->relay);
 }
 
 static gint32
@@ -137,7 +137,7 @@ swfdec_xml_node_update_child_nodes (SwfdecXmlNode *node)
   num = swfdec_xml_node_num_children (node);
   vals = g_malloc (sizeof (SwfdecAsValue) * num);
   for (i = 0; i < num; i++) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&vals[i], swfdec_as_relay_get_as_object (
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&vals[i], swfdec_as_relay_get_as_object (
 	  SWFDEC_AS_RELAY (swfdec_xml_node_get_child (node, i))));
   }
   swfdec_as_array_append_with_flags (node->child_nodes, num, vals,
@@ -446,7 +446,7 @@ swfdec_xml_node_get_attributes (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_IS_VALID_XML_NODE (node))
     return;
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, node->attributes);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, node->attributes);
 }
 
 static void
@@ -461,7 +461,7 @@ swfdec_xml_node_get_parentNode (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   if (node->parent != NULL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, 
+    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, 
 	swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (node->parent)));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
@@ -499,7 +499,7 @@ swfdec_xml_node_get_previousSibling (SwfdecAsContext *cx,
 
   sibling = swfdec_xml_node_previousSibling (node);
   if (sibling != NULL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (sibling)));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (sibling)));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
   }
@@ -533,7 +533,7 @@ swfdec_xml_node_get_nextSibling (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   sibling = swfdec_xml_node_nextSibling (node);
   if (sibling != NULL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (sibling)));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (sibling)));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
   }
@@ -553,7 +553,7 @@ swfdec_xml_node_get_firstChild (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   child = swfdec_xml_node_get_child (node, 0);
   if (child != NULL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (child)));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (child)));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (ret);
   }
@@ -581,7 +581,7 @@ swfdec_xml_node_get_lastChild (SwfdecAsContext *cx, SwfdecAsObject *object,
   child = swfdec_xml_node_get_child (node, num - 1);
   g_assert (child != NULL);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (child)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (child)));
 }
 
 static void
@@ -595,7 +595,7 @@ swfdec_xml_node_get_childNodes (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_IS_VALID_XML_NODE (node))
     return;
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, node->child_nodes);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, node->child_nodes);
 }
 
 SWFDEC_AS_NATIVE (253, 7, swfdec_xml_node_do_getNamespaceForPrefix)
@@ -696,7 +696,7 @@ swfdec_xml_node_clone (SwfdecAsContext *cx, SwfdecXmlNode *node, gboolean deep)
       child = swfdec_xml_node_get_child (node, i);
       child_new = swfdec_xml_node_clone (cx, child, TRUE);
       child_new->parent = new;
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (child_new)));
+      SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (child_new)));
       swfdec_as_array_push (new->children, &val);
     }
 
@@ -721,7 +721,7 @@ swfdec_xml_node_cloneNode (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   new = swfdec_xml_node_clone (cx, node, deep);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (new)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (new)));
 }
 
 void
@@ -793,7 +793,7 @@ swfdec_xml_node_insertAt (SwfdecXmlNode *node, SwfdecXmlNode *child, gint32 ind)
   swfdec_xml_node_removeNode (child);
 
   // insert child to node's child_nodes array
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (child)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (child)));
   swfdec_as_array_insert (node->children, ind, &val);
   swfdec_xml_node_update_child_nodes (node);
 
@@ -1026,14 +1026,14 @@ swfdec_xml_node_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_XMLNode, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
     return;
-  node = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  node = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
 
   swfdec_as_object_get_variable (node, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  proto = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
 
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nodeType,
       swfdec_xml_node_get_nodeType, NULL);
@@ -1119,5 +1119,5 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (node));
   swfdec_xml_node_init_values (node, type, value);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
 }

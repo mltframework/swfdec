@@ -344,7 +344,7 @@ swfdec_color_transform_as_construct (SwfdecAsContext *cx,
 
   transform = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, "context", cx, NULL);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (transform));
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
 
   if (argc < 8)
     return;

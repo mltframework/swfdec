@@ -196,7 +196,7 @@ swfdec_as_native_function_new_bare (SwfdecAsContext *context, const char *name,
    * being CONSTANT disallows setting it. */
   if (prototype) {
     SwfdecAsValue val;
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, prototype);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&val, prototype);
     swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_prototype, 
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }

@@ -1136,9 +1136,9 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name,
     SwfdecSandbox *sandbox = walk->data;
     swfdec_sandbox_use (sandbox);
     swfdec_as_object_get_variable (SWFDEC_AS_CONTEXT (player)->global, object_name, &vals[0]);
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&vals[0]))
+    if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&vals[0]))
       return;
-    obj = SWFDEC_AS_VALUE_GET_OBJECT (&vals[0]);
+    obj = SWFDEC_AS_VALUE_GET_COMPOSITE (&vals[0]);
     SWFDEC_AS_VALUE_SET_STRING (&vals[0], signal_name);
     swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, argc + 1, vals, NULL);
     swfdec_sandbox_unuse (sandbox);
@@ -1191,12 +1191,12 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
   }
   prev = priv->focus;
   if (prev) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&vals[0], SWFDEC_AS_OBJECT (prev));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&vals[0], SWFDEC_AS_OBJECT (prev));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (&vals[0]);
   }
   if (actor) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&vals[1], SWFDEC_AS_OBJECT (actor));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&vals[1], SWFDEC_AS_OBJECT (actor));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (&vals[1]);
   }

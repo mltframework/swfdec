@@ -49,8 +49,8 @@ swfdec_as_super_call (SwfdecAsFunction *function, SwfdecAsObject *thisp,
   }
 
   swfdec_as_object_get_variable (super->object, SWFDEC_AS_STR___constructor__, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay)))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_COMPOSITE (&val)->relay)))
     return;
 
   if (construct) {

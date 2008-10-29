@@ -149,7 +149,7 @@
  */
 
 /**
- * SWFDEC_AS_VALUE_GET_OBJECT:
+ * SWFDEC_AS_VALUE_GET_COMPOSITE:
  * @val: value to get, the value must reference an object
  *
  * Gets the object associated with @val. If you are not sure that the value is
@@ -159,7 +159,7 @@
  */
 
 /**
- * SWFDEC_AS_VALUE_SET_OBJECT:
+ * SWFDEC_AS_VALUE_SET_COMPOSITE:
  * @val: value to set
  * @o: garbage-collected #SwfdecAsObject to use
  *
@@ -403,7 +403,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
       return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
     case SWFDEC_AS_TYPE_OBJECT:
       {
-	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (value);
+	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_COMPOSITE (value);
 	if (SWFDEC_IS_MOVIE (object)) {
 	  SwfdecMovie *movie = swfdec_movie_resolve (SWFDEC_MOVIE (object));
 	  if (movie == NULL) {
@@ -419,9 +419,9 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
 	  swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &ret);
 	  if (SWFDEC_AS_VALUE_IS_STRING (&ret))
 	    return SWFDEC_AS_VALUE_GET_STRING (&ret);
-	  else if (SWFDEC_IS_AS_SUPER (SWFDEC_AS_VALUE_GET_OBJECT (value)->relay))
+	  else if (SWFDEC_IS_AS_SUPER (SWFDEC_AS_VALUE_GET_COMPOSITE (value)->relay))
 	    return SWFDEC_AS_STR__type_Object_;
-	  else if (SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (value)->relay))
+	  else if (SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_COMPOSITE (value)->relay))
 	    return SWFDEC_AS_STR__type_Function_;
 	  else
 	    return SWFDEC_AS_STR__type_Object_;
@@ -580,7 +580,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
       s = SWFDEC_AS_STR_Boolean;
       break;
     case SWFDEC_AS_TYPE_OBJECT:
-      return SWFDEC_AS_VALUE_GET_OBJECT (value);
+      return SWFDEC_AS_VALUE_GET_COMPOSITE (value);
     case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
@@ -588,12 +588,12 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
   }
 
   swfdec_as_object_get_variable (context->global, s, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay)))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_COMPOSITE (&val)->relay)))
     return NULL;
   swfdec_as_object_create (fun, 1, value, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    return SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&val)) {
+    return SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
   } else {
     SWFDEC_ERROR ("did not construct an object");
     return NULL;
@@ -658,8 +658,8 @@ swfdec_as_value_to_primitive (SwfdecAsValue *value)
 {
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (value) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (value))) {
-    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (value) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (value))) {
+    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_COMPOSITE (value), SWFDEC_AS_STR_valueOf,
 	0, NULL, value);
   }
 }

@@ -62,7 +62,7 @@ swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     SwfdecAsNumber *num = g_object_new (SWFDEC_TYPE_AS_NUMBER, "context", cx, NULL);
     num->number = d;
     swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (num));
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
   } else {
     swfdec_as_value_set_number (cx, ret, d);
   }

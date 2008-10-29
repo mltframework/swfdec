@@ -140,12 +140,12 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (thisp == NULL)
     thisp = swfdec_as_object_new_empty (cx);
 
-  if (argc > 1 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
+  if (argc > 1 && SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[1])) {
     int i;
     SwfdecAsObject *array;
     SwfdecAsValue val;
 
-    array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]);
+    array = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[1]);
 
     swfdec_as_object_get_variable (array, SWFDEC_AS_STR_length, &val);
     length = swfdec_as_value_to_integer (cx, &val);

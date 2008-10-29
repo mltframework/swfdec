@@ -163,10 +163,10 @@ swfdec_sprite_movie_set_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
   for (i = 0; i < length; i++) {
     if (!swfdec_as_object_get_variable (array, 
 	  swfdec_as_integer_to_string (cx, i), &val) ||
-	!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
-	!SWFDEC_IS_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay))
+	!SWFDEC_AS_VALUE_IS_COMPOSITE (&val) ||
+	!SWFDEC_IS_FILTER (SWFDEC_AS_VALUE_GET_COMPOSITE (&val)->relay))
       continue;
-    filter = SWFDEC_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay);
+    filter = SWFDEC_FILTER (SWFDEC_AS_VALUE_GET_COMPOSITE (&val)->relay);
     filter = swfdec_filter_clone (filter);
     list = g_slist_prepend (list, filter);
   }
@@ -185,7 +185,7 @@ swfdec_sprite_movie_get_transform (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
 
   trans = swfdec_transform_as_new (cx, movie);
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (trans)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (trans)));
 }
 
 SWFDEC_AS_NATIVE (900, 420, swfdec_sprite_movie_set_transform)
@@ -252,7 +252,7 @@ swfdec_sprite_movie_set_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
 	break;
       }
     }
-  } else if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+  } else if (SWFDEC_AS_VALUE_IS_COMPOSITE (&val)) {
     blend_mode = 0;
   } else {
     blend_mode = 1;
@@ -355,7 +355,7 @@ swfdec_sprite_movie_getInstanceAtDepth (SwfdecAsContext *cx,
   if (movie != NULL) {
     if (!swfdec_movie_is_scriptable (movie))
       movie = movie->parent;
-    SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (rval, SWFDEC_AS_OBJECT (movie));
   }
 }
 
@@ -584,12 +584,12 @@ swfdec_sprite_movie_hitTest (SwfdecAsContext *cx, SwfdecAsObject *object,
     SwfdecMovie *other;
     SwfdecRect movie_rect, other_rect;
 
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) ||
-	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]))) {
+    if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0]) ||
+	!SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]))) {
       SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
       return;
     }
-    other = SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]));
+    other = SWFDEC_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]));
     swfdec_movie_update (movie);
     swfdec_movie_update (other);
     movie_rect = movie->extents;
@@ -672,8 +672,8 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (movie->parent == NULL)
     SWFDEC_FIXME ("swapDepths on root movie, should do something weird");
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&value)) {
-    other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_OBJECT (&value);
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&value)) {
+    other = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_COMPOSITE (&value);
     if (!SWFDEC_IS_MOVIE (other) ||
 	other->parent != movie->parent)
       return;
@@ -726,7 +726,7 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
     swfdec_movie_initialize (movie);
   }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, SWFDEC_AS_OBJECT (movie));
 }
 
 static void
@@ -808,8 +808,8 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "ssi", &export, &name, &depth);
 
-  if (argc > 3 && SWFDEC_AS_VALUE_IS_OBJECT (&argv[3])) {
-    initObject = SWFDEC_AS_VALUE_GET_OBJECT ((&argv[3]));
+  if (argc > 3 && SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[3])) {
+    initObject = SWFDEC_AS_VALUE_GET_COMPOSITE ((&argv[3]));
   } else {
     initObject = NULL;
   }
@@ -841,7 +841,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   swfdec_sprite_movie_init_from_object (ret, initObject);
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (ret));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, SWFDEC_AS_OBJECT (ret));
 }
 
 SWFDEC_AS_NATIVE (900, 18, swfdec_sprite_movie_duplicateMovieClip)
@@ -863,7 +863,7 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj
     return;
   swfdec_sprite_movie_copy_props (new, movie);
   SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new->name, new->depth);
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (new));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, SWFDEC_AS_OBJECT (new));
 }
 
 SWFDEC_AS_NATIVE (900, 19, swfdec_sprite_movie_removeMovieClip)
@@ -939,7 +939,7 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_value_set_number (cx, &val, SWFDEC_TWIPS_TO_DOUBLE (y1));
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_yMax, &val);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, obj);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, obj);
 }
 
 SWFDEC_AS_NATIVE (900, 11, swfdec_sprite_movie_setMask)

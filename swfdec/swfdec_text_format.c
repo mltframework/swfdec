@@ -693,7 +693,7 @@ swfdec_text_format_do_get_tab_stops (SwfdecAsContext *cx,
     swfdec_as_value_set_integer (cx, &val, format->attr.tab_stops[i]);
     swfdec_as_array_push (array, &val);
   }
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, array);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, array);
 }
 
 static void
@@ -722,15 +722,15 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
     format->attr.n_tab_stops = 0;
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS);
   }
-  else if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) &&
-	SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])->array)
+  else if (SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0]) &&
+	SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0])->array)
   {
     SwfdecAsObject *array;
     SwfdecAsValue val;
     guint i;
     int len;
 
-    array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+    array = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]);
     len = swfdec_as_array_get_length (array);
 
     if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS)) {
@@ -864,7 +864,7 @@ swfdec_text_format_getTextExtent (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_value_set_integer (cx, &val, j);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_descent, &val);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, obj);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, obj);
   g_object_unref (layout);
   g_object_unref (buffer);
 }
@@ -950,13 +950,13 @@ swfdec_text_format_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextFormat, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  proto = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
   swfdec_as_object_get_variable (proto, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  proto = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
 
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_align,
       swfdec_text_format_do_get_align, swfdec_text_format_do_set_align);
@@ -1047,7 +1047,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   function = swfdec_as_native_function_new_bare (cx, 
 	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
 
   for (i = 0; i < argc && arguments[i] != NULL; i++) {
@@ -1091,7 +1091,7 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
   // FIXME: Need better way to create function without prototype/constructor
   function = swfdec_as_native_function_new_bare (context, 
 	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
 
   return ret;

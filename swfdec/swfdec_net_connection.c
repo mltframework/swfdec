@@ -75,7 +75,7 @@ swfdec_net_connection_onstatus (SwfdecNetConnection *conn, const char *code,
     SWFDEC_AS_VALUE_SET_STRING (&value, description);
     swfdec_as_object_set_variable (info, SWFDEC_AS_STR_description, &value);
   }
-  SWFDEC_AS_VALUE_SET_OBJECT (&value, info);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&value, info);
   swfdec_as_relay_call (SWFDEC_AS_RELAY(conn), SWFDEC_AS_STR_onStatus, 1, &value, NULL);
 }
 

@@ -49,7 +49,7 @@ swfdec_color_matrix_filter_get_matrix (SwfdecAsContext *cx,
   }
   array = swfdec_as_array_new (cx);
   swfdec_as_array_append (array, 20, val);
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, array);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, array);
 }
 
 static void
@@ -106,5 +106,5 @@ swfdec_color_matrix_filter_contruct (SwfdecAsContext *cx,
   swfdec_color_matrix_filter_do_set_matrix (cm, array);
 
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (cm));
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
 }

@@ -51,11 +51,11 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
     return;
   }
 
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0])) {
     SWFDEC_WARNING ("first argument to setInterval is not an object");
     return;
   }
-  object = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  object = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]);
   if (SWFDEC_IS_AS_FUNCTION (object->relay)) {
     msecs = swfdec_as_value_to_integer (cx, &argv[1]);
     if (msecs < MIN_INTERVAL_TIME) {
@@ -205,16 +205,16 @@ swfdec_player_ASconstructor (SwfdecAsContext *cx, SwfdecAsObject *object,
     proto = swfdec_as_object_new (cx, SWFDEC_AS_STR_Object, NULL);
     func_object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (func));
 
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, proto);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&val, proto);
     swfdec_as_object_set_variable_and_flags (func_object,
 	SWFDEC_AS_STR_prototype, &val,
 	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, func_object);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&val, func_object);
     swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
-    SWFDEC_AS_VALUE_SET_OBJECT (rval, func_object);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (rval, func_object);
   }
 }
 
@@ -229,7 +229,7 @@ swfdec_player_ASnative (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   func = swfdec_get_asnative (cx, x, y);
   if (func) {
-    SWFDEC_AS_VALUE_SET_OBJECT (rval, swfdec_as_relay_get_as_object SWFDEC_AS_RELAY (func));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (rval, swfdec_as_relay_get_as_object SWFDEC_AS_RELAY (func));
   }
 }
 
@@ -272,7 +272,7 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
     function = swfdec_get_asnative (cx, x, y);
     if (function == NULL)
       break;
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
     swfdec_as_object_set_variable_and_flags (target,
 	swfdec_as_context_get_string (cx, s), &val, flags);
     y++;
@@ -332,13 +332,13 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (0, NULL, "s", &name);
 
-  if (argc < 2 || !SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
+  if (argc < 2 || !SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[1])) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
     return;
   }
   
   swfdec_player_set_export_class (SWFDEC_PLAYER (cx), name, 
-      SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]));
+      SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[1]));
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }
 
@@ -354,21 +354,21 @@ swfdec_player_preinit_global (SwfdecAsContext *context)
   f = swfdec_as_native_function_new_bare (context,
 	SWFDEC_AS_STR_ASnative, swfdec_player_ASnative, NULL);
   o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_ASnative,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   f = swfdec_as_native_function_new_bare (context,
 	SWFDEC_AS_STR_ASconstructor, swfdec_player_ASconstructor, NULL);
   o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_ASconstructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   f = swfdec_as_native_function_new_bare (context,
 	SWFDEC_AS_STR_enableDebugConsole, swfdec_player_enableDebugConsole, NULL);
   o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_enableDebugConsole,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 }

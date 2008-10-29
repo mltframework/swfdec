@@ -332,7 +332,7 @@ static void
 mc_parent (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   if (movie->parent) {
-    SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie->parent));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (rval, SWFDEC_AS_OBJECT (movie->parent));
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (rval);
   }
@@ -342,7 +342,7 @@ static void
 mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
   movie = swfdec_movie_get_root (movie);
-  SWFDEC_AS_VALUE_SET_OBJECT (rval, SWFDEC_AS_OBJECT (movie));
+  SWFDEC_AS_VALUE_SET_COMPOSITE (rval, SWFDEC_AS_OBJECT (movie));
 }
 
 static void

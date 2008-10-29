@@ -707,7 +707,7 @@ swfdec_as_array_reverse (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_foreach_rename (object, swfdec_as_array_foreach_reverse,
       &length);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
 }
 
 SWFDEC_AS_NATIVE (252, 3, swfdec_as_array_concat)
@@ -727,11 +727,11 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_array_append_array (array_new, object);
 
   for (j = 0; j < argc; j++) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[j]) &&
-	SWFDEC_AS_VALUE_GET_OBJECT (&argv[j])->array)
+    if (SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[j]) &&
+	SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[j])->array)
     {
       swfdec_as_array_append_array (array_new,
-	  SWFDEC_AS_VALUE_GET_OBJECT (&argv[j]));
+	  SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[j]));
     }
     else
     {
@@ -741,7 +741,7 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, array_new);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, array_new);
 }
 
 SWFDEC_AS_NATIVE (252, 6, swfdec_as_array_slice)
@@ -780,7 +780,7 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   swfdec_as_array_append_array_range (array_new, object, start_index, num);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, array_new);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, array_new);
 }
 
 SWFDEC_AS_NATIVE (252, 8, swfdec_as_array_splice)
@@ -817,7 +817,7 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object,
   array_new = swfdec_as_array_new (cx);
   swfdec_as_array_append_array_range (array_new, object, start_index,
       num_remove);
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, array_new);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, array_new);
 
   /* move old data to the right spot */
   swfdec_as_array_move_range (object, start_index + num_remove,
@@ -1069,13 +1069,13 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   length = swfdec_as_array_get_length (object);
   if (length == 0) {
     // special case for empty array, because g_try_new0 would return NULL
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
     return;
   }
 
   if (!swfdec_as_context_try_use_mem (cx, sizeof (SortEntry) * length)) {
     SWFDEC_WARNING ("Array not sorted, too big (%i elements)", length);
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
     return;
   }
 
@@ -1084,7 +1084,7 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   array = g_try_new0 (SortEntry, length);
   if (!array) {
     SWFDEC_WARNING ("Array not sorted, too big (%i elements)", length);
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
     goto done;
   }
 
@@ -1165,7 +1165,7 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, target);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, target);
 
 done:
   g_free (array);
@@ -1188,9 +1188,9 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   if (argc > pos && !SWFDEC_AS_VALUE_IS_NUMBER (&argv[pos])) {
     SwfdecAsFunction *fun;
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[pos]) ||
+    if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[pos]) ||
 	!SWFDEC_IS_AS_FUNCTION (
-	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[pos])->relay))
+	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[pos])->relay))
 	return;
     custom_function = fun;
     pos++;
@@ -1224,17 +1224,17 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0])) {
 
-    array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+    array = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]);
     if (!array->array) {
-      SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+      SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
       return;
     }
 
     num_fields = swfdec_as_array_get_length (array);
     if (num_fields <= 0) {
-      SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+      SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
       return;
     }
 
@@ -1255,8 +1255,8 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
   options = g_new0 (SortOption, num_fields);
 
   if (argc > 1) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
-      array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]);
+    if (SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[1])) {
+      array = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[1]);
 
       if (array->array &&
 	swfdec_as_array_get_length (array) == num_fields) {
@@ -1304,5 +1304,5 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_set_length (object, 0);
   }
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
 }

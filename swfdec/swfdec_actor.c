@@ -257,7 +257,7 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
       SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onScroller);
     else
       SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onChanged);
-    SWFDEC_AS_VALUE_SET_OBJECT (&argv[1], SWFDEC_AS_OBJECT (actor));
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&argv[1], SWFDEC_AS_OBJECT (actor));
     swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
     swfdec_as_object_call (SWFDEC_AS_OBJECT (actor),
 	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);

@@ -346,7 +346,7 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
 
   /* save return value in case it was on the stack somewhere */
   if (frame->construct) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&retval, frame->thisp);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&retval, frame->thisp);
   } else if (return_value) {
     retval = *return_value;
   } else {
@@ -599,7 +599,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
       next = next->next;
     }
     if (next != NULL) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (next->function)));
+      SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (next->function)));
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);
     }
@@ -607,7 +607,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
     if (frame->function != NULL) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (frame->function)));
+      SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (frame->function)));
     } else {
       SWFDEC_AS_VALUE_SET_NULL (&val);
     }
@@ -621,19 +621,19 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   /* set the default variables (unless suppressed */
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
     if (frame->thisp) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, frame->thisp);
+      SWFDEC_AS_VALUE_SET_COMPOSITE (&val, frame->thisp);
     } else {
       SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
     }
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &val);
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&val, args);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&val, args);
     swfdec_as_object_set_variable (object, SWFDEC_AS_STR_arguments, &val);
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_SUPER)) {
     if (frame->super) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (frame->super)));
+      SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (frame->super)));
     } else {
       SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
     }
@@ -666,17 +666,17 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_THIS | SWFDEC_SCRIPT_SUPPRESS_THIS)) == SWFDEC_SCRIPT_PRELOAD_THIS
       && current_reg < script->n_registers) {
     if (frame->thisp) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], frame->thisp);
+      SWFDEC_AS_VALUE_SET_COMPOSITE (&frame->registers[current_reg++], frame->thisp);
     } else {
       SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
     }
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS && current_reg < script->n_registers) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], args);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&frame->registers[current_reg++], args);
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_SUPER && current_reg < script->n_registers) {
     if (frame->super) {
-      SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], 
+      SWFDEC_AS_VALUE_SET_COMPOSITE (&frame->registers[current_reg++], 
 	  swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (frame->super)));
     } else {
       SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
@@ -695,7 +695,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     current_reg++;
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_GLOBAL && current_reg < script->n_registers) {
-    SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], context->global);
+    SWFDEC_AS_VALUE_SET_COMPOSITE (&frame->registers[current_reg++], context->global);
   }
   /* set block boundaries */
   frame->block_start = frame->script->buffer->data;

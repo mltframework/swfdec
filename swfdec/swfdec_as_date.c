@@ -1056,7 +1056,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   guint i;
   SwfdecAsDate *date;
 
-  if (!cx->frame->construct) {
+  if (!swfdec_as_context_is_constructing (cx)) {
     object = swfdec_as_object_new_empty (cx);
     swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Date, NULL);
   }
@@ -1192,6 +1192,6 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 

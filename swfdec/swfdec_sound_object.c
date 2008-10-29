@@ -167,7 +167,7 @@ swfdec_sound_object_getTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_value_set_integer (cx, &val, matrix->rr);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_rr, &val);
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, obj);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, obj);
 }
 
 SWFDEC_AS_NATIVE (500, 2, swfdec_sound_object_getVolume)
@@ -457,6 +457,6 @@ swfdec_sound_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object, guin
     sound->target = swfdec_as_value_to_string (cx, &argv[0]);
   }
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 

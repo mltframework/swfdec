@@ -1,5 +1,5 @@
 /* Swfdec
- * Copyright (C) 2007 Benjamin Otte <otte@gnome.org>
+ * Copyright (C) 2007-2008 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -246,6 +246,12 @@ swfdec_as_native_function_new_bare (SwfdecAsContext *context, const char *name,
  *                 </para></listitem>
  * <listitem><para>"i": convert to integer. Requires an %integer pointer
  *                 </para></listitem>
+ * <listitem><para>"m": convert to an existing movieclip. This is only valid 
+ *                 inside Swfdec. Requires a %SwfdecMovie pointer.
+ *                 </para></listitem>
+ * <listitem><para>"M": convert to a movieclip or %NULL. This is only valid 
+ *                 inside Swfdec. If the movie has already been destroyed, 
+ *                 the pointer will be set to %NULL</para></listitem>
  * <listitem><para>"n": convert to number. Requires a %double pointer
  *                 </para></listitem>
  * <listitem><para>"o": convert to object. Requires a #SwfdecAsObject pointer.
@@ -337,6 +343,21 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
 	{
 	  int *j = va_arg (varargs, int *);
 	  *j = swfdec_as_value_to_integer (cx, &argv[i]);
+	}
+	break;
+      case 'm':
+      case 'M':
+	{
+	  SwfdecMovie *m;
+	  SwfdecMovie **arg = va_arg (varargs, SwfdecMovie **);
+	  if (SWFDEC_AS_VALUE_IS_MOVIE (&argv[i])) {
+	    m = SWFDEC_AS_VALUE_GET_MOVIE (&argv[i]);
+	  } else {
+	    m = NULL;
+	  }
+	  if (m == NULL && *args != 'M')
+	    return FALSE;
+	  *arg = m;
 	}
 	break;
       case 'n':

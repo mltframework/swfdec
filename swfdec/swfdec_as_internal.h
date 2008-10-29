@@ -23,6 +23,7 @@
 #include <swfdec/swfdec_as_gcable.h>
 #include <swfdec/swfdec_as_object.h>
 #include <swfdec/swfdec_as_types.h>
+#include <swfdec/swfdec_movie.h>
 
 G_BEGIN_DECLS
 

@@ -532,7 +532,7 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   const char *var, *str, *sep;
   SwfdecAsValue val;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   if (argc > 0) {
@@ -567,7 +567,7 @@ void
 swfdec_as_array_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   swfdec_as_array_join (cx, object, 0, NULL, ret);
@@ -578,7 +578,7 @@ void
 swfdec_as_array_do_push (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   // if 0 args, just return the length
@@ -600,7 +600,7 @@ swfdec_as_array_do_pop (SwfdecAsContext *cx, SwfdecAsObject *object,
   gint32 length;
   const char *var;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   // we allow negative indexes here, but not 0
@@ -626,7 +626,7 @@ swfdec_as_array_do_unshift (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   gint32 length;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   if (argc) {
@@ -650,7 +650,7 @@ swfdec_as_array_do_shift (SwfdecAsContext *cx, SwfdecAsObject *object,
   gint32 length;
   const char *var;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   // don't allow negative length
@@ -700,14 +700,14 @@ swfdec_as_array_reverse (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   gint32 length;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   length = swfdec_as_array_get_length (object);
   swfdec_as_object_foreach_rename (object, swfdec_as_array_foreach_reverse,
       &length);
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 SWFDEC_AS_NATIVE (252, 3, swfdec_as_array_concat)
@@ -719,7 +719,7 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsObject *array_new;
   const char *var;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   array_new = swfdec_as_array_new (cx);
@@ -727,11 +727,11 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_array_append_array (array_new, object);
 
   for (j = 0; j < argc; j++) {
-    if (SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[j]) &&
-	SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[j])->array)
+    if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[j]) &&
+	SWFDEC_AS_VALUE_GET_OBJECT (&argv[j])->array)
     {
       swfdec_as_array_append_array (array_new,
-	  SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[j]));
+	  SWFDEC_AS_VALUE_GET_OBJECT (&argv[j]));
     }
     else
     {
@@ -741,7 +741,7 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, array_new);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, array_new);
 }
 
 SWFDEC_AS_NATIVE (252, 6, swfdec_as_array_slice)
@@ -752,7 +752,7 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   gint32 length, start_index, num;
   SwfdecAsObject *array_new;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   length = swfdec_as_array_get_length (object);
@@ -780,7 +780,7 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   swfdec_as_array_append_array_range (array_new, object, start_index, num);
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, array_new);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, array_new);
 }
 
 SWFDEC_AS_NATIVE (252, 8, swfdec_as_array_splice)
@@ -791,7 +791,7 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object,
   gint32 length, start_index, num_remove, num_add, at_end;
   SwfdecAsObject *array_new;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object) || argc == 0)
+  if (object == NULL || object->movie || argc == 0)
     return;
 
   length = swfdec_as_array_get_length (object);
@@ -817,7 +817,7 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object,
   array_new = swfdec_as_array_new (cx);
   swfdec_as_array_append_array_range (array_new, object, start_index,
       num_remove);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, array_new);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, array_new);
 
   /* move old data to the right spot */
   swfdec_as_array_move_range (object, start_index + num_remove,
@@ -1069,13 +1069,13 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   length = swfdec_as_array_get_length (object);
   if (length == 0) {
     // special case for empty array, because g_try_new0 would return NULL
-    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
     return;
   }
 
   if (!swfdec_as_context_try_use_mem (cx, sizeof (SortEntry) * length)) {
     SWFDEC_WARNING ("Array not sorted, too big (%i elements)", length);
-    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
     return;
   }
 
@@ -1084,7 +1084,7 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   array = g_try_new0 (SortEntry, length);
   if (!array) {
     SWFDEC_WARNING ("Array not sorted, too big (%i elements)", length);
-    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
     goto done;
   }
 
@@ -1142,8 +1142,6 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (options[0] & SORT_OPTION_RETURNINDEXEDARRAY) {
     target = swfdec_as_array_new (cx);
-    if (!target)
-      goto done;
   } else {
     target = object;
   }
@@ -1165,7 +1163,7 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, target);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, target);
 
 done:
   g_free (array);
@@ -1181,16 +1179,16 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   SortOption options;
   SwfdecAsFunction *custom_function;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   pos = 0;
 
   if (argc > pos && !SWFDEC_AS_VALUE_IS_NUMBER (&argv[pos])) {
     SwfdecAsFunction *fun;
-    if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[pos]) ||
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[pos]) ||
 	!SWFDEC_IS_AS_FUNCTION (
-	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[pos])->relay))
+	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[pos])->relay))
 	return;
     custom_function = fun;
     pos++;
@@ -1218,23 +1216,23 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsObject *array;
   SwfdecAsValue val;
 
-  if (object == NULL || SWFDEC_IS_MOVIE (object))
+  if (object == NULL || object->movie)
     return;
 
   if (argc < 1)
     return;
 
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
 
-    array = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]);
+    array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
     if (!array->array) {
-      SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+      SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
       return;
     }
 
     num_fields = swfdec_as_array_get_length (array);
     if (num_fields <= 0) {
-      SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+      SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
       return;
     }
 
@@ -1246,6 +1244,9 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     fields[i] = NULL;
   } else {
+    if (SWFDEC_AS_VALUE_IS_MOVIE (&argv[0])) {
+      SWFDEC_FIXME ("how do we treat movies here?");
+    }
     num_fields = 1;
     fields = g_new (const char *, num_fields + 1);
     fields[0] = swfdec_as_value_to_string (cx, &argv[0]);
@@ -1255,8 +1256,8 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
   options = g_new0 (SortOption, num_fields);
 
   if (argc > 1) {
-    if (SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[1])) {
-      array = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[1]);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
+      array = SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]);
 
       if (array->array &&
 	swfdec_as_array_get_length (array) == num_fields) {
@@ -1288,7 +1289,7 @@ void
 swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
-  if (!cx->frame->construct) {
+  if (!swfdec_as_context_is_constructing (cx)) {
     object = swfdec_as_object_new (cx, NULL);
     swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Array, NULL);
   }
@@ -1304,5 +1305,5 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_set_length (object, 0);
   }
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

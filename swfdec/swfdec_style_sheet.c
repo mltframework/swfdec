@@ -69,7 +69,7 @@ swfdec_style_sheet_get_selector_object (SwfdecAsObject *object,
   g_return_val_if_fail (name != NULL, NULL);
 
   empty = swfdec_as_object_new_empty (swfdec_gc_object_get_context (object));
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, empty);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, empty);
   swfdec_as_object_unset_variable_flags (object, name,
       SWFDEC_AS_VARIABLE_CONSTANT);
   swfdec_as_object_set_variable (object, name, &val);
@@ -255,7 +255,7 @@ swfdec_style_sheet_parseCSSInternal (SwfdecAsContext *cx,
   if (values == NULL) {
     SWFDEC_AS_VALUE_SET_NULL (rval);
   } else {
-    SWFDEC_AS_VALUE_SET_COMPOSITE (rval, values);
+    SWFDEC_AS_VALUE_SET_OBJECT (rval, values);
   }
 }
 
@@ -320,13 +320,12 @@ swfdec_style_sheet_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   sheet = g_object_new (SWFDEC_TYPE_STYLE_SHEET, "context", cx, NULL);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (sheet));
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 static SwfdecTextFormat *
 swfdec_style_sheet_get_format (SwfdecStyleSheet *style, const char *name)
 {
-  SwfdecAsObject *styles;
   SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_STYLE_SHEET (style), NULL);
@@ -334,17 +333,13 @@ swfdec_style_sheet_get_format (SwfdecStyleSheet *style, const char *name)
 
   swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (style),
       SWFDEC_AS_STR__styles, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
+  swfdec_as_value_get_variable (swfdec_gc_object_get_context (style), &val, name, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return NULL;
-  styles = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
-
-  swfdec_as_object_get_variable (styles, name, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
-    return NULL;
-  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_COMPOSITE (&val)))
+  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay))
     return NULL;
 
-  return SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_COMPOSITE (&val));
+  return SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay);
 }
 
 SwfdecTextFormat *

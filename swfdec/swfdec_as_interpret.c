@@ -1457,53 +1457,30 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 
   rval = swfdec_as_stack_peek (cx, 1);
   lval = swfdec_as_stack_peek (cx, 2);
-  ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
-  rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
-  
-  /* get objects compared */
-  if (ltype >= SWFDEC_AS_TYPE_OBJECT && rtype >= SWFDEC_AS_TYPE_OBJECT) {
-    SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_COMPOSITE (lval);
-    SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_COMPOSITE (rval);
-
-    if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
-      lo = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (lo)));
-      ro = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (ro)));
-    } else if (SWFDEC_IS_MOVIE (lo)) {
-      swfdec_as_value_to_primitive (rval);
-      rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
-      if (rtype != SWFDEC_AS_TYPE_MOVIE) {
-	cond = FALSE;
-	goto out;
-      }
-      ro = SWFDEC_AS_VALUE_GET_COMPOSITE (rval);
-    } else if (SWFDEC_IS_MOVIE (ro)) {
-      swfdec_as_value_to_primitive (lval);
-      ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
-      if (ltype != SWFDEC_AS_TYPE_MOVIE) {
-	cond = FALSE;
-	goto out;
-      }
-      lo = SWFDEC_AS_VALUE_GET_COMPOSITE (lval);
-    }
-    cond = lo == ro;
+  /* check objects before anything else */
+  if (SWFDEC_AS_VALUE_IS_OBJECT (lval) && SWFDEC_AS_VALUE_IS_OBJECT (rval)) {
+    cond = SWFDEC_AS_VALUE_GET_OBJECT (lval) == SWFDEC_AS_VALUE_GET_OBJECT (rval);
     goto out;
   }
-
-  /* if one of the values is an object, call valueOf. 
-   * If it's still an object, return FALSE */
   swfdec_as_value_to_primitive (lval);
-  ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
-  if (ltype == SWFDEC_AS_TYPE_OBJECT) {
-    cond = FALSE;
-    goto out;
-  }
   swfdec_as_value_to_primitive (rval);
-  rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
-  if (rtype == SWFDEC_AS_TYPE_OBJECT) {
+  
+  /* check if we have equal movieclips */
+  if (SWFDEC_AS_VALUE_IS_MOVIE (lval)) {
+    cond = SWFDEC_AS_VALUE_IS_MOVIE (rval) &&
+      SWFDEC_AS_VALUE_GET_MOVIE (lval) == SWFDEC_AS_VALUE_GET_MOVIE (rval);
+    goto out;
+  }
+
+  /* now all composites compare false */
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (lval) || 
+      SWFDEC_AS_VALUE_IS_COMPOSITE (rval)) {
     cond = FALSE;
     goto out;
   }
-  /* now we have a comparison without objects */
+
+  ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
+  rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
 
   /* get rid of undefined and null */
   cond = rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL;
@@ -1516,7 +1493,6 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 
   /* compare strings */
   if (ltype == SWFDEC_AS_TYPE_STRING && rtype == SWFDEC_AS_TYPE_STRING) {
-    /* FIXME: flash 5 case insensitive? */
     cond = SWFDEC_AS_VALUE_GET_STRING (lval) == SWFDEC_AS_VALUE_GET_STRING (rval);
     goto out;
   }

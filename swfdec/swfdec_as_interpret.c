@@ -993,23 +993,21 @@ swfdec_action_new_comparison (SwfdecAsContext *cx, guint action, const guint8 *d
   }
   /* comparison with object is always false */
   swfdec_as_value_to_primitive (lval);
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (lval) &&
-      !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (lval))) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (lval)) {
     swfdec_as_stack_pop (cx);
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), FALSE);
     return;
   }
   /* same for the rval */
   swfdec_as_value_to_primitive (rval);
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (rval) &&
-      !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (rval))) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (rval)) {
     swfdec_as_stack_pop (cx);
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), FALSE);
     return;
   }
   /* movieclips are not objects, but they evaluate to NaN, so we can handle them here */
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (rval) ||
-      SWFDEC_AS_VALUE_IS_COMPOSITE (lval)) {
+  if (SWFDEC_AS_VALUE_IS_MOVIE (rval) ||
+      SWFDEC_AS_VALUE_IS_MOVIE (lval)) {
     swfdec_as_stack_pop (cx);
     SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 1));
     return;

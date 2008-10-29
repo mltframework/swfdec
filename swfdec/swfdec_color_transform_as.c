@@ -339,12 +339,12 @@ swfdec_color_transform_as_construct (SwfdecAsContext *cx,
 {
   SwfdecColorTransformAs *transform;
 
-  if (!cx->frame->construct)
+  if (!swfdec_as_context_is_constructing (cx))
     return;
 
   transform = g_object_new (SWFDEC_TYPE_COLOR_TRANSFORM_AS, "context", cx, NULL);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (transform));
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 
   if (argc < 8)
     return;

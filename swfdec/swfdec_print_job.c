@@ -98,14 +98,14 @@ swfdec_print_job_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_PrintJob, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
-  xml = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
+  xml = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
   swfdec_as_object_get_variable (xml, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_orientation,
       swfdec_print_job_get_orientation, NULL);

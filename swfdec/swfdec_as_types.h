@@ -153,6 +153,12 @@ const char *	swfdec_as_str_concat		(SwfdecAsContext *	cx,
 						 const char *		s1,
 						 const char *		s2);
 
+/* variable get/set */
+void		swfdec_as_value_get_variable	(SwfdecAsContext *	cx,
+						 const SwfdecAsValue *	val,
+						 const char *		name,
+						 SwfdecAsValue *	ret);
+
 
 G_END_DECLS
 #endif

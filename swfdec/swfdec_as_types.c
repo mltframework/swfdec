@@ -670,6 +670,37 @@ swfdec_as_value_to_primitive (SwfdecAsValue *value)
   }
 }
 
+/**
+ * swfdec_as_value_get_variable:
+ * @cx: the context
+ * @value: the value to get the variable from
+ * @name: name of the variable to get
+ * @ret: The return value to set. May be identical to the passed in @value.
+ *
+ * Gets a variable from the given @value. This function is a shortcut for 
+ * converting to a #SwfdecAsObject and then calling 
+ * swfdec_As_object_get_variable(). When the @value cannot be converted to an
+ * object, @ret is set to undefined.
+ **/
+void
+swfdec_as_value_get_variable (SwfdecAsContext *cx, const SwfdecAsValue *value, 
+    const char *name, SwfdecAsValue *ret)
+{
+  SwfdecAsObject *object;
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
+  g_return_if_fail (value != NULL);
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (ret != NULL);
+
+  object = swfdec_as_value_to_object (cx, value);
+  if (object == NULL) {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
+    return;
+  }
+  swfdec_as_object_get_variable (object, name, ret);
+}
+
 /* from swfdec_internal.h */
 gboolean
 swfdec_as_value_to_twips (SwfdecAsContext *context, const SwfdecAsValue *val, 

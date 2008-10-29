@@ -630,7 +630,7 @@ swfdec_action_get_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
       if (s) {
 	swfdec_as_object_get_variable (object, swfdec_as_context_get_string (cx, s), val);
       } else {
-	SWFDEC_AS_VALUE_SET_COMPOSITE (val, object);
+	SWFDEC_AS_VALUE_SET_MOVIE (val, SWFDEC_MOVIE (object));
       }
     } else {
       swfdec_as_frame_get_variable (cx->frame, swfdec_as_context_get_string (cx, s), val);
@@ -738,10 +738,11 @@ swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data,
 static void
 swfdec_action_set_member (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  const char *name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
   if (SWFDEC_AS_VALUE_IS_COMPOSITE (swfdec_as_stack_peek (cx, 3))) {
-    const char *name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
-    swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_COMPOSITE (swfdec_as_stack_peek (cx, 3)),
-	name, swfdec_as_stack_peek (cx, 1));
+    SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_COMPOSITE (swfdec_as_stack_peek (cx, 3));
+    if (o)
+      swfdec_as_object_set_variable (o, name, swfdec_as_stack_peek (cx, 1));
   }
   swfdec_as_stack_pop_n (cx, 3);
 }
@@ -770,9 +771,9 @@ swfdec_action_call (SwfdecAsContext *cx, guint n_args, SwfdecAsObject *super)
   SwfdecAsFunction *fun;
   SwfdecAsObject *thisp;
 
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (swfdec_as_stack_peek (cx, 1)))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (swfdec_as_stack_peek (cx, 1)))
     goto error;
-  fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_COMPOSITE (swfdec_as_stack_peek (cx, 1))->relay);
+  fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (swfdec_as_stack_peek (cx, 1))->relay);
   if (!SWFDEC_IS_AS_FUNCTION (fun))
     goto error;
   if (!SWFDEC_AS_VALUE_IS_COMPOSITE (swfdec_as_stack_peek (cx, 2))) {
@@ -1674,8 +1675,8 @@ swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data,
   constructor = swfdec_as_stack_peek (cx, 1);
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
   n_args = MIN (swfdec_as_stack_get_size (cx) - 2, n_args);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (constructor) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_COMPOSITE (constructor)->relay)) {
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor)->relay)) {
     SWFDEC_WARNING ("not a constructor");
     goto fail;
   }
@@ -1713,8 +1714,8 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
     swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_COMPOSITE (constructor),
 	name, constructor);
   }
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (constructor) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_COMPOSITE (constructor)->relay)) {
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (constructor) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (constructor)->relay)) {
     SWFDEC_WARNING ("%s is not a constructor", name);
     goto fail;
   }
@@ -1753,7 +1754,7 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
     swfdec_as_stack_pop_n (cx, 2);
   }
   swfdec_as_stack_pop_n (cx, size);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (swfdec_as_stack_push (cx), object);
+  SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (cx), object);
 }
 
 static void
@@ -1776,7 +1777,7 @@ swfdec_action_init_array (SwfdecAsContext *cx, guint action, const guint8 *data,
     swfdec_as_value_set_integer (cx, &val, n);
     swfdec_as_object_set_variable (array, SWFDEC_AS_STR_length, &val);
   }
-  SWFDEC_AS_VALUE_SET_COMPOSITE (swfdec_as_stack_push (cx), array);
+  SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (cx), array);
 }
 
 static void
@@ -1889,13 +1890,13 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   /* attach the function */
   if (*function_name == '\0') {
     swfdec_as_stack_ensure_free (cx, 1);
-    SWFDEC_AS_VALUE_SET_COMPOSITE (swfdec_as_stack_push (cx), 
+    SWFDEC_AS_VALUE_SET_OBJECT (swfdec_as_stack_push (cx), 
 	swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
   } else {
     SwfdecAsValue funval;
     /* FIXME: really varobj? Not eval or sth like that? */
     name = swfdec_as_context_get_string (cx, function_name);
-    SWFDEC_AS_VALUE_SET_COMPOSITE (&funval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
+    SWFDEC_AS_VALUE_SET_OBJECT (&funval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
     swfdec_as_object_set_variable (frame->target, name, &funval);
   }
 
@@ -1970,17 +1971,15 @@ static void
 swfdec_action_target_path (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *val;
-  SwfdecMovie *movie;
   char *s;
 
   val = swfdec_as_stack_peek (cx, 1);
 
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (val) ||
-      !SWFDEC_IS_MOVIE (movie = (SwfdecMovie *) SWFDEC_AS_VALUE_GET_COMPOSITE (val))) {
+  if (!SWFDEC_AS_VALUE_IS_MOVIE (val)) {
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
     return;
   }
-  s = swfdec_movie_get_path (movie, TRUE);
+  s = swfdec_movie_get_path (SWFDEC_AS_VALUE_GET_MOVIE (val), TRUE);
   SWFDEC_AS_VALUE_SET_STRING (val, swfdec_as_context_give_string (cx, s));
 }
 
@@ -2028,8 +2027,9 @@ swfdec_action_delete (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   val = swfdec_as_stack_peek (cx, 2);
   if (SWFDEC_AS_VALUE_IS_COMPOSITE (val)) {
-    success = swfdec_as_object_delete_variable (
-	SWFDEC_AS_VALUE_GET_COMPOSITE (val), name) == SWFDEC_AS_DELETE_DELETED;
+    SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
+    if (o)
+      success = swfdec_as_object_delete_variable (o, name) == SWFDEC_AS_DELETE_DELETED;
   }
   SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
   swfdec_as_stack_pop_n (cx, 1);
@@ -2184,9 +2184,9 @@ swfdec_action_is_instance_of (SwfdecAsObject *object,
 
   // FIXME: propflag tests are wrong, and we shouldn't get __proto__.prototype
   swfdec_as_object_get_variable (constructor, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return FALSE;
-  prototype = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
+  prototype = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
   class = object;
   while ((class = swfdec_as_object_get_prototype (class)) != NULL) {
@@ -2209,8 +2209,8 @@ swfdec_action_instance_of (SwfdecAsContext *cx, guint action,
   SwfdecAsObject *object, *constructor;
 
   val = swfdec_as_stack_pop (cx);
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (val)) {
-    constructor = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    constructor = SWFDEC_AS_VALUE_GET_OBJECT (val);
   } else {
     constructor = NULL;
   }
@@ -2247,8 +2247,8 @@ swfdec_action_cast (SwfdecAsContext *cx, guint action, const guint8 *data,
   }
  
   val = swfdec_as_stack_pop (cx);
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (val)) {
-    constructor = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    constructor = SWFDEC_AS_VALUE_GET_OBJECT (val);
   } else {
     constructor = NULL;
   }
@@ -2270,7 +2270,7 @@ swfdec_action_implements (SwfdecAsContext *cx, guint action,
     const guint8 *data, guint len)
 {
   SwfdecAsValue *val, *argv;
-  SwfdecAsObject *object, *proto, *interface;
+  SwfdecAsObject *object, *proto;
   int argc, i;
 
   swfdec_as_stack_ensure_size (cx, 2);
@@ -2279,8 +2279,8 @@ swfdec_action_implements (SwfdecAsContext *cx, guint action,
   if (SWFDEC_AS_VALUE_IS_COMPOSITE (val)) {
     object = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
     swfdec_as_object_get_variable (object, SWFDEC_AS_STR_prototype, val);
-    if (SWFDEC_AS_VALUE_IS_COMPOSITE (val)) {
-      proto = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+      proto = SWFDEC_AS_VALUE_GET_OBJECT (val);
     } else {
       proto = NULL;
     }
@@ -2303,14 +2303,11 @@ swfdec_action_implements (SwfdecAsContext *cx, guint action,
     return;
 
   for (i = 0; i < argc; i++) {
-    if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[i]))
-      continue;
-    interface = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[i]);
-    swfdec_as_object_get_variable (interface, SWFDEC_AS_STR_prototype, val);
-    if (!SWFDEC_AS_VALUE_IS_COMPOSITE (val))
+    swfdec_as_value_get_variable (cx, &argv[i], SWFDEC_AS_STR_prototype, val);
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (val))
       continue;
     proto->interfaces =
-      g_slist_prepend (proto->interfaces, SWFDEC_AS_VALUE_GET_COMPOSITE (val));
+      g_slist_prepend (proto->interfaces, SWFDEC_AS_VALUE_GET_OBJECT (val));
   }
 }
 
@@ -2323,8 +2320,8 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 
   superclass = swfdec_as_stack_peek (cx, 1);
   subclass = swfdec_as_stack_peek (cx, 2);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (superclass) ||
-      !SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_COMPOSITE (superclass)->relay)) {
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (superclass) ||
+      !SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (superclass)->relay)) {
     SWFDEC_ERROR ("superclass is not a function");
     goto fail;
   }
@@ -2332,14 +2329,14 @@ swfdec_action_extends (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     SWFDEC_ERROR ("subclass is not an object");
     goto fail;
   }
-  super = SWFDEC_AS_VALUE_GET_COMPOSITE (superclass);
+  super = SWFDEC_AS_VALUE_GET_OBJECT (superclass);
   prototype = swfdec_as_object_new_empty (cx);
   swfdec_as_object_get_variable (super, SWFDEC_AS_STR_prototype, &proto);
   swfdec_as_object_set_variable_and_flags (prototype, SWFDEC_AS_STR___proto__, &proto,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   swfdec_as_object_set_variable_and_flags (prototype, SWFDEC_AS_STR___constructor__,
       superclass, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&proto, prototype);
+  SWFDEC_AS_VALUE_SET_OBJECT (&proto, prototype);
   swfdec_as_object_set_variable (SWFDEC_AS_VALUE_GET_COMPOSITE (subclass),
       SWFDEC_AS_STR_prototype, &proto);
 fail:
@@ -2397,12 +2394,12 @@ swfdec_action_enumerate2 (SwfdecAsContext *cx, guint action, const guint8 *data,
   SwfdecAsObject *obj;
 
   val = swfdec_as_stack_peek (cx, 1);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (val)) {
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (val) ||
+      (obj = SWFDEC_AS_VALUE_GET_COMPOSITE (val)) == NULL) {
     SWFDEC_WARNING ("Enumerate called without an object");
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
     return;
   }
-  obj = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
   SWFDEC_AS_VALUE_SET_UNDEFINED (val);
   swfdec_action_do_enumerate (cx, obj);
 }

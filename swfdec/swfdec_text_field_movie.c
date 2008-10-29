@@ -401,18 +401,13 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie),
       SWFDEC_AS_STR_TextField, NULL);
 
-  /* create _listeners array */
+  /* create _listeners array containing self */
   array = swfdec_as_array_new (cx);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, SWFDEC_AS_OBJECT (movie));
+  SWFDEC_AS_VALUE_SET_MOVIE (&val, movie);
   swfdec_as_array_push (array, &val);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, array);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
   swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR__listeners, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-
-  /* add self to listeners */
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, SWFDEC_AS_OBJECT (movie));
-  swfdec_as_object_call (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_addListener,
-      1, &val, NULL);
 
   text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 0);
   text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);

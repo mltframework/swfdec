@@ -875,7 +875,7 @@ swfdec_text_field_movie_get_styleSheet (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   if (text->style_sheet != NULL) {
-    SWFDEC_AS_VALUE_SET_COMPOSITE (ret, SWFDEC_AS_OBJECT (text->style_sheet));
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (text->style_sheet));
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
@@ -903,10 +903,8 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0])) {
-    value = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0]);
-    if (SWFDEC_IS_MOVIE (value))
-      value = NULL;
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
+    value = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
   } else {
     value = NULL;
   }
@@ -1072,7 +1070,7 @@ swfdec_text_field_movie_getNewTextFormat (SwfdecAsContext *cx,
       SWFDEC_TEXT_ATTRIBUTES_MASK);
   format->values_set = SWFDEC_TEXT_ATTRIBUTES_MASK;
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (format)));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (format)));
 }
 
 SWFDEC_AS_NATIVE (104, 105, swfdec_text_field_movie_setNewTextFormat)
@@ -1140,12 +1138,12 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   if (start == end)
     return;
 
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[i]))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[i]))
     return;
-  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[i])->relay))
+  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i])->relay))
     return;
 
-  format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[i])->relay);
+  format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i])->relay);
   start = g_utf8_offset_to_pointer (string, start) - string;
   end = g_utf8_offset_to_pointer (string, end) - string;
 
@@ -1183,7 +1181,7 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
   length = g_utf8_strlen (string, -1);
 
   format = swfdec_text_format_new (cx);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (format)));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (format)));
 
   if (argc == 0) {
     start = 0;
@@ -1296,7 +1294,7 @@ swfdec_text_field_movie_getFontList (SwfdecAsContext *cx,
 
   g_free (families);
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, SWFDEC_AS_OBJECT (array));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, array);
 }
 
 SWFDEC_AS_NATIVE (104, 106, swfdec_text_field_movie_getDepth)
@@ -1393,9 +1391,9 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   swfdec_movie_update (movie);
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
-  fun_object = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
+  fun_object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
   if (!SWFDEC_IS_AS_FUNCTION (fun_object->relay))
     return;
   fun = SWFDEC_AS_FUNCTION (fun_object->relay);
@@ -1407,7 +1405,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
 	SWFDEC_AS_STR___proto__, &val,
 	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
-  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, fun_object);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, fun_object);
   if (cx->version < 7) {
     swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie),
 	SWFDEC_AS_STR_constructor, &val, SWFDEC_AS_VARIABLE_HIDDEN);
@@ -1433,13 +1431,13 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
-  object = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
+  object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
   swfdec_as_object_get_variable (object, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 
   // text
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_text,
@@ -1560,5 +1558,5 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   // FIXME: do object.addListener (object);
 
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

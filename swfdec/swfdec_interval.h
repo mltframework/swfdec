@@ -46,7 +46,6 @@ struct _SwfdecInterval {
   guint			msecs;		/* interval in milliseconds */
   gboolean		repeat;		/* TRUE for calling in intervals, FALSE for single-shot */
   /* if calling named function */
-  SwfdecAsObject *	object;		/* this object or function to call (depending on fun_name) */
   const char *		fun_name;	/* name of function or NULL if object is function */
 
   guint			n_args;		/* number of arguments to call function with */
@@ -68,7 +67,7 @@ guint		swfdec_interval_new_function  	(SwfdecPlayer *		player,
 guint		swfdec_interval_new_object  	(SwfdecPlayer *		player,
 						 guint			msecs,
 						 gboolean		repeat,
-						 SwfdecAsObject *	thisp,
+						 const SwfdecAsValue *	thisp,
 						 const char *		fun_name,
 						 guint			n_args,
 						 const SwfdecAsValue *	args);

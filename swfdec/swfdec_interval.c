@@ -41,11 +41,10 @@ swfdec_interval_mark (SwfdecGcObject *object)
   guint i;
   SwfdecInterval *interval = SWFDEC_INTERVAL (object);
 
-  swfdec_gc_object_mark (interval->object);
   swfdec_gc_object_mark (interval->sandbox);
   if (interval->fun_name)
     swfdec_as_string_mark (interval->fun_name);
-  for (i = 0; i < interval->n_args; i++) {
+  for (i = 0; i < interval->n_args + 1; i++) {
     swfdec_as_value_mark (&interval->args[i]);
   }
 
@@ -58,10 +57,10 @@ swfdec_interval_dispose (GObject *object)
   SwfdecInterval *interval = SWFDEC_INTERVAL (object);
   SwfdecAsContext *cx = swfdec_gc_object_get_context (interval);
 
-  if (interval->n_args) {
+  if (interval->args) {
     swfdec_as_context_unuse_mem (cx,
-	interval->n_args * sizeof (SwfdecAsValue));
-    g_free (interval->args);
+	(interval->n_args + 1) * sizeof (SwfdecAsValue));
+    g_slice_free1 ((interval->n_args + 1) * sizeof (SwfdecAsValue), interval->args);
     interval->args = NULL;
     interval->n_args = 0;
   }
@@ -108,26 +107,30 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
   }
   swfdec_sandbox_use (interval->sandbox);
   if (interval->fun_name) {
-    swfdec_as_object_call (interval->object, 
-	interval->fun_name, interval->n_args, interval->args, &ret);
+    SwfdecAsObject *object = swfdec_as_value_to_object (context, &interval->args[0]);
+    if (object) {
+      swfdec_as_object_call (object,
+	  interval->fun_name, interval->n_args, interval->args, &ret);
+    }
   } else {
     /* we check that the relay's type is correct upon adding the interval */
-    swfdec_as_function_call (SWFDEC_AS_FUNCTION (interval->object->relay),
-	NULL, interval->n_args, interval->args, &ret);
+    swfdec_as_function_call (SWFDEC_AS_FUNCTION (
+	  SWFDEC_AS_VALUE_GET_OBJECT (&interval->args[0])->relay),
+	NULL, interval->n_args, &interval->args[1], &ret);
   }
   swfdec_sandbox_unuse (interval->sandbox);
 }
 
 static guint
 swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat, 
-    SwfdecAsObject *object, const char *fun_name,
+    const SwfdecAsValue *src, const char *fun_name,
     guint n_args, const SwfdecAsValue *args)
 {
   SwfdecAsContext *context;
   SwfdecInterval *interval;
 
   context = SWFDEC_AS_CONTEXT (player);
-  if (n_args && !swfdec_as_context_try_use_mem (context, n_args * sizeof (SwfdecAsValue))) {
+  if (!swfdec_as_context_try_use_mem (context, (n_args + 1) * sizeof (SwfdecAsValue))) {
     swfdec_as_context_abort (context,
 	"Too many arguments passed to setInterval/setTimeout");
     return 0;
@@ -138,10 +141,12 @@ swfdec_interval_new (SwfdecPlayer *player, guint msecs, gboolean repeat,
   interval->sandbox = swfdec_sandbox_get (player);
   interval->msecs = msecs;
   interval->repeat = repeat;
-  interval->object = object;
   interval->fun_name = fun_name;
   interval->n_args = n_args;
-  interval->args = g_memdup (args, n_args * sizeof (SwfdecAsValue));
+  interval->args = g_slice_alloc ((n_args + 1) * sizeof (SwfdecAsValue));
+  interval->args[0] = *src;
+  if (n_args)
+    memcpy (&interval->args[1], args, n_args * sizeof (SwfdecAsValue));
   interval->timeout.timestamp = player->priv->time + SWFDEC_MSECS_TO_TICKS (interval->msecs);
   interval->timeout.callback = swfdec_interval_trigger;
   swfdec_player_add_timeout (player, &interval->timeout);
@@ -156,23 +161,26 @@ guint
 swfdec_interval_new_function (SwfdecPlayer *player, guint msecs, gboolean repeat,
     SwfdecAsFunction *fun, guint n_args, const SwfdecAsValue *args)
 {
+  SwfdecAsValue val;
+
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
   g_return_val_if_fail (msecs > 0, 0);
   g_return_val_if_fail (SWFDEC_IS_AS_FUNCTION (fun), 0);
   g_return_val_if_fail (n_args == 0 || args != NULL, 0);
 
-  return swfdec_interval_new (player, msecs, repeat, 
-      swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)), NULL, n_args, args);
+  SWFDEC_AS_VALUE_SET_OBJECT (&val,
+      swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
+  return swfdec_interval_new (player, msecs, repeat, &val, NULL, n_args, args);
 }
 
 guint
 swfdec_interval_new_object (SwfdecPlayer *player, guint msecs, gboolean repeat,
-    SwfdecAsObject *thisp, const char *fun_name,
+    const SwfdecAsValue *thisp, const char *fun_name,
     guint n_args, const SwfdecAsValue *args)
 {
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), 0);
   g_return_val_if_fail (msecs > 0, 0);
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (thisp), 0);
+  g_return_val_if_fail (thisp != NULL, 0);
   g_return_val_if_fail (fun_name != NULL, 0);
   g_return_val_if_fail (n_args == 0 || args != NULL, 0);
 

@@ -120,6 +120,7 @@ struct _SwfdecAsDoubleValue {
   SwfdecAsValue *__val = (val); \
   SwfdecAsObject *__o = (o); \
   g_assert (__o != NULL); \
+  g_assert (!__o->movie); \
   (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
   (__val)->value.object = __o; \
 } G_STMT_END

@@ -1558,5 +1558,5 @@ swfdec_text_field_movie_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   // FIXME: do object.addListener (object);
 
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
+  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
 }

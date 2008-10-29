@@ -932,17 +932,15 @@ swfdec_action_add2_to_primitive (SwfdecAsValue *value)
   SwfdecAsObject *object;
   const char *name;
 
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (value))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (value))
     return;
-  object = SWFDEC_AS_VALUE_GET_COMPOSITE (value);
-  if (SWFDEC_IS_MOVIE (object))
-    return;
+  object = SWFDEC_AS_VALUE_GET_OBJECT (value);
 
   if (SWFDEC_IS_AS_DATE (object->relay) && swfdec_gc_object_get_context (object)->version > 5)
     name = SWFDEC_AS_STR_toString;
   else
     name = SWFDEC_AS_STR_valueOf;
-  swfdec_as_object_call (SWFDEC_AS_VALUE_GET_COMPOSITE (value), name, 0, NULL, value);
+  swfdec_as_object_call (object, name, 0, NULL, value);
 }
 
 static void
@@ -955,10 +953,10 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   rtmp = *rval;
   ltmp = *lval;
   swfdec_action_add2_to_primitive (&rtmp);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&rtmp) || SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (&rtmp)))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&rtmp))
     rval = &rtmp;
   swfdec_action_add2_to_primitive (&ltmp);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&ltmp) || SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (&ltmp)))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&ltmp))
     lval = &ltmp;
 
   if (SWFDEC_AS_VALUE_IS_STRING (lval) || SWFDEC_AS_VALUE_IS_STRING (rval)) {

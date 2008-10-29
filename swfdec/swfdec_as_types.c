@@ -593,12 +593,12 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
   }
 
   swfdec_as_object_get_variable (context->global, s, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_COMPOSITE (&val)->relay)))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay)))
     return NULL;
   swfdec_as_object_create (fun, 1, value, &val);
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&val)) {
-    return SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
+    return SWFDEC_AS_VALUE_GET_OBJECT (&val);
   } else {
     SWFDEC_ERROR ("did not construct an object");
     return NULL;

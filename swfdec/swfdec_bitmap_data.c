@@ -171,7 +171,7 @@ swfdec_bitmap_data_loadBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
   cairo_paint (cr);
   cairo_destroy (cr);
   cairo_surface_destroy (isurface);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (bitmap)));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (bitmap)));
 }
 
 // properties
@@ -231,17 +231,11 @@ swfdec_bitmap_data_get_rectangle (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_flash, args);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (args))
+  swfdec_as_value_get_variable (cx, args, SWFDEC_AS_STR_geom, args);
+  swfdec_as_value_get_variable (cx, args, SWFDEC_AS_STR_Rectangle, args);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (args))
     return;
-  o = SWFDEC_AS_VALUE_GET_COMPOSITE (args);
-  swfdec_as_object_get_variable (o, SWFDEC_AS_STR_geom, args);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (args))
-    return;
-  o = SWFDEC_AS_VALUE_GET_COMPOSITE (args);
-  swfdec_as_object_get_variable (o, SWFDEC_AS_STR_Rectangle, args);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (args))
-    return;
-  o = SWFDEC_AS_VALUE_GET_COMPOSITE (args);
+  o = SWFDEC_AS_VALUE_GET_OBJECT (args);
   if (!SWFDEC_IS_AS_FUNCTION (o->relay))
     return;
 
@@ -733,7 +727,7 @@ swfdec_bitmap_data_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
   cairo_set_source_surface (cr, bitmap->surface, 0, 0);
   cairo_paint (cr);
   cairo_destroy (cr);
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (clone)));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (clone)));
 }
 
 SWFDEC_AS_NATIVE (1100, 22, swfdec_bitmap_data_do_dispose)
@@ -802,7 +796,7 @@ swfdec_bitmap_data_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     cairo_destroy (cr);
   }
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (bitmap));
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }
 
 /*** PUBLIC API ***/

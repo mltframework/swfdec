@@ -28,6 +28,7 @@
 
 #include "swfdec_player_internal.h"
 #include "swfdec_as_frame_internal.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_internal.h"
 #include "swfdec_button_movie.h" /* for mouse cursor */
@@ -1139,6 +1140,8 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name,
     if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&vals[0]))
       return;
     obj = SWFDEC_AS_VALUE_GET_COMPOSITE (&vals[0]);
+    if (obj == NULL)
+      return;
     SWFDEC_AS_VALUE_SET_STRING (&vals[0], signal_name);
     swfdec_as_object_call (obj, SWFDEC_AS_STR_broadcastMessage, argc + 1, vals, NULL);
     swfdec_sandbox_unuse (sandbox);
@@ -1191,12 +1194,12 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
   }
   prev = priv->focus;
   if (prev) {
-    SWFDEC_AS_VALUE_SET_COMPOSITE (&vals[0], SWFDEC_AS_OBJECT (prev));
+    SWFDEC_AS_VALUE_SET_MOVIE (&vals[0], SWFDEC_MOVIE (prev));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (&vals[0]);
   }
   if (actor) {
-    SWFDEC_AS_VALUE_SET_COMPOSITE (&vals[1], SWFDEC_AS_OBJECT (actor));
+    SWFDEC_AS_VALUE_SET_MOVIE (&vals[1], SWFDEC_MOVIE (actor));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (&vals[1]);
   }

@@ -1192,7 +1192,7 @@ swfdec_as_object_add_function (SwfdecAsObject *object, const char *name, SwfdecA
   cx = swfdec_gc_object_get_context (object);
   if (!native)
     native = swfdec_as_object_do_nothing;
-  function = swfdec_as_native_function_new (cx, name, native, NULL);
+  function = swfdec_as_native_function_new (cx, name, native);
 
   name = swfdec_as_context_get_string (cx, name);
   SWFDEC_AS_VALUE_SET_COMPOSITE (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
@@ -1430,11 +1430,11 @@ swfdec_as_object_add_native_variable (SwfdecAsObject *object,
   g_return_if_fail (get != NULL);
 
   get_func =
-    swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, get, NULL);
+    swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, get);
 
   if (set != NULL) {
     set_func =
-      swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, set, NULL);
+      swfdec_as_native_function_new (swfdec_gc_object_get_context (object), variable, set);
   } else {
     set_func = NULL;
   }
@@ -1741,10 +1741,10 @@ swfdec_as_object_init_context (SwfdecAsContext *context)
   SwfdecAsValue val;
 
   /* initialize core objects */
-  fun = swfdec_as_native_function_new_bare (context, SWFDEC_AS_STR_Object, swfdec_as_object_construct, NULL);
+  fun = swfdec_as_native_function_new_bare (context, SWFDEC_AS_STR_Object, swfdec_as_object_construct);
   object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun));
   obj_proto = swfdec_as_object_new_empty (context);
-  fun = swfdec_as_native_function_new_bare (context, SWFDEC_AS_STR_Function, swfdec_as_object_do_nothing, NULL);
+  fun = swfdec_as_native_function_new_bare (context, SWFDEC_AS_STR_Function, swfdec_as_object_do_nothing);
   function = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun));
   fun_proto = swfdec_as_object_new_empty (context);
 

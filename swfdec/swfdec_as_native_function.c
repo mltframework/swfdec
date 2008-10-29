@@ -146,8 +146,6 @@ swfdec_as_native_function_init (SwfdecAsNativeFunction *function)
  * @context: a #SwfdecAsContext
  * @name: name of the function
  * @native: function to call when executed
- * @prototype: The object to be used as "prototype" property for the created 
- *             function or %NULL for none.
  *
  * Creates a new native function, that will execute @native when called. You 
  * might want to use swfdec_as_object_add_function() instead of this function.
@@ -156,16 +154,15 @@ swfdec_as_native_function_init (SwfdecAsNativeFunction *function)
  **/
 SwfdecAsFunction *
 swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
-    SwfdecAsNative native, SwfdecAsObject *prototype)
+    SwfdecAsNative native)
 {
   SwfdecAsFunction *fun;
   SwfdecAsObject *object;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (native != NULL, NULL);
-  g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
-  fun = swfdec_as_native_function_new_bare (context, name, native, prototype);
+  fun = swfdec_as_native_function_new_bare (context, name, native);
   object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun));
 
   swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Function, NULL);
@@ -176,14 +173,13 @@ swfdec_as_native_function_new (SwfdecAsContext *context, const char *name,
 
 SwfdecAsFunction *
 swfdec_as_native_function_new_bare (SwfdecAsContext *context, const char *name,
-    SwfdecAsNative native, SwfdecAsObject *prototype)
+    SwfdecAsNative native)
 {
   SwfdecAsNativeFunction *fun;
   SwfdecAsObject *object;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (native != NULL, NULL);
-  g_return_val_if_fail (prototype == NULL || SWFDEC_IS_AS_OBJECT (prototype), NULL);
 
   fun = g_object_new (SWFDEC_TYPE_AS_NATIVE_FUNCTION, "context", context, NULL);
   fun->native = native;
@@ -191,15 +187,6 @@ swfdec_as_native_function_new_bare (SwfdecAsContext *context, const char *name,
 
   object = swfdec_as_object_new_empty (context);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (fun));
-
-  /* need to set prototype before setting the constructor or Function.constructor 
-   * being CONSTANT disallows setting it. */
-  if (prototype) {
-    SwfdecAsValue val;
-    SWFDEC_AS_VALUE_SET_COMPOSITE (&val, prototype);
-    swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_prototype, 
-	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  }
 
   return SWFDEC_AS_FUNCTION (fun);
 }

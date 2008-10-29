@@ -52,8 +52,7 @@ GType		swfdec_as_native_function_get_type	(void);
 
 SwfdecAsFunction *swfdec_as_native_function_new	(SwfdecAsContext *	context,
 						 const char *		name,
-						 SwfdecAsNative		native,
-						 SwfdecAsObject *	prototype);
+						 SwfdecAsNative		native);
 
 gboolean	swfdec_as_native_function_check	(SwfdecAsContext *	cx,
 						 SwfdecAsObject *	object,

@@ -85,8 +85,8 @@ SwfdecAsFunction *
 		swfdec_as_native_function_new_bare 
 						(SwfdecAsContext *	context,
 						 const char *		name,
-						 SwfdecAsNative		native,
-						 SwfdecAsObject *	prototype);
+						 SwfdecAsNative		native);
+
 /* swfdec_as_array.h */
 void		swfdec_as_array_remove_range	(SwfdecAsObject *	object,
 						 gint32			start_index,

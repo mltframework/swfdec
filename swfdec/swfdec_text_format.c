@@ -1046,7 +1046,7 @@ swfdec_text_format_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (format));
 
   function = swfdec_as_native_function_new_bare (cx, 
-	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL);
+	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
 
@@ -1090,7 +1090,7 @@ swfdec_text_format_new_no_properties (SwfdecAsContext *context)
 
   // FIXME: Need better way to create function without prototype/constructor
   function = swfdec_as_native_function_new_bare (context, 
-	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent, NULL);
+	SWFDEC_AS_STR_getTextExtent, swfdec_text_format_getTextExtent);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)));
   swfdec_as_object_set_variable (object, SWFDEC_AS_STR_getTextExtent, &val);
 

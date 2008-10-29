@@ -171,7 +171,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
       x_exists = TRUE;
     if (native_funcs[i].x == x && native_funcs[i].y == y) {
       SwfdecAsFunction *fun = swfdec_as_native_function_new (cx, native_funcs[i].name,
-	  native_funcs[i].func, NULL);
+	  native_funcs[i].func);
       return fun;
     }
   }
@@ -179,8 +179,7 @@ swfdec_get_asnative (SwfdecAsContext *cx, guint x, guint y)
   if (x_exists) {
     SwfdecAsFunction *func;
     char *name = g_strdup_printf ("ASnative (%u, %u)", x, y);
-    func = swfdec_as_native_function_new (cx, name, swfdec_player_do_nothing,
-	NULL);
+    func = swfdec_as_native_function_new (cx, name, swfdec_player_do_nothing);
     g_free (name);
     return func;
   } else {
@@ -352,21 +351,21 @@ swfdec_player_preinit_global (SwfdecAsContext *context)
   SwfdecAsValue val;
 
   f = swfdec_as_native_function_new_bare (context,
-	SWFDEC_AS_STR_ASnative, swfdec_player_ASnative, NULL);
+	SWFDEC_AS_STR_ASnative, swfdec_player_ASnative);
   o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
   SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_ASnative,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   f = swfdec_as_native_function_new_bare (context,
-	SWFDEC_AS_STR_ASconstructor, swfdec_player_ASconstructor, NULL);
+	SWFDEC_AS_STR_ASconstructor, swfdec_player_ASconstructor);
   o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
   SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_ASconstructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 
   f = swfdec_as_native_function_new_bare (context,
-	SWFDEC_AS_STR_enableDebugConsole, swfdec_player_enableDebugConsole, NULL);
+	SWFDEC_AS_STR_enableDebugConsole, swfdec_player_enableDebugConsole);
   o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (f));
   SWFDEC_AS_VALUE_SET_OBJECT (&val, o);
   swfdec_as_object_set_variable_and_flags (context->global, SWFDEC_AS_STR_enableDebugConsole,

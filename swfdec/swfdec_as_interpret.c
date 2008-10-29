@@ -1384,52 +1384,42 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   ltype = SWFDEC_AS_VALUE_GET_TYPE (&ltmp);
   rtype = SWFDEC_AS_VALUE_GET_TYPE (&rtmp);
   
-  /* get objects compared */
-  if (ltype >= SWFDEC_AS_TYPE_OBJECT && rtype >= SWFDEC_AS_TYPE_OBJECT) {
-    SwfdecAsObject *lo = SWFDEC_AS_VALUE_GET_COMPOSITE (&ltmp);
-    SwfdecAsObject *ro = SWFDEC_AS_VALUE_GET_COMPOSITE (&rtmp);
-
-    if (SWFDEC_IS_MOVIE (lo) && SWFDEC_IS_MOVIE (ro)) {
-      lo = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (lo)));
-      ro = SWFDEC_AS_OBJECT (swfdec_movie_resolve (SWFDEC_MOVIE (ro)));
-    } else if (SWFDEC_IS_MOVIE (lo)) {
-      swfdec_as_value_to_primitive (rval);
-      rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
-      if (rtype != SWFDEC_AS_TYPE_MOVIE) {
-	cond = FALSE;
-	goto out;
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&ltmp) && SWFDEC_AS_VALUE_IS_COMPOSITE (&rtmp)) {
+    /* get movies compared */
+    if (ltype == SWFDEC_AS_TYPE_MOVIE) {
+      if (rtype == SWFDEC_AS_TYPE_MOVIE) {
+	rval = &rtmp;
+      } else {
+	swfdec_as_value_to_primitive (rval);
       }
-      ro = SWFDEC_AS_VALUE_GET_COMPOSITE (rval);
-    } else if (SWFDEC_IS_MOVIE (ro)) {
-      swfdec_as_value_to_primitive (lval);
-      ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
-      if (ltype != SWFDEC_AS_TYPE_MOVIE) {
-	cond = FALSE;
-	goto out;
-      }
-      lo = SWFDEC_AS_VALUE_GET_COMPOSITE (lval);
-    } else {
-      lo = SWFDEC_AS_VALUE_GET_COMPOSITE (lval);
-      ro = SWFDEC_AS_VALUE_GET_COMPOSITE (rval);
+      cond = SWFDEC_AS_VALUE_IS_MOVIE (rval) && 
+	SWFDEC_AS_VALUE_GET_MOVIE (&ltmp) == SWFDEC_AS_VALUE_GET_MOVIE (rval);
+      goto out;
     }
-    cond = lo == ro;
+    if (rtype == SWFDEC_AS_TYPE_MOVIE) {
+      swfdec_as_value_to_primitive (lval);
+      cond = SWFDEC_AS_VALUE_IS_MOVIE (lval) && 
+	SWFDEC_AS_VALUE_GET_MOVIE (&rtmp) == SWFDEC_AS_VALUE_GET_MOVIE (lval);
+      goto out;
+    }
+
+    cond = SWFDEC_AS_VALUE_GET_OBJECT (lval) == SWFDEC_AS_VALUE_GET_OBJECT (rval);
     goto out;
   }
 
   /* compare strings */
   if (ltype == SWFDEC_AS_TYPE_STRING && rtype == SWFDEC_AS_TYPE_STRING) {
-    /* FIXME: flash 5 case insensitive? */
     cond = SWFDEC_AS_VALUE_GET_STRING (&ltmp) == SWFDEC_AS_VALUE_GET_STRING (&rtmp);
     goto out;
   }
 
   /* convert to numbers */
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&ltmp) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (&ltmp))) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&ltmp)) {
     l = swfdec_as_value_to_number (cx, lval);
   } else {
     l = swfdec_as_value_to_number (cx, &ltmp);
   }
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (&rtmp) && !SWFDEC_IS_MOVIE (SWFDEC_AS_VALUE_GET_COMPOSITE (&rtmp))) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (&rtmp)) {
     r = swfdec_as_value_to_number (cx, rval);
   } else {
     r = swfdec_as_value_to_number (cx, &rtmp);

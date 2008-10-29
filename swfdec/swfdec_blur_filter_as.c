@@ -125,5 +125,5 @@ swfdec_blur_filter_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   filter->quality = CLAMP (quality, 0, 15);
 
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (filter));
-  SWFDEC_AS_VALUE_SET_COMPOSITE (ret, object);
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

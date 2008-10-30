@@ -1170,7 +1170,7 @@ swfdec_movie_remove_variable_listener (SwfdecMovie *movie,
     g_slist_remove (movie->variable_listeners, iter->data);
 }
 
-static void
+void
 swfdec_movie_call_variable_listeners (SwfdecMovie *movie, const char *name,
     const SwfdecAsValue *val)
 {
@@ -1186,29 +1186,6 @@ swfdec_movie_call_variable_listeners (SwfdecMovie *movie, const char *name,
 
     listener->function (listener->object, name, val);
   }
-}
-
-static void
-swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable, 
-    const SwfdecAsValue *val, guint flags)
-{
-  SwfdecMovie *movie = SWFDEC_MOVIE (object);
-  guint prop_id;
-
-  movie = swfdec_movie_resolve (movie);
-  if (movie == NULL)
-    return;
-  object = SWFDEC_AS_OBJECT (movie);
-
-  prop_id = swfdec_movie_property_lookup (variable);
-  if (prop_id != G_MAXUINT) {
-    swfdec_movie_property_set (movie, prop_id, val);
-    return;
-  }
-
-  swfdec_movie_call_variable_listeners (movie, variable, val);
-
-  SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val, flags);
 }
 
 typedef struct {
@@ -1365,7 +1342,6 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (movie_class);
   SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (movie_class);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (movie_class);
 
   object_class->constructor = swfdec_movie_constructor;
   object_class->dispose = swfdec_movie_dispose;
@@ -1373,8 +1349,6 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   object_class->set_property = swfdec_movie_set_property;
 
   gc_class->mark = swfdec_movie_mark;
-
-  asobject_class->set = swfdec_movie_set_variable;
 
   signals[MATRIX_CHANGED] = g_signal_new ("matrix-changed", G_TYPE_FROM_CLASS (movie_class),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,

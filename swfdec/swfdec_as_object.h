@@ -73,12 +73,6 @@ struct _SwfdecAsObject {
 
 struct _SwfdecAsObjectClass {
   SwfdecGcObjectClass	object_class;
-
-  /* set the variable - and return it (or NULL on error) */
-  void			(* set)			(SwfdecAsObject *	object,
-						 const char *		variable,
-						 const SwfdecAsValue *	val,
-						 guint			default_flags);
 };
 
 GType		swfdec_as_object_get_type	(void);

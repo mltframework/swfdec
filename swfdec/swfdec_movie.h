@@ -232,6 +232,10 @@ void		swfdec_movie_property_set	(SwfdecMovie *		movie,
 void		swfdec_movie_property_get	(SwfdecMovie *		movie,
 						 guint			id, 
 						 SwfdecAsValue *	val);
+void		swfdec_movie_call_variable_listeners 
+						(SwfdecMovie *		movie,
+						 const char *		name,
+						 const SwfdecAsValue *	val);
 void		swfdec_movie_remove		(SwfdecMovie *		movie);
 void		swfdec_movie_destroy		(SwfdecMovie *		movie);
 void		swfdec_movie_set_static_properties 

@@ -817,6 +817,7 @@ EXTRA_DIST = \
 	convolution-filter-properties-8.swf.trace \
 	countdown.swf \
 	countdown.swf.trace \
+	cookiemon.jpg \
 	crash-0.5.2-cvs-return-from-block.as \
 	crash-0.5.2-cvs-return-from-block-5.swf \
 	crash-0.5.2-cvs-return-from-block-5.swf.trace \
@@ -4395,6 +4396,7 @@ EXTRA_DIST = \
 	with-prototypes-6.swf.trace \
 	with-prototypes-7.swf \
 	with-prototypes-7.swf.trace \
+	wookiemon.jpg \
 	xml-cdata.as \
 	xml-cdata-5.swf \
 	xml-cdata-5.swf.trace \

@@ -2463,6 +2463,15 @@ EXTRA_DIST = \
 	nextframe-stop.swf.trace \
 	number.swf \
 	number.swf.trace \
+	number-construct.as \
+	number-construct-5.swf \
+	number-construct-5.swf.trace \
+	number-construct-6.swf \
+	number-construct-6.swf.trace \
+	number-construct-7.swf \
+	number-construct-7.swf.trace \
+	number-construct-8.swf \
+	number-construct-8.swf.trace \
 	number-properties.as \
 	number-properties-5.swf \
 	number-properties-5.swf.trace \

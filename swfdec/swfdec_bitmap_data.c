@@ -316,7 +316,7 @@ swfdec_bitmap_data_getPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
   addr = cairo_image_surface_get_data (bitmap->surface);
   addr += cairo_image_surface_get_stride (bitmap->surface) * y;
   addr += 4 * x;
-  color = *(SwfdecColor *) addr;
+  color = *(SwfdecColor *) (gpointer) addr;
   color = SWFDEC_COLOR_UNMULTIPLY (color);
   color &= SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0);
   SWFDEC_AS_VALUE_SET_INT (ret, color);
@@ -342,10 +342,10 @@ swfdec_bitmap_data_setPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
   addr = cairo_image_surface_get_data (bitmap->surface);
   addr += cairo_image_surface_get_stride (bitmap->surface) * y;
   addr += 4 * x;
-  old = *(SwfdecColor *) addr;
+  old = *(SwfdecColor *) (gpointer) addr;
   old |= SWFDEC_COLOR_COMBINE (0xFF, 0xFF, 0xFF, 0);
   color = old & SWFDEC_COLOR_OPAQUE (color);
-  *(SwfdecColor *) addr = SWFDEC_COLOR_MULTIPLY (color);
+  *(SwfdecColor *) (gpointer) addr = SWFDEC_COLOR_MULTIPLY (color);
   cairo_surface_mark_dirty_rectangle (bitmap->surface, x, y, 1, 1);
   swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
 }
@@ -575,7 +575,7 @@ swfdec_bitmap_data_getPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
   addr = cairo_image_surface_get_data (bitmap->surface);
   addr += cairo_image_surface_get_stride (bitmap->surface) * y;
   addr += 4 * x;
-  color = *(SwfdecColor *) addr;
+  color = *(SwfdecColor *) (gpointer) addr;
   color = SWFDEC_COLOR_UNMULTIPLY (color);
   SWFDEC_AS_VALUE_SET_INT (ret, color);
 }
@@ -600,9 +600,9 @@ swfdec_bitmap_data_setPixel32 (SwfdecAsContext *cx, SwfdecAsObject *object,
   addr += cairo_image_surface_get_stride (bitmap->surface) * y;
   addr += 4 * x;
   if (swfdec_surface_has_alpha (bitmap->surface)) {
-    *(SwfdecColor *) addr = SWFDEC_COLOR_MULTIPLY ((SwfdecColor) color);
+    *(SwfdecColor *) (gpointer) addr = SWFDEC_COLOR_MULTIPLY ((SwfdecColor) color);
   } else {
-    *(SwfdecColor *) addr = SWFDEC_COLOR_OPAQUE ((SwfdecColor) color);
+    *(SwfdecColor *) (gpointer) addr = SWFDEC_COLOR_OPAQUE ((SwfdecColor) color);
   }
   cairo_surface_mark_dirty_rectangle (bitmap->surface, x, y, 1, 1);
   swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);

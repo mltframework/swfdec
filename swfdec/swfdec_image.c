@@ -402,7 +402,8 @@ swfdec_image_lossless_load (SwfdecImage *image, SwfdecRenderer *renderer)
     if (palette_size < 256)
       memset (palette + palette_size, 0, (256 - palette_size) * 4);
 
-    pixels = (guint32 *) data;
+    /* cast is safe, we malloc'd the memory above */
+    pixels = (guint32 *) (gpointer) data;
     for (j = 0; j < (guint) image->height; j++) {
       for (i = 0; i < (guint) image->width; i++) {
 	*pixels = palette[indexed_data[i]];

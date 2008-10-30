@@ -174,7 +174,8 @@ swfdec_test_image_compare (SwfdecAsContext *cx, SwfdecAsObject *object, guint ar
 	cairo_image_surface_get_stride (image->surface),
 	cairo_image_surface_get_stride (compare->surface),
 	cairo_image_surface_get_stride (diff->surface)) != 0) {
-    SWFDEC_AS_VALUE_SET_OBJECT (retval, SWFDEC_AS_OBJECT (diff));
+    SWFDEC_AS_VALUE_SET_OBJECT (retval, 
+	swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (diff)));
   } else {
     SWFDEC_AS_VALUE_SET_NULL (retval);
   }

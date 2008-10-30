@@ -36,6 +36,18 @@ G_BEGIN_DECLS
 #define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
 /* swfdec_as_types.h */
+#define SWFDEC_AS_VALUE_IS_COMPOSITE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) >= SWFDEC_AS_TYPE_OBJECT)
+#define SWFDEC_AS_VALUE_IS_PRIMITIVE(val) (!SWFDEC_AS_VALUE_IS_COMPOSITE(val))
+#define SWFDEC_AS_VALUE_GET_COMPOSITE(val) (SWFDEC_AS_VALUE_IS_OBJECT (val) ? \
+    SWFDEC_AS_VALUE_GET_OBJECT (val) : SWFDEC_AS_OBJECT (SWFDEC_AS_VALUE_GET_MOVIE (val)))
+#define SWFDEC_AS_VALUE_SET_COMPOSITE(val,o) G_STMT_START { \
+  SwfdecAsValue *__val = (val); \
+  SwfdecAsObject *__o = (o); \
+  g_assert (__o != NULL); \
+  (__val)->type = __o->movie ? SWFDEC_AS_TYPE_MOVIE : SWFDEC_AS_TYPE_OBJECT; \
+  (__val)->value.object = __o; \
+} G_STMT_END
+
 #define SWFDEC_AS_VALUE_IS_MOVIE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_MOVIE)
 #define SWFDEC_AS_VALUE_GET_MOVIE(val) (swfdec_movie_resolve (SWFDEC_MOVIE ((val)->value.object)))
 #define SWFDEC_AS_VALUE_SET_MOVIE(val,m) G_STMT_START { \

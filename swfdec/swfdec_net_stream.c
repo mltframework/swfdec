@@ -26,6 +26,7 @@
 #include "swfdec_access.h"
 #include "swfdec_amf.h"
 #include "swfdec_as_frame_internal.h"
+#include "swfdec_as_internal.h"
 #include "swfdec_as_strings.h"
 #include "swfdec_audio_flv.h"
 #include "swfdec_cached_video.h"

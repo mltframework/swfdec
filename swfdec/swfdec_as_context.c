@@ -336,7 +336,7 @@ swfdec_as_value_mark (SwfdecAsValue *value)
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   if (SWFDEC_AS_VALUE_IS_COMPOSITE (value)) {
-    swfdec_gc_object_mark (SWFDEC_AS_VALUE_GET_COMPOSITE (value));
+    swfdec_gc_object_mark (value->value.object);
   } else if (SWFDEC_AS_VALUE_IS_STRING (value) ||
       SWFDEC_AS_VALUE_IS_NUMBER (value)) {
     if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_ROOT))

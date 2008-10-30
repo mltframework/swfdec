@@ -55,5 +55,8 @@ void		swfdec_video_movie_set_provider		(SwfdecVideoMovie *	movie,
 							 SwfdecVideoProvider *	provider);
 void		swfdec_video_movie_clear	      	(SwfdecVideoMovie *	movie);
 
+/* in swfdec_video_movie_as.c */
+void		swfdec_video_movie_init_properties	(SwfdecAsContext *	context);
+
 G_END_DECLS
 #endif

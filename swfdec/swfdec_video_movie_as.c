@@ -60,3 +60,100 @@ swfdec_video_clear (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   swfdec_video_movie_clear (video);
 }
 
+static void
+swfdec_video_get_width (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecVideoMovie *video;
+  guint w;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_VIDEO_MOVIE, &video, "");
+
+  if (video->provider) {
+    w = swfdec_video_provider_get_width (video->provider);
+  } else {
+    w = 0;
+  }
+  swfdec_as_value_set_integer (cx, rval, w);
+}
+
+static void
+swfdec_video_get_height (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SwfdecVideoMovie *video;
+  guint h;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_VIDEO_MOVIE, &video, "");
+
+  if (video->provider) {
+    h = swfdec_video_provider_get_height (video->provider);
+  } else {
+    h = 0;
+  }
+  swfdec_as_value_set_integer (cx, rval, h);
+}
+
+static void
+swfdec_video_get_deblocking (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("Video.deblocking (get)");
+  swfdec_as_value_set_integer (cx, rval, 0);
+}
+
+static void
+swfdec_video_set_deblocking (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("Video.deblocking (set)");
+}
+
+static void
+swfdec_video_get_smoothing (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("Video.smoothing (get)");
+  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
+}
+
+static void
+swfdec_video_set_smoothing (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
+    SwfdecAsValue *argv, SwfdecAsValue *rval)
+{
+  SWFDEC_STUB ("Video.smoothing (set)");
+}
+
+void
+swfdec_video_movie_init_properties (SwfdecAsContext *cx)
+{
+  SwfdecAsValue val;
+  SwfdecAsObject *video, *proto;
+
+  // FIXME: We should only initialize if the prototype Object has not been
+  // initialized by any object's constructor with native properties
+  // (TextField, TextFormat, XML, XMLNode at least)
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
+
+  swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Video, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  video = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_get_variable (video, SWFDEC_AS_STR_prototype, &val);
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+    return;
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_width, 
+      swfdec_video_get_width, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_height, 
+      swfdec_video_get_height, NULL);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_deblocking, 
+      swfdec_video_get_deblocking, swfdec_video_set_deblocking);
+  swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_smoothing, 
+      swfdec_video_get_smoothing, swfdec_video_set_smoothing);
+}
+
+

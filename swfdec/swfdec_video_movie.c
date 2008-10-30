@@ -102,83 +102,6 @@ swfdec_video_movie_set_ratio (SwfdecMovie *movie)
     swfdec_video_provider_set_ratio (video->provider, movie->original_ratio);
 }
 
-static gboolean
-swfdec_video_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags)
-{
-  guint version = swfdec_gc_object_get_context (object)->version;
-  SwfdecVideoMovie *video;
-  SwfdecAsContext *cx;
-
-  video = SWFDEC_VIDEO_MOVIE (object);
-  cx = swfdec_gc_object_get_context (video);
-
-  if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_width) == 0) {
-    guint w;
-    if (video->provider) {
-      w = swfdec_video_provider_get_width (video->provider);
-    } else {
-      w = 0;
-    }
-    swfdec_as_value_set_integer (cx, val, w);
-    return TRUE;
-  } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_height) == 0) {
-    guint h;
-    if (video->provider) {
-      h = swfdec_video_provider_get_height (video->provider);
-    } else {
-      h = 0;
-    }
-    swfdec_as_value_set_integer (cx, val, h);
-    return TRUE;
-  } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_deblocking) == 0) {
-    SWFDEC_STUB ("Video.deblocking (get)");
-    swfdec_as_value_set_number (cx, val, 0);
-    return TRUE;
-  } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_smoothing) == 0) {
-    SWFDEC_STUB ("Video.smoothing (get)");
-    SWFDEC_AS_VALUE_SET_BOOLEAN (val, FALSE);
-    return TRUE;
-  } else {
-    return SWFDEC_AS_OBJECT_CLASS (swfdec_video_movie_parent_class)->get (
-	object, orig, variable, val, flags);
-  }
-}
-
-static void
-swfdec_video_movie_set_variable (SwfdecAsObject *object, const char *variable,
-    const SwfdecAsValue *val, guint flags)
-{
-  guint version = swfdec_gc_object_get_context (object)->version;
-
-  if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_deblocking) == 0) {
-    SWFDEC_STUB ("Video.deblocking (set)");
-  } else if (swfdec_strcmp (version, variable, SWFDEC_AS_STR_smoothing) == 0) {
-    SWFDEC_STUB ("Video.smoothing (set)");
-  } else {
-    SWFDEC_AS_OBJECT_CLASS (swfdec_video_movie_parent_class)->set (object,
-	variable, val, flags);
-  }
-}
-
-static gboolean
-swfdec_video_movie_foreach_variable (SwfdecAsObject *object, SwfdecAsVariableForeach func, gpointer data)
-{
-  const char *native_variables[] = { SWFDEC_AS_STR_width, SWFDEC_AS_STR_height,
-    SWFDEC_AS_STR_smoothing, SWFDEC_AS_STR_deblocking, NULL };
-  int i;
-
-  for (i = 0; native_variables[i] != NULL; i++) {
-    SwfdecAsValue val;
-    swfdec_as_object_get_variable (object, native_variables[i], &val);
-    if (!func (object, native_variables[i], &val, 0, data))
-      return FALSE;
-  }
-
-  return SWFDEC_AS_OBJECT_CLASS (swfdec_video_movie_parent_class)->foreach (
-      object, func, data);
-}
-
 static void
 swfdec_video_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *matrix, gboolean last)
 {
@@ -205,6 +128,7 @@ swfdec_video_movie_constructor (GType type, guint n_construct_properties,
 
   movie = SWFDEC_MOVIE (object);
   swfdec_sandbox_use (movie->resource->sandbox);
+  swfdec_video_movie_init_properties (swfdec_gc_object_get_context (movie));
   swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
       SWFDEC_AS_STR_Video, NULL);
   swfdec_sandbox_unuse (movie->resource->sandbox);
@@ -224,15 +148,10 @@ static void
 swfdec_video_movie_class_init (SwfdecVideoMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  SwfdecAsObjectClass *asobject_class = SWFDEC_AS_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
 
   object_class->constructor = swfdec_video_movie_constructor;
   object_class->dispose = swfdec_video_movie_dispose;
-
-  asobject_class->get = swfdec_video_movie_get_variable;
-  asobject_class->set = swfdec_video_movie_set_variable;
-  asobject_class->foreach = swfdec_video_movie_foreach_variable;
 
   movie_class->update_extents = swfdec_video_movie_update_extents;
   movie_class->render = swfdec_video_movie_render;

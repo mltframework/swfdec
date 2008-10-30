@@ -74,12 +74,6 @@ struct _SwfdecAsObject {
 struct _SwfdecAsObjectClass {
   SwfdecGcObjectClass	object_class;
 
-  /* get the value and flags for a variables */
-  gboolean	      	(* get)			(SwfdecAsObject *       object,
-						 SwfdecAsObject *	orig,
-						 const char *		variable,
-						 SwfdecAsValue *	val,
-						 guint *      		flags);
   /* set the variable - and return it (or NULL on error) */
   void			(* set)			(SwfdecAsObject *	object,
 						 const char *		variable,

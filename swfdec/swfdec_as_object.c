@@ -38,6 +38,7 @@
 #include "swfdec_as_super.h"
 #include "swfdec_debug.h"
 #include "swfdec_movie.h"
+#include "swfdec_resource.h"
 #include "swfdec_utils.h"
 
 /**
@@ -303,31 +304,6 @@ swfdec_as_object_variable_enabled_in_version (SwfdecAsVariable *var,
   if (var->flags & SWFDEC_AS_VARIABLE_VERSION_9_UP && version < 9)
     return FALSE;
 
-  return TRUE;
-}
-
-static gboolean
-swfdec_as_object_do_get (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags)
-{
-  SwfdecAsVariable *var;
-  
-  var = swfdec_as_object_hash_lookup (object, variable);
-  if (var == NULL)
-    return FALSE;
-
-  /* variable flag checks */
-  if (!swfdec_as_object_variable_enabled_in_version (var,
-	swfdec_gc_object_get_context (object)->version))
-    return FALSE;
-
-  if (var->get) {
-    swfdec_as_function_call (var->get, orig, 0, NULL, val);
-    *flags = var->flags;
-  } else {
-    *val = var->value;
-    *flags = var->flags;
-  }
   return TRUE;
 }
 
@@ -748,7 +724,6 @@ swfdec_as_object_class_init (SwfdecAsObjectClass *klass)
 
   gc_class->mark = swfdec_as_object_mark;
 
-  klass->get = swfdec_as_object_do_get;
   klass->set = swfdec_as_object_do_set;
   klass->foreach = swfdec_as_object_do_foreach;
 }
@@ -920,7 +895,7 @@ gboolean
 swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
 {
-  SwfdecAsObjectClass *klass;
+  SwfdecAsContext *context;
   guint i;
   SwfdecAsValue tmp_val;
   guint tmp_flags;
@@ -929,6 +904,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
 
+  context = swfdec_gc_object_get_context (object);
   if (value == NULL)
     value = &tmp_val;
   if (flags == NULL)
@@ -946,23 +922,64 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
 
   resolve = NULL;
   for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && cur != NULL; i++) {
-    klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
-    if (klass->get (cur, object, variable, value, flags)) {
+    SwfdecAsVariable *var;
+    
+    var = swfdec_as_object_hash_lookup (cur, variable);
+    if (var != NULL &&
+	swfdec_as_object_variable_enabled_in_version (var, context->version)) {
+      if (var->get) {
+	swfdec_as_function_call (var->get, object, 0, NULL, value);
+	*flags = var->flags;
+      } else {
+	*value = var->value;
+	*flags = var->flags;
+      }
       *pobject = cur;
       return TRUE;
     }
-    if (resolve == NULL) {
-      SwfdecAsVariable *var =
-	swfdec_as_object_hash_lookup (cur, SWFDEC_AS_STR___resolve);
 
-      if (var != NULL && (swfdec_gc_object_get_context (object)->version <= 6 ||
-	    SWFDEC_AS_VALUE_IS_COMPOSITE (&var->value)))
+    if (cur->movie) {
+      SwfdecMovie *movie, *ret;
+      guint prop_id;
+  
+      movie = SWFDEC_MOVIE (cur);
+
+      if (context->version > 5 && variable == SWFDEC_AS_STR__global) {
+	/* FIXME: current global or movie's global? */
+	SWFDEC_AS_VALUE_SET_OBJECT (value, swfdec_as_relay_get_as_object (
+	      SWFDEC_AS_RELAY (movie->resource->sandbox)));
+	*flags = 0;
+	*pobject = cur;
+	return TRUE;
+      }
+  
+      ret = swfdec_movie_get_by_name (movie, variable, FALSE);
+      if (ret) {
+	SWFDEC_AS_VALUE_SET_MOVIE (value, ret);
+	*flags = 0;
+	*pobject = cur;
+	return TRUE;
+      }
+
+      prop_id = swfdec_movie_property_lookup (variable);
+      if (prop_id != G_MAXUINT) {
+	swfdec_movie_property_get (movie, prop_id, value);
+	*flags = 0;
+	*pobject = cur;
+	return TRUE;
+      }
+    }
+
+    if (resolve == NULL) {
+      var = swfdec_as_object_hash_lookup (cur, SWFDEC_AS_STR___resolve);
+
+      if (var != NULL && (context->version <= 6 || SWFDEC_AS_VALUE_IS_COMPOSITE (&var->value)))
 	resolve = cur;
     }
     cur = swfdec_as_object_get_prototype_internal (cur);
   }
   if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
-    swfdec_as_context_abort (swfdec_gc_object_get_context (object), "Prototype recursion limit exceeded");
+    swfdec_as_context_abort (context, "Prototype recursion limit exceeded");
     SWFDEC_AS_VALUE_SET_UNDEFINED (value);
     *flags = 0;
     *pobject = NULL;
@@ -972,12 +989,10 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     SwfdecAsValue argv;
     SwfdecAsVariable *var;
     SwfdecAsFunction *fun;
-    SwfdecAsContext *context;
 
     *flags = 0;
     *pobject = resolve;
     SWFDEC_AS_VALUE_SET_UNDEFINED (value);
-    context = swfdec_gc_object_get_context (resolve);
 
     var = swfdec_as_object_hash_lookup (resolve, SWFDEC_AS_STR___resolve);
     g_assert (var != NULL);

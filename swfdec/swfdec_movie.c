@@ -1122,47 +1122,6 @@ swfdec_movie_get_root (SwfdecMovie *movie)
   return movie;
 }
 
-static gboolean
-swfdec_movie_get_variable (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags)
-{
-  SwfdecMovie *movie, *ret;
-  guint prop_id;
-  
-  movie = SWFDEC_MOVIE (object);
-  movie = swfdec_movie_resolve (movie);
-  if (movie == NULL)
-    return FALSE;
-  object = SWFDEC_AS_OBJECT (movie);
-
-  if (SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->get (object, orig, variable, val, flags))
-    return TRUE;
-
-  /* FIXME: check that this is correct */
-  if (swfdec_gc_object_get_context (object)->version > 5 && variable == SWFDEC_AS_STR__global) {
-    SWFDEC_AS_VALUE_SET_OBJECT (val, swfdec_as_relay_get_as_object (
-	  SWFDEC_AS_RELAY (movie->resource->sandbox)));
-    *flags = 0;
-    return TRUE;
-  }
-  
-  ret = swfdec_movie_get_by_name (movie, variable, FALSE);
-  if (ret) {
-    SWFDEC_AS_VALUE_SET_MOVIE (val, ret);
-    *flags = 0;
-    return TRUE;
-  }
-
-  prop_id = swfdec_movie_property_lookup (variable);
-  if (prop_id != G_MAXUINT) {
-    swfdec_movie_property_get (movie, prop_id, val);
-    *flags = 0;
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
 void
 swfdec_movie_add_variable_listener (SwfdecMovie *movie, SwfdecAsObject *object,
     const char *name, const SwfdecMovieVariableListenerFunction function)
@@ -1436,7 +1395,6 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
 
   gc_class->mark = swfdec_movie_mark;
 
-  asobject_class->get = swfdec_movie_get_variable;
   asobject_class->set = swfdec_movie_set_variable;
   asobject_class->foreach = swfdec_movie_foreach_variable;
 

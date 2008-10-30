@@ -9,7 +9,7 @@ G_BEGIN_DECLS
 
 /* Pixel value in the same colorspace as cairo - endian-dependant ARGB.
  * The alpha pixel must be present */
-typedef guint SwfdecColor;
+typedef guint32 SwfdecColor;
 
 /* audio is 44100Hz, framerate is multiple of 256Hz, FLV timestamps are 1000Hz
  * This is a multiple of all these numbers, so we can be always accurate

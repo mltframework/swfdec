@@ -861,7 +861,7 @@ swfdec_bitmap_data_get_pixel (SwfdecBitmapData *bitmap, guint x, guint y)
   addr = cairo_image_surface_get_data (bitmap->surface);
   addr += cairo_image_surface_get_stride (bitmap->surface) * y;
   addr += 4 * x;
-  return *(guint32 *) addr;
+  return *(guint32 *) (gpointer) addr;
 }
 
 void
@@ -876,7 +876,7 @@ swfdec_bitmap_data_set_pixel (SwfdecBitmapData *bitmap, guint x, guint y, Swfdec
   addr = cairo_image_surface_get_data (bitmap->surface);
   addr += cairo_image_surface_get_stride (bitmap->surface) * y;
   addr += 4 * x;
-  *(guint32 *) addr = color;
+  *(guint32 *) (gpointer) addr = color;
   swfdec_bitmap_data_invalidate (bitmap, x, y, 1, 1);
 }
 

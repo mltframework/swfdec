@@ -442,10 +442,10 @@ swfdec_renderer_transform (SwfdecRenderer *renderer, cairo_surface_t *surface,
   stride = cairo_image_surface_get_stride (target);
   for (y = 0; y < rect->height; y++) {
     for (x = 0; x < rect->width; x++) {
-      color = ((guint32 *) data)[x];
+      color = ((guint32 *) (gpointer) data)[x];
       color |= mask;
       color = swfdec_color_apply_transform_premultiplied (color, trans);
-      ((guint32 *) data)[x] = color;
+      ((guint32 *) (gpointer) data)[x] = color;
     }
     data += stride;
   }

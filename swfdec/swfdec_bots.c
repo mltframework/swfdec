@@ -178,7 +178,8 @@ swfdec_bots_put_u16 (SwfdecBots *bots, guint i)
   g_return_if_fail (i <= G_MAXUINT16);
 
   swfdec_bots_prepare_bytes (bots, 2);
-  *(guint16 *)bots->ptr = GUINT16_TO_LE (i);
+  bots->ptr[0] = i;
+  bots->ptr[1] = i >> 8;
   bots->ptr += 2;
 }
 
@@ -188,7 +189,8 @@ swfdec_bots_put_s16 (SwfdecBots *bots, int i)
   g_return_if_fail (i >= G_MININT16 && i <= G_MAXINT16);
 
   swfdec_bots_prepare_bytes (bots, 2);
-  *(guint16 *)bots->ptr = GINT16_TO_LE (i);
+  bots->ptr[0] = i;
+  bots->ptr[1] = i >> 8;
   bots->ptr += 2;
 }
 
@@ -198,7 +200,10 @@ swfdec_bots_put_u32 (SwfdecBots *bots, guint i)
   g_return_if_fail (i <= G_MAXUINT32);
 
   swfdec_bots_prepare_bytes (bots, 4);
-  *(guint32 *)bots->ptr = GUINT32_TO_LE (i);
+  bots->ptr[0] = i;
+  bots->ptr[1] = i >> 8;
+  bots->ptr[2] = i >> 16;
+  bots->ptr[3] = i >> 24;
   bots->ptr += 4;
 }
 

@@ -59,8 +59,10 @@ swfdec_audio_decoder_uncompressed_upscale (SwfdecBuffer *buffer, SwfdecAudioForm
 	buffer->length - n_samples * 2 * channels);
   }
   ret = swfdec_buffer_new (n_samples * 4 * granularity);
-  src = (gint16 *) buffer->data;
-  dest = (gint16 *) ret->data;
+  /* can be upscaled, because the input buffer and the newly allocated buffer 
+   * are aligned properly */
+  src = (gint16 *) (gpointer) buffer->data;
+  dest = (gint16 *) (gpointer) ret->data;
   for (i = 0; i < n_samples; i++) {
     for (j = 0; j < granularity; j++) {
       *dest++ = src[0];
@@ -96,19 +98,19 @@ static SwfdecBuffer *
 swfdec_audio_decoder_uncompressed_decode_16bit (SwfdecBuffer *buffer)
 {
   SwfdecBuffer *ret;
-  gint16 *src, *dest;
+  SwfdecBits bits;
+  gint16 *dest;
   guint i;
 
   if (buffer->length & 2) {
     SWFDEC_ERROR ("buffer length not a multiple of 16bit");
   }
   ret = swfdec_buffer_new (buffer->length & ~1);
-  src = (gint16 *) buffer->data;
-  dest = (gint16 *) ret->data;
+  swfdec_bits_init (&bits, buffer);
+  dest = (gint16 *) (gpointer) ret->data;
   for (i = 0; i < ret->length; i += 2) {
-    *dest = GINT16_FROM_LE (*src);
+    *dest = swfdec_bits_get_u16 (&bits);
     dest++;
-    src++;
   }
 
   return ret;

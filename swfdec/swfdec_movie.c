@@ -1211,27 +1211,6 @@ swfdec_movie_set_variable (SwfdecAsObject *object, const char *variable,
   SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->set (object, variable, val, flags);
 }
 
-static gboolean
-swfdec_movie_foreach_variable (SwfdecAsObject *object, SwfdecAsVariableForeach func, gpointer data)
-{
-  SwfdecMovie *movie = SWFDEC_MOVIE (object);
-  SwfdecAsValue val;
-  GList *walk;
-  gboolean ret;
-
-  ret = SWFDEC_AS_OBJECT_CLASS (swfdec_movie_parent_class)->foreach (object, func, data);
-
-  for (walk = movie->list; walk && ret; walk = walk->next) {
-    SwfdecMovie *cur = walk->data;
-    if (cur->original_name == SWFDEC_AS_STR_EMPTY)
-      continue;
-    SWFDEC_AS_VALUE_SET_MOVIE (&val, walk->data);
-    ret &= func (object, cur->name, &val, 0, data);
-  }
-
-  return ret;
-}
-
 typedef struct {
   SwfdecMovie *		movie;
   int			depth;
@@ -1396,7 +1375,6 @@ swfdec_movie_class_init (SwfdecMovieClass * movie_class)
   gc_class->mark = swfdec_movie_mark;
 
   asobject_class->set = swfdec_movie_set_variable;
-  asobject_class->foreach = swfdec_movie_foreach_variable;
 
   signals[MATRIX_CHANGED] = g_signal_new ("matrix-changed", G_TYPE_FROM_CLASS (movie_class),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID,

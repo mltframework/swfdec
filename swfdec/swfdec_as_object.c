@@ -591,16 +591,6 @@ swfdec_as_object_hash_foreach (gpointer key, gpointer value, gpointer data)
   fdata->retval = fdata->func (fdata->object, key, &var->value, var->flags, fdata->data);
 }
 
-/* FIXME: does not do Adobe Flash's order for Enumerate actions */
-static gboolean
-swfdec_as_object_do_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func, gpointer data)
-{
-  ForeachData fdata = { object, func, data, TRUE };
-
-  g_hash_table_foreach (object->properties, swfdec_as_object_hash_foreach, &fdata);
-  return fdata.retval;
-}
-
 typedef struct {
   SwfdecAsObject *		object;
   SwfdecAsVariableForeachRemove	func;
@@ -725,7 +715,6 @@ swfdec_as_object_class_init (SwfdecAsObjectClass *klass)
   gc_class->mark = swfdec_as_object_mark;
 
   klass->set = swfdec_as_object_do_set;
-  klass->foreach = swfdec_as_object_do_foreach;
 }
 
 static void
@@ -1163,14 +1152,32 @@ gboolean
 swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
     gpointer data)
 {
-  SwfdecAsObjectClass *klass;
+  ForeachData fdata = { object, func, data, TRUE };
 
   g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
 
-  klass = SWFDEC_AS_OBJECT_GET_CLASS (object);
-  g_return_val_if_fail (klass->foreach != NULL, FALSE);
-  return klass->foreach (object, func, data);
+  /* FIXME: does not do Adobe Flash's order for Enumerate actions */
+  g_hash_table_foreach (object->properties, swfdec_as_object_hash_foreach, &fdata);
+  if (!fdata.retval)
+    return FALSE;
+
+  if (object->movie) {
+    SwfdecMovie *movie = SWFDEC_MOVIE (object);
+    SwfdecAsValue val;
+    GList *walk;
+
+    for (walk = movie->list; walk; walk = walk->next) {
+      SwfdecMovie *cur = walk->data;
+      if (cur->original_name == SWFDEC_AS_STR_EMPTY)
+	continue;
+      SWFDEC_AS_VALUE_SET_MOVIE (&val, cur);
+      if (!func (object, cur->name, &val, 0, data))
+	return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 /*** SIMPLIFICATIONS ***/

@@ -79,10 +79,6 @@ struct _SwfdecAsObjectClass {
 						 const char *		variable,
 						 const SwfdecAsValue *	val,
 						 guint			default_flags);
-  /* call with every variable until func returns FALSE */
-  gboolean		(* foreach)		(SwfdecAsObject *	object,
-						 SwfdecAsVariableForeach func,
-						 gpointer		data);
 };
 
 GType		swfdec_as_object_get_type	(void);

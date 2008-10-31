@@ -832,7 +832,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
 
   while (context->state < SWFDEC_AS_CONTEXT_ABORTED) {
     if (context->exception) {
-      swfdec_as_frame_handle_exception (frame);
+      swfdec_as_frame_handle_exception (context, frame);
       if (frame != context->frame)
 	goto out;
       pc = frame->pc;

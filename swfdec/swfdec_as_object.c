@@ -1234,7 +1234,7 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
   context = swfdec_gc_object_get_context (object);
   swfdec_as_frame_init (&frame, context, script);
   swfdec_as_frame_set_this (&frame, object);
-  swfdec_as_frame_preload (&frame);
+  swfdec_as_frame_preload (context, &frame);
   /* we take no prisoners */
   frame.activation = NULL;
   swfdec_as_context_run (context);

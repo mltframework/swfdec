@@ -65,27 +65,31 @@ void		swfdec_as_frame_return		(SwfdecAsFrame *	frame,
 
 void		swfdec_as_frame_set_this	(SwfdecAsFrame *	frame,
 						 SwfdecAsObject *	thisp);
-void		swfdec_as_frame_preload		(SwfdecAsFrame *	frame);
+void		swfdec_as_frame_preload		(SwfdecAsContext *	context,
+						 SwfdecAsFrame *	frame);
 
-#define swfdec_as_frame_get_variable(frame, variable, value) \
-  swfdec_as_frame_get_variable_and_flags (frame, variable, value, NULL, NULL)
+#define swfdec_as_frame_get_variable(cx, frame, variable, value) \
+  swfdec_as_frame_get_variable_and_flags (cx, frame, variable, value, NULL, NULL)
 SwfdecAsObject *swfdec_as_frame_get_variable_and_flags 
-						(SwfdecAsFrame *	frame,
+						(SwfdecAsContext *	context,
+						 SwfdecAsFrame *	frame,
 						 const char *		variable,
 						 SwfdecAsValue *	value,
 						 guint *		flags,
 						 SwfdecAsObject **	pobject);
-#define swfdec_as_frame_set_variable(frame, variable, value, overwrite, local) \
-  swfdec_as_frame_set_variable_and_flags (frame, variable, value, 0, overwrite, local)
+#define swfdec_as_frame_set_variable(cx, frame, variable, value, overwrite, local) \
+  swfdec_as_frame_set_variable_and_flags (cx, frame, variable, value, 0, overwrite, local)
 void		swfdec_as_frame_set_variable_and_flags
-						(SwfdecAsFrame *	frame,
+						(SwfdecAsContext *	context,
+						 SwfdecAsFrame *	frame,
 						 const char *		variable,
 						 const SwfdecAsValue *	value,
 						 guint			default_flags,
 						 gboolean		overwrite,
 						 gboolean		local);
 SwfdecAsDeleteReturn
-		swfdec_as_frame_delete_variable	(SwfdecAsFrame *	frame,
+		swfdec_as_frame_delete_variable	(SwfdecAsContext *	context,
+						 SwfdecAsFrame *	frame,
 						 const char *		variable);
 
 void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,
@@ -97,7 +101,8 @@ void		swfdec_as_frame_push_block	(SwfdecAsFrame *	frame,
 						 gpointer		data);
 void		swfdec_as_frame_pop_block	(SwfdecAsFrame *	frame,
 						 SwfdecAsContext *	context);
-void		swfdec_as_frame_handle_exception(SwfdecAsFrame *	frame);
+void		swfdec_as_frame_handle_exception(SwfdecAsContext *	context,
+						 SwfdecAsFrame *	frame);
 SwfdecMovie *	swfdec_as_frame_get_target	(SwfdecAsFrame *	frame);
 
 

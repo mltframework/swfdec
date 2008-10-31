@@ -408,7 +408,7 @@ super_special_movie_lookup_magic (SwfdecAsContext *cx, SwfdecAsObject *o, const 
   SwfdecAsValue val;
 
   if (o == NULL) {
-    o = swfdec_as_frame_get_variable (cx->frame, name, NULL);
+    o = swfdec_as_frame_get_variable (cx, cx->frame, name, NULL);
     if (o == NULL)
       return NULL;
   }
@@ -647,7 +647,7 @@ swfdec_action_get_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
 	SWFDEC_AS_VALUE_SET_MOVIE (val, SWFDEC_MOVIE (object));
       }
     } else {
-      swfdec_as_frame_get_variable (cx->frame, swfdec_as_context_get_string (cx, s), val);
+      swfdec_as_frame_get_variable (cx, cx->frame, swfdec_as_context_get_string (cx, s), val);
     }
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (val);
@@ -673,7 +673,7 @@ swfdec_action_set_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
 	rest = s;
       else
 	rest = swfdec_as_context_get_string (cx, rest);
-      swfdec_as_frame_set_variable (cx->frame, rest,
+      swfdec_as_frame_set_variable (cx, cx->frame, rest,
 	  swfdec_as_stack_peek (cx, 1), TRUE, FALSE);
     }
   }
@@ -829,7 +829,7 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
   thisp = swfdec_as_stack_peek (cx, 2);
   fun = swfdec_as_stack_peek (cx, 1);
-  obj = swfdec_as_frame_get_variable (frame, name, fun);
+  obj = swfdec_as_frame_get_variable (cx, frame, name, fun);
   if (obj) {
     SWFDEC_AS_VALUE_SET_COMPOSITE (thisp, obj);
   } else {
@@ -2003,7 +2003,7 @@ swfdec_action_define_local (SwfdecAsContext *cx, guint action, const guint8 *dat
   const char *name;
 
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
-  swfdec_as_frame_set_variable (cx->frame, name, swfdec_as_stack_peek (cx, 1),
+  swfdec_as_frame_set_variable (cx, cx->frame, name, swfdec_as_stack_peek (cx, 1),
       TRUE, TRUE);
   swfdec_as_stack_pop_n (cx, 2);
 }
@@ -2015,7 +2015,7 @@ swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *da
   const char *name;
 
   name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
-  swfdec_as_frame_set_variable (cx->frame, name, &val, FALSE, TRUE);
+  swfdec_as_frame_set_variable (cx, cx->frame, name, &val, FALSE, TRUE);
   swfdec_as_stack_pop (cx);
 }
 
@@ -2058,7 +2058,7 @@ swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   
   val = swfdec_as_stack_peek (cx, 1);
   name = swfdec_as_value_to_string (cx, val);
-  success = swfdec_as_frame_delete_variable (cx->frame, name) == SWFDEC_AS_DELETE_DELETED;
+  success = swfdec_as_frame_delete_variable (cx, cx->frame, name) == SWFDEC_AS_DELETE_DELETED;
   SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
 }
 

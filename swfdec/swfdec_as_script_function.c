@@ -81,7 +81,7 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     swfdec_as_super_new (&frame, 
 	swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (function)), super_reference);
   }
-  swfdec_as_frame_preload (&frame);
+  swfdec_as_frame_preload (context, &frame);
   swfdec_as_context_run (context);
 
   if (old_sandbox) {

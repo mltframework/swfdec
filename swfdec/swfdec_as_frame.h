@@ -40,9 +40,11 @@ SwfdecAsFrame *	swfdec_as_frame_get_next	(SwfdecAsFrame *		frame);
 SwfdecScript *	swfdec_as_frame_get_script	(SwfdecAsFrame *		frame);
 
 SwfdecAsValue *	swfdec_as_stack_iterator_init	(SwfdecAsStackIterator *	iter,
+						 SwfdecAsContext *		context,
 						 SwfdecAsFrame *		frame);
 SwfdecAsValue *	swfdec_as_stack_iterator_init_arguments 
 						(SwfdecAsStackIterator *	iter,
+						 SwfdecAsContext *		context,
 						 SwfdecAsFrame *		frame);
 SwfdecAsValue *	swfdec_as_stack_iterator_next	(SwfdecAsStackIterator *	iter);
 

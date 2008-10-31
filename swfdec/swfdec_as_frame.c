@@ -67,6 +67,7 @@
 /**
  * swfdec_as_stack_iterator_init_arguments:
  * @iter: iterator to be initialized
+ * @context: context @frame belongs to
  * @frame: the frame to initialize from
  *
  * Initializes a stack iterator to walk the arguments passed to the given @frame. See
@@ -75,11 +76,11 @@
  * Returns: The value of the first argument
  **/
 SwfdecAsValue *
-swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame)
+swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, 
+    SwfdecAsContext *context, SwfdecAsFrame *frame)
 {
-  SwfdecAsContext *context;
-
   g_return_val_if_fail (iter != NULL, NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
   g_return_val_if_fail (frame != NULL, NULL);
 
   if (frame->argc == 0) {
@@ -88,7 +89,6 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
     iter->current = NULL;
     return NULL;
   }
-  context = swfdec_gc_object_get_context (frame->target);
   if (frame->argv) {
     iter->stack = NULL;
     iter->current = (SwfdecAsValue *) frame->argv;
@@ -112,6 +112,7 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
 /**
  * swfdec_as_stack_iterator_init:
  * @iter: a #SwfdecStackIterator
+ * @context: context @frame belongs to
  * @frame: the frame to initialize from
  *
  * Initializes @iter to walk the stack of @frame. The first value on the stack
@@ -127,15 +128,13 @@ swfdec_as_stack_iterator_init_arguments (SwfdecAsStackIterator *iter, SwfdecAsFr
  * Returns: the topmost value on the stack of @frame or %NULL if none
  **/
 SwfdecAsValue *
-swfdec_as_stack_iterator_init (SwfdecAsStackIterator *iter, SwfdecAsFrame *frame)
+swfdec_as_stack_iterator_init (SwfdecAsStackIterator *iter, SwfdecAsContext *context, SwfdecAsFrame *frame)
 {
-  SwfdecAsContext *context;
   SwfdecAsStack *stack;
 
   g_return_val_if_fail (iter != NULL, NULL);
   g_return_val_if_fail (frame != NULL, NULL);
 
-  context = swfdec_gc_object_get_context (frame->target);
   iter->i = 0;
   stack = context->stack;
   if (context->frame == frame) {
@@ -267,11 +266,11 @@ swfdec_as_frame_pop_block (SwfdecAsFrame *frame, SwfdecAsContext *cx)
 /*** FRAME ***/
 
 static void
-swfdec_as_frame_free (SwfdecAsFrame *frame)
+swfdec_as_frame_free (SwfdecAsContext *context, SwfdecAsFrame *frame)
 {
   /* pop blocks while state is intact */
   while (frame->blocks->len > 0)
-    swfdec_as_frame_pop_block (frame, swfdec_gc_object_get_context (frame->target));
+    swfdec_as_frame_pop_block (frame, context);
 
   /* clean up */
   g_slice_free1 (sizeof (SwfdecAsValue) * frame->n_registers, frame->registers);
@@ -400,7 +399,7 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
     swfdec_as_stack_ensure_free (context, 1);
     *swfdec_as_stack_push (context) = retval;
   }
-  swfdec_as_frame_free (frame);
+  swfdec_as_frame_free (context, frame);
 }
 
 /**
@@ -445,16 +444,14 @@ swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
  * Returns: Object in scope chain that contained the variable.
  **/
 SwfdecAsObject *
-swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variable,
-    SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
+swfdec_as_frame_get_variable_and_flags (SwfdecAsContext *cx, SwfdecAsFrame *frame, 
+    const char *variable, SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
 {
   GSList *walk;
-  SwfdecAsContext *cx;
 
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), NULL);
   g_return_val_if_fail (frame != NULL, NULL);
   g_return_val_if_fail (variable != NULL, NULL);
-
-  cx = swfdec_gc_object_get_context (frame->target);
 
   for (walk = frame->scope_chain; walk; walk = walk->next) {
     if (swfdec_as_object_get_variable_and_flags (walk->data, variable, value, 
@@ -483,8 +480,9 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsFrame *frame, const char *variab
 }
 
 void
-swfdec_as_frame_set_variable_and_flags (SwfdecAsFrame *frame, const char *variable,
-    const SwfdecAsValue *value, guint default_flags, gboolean overwrite, gboolean local)
+swfdec_as_frame_set_variable_and_flags (SwfdecAsContext *context, SwfdecAsFrame *frame, 
+    const char *variable, const SwfdecAsValue *value, guint default_flags, 
+    gboolean overwrite, gboolean local)
 {
   SwfdecAsObject *pobject, *set;
   GSList *walk;
@@ -519,7 +517,7 @@ swfdec_as_frame_set_variable_and_flags (SwfdecAsFrame *frame, const char *variab
 }
 
 SwfdecAsDeleteReturn
-swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
+swfdec_as_frame_delete_variable (SwfdecAsContext *cx, SwfdecAsFrame *frame, const char *variable)
 {
   GSList *walk;
   SwfdecAsDeleteReturn ret;
@@ -538,7 +536,7 @@ swfdec_as_frame_delete_variable (SwfdecAsFrame *frame, const char *variable)
   if (ret)
     return ret;
   /* 2) the global object */
-  return swfdec_as_object_delete_variable (swfdec_gc_object_get_context (frame->target)->global, variable);
+  return swfdec_as_object_delete_variable (cx->global, variable);
 }
 
 /**
@@ -564,20 +562,19 @@ swfdec_as_frame_set_target (SwfdecAsFrame *frame, SwfdecAsObject *target)
 }
 
 void
-swfdec_as_frame_preload (SwfdecAsFrame *frame)
+swfdec_as_frame_preload (SwfdecAsContext *context, SwfdecAsFrame *frame)
 {
   SwfdecAsObject *object, *args;
   guint i, current_reg = 1;
   SwfdecScript *script;
   SwfdecAsValue val;
   const SwfdecAsValue *cur;
-  SwfdecAsContext *context;
   SwfdecAsStackIterator iter;
 
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
   g_return_if_fail (frame != NULL);
 
   /* setup */
-  context = swfdec_gc_object_get_context (frame->target ? (gpointer) frame->target : (gpointer) frame->function);
   script = frame->script;
   if (frame->script == NULL)
     goto out;
@@ -589,7 +586,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_ARGS | SWFDEC_SCRIPT_SUPPRESS_ARGS)) != SWFDEC_SCRIPT_SUPPRESS_ARGS) {
     SwfdecAsFrame *next;
     args = swfdec_as_array_new (context);
-    for (cur = swfdec_as_stack_iterator_init_arguments (&iter, frame); cur != NULL;
+    for (cur = swfdec_as_stack_iterator_init_arguments (&iter, context, frame); cur != NULL;
 	cur = swfdec_as_stack_iterator_next (&iter)) {
       swfdec_as_array_push (args, cur);
     }
@@ -638,7 +635,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   /* set and preload argument variables */
   SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-  cur = swfdec_as_stack_iterator_init_arguments (&iter, frame);
+  cur = swfdec_as_stack_iterator_init_arguments (&iter, context, frame);
   for (i = 0; i < script->n_arguments; i++) {
     if (cur == NULL)
       cur = &val;
@@ -675,13 +672,13 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
     }
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ROOT && current_reg < script->n_registers) {
-    if (!swfdec_as_frame_get_variable (frame, SWFDEC_AS_STR__root, &frame->registers[current_reg])) {
+    if (!swfdec_as_frame_get_variable (context, frame, SWFDEC_AS_STR__root, &frame->registers[current_reg])) {
       SWFDEC_WARNING ("no root to preload");
     }
     current_reg++;
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_PARENT && current_reg < script->n_registers) {
-    if (!swfdec_as_frame_get_variable (frame, SWFDEC_AS_STR__parent, &frame->registers[current_reg])) {
+    if (!swfdec_as_frame_get_variable (context, frame, SWFDEC_AS_STR__parent, &frame->registers[current_reg])) {
       SWFDEC_WARNING ("no root to preload");
     }
     current_reg++;
@@ -707,12 +704,9 @@ out:
 }
 
 void
-swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
+swfdec_as_frame_handle_exception (SwfdecAsContext *cx, SwfdecAsFrame *frame)
 {
-  SwfdecAsContext *cx;
-
   g_return_if_fail (frame != NULL);
-  cx = swfdec_gc_object_get_context (frame->target);
   g_return_if_fail (cx->exception);
 
   /* pop blocks in the hope that we are inside a Try block */

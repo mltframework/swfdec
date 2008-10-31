@@ -61,78 +61,10 @@ swfdec_as_super_call (SwfdecAsFunction *function, SwfdecAsObject *thisp,
       super->object->prototype, n_args, args, return_value);
 }
 
-#if 0
-static gboolean
-swfdec_as_super_get (SwfdecAsObject *object, SwfdecAsObject *orig,
-    const char *variable, SwfdecAsValue *val, guint *flags)
-{
-  SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
-  SwfdecAsObjectClass *klass;
-  SwfdecAsObject *cur;
-  guint i;
-
-  if (super->object == NULL) {
-    SWFDEC_WARNING ("super.%s () called without an object.", variable);
-    return FALSE;
-  }
-  cur = super->object->prototype;
-  for (i = 0; i <= SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && cur != NULL; i++) {
-    klass = SWFDEC_AS_OBJECT_GET_CLASS (cur);
-    /* FIXME: is the orig pointer correct? */
-    if (klass->get (cur, super->object, variable, val, flags))
-      return TRUE;
-    /* FIXME: need get_prototype_internal here? */
-    cur = swfdec_as_object_get_prototype (cur);
-  }
-  if (i > SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT) {
-    swfdec_as_context_abort (swfdec_gc_object_get_context (object),
-	"Prototype recursion limit exceeded");
-  }
-  SWFDEC_AS_VALUE_SET_UNDEFINED (val);
-  *flags = 0;
-  return FALSE;
-}
-
-static void
-swfdec_as_super_set (SwfdecAsObject *object, const char *variable, const SwfdecAsValue *val, guint flags)
-{
-  /* This seems to be ignored completely */
-}
-
-static void
-swfdec_as_super_set_flags (SwfdecAsObject *object, const char *variable, guint flags, guint mask)
-{
-  /* if we have no variables, we also can't set its flags... */
-}
-
-static SwfdecAsDeleteReturn
-swfdec_as_super_delete (SwfdecAsObject *object, const char *variable)
-{
-  /* if we have no variables... */
-  return SWFDEC_AS_DELETE_NOT_FOUND;
-}
-
-static SwfdecAsObject *
-swfdec_as_super_resolve (SwfdecAsObject *object)
-{
-  SwfdecAsSuper *super = SWFDEC_AS_SUPER (object);
-
-  return super->thisp;
-}
-#endif
-
 static void
 swfdec_as_super_class_init (SwfdecAsSuperClass *klass)
 {
   SwfdecAsFunctionClass *function_class = SWFDEC_AS_FUNCTION_CLASS (klass);
-
-#if 0
-  asobject_class->get = swfdec_as_super_get;
-  asobject_class->set = swfdec_as_super_set;
-  asobject_class->set_flags = swfdec_as_super_set_flags;
-  asobject_class->del = swfdec_as_super_delete;
-  asobject_class->resolve = swfdec_as_super_resolve;
-#endif
 
   function_class->call = swfdec_as_super_call;
 }

@@ -42,28 +42,6 @@
 
 /*** SUPPORT FUNCTIONS ***/
 
-char *
-swfdec_script_print_action (guint action, const guint8 *data, guint len)
-{
-  const SwfdecActionSpec *spec = swfdec_as_actions + action;
-
-  if (action & 0x80) {
-    if (spec->print == NULL) {
-      SWFDEC_ERROR ("action %u 0x%02X %s has no print statement",
-	  action, action, spec->name ? spec->name : "Unknown");
-      return g_strdup_printf ("erroneous action %s",
-	  spec->name ? spec->name : "Unknown");
-    }
-    return spec->print (action, data, len);
-  } else {
-    if (spec->name == NULL) {
-      SWFDEC_ERROR ("action %u is unknown", action);
-      return g_strdup_printf ("unknown Action 0x%02X", action);
-    }
-    return g_strdup (spec->name);
-  }
-}
-
 static gboolean
 swfdec_script_foreach_internal (SwfdecBits *bits, SwfdecScriptForeachFunc func, gpointer user_data)
 {

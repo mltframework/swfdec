@@ -26,7 +26,6 @@ G_BEGIN_DECLS
 
 typedef struct {
   const char *		name;		/* name identifying the action */
-  char *		(* print)	(guint action, const guint8 *data, guint len);
   int			remove;		/* values removed from stack or -1 for dynamic */
   int			add;		/* values added to the stack or -1 for dynamic */
   void			(* exec)	(SwfdecAsContext *cx, guint action, const guint8 *data, guint len);

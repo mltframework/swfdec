@@ -75,9 +75,6 @@ SwfdecScript *	swfdec_script_new_from_bits   		(SwfdecBits *			bits,
 gboolean	swfdec_script_foreach			(SwfdecScript *			script,
 							 SwfdecScriptForeachFunc	func,
 							 gpointer			user_data);
-char *		swfdec_script_print_action		(guint				action,
-							 const guint8 *			data,
-							 guint				len);
 
 G_END_DECLS
 

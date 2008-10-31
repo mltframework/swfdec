@@ -31,7 +31,7 @@ typedef void (* SwfdecAsFrameBlockFunc) (SwfdecAsContext *cx, SwfdecAsFrame *fra
 struct _SwfdecAsFrame {
   SwfdecAsFrame *	next;		/* next frame (FIXME: keep a list in the context instead?) */
   SwfdecAsFunction *	function;	/* function we're executing or NULL if toplevel */
-  SwfdecAsObject *	thisp;		/* this object in current frame or NULL if none */
+  SwfdecAsValue		thisp;		/* this object in current frame or undefined if none */
   SwfdecAsSuper *	super;		/* super object in current frame or NULL if none */
   gboolean		construct;	/* TRUE if this is the constructor for thisp */
   SwfdecAsValue *	return_value;	/* pointer to where to store the return value */

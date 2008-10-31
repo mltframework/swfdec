@@ -38,7 +38,6 @@ struct _SwfdecAsStackIterator {
 
 SwfdecAsFrame *	swfdec_as_frame_get_next	(SwfdecAsFrame *		frame);
 SwfdecScript *	swfdec_as_frame_get_script	(SwfdecAsFrame *		frame);
-SwfdecAsObject *swfdec_as_frame_get_this	(SwfdecAsFrame *		frame);
 
 SwfdecAsValue *	swfdec_as_stack_iterator_init	(SwfdecAsStackIterator *	iter,
 						 SwfdecAsFrame *		frame);

@@ -65,7 +65,7 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
    * It's a problem when called inside swfdec_as_function_call () as the
    * user of that function expects success, but super may fail here */
   /* second check especially for super object */
-  if (thisp != NULL && frame.thisp == NULL) {
+  if (thisp != NULL && SWFDEC_AS_VALUE_IS_UNDEFINED (&frame.thisp)) {
     swfdec_as_frame_set_this (&frame, swfdec_as_object_resolve (thisp));
   }
   frame.argc = n_args;

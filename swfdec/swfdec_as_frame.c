@@ -347,7 +347,7 @@ swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
 
   /* save return value in case it was on the stack somewhere */
   if (frame->construct) {
-    SWFDEC_AS_VALUE_SET_COMPOSITE (&retval, frame->thisp);
+    retval = frame->thisp;
   } else if (return_value) {
     retval = *return_value;
   } else {
@@ -417,11 +417,11 @@ void
 swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
 {
   g_return_if_fail (frame != NULL);
-  g_return_if_fail (frame->thisp == NULL);
+  g_return_if_fail (SWFDEC_AS_VALUE_IS_UNDEFINED (&frame->thisp));
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
 
   g_assert (!SWFDEC_IS_AS_SUPER (thisp));
-  frame->thisp = thisp;
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&frame->thisp, thisp);
   if (frame->target == NULL) {
     frame->target = thisp;
     frame->original_target = thisp;
@@ -621,12 +621,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
 
   /* set the default variables (unless suppressed */
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_THIS)) {
-    if (frame->thisp) {
-      SWFDEC_AS_VALUE_SET_COMPOSITE (&val, frame->thisp);
-    } else {
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
-    }
-    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &val);
+    swfdec_as_object_set_variable (object, SWFDEC_AS_STR_this, &frame->thisp);
   }
   if (!(script->flags & SWFDEC_SCRIPT_SUPPRESS_ARGS)) {
     SWFDEC_AS_VALUE_SET_OBJECT (&val, args);
@@ -666,11 +661,7 @@ swfdec_as_frame_preload (SwfdecAsFrame *frame)
   /* preload from flags */
   if ((script->flags & (SWFDEC_SCRIPT_PRELOAD_THIS | SWFDEC_SCRIPT_SUPPRESS_THIS)) == SWFDEC_SCRIPT_PRELOAD_THIS
       && current_reg < script->n_registers) {
-    if (frame->thisp) {
-      SWFDEC_AS_VALUE_SET_COMPOSITE (&frame->registers[current_reg++], frame->thisp);
-    } else {
-      SWFDEC_AS_VALUE_SET_UNDEFINED (&frame->registers[current_reg++]);
-    }
+    frame->registers[current_reg++] = frame->thisp;
   }
   if (script->flags & SWFDEC_SCRIPT_PRELOAD_ARGS && current_reg < script->n_registers) {
     SWFDEC_AS_VALUE_SET_OBJECT (&frame->registers[current_reg++], args);
@@ -766,22 +757,5 @@ swfdec_as_frame_get_script (SwfdecAsFrame *frame)
   g_return_val_if_fail (frame != NULL, NULL);
 
   return frame->script;
-}
-
-/**
- * swfdec_as_frame_get_this:
- * @frame: a #SwfdecAsFrame
- *
- * Gets the this object of the given @frame. If the frame has no this object,
- * %NULL is returned.
- *
- * Returns: The this object of the frame or %NULL if none.
- **/
-SwfdecAsObject *
-swfdec_as_frame_get_this (SwfdecAsFrame *frame)
-{
-  g_return_val_if_fail (frame != NULL, NULL);
-
-  return frame->thisp;
 }
 

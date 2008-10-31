@@ -77,8 +77,10 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     frame.target = frame.next->original_target;
     frame.original_target = frame.target;
   }
-  if (thisp)
-    swfdec_as_frame_set_this (&frame, swfdec_as_object_resolve (thisp));
+  if (thisp) {
+    thisp = swfdec_as_object_resolve (thisp);
+    swfdec_as_frame_set_this (&frame, thisp);
+  }
   frame.argc = n_args;
   frame.argv = args;
   frame.return_value = return_value;
@@ -108,7 +110,7 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
       argv[i] = *cur;
     }
   }
-  native->native (cx, frame.thisp, frame.argc, argv, &rval);
+  native->native (cx, thisp, frame.argc, argv, &rval);
   if (argv != frame.argv)
     g_free (argv);
   swfdec_as_frame_return (&frame, &rval);

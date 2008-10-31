@@ -113,7 +113,7 @@ swfdec_as_native_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
   native->native (cx, thisp, frame.argc, argv, &rval);
   if (argv != frame.argv)
     g_free (argv);
-  swfdec_as_frame_return (&frame, &rval);
+  swfdec_as_context_return (cx, &rval);
 }
 
 static void

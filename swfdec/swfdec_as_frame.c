@@ -265,7 +265,7 @@ swfdec_as_frame_pop_block (SwfdecAsFrame *frame, SwfdecAsContext *cx)
 
 /*** FRAME ***/
 
-static void
+void
 swfdec_as_frame_free (SwfdecAsContext *context, SwfdecAsFrame *frame)
 {
   /* pop blocks while state is intact */
@@ -321,85 +321,6 @@ swfdec_as_frame_init_native (SwfdecAsFrame *frame, SwfdecAsContext *context)
   frame->next = context->frame;
   context->frame = frame;
   context->call_depth++;
-}
-
-/**
- * swfdec_as_frame_return:
- * @frame: a #SwfdecAsFrame that is currently executing.
- * @return_value: return value of the function or %NULL for none. An undefined
- *                value will be used in that case.
- *
- * Ends execution of the frame and instructs the frame's context to continue 
- * execution with its parent frame. This function may only be called on the
- * currently executing frame.
- **/
-void
-swfdec_as_frame_return (SwfdecAsFrame *frame, SwfdecAsValue *return_value)
-{
-  SwfdecAsContext *context;
-  SwfdecAsValue retval;
-  SwfdecAsFrame *next;
-
-  g_return_if_fail (frame != NULL);
-  context = swfdec_gc_object_get_context (frame->target ? (gpointer) frame->target : (gpointer) frame->function);
-  g_return_if_fail (frame == context->frame);
-
-  /* save return value in case it was on the stack somewhere */
-  if (frame->construct) {
-    retval = frame->thisp;
-  } else if (return_value) {
-    retval = *return_value;
-  } else {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (&retval);
-  }
-  /* pop frame and leftover stack */
-  next = frame->next;
-  context->frame = next;
-  g_assert (context->call_depth > 0);
-  context->call_depth--;
-  while (context->base > frame->stack_begin || 
-      context->end < frame->stack_begin)
-    swfdec_as_stack_pop_segment (context);
-  context->cur = frame->stack_begin;
-  /* setup stack for previous frame */
-  if (next) {
-    if (next->stack_begin >= &context->stack->elements[0] &&
-	next->stack_begin <= context->cur) {
-      context->base = next->stack_begin;
-    } else {
-      context->base = &context->stack->elements[0];
-    }
-  } else {
-    g_assert (context->stack->next == NULL);
-    context->base = &context->stack->elements[0];
-  }
-  /* pop argv if on stack */
-  if (frame->argv == NULL && frame->argc > 0) {
-    guint i = frame->argc;
-    while (TRUE) {
-      guint n = context->cur - context->base;
-      n = MIN (n, i);
-      swfdec_as_stack_pop_n (context, n);
-      i -= n;
-      if (i == 0)
-	break;
-      swfdec_as_stack_pop_segment (context);
-    }
-  }
-  if (context->debugger) {
-    SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
-
-    if (klass->leave_frame)
-      klass->leave_frame (context->debugger, context, frame, &retval);
-  }
-  /* set return value */
-  if (frame->return_value) {
-    *frame->return_value = retval;
-  } else {
-    swfdec_as_stack_ensure_free (context, 1);
-    *swfdec_as_stack_push (context) = retval;
-  }
-  swfdec_as_frame_free (context, frame);
 }
 
 /**
@@ -692,7 +613,7 @@ swfdec_as_frame_preload (SwfdecAsContext *context, SwfdecAsFrame *frame)
 
 out:
   if (context->state == SWFDEC_AS_CONTEXT_ABORTED) {
-    swfdec_as_frame_return (frame, NULL);
+    swfdec_as_context_return (context, NULL);
     return;
   }
   if (context->debugger) {
@@ -715,7 +636,7 @@ swfdec_as_frame_handle_exception (SwfdecAsContext *cx, SwfdecAsFrame *frame)
   }
   /* no Try blocks caught it, exit frame */
   if (cx->exception) {
-    swfdec_as_frame_return (frame, NULL);
+    swfdec_as_context_return (cx, NULL);
   }
 }
 

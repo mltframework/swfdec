@@ -767,6 +767,84 @@ swfdec_as_context_get_time (SwfdecAsContext *context, GTimeVal *tv)
 }
 
 /**
+ * swfdec_as_context_return:
+ * @context: the context to return the topmost frame in
+ * @return_value: return value of the function or %NULL for none. An undefined
+ *                value will be used in that case.
+ *
+ * Ends execution of the currently executing frame and continues execution with 
+ * its parent frame.
+ **/
+void
+swfdec_as_context_return (SwfdecAsContext *context, SwfdecAsValue *return_value)
+{
+  SwfdecAsValue retval;
+  SwfdecAsFrame *frame, *next;
+
+  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
+  g_return_if_fail (context->frame != NULL);
+
+  frame = context->frame;
+
+  /* save return value in case it was on the stack somewhere */
+  if (frame->construct) {
+    retval = frame->thisp;
+  } else if (return_value) {
+    retval = *return_value;
+  } else {
+    SWFDEC_AS_VALUE_SET_UNDEFINED (&retval);
+  }
+  /* pop frame and leftover stack */
+  next = frame->next;
+  context->frame = next;
+  g_assert (context->call_depth > 0);
+  context->call_depth--;
+  while (context->base > frame->stack_begin || 
+      context->end < frame->stack_begin)
+    swfdec_as_stack_pop_segment (context);
+  context->cur = frame->stack_begin;
+  /* setup stack for previous frame */
+  if (next) {
+    if (next->stack_begin >= &context->stack->elements[0] &&
+	next->stack_begin <= context->cur) {
+      context->base = next->stack_begin;
+    } else {
+      context->base = &context->stack->elements[0];
+    }
+  } else {
+    g_assert (context->stack->next == NULL);
+    context->base = &context->stack->elements[0];
+  }
+  /* pop argv if on stack */
+  if (frame->argv == NULL && frame->argc > 0) {
+    guint i = frame->argc;
+    while (TRUE) {
+      guint n = context->cur - context->base;
+      n = MIN (n, i);
+      swfdec_as_stack_pop_n (context, n);
+      i -= n;
+      if (i == 0)
+	break;
+      swfdec_as_stack_pop_segment (context);
+    }
+  }
+  if (context->debugger) {
+    SwfdecAsDebuggerClass *klass = SWFDEC_AS_DEBUGGER_GET_CLASS (context->debugger);
+
+    if (klass->leave_frame)
+      klass->leave_frame (context->debugger, context, frame, &retval);
+  }
+  /* set return value */
+  if (frame->return_value) {
+    *frame->return_value = retval;
+  } else {
+    swfdec_as_stack_ensure_free (context, 1);
+    *swfdec_as_stack_push (context) = retval;
+  }
+  swfdec_as_frame_free (context, frame);
+}
+
+/**
  * swfdec_as_context_run:
  * @context: a #SwfdecAsContext
  *
@@ -839,7 +917,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
       continue;
     }
     if (pc == exitpc) {
-      swfdec_as_frame_return (frame, NULL);
+      swfdec_as_context_return (context, NULL);
       goto out;
     }
     if (pc < startpc || pc >= endpc) {
@@ -946,7 +1024,7 @@ swfdec_as_context_run (SwfdecAsContext *context)
 
 error:
   if (context->frame == frame)
-    swfdec_as_frame_return (frame, NULL);
+    swfdec_as_context_return (context, NULL);
 out:
   context->version = original_version;
   return;

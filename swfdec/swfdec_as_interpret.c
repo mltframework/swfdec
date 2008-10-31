@@ -2022,13 +2022,13 @@ swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *da
 static void
 swfdec_action_end (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  swfdec_as_frame_return (cx->frame, NULL);
+  swfdec_as_context_return (cx, NULL);
 }
 
 static void
 swfdec_action_return (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  swfdec_as_frame_return (cx->frame, swfdec_as_stack_pop (cx));
+  swfdec_as_context_return (cx, swfdec_as_stack_pop (cx));
 }
 
 static void

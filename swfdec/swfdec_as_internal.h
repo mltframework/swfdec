@@ -60,6 +60,8 @@ G_BEGIN_DECLS
 
 /* swfdec_as_context.c */
 gboolean	swfdec_as_context_check_continue (SwfdecAsContext *	context);
+void		swfdec_as_context_return	(SwfdecAsContext *	context,
+						 SwfdecAsValue *	return_value);
 void		swfdec_as_context_run		(SwfdecAsContext *	context);
 void		swfdec_as_context_run_init_script (SwfdecAsContext *	context,
 						 const guint8 *		data,

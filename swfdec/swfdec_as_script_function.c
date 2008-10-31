@@ -59,11 +59,10 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
   swfdec_as_frame_init (&frame, swfdec_gc_object_get_context (function), script->script);
   frame.scope_chain = g_slist_concat (frame.scope_chain, g_slist_copy (script->scope_chain));
   frame.function = function;
-  frame.target = script->target;
-  frame.original_target = script->target;
-  /* FIXME: figure out what to do in these situations?
-   * It's a problem when called inside swfdec_as_function_call () as the
-   * user of that function expects success, but super may fail here */
+  if (script->target) {
+    frame.target = script->target;
+    frame.original_target = script->target;
+  }
   /* second check especially for super object */
   if (thisp != NULL && SWFDEC_AS_VALUE_IS_UNDEFINED (&frame.thisp)) {
     swfdec_as_frame_set_this (&frame, swfdec_as_object_resolve (thisp));

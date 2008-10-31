@@ -899,7 +899,6 @@ swfdec_as_context_run (SwfdecAsContext *context)
     step = NULL;
   }
 
-  g_assert (frame->target);
   script = frame->script;
   context->version = script->version;
   startpc = script->buffer->data;

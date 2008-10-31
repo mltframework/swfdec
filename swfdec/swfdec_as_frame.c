@@ -319,6 +319,10 @@ swfdec_as_frame_init_native (SwfdecAsFrame *frame, SwfdecAsContext *context)
   frame->stack_begin = context->cur;
   context->base = frame->stack_begin;
   frame->next = context->frame;
+  if (frame->next) {
+    frame->original_target = frame->next->original_target;
+    frame->target = frame->original_target;
+  }
   context->frame = frame;
   context->call_depth++;
 }
@@ -342,10 +346,6 @@ swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
 
   g_assert (!SWFDEC_IS_AS_SUPER (thisp));
   SWFDEC_AS_VALUE_SET_COMPOSITE (&frame->thisp, thisp);
-  if (frame->target == NULL) {
-    frame->target = thisp;
-    frame->original_target = thisp;
-  }
 }
 
 /**

@@ -18,6 +18,16 @@
  * Boston, MA  02110-1301  USA
  */
 
+/*** IMPORTANT NOTE ***/
+
+/* Function definitions like this:
+ *   function foo () {};
+ * does not work, because those are set on the original target, and the target 
+ * is a MovieClip, which doesn't exist when init scripts are run.
+ * Use this instead:
+ *   foo = function () {};
+ */
+
 /*** GENERAL ***/
 
 ASSetPropFlags = ASnative (1, 0);
@@ -37,10 +47,10 @@ ASSetPropFlags (Object, "addProperty", 0, 128);
 
 /*** Error ***/
 
-function Error (msg) {
+Error = function (msg) {
   if (typeof (msg) != "undefined")
     this.message = msg;
-}
+};
 Error.prototype.name = Error.prototype.message = "Error";
 Error.prototype.toString = function () {
       return this.message;
@@ -48,7 +58,7 @@ Error.prototype.toString = function () {
 
 /*** ASBROADCASTER ***/
 
-function AsBroadcaster () { };
+AsBroadcaster = function () { };
 
 AsBroadcaster.broadcastMessage = ASnative(101, 12);
 
@@ -198,7 +208,7 @@ XML.prototype.addRequestHeader = function (key, value) {
 
 /*** LOADVARS ***/
 
-function LoadVars () { };
+LoadVars = function () { };
 
 LoadVars.prototype.contentType = "application/x-www-form-urlencoded";
 
@@ -638,8 +648,7 @@ ASSetPropFlags (Accessibility, null, 6);
 
 /* Camera */
 
-function Camera () {
-}
+Camera = function () {};
 
 Camera.get = function (index) {
   var get_func = ASnative (2102, 200);
@@ -651,7 +660,7 @@ ASSetPropFlags (Camera.prototype, null, 3);
 
 /* ContextMenu */
 
-function ContextMenu (callback) {
+ContextMenu = function (callback) {
   this.onSelect = callback;
   this.customItems = new Array ();
   this.builtInItems = {
@@ -664,7 +673,7 @@ function ContextMenu (callback) {
     save: true,
     zoom: true
   };
-}
+};
 
 ContextMenu.prototype.copy = function () {
   var o = new ContextMenu ();
@@ -698,7 +707,7 @@ ASSetPropFlags (ContextMenu.prototype, null, 1027);
 
 /* ContextMenuItem */
 
-function ContextMenuItem (caption, callback, separatorBefore, enabled, visible)
+ContextMenuItem = function (caption, callback, separatorBefore, enabled, visible)
 {
   this.caption = caption;
   this.onSelect = callback;
@@ -717,7 +726,7 @@ function ContextMenuItem (caption, callback, separatorBefore, enabled, visible)
   } else {
     this.visible = visible;
   }
-}
+};
 
 ContextMenuItem.prototype.copy = function () {
   var o = new ContextMenuItem ();
@@ -759,16 +768,14 @@ ASSetPropFlags (flash.net.FileReferenceList.prototype, null, 3);
 
 /* LocalConnection */
 
-function LocalConnection () {
-}
+LocalConnection = function () {};
 
 ASSetNative (LocalConnection.prototype, 2200, "6connect,6send,6close,6domain");
 ASSetPropFlags (LocalConnection.prototype, null, 3);
 
 /* Microphone */
 
-function Microphone () {
-}
+Microphone = function () {};
 
 Microphone.get = function (index) {
   var get_func = ASnative (2104, 200);
@@ -804,8 +811,7 @@ textRenderer = flash.text.TextRenderer; // awesome
 
 /* XMLSocket */
 
-function XMLSocket () {
-}
+XMLSocket = function () {};
 
 XMLSocket.prototype.onData = function (src) {
     this.onXML (new XML (src));
@@ -1454,7 +1460,7 @@ ASSetPropFlags (flash.external.ExternalInterface, null, 4103);
 
 /* SharedObject */
 
-function SharedObject () {
+SharedObject = function () {
 };
 
 SharedObject.deleteAll = function () {
@@ -1483,17 +1489,16 @@ ASSetPropFlags (SharedObject.prototype, null, 3);
 /* This function added new Error classes in Flash player 7, in Flash player 9
  * it seems to be just broken, we just call new Error based on the number of
  * ,-characters in the given string */
-function AsSetupError (names) {
+AsSetupError = function (names) {
   var count = names.split (",").length;
   for (var i = 0; i < count; i++) {
     var tmp = new Error ();
   }
-}
+};
 
 /* RemoteLSOUsage */
 
-function RemoteLSOUsage () {
-};
+RemoteLSOUsage = function () {};
 
 RemoteLSOUsage.getURLPageSupport = function () {
   var o = {}; o["Implement RemoteLSOUsage.getURLPageSupport (static)"] ();

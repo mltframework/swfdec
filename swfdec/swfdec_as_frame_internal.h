@@ -23,6 +23,7 @@
 #include <swfdec/swfdec_as_super.h>
 #include <swfdec/swfdec_as_types.h>
 #include <swfdec/swfdec_script_internal.h>
+#include <swfdec/swfdec_types.h>
 
 G_BEGIN_DECLS
 
@@ -97,6 +98,7 @@ void		swfdec_as_frame_push_block	(SwfdecAsFrame *	frame,
 void		swfdec_as_frame_pop_block	(SwfdecAsFrame *	frame,
 						 SwfdecAsContext *	context);
 void		swfdec_as_frame_handle_exception(SwfdecAsFrame *	frame);
+SwfdecMovie *	swfdec_as_frame_get_target	(SwfdecAsFrame *	frame);
 
 
 G_END_DECLS

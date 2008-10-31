@@ -63,8 +63,9 @@
 static void
 swfdec_action_stop (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target))
-    SWFDEC_SPRITE_MOVIE (cx->frame->target)->playing = FALSE;
+  SwfdecMovie *target = swfdec_as_frame_get_target (cx->frame);
+  if (SWFDEC_IS_SPRITE_MOVIE (target))
+    SWFDEC_SPRITE_MOVIE (target)->playing = FALSE;
   else
     SWFDEC_ERROR ("no movie to stop");
 }
@@ -72,8 +73,9 @@ swfdec_action_stop (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 static void
 swfdec_action_play (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target))
-    SWFDEC_SPRITE_MOVIE (cx->frame->target)->playing = TRUE;
+  SwfdecMovie *target = swfdec_as_frame_get_target (cx->frame);
+  if (SWFDEC_IS_SPRITE_MOVIE (target))
+    SWFDEC_SPRITE_MOVIE (target)->playing = TRUE;
   else
     SWFDEC_ERROR ("no movie to play");
 }
@@ -81,8 +83,9 @@ swfdec_action_play (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 static void
 swfdec_action_next_frame (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
-    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
+  SwfdecMovie *target = swfdec_as_frame_get_target (cx->frame);
+  if (SWFDEC_IS_SPRITE_MOVIE (target)) {
+    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (target);
     if (movie->frame < movie->n_frames) {
       swfdec_sprite_movie_goto (movie, movie->frame + 1);
       movie->playing = FALSE;
@@ -97,8 +100,9 @@ swfdec_action_next_frame (SwfdecAsContext *cx, guint action, const guint8 *data,
 static void
 swfdec_action_previous_frame (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
-    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
+  SwfdecMovie *target = swfdec_as_frame_get_target (cx->frame);
+  if (SWFDEC_IS_SPRITE_MOVIE (target)) {
+    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (target);
     if (movie->frame > 1) {
       swfdec_sprite_movie_goto (movie, movie->frame - 1);
       movie->playing = FALSE;
@@ -113,6 +117,7 @@ swfdec_action_previous_frame (SwfdecAsContext *cx, guint action, const guint8 *d
 static void
 swfdec_action_goto_frame (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecMovie *target;
   guint frame;
 
   if (len != 2) {
@@ -120,8 +125,9 @@ swfdec_action_goto_frame (SwfdecAsContext *cx, guint action, const guint8 *data,
     return;
   }
   frame = data[0] | (data[1] << 8);
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
-    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
+  target = swfdec_as_frame_get_target (cx->frame);
+  if (SWFDEC_IS_SPRITE_MOVIE (target)) {
+    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (target);
     swfdec_sprite_movie_goto (movie, frame + 1);
     movie->playing = FALSE;
   } else {
@@ -132,13 +138,15 @@ swfdec_action_goto_frame (SwfdecAsContext *cx, guint action, const guint8 *data,
 static void
 swfdec_action_goto_label (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecMovie *target;
   if (!memchr (data, 0, len)) {
     SWFDEC_ERROR ("GotoLabel action does not specify a string");
     return;
   }
 
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
-    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
+  target = swfdec_as_frame_get_target (cx->frame);
+  if (SWFDEC_IS_SPRITE_MOVIE (target)) {
+    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (target);
     int frame;
     if (movie->sprite == NULL ||
 	(frame = swfdec_sprite_get_frame (movie->sprite, (const char *) data)) == -1)
@@ -187,6 +195,7 @@ swfdec_action_goto_frame2 (SwfdecAsContext *cx, guint action, const guint8 *data
   guint bias;
   gboolean play;
   SwfdecAsValue *val;
+  SwfdecMovie *target;
 
   swfdec_bits_init_data (&bits, data, len);
   if (swfdec_bits_getbits (&bits, 6)) {
@@ -199,8 +208,9 @@ swfdec_action_goto_frame2 (SwfdecAsContext *cx, guint action, const guint8 *data
   }
   val = swfdec_as_stack_peek (cx, 1);
   /* now set it */
-  if (SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
-    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
+  target = swfdec_as_frame_get_target (cx->frame);
+  if (SWFDEC_IS_SPRITE_MOVIE (target)) {
+    SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (target);
     guint frame = swfdec_value_to_frame (cx, movie, val);
     if (frame > 0) {
       frame += bias;
@@ -240,18 +250,20 @@ static void
 swfdec_action_wait_for_frame2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecSpriteMovie *movie;
+  SwfdecMovie *target;
   int frame, loaded;
 
   if (len < 1) {
     SWFDEC_ERROR ("WaitForFrame2 needs a 1-byte data");
     return;
   }
-  if (!SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
+  target = swfdec_as_frame_get_target (cx->frame);
+  if (!SWFDEC_IS_SPRITE_MOVIE (target)) {
     SWFDEC_ERROR ("no movie for WaitForFrame");
     return;
   }
 
-  movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
+  movie = SWFDEC_SPRITE_MOVIE (target);
   frame = swfdec_value_to_frame (cx, movie, swfdec_as_stack_pop (cx));
   loaded = swfdec_sprite_movie_get_frames_loaded (movie);
   if (loaded < (int) movie->n_frames &&
@@ -263,6 +275,7 @@ static void
 swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecSpriteMovie *movie;
+  SwfdecMovie *target;
   guint jump;
   int frame, loaded;
 
@@ -270,12 +283,13 @@ swfdec_action_wait_for_frame (SwfdecAsContext *cx, guint action, const guint8 *d
     SWFDEC_ERROR ("WaitForFrame action length invalid (is %u, should be 3", len);
     return;
   }
-  if (!SWFDEC_IS_SPRITE_MOVIE (cx->frame->target)) {
+  target = swfdec_as_frame_get_target (cx->frame);
+  if (!SWFDEC_IS_SPRITE_MOVIE (target)) {
     SWFDEC_ERROR ("no movie for WaitForFrame");
     return;
   }
 
-  movie = SWFDEC_SPRITE_MOVIE (cx->frame->target);
+  movie = SWFDEC_SPRITE_MOVIE (target);
   frame = data[0] | (data[1] << 8);
   jump = data[2];
   loaded = swfdec_sprite_movie_get_frames_loaded (movie);
@@ -415,8 +429,8 @@ swfdec_action_get_movie_by_slash_path (SwfdecAsContext *cx, const char *path)
 {
   SwfdecAsObject *o;
 
-  o = cx->frame->target;
-  if (!SWFDEC_IS_MOVIE (o))
+  o = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (cx->frame));
+  if (o == NULL)
     return NULL;
   if (*path == '/') {
     o = SWFDEC_AS_OBJECT (swfdec_movie_get_root (SWFDEC_MOVIE (o)));
@@ -449,8 +463,8 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char 
 
   if (path == end) {
     if (o == NULL)
-      o = cx->frame->target;
-    if (SWFDEC_IS_MOVIE (o))
+      o = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (cx->frame));
+    if (o)
       return o;
     else
       return NULL;
@@ -458,7 +472,7 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char 
 
   if (path[0] == '/') {
     if (o == NULL)
-      o = cx->frame->target;
+      o = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (cx->frame));
     if (!SWFDEC_IS_MOVIE (o))
       return NULL;
     o = SWFDEC_AS_OBJECT (swfdec_movie_get_root (SWFDEC_MOVIE (o)));
@@ -499,7 +513,7 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char 
 	  }
 	}
 	if (o == NULL)
-	  o = cx->frame->target;
+	  o = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (cx->frame));
       }
       /* ".." goes back to parent */
       if (!SWFDEC_IS_MOVIE (o))
@@ -1583,9 +1597,9 @@ swfdec_action_do_set_target (SwfdecAsContext *cx, const char *target, const char
       SWFDEC_WARNING ("target \"%s\" is not an object", target);
     } else if (!SWFDEC_IS_MOVIE (o)) {
       SWFDEC_FIXME ("target \"%s\" is not a movie, something weird is supposed to happen now", target);
-      o = NULL;
+    } else {
+      swfdec_as_frame_set_target (cx->frame, o);
     }
-    swfdec_as_frame_set_target (cx->frame, o);
   }
 }
 
@@ -2736,7 +2750,8 @@ swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 static void
 swfdec_action_remove_sprite (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
+  SwfdecMovie *target = swfdec_as_frame_get_target (cx->frame);
+  if (target == NULL) {
     SWFDEC_FIXME ("target is not a movie in RemoveSprite");
   } else if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_INFO ("tried using RemoveSprite in a non-SwfdecPlayer context");
@@ -2756,13 +2771,14 @@ swfdec_action_remove_sprite (SwfdecAsContext *cx, guint action, const guint8 *da
 static void
 swfdec_action_clone_sprite (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
+  SwfdecMovie *target = swfdec_as_frame_get_target (cx->frame);
   SwfdecMovie *movie, *new_movie;
   const char *new_name;
   int depth;
 
   depth = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1)) - 16384;
   new_name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
-  if (!SWFDEC_IS_MOVIE (cx->frame->target)) {
+  if (target == NULL) {
     SWFDEC_FIXME ("target is not a movie in CloneSprite");
   } else if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_INFO ("tried using CloneSprite in a non-SwfdecPlayer context");

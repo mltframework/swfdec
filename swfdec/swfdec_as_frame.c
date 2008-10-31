@@ -725,6 +725,16 @@ swfdec_as_frame_handle_exception (SwfdecAsFrame *frame)
   }
 }
 
+SwfdecMovie *
+swfdec_as_frame_get_target (SwfdecAsFrame *frame) 
+{
+  if (SWFDEC_IS_MOVIE (frame->target))
+    return SWFDEC_MOVIE (frame->target);
+  if (SWFDEC_IS_MOVIE (frame->original_target))
+    return SWFDEC_MOVIE (frame->original_target);
+  return NULL;
+}
+
 /**
  * swfdec_as_frame_get_next:
  * @frame: a #SwfdecAsFrame

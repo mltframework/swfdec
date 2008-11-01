@@ -1216,7 +1216,15 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   buffer = NULL;
 
   if (method == 1 || method == 2) {
-    char *text = swfdec_as_interpret_encode_variables (cx->frame->target);
+    SwfdecMovie *movie;
+    char *text;
+
+    movie = swfdec_as_frame_get_target (cx->frame);
+    if (movie == NULL) {
+      SWFDEC_FIXME ("no target, what do we encode now?");
+      return;
+    }
+    text = swfdec_as_interpret_encode_variables (SWFDEC_AS_OBJECT (movie));
     if (method == 1) {
       url = swfdec_as_context_give_string (cx, g_strjoin (NULL, url,
 	    strchr (url, '?') == NULL ? "?" : "&", text, NULL));
@@ -1598,7 +1606,7 @@ swfdec_action_do_set_target (SwfdecAsContext *cx, const char *target, const char
     } else if (!SWFDEC_IS_MOVIE (o)) {
       SWFDEC_FIXME ("target \"%s\" is not a movie, something weird is supposed to happen now", target);
     } else {
-      swfdec_as_frame_set_target (cx->frame, o);
+      swfdec_as_frame_set_target (cx->frame, SWFDEC_MOVIE (o));
     }
   }
 }
@@ -1892,9 +1900,9 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
   /* see function-scope tests */
   if (cx->version > 5) {
     /* FIXME: or original target? */
-    fun = swfdec_as_script_function_new (frame->original_target, frame->scope_chain, script);
+    fun = swfdec_as_script_function_new (cx, frame->original_target, frame->scope_chain, script);
   } else {
-    fun = swfdec_as_script_function_new (frame->original_target, NULL, script);
+    fun = swfdec_as_script_function_new (cx, frame->original_target, NULL, script);
   }
   /* This is a hack that should only trigger for functions defined in the init scripts.
    * It is supposed to ensure that those functions inherit their target when being 
@@ -1908,10 +1916,12 @@ swfdec_action_define_function (SwfdecAsContext *cx, guint action,
 	swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
   } else {
     SwfdecAsValue funval;
-    /* FIXME: really varobj? Not eval or sth like that? */
-    name = swfdec_as_context_get_string (cx, function_name);
-    SWFDEC_AS_VALUE_SET_OBJECT (&funval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
-    swfdec_as_object_set_variable (frame->target, name, &funval);
+    SwfdecMovie *target = frame->original_target;
+    if (target) {
+      name = swfdec_as_context_get_string (cx, function_name);
+      SWFDEC_AS_VALUE_SET_OBJECT (&funval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (fun)));
+      swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (target), name, &funval);
+    }
   }
 
   /* update current context */

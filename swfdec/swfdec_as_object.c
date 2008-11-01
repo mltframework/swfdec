@@ -1233,12 +1233,18 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
 
   context = swfdec_gc_object_get_context (object);
   swfdec_as_frame_init (&frame, context, script);
-  frame.original_target = object;
-  frame.target = object;
+  if (object->movie) {
+    frame.target = SWFDEC_MOVIE (object);
+    frame.original_target = frame.target;
+  }
   swfdec_as_frame_set_this (&frame, object);
   swfdec_as_frame_preload (context, &frame);
-  /* we take no prisoners */
-  frame.activation = NULL;
+  if (object->movie) {
+    frame.activation = NULL;
+  } else {
+    frame.activation = object;
+    frame.scope_chain = g_slist_append (frame.scope_chain, object);
+  }
   swfdec_as_context_run (context);
   swfdec_as_stack_pop (context);
 }

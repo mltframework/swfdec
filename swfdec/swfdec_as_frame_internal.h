@@ -44,8 +44,8 @@ struct _SwfdecAsFrame {
   const guint8 *      	block_start;	/* start of current block */
   const guint8 *      	block_end;	/* end of current block */
   GArray *		blocks;		/* blocks we have entered (like With) */
-  SwfdecAsObject *	target;		/* target to use as last object in scope chain or for SetVariable */
-  SwfdecAsObject *	original_target;/* original target (used when resetting target) */
+  SwfdecMovie *		target;		/* target to use as last object in scope chain or for SetVariable */
+  SwfdecMovie *		original_target;/* original target (used when resetting target) */
   SwfdecAsObject *	activation;	/* activation object or NULL if the frame takes no local variables */
   SwfdecAsValue *	registers;	/* the registers */
   guint			n_registers;	/* number of allocated registers */
@@ -93,7 +93,7 @@ SwfdecAsDeleteReturn
 						 const char *		variable);
 
 void		swfdec_as_frame_set_target	(SwfdecAsFrame *	frame,
-						 SwfdecAsObject *	target);
+						 SwfdecMovie *		target);
 void		swfdec_as_frame_push_block	(SwfdecAsFrame *	frame,
 						 const guint8 *		start,
 						 const guint8 *		end,

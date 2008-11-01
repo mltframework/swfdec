@@ -368,6 +368,7 @@ SwfdecAsObject *
 swfdec_as_frame_get_variable_and_flags (SwfdecAsContext *cx, SwfdecAsFrame *frame, 
     const char *variable, SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
 {
+  SwfdecAsObject *object;
   GSList *walk;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), NULL);
@@ -380,19 +381,11 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsContext *cx, SwfdecAsFrame *fram
       return walk->data;
   }
   /* we've walked the scope chain down. Now look in the special objects. */
-  /* 1) the target (if removed, use original target) */
-  if (SWFDEC_IS_MOVIE (frame->target) &&
-      SWFDEC_MOVIE(frame->target)->state < SWFDEC_MOVIE_STATE_DESTROYED) {
-    if (swfdec_as_object_get_variable_and_flags (frame->target, variable,
-	  value, flags, pobject))
-      return frame->target;
-  } else {
-    if (swfdec_as_object_get_variable_and_flags (frame->original_target,
-	  variable, value, flags, pobject))
-      return frame->original_target;
-  }
+  /* 1) the current target */
+  object = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (frame));
+  if (object && swfdec_as_object_get_variable_and_flags (object, variable, value, flags, pobject))
+    return object;
   /* 2) the global object */
-  /* FIXME: ignored on version 4, but should it never be created instead? */
   if (cx->version > 4 && swfdec_as_object_get_variable_and_flags (cx->global,
 	variable, value, flags, pobject))
     return cx->global;
@@ -422,11 +415,14 @@ swfdec_as_frame_set_variable_and_flags (SwfdecAsContext *context, SwfdecAsFrame 
     }
   }
   if (set == NULL) {
-    if (local && frame->activation) {
+    /* the !frame->original_target check is exclusively for init scripts */
+    if (frame->activation && (local || !frame->original_target)) {
       set = frame->activation;
     } else {
-      set = frame->target;
+      set = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (frame));
     }
+    if (set == NULL)
+      return;
   }
 
   if (!overwrite) {
@@ -442,6 +438,7 @@ swfdec_as_frame_delete_variable (SwfdecAsContext *cx, SwfdecAsFrame *frame, cons
 {
   GSList *walk;
   SwfdecAsDeleteReturn ret;
+  SwfdecAsObject *object;
 
   g_return_val_if_fail (frame != NULL, FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
@@ -453,9 +450,12 @@ swfdec_as_frame_delete_variable (SwfdecAsContext *cx, SwfdecAsFrame *frame, cons
   }
   /* we've walked the scope chain down. Now look in the special objects. */
   /* 1) the target set via SetTarget */
-  ret = swfdec_as_object_delete_variable (frame->target, variable);
-  if (ret)
-    return ret;
+  object = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (frame));
+  if (object) {
+    ret = swfdec_as_object_delete_variable (object, variable);
+    if (ret)
+      return ret;
+  }
   /* 2) the global object */
   return swfdec_as_object_delete_variable (cx->global, variable);
 }
@@ -463,17 +463,17 @@ swfdec_as_frame_delete_variable (SwfdecAsContext *cx, SwfdecAsFrame *frame, cons
 /**
  * swfdec_as_frame_set_target:
  * @frame: a #SwfdecAsFrame
- * @target: the new object to use as target or %NULL to unset
+ * @target: the movie to use as target or %NULL to unset
  *
  * Sets the new target to be used in this @frame. The target is a legacy 
  * Actionscript concept that is similar to "with". If you don't have to,
  * you shouldn't use this function.
  **/
 void
-swfdec_as_frame_set_target (SwfdecAsFrame *frame, SwfdecAsObject *target)
+swfdec_as_frame_set_target (SwfdecAsFrame *frame, SwfdecMovie *target)
 {
   g_return_if_fail (frame != NULL);
-  g_return_if_fail (target == NULL || SWFDEC_IS_AS_OBJECT (target));
+  g_return_if_fail (target == NULL || SWFDEC_IS_MOVIE (target));
 
   if (target) {
     frame->target = target;
@@ -643,9 +643,11 @@ swfdec_as_frame_handle_exception (SwfdecAsContext *cx, SwfdecAsFrame *frame)
 SwfdecMovie *
 swfdec_as_frame_get_target (SwfdecAsFrame *frame) 
 {
-  if (SWFDEC_IS_MOVIE (frame->target))
+  if (SWFDEC_IS_MOVIE (frame->target) &&
+      SWFDEC_MOVIE(frame->target)->state < SWFDEC_MOVIE_STATE_DESTROYED)
     return SWFDEC_MOVIE (frame->target);
-  if (SWFDEC_IS_MOVIE (frame->original_target))
+  if (SWFDEC_IS_MOVIE (frame->original_target) &&
+      SWFDEC_MOVIE(frame->original_target)->state < SWFDEC_MOVIE_STATE_DESTROYED)
     return SWFDEC_MOVIE (frame->original_target);
   return NULL;
 }

@@ -136,17 +136,17 @@ swfdec_as_script_function_init (SwfdecAsScriptFunction *script_function)
 }
 
 SwfdecAsFunction *
-swfdec_as_script_function_new (SwfdecAsObject *target, const GSList *scope_chain, SwfdecScript *script)
+swfdec_as_script_function_new (SwfdecAsContext *context, SwfdecMovie *target, 
+    const GSList *scope_chain, SwfdecScript *script)
 {
   SwfdecAsValue val, *tmp;
   SwfdecAsScriptFunction *fun;
   SwfdecAsObject *proto, *object;
-  SwfdecAsContext *context;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
+  g_return_val_if_fail (target == NULL || SWFDEC_IS_MOVIE (target), NULL);
   g_return_val_if_fail (script != NULL, NULL);
 
-  context = swfdec_gc_object_get_context (target);
   fun = g_object_new (SWFDEC_TYPE_AS_SCRIPT_FUNCTION, "context", context, NULL);
   fun->scope_chain = g_slist_copy ((GSList *) scope_chain);
   fun->script = script;

@@ -41,11 +41,12 @@ G_BEGIN_DECLS
 #define SWFDEC_AS_VALUE_GET_COMPOSITE(val) (SWFDEC_AS_VALUE_IS_OBJECT (val) ? \
     SWFDEC_AS_VALUE_GET_OBJECT (val) : SWFDEC_AS_OBJECT (SWFDEC_AS_VALUE_GET_MOVIE (val)))
 #define SWFDEC_AS_VALUE_SET_COMPOSITE(val,o) G_STMT_START { \
-  SwfdecAsValue *__val = (val); \
-  SwfdecAsObject *__o = (o); \
-  g_assert (__o != NULL); \
-  (__val)->type = __o->movie ? SWFDEC_AS_TYPE_MOVIE : SWFDEC_AS_TYPE_OBJECT; \
-  (__val)->value.object = __o; \
+  SwfdecAsObject *_o = (o); \
+  if (_o->movie) { \
+    SWFDEC_AS_VALUE_SET_MOVIE ((val), SWFDEC_MOVIE (_o)); \
+  } else { \
+    SWFDEC_AS_VALUE_SET_OBJECT ((val), _o); \
+  } \
 } G_STMT_END
 
 #define SWFDEC_AS_VALUE_IS_MOVIE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_MOVIE)

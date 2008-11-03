@@ -386,6 +386,7 @@ swfdec_resource_mark (SwfdecGcObject *object)
     swfdec_gc_object_mark (resource->sandbox);
   if (resource->target)
     swfdec_gc_object_mark (resource->target);
+  swfdec_as_value_mark (&resource->movie);
 
   SWFDEC_GC_OBJECT_CLASS (swfdec_resource_parent_class)->mark (object);
 }

@@ -993,9 +993,9 @@ swfdec_movie_set_property (GObject *object, guint param_id, const GValue *value,
     case PROP_RESOURCE:
       movie->resource = g_value_get_object (value);
       /* NB: the resource assumes it can access the player via the movie */
-      if (movie->resource->movie == NULL) {
+      if (SWFDEC_AS_VALUE_IS_UNDEFINED (&movie->resource->movie)) {
 	g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
-	movie->resource->movie = SWFDEC_SPRITE_MOVIE (movie);
+	SWFDEC_AS_VALUE_SET_MOVIE (&movie->resource->movie, movie);
       }
       break;
     default:
@@ -1670,7 +1670,7 @@ swfdec_movie_get_own_resource (SwfdecMovie *movie)
   if (!SWFDEC_IS_SPRITE_MOVIE (movie))
     return NULL;
 
-  if (movie->resource->movie != SWFDEC_SPRITE_MOVIE (movie))
+  if (SWFDEC_AS_VALUE_GET_MOVIE (&movie->resource->movie) != movie)
     return NULL;
 
   return movie->resource;

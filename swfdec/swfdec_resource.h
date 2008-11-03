@@ -49,7 +49,7 @@ struct _SwfdecResource
 
   guint			version;	/* version of this resource */
   SwfdecSandbox *	sandbox;	/* sandbox this resource belongs to (only NULL for a short time on very first loader) */
-  SwfdecSpriteMovie * 	movie;		/* the movie responsible for creating this instance */
+  SwfdecAsValue 	movie;		/* the movie responsible for creating this instance or undefined if none */
 
   SwfdecLoader *	loader;		/* the loader providing data for the decoder */
   SwfdecDecoder *	decoder;	/* decoder in use or NULL if broken file */

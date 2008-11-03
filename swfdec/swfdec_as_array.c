@@ -349,13 +349,12 @@ swfdec_as_array_insert_with_flags (SwfdecAsObject *array, gint32 idx,
     const SwfdecAsValue *value, SwfdecAsVariableFlag flags)
 {
   gint32 length;
-  SwfdecAsObject *object;
 
   g_return_if_fail (SWFDEC_IS_AS_OBJECT (array));
   g_return_if_fail (idx >= 0);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-  length = swfdec_as_array_get_length (object);
+  length = swfdec_as_array_get_length (array);
 
   if (idx < length)
     swfdec_as_array_move_range (array, idx, length - idx, idx + 1);

@@ -1059,6 +1059,15 @@ EXTRA_DIST = \
 	crash-0.8.0-huffmann-table-8.swf \
 	crash-0.8.0-huffmann-table-8.swf.trace \
 	crash-0.8.0-huffmann-table.xml \
+	crash-0.9.1-getvariable-shapes-5.swf \
+	crash-0.9.1-getvariable-shapes-5.swf.trace \
+	crash-0.9.1-getvariable-shapes-6.swf \
+	crash-0.9.1-getvariable-shapes-6.swf.trace \
+	crash-0.9.1-getvariable-shapes-7.swf \
+	crash-0.9.1-getvariable-shapes-7.swf.trace \
+	crash-0.9.1-getvariable-shapes-8.swf \
+	crash-0.9.1-getvariable-shapes-8.swf.trace \
+	crash-0.9.1-getvariable-shapes.xml \
 	createEmptyMovieClip-events.sc \
 	createEmptyMovieClip-events.swf \
 	createEmptyMovieClip-events.swf.trace \

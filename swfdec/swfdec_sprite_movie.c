@@ -79,7 +79,7 @@ swfdec_sprite_movie_perform_old_place (SwfdecSpriteMovie *movie,
 
   dec = SWFDEC_SWF_DECODER (mov->resource->decoder);
 
-  SWFDEC_LOG ("performing PlaceObject on movie %s", mov->nameasdf);
+  SWFDEC_LOG ("performing PlaceObject on movie %s", mov->name);
 
   id = swfdec_bits_get_u16 (bits);
   SWFDEC_LOG ("  id = %d", id);
@@ -175,7 +175,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
   has_character = swfdec_bits_getbit (bits);
   move = swfdec_bits_getbit (bits);
 
-  SWFDEC_LOG ("performing PlaceObject%d on movie %s", tag == SWFDEC_TAG_PLACEOBJECT2 ? 2 : 3, mov->nameasdf);
+  SWFDEC_LOG ("performing PlaceObject%d on movie %s", tag == SWFDEC_TAG_PLACEOBJECT2 ? 2 : 3, mov->name);
   SWFDEC_LOG ("  has_clip_actions = %d", has_clip_actions);
   SWFDEC_LOG ("  has_clip_depth = %d", has_clip_depth);
   SWFDEC_LOG ("  has_name = %d", has_name);
@@ -323,7 +323,7 @@ swfdec_sprite_movie_perform_place (SwfdecSpriteMovie *movie, SwfdecBits *bits, g
 	has_ctrans ? &ctrans : NULL, ratio, clip_depth, blend_mode, events);
   } else {
     if (cur != NULL && version > 5) {
-      SWFDEC_INFO ("depth %d is already occupied by movie %s, not placing", depth, cur->nameasdf);
+      SWFDEC_INFO ("depth %d is already occupied by movie %s, not placing", depth, cur->name);
       goto out;
     }
     if (!SWFDEC_IS_GRAPHIC (graphic)) {

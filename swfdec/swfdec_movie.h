@@ -122,7 +122,7 @@ struct _SwfdecMovie {
   SwfdecAsObject	object;
 
   SwfdecGraphic *	graphic;		/* graphic represented by this movie or NULL if script-created */
-  const char *		nameasdf;		/* name of movie - GC'd */
+  const char *		name;		/* name of movie - GC'd */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   int			depth;			/* depth of movie (equals content->depth unless explicitly set) */
   SwfdecMovieCacheState	cache_state;		/* whether we are up to date */

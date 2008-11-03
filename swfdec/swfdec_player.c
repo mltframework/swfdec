@@ -453,7 +453,7 @@ swfdec_player_add_action (SwfdecPlayer *player, SwfdecActor *actor,
   g_return_if_fail (SWFDEC_IS_ACTOR (actor));
   g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
 
-  SWFDEC_LOG ("adding action %s %u", SWFDEC_MOVIE (actor)->nameasdf, type);
+  SWFDEC_LOG ("adding action %s %u", SWFDEC_MOVIE (actor)->name, type);
   swfdec_player_do_add_action (player, importance, &action);
 }
 
@@ -468,7 +468,7 @@ swfdec_player_add_action_script	(SwfdecPlayer *player, SwfdecActor *actor,
   g_return_if_fail (script != NULL);
   g_return_if_fail (importance < SWFDEC_PLAYER_N_ACTION_QUEUES);
 
-  SWFDEC_LOG ("adding action script %s %s", SWFDEC_MOVIE (actor)->nameasdf, script->name);
+  SWFDEC_LOG ("adding action script %s %s", SWFDEC_MOVIE (actor)->name, script->name);
   swfdec_player_do_add_action (player, importance, &action);
 }
 
@@ -1189,7 +1189,7 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
   priv = player->priv;
   if (actor == priv->focus) {
     SWFDEC_DEBUG ("nothing to do, focus change request from movie %s to itself", 
-	actor ? SWFDEC_MOVIE (actor)->nameasdf : "---");
+	actor ? SWFDEC_MOVIE (actor)->name : "---");
     return;
   }
   prev = priv->focus;
@@ -2615,7 +2615,7 @@ swfdec_player_create_movie_at_level (SwfdecPlayer *player, SwfdecResource *resou
   /* create new root movie */
   s = swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%d", level));
   movie = swfdec_movie_new (player, level - 16384, NULL, resource, NULL, s);
-  movie->nameasdf = SWFDEC_AS_STR_EMPTY;
+  movie->name = SWFDEC_AS_STR_EMPTY;
   return SWFDEC_SPRITE_MOVIE (movie);
 }
 
@@ -3798,7 +3798,7 @@ swfdec_player_set_url (SwfdecPlayer *player, const SwfdecURL *url)
   priv->resource = swfdec_resource_new (player, loader, priv->variables);
   movie = swfdec_movie_new (player, -16384, NULL, priv->resource, NULL, SWFDEC_AS_STR__level0);
   SWFDEC_ACTOR (movie)->focusrect = SWFDEC_FLASH_YES;
-  movie->nameasdf = SWFDEC_AS_STR_EMPTY;
+  movie->name = SWFDEC_AS_STR_EMPTY;
   g_object_unref (loader);
   g_object_notify (G_OBJECT (player), "url");
   g_object_thaw_notify (G_OBJECT (player));

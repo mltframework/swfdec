@@ -52,8 +52,8 @@ swfdec_as_movie_value_new (SwfdecMovie *movie, const char *name)
   val->names[n_names - 1] = name;
   movie = movie->parent;
   for (i = n_names - 2; movie; i--) {
-    if (movie->nameasdf != SWFDEC_AS_STR_EMPTY) {
-      val->names[i] = movie->nameasdf;
+    if (movie->name != SWFDEC_AS_STR_EMPTY) {
+      val->names[i] = movie->name;
     } else {
       val->names[i] = movie->as_value->names[i];
     };

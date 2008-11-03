@@ -1160,10 +1160,10 @@ swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
 
     for (walk = movie->list; walk; walk = walk->next) {
       SwfdecMovie *cur = walk->data;
-      if (cur->nameasdf == SWFDEC_AS_STR_EMPTY)
+      if (cur->name == SWFDEC_AS_STR_EMPTY)
 	continue;
       SWFDEC_AS_VALUE_SET_MOVIE (&val, cur);
-      if (!func (object, cur->nameasdf, &val, 0, data))
+      if (!func (object, cur->name, &val, 0, data))
 	return FALSE;
     }
   }

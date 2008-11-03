@@ -138,13 +138,13 @@ mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 static void
 mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 {
-  SWFDEC_AS_VALUE_SET_STRING (rval, movie->nameasdf);
+  SWFDEC_AS_VALUE_SET_STRING (rval, movie->name);
 }
 
 static void
 mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  movie->nameasdf = swfdec_as_value_to_string (swfdec_gc_object_get_context (movie), val);
+  movie->name = swfdec_as_value_to_string (swfdec_gc_object_get_context (movie), val);
 }
 
 static void
@@ -353,7 +353,7 @@ mc_target_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 
   s = g_string_new ("");
   while (movie->parent) {
-    g_string_prepend (s, movie->nameasdf);
+    g_string_prepend (s, movie->name);
     g_string_prepend_c (s, '/');
     movie = movie->parent;
   }

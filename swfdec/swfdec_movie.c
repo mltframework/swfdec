@@ -123,7 +123,7 @@ swfdec_movie_invalidate (SwfdecMovie *movie, const cairo_matrix_t *parent_to_glo
   }
   g_assert (movie->cache_state <= SWFDEC_MOVIE_INVALID_CHILDREN);
   SWFDEC_LOG ("invalidating %s %s at %s", G_OBJECT_TYPE_NAME (movie), 
-      movie->nameasdf, new_contents ? "end" : "start");
+      movie->name, new_contents ? "end" : "start");
   cairo_matrix_multiply (&matrix, &movie->matrix, parent_to_global);
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   klass->invalidate (movie, &matrix, new_contents);
@@ -354,7 +354,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
 {
   SwfdecPlayer *player;
 
-  SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->nameasdf);
+  SWFDEC_LOG ("removing %s %s", G_OBJECT_TYPE_NAME (movie), movie->name);
 
   player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
   while (movie->list) {
@@ -420,7 +420,7 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (movie));
 
   g_assert (movie->state < SWFDEC_MOVIE_STATE_DESTROYED);
-  SWFDEC_LOG ("destroying movie %s", movie->nameasdf);
+  SWFDEC_LOG ("destroying movie %s", movie->name);
   while (movie->list) {
     swfdec_movie_destroy (movie->list->data);
   }
@@ -617,7 +617,7 @@ swfdec_movie_do_contains (SwfdecMovie *movie, double x, double y, gboolean event
     SwfdecMovie *child = walk->data;
     
     if (!child->visible) {
-      SWFDEC_LOG ("%s %s (depth %d) is invisible, ignoring", G_OBJECT_TYPE_NAME (movie), movie->nameasdf, movie->depth);
+      SWFDEC_LOG ("%s %s (depth %d) is invisible, ignoring", G_OBJECT_TYPE_NAME (movie), movie->name, movie->depth);
       continue;
     }
     got = swfdec_movie_get_movie_at (child, x, y, events);
@@ -792,7 +792,7 @@ swfdec_movie_render (SwfdecMovie *movie, cairo_t *cr,
   
   if (movie->mask_of != NULL && !swfdec_color_transform_is_mask (color_transform)) {
     SWFDEC_LOG ("not rendering %s %p, movie is a mask",
-	G_OBJECT_TYPE_NAME (movie), movie->nameasdf);
+	G_OBJECT_TYPE_NAME (movie), movie->name);
     return;
   }
 
@@ -930,11 +930,11 @@ swfdec_movie_set_property (GObject *object, guint param_id, const GValue *value,
 	g_object_ref (movie->graphic);
       break;
     case PROP_NAME:
-      movie->nameasdf = g_value_get_string (value);
-      if (movie->nameasdf) {
-	movie->nameasdf = swfdec_as_context_get_string (cx, movie->nameasdf);
+      movie->name = g_value_get_string (value);
+      if (movie->name) {
+	movie->name = swfdec_as_context_get_string (cx, movie->name);
       } else {
-	movie->nameasdf = SWFDEC_AS_STR_EMPTY;
+	movie->name = SWFDEC_AS_STR_EMPTY;
       }
       break;
     case PROP_PARENT:
@@ -972,7 +972,7 @@ swfdec_movie_dispose (GObject *object)
 
   g_assert (movie->list == NULL);
 
-  SWFDEC_LOG ("disposing movie %s (depth %d)", movie->nameasdf, movie->depth);
+  SWFDEC_LOG ("disposing movie %s (depth %d)", movie->name, movie->depth);
   if (movie->graphic) {
     g_object_unref (movie->graphic);
     movie->graphic = NULL;
@@ -1004,7 +1004,7 @@ swfdec_movie_mark (SwfdecGcObject *object)
     swfdec_gc_object_mark (movie->parent);
   if (movie->as_value)
     swfdec_as_movie_value_mark (movie->as_value);
-  swfdec_as_string_mark (movie->nameasdf);
+  swfdec_as_string_mark (movie->name);
   g_list_foreach (movie->list, (GFunc) swfdec_gc_object_mark, NULL);
   g_slist_foreach (movie->filters, (GFunc) swfdec_gc_object_mark, NULL);
 
@@ -1054,13 +1054,13 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
 
   for (walk = movie->list; walk; walk = walk->next) {
     SwfdecMovie *cur = walk->data;
-    if (swfdec_strcmp (version, cur->nameasdf, name) == 0) {
+    if (swfdec_strcmp (version, cur->name, name) == 0) {
       if (swfdec_movie_is_scriptable (cur))
 	return cur;
       else
 	return movie;
     }
-    if (unnamed && cur->nameasdf == SWFDEC_AS_STR_EMPTY) {
+    if (unnamed && cur->name == SWFDEC_AS_STR_EMPTY) {
       if (swfdec_strcmp (version, cur->as_value->names[cur->as_value->n_names - 1], name) == 0) {
 	/* unnamed movies are always scriptable */
 	return cur;
@@ -1241,7 +1241,7 @@ swfdec_movie_do_render (SwfdecMovie *movie, cairo_t *cr,
       clip->movie = child;
       clip->depth = child->clip_depth;
       SWFDEC_INFO ("clipping up to depth %d by using %s with depth %d", child->clip_depth,
-	  child->nameasdf, child->depth);
+	  child->name, child->depth);
       cairo_push_group (cr);
       continue;
     }
@@ -1307,12 +1307,12 @@ swfdec_movie_constructor (GType type, guint n_construct_properties,
   /* the movie is created invalid */
   priv->invalid_pending = g_slist_prepend (priv->invalid_pending, object);
 
-  if (movie->nameasdf == SWFDEC_AS_STR_EMPTY && 
+  if (movie->name == SWFDEC_AS_STR_EMPTY && 
       (swfdec_movie_is_scriptable (movie) || SWFDEC_IS_ACTOR (movie))) {
     name = swfdec_as_context_give_string (cx,
 	g_strdup_printf ("instance%u", ++priv->unnamed_count));
   } else {
-    name = movie->nameasdf;
+    name = movie->name;
   }
   if (name != SWFDEC_AS_STR_EMPTY)
     movie->as_value = swfdec_as_movie_value_new (movie, name);
@@ -1458,7 +1458,7 @@ swfdec_movie_set_static_properties (SwfdecMovie *movie, const cairo_matrix_t *tr
   g_return_if_fail (ratio >= -1);
 
   if (movie->modified) {
-    SWFDEC_LOG ("%s has already been modified by scripts, ignoring updates", movie->nameasdf);
+    SWFDEC_LOG ("%s has already been modified by scripts, ignoring updates", movie->name);
     return;
   }
   if (transform) {
@@ -1586,8 +1586,8 @@ swfdec_movie_get_path (SwfdecMovie *movie, gboolean dot)
   s = g_string_new ("");
   do {
     if (movie->parent) {
-      if (movie->nameasdf != SWFDEC_AS_STR_EMPTY) {
-	g_string_prepend (s, movie->nameasdf);
+      if (movie->name != SWFDEC_AS_STR_EMPTY) {
+	g_string_prepend (s, movie->name);
       } else if (movie->as_value) {
 	g_string_prepend (s, movie->as_value->names[movie->as_value->n_names - 1]);
       } else {

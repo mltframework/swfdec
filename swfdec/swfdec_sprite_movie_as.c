@@ -398,7 +398,7 @@ swfdec_sprite_movie_attachBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   swfdec_bitmap_movie_new (parent, SWFDEC_BITMAP_DATA (bitmap->relay), depth);
   SWFDEC_LOG ("created new BitmapMovie to parent %s at depth %d", 
-      parent->nameasdf, depth);
+      parent->name, depth);
 }
 
 SWFDEC_AS_NATIVE (900, 26, swfdec_sprite_movie_getRect)
@@ -822,7 +822,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
   ret = swfdec_movie_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (object)),
       depth, movie, movie->resource, sprite, name);
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
-      ret->nameasdf, ret->depth);
+      ret->name, ret->depth);
   /* run init and construct */
   constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (cx), export);
   if (constructor == NULL) {
@@ -854,7 +854,7 @@ swfdec_sprite_movie_duplicateMovieClip (SwfdecAsContext *cx, SwfdecAsObject *obj
   if (new == NULL)
     return;
   swfdec_sprite_movie_copy_props (new, movie);
-  SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->nameasdf, new->nameasdf, new->depth);
+  SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new->name, new->depth);
   SWFDEC_AS_VALUE_SET_MOVIE (rval, new);
 }
 

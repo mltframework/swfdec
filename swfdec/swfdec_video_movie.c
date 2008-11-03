@@ -122,16 +122,18 @@ swfdec_video_movie_constructor (GType type, guint n_construct_properties,
   GObject *object;
   SwfdecMovie *movie;
   SwfdecVideo *video;
+  gboolean unuse;
 
   object = G_OBJECT_CLASS (swfdec_video_movie_parent_class)->constructor (type, 
       n_construct_properties, construct_properties);
 
   movie = SWFDEC_MOVIE (object);
-  swfdec_sandbox_use (movie->resource->sandbox);
+  unuse = swfdec_sandbox_try_use (movie->resource->sandbox);
   swfdec_video_movie_init_properties (swfdec_gc_object_get_context (movie));
   swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
       SWFDEC_AS_STR_Video, NULL);
-  swfdec_sandbox_unuse (movie->resource->sandbox);
+  if (unuse)
+    swfdec_sandbox_unuse (movie->resource->sandbox);
 
   video = SWFDEC_VIDEO (movie->graphic);
 

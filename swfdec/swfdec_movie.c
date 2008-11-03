@@ -1060,7 +1060,7 @@ swfdec_movie_get_by_name (SwfdecMovie *movie, const char *name, gboolean unnamed
       else
 	return movie;
     }
-    if (unnamed && cur->name == SWFDEC_AS_STR_EMPTY) {
+    if (unnamed && cur->name == SWFDEC_AS_STR_EMPTY && cur->as_value) {
       if (swfdec_strcmp (version, cur->as_value->names[cur->as_value->n_names - 1], name) == 0) {
 	/* unnamed movies are always scriptable */
 	return cur;

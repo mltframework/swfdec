@@ -2286,6 +2286,15 @@ EXTRA_DIST = \
 	movieclip-property-priorities-8.swf \
 	movieclip-property-priorities-8.swf.trace \
 	movieclip-property-priorities.as \
+	movieclip-references-5.swf \
+	movieclip-references-5.swf.trace \
+	movieclip-references-6.swf \
+	movieclip-references-6.swf.trace \
+	movieclip-references-7.swf \
+	movieclip-references-7.swf.trace \
+	movieclip-references-8.swf \
+	movieclip-references-8.swf.trace \
+	movieclip-references.as \
 	movieclip-set-prototype.c \
 	movieclip-set-prototype-5.swf \
 	movieclip-set-prototype-5.swf.trace \

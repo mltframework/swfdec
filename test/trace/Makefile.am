@@ -806,6 +806,15 @@ EXTRA_DIST = \
 	context-menu-properties-7.swf.trace \
 	context-menu-properties-8.swf \
 	context-menu-properties-8.swf.trace \
+	conversion-functions-5.swf \
+	conversion-functions-5.swf.trace \
+	conversion-functions-6.swf \
+	conversion-functions-6.swf.trace \
+	conversion-functions-7.swf \
+	conversion-functions-7.swf.trace \
+	conversion-functions-8.swf \
+	conversion-functions-8.swf.trace \
+	conversion-functions.as \
 	convolution-filter-properties.as \
 	convolution-filter-properties-5.swf \
 	convolution-filter-properties-5.swf.trace \

@@ -60,6 +60,7 @@ struct _SwfdecAsContext {
   GHashTable *		objects;	/* all objects the context manages */
   gpointer		strings;	/* all numbers the context manages */
   gpointer		numbers;	/* all numbers the context manages */
+  gpointer		movies;		/* all movies the context manages */
   GHashTable *		constant_pools;	/* memory address => SwfdecConstantPool for all gc'ed pools */
 
   /* execution state */

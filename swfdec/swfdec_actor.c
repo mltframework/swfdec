@@ -304,7 +304,7 @@ swfdec_actor_queue_script_with_key (SwfdecActor *actor,
     return;
   /* can happen for mouse/keyboard events on the initial movie */
   if (SWFDEC_MOVIE (actor)->resource->sandbox == NULL) {
-    SWFDEC_INFO ("movie %s not yet initialized, skipping event", SWFDEC_MOVIE (actor)->name);
+    SWFDEC_INFO ("movie %s not yet initialized, skipping event", SWFDEC_MOVIE (actor)->nameasdf);
     return;
   }
 

@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include <swfdec/swfdec_as_object.h>
+#include <swfdec/swfdec_as_movie_value.h>
 #include <swfdec/swfdec_color.h>
 #include <swfdec/swfdec.h>
 #include <swfdec/swfdec_event.h>
@@ -121,7 +122,7 @@ struct _SwfdecMovie {
   SwfdecAsObject	object;
 
   SwfdecGraphic *	graphic;		/* graphic represented by this movie or NULL if script-created */
-  const char *		name;			/* name of movie - GC'd */
+  const char *		nameasdf;		/* name of movie - GC'd */
   GList *		list;			/* our contained movie clips (ordered by depth) */
   int			depth;			/* depth of movie (equals content->depth unless explicitly set) */
   SwfdecMovieCacheState	cache_state;		/* whether we are up to date */
@@ -129,10 +130,12 @@ struct _SwfdecMovie {
   GSList		*variable_listeners;	/* textfield's listening to changes in variables - SwfdecMovieVariableListener */
 
   /* static properties (set by PlaceObject tags) */
-  const char *		original_name;		/* the original name - GC'd and static */
   cairo_matrix_t	original_transform;	/* initial transform used */
   guint			original_ratio;		/* ratio used in this movie */
   int			clip_depth;		/* up to which movie this movie clips */
+
+  /* scripting stuff */
+  SwfdecAsMovieValue *	as_value;		/* This movie's value in the script engine or %NULL if not accessible by scripts */
 
   /* parenting information */
   SwfdecMovie *		parent;			/* movie that contains us or NULL for root movies */
@@ -290,7 +293,6 @@ void		swfdec_movie_render		(SwfdecMovie *		movie,
 						 cairo_t *		cr, 
 						 const SwfdecColorTransform *trans);
 gboolean	swfdec_movie_is_scriptable	(SwfdecMovie *		movie);
-SwfdecMovie *	swfdec_movie_resolve		(SwfdecMovie *		movie);
 guint		swfdec_movie_get_version	(SwfdecMovie *		movie);
 
 int		swfdec_movie_compare_depths	(gconstpointer		a,

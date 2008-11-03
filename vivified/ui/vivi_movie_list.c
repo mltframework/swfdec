@@ -125,10 +125,7 @@ vivi_movie_list_get_value (GtkTreeModel *tree_model, GtkTreeIter *iter,
       return;
     case VIVI_MOVIE_LIST_COLUMN_NAME:
       g_value_init (value, G_TYPE_STRING);
-      if (movie->name[0])
-	g_value_set_string (value, movie->name);
-      else
-	g_value_set_string (value, movie->original_name);
+      g_value_set_string (value, movie->nameasdf);
       return;
     case VIVI_MOVIE_LIST_COLUMN_DEPTH:
       g_value_init (value, G_TYPE_INT);

@@ -24,6 +24,7 @@ libswfdec_source_files = \
 	swfdec_as_gcable.c \
 	swfdec_as_interpret.c \
 	swfdec_as_math.c \
+	swfdec_as_movie_value.c \
 	swfdec_as_native_function.c \
 	swfdec_as_number.c \
 	swfdec_as_object.c \
@@ -245,6 +246,7 @@ noinst_HEADERS = \
 	swfdec_as_date.h \
 	swfdec_as_gcable.h \
 	swfdec_as_interpret.h \
+	swfdec_as_movie_value.h \
 	swfdec_as_number.h \
 	swfdec_as_script_function.h \
 	swfdec_as_stack.h \

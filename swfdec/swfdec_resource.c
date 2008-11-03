@@ -131,7 +131,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
       return;
     }
     if (name == SWFDEC_AS_STR_onLoadInit &&
-	SWFDEC_AS_OBJECT (movie) != resource->movie.value.object) {
+	(SwfdecAsGcable *) movie->as_value != resource->movie.value.gcable) {
       SWFDEC_INFO ("not emitting onLoadInit - the movie is different");
       return;
     }
@@ -184,12 +184,11 @@ swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resourc
   SwfdecMovie *copy;
   
   copy = swfdec_movie_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), 
-      mov->depth, mov->parent, resource, NULL, mov->name);
+      mov->depth, mov->parent, resource, NULL, mov->nameasdf);
   if (copy == NULL)
     return FALSE;
   swfdec_movie_begin_update_matrix (copy);
   copy->matrix = mov->matrix;
-  copy->original_name = mov->original_name;
   copy->modified = mov->modified;
   copy->xscale = mov->xscale;
   copy->yscale = mov->yscale;

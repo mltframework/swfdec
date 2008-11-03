@@ -32,6 +32,7 @@
 #include "swfdec_as_initialize.h"
 #include "swfdec_as_internal.h"
 #include "swfdec_as_interpret.h"
+#include "swfdec_as_movie_value.h"
 #include "swfdec_as_native_function.h"
 #include "swfdec_as_object.h"
 #include "swfdec_as_stack.h"
@@ -287,6 +288,12 @@ swfdec_as_context_collect_double (SwfdecAsContext *context, gpointer gc)
 }
 
 static void
+swfdec_as_context_collect_movie (SwfdecAsContext *context, gpointer gc)
+{
+  swfdec_as_movie_value_free ((SwfdecAsMovieValue *) gc);
+}
+
+static void
 swfdec_as_context_collect (SwfdecAsContext *context)
 {
   /* NB: This functions is called without GC from swfdec_as_context_dispose */
@@ -299,6 +306,8 @@ swfdec_as_context_collect (SwfdecAsContext *context)
       swfdec_as_context_collect_string);
   context->numbers = swfdec_as_gcable_collect (context, context->numbers,
       swfdec_as_context_collect_double);
+  context->movies = swfdec_as_gcable_collect (context, context->movies,
+      swfdec_as_context_collect_movie);
 
   SWFDEC_INFO (">> done collecting garbage");
 }
@@ -335,11 +344,14 @@ swfdec_as_value_mark (SwfdecAsValue *value)
 {
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (value)) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
     swfdec_gc_object_mark (value->value.object);
+  } else if (SWFDEC_AS_VALUE_IS_MOVIE (value)) {
+    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_MARK))
+      swfdec_as_movie_value_mark ((SwfdecAsMovieValue *) value->value.gcable);
   } else if (SWFDEC_AS_VALUE_IS_STRING (value) ||
       SWFDEC_AS_VALUE_IS_NUMBER (value)) {
-    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_ROOT))
+    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_ROOT | SWFDEC_AS_GC_MARK))
       SWFDEC_AS_GCABLE_SET_FLAG (value->value.gcable, SWFDEC_AS_GC_MARK);
   }
 }

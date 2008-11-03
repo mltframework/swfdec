@@ -21,6 +21,7 @@
 #define _SWFDEC_AS_INTERNAL_H_
 
 #include <swfdec/swfdec_as_gcable.h>
+#include <swfdec/swfdec_as_movie_value.h>
 #include <swfdec/swfdec_as_object.h>
 #include <swfdec/swfdec_as_types.h>
 #include <swfdec/swfdec_movie.h>
@@ -50,13 +51,15 @@ G_BEGIN_DECLS
 } G_STMT_END
 
 #define SWFDEC_AS_VALUE_IS_MOVIE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_MOVIE)
-#define SWFDEC_AS_VALUE_GET_MOVIE(val) (swfdec_movie_resolve (SWFDEC_MOVIE ((val)->value.object)))
+#define SWFDEC_AS_VALUE_GET_MOVIE(val) (((SwfdecAsMovieValue *) (val)->value.gcable)->movie ? \
+    ((SwfdecAsMovieValue *) (val)->value.gcable)->movie : swfdec_as_movie_value_get ((SwfdecAsMovieValue *) (val)->value.gcable))
 #define SWFDEC_AS_VALUE_SET_MOVIE(val,m) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
   SwfdecMovie *__m = (m); \
   g_assert (SWFDEC_IS_MOVIE (__m)); \
+  g_assert (__m->as_value); \
   (__val)->type = SWFDEC_AS_TYPE_MOVIE; \
-  (__val)->value.object = (SwfdecAsObject *) __m; \
+  (__val)->value.gcable = (SwfdecAsGcable *) __m->as_value; \
 } G_STMT_END
 
 /* swfdec_as_context.c */

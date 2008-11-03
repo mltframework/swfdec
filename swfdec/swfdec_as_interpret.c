@@ -2770,7 +2770,7 @@ swfdec_action_remove_sprite (SwfdecAsContext *cx, guint action, const guint8 *da
     SwfdecMovie *movie = swfdec_player_get_movie_from_value (SWFDEC_PLAYER (cx),
 	swfdec_as_stack_peek (cx, 1));
     if (movie && swfdec_depth_classify (movie->depth) == SWFDEC_DEPTH_CLASS_DYNAMIC) {
-      SWFDEC_LOG ("removing clip %s", movie->name);
+      SWFDEC_LOG ("removing clip %s", movie->nameasdf);
       swfdec_movie_remove (movie);
     } else {
       SWFDEC_INFO ("cannot remove movie");
@@ -2803,7 +2803,7 @@ swfdec_action_clone_sprite (SwfdecAsContext *cx, guint action, const guint8 *dat
     }
     new_movie = swfdec_movie_duplicate (movie, new_name, depth);
     if (new_movie) {
-      SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->name, new_movie->name, new_movie->depth);
+      SWFDEC_LOG ("duplicated %s as %s to depth %u", movie->nameasdf, new_movie->nameasdf, new_movie->depth);
     }
   }
   swfdec_as_stack_pop_n (cx, 3);

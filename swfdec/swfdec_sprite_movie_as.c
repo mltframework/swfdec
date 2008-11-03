@@ -499,6 +499,7 @@ swfdec_sprite_movie_do_goto (SwfdecSpriteMovie *movie, SwfdecAsValue *target)
   int frame;
 
   g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
+  g_return_if_fail (movie->sprite != NULL);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (target));
 
   if (SWFDEC_AS_VALUE_IS_STRING (target)) {
@@ -527,6 +528,9 @@ swfdec_sprite_movie_gotoAndPlay (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SPRITE_MOVIE, (gpointer)&movie, "v", &val);
   
+  if (movie->sprite == NULL)
+    return;
+
   swfdec_sprite_movie_do_goto (movie, &val);
   movie->playing = TRUE;
 }
@@ -541,6 +545,9 @@ swfdec_sprite_movie_gotoAndStop (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_SPRITE_MOVIE, (gpointer)&movie, "v", &val);
   
+  if (movie->sprite == NULL)
+    return;
+
   swfdec_sprite_movie_do_goto (movie, &val);
   movie->playing = FALSE;
 }

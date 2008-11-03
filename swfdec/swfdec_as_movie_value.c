@@ -35,7 +35,7 @@ swfdec_as_movie_value_new (SwfdecMovie *movie, const char *name)
 {
   SwfdecAsMovieValue *val, *parent;
   SwfdecAsContext *context;
-  guint n_names;
+  guint i, n_names;
 
   g_assert (SWFDEC_IS_MOVIE (movie));
   g_assert (name != NULL);
@@ -49,9 +49,16 @@ swfdec_as_movie_value_new (SwfdecMovie *movie, const char *name)
   val->player = SWFDEC_PLAYER (context);
   val->movie = movie;
   val->n_names = n_names;
-  if (parent)
-    memcpy (val->names, parent->names, sizeof (const char *) * parent->n_names);
   val->names[n_names - 1] = name;
+  movie = movie->parent;
+  for (i = n_names - 2; movie; i--) {
+    if (movie->nameasdf != SWFDEC_AS_STR_EMPTY) {
+      val->names[i] = movie->nameasdf;
+    } else {
+      val->names[i] = movie->as_value->names[i];
+    };
+    movie = movie->parent; 
+  }
 
   SWFDEC_AS_GCABLE_SET_NEXT (val, context->movies);
   context->movies = val;

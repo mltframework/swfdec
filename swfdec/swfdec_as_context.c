@@ -689,14 +689,7 @@ swfdec_as_context_is_constructing (SwfdecAsContext *context)
  * @context: a #SwfdecAsContext
  *
  * This is a debugging function. It gets the topmost stack frame that is 
- * currently executing. If no function is executing, %NULL is returned. You can
- * easily get a backtrace with code like this:
- * |[for (frame = swfdec_as_context_get_frame (context); frame != NULL; 
- *     frame = swfdec_as_frame_get_next (frame)) {
- *   char *s = swfdec_as_object_get_debug (SWFDEC_AS_OBJECT (frame));
- *   g_print ("%s\n", s);
- *   g_free (s);
- * }]|
+ * currently executing. If no function is executing, %NULL is returned.
  *
  * Returns: the currently executing frame or %NULL if none
  **/

@@ -1117,17 +1117,19 @@ static void
 swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecBits bits;
-  char *url, *target;
+  char *url, *t;
+  const char *target;
 
   swfdec_bits_init_data (&bits, data, len);
   url = swfdec_bits_get_string (&bits, cx->version);
-  target = swfdec_bits_get_string (&bits, cx->version);
-  if (url == NULL || target == NULL) {
+  t = swfdec_bits_get_string (&bits, cx->version);
+  if (url == NULL || t == NULL) {
     SWFDEC_ERROR ("not enough data in GetURL");
     g_free (url);
-    g_free (target);
+    g_free (t);
     return;
   }
+  target = swfdec_as_context_give_string (cx, t);
   if (swfdec_bits_left (&bits)) {
     SWFDEC_WARNING ("leftover bytes in GetURL action");
   }
@@ -1137,7 +1139,6 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, NULL);
   }
   g_free (url);
-  g_free (target);
 }
 
 static void

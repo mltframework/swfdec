@@ -490,8 +490,7 @@ swfdec_resource_add_export (SwfdecResource *instance, SwfdecCharacter *character
 typedef struct _SwfdecResourceLoad SwfdecResourceLoad;
 struct _SwfdecResourceLoad {
   SwfdecSandbox *		sandbox;
-  char *			target_string;
-  SwfdecSpriteMovie *		target_movie;
+  SwfdecAsValue			target;
   char *			url;
   SwfdecBuffer *		buffer;
   SwfdecMovieClipLoader *	loader;
@@ -503,7 +502,6 @@ swfdec_resource_load_free (gpointer loadp)
   SwfdecResourceLoad *load = loadp;
 
   g_free (load->url);
-  g_free (load->target_string);
   if (load->buffer)
     swfdec_buffer_unref (load->buffer);
   g_slice_free (SwfdecResourceLoad, load);
@@ -517,8 +515,7 @@ swfdec_resource_load_mark (gpointer loadp, gpointer playerp)
   swfdec_gc_object_mark (load->sandbox);
   if (load->loader)
     swfdec_gc_object_mark (load->loader);
-  if (load->target_movie)
-    swfdec_gc_object_mark (load->target_movie);
+  swfdec_as_value_mark (&load->target);
 }
 
 static gboolean
@@ -530,14 +527,14 @@ swfdec_resource_create_movie (SwfdecResource *resource, SwfdecResourceLoad *load
   if (resource->movie)
     return TRUE;
   player = SWFDEC_PLAYER (swfdec_gc_object_get_context (resource));
-  if (load->target_movie) {
-    movie = (SwfdecSpriteMovie *) swfdec_movie_resolve (SWFDEC_MOVIE (load->target_movie));
+  if (SWFDEC_AS_VALUE_IS_MOVIE (&load->target)) {
+    movie = (SwfdecSpriteMovie *) SWFDEC_AS_VALUE_GET_MOVIE (&load->target);
     if (SWFDEC_IS_SPRITE_MOVIE (movie))
       movie = swfdec_resource_replace_movie (movie, resource);
     else
       movie = NULL;
-  } else {
-    int level = swfdec_player_get_level (player, load->target_string, 7);
+  } else if (SWFDEC_AS_VALUE_IS_STRING (&load->target)) {
+    int level = swfdec_player_get_level (player, SWFDEC_AS_VALUE_GET_STRING (&load->target), 7);
     if (level >= 0) {
       movie = swfdec_player_get_movie_at_level (player, level);
       if (movie)
@@ -546,6 +543,9 @@ swfdec_resource_create_movie (SwfdecResource *resource, SwfdecResourceLoad *load
     } else {
       movie = NULL;
     }
+  } else {
+    /* we only set target to string or movie values */
+    g_assert_not_reached ();
   }
   if (movie == NULL) {
     SWFDEC_WARNING ("target does not reference a movie, not loading %s", load->url);
@@ -574,8 +574,10 @@ swfdec_resource_do_load (SwfdecPlayer *player, gboolean allowed, gpointer loadp)
     SWFDEC_WARNING ("SECURITY: no access to %s from %s",
 	load->url, swfdec_url_get_url (load->sandbox->url));
     /* FIXME: is replacing correct? */
-    if (load->target_movie) {
-      resource->movie = SWFDEC_SPRITE_MOVIE (swfdec_movie_resolve (SWFDEC_MOVIE (load->target_movie)));
+    if (SWFDEC_AS_VALUE_IS_MOVIE (&load->target)) {
+      resource->movie = (SwfdecSpriteMovie *) SWFDEC_AS_VALUE_GET_MOVIE (&load->target);
+      if (!SWFDEC_IS_SPRITE_MOVIE (resource->movie))
+	resource->movie = NULL;
       swfdec_resource_emit_error (resource, SWFDEC_AS_STR_IllegalRequest);
     }
     swfdec_player_unroot (player, load);
@@ -609,7 +611,11 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
   if (load->url[0] == '\0') {
     SwfdecSpriteMovie *movie;
       
-    movie = load->target_movie ? (SwfdecSpriteMovie *) swfdec_movie_resolve (SWFDEC_MOVIE (load->target_movie)) : NULL;
+    if (SWFDEC_AS_VALUE_IS_MOVIE (&load->target)) {
+      movie = (SwfdecSpriteMovie *) SWFDEC_AS_VALUE_GET_MOVIE (&load->target);
+    } else {
+      movie = NULL;
+    }
     if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
       swfdec_resource_replace_movie (movie, SWFDEC_MOVIE (movie)->resource);
     } else {
@@ -622,22 +628,20 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
   /* fscommand? */
   if (g_ascii_strncasecmp (load->url, "FSCommand:", 10) == 0) {
     char *command = load->url + 10;
-    if (load->target_movie) {
-      char *target = swfdec_movie_get_path (SWFDEC_MOVIE (load->target_movie), TRUE);
+    const char *target = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), &load->target);
+    if (SWFDEC_AS_VALUE_IS_MOVIE (&load->target)) {
       SWFDEC_FIXME ("Adobe 9.0.124.0 and later don't emit fscommands here. "
 	  "We just do for compatibility reasons with the testsuite.");
-      g_signal_emit_by_name (player, "fscommand", command, target);
-      g_free (target);
-    } else {
-      g_signal_emit_by_name (player, "fscommand", command, load->target_string);
     }
+    g_signal_emit_by_name (player, "fscommand", command, target);
     swfdec_player_unroot (player, load);
     return;
   }
 
   /* LAUNCH command (aka getURL) */
-  if (load->target_string && swfdec_player_get_level (player, load->target_string, 7) < 0) {
-    swfdec_player_launch (player, load->url, load->target_string, load->buffer);
+  if (SWFDEC_AS_VALUE_IS_STRING (&load->target) && swfdec_player_get_level (player, 
+	SWFDEC_AS_VALUE_GET_STRING (&load->target), 7) < 0) {
+    swfdec_player_launch (player, load->url, SWFDEC_AS_VALUE_GET_STRING (&load->target), load->buffer);
     swfdec_player_unroot (player, load);
     return;
   }
@@ -647,10 +651,9 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
 }
 
 /* NB: must be called from a script */
-/* FIXME: 6 arguments?! */
+/* FIXME: 5 arguments?! */
 static void
-swfdec_resource_load_internal (SwfdecPlayer *player,
-    SwfdecSpriteMovie *target_movie, const char *target_string,
+swfdec_resource_load_internal (SwfdecPlayer *player, const SwfdecAsValue *val,
     const char *url, SwfdecBuffer *buffer, SwfdecMovieClipLoader *loader)
 {
   SwfdecResourceLoad *load;
@@ -660,8 +663,7 @@ swfdec_resource_load_internal (SwfdecPlayer *player,
 
   load->sandbox = swfdec_sandbox_get (player);
   load->url = g_strdup (url);
-  load->target_movie = target_movie;
-  load->target_string = g_strdup (target_string);
+  load->target = *val;
   load->buffer = buffer;
   load->loader = loader;
 
@@ -674,6 +676,7 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
     const char *url, SwfdecBuffer *buffer, SwfdecMovieClipLoader *loader)
 {
   SwfdecMovie *movie;
+  SwfdecAsValue val;
   const char *s;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), FALSE);
@@ -684,8 +687,7 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
   if (SWFDEC_AS_VALUE_IS_MOVIE (target)) {
     movie = SWFDEC_AS_VALUE_GET_MOVIE (target);
     if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-      swfdec_resource_load_internal (player, SWFDEC_SPRITE_MOVIE (movie),
-	  NULL, url, buffer, loader);
+      swfdec_resource_load_internal (player, target, url, buffer, loader);
       return TRUE;
     }
   }
@@ -695,9 +697,9 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
       int i = swfdec_as_double_to_integer (SWFDEC_AS_VALUE_GET_NUMBER (target));
       if (i < 0)
 	return FALSE;
-      s = swfdec_as_context_give_string (swfdec_gc_object_get_context (loader),
-	  g_strdup_printf ("_level%d", i));
-      swfdec_resource_load_internal (player, NULL, s, url, buffer, loader);
+      SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
+	    SWFDEC_AS_CONTEXT (player), g_strdup_printf ("_level%d", i)));
+      swfdec_resource_load_internal (player, &val, url, buffer, loader);
       return TRUE;
     } else if (SWFDEC_AS_VALUE_IS_STRING (target) || SWFDEC_AS_VALUE_IS_MOVIE(target)) {
       s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), target);
@@ -711,14 +713,15 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
   if (swfdec_player_get_level (player, s, SWFDEC_AS_CONTEXT (player)->version) >= 0) {
     /* lowercase the string, so we can do case insensitive level lookups later on */
     char *tmp = g_ascii_strdown (s, -1);
-    swfdec_resource_load_internal (player, NULL, tmp, url, buffer, NULL);
-    g_free (tmp);
+    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
+	  SWFDEC_AS_CONTEXT (player), tmp));
+    swfdec_resource_load_internal (player, &val, url, buffer, NULL);
     return TRUE;
   }
   movie = swfdec_player_get_movie_from_string (player, s);
   if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    swfdec_resource_load_internal (player, SWFDEC_SPRITE_MOVIE (movie),
-	NULL, url, buffer, loader);
+    SWFDEC_AS_VALUE_SET_MOVIE (&val, movie);
+    swfdec_resource_load_internal (player, &val, url, buffer, loader);
     return TRUE;
   }
   SWFDEC_WARNING ("%s does not reference a movie, not loading %s", s, url);
@@ -729,11 +732,14 @@ void
 swfdec_resource_load (SwfdecPlayer *player, const char *target, 
     const char *url, SwfdecBuffer *buffer)
 {
+  SwfdecAsValue val;
+
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (target != NULL);
   g_return_if_fail (url != NULL);
 
-  swfdec_resource_load_internal (player, NULL, target, url, buffer, NULL);
+  SWFDEC_AS_VALUE_SET_STRING (&val, target);
+  swfdec_resource_load_internal (player, &val, url, buffer, NULL);
 }
 
 gboolean

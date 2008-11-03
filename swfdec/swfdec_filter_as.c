@@ -37,6 +37,6 @@ swfdec_filter_do_clone (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_FILTER, &filter, "");
 
   filter = swfdec_filter_clone (filter);
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, SWFDEC_AS_OBJECT (filter));
+  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (filter)));
 }
 

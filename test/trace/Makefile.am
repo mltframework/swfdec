@@ -4353,6 +4353,15 @@ EXTRA_DIST = \
 	utf-32-be-bom.txt \
 	utf-32-le-bom.txt \
 	values.as \
+	various-tests-5.swf \
+	various-tests-5.swf.trace \
+	various-tests-6.swf \
+	various-tests-6.swf.trace \
+	various-tests-7.swf \
+	various-tests-7.swf.trace \
+	various-tests-8.swf \
+	various-tests-8.swf.trace \
+	various-tests.as \
 	version4-global.sc \
 	version4-global.swf \
 	version4-global.swf.trace \

@@ -1031,6 +1031,15 @@ EXTRA_DIST = \
 	crash-0.8.2-gotoAndPlay-8.swf \
 	crash-0.8.2-gotoAndPlay-8.swf.trace \
 	crash-0.8.2-gotoAndPlay.as \
+	crash-0.8.2-sendAndLoad-without-target-5.swf \
+	crash-0.8.2-sendAndLoad-without-target-5.swf.trace \
+	crash-0.8.2-sendAndLoad-without-target-6.swf \
+	crash-0.8.2-sendAndLoad-without-target-6.swf.trace \
+	crash-0.8.2-sendAndLoad-without-target-7.swf \
+	crash-0.8.2-sendAndLoad-without-target-7.swf.trace \
+	crash-0.8.2-sendAndLoad-without-target-8.swf \
+	crash-0.8.2-sendAndLoad-without-target-8.swf.trace \
+	crash-0.8.2-sendAndLoad-without-target.as \
 	createEmptyMovieClip-events.sc \
 	createEmptyMovieClip-events.swf \
 	createEmptyMovieClip-events.swf.trace \

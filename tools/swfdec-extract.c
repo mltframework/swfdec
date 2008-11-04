@@ -147,7 +147,7 @@ export_sprite_sound (SwfdecSprite *sprite, const char *filename)
 static cairo_surface_t *
 surface_create_for_filename (const char *filename, int width, int height)
 {
-  guint len = strlen (filename);
+  G_GNUC_UNUSED guint len = strlen (filename);
   cairo_surface_t *surface;
   if (FALSE) {
 #ifdef CAIRO_HAS_PDF_SURFACE

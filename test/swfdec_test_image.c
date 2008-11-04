@@ -99,9 +99,9 @@ buffer_diff_core (unsigned char *buf_a,
     guint32 *row_a, *row_b, *row;
 
     for (y = 0; y < height; y++) {
-	row_a = (guint32 *) (buf_a + y * stride_a);
-	row_b = (guint32 *) (buf_b + y * stride_b);
-	row = (guint32 *) (buf_diff + y * stride_diff);
+	row_a = (guint32 *) (gpointer) (buf_a + y * stride_a);
+	row_b = (guint32 *) (gpointer) (buf_b + y * stride_b);
+	row = (guint32 *) (gpointer) (buf_diff + y * stride_diff);
 	for (x = 0; x < width; x++) {
 	    /* check if the pixels are the same */
 	    if (row_a[x] != row_b[x]) {

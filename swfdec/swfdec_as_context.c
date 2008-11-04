@@ -326,7 +326,7 @@ swfdec_as_string_mark (const char *string)
 
   g_return_if_fail (string != NULL);
 
-  value = (SwfdecAsStringValue *) ((guint8 *) string - G_STRUCT_OFFSET (SwfdecAsStringValue, string));
+  value = (SwfdecAsStringValue *) (gpointer) ((guint8 *) string - G_STRUCT_OFFSET (SwfdecAsStringValue, string));
   if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value, SWFDEC_AS_GC_ROOT))
     SWFDEC_AS_GCABLE_SET_FLAG (value, SWFDEC_AS_GC_MARK);
 }

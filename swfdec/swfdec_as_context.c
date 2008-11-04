@@ -589,7 +589,6 @@ swfdec_as_context_init (SwfdecAsContext *context)
 
   for (s = swfdec_as_strings; s->next; s++) {
     g_hash_table_insert (context->interned_strings, (gpointer) s->string, (gpointer) s);
-    g_print ("%s\n", s->string);
   }
   context->rand = g_rand_new ();
   g_get_current_time (&context->start_time);

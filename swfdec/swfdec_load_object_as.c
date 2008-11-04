@@ -31,9 +31,14 @@
 #include "swfdec_player_internal.h"
 
 static void
-swfdec_load_object_on_finish (SwfdecAsObject *target, const char *text)
+swfdec_load_object_on_finish (SwfdecPlayer *player, const SwfdecAsValue *target, const char *text)
 {
+  SwfdecAsObject *object;
   SwfdecAsValue val;
+
+  object = SWFDEC_AS_VALUE_GET_COMPOSITE (target);
+  if (object == NULL)
+    return;
 
   if (text != NULL) {
     SWFDEC_AS_VALUE_SET_STRING (&val, text);
@@ -41,19 +46,22 @@ swfdec_load_object_on_finish (SwfdecAsObject *target, const char *text)
     SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
   }
 
-  swfdec_as_object_call (target, SWFDEC_AS_STR_onData, 1, &val, NULL);
+  swfdec_as_object_call (object, SWFDEC_AS_STR_onData, 1, &val, NULL);
 }
 
 static void
-swfdec_load_object_on_progress (SwfdecAsObject *target, glong size,
-    glong loaded)
+swfdec_load_object_on_progress (SwfdecPlayer *player, const SwfdecAsValue *target,
+    glong size, glong loaded)
 {
-  SwfdecAsContext *cx;
+  SwfdecAsContext *cx = SWFDEC_AS_CONTEXT (player);
+  SwfdecAsObject *object;
   SwfdecAsValue val;
 
-  cx = swfdec_gc_object_get_context (target);
+  object = SWFDEC_AS_VALUE_GET_COMPOSITE (target);
+  if (object == NULL)
+    return;
   swfdec_as_value_set_number (cx, &val, loaded);
-  swfdec_as_object_set_variable_and_flags (target, SWFDEC_AS_STR__bytesLoaded,
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__bytesLoaded,
       &val, SWFDEC_AS_VARIABLE_HIDDEN);
 
   if (size >= 0) {
@@ -61,7 +69,7 @@ swfdec_load_object_on_progress (SwfdecAsObject *target, glong size,
   } else {
     swfdec_as_value_set_number (cx, &val, loaded);
   }
-  swfdec_as_object_set_variable_and_flags (target, SWFDEC_AS_STR__bytesTotal,
+  swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR__bytesTotal,
       &val, SWFDEC_AS_VARIABLE_HIDDEN);
 }
 
@@ -76,7 +84,8 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "s", &url);
 
-  swfdec_load_object_create (object, url, NULL, 0, NULL, NULL,
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
+  swfdec_load_object_create (SWFDEC_PLAYER (cx), &val, url, NULL, 0, NULL, NULL,
       swfdec_load_object_on_progress, swfdec_load_object_on_finish);
 
   swfdec_as_value_set_integer (cx, &val, 0);
@@ -225,7 +234,7 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsValue val;
   SwfdecBuffer *buffer;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "sO|s", &url, &target,
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "so|s", &url, &target,
       &method);
 
   SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
@@ -236,14 +245,15 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
 	g_strjoin (NULL, url, "?", data, NULL));
     buffer = NULL;
   } else {
+    gsize len = strlen (data);
     // don't send the nul-byte
-    buffer = swfdec_buffer_new_for_data (g_memdup (data, strlen (data)),
-	strlen (data));
+    buffer = swfdec_buffer_new_for_data (g_memdup (data, len), len);
   }
 
   swfdec_load_object_as_get_headers (object, &header_count, &header_names,
       &header_values);
-  swfdec_load_object_create (target, url, buffer, header_count, header_names,
+  SWFDEC_AS_VALUE_SET_COMPOSITE (&val, target);
+  swfdec_load_object_create (SWFDEC_PLAYER (cx), &val, url, buffer, header_count, header_names,
       header_values, swfdec_load_object_on_progress,
       swfdec_load_object_on_finish);
 

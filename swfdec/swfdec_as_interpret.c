@@ -1142,15 +1142,16 @@ swfdec_action_get_url (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 }
 
 static void
-swfdec_as_interpret_load_variables_on_finish (SwfdecAsObject *target,
-    const char *text)
+swfdec_as_interpret_load_variables_on_finish (SwfdecPlayer *player,
+    const SwfdecAsValue *val, const char *text)
 {
+  SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (val);
+
   if (text != NULL)
-    swfdec_as_object_decode (target, text);
+    swfdec_as_object_decode (SWFDEC_AS_OBJECT (movie), text);
 
   // only call onData for sprite movies
-  // FIXME: is it called even when loading fails?
-  swfdec_actor_queue_script (SWFDEC_ACTOR (target), SWFDEC_EVENT_DATA);
+  swfdec_actor_queue_script (SWFDEC_ACTOR (movie), SWFDEC_EVENT_DATA);
 }
 
 static gboolean
@@ -1199,6 +1200,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   const char *target, *url;
   guint method, internal, variables;
   SwfdecBuffer *buffer;
+  SwfdecAsValue val;
 
   if (len != 1) {
     SWFDEC_ERROR ("GetURL2 requires 1 byte of data, not %u", len);
@@ -1245,7 +1247,8 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
     if (movie != NULL) {
-      swfdec_load_object_create (SWFDEC_AS_OBJECT (movie), url, buffer, 0,
+      SWFDEC_AS_VALUE_SET_MOVIE (&val, movie);
+      swfdec_load_object_create (SWFDEC_PLAYER (cx), &val, url, buffer, 0,
 	  NULL, NULL, NULL, swfdec_as_interpret_load_variables_on_finish);
     }
   } else if (internal) {

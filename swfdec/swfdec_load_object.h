@@ -31,10 +31,10 @@ G_BEGIN_DECLS
 typedef struct _SwfdecLoadObject SwfdecLoadObject;
 typedef struct _SwfdecLoadObjectClass SwfdecLoadObjectClass;
 
-typedef void (* SwfdecLoadObjectProgress) (SwfdecAsObject *target,
-    glong loaded, glong size);
-typedef void (* SwfdecLoadObjectFinish) (SwfdecAsObject *target,
-    const char *text);
+typedef void (* SwfdecLoadObjectProgress) (SwfdecPlayer *player,
+    const SwfdecAsValue *target, glong loaded, glong size);
+typedef void (* SwfdecLoadObjectFinish) (SwfdecPlayer *player,
+    const SwfdecAsValue *target, const char *text);
 
 #define SWFDEC_TYPE_LOAD_OBJECT                    (swfdec_load_object_get_type())
 #define SWFDEC_IS_LOAD_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_LOAD_OBJECT))
@@ -44,7 +44,7 @@ typedef void (* SwfdecLoadObjectFinish) (SwfdecAsObject *target,
 #define SWFDEC_LOAD_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_LOAD_OBJECT, SwfdecLoadObjectClass))
 
 struct _SwfdecLoadObject {
-  GObject			object;
+  SwfdecGcObject	      	object;
   
   const char *			url;		/* GC'ed url to request */
   SwfdecBuffer *		buffer;		/* data to send */
@@ -55,18 +55,19 @@ struct _SwfdecLoadObject {
 
   SwfdecSandbox *		sandbox;	/* sandbox that inited the loading */
   guint				version;	/* version used when initiating the load - for parsing the data */
-  SwfdecAsObject *		target;		/* target object */
+  SwfdecAsValue			target;		/* target (either movie or object) */
   SwfdecLoadObjectProgress	progress;	/* progress callback */
   SwfdecLoadObjectFinish	finish;		/* finish callback */
 };
 
 struct _SwfdecLoadObjectClass {
-  GObjectClass			object_class;
+  SwfdecGcObjectClass		object_class;
 };
 
 GType		swfdec_load_object_get_type	(void);
 
-void		swfdec_load_object_create     	(SwfdecAsObject *		target,
+void		swfdec_load_object_create     	(SwfdecPlayer *			player,
+						 const SwfdecAsValue *		target,
 						 const char *			url,
 						 SwfdecBuffer *			data,
 						 guint				header_count,

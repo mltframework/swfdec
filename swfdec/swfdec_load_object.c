@@ -38,7 +38,7 @@
 static SwfdecPlayer *
 swfdec_load_object_stream_target_get_player (SwfdecStreamTarget *target)
 {
-  return SWFDEC_PLAYER (swfdec_gc_object_get_context (SWFDEC_LOAD_OBJECT (target)->target));
+  return SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
 }
 
 static gboolean
@@ -47,10 +47,11 @@ swfdec_load_object_stream_target_parse (SwfdecStreamTarget *target,
 {
   SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
 
   if (load_object->progress != NULL) {
     swfdec_sandbox_use (load_object->sandbox);
-    load_object->progress (load_object->target,
+    load_object->progress (player, &load_object->target,
 	swfdec_loader_get_loaded (loader), swfdec_loader_get_size (loader));
     swfdec_sandbox_unuse (load_object->sandbox);
   }
@@ -63,6 +64,7 @@ swfdec_load_object_stream_target_error (SwfdecStreamTarget *target,
 {
   SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (load_object->sandbox));
 
   /* break reference to the loader */
   swfdec_stream_set_target (SWFDEC_STREAM (loader), NULL);
@@ -71,18 +73,18 @@ swfdec_load_object_stream_target_error (SwfdecStreamTarget *target,
 
   /* call finish */
   swfdec_sandbox_use (load_object->sandbox);
-  load_object->finish (load_object->target, NULL);
+  load_object->finish (player, &load_object->target, NULL);
   swfdec_sandbox_unuse (load_object->sandbox);
 
   /* unroot */
-  swfdec_player_unroot (SWFDEC_PLAYER (
-	swfdec_gc_object_get_context (load_object->sandbox)), load_object);
+  swfdec_player_unroot (player, load_object);
 }
 
 static void
 swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
     SwfdecStream *stream)
 {
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
   SwfdecLoadObject *load_object = SWFDEC_LOAD_OBJECT (target);
   char *text;
 
@@ -92,21 +94,19 @@ swfdec_load_object_stream_target_close (SwfdecStreamTarget *target,
   /* break reference to the loader */
   swfdec_stream_set_target (stream, NULL);
   load_object->loader = NULL;
-  g_object_unref (stream);
 
   /* call finish */
   swfdec_sandbox_use (load_object->sandbox);
   if (text != NULL) {
-    load_object->finish (load_object->target, 
-	swfdec_as_context_give_string (swfdec_gc_object_get_context (load_object->target), text));
+    load_object->finish (player, &load_object->target, 
+	swfdec_as_context_give_string (SWFDEC_AS_CONTEXT (player), text));
   } else {
-    load_object->finish (load_object->target, SWFDEC_AS_STR_EMPTY);
+    load_object->finish (player, &load_object->target, SWFDEC_AS_STR_EMPTY);
   }
   swfdec_sandbox_unuse (load_object->sandbox);
 
   /* unroot */
-  swfdec_player_unroot (SWFDEC_PLAYER (
-	swfdec_gc_object_get_context (load_object->sandbox)), load_object);
+  swfdec_player_unroot (player, load_object);
 }
 
 static void
@@ -120,7 +120,7 @@ swfdec_load_object_stream_target_init (SwfdecStreamTargetInterface *iface)
 
 /*** SWFDEC_LOAD_OBJECT ***/
 
-G_DEFINE_TYPE_WITH_CODE (SwfdecLoadObject, swfdec_load_object, G_TYPE_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (SwfdecLoadObject, swfdec_load_object, SWFDEC_TYPE_GC_OBJECT,
     G_IMPLEMENT_INTERFACE (SWFDEC_TYPE_STREAM_TARGET, swfdec_load_object_stream_target_init))
 
 static void
@@ -167,7 +167,7 @@ swfdec_load_object_load (SwfdecPlayer *player, gboolean allow, gpointer obj)
 
     /* call finish */
     swfdec_sandbox_use (load->sandbox);
-    load->finish (load->target, NULL);
+    load->finish (player, &load->target, NULL);
     swfdec_sandbox_unuse (load->sandbox);
 
     /* unroot */
@@ -205,33 +205,35 @@ static void
 swfdec_load_object_mark (gpointer object, gpointer player)
 {
   SwfdecLoadObject *load = object;
+  
+  /* need to mark ourself, becuase we're not a real GcObject */
+  swfdec_gc_object_mark (load);
 
   swfdec_gc_object_mark (load->sandbox);
   if (load->url)
     swfdec_as_string_mark (load->url);
-  swfdec_gc_object_mark (load->target);
+  swfdec_as_value_mark (&load->target);
 }
 
 void
-swfdec_load_object_create (SwfdecAsObject *target, const char *url,
-    SwfdecBuffer *data, guint header_count, char **header_names,
+swfdec_load_object_create (SwfdecPlayer *player, const SwfdecAsValue *target,
+    const char *url, SwfdecBuffer *data, guint header_count, char **header_names,
     char **header_values, SwfdecLoadObjectProgress progress,
     SwfdecLoadObjectFinish finish)
 {
-  SwfdecPlayer *player;
   SwfdecLoadObject *load;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (target));
+  g_return_if_fail (SWFDEC_IS_PLAYER (player));
+  g_return_if_fail (target != NULL);
   g_return_if_fail (url != NULL);
   g_return_if_fail (header_count == 0 || header_names != NULL);
   g_return_if_fail (header_count == 0 || header_values != NULL);
   g_return_if_fail (finish != NULL);
 
-  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
-  load = g_object_new (SWFDEC_TYPE_LOAD_OBJECT, NULL);
-  swfdec_player_root_full (player, load, swfdec_load_object_mark, g_object_unref);
+  load = g_object_new (SWFDEC_TYPE_LOAD_OBJECT, "context", player, NULL);
+  swfdec_player_root_full (player, load, swfdec_load_object_mark, NULL);
 
-  load->target = target;
+  load->target = *target;
   load->url = url;
   load->buffer = data;
   load->header_count = header_count;

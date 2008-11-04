@@ -223,7 +223,7 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsValue val;
   SwfdecBuffer *buffer;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "sO|s", &url, &target,
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "so|s", &url, &target,
       &method);
 
   SWFDEC_AS_VALUE_SET_OBJECT (&val, object);

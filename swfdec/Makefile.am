@@ -433,10 +433,16 @@ swfdec_as_strings.h: swfdec_as_strings.c
 	  && echo "#define _SWFDEC_AS_STRINGS_H_" \
 	  && echo "#include <swfdec/swfdec_as_types.h>" \
 	  && echo "G_BEGIN_DECLS" \
-	  && echo "extern const SwfdecAsStringValue swfdec_as_strings[];" \
+	  && echo "#define SWFDEC_AS_CONSTANT_STRING_LENGTH_MAX 40" \
+	  && echo "typedef struct {" \
+	  && echo "  SwfdecAsStringValue *	next;" \
+	  && echo "  gsize			length;" \
+	  && echo "  char			string[SWFDEC_AS_CONSTANT_STRING_LENGTH_MAX];" \
+	  && echo "} SwfdecAsConstantStringValue;" \
+	  && echo "extern const SwfdecAsConstantStringValue swfdec_as_strings[];" \
 	  && grep "  SWFDEC_AS_CONSTANT_STRING" swfdec_as_strings.c \
 	  | sed "s/.*(\"\(.*\)\").*/\1/" \
-	  | LC_ALL="C" $(AWK) '{ if ($$0 == "") name = "EMPTY"; else if ($$0 == ",") name = "COMMA"; else if ($$0 == "/") name = "SLASH"; else name = $$0; gsub("[^a-zA-Z0-9]","_",name); print "#define SWFDEC_AS_STR_" name " (((SwfdecAsStringValue *) &((guint8 *) swfdec_as_strings)[" (x + 0) " * sizeof (SwfdecAsStringValue) + " (y + 0) "])->string)"; x = x + 1; y = y + length ($$0) + 1 }' \
+	  | LC_ALL="C" $(AWK) '{ if ($$0 == "") name = "EMPTY"; else if ($$0 == ",") name = "COMMA"; else if ($$0 == "/") name = "SLASH"; else name = $$0; gsub("[^a-zA-Z0-9]","_",name); print "#define SWFDEC_AS_STR_" name " (((SwfdecAsStringValue *) &swfdec_as_strings[" (x + 0) "])->string)"; x = x + 1; }' \
 	  && echo "G_END_DECLS" \
 	  && echo "#endif" ) > xgen-sas \
 	&& (cmp -s xgen-sas swfdec_as_strings.h || cp xgen-sas swfdec_as_strings.h ) \

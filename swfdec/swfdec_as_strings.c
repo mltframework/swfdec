@@ -26,8 +26,8 @@
 #include "swfdec_as_gcable.h"
 
 
-#define SWFDEC_AS_CONSTANT_STRING(str) { GSIZE_TO_POINTER (SWFDEC_AS_GC_ROOT), sizeof (str) - 1, str },
-const SwfdecAsStringValue swfdec_as_strings[] = {
+#define SWFDEC_AS_CONSTANT_STRING(str) { GSIZE_TO_POINTER (SWFDEC_AS_GC_ROOT), sizeof (str) - 1, str "\0" },
+const SwfdecAsConstantStringValue swfdec_as_strings[] = {
   SWFDEC_AS_CONSTANT_STRING ("")
   SWFDEC_AS_CONSTANT_STRING ("__proto__")
   SWFDEC_AS_CONSTANT_STRING ("this")

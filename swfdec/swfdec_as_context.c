@@ -579,7 +579,7 @@ swfdec_as_context_class_init (SwfdecAsContextClass *klass)
 static void
 swfdec_as_context_init (SwfdecAsContext *context)
 {
-  const SwfdecAsStringValue *s;
+  const SwfdecAsConstantStringValue *s;
 
   context->version = G_MAXUINT;
 
@@ -587,9 +587,9 @@ swfdec_as_context_init (SwfdecAsContext *context)
   context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
   context->constant_pools = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  for (s = swfdec_as_strings; s->next; s = (const SwfdecAsStringValue *) 
-      ((const guint8 *) (s + 1) + s->length + 1)) {
+  for (s = swfdec_as_strings; s->next; s++) {
     g_hash_table_insert (context->interned_strings, (gpointer) s->string, (gpointer) s);
+    g_print ("%s\n", s->string);
   }
   context->rand = g_rand_new ();
   g_get_current_time (&context->start_time);

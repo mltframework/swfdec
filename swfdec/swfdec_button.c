@@ -22,8 +22,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <string.h>
 #include "swfdec_button.h"
+
+#include <string.h>
+
 #include "swfdec_button_movie.h"
 #include "swfdec_debug.h"
 #include "swfdec_filter.h"

@@ -669,7 +669,6 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
 
   g_return_if_fail (object != NULL);
   g_return_if_fail (variable != NULL);
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   context = swfdec_gc_object_get_context (object);
 

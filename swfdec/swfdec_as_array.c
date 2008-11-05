@@ -352,7 +352,6 @@ swfdec_as_array_insert_with_flags (SwfdecAsObject *array, gint32 idx,
 
   g_return_if_fail (array != NULL);
   g_return_if_fail (idx >= 0);
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   length = swfdec_as_array_get_length (array);
 
@@ -426,7 +425,6 @@ swfdec_as_array_set_value (SwfdecAsObject *array, gint32 idx,
 
   g_assert (array != NULL);
   g_assert (idx >= 0);
-  g_assert (SWFDEC_IS_AS_VALUE (value));
 
   var = swfdec_as_integer_to_string (swfdec_gc_object_get_context (array), idx);
   swfdec_as_object_set_variable (array, var, value);
@@ -855,8 +853,6 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
   int retval;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), 0);
-  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (a), 0);
-  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (b), 0);
   g_return_val_if_fail (custom_function == NULL ||
       SWFDEC_IS_AS_FUNCTION (custom_function), 0);
 
@@ -921,8 +917,6 @@ swfdec_as_array_sort_compare (gconstpointer a_ptr, gconstpointer b_ptr,
   SortCompareData *data = user_data;
   int retval;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (a), 0);
-  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (b), 0);
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (data->context), 0);
   g_return_val_if_fail (data->options != NULL, 0);
   g_return_val_if_fail (data->custom_function == NULL ||

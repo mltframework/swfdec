@@ -350,7 +350,6 @@ swfdec_as_string_mark (const char *string)
 void
 swfdec_as_value_mark (SwfdecAsValue *value)
 {
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
     swfdec_gc_object_mark (value->value.object);
@@ -708,7 +707,6 @@ void
 swfdec_as_context_throw (SwfdecAsContext *context, const SwfdecAsValue *value)
 {
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
   g_return_if_fail (!context->exception);
 
   context->exception = TRUE;

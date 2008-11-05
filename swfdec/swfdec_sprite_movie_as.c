@@ -500,7 +500,6 @@ swfdec_sprite_movie_do_goto (SwfdecSpriteMovie *movie, SwfdecAsValue *target)
 
   g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
   g_return_if_fail (movie->sprite != NULL);
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (target));
 
   if (SWFDEC_AS_VALUE_IS_STRING (target)) {
     const char *label = SWFDEC_AS_VALUE_GET_STRING (target);

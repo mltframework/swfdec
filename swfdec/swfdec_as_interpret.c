@@ -555,7 +555,6 @@ swfdec_player_get_movie_from_value (SwfdecPlayer *player, SwfdecAsValue *val)
   const char *s;
 
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
-  g_return_val_if_fail (SWFDEC_IS_AS_VALUE (val), NULL);
 
   cx = SWFDEC_AS_CONTEXT (player);
   s = swfdec_as_value_to_string (cx, val);
@@ -2601,7 +2600,6 @@ swfdec_action_try_end_finally (SwfdecAsContext *cx, SwfdecAsFrame *frame, gpoint
 {
   SwfdecAsValue *exception_value = data;
 
-  g_return_if_fail (SWFDEC_IS_AS_VALUE (exception_value));
 
   // finally has ended and we had exception stored, throw it
   if (!cx->exception && cx->frame == frame)

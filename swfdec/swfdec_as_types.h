@@ -68,7 +68,6 @@ struct _SwfdecAsValue {
   } value;
 };
 
-#define SWFDEC_IS_AS_VALUE(val) ((val) != NULL && SWFDEC_AS_VALUE_GET_TYPE (val) <= SWFDEC_TYPE_AS_OBJECT)
 #define SWFDEC_AS_VALUE_GET_TYPE(val) ((val)->type)
 
 #define SWFDEC_AS_VALUE_IS_UNDEFINED(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_UNDEFINED)

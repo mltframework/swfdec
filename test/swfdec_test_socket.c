@@ -46,23 +46,27 @@ swfdec_test_throw (SwfdecAsContext *cx, const char *message, ...)
 
 /*** SWFDEC_TEST_SOCKET ***/
 
-G_DEFINE_TYPE (SwfdecTestSocket, swfdec_test_socket, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_TYPE (SwfdecTestSocket, swfdec_test_socket, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_test_socket_do_close (SwfdecTestSocket *sock, gboolean success)
 {
+  SwfdecAsContext *cx;
+  SwfdecAsValue val;
+
   if (sock->plugin == NULL)
     return;
 
+  cx = swfdec_gc_object_get_context (sock);
   sock->plugin->finish (sock->plugin, success ? 0 : 1);
   sock->plugin = NULL;
 
-  if (sock->test->pending_sockets &&
-      sock->test->pending_sockets->data == sock) {
-    sock->test->pending_sockets = sock->test->pending_sockets->prev;
-  }
-  sock->test->sockets = g_list_remove (sock->test->sockets, sock);
+  sock->test->sockets = g_slist_remove (sock->test->sockets, sock);
   sock->test = NULL;
+
+  SWFDEC_AS_VALUE_SET_BOOLEAN (&val, success);
+  swfdec_as_relay_call (SWFDEC_AS_RELAY (sock), swfdec_as_context_get_string (cx, "onClose"),
+      1, &val, NULL);
 }
 
 static void
@@ -71,8 +75,6 @@ swfdec_test_socket_dispose (GObject *object)
   SwfdecTestSocket *sock = SWFDEC_TEST_SOCKET (object);
 
   swfdec_test_socket_do_close (sock, FALSE);
-  swfdec_buffer_queue_unref (sock->receive_queue);
-  sock->receive_queue = NULL;
 
   G_OBJECT_CLASS (swfdec_test_socket_parent_class)->dispose (object);
 }
@@ -88,7 +90,6 @@ swfdec_test_socket_class_init (SwfdecTestSocketClass *klass)
 static void
 swfdec_test_socket_init (SwfdecTestSocket *sock)
 {
-  sock->receive_queue = swfdec_buffer_queue_new ();
 }
 
 /*** AS CODE ***/
@@ -110,37 +111,6 @@ swfdec_test_socket_send (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   buffer = swfdec_test_buffer_from_args (cx, argc, argv);
   sock->plugin->receive (sock->plugin, buffer->data, buffer->length);
   swfdec_buffer_unref (buffer);
-}
-
-SWFDEC_TEST_FUNCTION ("Socket_receive", swfdec_test_socket_receive)
-void
-swfdec_test_socket_receive (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
-    SwfdecAsValue *argv, SwfdecAsValue *retval)
-{
-  SwfdecTestSocket *sock;
-  SwfdecBuffer *buffer;
-  gsize len = 0, depth;
-
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_SOCKET, &sock, "|i", &len);
-
-  depth = swfdec_buffer_queue_get_depth (sock->receive_queue);
-  if (len > 0) {
-    if (depth < len) {
-      swfdec_test_throw (cx, "only %zu bytes available", depth);
-      return;
-    } else {
-      buffer = swfdec_buffer_queue_pull (sock->receive_queue, len);
-    }
-  } else {
-    if (depth == 0) {
-      SWFDEC_AS_VALUE_SET_NULL (retval);
-      return;
-    } else {
-      buffer = swfdec_buffer_queue_pull (sock->receive_queue, depth);
-    }
-  }
-  SWFDEC_AS_VALUE_SET_OBJECT (retval, swfdec_as_relay_get_as_object (
-	SWFDEC_AS_RELAY (swfdec_test_buffer_new (cx, buffer))));
 }
 
 SWFDEC_TEST_FUNCTION ("Socket_error", swfdec_test_socket_error)
@@ -184,10 +154,14 @@ swfdec_test_socket_plugin_send (SwfdecTestPluginSocket *plugin, unsigned char *d
     unsigned long length)
 {
   SwfdecTestSocket *sock = plugin->data;
-  SwfdecBuffer *buffer;
+  SwfdecAsContext *cx = swfdec_gc_object_get_context (sock);
+  SwfdecTestBuffer *buffer;
+  SwfdecAsValue val;
 
-  buffer = swfdec_buffer_new_for_data (g_memdup (data, length), length);
-  swfdec_buffer_queue_push (sock->receive_queue, buffer);
+  buffer = swfdec_test_buffer_new (cx, swfdec_buffer_new_for_data (g_memdup (data, length), length));
+  SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (buffer)));
+  swfdec_as_relay_call (SWFDEC_AS_RELAY (sock), swfdec_as_context_get_string (cx, "onData"),
+      1, &val, NULL);
 }
 
 static void
@@ -196,12 +170,13 @@ swfdec_test_socket_plugin_close (SwfdecTestPluginSocket *plugin)
   swfdec_test_socket_do_close (plugin->data, TRUE);
 }
 
-SwfdecAsObject *
+SwfdecTestSocket *
 swfdec_test_socket_new (SwfdecTestTest *test, SwfdecTestPluginSocket *plugin)
 {
-  SwfdecAsValue val;
+  SwfdecAsObject *object;
+  SwfdecTestSocket *new;
   SwfdecAsContext *cx;
-  SwfdecAsObject *new;
+  SwfdecAsValue val;
 
   g_return_val_if_fail (SWFDEC_IS_TEST_TEST (test), NULL);
   g_return_val_if_fail (plugin != NULL, NULL);
@@ -209,24 +184,24 @@ swfdec_test_socket_new (SwfdecTestTest *test, SwfdecTestPluginSocket *plugin)
   cx = swfdec_gc_object_get_context (test);
 
   new = g_object_new (SWFDEC_TYPE_TEST_SOCKET, "context", cx, NULL);
-  swfdec_as_object_get_variable (cx->global, 
-      swfdec_as_context_get_string (cx, "Socket"), &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val))
-    swfdec_as_object_set_constructor (new, SWFDEC_AS_VALUE_GET_OBJECT (&val));
+  object = swfdec_as_object_new (cx, NULL);
+  swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (new));
+  swfdec_as_object_set_constructor_by_name (object,
+      swfdec_as_context_get_string (cx, "Socket"), NULL);
 
   plugin->send = swfdec_test_socket_plugin_send;
   plugin->close = swfdec_test_socket_plugin_close;
   plugin->data = new;
-  SWFDEC_TEST_SOCKET (new)->test = test;
-  SWFDEC_TEST_SOCKET (new)->plugin = plugin;
-  test->sockets = g_list_append (test->sockets, new);
+  new->test = test;
+  new->plugin = plugin;
+  test->sockets = g_slist_prepend (test->sockets, new);
 
   SWFDEC_AS_VALUE_SET_STRING (&val,
       swfdec_as_context_get_string (cx, plugin->host));
-  swfdec_as_object_set_variable (new, 
+  swfdec_as_object_set_variable (object, 
       swfdec_as_context_get_string (cx, "host"), &val);
   swfdec_as_value_set_integer (cx, &val, plugin->port);
-  swfdec_as_object_set_variable (new, 
+  swfdec_as_object_set_variable (object, 
       swfdec_as_context_get_string (cx, "port"), &val);
 
   return new;

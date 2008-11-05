@@ -51,8 +51,7 @@ struct _SwfdecTestTest
   SwfdecBufferQueue *	trace;		/* all captured trace output */
   SwfdecBufferQueue *	launched;	/* all launched urls */
 
-  GList *		sockets;	/* list of all sockets */
-  GList *		pending_sockets;/* last socket handed out or NULL if none given out */
+  GSList *		sockets;	/* list of all sockets */
 };
 
 struct _SwfdecTestTestClass

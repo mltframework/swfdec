@@ -39,23 +39,22 @@ typedef struct _SwfdecTestSocketClass SwfdecTestSocketClass;
 
 struct _SwfdecTestSocket
 {
-  SwfdecAsObject		as_object;
+  SwfdecAsRelay			relay;
 
   SwfdecTestPluginSocket *	plugin;		/* the socket we manage or NULL if closed */
   SwfdecTestTest *		test;		/* the test that spawned us */
-  SwfdecBufferQueue *		receive_queue;	/* queue with received data */
 };
 
 struct _SwfdecTestSocketClass
 {
-  SwfdecAsObjectClass	as_object_class;
+  SwfdecAsRelayClass		relay_class;
 };
 
-GType		swfdec_test_socket_get_type	(void);
+GType			swfdec_test_socket_get_type	(void);
 
-SwfdecAsObject *swfdec_test_socket_new		(SwfdecTestTest *		test,
-						 SwfdecTestPluginSocket *	sock);
-void		swfdec_test_socket_close	(SwfdecTestSocket *		sock);
+SwfdecTestSocket *	swfdec_test_socket_new		(SwfdecTestTest *		test,
+							 SwfdecTestPluginSocket *	sock);
+void			swfdec_test_socket_close	(SwfdecTestSocket *		sock);
 
 G_END_DECLS
 #endif

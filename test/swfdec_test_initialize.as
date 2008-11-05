@@ -51,14 +51,12 @@ Socket = function () {};
 Socket.prototype = {};
 Socket.prototype.close = Native.Socket_close;
 Socket.prototype.error = Native.Socket_error;
-Socket.prototype.receive = Native.Socket_receive;
 Socket.prototype.send = Native.Socket_send;
 Socket.prototype.addProperty ("closed", Native.Socket_get_closed, null);
 
 Test = Native.Test;
 Test.prototype = {};
 Test.prototype.advance = Native.Test_advance;
-Test.prototype.getSocket = Native.Test_getSocket;
 Test.prototype.mouse_move = Native.Test_mouse_move;
 Test.prototype.mouse_press = Native.Test_mouse_press;
 Test.prototype.mouse_release = Native.Test_mouse_release;

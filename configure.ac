@@ -323,9 +323,6 @@ vivified/code/Makefile
 vivified/code/test/Makefile
 vivified/code/test/compiler/Makefile
 vivified/code/test/decompiler/Makefile
-vivified/core/Makefile
-vivified/dock/Makefile
-vivified/ui/Makefile
 )
 
 AC_OUTPUT

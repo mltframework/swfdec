@@ -516,8 +516,10 @@ swfdec_action_lookup_object (SwfdecAsContext *cx, SwfdecAsObject *o, const char 
 	GSList *walk;
 	for (walk = cx->frame->scope_chain; walk; walk = walk->next) {
 	  o = walk->data;
-	  if (o->movie)
+	  if (o->movie) {
+	    movie = SWFDEC_MOVIE (o->relay);
 	    break;
+	  }
 	}
 	if (walk == NULL)
 	  movie = swfdec_as_frame_get_target (cx->frame);

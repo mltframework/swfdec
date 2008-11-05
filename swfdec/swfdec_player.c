@@ -1059,6 +1059,7 @@ swfdec_player_dispose (GObject *object)
   G_OBJECT_CLASS (swfdec_player_parent_class)->dispose (object);
   /* must happen after disposing context, some objects unroot themselves */
   swfdec_function_list_clear (&priv->rooted);
+  g_assert (priv->xml_sockets == NULL); /* xml sockets do remove themselves */
 
   swfdec_player_remove_all_external_actions (player, player);
 #ifndef G_DISABLE_ASSERT
@@ -2080,6 +2081,7 @@ swfdec_player_mark (SwfdecAsContext *context)
   g_list_foreach (priv->roots, (GFunc) swfdec_gc_object_mark, NULL);
   g_list_foreach (priv->intervals, (GFunc) swfdec_gc_object_mark, NULL);
   g_slist_foreach (priv->sandboxes, (GFunc) swfdec_gc_object_mark, NULL);
+  g_slist_foreach (priv->xml_sockets, (GFunc) swfdec_gc_object_mark, NULL);
   swfdec_function_list_execute (&priv->rooted, player);
   swfdec_gc_object_mark (priv->resource);
 

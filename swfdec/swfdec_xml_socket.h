@@ -45,7 +45,6 @@ struct _SwfdecXmlSocket {
   gboolean		open;		/* the socket has been opened already */
   SwfdecBufferQueue *	queue;		/* everything that belongs to the same string */
   SwfdecAsObject *	target;		/* target object we call out to */
-  gboolean		target_owner;	/* TRUE if we own the target */
 };
 
 struct _SwfdecXmlSocketClass {

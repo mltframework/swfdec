@@ -105,6 +105,7 @@ struct _SwfdecPlayerPrivate
   guint			interval_id;		/* id returned from setInterval call */
   GList *		intervals;		/* all currently running intervals */
   GHashTable *		registered_classes;	/* name => SwfdecAsObject constructor */
+  GSList *		xml_sockets;		/* all XMLSockets currently in use */
 
   /* rendering */
   GArray *		invalidations;		/* fine-grained areas in need of redraw */

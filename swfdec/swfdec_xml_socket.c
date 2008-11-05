@@ -32,24 +32,18 @@
 #include "swfdec_movie.h"
 #include "swfdec_player_internal.h"
 
-static GQuark xml_socket_quark = 0;
-
 static void
 swfdec_xml_socket_ensure_closed (SwfdecXmlSocket *xml)
 {
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (xml));
+
   if (xml->socket == NULL)
     return;
 
   swfdec_stream_set_target (SWFDEC_STREAM (xml->socket), NULL);
   g_object_unref (xml->socket);
   xml->socket = NULL;
-
-  swfdec_player_unroot (SWFDEC_PLAYER (swfdec_gc_object_get_context (xml)), xml);
-  if (xml->target_owner) {
-    g_object_steal_qdata (G_OBJECT (xml->target), xml_socket_quark);
-    xml->target_owner = FALSE;
-  }
-  xml->target = NULL;
+  player->priv->xml_sockets = g_slist_remove (player->priv->xml_sockets, xml);
 }
 
 /*** SWFDEC_STREAM_TARGET ***/
@@ -208,34 +202,23 @@ swfdec_xml_socket_init (SwfdecXmlSocket *xml)
   xml->queue = swfdec_buffer_queue_new ();
 }
 
-static void
-swfdec_xml_socket_target_gone (gpointer xmlp)
-{
-  SwfdecXmlSocket *xml = xmlp;
-
-  xml->target_owner = FALSE;
-}
-
 static SwfdecXmlSocket *
 swfdec_xml_socket_create (SwfdecAsObject *target, SwfdecSandbox *sandbox, const char *hostname, guint port)
 {
-  SwfdecAsContext *cx = swfdec_gc_object_get_context (target);
+  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
   SwfdecXmlSocket *xml;
   SwfdecSocket *sock;
 
   SWFDEC_FIXME ("implement security checks please");
-  sock = swfdec_player_create_socket (SWFDEC_PLAYER (cx), hostname, port);
+  sock = swfdec_player_create_socket (player, hostname, port);
   if (sock == NULL)
     return NULL;
 
-  xml = g_object_new (SWFDEC_TYPE_XML_SOCKET, "context", cx, NULL);
-  swfdec_player_root (SWFDEC_PLAYER (cx), xml, (GFunc) swfdec_gc_object_mark);
+  xml = g_object_new (SWFDEC_TYPE_XML_SOCKET, "context", player, NULL);
+  /* we prepend here, so send etc find the newest socket */
+  player->priv->xml_sockets = g_slist_prepend (player->priv->xml_sockets, xml);
 
-  if (xml_socket_quark == 0)
-    xml_socket_quark = g_quark_from_static_string ("swfdec-xml-socket");
-  g_object_set_qdata_full (G_OBJECT (target), xml_socket_quark, xml, swfdec_xml_socket_target_gone);
   xml->target = target;
-  xml->target_owner = TRUE;
   xml->socket = sock;
   xml->sandbox = sandbox;
   swfdec_stream_set_target (SWFDEC_STREAM (sock), SWFDEC_STREAM_TARGET (xml));
@@ -249,27 +232,29 @@ static SwfdecXmlSocket *
 swfdec_xml_socket_get (SwfdecAsObject *object)
 {
   SwfdecXmlSocket *xml;
+  SwfdecPlayer *player;
+  GSList *walk;
 
   if (object == NULL) {
     SWFDEC_WARNING ("no object to get xml socket from");
     return NULL;
   }
-  if (xml_socket_quark == 0) {
-    SWFDEC_WARNING ("no sockets have been created yet");
-    return NULL;
-  }
-  
-  xml = g_object_get_qdata (G_OBJECT (object), xml_socket_quark);
-  if (xml == NULL) {
-    SWFDEC_WARNING ("no xml socket on object");
-    return NULL;
-  }
-  if (xml->socket == NULL) {
-    SWFDEC_WARNING ("xml socket not open");
-    return NULL;
+
+  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (object));
+  for (walk = player->priv->xml_sockets; walk; walk = walk->next) {
+    xml = walk->data;
+
+    if (xml->target == object) {
+      if (xml->socket == NULL) {
+	SWFDEC_WARNING ("xml socket not open");
+	return NULL;
+      }
+      return xml;
+    }
   }
 
-  return xml;
+  SWFDEC_WARNING ("no xml socket on object");
+  return NULL;
 }
 
 
@@ -299,6 +284,7 @@ swfdec_xml_socket_send (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *send;
   gsize len;
 
+  SWFDEC_AS_CHECK (0, NULL, "s", &send);
   if (argc < 1)
     return;
 
@@ -310,7 +296,6 @@ swfdec_xml_socket_send (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  send = swfdec_as_value_to_string (cx, &argv[0]);
   len = strlen (send) + 1;
   buf = swfdec_buffer_new (len);
   memcpy (buf->data, send, len);

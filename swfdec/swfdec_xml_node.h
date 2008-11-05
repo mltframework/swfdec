@@ -77,7 +77,7 @@ struct _SwfdecXmlNode {
 };
 
 struct _SwfdecXmlNodeClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	object_class;
 };
 
 GType		swfdec_xml_node_get_type	(void);

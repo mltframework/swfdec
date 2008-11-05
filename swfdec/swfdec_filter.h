@@ -41,7 +41,7 @@ struct _SwfdecFilter {
 };
 
 struct _SwfdecFilterClass {
-  SwfdecAsObjectClass	relay_class;
+  SwfdecAsRelayClass	relay_class;
 
   void			(* clone)		(SwfdecFilter *		dest,
 						 SwfdecFilter *		source);

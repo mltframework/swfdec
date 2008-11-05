@@ -765,7 +765,6 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
     SwfdecAsObject *initObject)
 {
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (initObject == NULL || SWFDEC_IS_AS_OBJECT (initObject));
 
   if (initObject != NULL) {
     SwfdecAsContext *cx = swfdec_gc_object_get_context (movie);

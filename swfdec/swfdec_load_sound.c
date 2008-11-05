@@ -404,7 +404,7 @@ swfdec_load_sound_new (SwfdecAsObject *target, const char *url)
   SwfdecAsContext *context;
   char *missing;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), NULL);
+  g_return_val_if_fail (target != NULL, NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
   context = swfdec_gc_object_get_context (target);

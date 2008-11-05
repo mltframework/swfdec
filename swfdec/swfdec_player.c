@@ -2783,7 +2783,6 @@ swfdec_player_set_export_class (SwfdecPlayer *player, const char *name, SwfdecAs
 
   g_return_if_fail (SWFDEC_IS_PLAYER (player));
   g_return_if_fail (name != NULL);
-  g_return_if_fail (object == NULL || SWFDEC_IS_AS_OBJECT (object));
 
   priv = player->priv;
   if (object) {

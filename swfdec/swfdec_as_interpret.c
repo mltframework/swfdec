@@ -2224,8 +2224,8 @@ swfdec_action_is_instance_of (SwfdecAsObject *object,
   SwfdecAsObject *class, *prototype;
   GSList *iter;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (constructor), FALSE);
+  g_return_val_if_fail (object != NULL, FALSE);
+  g_return_val_if_fail (constructor != NULL, FALSE);
 
   // FIXME: propflag tests are wrong, and we shouldn't get __proto__.prototype
   swfdec_as_object_get_variable (constructor, SWFDEC_AS_STR_prototype, &val);

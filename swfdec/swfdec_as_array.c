@@ -94,7 +94,7 @@ swfdec_as_array_get_length (SwfdecAsObject *array)
 {
   gint32 length;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (array), 0);
+  g_return_val_if_fail (array != NULL, 0);
 
   length = swfdec_as_array_length_as_integer (array);
 
@@ -110,7 +110,7 @@ swfdec_as_array_set_length_object (SwfdecAsObject *object, gint32 length)
   SwfdecAsValue val;
   gboolean was_array;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (object != NULL);
 
   was_array = object->array;
   object->array = FALSE;
@@ -135,7 +135,7 @@ swfdec_as_array_set_length (SwfdecAsObject *array, gint32 length)
 {
   SwfdecAsValue val;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (array));
+  g_return_if_fail (array != NULL);
   g_return_if_fail (length >= 0);
 
   swfdec_as_value_set_integer (swfdec_gc_object_get_context (array), &val, length);
@@ -223,7 +223,7 @@ swfdec_as_array_move_range (SwfdecAsObject *object, gint32 from_index,
 {
   ForeachMoveRangeData fdata = { from_index, num, to_index };
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (object != NULL);
   g_return_if_fail (from_index >= 0);
   g_return_if_fail (num >= 0);
   g_return_if_fail (to_index >= 0);
@@ -248,7 +248,7 @@ swfdec_as_array_set_range_with_flags (SwfdecAsObject *object,
   const char *var;
 
   // allow negative indexes
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (object != NULL);
   g_return_if_fail (num >= 0);
   g_return_if_fail (num == 0 || value != NULL);
 
@@ -316,7 +316,7 @@ void
 swfdec_as_array_append_with_flags (SwfdecAsObject *array, guint n,
     const SwfdecAsValue *value, SwfdecAsVariableFlag flags)
 {
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (array));
+  g_return_if_fail (array != NULL);
   g_return_if_fail (n == 0 || value != NULL);
 
   // don't allow negative length
@@ -350,7 +350,7 @@ swfdec_as_array_insert_with_flags (SwfdecAsObject *array, gint32 idx,
 {
   gint32 length;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (array));
+  g_return_if_fail (array != NULL);
   g_return_if_fail (idx >= 0);
   g_return_if_fail (SWFDEC_IS_AS_VALUE (value));
 
@@ -374,7 +374,7 @@ swfdec_as_array_remove (SwfdecAsObject *array, gint32 idx)
 {
   gint32 length;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (array));
+  g_return_if_fail (array != NULL);
   g_return_if_fail (idx >= 0);
 
   length = swfdec_as_array_get_length (array);
@@ -401,7 +401,7 @@ swfdec_as_array_get_value (SwfdecAsObject *array, gint32 idx,
 {
   const char *var;
 
-  g_assert (SWFDEC_IS_AS_OBJECT (array));
+  g_assert (array != NULL);
   g_assert (idx >= 0);
   g_assert (value != NULL);
 
@@ -424,7 +424,7 @@ swfdec_as_array_set_value (SwfdecAsObject *array, gint32 idx,
 {
   const char *var;
 
-  g_assert (SWFDEC_IS_AS_OBJECT (array));
+  g_assert (array != NULL);
   g_assert (idx >= 0);
   g_assert (SWFDEC_IS_AS_VALUE (value));
 
@@ -463,8 +463,8 @@ swfdec_as_array_append_array_range (SwfdecAsObject *array_to,
 {
   ForeachAppendArrayRangeData fdata;
 
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (array_to));
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object_from));
+  g_return_if_fail (array_to != NULL);
+  g_return_if_fail (object_from != NULL);
   g_return_if_fail (start_index >= 0);
 
   if (num == 0)
@@ -1056,7 +1056,7 @@ swfdec_as_array_do_sort (SwfdecAsContext *cx, SwfdecAsObject *object,
   gboolean descending;
 
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (object != NULL);
   g_return_if_fail (options != NULL);
   g_return_if_fail (custom_function == NULL ||
       SWFDEC_IS_AS_FUNCTION (custom_function));

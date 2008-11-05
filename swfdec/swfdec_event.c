@@ -175,7 +175,7 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecAsObject *object,
   guint i;
 
   g_return_if_fail (list != NULL);
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (object));
+  g_return_if_fail (object != NULL);
   g_return_if_fail (condition < N_CONDITIONS);
 
   condition = (1 << condition);

@@ -65,7 +65,7 @@ swfdec_style_sheet_get_selector_object (SwfdecAsObject *object,
   SwfdecAsValue val;
   SwfdecAsObject *empty;
 
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (object != NULL, NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
   empty = swfdec_as_object_new_empty (swfdec_gc_object_get_context (object));
@@ -85,7 +85,7 @@ swfdec_style_sheet_parse_selectors (SwfdecAsContext *cx, const char *p,
   const char *name;
 
   g_return_val_if_fail (p != NULL && p != '\0' && !g_ascii_isspace (*p), NULL);
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), NULL);
+  g_return_val_if_fail (object != NULL, NULL);
   g_return_val_if_fail (selectors != NULL, NULL);
 
   p += strspn (p, " \t\r\n,");

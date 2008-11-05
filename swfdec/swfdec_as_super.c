@@ -82,8 +82,7 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
   SwfdecAsSuper *super;
 
   g_return_if_fail (frame != NULL);
-  g_return_if_fail (SWFDEC_IS_AS_OBJECT (thisp));
-  g_return_if_fail (ref == NULL || SWFDEC_IS_AS_OBJECT (ref));
+  g_return_if_fail (thisp != NULL);
   
   if (frame->super != NULL)
     return;

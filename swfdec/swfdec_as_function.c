@@ -96,8 +96,6 @@ swfdec_as_function_call_full (SwfdecAsFunction *function, SwfdecAsObject *thisp,
   SwfdecAsFunctionClass *klass;
 
   g_return_if_fail (SWFDEC_IS_AS_FUNCTION (function));
-  g_return_if_fail (thisp == NULL || SWFDEC_IS_AS_OBJECT (thisp));
-  g_return_if_fail (super_reference == NULL || SWFDEC_IS_AS_OBJECT (super_reference));
 
   klass = SWFDEC_AS_FUNCTION_GET_CLASS (function);
   klass->call (function, thisp, construct, super_reference, n_args, args, return_value);

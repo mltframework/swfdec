@@ -194,13 +194,12 @@ swfdec_event_list_execute (SwfdecEventList *list, SwfdecAsObject *object,
 }
 
 gboolean
-swfdec_event_list_has_conditions (SwfdecEventList *list, SwfdecAsObject *object,
+swfdec_event_list_has_conditions (SwfdecEventList *list,
     guint condition, guint8 key)
 {
   guint i;
 
   g_return_val_if_fail (list != NULL, FALSE);
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (object), FALSE);
   g_return_val_if_fail (condition < N_CONDITIONS, FALSE);
 
   condition = 1 << condition;

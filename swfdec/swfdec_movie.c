@@ -373,7 +373,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
     SwfdecActor *actor = SWFDEC_ACTOR (movie);
     swfdec_movie_unset_actor (player, actor);
     if ((actor->events && 
-	  swfdec_event_list_has_conditions (actor->events, SWFDEC_AS_OBJECT (movie), SWFDEC_EVENT_UNLOAD, 0)) ||
+	  swfdec_event_list_has_conditions (actor->events, SWFDEC_EVENT_UNLOAD, 0)) ||
 	swfdec_as_object_has_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onUnload)) {
       swfdec_actor_queue_script (actor, SWFDEC_EVENT_UNLOAD);
       destroy = FALSE;

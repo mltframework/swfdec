@@ -832,40 +832,6 @@ swfdec_sprite_movie_init (SwfdecSpriteMovie * movie)
   movie->frame = (guint) -1;
 }
 
-/* cute little hack */
-extern void
-swfdec_sprite_movie_clear (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval);
-/**
- * swfdec_sprite_movie_unload:
- * @movie: a #SwfdecMovie
- *
- * Clears all contents from the given movie. This means deleting all
- * variables and removing all children movie clips.
- **/
-void
-swfdec_sprite_movie_unload (SwfdecSpriteMovie *movie)
-{
-  SwfdecMovie *mov;
-  SwfdecAsValue hack;
-
-  g_return_if_fail (SWFDEC_IS_SPRITE_MOVIE (movie));
-
-  mov = SWFDEC_MOVIE (movie);
-  swfdec_sprite_movie_clear (swfdec_gc_object_get_context (movie), 
-      SWFDEC_AS_OBJECT (movie), 0, NULL, &hack);
-  /* FIXME: destroy or unload? */
-  while (mov->list)
-    swfdec_movie_remove (mov->list->data);
-  swfdec_as_object_delete_all_variables (SWFDEC_AS_OBJECT (movie));
-  movie->frame = (guint) -1;
-  movie->n_frames = 0;
-  movie->next_action = 0;
-  movie->max_action = 0;
-  movie->sprite = NULL;
-  swfdec_movie_queue_update (SWFDEC_MOVIE (movie), SWFDEC_MOVIE_INVALID_EXTENTS);
-}
-
 /**
  * swfdec_sprite_movie_get_frames_loaded:
  * @movie: a #SwfdecSpriteMovie

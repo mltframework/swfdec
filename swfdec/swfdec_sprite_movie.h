@@ -66,7 +66,6 @@ int		swfdec_sprite_movie_get_frames_total	(SwfdecSpriteMovie *	movie);
 
 void		swfdec_sprite_movie_goto		(SwfdecSpriteMovie *	movie,
 							 guint			goto_frame);
-void		swfdec_sprite_movie_unload		(SwfdecSpriteMovie *	movie);
 
 
 G_END_DECLS

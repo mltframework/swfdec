@@ -82,7 +82,9 @@ swfdec_load_object_as_load (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
   const char *url;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "s", &url);
+  SWFDEC_AS_CHECK (0, NULL, "s", &url);
+  if (object == NULL)
+    return;
 
   SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
   swfdec_load_object_create (SWFDEC_PLAYER (cx), &val, url, NULL, 0, NULL, NULL,
@@ -199,7 +201,9 @@ swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecBuffer *buffer;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "s|ss", &url, &target, &method);
+  SWFDEC_AS_CHECK (0, NULL, "s|ss", &url, &target, &method);
+  if (object == NULL)
+    return;
 
   SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
   data = swfdec_as_value_to_string (cx, &val);
@@ -234,8 +238,10 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecAsValue val;
   SwfdecBuffer *buffer;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_OBJECT, &object, "so|s", &url, &target,
+  SWFDEC_AS_CHECK (0, NULL, "so|s", &url, &target,
       &method);
+  if (object == NULL)
+    return;
 
   SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
   data = swfdec_as_value_to_string (cx, &val);

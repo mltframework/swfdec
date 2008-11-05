@@ -57,7 +57,7 @@ struct _SwfdecAsContext {
   gsize			memory;		/* total memory currently in use */
   gsize			memory_since_gc;/* memory allocated since last GC run */
   GHashTable *		interned_strings;/* string => memory mapping the context manages */
-  GHashTable *		objects;	/* all objects the context manages */
+  gpointer		gc_objects;	/* all SwfdecGcObjects the context manages */
   gpointer		strings;	/* all numbers the context manages */
   gpointer		numbers;	/* all numbers the context manages */
   gpointer		movies;		/* all movies the context manages */

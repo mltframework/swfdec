@@ -108,7 +108,8 @@ swfdec_gc_object_constructor (GType type, guint n_construct_properties,
 
   context = object->context;
   swfdec_as_context_use_mem (context, swfdec_gc_object_get_size (object));
-  g_hash_table_insert (context->objects, object, object);
+  object->next = context->gc_objects;
+  context->gc_objects = object;
 
   return gobject;
 }

@@ -250,22 +250,31 @@ swfdec_as_context_unuse_mem (SwfdecAsContext *context, gsize bytes)
 
 /*** GC ***/
 
-static gboolean
-swfdec_as_context_remove_objects (gpointer key, gpointer value, gpointer debugger)
+static void
+swfdec_as_context_remove_gc_objects (SwfdecAsContext *context)
 {
-  SwfdecGcObject *gc;
+  SwfdecGcObject *gc, *prev, *next;
 
-  gc = key;
-  /* we only check for mark here, not root, since this works on destroy, too */
-  if (gc->flags & SWFDEC_AS_GC_MARK) {
-    gc->flags &= ~SWFDEC_AS_GC_MARK;
-    SWFDEC_LOG ("%s: %s %p", (gc->flags & SWFDEC_AS_GC_ROOT) ? "rooted" : "marked",
-	G_OBJECT_TYPE_NAME (gc), gc);
-    return FALSE;
-  } else {
-    SWFDEC_LOG ("deleted: %s %p", G_OBJECT_TYPE_NAME (gc), gc);
-    g_object_unref (gc);
-    return TRUE;
+  prev = NULL;
+  gc = context->gc_objects;
+  while (gc) {
+    next = gc->next;
+    /* we only check for mark here, not root, since this works on destroy, too */
+    if (gc->flags & SWFDEC_AS_GC_MARK) {
+      gc->flags &= ~SWFDEC_AS_GC_MARK;
+      SWFDEC_LOG ("%s: %s %p", (gc->flags & SWFDEC_AS_GC_ROOT) ? "rooted" : "marked",
+	  G_OBJECT_TYPE_NAME (gc), gc);
+      prev = gc;
+    } else {
+      SWFDEC_LOG ("deleted: %s %p", G_OBJECT_TYPE_NAME (gc), gc);
+      g_object_unref (gc);
+      if (prev) {
+	prev->next = next;
+      } else {
+	context->gc_objects = next;
+      }
+    }
+    gc = next;
   }
 }
 
@@ -299,8 +308,7 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   /* NB: This functions is called without GC from swfdec_as_context_dispose */
   SWFDEC_INFO (">> collecting garbage");
   
-  g_hash_table_foreach_remove (context->objects, 
-    swfdec_as_context_remove_objects, context->debugger);
+  swfdec_as_context_remove_gc_objects (context);
 
   context->strings = swfdec_as_gcable_collect (context, context->strings,
       swfdec_as_context_collect_string);
@@ -356,15 +364,6 @@ swfdec_as_value_mark (SwfdecAsValue *value)
   }
 }
 
-static void
-swfdec_as_context_mark_roots (gpointer key, gpointer value, gpointer data)
-{
-  SwfdecGcObject *object = key;
-
-  if ((object->flags & (SWFDEC_AS_GC_MARK | SWFDEC_AS_GC_ROOT)) == SWFDEC_AS_GC_ROOT)
-    swfdec_gc_object_mark (object);
-}
-
 /* FIXME: replace this with refcounted strings? */
 static void 
 swfdec_as_context_mark_constant_pools (gpointer key, gpointer value, gpointer unused)
@@ -387,7 +386,6 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
     swfdec_gc_object_mark (context->global);
   if (context->exception)
     swfdec_as_value_mark (&context->exception_value);
-  g_hash_table_foreach (context->objects, swfdec_as_context_mark_roots, NULL);
   g_hash_table_foreach (context->constant_pools, swfdec_as_context_mark_constant_pools, NULL);
 }
 
@@ -524,9 +522,8 @@ swfdec_as_context_dispose (GObject *object)
   g_assert (context->strings == NULL);
   g_assert (context->numbers == NULL);
   g_assert (g_hash_table_size (context->constant_pools) == 0);
-  g_assert (g_hash_table_size (context->objects) == 0);
+  g_assert (context->gc_objects == 0);
   g_hash_table_destroy (context->constant_pools);
-  g_hash_table_destroy (context->objects);
   g_hash_table_destroy (context->interned_strings);
   g_rand_free (context->rand);
   if (context->debugger) {
@@ -584,7 +581,6 @@ swfdec_as_context_init (SwfdecAsContext *context)
   context->version = G_MAXUINT;
 
   context->interned_strings = g_hash_table_new (g_str_hash, g_str_equal);
-  context->objects = g_hash_table_new (g_direct_hash, g_direct_equal);
   context->constant_pools = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   for (s = swfdec_as_strings; s->next; s++) {

@@ -39,6 +39,7 @@ struct _SwfdecGcObject {
   GObject		object;
   SwfdecAsContext *	context;	/* context the object belongs to - NB: object holds no reference */
   /*< private >*/
+  SwfdecGcObject *	next;		/* next GcObject in list of context's object */
   guint8		flags;		/* GC flags */
   gsize			size;		/* size reserved in GC */
 };

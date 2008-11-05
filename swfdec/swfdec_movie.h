@@ -109,11 +109,11 @@ typedef enum {
   SWFDEC_MOVIE_INVALID_EXTENTS,		/* recalculate extents */
 } SwfdecMovieCacheState;
 
-typedef void (*SwfdecMovieVariableListenerFunction) (SwfdecAsObject *object,
+typedef void (*SwfdecMovieVariableListenerFunction) (gpointer data,
     const char *name, const SwfdecAsValue *val);
 
 typedef struct {
-  SwfdecAsObject *			object;
+  gpointer				data;
   const char *				name;
   SwfdecMovieVariableListenerFunction	function;
 } SwfdecMovieVariableListener;
@@ -310,11 +310,11 @@ void		swfdec_movie_property_do_get	(SwfdecMovie *		movie,
 						 SwfdecAsValue *	val);
 
 void		swfdec_movie_add_variable_listener (SwfdecMovie *	movie,
-						 SwfdecAsObject *	object,
+						 gpointer		data,
 						 const char *		name,
 						 const SwfdecMovieVariableListenerFunction	function);
 void		swfdec_movie_remove_variable_listener (SwfdecMovie *	movie,
-						 SwfdecAsObject *	object,
+						 gpointer		data,
 						 const char *		name,
 						 const SwfdecMovieVariableListenerFunction	function);
 SwfdecResource *swfdec_movie_get_own_resource	(SwfdecMovie *		movie);

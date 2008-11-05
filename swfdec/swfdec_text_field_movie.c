@@ -1027,14 +1027,11 @@ swfdec_text_field_movie_set_listen_variable_text (SwfdecTextFieldMovie *text,
 }
 
 static void
-swfdec_text_field_movie_variable_listener_callback (SwfdecAsObject *object,
+swfdec_text_field_movie_variable_listener_callback (gpointer data,
     const char *name, const SwfdecAsValue *val)
 {
-  SwfdecTextFieldMovie *text;
+  SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (data);
 
-  g_return_if_fail (SWFDEC_IS_TEXT_FIELD_MOVIE (object));
-
-  text = SWFDEC_TEXT_FIELD_MOVIE (object);
   swfdec_text_field_movie_set_text (text,
       swfdec_as_value_to_string (swfdec_gc_object_get_context (text), val), text->html);
 }
@@ -1049,10 +1046,9 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
   if (text->variable != NULL) {
     swfdec_text_field_movie_parse_listen_variable (text, text->variable,
 	&object, &name);
-    if (object != NULL && SWFDEC_IS_MOVIE (object)) {
+    if (object != NULL && object->movie) {
       swfdec_movie_remove_variable_listener (SWFDEC_MOVIE (object),
-	  SWFDEC_AS_OBJECT (text), name,
-	  swfdec_text_field_movie_variable_listener_callback);
+	  text, name, swfdec_text_field_movie_variable_listener_callback);
     }
   }
 
@@ -1077,10 +1073,9 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
       // FIXME: html value correct here?
       swfdec_text_field_movie_set_text (text, initial, text_field->html);
     }
-    if (object != NULL && SWFDEC_IS_MOVIE (object)) {
+    if (object != NULL && object->movie) {
       swfdec_movie_add_variable_listener (SWFDEC_MOVIE (object),
-	  SWFDEC_AS_OBJECT (text), name,
-	  swfdec_text_field_movie_variable_listener_callback);
+	  text, name, swfdec_text_field_movie_variable_listener_callback);
     }
   }
 }

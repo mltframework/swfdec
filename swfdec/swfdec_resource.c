@@ -89,8 +89,8 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
       movie->n_frames = movie->sprite->n_frames;
       swfdec_movie_invalidate_last (SWFDEC_MOVIE (movie));
       swfdec_sandbox_use (instance->sandbox);
-      swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
-	  SWFDEC_AS_STR_MovieClip, NULL);
+      swfdec_as_object_set_constructor_by_name (swfdec_as_relay_get_as_object (
+	    SWFDEC_AS_RELAY (movie)), SWFDEC_AS_STR_MovieClip, NULL);
       swfdec_sandbox_unuse (instance->sandbox);
       if (swfdec_resource_is_root (instance)) {
 	swfdec_player_start_ticking (player);
@@ -208,20 +208,22 @@ swfdec_resource_stream_target_open (SwfdecStreamTarget *target, SwfdecStream *st
 {
   SwfdecLoader *loader = SWFDEC_LOADER (stream);
   SwfdecResource *instance = SWFDEC_RESOURCE (target);
+  SwfdecAsObject *object;
   SwfdecMovie *movie;
   const char *query;
 
   g_assert (SWFDEC_AS_VALUE_IS_MOVIE (&instance->movie));
   movie = SWFDEC_AS_VALUE_GET_MOVIE (&instance->movie);
   g_assert (movie);
+  object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (movie));
   query = swfdec_url_get_query (swfdec_loader_get_url (loader));
   if (query) {
     SWFDEC_INFO ("set url query movie variables: %s", query);
-    swfdec_as_object_decode (SWFDEC_AS_OBJECT (movie), query);
+    swfdec_as_object_decode (object, query);
   }
   if (instance->variables) {
     SWFDEC_INFO ("set manual movie variables: %s", instance->variables);
-    swfdec_as_object_decode (SWFDEC_AS_OBJECT (movie), instance->variables);
+    swfdec_as_object_decode (object, instance->variables);
   }
   swfdec_resource_emit_signal (instance, SWFDEC_AS_STR_onLoadStart, FALSE, NULL, 0);
   instance->state = SWFDEC_RESOURCE_OPENED;

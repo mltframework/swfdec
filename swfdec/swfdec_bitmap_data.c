@@ -140,14 +140,19 @@ swfdec_bitmap_data_loadBitmap (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecBitmapData *bitmap;
   SwfdecImage *image;
+  SwfdecMovie *movie;
   const char *name;
   cairo_surface_t *isurface;
   cairo_t *cr;
 
   SWFDEC_AS_CHECK (0, NULL, "s", &name);
 
-  g_assert (SWFDEC_IS_MOVIE (cx->frame->target));
-  image = swfdec_resource_get_export (SWFDEC_MOVIE (cx->frame->target)->resource, name);
+  movie = swfdec_as_frame_get_target (cx->frame);
+  if (movie == NULL) {
+    SWFDEC_ERROR ("no target to load from");
+    return;
+  }
+  image = swfdec_resource_get_export (movie->resource, name);
   if (!SWFDEC_IS_IMAGE (image)) {
     SWFDEC_ERROR ("loadBitmap cannot find image with name %s", name);
     return;
@@ -522,8 +527,8 @@ swfdec_bitmap_data_draw (SwfdecAsContext *cx, SwfdecAsObject *object,
       cairo_paint (cr);
       cairo_pattern_destroy (pattern);
     }
-  } else if (SWFDEC_IS_MOVIE (o)) {
-    SwfdecMovie *movie = SWFDEC_MOVIE (o);
+  } else if (o->movie) {
+    SwfdecMovie *movie = SWFDEC_MOVIE (o->relay);
     swfdec_movie_update (movie);
     cairo_scale (cr, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR, 1.0 / SWFDEC_TWIPS_SCALE_FACTOR);
     cairo_transform (cr, &movie->inverse_matrix);

@@ -712,12 +712,13 @@ swfdec_sprite_movie_constructor (GType type, guint n_construct_properties,
   movie = SWFDEC_MOVIE (object);
   if (movie->resource->sandbox) {
     /* FIXME: This hack is probably wrong */
+    SwfdecAsObject *o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (movie));
     if (swfdec_sandbox_try_use (movie->resource->sandbox)) {
-      swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
+      swfdec_as_object_set_constructor_by_name (o,
 	  SWFDEC_AS_STR_MovieClip, NULL);
       swfdec_sandbox_unuse (movie->resource->sandbox);
     } else {
-      swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
+      swfdec_as_object_set_constructor_by_name (o,
 	  SWFDEC_AS_STR_MovieClip, NULL);
     }
   }
@@ -770,20 +771,6 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
 }
 
 static void
-swfdec_sprite_movie_mark (SwfdecGcObject *object)
-{
-  GList *walk;
-
-  for (walk = SWFDEC_MOVIE (object)->list; walk; walk = walk->next) {
-    SwfdecAsObject *child = walk->data;
-    g_assert (child->properties != NULL);
-    swfdec_gc_object_mark (child);
-  }
-
-  SWFDEC_GC_OBJECT_CLASS (swfdec_sprite_movie_parent_class)->mark (object);
-}
-
-static void
 swfdec_sprite_movie_property_get (SwfdecMovie *mov, guint prop_id, SwfdecAsValue *val)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
@@ -809,14 +796,11 @@ static void
 swfdec_sprite_movie_class_init (SwfdecSpriteMovieClass * g_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (g_class);
-  SwfdecGcObjectClass *gc_class = SWFDEC_GC_OBJECT_CLASS (g_class);
   SwfdecMovieClass *movie_class = SWFDEC_MOVIE_CLASS (g_class);
   SwfdecActorClass *actor_class = SWFDEC_ACTOR_CLASS (g_class);
 
   object_class->dispose = swfdec_sprite_movie_dispose;
   object_class->constructor = swfdec_sprite_movie_constructor;
-
-  gc_class->mark = swfdec_sprite_movie_mark;
 
   movie_class->init_movie = swfdec_sprite_movie_init_movie;
   movie_class->finish_movie = swfdec_sprite_movie_finish_movie;

@@ -39,12 +39,14 @@ G_BEGIN_DECLS
 /* swfdec_as_types.h */
 #define SWFDEC_AS_VALUE_IS_COMPOSITE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) >= SWFDEC_AS_TYPE_OBJECT)
 #define SWFDEC_AS_VALUE_IS_PRIMITIVE(val) (!SWFDEC_AS_VALUE_IS_COMPOSITE(val))
+/* FIXME: ugly macro */
 #define SWFDEC_AS_VALUE_GET_COMPOSITE(val) (SWFDEC_AS_VALUE_IS_OBJECT (val) ? \
-    SWFDEC_AS_VALUE_GET_OBJECT (val) : SWFDEC_AS_OBJECT (SWFDEC_AS_VALUE_GET_MOVIE (val)))
+    SWFDEC_AS_VALUE_GET_OBJECT (val) : (SWFDEC_AS_VALUE_GET_MOVIE (val) ? \
+      swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (SWFDEC_AS_VALUE_GET_MOVIE (val))) : NULL))
 #define SWFDEC_AS_VALUE_SET_COMPOSITE(val,o) G_STMT_START { \
   SwfdecAsObject *_o = (o); \
   if (_o->movie) { \
-    SWFDEC_AS_VALUE_SET_MOVIE ((val), SWFDEC_MOVIE (_o)); \
+    SWFDEC_AS_VALUE_SET_MOVIE ((val), SWFDEC_MOVIE (_o->relay)); \
   } else { \
     SWFDEC_AS_VALUE_SET_OBJECT ((val), _o); \
   } \

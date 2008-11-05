@@ -368,7 +368,7 @@ SwfdecAsObject *
 swfdec_as_frame_get_variable_and_flags (SwfdecAsContext *cx, SwfdecAsFrame *frame, 
     const char *variable, SwfdecAsValue *value, guint *flags, SwfdecAsObject **pobject)
 {
-  SwfdecAsObject *object;
+  SwfdecMovie *target;
   GSList *walk;
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (cx), NULL);
@@ -382,9 +382,12 @@ swfdec_as_frame_get_variable_and_flags (SwfdecAsContext *cx, SwfdecAsFrame *fram
   }
   /* we've walked the scope chain down. Now look in the special objects. */
   /* 1) the current target */
-  object = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (frame));
-  if (object && swfdec_as_object_get_variable_and_flags (object, variable, value, flags, pobject))
-    return object;
+  target = swfdec_as_frame_get_target (frame);
+  if (target) {
+    SwfdecAsObject *object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (target));
+    if (swfdec_as_object_get_variable_and_flags (object, variable, value, flags, pobject))
+      return object;
+  }
   /* 2) the global object */
   if (cx->version > 4 && swfdec_as_object_get_variable_and_flags (cx->global,
 	variable, value, flags, pobject))
@@ -419,7 +422,11 @@ swfdec_as_frame_set_variable_and_flags (SwfdecAsContext *context, SwfdecAsFrame 
     if (frame->activation && (local || !frame->original_target)) {
       set = frame->activation;
     } else {
-      set = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (frame));
+      SwfdecMovie *target = swfdec_as_frame_get_target (frame);
+      if (target)
+	set = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (target));
+      else
+	set = NULL;
     }
     if (set == NULL)
       return;
@@ -438,7 +445,7 @@ swfdec_as_frame_delete_variable (SwfdecAsContext *cx, SwfdecAsFrame *frame, cons
 {
   GSList *walk;
   SwfdecAsDeleteReturn ret;
-  SwfdecAsObject *object;
+  SwfdecMovie *target;
 
   g_return_val_if_fail (frame != NULL, FALSE);
   g_return_val_if_fail (variable != NULL, FALSE);
@@ -450,9 +457,10 @@ swfdec_as_frame_delete_variable (SwfdecAsContext *cx, SwfdecAsFrame *frame, cons
   }
   /* we've walked the scope chain down. Now look in the special objects. */
   /* 1) the target set via SetTarget */
-  object = SWFDEC_AS_OBJECT (swfdec_as_frame_get_target (frame));
-  if (object) {
-    ret = swfdec_as_object_delete_variable (object, variable);
+
+  target = swfdec_as_frame_get_target (frame);
+  if (target) {
+    ret = swfdec_as_object_delete_variable (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (target)), variable);
     if (ret)
       return ret;
   }
@@ -644,10 +652,10 @@ SwfdecMovie *
 swfdec_as_frame_get_target (SwfdecAsFrame *frame) 
 {
   if (SWFDEC_IS_MOVIE (frame->target) &&
-      SWFDEC_MOVIE(frame->target)->state < SWFDEC_MOVIE_STATE_DESTROYED)
+      SWFDEC_MOVIE (frame->target)->state < SWFDEC_MOVIE_STATE_DESTROYED)
     return SWFDEC_MOVIE (frame->target);
   if (SWFDEC_IS_MOVIE (frame->original_target) &&
-      SWFDEC_MOVIE(frame->original_target)->state < SWFDEC_MOVIE_STATE_DESTROYED)
+      SWFDEC_MOVIE (frame->original_target)->state < SWFDEC_MOVIE_STATE_DESTROYED)
     return SWFDEC_MOVIE (frame->original_target);
   return NULL;
 }

@@ -119,7 +119,7 @@ typedef struct {
 } SwfdecMovieVariableListener;
 
 struct _SwfdecMovie {
-  SwfdecAsObject	object;
+  SwfdecAsRelay		relay;
 
   SwfdecGraphic *	graphic;		/* graphic represented by this movie or NULL if script-created */
   const char *		name;		/* name of movie - GC'd */
@@ -182,7 +182,7 @@ struct _SwfdecMovie {
 };
 
 struct _SwfdecMovieClass {
-  SwfdecAsObjectClass	object_class;
+  SwfdecAsRelayClass	relay_class;
 
   /* general vfuncs */
   void			(* init_movie)		(SwfdecMovie *		movie);

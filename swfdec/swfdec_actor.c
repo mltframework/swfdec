@@ -68,7 +68,7 @@ swfdec_actor_mouse_events (SwfdecActor *actor)
   if (actor->events && swfdec_event_list_has_mouse_events (actor->events))
     return TRUE;
   /* otherwise, require at least one of the custom script handlers */
-  object = SWFDEC_AS_OBJECT (actor);
+  object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (actor));
   if (swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onRollOver) ||
       swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onRollOut) ||
       swfdec_as_object_has_variable (object, SWFDEC_AS_STR_onDragOver) ||
@@ -190,6 +190,7 @@ swfdec_sprite_movie_set_constructor (SwfdecSpriteMovie *movie)
   SwfdecMovie *mov = SWFDEC_MOVIE (movie);
   SwfdecAsContext *context = swfdec_gc_object_get_context (movie);
   SwfdecAsObject *constructor = NULL;
+  SwfdecAsObject *object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (movie));
 
   g_assert (mov->resource != NULL);
 
@@ -206,12 +207,12 @@ swfdec_sprite_movie_set_constructor (SwfdecSpriteMovie *movie)
   }
   if (constructor == NULL) {
     swfdec_sandbox_use (SWFDEC_MOVIE (movie)->resource->sandbox);
-    swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
+    swfdec_as_object_set_constructor_by_name (object,
 	SWFDEC_AS_STR_MovieClip, NULL);
     swfdec_sandbox_unuse (SWFDEC_MOVIE (movie)->resource->sandbox);
     return FALSE;
   } else {
-    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (movie), constructor);
+    swfdec_as_object_set_constructor (object, constructor);
     return TRUE;
   }
 }
@@ -220,7 +221,7 @@ void
 swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
     guint8 key)
 {
-  SwfdecAsObject *thisp;
+  SwfdecMovie *thisp;
   const char *name;
   guint version;
   gboolean need_constructor = FALSE;
@@ -233,14 +234,14 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
     /* these conditions don't exist for buttons */
     if (condition == SWFDEC_EVENT_CONSTRUCT || condition < SWFDEC_EVENT_PRESS)
       return;
-    thisp = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (actor)->parent);
+    thisp = SWFDEC_MOVIE (actor)->parent;
     if (version <= 5) {
       while (!SWFDEC_IS_SPRITE_MOVIE (thisp))
-	thisp = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (thisp)->parent);
+	thisp = SWFDEC_MOVIE (thisp)->parent;
     }
     g_assert (thisp);
   } else {
-    thisp = SWFDEC_AS_OBJECT (actor);
+    thisp = SWFDEC_MOVIE (actor);
   }
 
   /* special cases */
@@ -261,7 +262,7 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
       SWFDEC_AS_VALUE_SET_STRING (&argv[0], SWFDEC_AS_STR_onChanged);
     SWFDEC_AS_VALUE_SET_MOVIE (&argv[1], movie);
     swfdec_sandbox_use (movie->resource->sandbox);
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (actor),
+    swfdec_as_relay_call (SWFDEC_AS_RELAY (actor),
 	SWFDEC_AS_STR_broadcastMessage, 2, argv, NULL);
     swfdec_sandbox_unuse (movie->resource->sandbox);
     return;
@@ -269,16 +270,17 @@ swfdec_actor_execute (SwfdecActor *actor, SwfdecEventType condition,
 
   swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
   if (actor->events) {
-    swfdec_event_list_execute (actor->events, thisp, condition, key);
+    swfdec_event_list_execute (actor->events, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (thisp)),
+	condition, key);
   }
   /* FIXME: how do we compute the version correctly here? */
   if (version > 5) {
     name = swfdec_event_type_get_name (condition);
     if (name != NULL) {
-      swfdec_as_object_call (SWFDEC_AS_OBJECT (actor), name, 0, NULL, NULL);
+      swfdec_as_relay_call (SWFDEC_AS_RELAY (actor), name, 0, NULL, NULL);
     }
     if (condition == SWFDEC_EVENT_CONSTRUCT && need_constructor)
-      swfdec_as_object_call (thisp, SWFDEC_AS_STR_constructor, 0, NULL, NULL);
+      swfdec_as_relay_call (SWFDEC_AS_RELAY (thisp), SWFDEC_AS_STR_constructor, 0, NULL, NULL);
   }
   swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
 }

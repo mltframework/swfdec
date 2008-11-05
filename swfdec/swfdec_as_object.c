@@ -687,7 +687,7 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
   }
 
   if (object->movie) {
-    SwfdecMovie *movie = SWFDEC_MOVIE (object);
+    SwfdecMovie *movie = SWFDEC_MOVIE (object->relay);
 
     guint prop_id = swfdec_movie_property_lookup (variable);
     if (prop_id != G_MAXUINT) {
@@ -922,7 +922,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
       SwfdecMovie *movie, *ret;
       guint prop_id;
   
-      movie = SWFDEC_MOVIE (cur);
+      movie = SWFDEC_MOVIE (cur->relay);
 
       if (context->version > 5 && variable == SWFDEC_AS_STR__global) {
 	/* FIXME: current global or movie's global? */
@@ -1154,7 +1154,7 @@ swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
     return FALSE;
 
   if (object->movie) {
-    SwfdecMovie *movie = SWFDEC_MOVIE (object);
+    SwfdecMovie *movie = SWFDEC_MOVIE (object->relay);
     SwfdecAsValue val;
     GList *walk;
 
@@ -1234,7 +1234,7 @@ swfdec_as_object_run (SwfdecAsObject *object, SwfdecScript *script)
   context = swfdec_gc_object_get_context (object);
   swfdec_as_frame_init (&frame, context, script);
   if (object->movie) {
-    frame.target = SWFDEC_MOVIE (object);
+    frame.target = SWFDEC_MOVIE (object->relay);
     frame.original_target = frame.target;
   }
   swfdec_as_frame_set_this (&frame, object);
@@ -1396,7 +1396,7 @@ swfdec_as_object_set_constructor (SwfdecAsObject *object, SwfdecAsObject *constr
   SWFDEC_AS_VALUE_SET_OBJECT (&val, construct);
   swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_constructor, 
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
-  if (swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (construct),
+  if (swfdec_as_object_get_variable (construct,
 	  SWFDEC_AS_STR_prototype, &val)) {
     swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR___proto__, 
 	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

@@ -521,8 +521,9 @@ swfdec_player_do_action (SwfdecPlayer *player)
     if (action) {
       if (action->script) {
 	SwfdecSandbox *sandbox = SWFDEC_MOVIE (action->actor)->resource->sandbox;
+	SwfdecAsObject *object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (action->actor));
 	swfdec_sandbox_use (sandbox);
-	swfdec_as_object_run (SWFDEC_AS_OBJECT (action->actor), action->script);
+	swfdec_as_object_run (object, action->script);
 	swfdec_sandbox_unuse (sandbox);
       } else {
 	swfdec_actor_execute (action->actor, action->event, action->key);
@@ -1205,7 +1206,7 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
   }
   if (prev) {
     swfdec_sandbox_use (SWFDEC_MOVIE (prev)->resource->sandbox);
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (prev), SWFDEC_AS_STR_onKillFocus,
+    swfdec_as_relay_call (SWFDEC_AS_RELAY (prev), SWFDEC_AS_STR_onKillFocus,
 	1, &vals[1], NULL);
     swfdec_sandbox_unuse (SWFDEC_MOVIE (prev)->resource->sandbox);
     klass = SWFDEC_ACTOR_GET_CLASS (prev);
@@ -1217,7 +1218,7 @@ swfdec_player_grab_focus (SwfdecPlayer *player, SwfdecActor *actor)
   swfdec_player_invalidate_focusrect (player);
   if (actor) {
     swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
-    swfdec_as_object_call (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_onSetFocus,
+    swfdec_as_relay_call (SWFDEC_AS_RELAY (actor), SWFDEC_AS_STR_onSetFocus,
 	1, &vals[0], NULL);
     swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
     klass = SWFDEC_ACTOR_GET_CLASS (actor);
@@ -1489,6 +1490,7 @@ swfdec_player_focus_sort (gconstpointer ca, gconstpointer cb)
 static GList *
 swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
 {
+  SwfdecAsObject *object;
   SwfdecAsValue val;
   const GList *walk;
   GList *ret = NULL;
@@ -1499,15 +1501,17 @@ swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
     if (!SWFDEC_IS_ACTOR (actor))
       continue;
 
+    object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (actor));
     swfdec_sandbox_use (SWFDEC_MOVIE (actor)->resource->sandbox);
     if (SWFDEC_IS_TEXT_FIELD_MOVIE (actor)) {
       SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
       if (text->editable)
 	ret = g_list_prepend (ret, actor);
     } else if (SWFDEC_MOVIE (actor)->parent != NULL) {
-      swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabEnabled, &val);
+      swfdec_as_object_get_variable (object, SWFDEC_AS_STR_tabEnabled, &val);
       if (swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
-	swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabEnabled, &val);
+	/* Flash queries again - why not? :/ */
+	swfdec_as_object_get_variable (object, SWFDEC_AS_STR_tabEnabled, &val);
 	ret = g_list_prepend (ret, actor);
       } else if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val) && 
 	  swfdec_actor_get_mouse_events (actor)) {
@@ -1518,7 +1522,7 @@ swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
     if (SWFDEC_MOVIE (actor)->parent == NULL)
       SWFDEC_AS_VALUE_SET_UNDEFINED (&val);
     else
-      swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor), SWFDEC_AS_STR_tabChildren, &val);
+      swfdec_as_object_get_variable (object, SWFDEC_AS_STR_tabChildren, &val);
 
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val) ||
 	swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {

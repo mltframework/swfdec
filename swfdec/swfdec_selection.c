@@ -117,7 +117,7 @@ swfdec_actor_can_grab_focus (SwfdecActor *actor)
       SWFDEC_IS_BUTTON_MOVIE (actor)) {
     if (SWFDEC_MOVIE (actor)->parent == NULL)
       return FALSE;
-    if (!swfdec_as_object_get_variable (SWFDEC_AS_OBJECT (actor),
+    if (!swfdec_as_object_get_variable (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (actor)),
 	SWFDEC_AS_STR_focusEnabled, &val))
       return swfdec_actor_get_mouse_events (actor);
     return swfdec_as_value_to_boolean (swfdec_gc_object_get_context (actor), &val);
@@ -138,7 +138,7 @@ swfdec_selection_setFocus (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecSandbox *sandbox;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (ret, FALSE);
-  SWFDEC_AS_CHECK (0, NULL, "O", &actor);
+  SWFDEC_AS_CHECK (0, NULL, "M", &actor);
 
   if (actor != NULL) {
     if (!SWFDEC_IS_ACTOR (actor) ||

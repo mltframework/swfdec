@@ -364,9 +364,9 @@ void
 swfdec_sprite_movie_getSWFVersion (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
-  if (object != NULL && SWFDEC_IS_MOVIE (object)) {
+  if (object != NULL && object->movie) {
     swfdec_as_value_set_integer (cx, rval,
-	swfdec_movie_get_version (SWFDEC_MOVIE (object)));
+	swfdec_movie_get_version (SWFDEC_MOVIE (object->relay)));
   } else {
     swfdec_as_value_set_integer (cx, rval, -1);
   }
@@ -709,6 +709,7 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SwfdecMovie *movie, *parent;
+  SwfdecSandbox *sandbox;
   int depth;
   const char *name;
 
@@ -719,16 +720,11 @@ swfdec_sprite_movie_createEmptyMovieClip (SwfdecAsContext *cx, SwfdecAsObject *o
     swfdec_movie_remove (movie);
   movie = swfdec_movie_new (SWFDEC_PLAYER (cx), depth, parent, parent->resource, NULL, name);
 
-  if (SWFDEC_IS_SPRITE_MOVIE (movie)) {
-    SwfdecSandbox *sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (cx));
-    SwfdecActor *actor = SWFDEC_ACTOR (movie);
-    swfdec_sandbox_unuse (sandbox);
-    swfdec_movie_initialize (movie);
-    swfdec_actor_execute (actor, SWFDEC_EVENT_CONSTRUCT, 0);
-    swfdec_sandbox_use (sandbox);
-  } else {
-    swfdec_movie_initialize (movie);
-  }
+  sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (cx));
+  swfdec_sandbox_unuse (sandbox);
+  swfdec_movie_initialize (movie);
+  swfdec_actor_execute (SWFDEC_ACTOR (movie), SWFDEC_EVENT_CONSTRUCT, 0);
+  swfdec_sandbox_use (sandbox);
 
   SWFDEC_AS_VALUE_SET_MOVIE (rval, movie);
 }
@@ -751,16 +747,15 @@ static gboolean
 swfdec_sprite_movie_foreach_copy_properties (SwfdecAsObject *object,
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data)
 {
-  SwfdecAsObject *target = data;
-
-  g_return_val_if_fail (SWFDEC_IS_AS_OBJECT (target), FALSE);
+  SwfdecMovie *target = SWFDEC_MOVIE (data);
 
   /* FIXME: We likely need better flag handling here.
    * We might even want to fix swfdec_as_object_foreach() */
   if (flags & SWFDEC_AS_VARIABLE_HIDDEN)
     return TRUE;
 
-  swfdec_as_object_set_variable (target, variable, value);
+  swfdec_as_object_set_variable (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (target)),
+      variable, value);
 
   return TRUE;
 }
@@ -776,12 +771,12 @@ swfdec_sprite_movie_init_from_object (SwfdecMovie *movie,
     SwfdecAsContext *cx = swfdec_gc_object_get_context (movie);
     if (cx->version <= 6) {
       swfdec_as_object_foreach (initObject,
-	  swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
+	  swfdec_sprite_movie_foreach_copy_properties, movie);
       swfdec_movie_initialize (movie);
     } else {
       swfdec_movie_initialize (movie);
       swfdec_as_object_foreach (initObject,
-	  swfdec_sprite_movie_foreach_copy_properties, SWFDEC_AS_OBJECT (movie));
+	  swfdec_sprite_movie_foreach_copy_properties, movie);
     }
   } else {
     swfdec_movie_initialize (movie);
@@ -805,7 +800,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   SwfdecMovie *movie;
   SwfdecMovie *ret;
-  SwfdecAsObject *initObject = NULL, *constructor;
+  SwfdecAsObject *initObject = NULL, *constructor, *o;
   const char *name, *export;
   int depth;
   SwfdecGraphic *sprite;
@@ -832,11 +827,11 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
       ret->name, ret->depth);
   /* run init and construct */
   constructor = swfdec_player_get_export_class (SWFDEC_PLAYER (cx), export);
+  o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (ret));
   if (constructor == NULL) {
-    swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (ret),
-	SWFDEC_AS_STR_MovieClip, NULL);
+    swfdec_as_object_set_constructor_by_name (o, SWFDEC_AS_STR_MovieClip, NULL);
   } else {
-    swfdec_as_object_set_constructor (SWFDEC_AS_OBJECT (ret), constructor);
+    swfdec_as_object_set_constructor (o, constructor);
   }
 
   swfdec_sprite_movie_init_from_object (ret, initObject);
@@ -949,10 +944,10 @@ swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
   SwfdecMovie *movie, *mask;
 
   /* yes, this works with regular movies */
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "O", &mask);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "M", &mask);
 
-  if (mask != NULL && !SWFDEC_IS_MOVIE (mask)) {
-    SWFDEC_FIXME ("mask is not a movie, what now?");
+  if (argc > 0 && mask == NULL && !SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
+    SWFDEC_FIXME ("mask is not a movie and not null, what now?");
     mask = NULL;
   }
   if (movie->masked_by)

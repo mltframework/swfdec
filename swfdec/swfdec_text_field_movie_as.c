@@ -875,7 +875,7 @@ swfdec_text_field_movie_get_styleSheet (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   if (text->style_sheet != NULL) {
-    SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (text->style_sheet));
+    SWFDEC_AS_VALUE_SET_OBJECT (ret, text->style_sheet);
   } else {
     SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
   }
@@ -1339,7 +1339,7 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   int depth, x, y, width, height;
   const char *name;
   SwfdecAsFunction *fun;
-  SwfdecAsObject *fun_object;
+  SwfdecAsObject *fun_object, *o;
   SwfdecAsValue val;
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &parent, "siiiii", &name, &depth, &x, &y, &width, &height);
@@ -1399,22 +1399,23 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   fun = SWFDEC_AS_FUNCTION (fun_object->relay);
 
   /* set initial variables */
+  o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (movie));
   if (swfdec_as_object_get_variable (fun_object,
 	SWFDEC_AS_STR_prototype, &val)) {
-    swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie),
+    swfdec_as_object_set_variable_and_flags (o,
 	SWFDEC_AS_STR___proto__, &val,
 	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   }
   SWFDEC_AS_VALUE_SET_OBJECT (&val, fun_object);
   if (cx->version < 7) {
-    swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie),
+    swfdec_as_object_set_variable_and_flags (o,
 	SWFDEC_AS_STR_constructor, &val, SWFDEC_AS_VARIABLE_HIDDEN);
   }
-  swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie),
+  swfdec_as_object_set_variable_and_flags (o,
       SWFDEC_AS_STR___constructor__, &val,
       SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_VERSION_6_UP);
 
-  swfdec_as_function_call_full (fun, SWFDEC_AS_OBJECT (movie), TRUE, NULL,
+  swfdec_as_function_call_full (fun, o, TRUE, NULL,
       0, NULL, cx->version > 7 ? rval : &val);
 }
 

@@ -283,7 +283,7 @@ swfdec_xml_socket_connect (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (0, NULL, "si", &host, &port);
 
-  if (SWFDEC_IS_MOVIE (object) || object == NULL)
+  if (object == NULL || object->movie)
     return;
 
   swfdec_xml_socket_create (object, swfdec_sandbox_get (SWFDEC_PLAYER (cx)), host, port);

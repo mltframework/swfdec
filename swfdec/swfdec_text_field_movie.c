@@ -395,19 +395,22 @@ swfdec_text_field_movie_init_movie (SwfdecMovie *movie)
   needs_unuse = swfdec_sandbox_try_use (movie->resource->sandbox);
 
   cx = swfdec_gc_object_get_context (movie);
+  if (movie->resource->version > 5) {
+    SwfdecAsObject *o = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (movie));
 
-  swfdec_text_field_movie_init_properties (cx);
+    swfdec_text_field_movie_init_properties (cx);
 
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie),
-      SWFDEC_AS_STR_TextField, NULL);
+    swfdec_as_object_set_constructor_by_name (o,
+	SWFDEC_AS_STR_TextField, NULL);
 
-  /* create _listeners array containing self */
-  array = swfdec_as_array_new (cx);
-  SWFDEC_AS_VALUE_SET_MOVIE (&val, movie);
-  swfdec_as_array_push (array, &val);
-  SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
-  swfdec_as_object_set_variable_and_flags (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR__listeners, 
-      &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+    /* create _listeners array containing self */
+    array = swfdec_as_array_new (cx);
+    SWFDEC_AS_VALUE_SET_MOVIE (&val, movie);
+    swfdec_as_array_push (array, &val);
+    SWFDEC_AS_VALUE_SET_OBJECT (&val, array);
+    swfdec_as_object_set_variable_and_flags (o, SWFDEC_AS_STR__listeners, 
+	&val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
+  }
 
   text->border_color = SWFDEC_COLOR_COMBINE (0, 0, 0, 0);
   text->background_color = SWFDEC_COLOR_COMBINE (255, 255, 255, 0);
@@ -541,9 +544,8 @@ swfdec_text_field_movie_parse_listen_variable (SwfdecTextFieldMovie *text,
   if (SWFDEC_MOVIE (text)->parent == NULL)
     return;
 
-  g_assert (SWFDEC_IS_AS_OBJECT (SWFDEC_MOVIE (text)->parent));
   cx = swfdec_gc_object_get_context (text);
-  parent = SWFDEC_AS_OBJECT (SWFDEC_MOVIE (text)->parent);
+  parent = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (SWFDEC_MOVIE (text)->parent));
 
   p1 = strrchr (variable, '.');
   p2 = strrchr (variable, ':');
@@ -601,7 +603,7 @@ swfdec_text_field_movie_asfunction (SwfdecTextFieldMovie *text,
   } else {
     swfdec_as_object_call (object, name, 0, NULL, NULL);
   }
-  swfdec_sandbox_use (SWFDEC_MOVIE (text)->resource->sandbox);
+  swfdec_sandbox_unuse (SWFDEC_MOVIE (text)->resource->sandbox);
 
   g_strfreev (parts);
 }
@@ -1047,7 +1049,7 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
     swfdec_text_field_movie_parse_listen_variable (text, text->variable,
 	&object, &name);
     if (object != NULL && object->movie) {
-      swfdec_movie_remove_variable_listener (SWFDEC_MOVIE (object),
+      swfdec_movie_remove_variable_listener (SWFDEC_MOVIE (object->relay),
 	  text, name, swfdec_text_field_movie_variable_listener_callback);
     }
   }
@@ -1074,7 +1076,7 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
       swfdec_text_field_movie_set_text (text, initial, text_field->html);
     }
     if (object != NULL && object->movie) {
-      swfdec_movie_add_variable_listener (SWFDEC_MOVIE (object),
+      swfdec_movie_add_variable_listener (SWFDEC_MOVIE (object->relay),
 	  text, name, swfdec_text_field_movie_variable_listener_callback);
     }
   }

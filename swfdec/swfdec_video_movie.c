@@ -130,7 +130,7 @@ swfdec_video_movie_constructor (GType type, guint n_construct_properties,
   movie = SWFDEC_MOVIE (object);
   unuse = swfdec_sandbox_try_use (movie->resource->sandbox);
   swfdec_video_movie_init_properties (swfdec_gc_object_get_context (movie));
-  swfdec_as_object_set_constructor_by_name (SWFDEC_AS_OBJECT (movie), 
+  swfdec_as_object_set_constructor_by_name (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (movie)), 
       SWFDEC_AS_STR_Video, NULL);
   if (unuse)
     swfdec_sandbox_unuse (movie->resource->sandbox);

@@ -67,13 +67,11 @@ enum {
 
 static guint signals[LAST_SIGNAL] = { 0, };
 
-G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_AS_OBJECT)
+G_DEFINE_ABSTRACT_TYPE (SwfdecMovie, swfdec_movie, SWFDEC_TYPE_AS_RELAY)
 
 static void
 swfdec_movie_init (SwfdecMovie * movie)
 {
-  SWFDEC_AS_OBJECT (movie)->movie = TRUE;
-
   movie->blend_mode = SWFDEC_BLEND_MODE_NORMAL;
 
   movie->xscale = 100;
@@ -374,7 +372,7 @@ swfdec_movie_do_remove (SwfdecMovie *movie, gboolean destroy)
     swfdec_movie_unset_actor (player, actor);
     if ((actor->events && 
 	  swfdec_event_list_has_conditions (actor->events, SWFDEC_EVENT_UNLOAD, 0)) ||
-	swfdec_as_object_has_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR_onUnload)) {
+	swfdec_as_object_has_variable (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (movie)), SWFDEC_AS_STR_onUnload)) {
       swfdec_actor_queue_script (actor, SWFDEC_EVENT_UNLOAD);
       destroy = FALSE;
     }
@@ -450,7 +448,6 @@ swfdec_movie_destroy (SwfdecMovie *movie)
   if (movie->as_value) {
     movie->as_value->movie = NULL;
     movie->as_value = NULL;
-    SWFDEC_AS_OBJECT (movie)->prototype = NULL;
   }
   g_object_unref (movie);
 }
@@ -948,11 +945,8 @@ swfdec_movie_set_property (GObject *object, guint param_id, const GValue *value,
 	/* invalidate the parent, so it gets visible */
 	swfdec_movie_queue_update (movie->parent, SWFDEC_MOVIE_INVALID_CHILDREN);
       } else {
-	SwfdecAsValue val;
 	SwfdecPlayerPrivate *priv = SWFDEC_PLAYER (cx)->priv;
 	priv->roots = g_list_insert_sorted (priv->roots, movie, swfdec_movie_compare_depths);
-	SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, priv->system->version));
-	swfdec_as_object_set_variable (SWFDEC_AS_OBJECT (movie), SWFDEC_AS_STR__version, &val);
       }
       break;
     case PROP_RESOURCE:
@@ -1031,6 +1025,8 @@ swfdec_movie_mark (SwfdecGcObject *object)
 gboolean
 swfdec_movie_is_scriptable (SwfdecMovie *movie)
 {
+  /* FIXME: It would be much easier if we'd just check that there's no as_value 
+   * for non-scriptable movies */
   return (SWFDEC_IS_ACTOR (movie) || SWFDEC_IS_VIDEO_MOVIE (movie)) &&
    (swfdec_movie_get_version (movie) > 5 || !SWFDEC_IS_TEXT_FIELD_MOVIE (movie));
 }
@@ -1291,6 +1287,7 @@ swfdec_movie_constructor (GType type, guint n_construct_properties,
 {
   SwfdecPlayerPrivate *priv;
   SwfdecAsContext *cx;
+  SwfdecAsObject *o;
   SwfdecMovie *movie;
   GObject *object;
   const char *name;
@@ -1320,6 +1317,17 @@ swfdec_movie_constructor (GType type, guint n_construct_properties,
     SWFDEC_AS_VALUE_SET_MOVIE (&movie->resource->movie, movie);
   }
 
+  /* create AsObject */
+  o = swfdec_as_object_new_empty (cx);
+  o->movie = TRUE;
+  swfdec_as_object_set_relay (o, SWFDEC_AS_RELAY (movie));
+
+  /* set $version variable */
+  if (movie->parent == NULL) {
+    SwfdecAsValue val;
+    SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_get_string (cx, priv->system->version));
+    swfdec_as_object_set_variable (o, SWFDEC_AS_STR__version, &val);
+  }
   return object;
 }
 

@@ -340,7 +340,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_STRING_CHECK (&str, "");
 
   arr = swfdec_as_array_new (cx);
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, arr);
   /* hi, i'm the special case */
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     delim = SWFDEC_AS_STR_COMMA;
@@ -392,7 +392,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_STRING_CHECK (&str, "");
 
   arr = swfdec_as_array_new (cx);
-  SWFDEC_AS_VALUE_SET_OBJECT (ret, SWFDEC_AS_OBJECT (arr));
+  SWFDEC_AS_VALUE_SET_OBJECT (ret, arr);
   /* hi, i'm the special case */
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     SWFDEC_AS_VALUE_SET_STRING (&val, str);

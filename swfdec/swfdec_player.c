@@ -2064,7 +2064,14 @@ swfdec_accumulate_quit (GSignalInvocationHint *ihint, GValue *return_accu,
 }
 
 static void
-swfdec_player_mark_string_object (gpointer key, gpointer value, gpointer data)
+swfdec_player_mark_string_as_object (gpointer key, gpointer value, gpointer data)
+{
+  swfdec_as_string_mark (key);
+  swfdec_as_object_mark (value);
+}
+
+static void
+swfdec_player_mark_string_gc_object (gpointer key, gpointer value, gpointer data)
 {
   swfdec_as_string_mark (key);
   swfdec_gc_object_mark (value);
@@ -2076,8 +2083,8 @@ swfdec_player_mark (SwfdecAsContext *context)
   SwfdecPlayer *player = SWFDEC_PLAYER (context);
   SwfdecPlayerPrivate *priv = player->priv;
 
-  g_hash_table_foreach (priv->registered_classes, swfdec_player_mark_string_object, NULL);
-  g_hash_table_foreach (priv->scripting_callbacks, swfdec_player_mark_string_object, NULL);
+  g_hash_table_foreach (priv->registered_classes, swfdec_player_mark_string_as_object, NULL);
+  g_hash_table_foreach (priv->scripting_callbacks, swfdec_player_mark_string_gc_object, NULL);
   g_list_foreach (priv->roots, (GFunc) swfdec_gc_object_mark, NULL);
   g_list_foreach (priv->intervals, (GFunc) swfdec_gc_object_mark, NULL);
   g_slist_foreach (priv->sandboxes, (GFunc) swfdec_gc_object_mark, NULL);

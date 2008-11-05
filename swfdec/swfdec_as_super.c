@@ -86,7 +86,7 @@ swfdec_as_super_new (SwfdecAsFrame *frame, SwfdecAsObject *thisp, SwfdecAsObject
   
   if (frame->super != NULL)
     return;
-  context = swfdec_gc_object_get_context (thisp);
+  context = thisp->context;
   if (context->version <= 5)
     return;
 

@@ -81,7 +81,7 @@ gboolean
 swfdec_matrix_from_as_object (cairo_matrix_t *matrix, SwfdecAsObject *object)
 {
   SwfdecAsValue *val;
-  SwfdecAsContext *cx = swfdec_gc_object_get_context (object);
+  SwfdecAsContext *cx = object->context;
 
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_a);
   if (val == NULL ||

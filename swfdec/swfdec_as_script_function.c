@@ -109,7 +109,7 @@ swfdec_as_script_function_mark (SwfdecGcObject *object)
 {
   SwfdecAsScriptFunction *script = SWFDEC_AS_SCRIPT_FUNCTION (object);
 
-  g_slist_foreach (script->scope_chain, (GFunc) swfdec_gc_object_mark, NULL);
+  g_slist_foreach (script->scope_chain, (GFunc) swfdec_as_object_mark, NULL);
   if (script->sandbox)
     swfdec_gc_object_mark (script->sandbox);
 

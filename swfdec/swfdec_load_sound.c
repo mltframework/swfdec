@@ -91,7 +91,7 @@ swfdec_load_sound_sound_provider_init (SwfdecSoundProviderInterface *iface)
 static SwfdecPlayer *
 swfdec_load_sound_stream_target_get_player (SwfdecStreamTarget *target)
 {
-  return SWFDEC_PLAYER (swfdec_gc_object_get_context (SWFDEC_LOAD_SOUND (target)->target));
+  return SWFDEC_PLAYER (SWFDEC_LOAD_SOUND (target)->target->context);
 }
 
 static gboolean
@@ -407,7 +407,7 @@ swfdec_load_sound_new (SwfdecAsObject *target, const char *url)
   g_return_val_if_fail (target != NULL, NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
-  context = swfdec_gc_object_get_context (target);
+  context = target->context;
   sound = g_object_new (SWFDEC_TYPE_LOAD_SOUND, NULL);
   sound->target = target;
   sound->sandbox = swfdec_sandbox_get (SWFDEC_PLAYER (context));

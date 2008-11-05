@@ -819,7 +819,7 @@ swfdec_sprite_movie_attachMovie (SwfdecAsContext *cx, SwfdecAsObject *object,
   ret = swfdec_movie_find (movie, depth);
   if (ret)
     swfdec_movie_remove (ret);
-  ret = swfdec_movie_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (object)),
+  ret = swfdec_movie_new (SWFDEC_PLAYER (cx),
       depth, movie, movie->resource, sprite, name);
   SWFDEC_LOG ("attached %s (%u) as %s to depth %u", export, SWFDEC_CHARACTER (sprite)->id,
       ret->name, ret->depth);

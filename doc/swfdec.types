@@ -5,7 +5,7 @@ swfdec_as_context_get_type
 swfdec_as_debugger_get_type
 swfdec_as_function_get_type
 swfdec_as_native_function_get_type
-swfdec_as_object_get_type
+swfdec_as_relay_get_type
 swfdec_audio_get_type
 swfdec_file_loader_get_type
 swfdec_gc_object_get_type

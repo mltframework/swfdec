@@ -1296,7 +1296,7 @@ swfdec_movie_constructor (GType type, guint n_construct_properties,
       n_construct_properties, construct_properties);
   movie = SWFDEC_MOVIE (object);
 
-  cx = swfdec_gc_object_get_context (object);
+  cx = swfdec_gc_object_get_context (movie);
   priv = SWFDEC_PLAYER (cx)->priv;
   /* the movie is created invalid */
   priv->invalid_pending = g_slist_prepend (priv->invalid_pending, object);

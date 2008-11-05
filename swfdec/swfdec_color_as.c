@@ -70,7 +70,7 @@ add_variable (SwfdecAsObject *obj, const char *name, double value)
 {
   SwfdecAsValue val;
 
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (obj), &val, value);
+  swfdec_as_value_set_number (obj->context, &val, value);
   swfdec_as_object_set_variable (obj, name, &val);
 }
 
@@ -135,7 +135,7 @@ parse_property (SwfdecAsObject *obj, const char *name, int *target, gboolean sca
 
   if (!swfdec_as_object_get_variable (obj, name, &val))
     return;
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (obj), &val);
+  d = swfdec_as_value_to_number (obj->context, &val);
   if (scale) {
     *target = d * 256.0 / 100.0;
   } else {

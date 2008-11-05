@@ -321,7 +321,7 @@ swfdec_text_field_movie_mark (SwfdecGcObject *object)
 
   swfdec_text_buffer_mark (text->text);
   if (text->style_sheet != NULL)
-    swfdec_gc_object_mark (text->style_sheet);
+    swfdec_as_object_mark (text->style_sheet);
   if (text->style_sheet_input != NULL)
     swfdec_as_string_mark (text->style_sheet_input);
   if (text->restrict_ != NULL)

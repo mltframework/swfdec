@@ -82,6 +82,8 @@ typedef SwfdecAsVariableForeach SwfdecAsVariableForeachRemove;
 typedef const char *(* SwfdecAsVariableForeachRename) (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
 
+void		swfdec_as_object_free		(SwfdecAsContext *	context,
+						 SwfdecAsObject *	object);
 SwfdecAsValue *	swfdec_as_object_peek_variable	(SwfdecAsObject *       object,
 						 const char *		name);
 guint		swfdec_as_object_foreach_remove	(SwfdecAsObject *       object,

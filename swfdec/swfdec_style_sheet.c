@@ -68,7 +68,7 @@ swfdec_style_sheet_get_selector_object (SwfdecAsObject *object,
   g_return_val_if_fail (object != NULL, NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  empty = swfdec_as_object_new_empty (swfdec_gc_object_get_context (object));
+  empty = swfdec_as_object_new_empty (object->context);
   SWFDEC_AS_VALUE_SET_OBJECT (&val, empty);
   swfdec_as_object_unset_variable_flags (object, name,
       SWFDEC_AS_VARIABLE_CONSTANT);

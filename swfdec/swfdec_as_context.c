@@ -310,6 +310,8 @@ swfdec_as_context_collect (SwfdecAsContext *context)
   
   swfdec_as_context_remove_gc_objects (context);
 
+  context->objects = swfdec_as_gcable_collect (context, context->objects,
+      (SwfdecAsGcableDestroyNotify) swfdec_as_object_free);
   context->strings = swfdec_as_gcable_collect (context, context->strings,
       swfdec_as_context_collect_string);
   context->numbers = swfdec_as_gcable_collect (context, context->numbers,
@@ -350,9 +352,9 @@ swfdec_as_string_mark (const char *string)
 void
 swfdec_as_value_mark (SwfdecAsValue *value)
 {
-
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
-    swfdec_gc_object_mark (value->value.object);
+    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_MARK))
+      swfdec_as_object_mark ((SwfdecAsObject *) value->value.gcable);
   } else if (SWFDEC_AS_VALUE_IS_MOVIE (value)) {
     if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_MARK))
       swfdec_as_movie_value_mark ((SwfdecAsMovieValue *) value->value.gcable);
@@ -382,7 +384,7 @@ swfdec_as_context_do_mark (SwfdecAsContext *context)
 {
   /* This if is needed for SwfdecPlayer */
   if (context->global)
-    swfdec_gc_object_mark (context->global);
+    swfdec_as_object_mark (context->global);
   if (context->exception)
     swfdec_as_value_mark (&context->exception_value);
   g_hash_table_foreach (context->constant_pools, swfdec_as_context_mark_constant_pools, NULL);

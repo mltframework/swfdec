@@ -50,11 +50,11 @@ swfdec_xml_node_mark (SwfdecGcObject *object)
   if (node->parent != NULL)
     swfdec_gc_object_mark (node->parent);
   if (node->children != NULL)
-    swfdec_gc_object_mark (node->children);
+    swfdec_as_object_mark (node->children);
   if (node->attributes != NULL)
-    swfdec_gc_object_mark (node->attributes);
+    swfdec_as_object_mark (node->attributes);
   if (node->child_nodes != NULL)
-    swfdec_gc_object_mark (node->child_nodes);
+    swfdec_as_object_mark (node->child_nodes);
 
   SWFDEC_GC_OBJECT_CLASS (swfdec_xml_node_parent_class)->mark (object);
 }
@@ -210,7 +210,7 @@ swfdec_xml_node_foreach_find_namespace (SwfdecAsObject *object,
     return TRUE;
 
   // ok, now check if the uri is the one we are searching for
-  uri = swfdec_as_value_to_string (swfdec_gc_object_get_context (object), value);
+  uri = swfdec_as_value_to_string (object->context, value);
   if (!g_ascii_strcasecmp (uri, fdata->namespace)) {
     fdata->variable = variable;
     return FALSE;
@@ -892,7 +892,7 @@ swfdec_xml_node_foreach_string_append_attribute (SwfdecAsObject *object,
   string = g_string_append (string, variable);
   string = g_string_append (string, "=\"");
   escaped =
-    swfdec_xml_escape (swfdec_as_value_to_string (swfdec_gc_object_get_context (object), value));
+    swfdec_xml_escape (swfdec_as_value_to_string (object->context, value));
   string = g_string_append (string, escaped);
   g_free (escaped);
   string = g_string_append (string, "\"");

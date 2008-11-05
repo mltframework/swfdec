@@ -103,14 +103,14 @@ struct _SwfdecAsDoubleValue {
 #define SWFDEC_AS_VALUE_SET_NULL(val) (val)->type = SWFDEC_AS_TYPE_NULL
 
 #define SWFDEC_AS_VALUE_IS_OBJECT(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_OBJECT)
-#define SWFDEC_AS_VALUE_GET_OBJECT(val) ((val)->value.object)
+#define SWFDEC_AS_VALUE_GET_OBJECT(val) ((SwfdecAsObject *) (val)->value.gcable)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
   SwfdecAsValue *__val = (val); \
   SwfdecAsObject *__o = (o); \
   g_assert (__o != NULL); \
   g_assert (!__o->movie); \
   (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
-  (__val)->value.object = __o; \
+  (__val)->value.gcable = (SwfdecAsGcable *) __o; \
 } G_STMT_END
 
 /* value setters */

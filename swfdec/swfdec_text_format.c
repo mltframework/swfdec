@@ -217,7 +217,7 @@ swfdec_text_format_get_integer (SwfdecAsObject *object,
     return;
   }
 
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (object), ret,
+  swfdec_as_value_set_number (object->context, ret,
       (double)G_STRUCT_MEMBER (int, format, property_offsets[property]));
 }
 

@@ -165,7 +165,7 @@ swfdec_xml_socket_mark (SwfdecGcObject *object)
 {
   SwfdecXmlSocket *sock = SWFDEC_XML_SOCKET (object);
 
-  swfdec_gc_object_mark (sock->target);
+  swfdec_as_object_mark (sock->target);
   swfdec_gc_object_mark (sock->sandbox);
 
   SWFDEC_GC_OBJECT_CLASS (swfdec_xml_socket_parent_class)->mark (object);
@@ -205,7 +205,7 @@ swfdec_xml_socket_init (SwfdecXmlSocket *xml)
 static SwfdecXmlSocket *
 swfdec_xml_socket_create (SwfdecAsObject *target, SwfdecSandbox *sandbox, const char *hostname, guint port)
 {
-  SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (target));
+  SwfdecPlayer *player = SWFDEC_PLAYER (target->context);
   SwfdecXmlSocket *xml;
   SwfdecSocket *sock;
 
@@ -240,7 +240,7 @@ swfdec_xml_socket_get (SwfdecAsObject *object)
     return NULL;
   }
 
-  player = SWFDEC_PLAYER (swfdec_gc_object_get_context (object));
+  player = SWFDEC_PLAYER (object->context);
   for (walk = player->priv->xml_sockets; walk; walk = walk->next) {
     xml = walk->data;
 

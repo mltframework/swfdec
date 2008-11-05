@@ -352,7 +352,7 @@ static gboolean
 swfdec_rectangle_from_as_object (SwfdecRectangle *rect, SwfdecAsObject *object)
 {
   SwfdecAsValue *val;
-  SwfdecAsContext *cx = swfdec_gc_object_get_context (object);
+  SwfdecAsContext *cx = object->context;
 
   /* FIXME: This function is untested */
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_x);
@@ -370,7 +370,7 @@ static void
 swfdec_point_from_as_object (int *x, int *y, SwfdecAsObject *object)
 {
   SwfdecAsValue *val;
-  SwfdecAsContext *cx = swfdec_gc_object_get_context (object);
+  SwfdecAsContext *cx = object->context;
 
   /* FIXME: This function is untested */
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_x);

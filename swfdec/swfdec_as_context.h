@@ -58,7 +58,8 @@ struct _SwfdecAsContext {
   gsize			memory_since_gc;/* memory allocated since last GC run */
   GHashTable *		interned_strings;/* string => memory mapping the context manages */
   gpointer		gc_objects;	/* all SwfdecGcObjects the context manages */
-  gpointer		strings;	/* all numbers the context manages */
+  gpointer		objects;	/* all objects the context manages */
+  gpointer		strings;	/* all strings the context manages */
   gpointer		numbers;	/* all numbers the context manages */
   gpointer		movies;		/* all movies the context manages */
   GHashTable *		constant_pools;	/* memory address => SwfdecConstantPool for all gc'ed pools */

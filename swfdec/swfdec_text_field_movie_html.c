@@ -129,7 +129,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
     return;
 
   object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (tag->format));
-  cx = swfdec_gc_object_get_context (object);
+  cx = swfdec_gc_object_get_context (tag->format);
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
 	cx, g_strndup (value, value_length)));
 

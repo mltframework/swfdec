@@ -22,7 +22,6 @@
 
 #include <glib-object.h>
 #include <swfdec/swfdec_as_types.h>
-#include <swfdec/swfdec_gc_object.h>
 
 G_BEGIN_DECLS
 
@@ -49,17 +48,10 @@ typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
 typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
 
-#define SWFDEC_TYPE_AS_OBJECT                    (swfdec_as_object_get_type())
-#define SWFDEC_IS_AS_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SWFDEC_TYPE_AS_OBJECT))
-#define SWFDEC_IS_AS_OBJECT_CLASS(klass)         (G_TYPE_CHECK_CLASS_TYPE ((klass), SWFDEC_TYPE_AS_OBJECT))
-#define SWFDEC_AS_OBJECT(obj)                    (G_TYPE_CHECK_INSTANCE_CAST ((obj), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObject))
-#define SWFDEC_AS_OBJECT_CLASS(klass)            (G_TYPE_CHECK_CLASS_CAST ((klass), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
-#define SWFDEC_AS_OBJECT_GET_CLASS(obj)          (G_TYPE_INSTANCE_GET_CLASS ((obj), SWFDEC_TYPE_AS_OBJECT, SwfdecAsObjectClass))
-
 struct _SwfdecAsObject {
-  /*< protected >*/
-  SwfdecGcObject      	object;
   /*< private >*/
+  SwfdecAsGcable *	next;		/* GC management */
+  SwfdecAsContext *	context;	/* the context that manages the object */
   gboolean		array:1;	/* TRUE if object is an array */
   gboolean		super:1;	/* TRUE if object is a super object */
   gboolean		movie:1;	/* TRUE if object is really a MovieClip */
@@ -71,11 +63,6 @@ struct _SwfdecAsObject {
   SwfdecAsRelay	*	relay;		/* object we relay data to */
 };
 
-struct _SwfdecAsObjectClass {
-  SwfdecGcObjectClass	object_class;
-};
-
-GType		swfdec_as_object_get_type	(void);
 
 SwfdecAsObject *swfdec_as_object_new		(SwfdecAsContext *    	context,
 						 ...) G_GNUC_NULL_TERMINATED;
@@ -95,6 +82,7 @@ void		swfdec_as_object_create		(SwfdecAsFunction *	fun,
 void		swfdec_as_object_set_constructor(SwfdecAsObject *	object,
 						 SwfdecAsObject *	construct);
 SwfdecAsObject *swfdec_as_object_resolve	(SwfdecAsObject *	object);
+void		swfdec_as_object_mark		(SwfdecAsObject *	object);
 
 void		swfdec_as_object_set_relay	(SwfdecAsObject *	object,
 						 SwfdecAsRelay *	relay);

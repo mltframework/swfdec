@@ -752,7 +752,8 @@ swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data,
     swfdec_as_object_get_variable (object, name, swfdec_as_stack_peek (cx, 2));
 #ifdef SWFDEC_WARN_MISSING_PROPERTIES
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx, 2))) {
-	SWFDEC_WARNING ("no variable named %s:%s", G_OBJECT_TYPE_NAME (object), name);
+	SWFDEC_WARNING ("no variable named %s:%s", 
+	    object->relay ? G_OBJECT_TYPE_NAME (object->relay) : ":", name);
     }
 #endif
   } else {
@@ -899,7 +900,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   }
   if (!swfdec_action_call (cx, n_args, super)) {
     SWFDEC_WARNING ("no function named \"%s\" on object %s", name, 
-	obj ? G_OBJECT_TYPE_NAME(obj) : "unknown");
+	obj && obj->relay ? G_OBJECT_TYPE_NAME(obj->relay) : "unknown");
   }
 }
 
@@ -963,7 +964,7 @@ swfdec_action_add2_to_primitive (SwfdecAsValue *value)
     return;
   object = SWFDEC_AS_VALUE_GET_OBJECT (value);
 
-  if (SWFDEC_IS_AS_DATE (object->relay) && swfdec_gc_object_get_context (object)->version > 5)
+  if (SWFDEC_IS_AS_DATE (object->relay) && object->context->version > 5)
     name = SWFDEC_AS_STR_toString;
   else
     name = SWFDEC_AS_STR_valueOf;
@@ -1177,7 +1178,7 @@ swfdec_as_interpret_encode_variables_foreach (SwfdecAsObject *object,
   GString *variables = data;
   char *escaped;
 
-  context = swfdec_gc_object_get_context (object);
+  context = object->context;
   // FIXME: check propflags?
 
   if (variables->len > 0)
@@ -2412,8 +2413,7 @@ swfdec_action_do_enumerate (SwfdecAsContext *cx, SwfdecAsObject *object)
     object = swfdec_as_object_get_prototype (object);
   }
   if (i == 256) {
-    swfdec_as_context_abort (swfdec_gc_object_get_context (object),
-	"Prototype recursion limit exceeded");
+    swfdec_as_context_abort (cx, "Prototype recursion limit exceeded");
     g_slist_free (list);
     return;
   }

@@ -36,7 +36,7 @@ swfdec_as_relay_mark (SwfdecGcObject *object)
   SwfdecAsRelay *relay = SWFDEC_AS_RELAY (object);
 
   if (relay->relay)
-    swfdec_gc_object_mark (relay->relay);
+    swfdec_as_object_mark (relay->relay);
 
   SWFDEC_GC_OBJECT_CLASS (swfdec_as_relay_parent_class)->mark (object);
 }

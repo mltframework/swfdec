@@ -185,8 +185,6 @@ swfdec_resource_replace_movie (SwfdecSpriteMovie *movie, SwfdecResource *resourc
   
   copy = swfdec_movie_new (SWFDEC_PLAYER (swfdec_gc_object_get_context (movie)), 
       mov->depth, mov->parent, resource, NULL, mov->name);
-  if (copy == NULL)
-    return FALSE;
   swfdec_movie_begin_update_matrix (copy);
   copy->matrix = mov->matrix;
   copy->modified = mov->modified;

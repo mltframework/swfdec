@@ -1077,7 +1077,7 @@ swfdec_action_not (SwfdecAsContext *cx, guint action, const guint8 *data, guint 
     swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), d == 0 ? 1 : 0);
   } else {
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), 
-	!swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1)));
+	!swfdec_as_value_to_boolean (cx, *swfdec_as_stack_peek (cx, 1)));
   }
 }
 
@@ -1101,7 +1101,7 @@ swfdec_action_if (SwfdecAsContext *cx, guint action, const guint8 *data, guint l
     SWFDEC_ERROR ("If action length invalid (is %u, should be 2)", len);
     return;
   }
-  if (swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1))) {
+  if (swfdec_as_value_to_boolean (cx, *swfdec_as_stack_peek (cx, 1))) {
     gint16 offset = data[0] | (data[1] << 8);
     cx->frame->pc += 5 + (int) offset;
   }
@@ -1661,7 +1661,7 @@ swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data,
   guint stack_size = 3;
 
   swfdec_as_stack_ensure_size (cx, 3);
-  center = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 2));
+  center = swfdec_as_value_to_boolean (cx, *swfdec_as_stack_peek (cx, 2));
   if (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 3))) {
     swfdec_as_stack_ensure_size (cx, 7);
     rect.x0 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 7));
@@ -2469,8 +2469,8 @@ swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, gu
       r = FALSE;
     }
   } else {
-    l = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 1));
-    r = swfdec_as_value_to_boolean (cx, swfdec_as_stack_peek (cx, 2));
+    l = swfdec_as_value_to_boolean (cx, *swfdec_as_stack_peek (cx, 1));
+    r = swfdec_as_value_to_boolean (cx, *swfdec_as_stack_peek (cx, 2));
   }
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 2),

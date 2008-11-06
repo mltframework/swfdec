@@ -612,28 +612,28 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
 * Returns: either %TRUE or %FALSE.
 **/
 gboolean
-swfdec_as_value_to_boolean (SwfdecAsContext *context, const SwfdecAsValue *value)
+swfdec_as_value_to_boolean (SwfdecAsContext *context, SwfdecAsValue value)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), FALSE);
 
   /* FIXME: what do we do when called in flash 4? */
-  switch (SWFDEC_AS_VALUE_GET_TYPE (*value)) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_UNDEFINED:
     case SWFDEC_AS_TYPE_NULL:
       return FALSE;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      return SWFDEC_AS_VALUE_GET_BOOLEAN (*value);
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (value);
     case SWFDEC_AS_TYPE_NUMBER:
       {
-	double d = SWFDEC_AS_VALUE_GET_NUMBER (*value);
+	double d = SWFDEC_AS_VALUE_GET_NUMBER (value);
 	return d != 0.0 && !isnan (d);
       }
     case SWFDEC_AS_TYPE_STRING:
       if (context->version <= 6) {
-	double d = swfdec_as_value_to_number (context, value);
+	double d = swfdec_as_value_to_number (context, &value);
 	return d != 0.0 && !isnan (d);
       } else {
-	return SWFDEC_AS_VALUE_GET_STRING (*value) != SWFDEC_AS_STR_EMPTY;
+	return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;
       }
     case SWFDEC_AS_TYPE_OBJECT:
     case SWFDEC_AS_TYPE_MOVIE:

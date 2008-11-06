@@ -183,7 +183,7 @@ mc_visible_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   gboolean b;
 
-  b = swfdec_as_value_to_boolean (swfdec_gc_object_get_context (movie), val);
+  b = swfdec_as_value_to_boolean (swfdec_gc_object_get_context (movie), *val);
   if (b != movie->visible) {
     movie->visible = b;
     swfdec_movie_invalidate_last (movie);
@@ -434,7 +434,7 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 	return;
       b = d ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
     } else {
-      b = swfdec_as_value_to_boolean (cx, val) ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
+      b = swfdec_as_value_to_boolean (cx, *val) ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
     }
   }
 

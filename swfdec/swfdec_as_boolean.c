@@ -52,7 +52,7 @@ swfdec_as_boolean_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 {
   if (swfdec_as_context_is_constructing (cx)) {
     SwfdecAsBoolean *b = g_object_new (SWFDEC_TYPE_AS_BOOLEAN, "context", cx, NULL);
-    b->boolean = argc > 0 ? swfdec_as_value_to_boolean (cx, &argv[0]) : FALSE;
+    b->boolean = argc > 0 ? swfdec_as_value_to_boolean (cx, argv[0]) : FALSE;
     swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (b));
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {

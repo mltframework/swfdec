@@ -119,7 +119,7 @@ void		swfdec_as_value_set_number	(SwfdecAsContext *	context,
 
 /* value conversion functions */
 gboolean	swfdec_as_value_to_boolean	(SwfdecAsContext *	context,
-						 const SwfdecAsValue *	value);
+						 SwfdecAsValue		value);
 int		swfdec_as_value_to_integer	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 double		swfdec_as_value_to_number	(SwfdecAsContext *	context,

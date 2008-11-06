@@ -1510,7 +1510,7 @@ swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
 	ret = g_list_prepend (ret, actor);
     } else if (SWFDEC_MOVIE (actor)->parent != NULL) {
       swfdec_as_object_get_variable (object, SWFDEC_AS_STR_tabEnabled, &val);
-      if (swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
+      if (swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), val)) {
 	/* Flash queries again - why not? :/ */
 	swfdec_as_object_get_variable (object, SWFDEC_AS_STR_tabEnabled, &val);
 	ret = g_list_prepend (ret, actor);
@@ -1526,7 +1526,7 @@ swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
       swfdec_as_object_get_variable (object, SWFDEC_AS_STR_tabChildren, &val);
 
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (val) ||
-	swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
+	swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), val)) {
       GList *list;
       swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);
       list = swfdec_player_get_tab_movies (player, SWFDEC_MOVIE (actor)->list);

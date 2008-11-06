@@ -325,7 +325,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case 'b':
 	{
 	  gboolean *b = va_arg (varargs, gboolean *);
-	  *b = swfdec_as_value_to_boolean (cx, &argv[i]);
+	  *b = swfdec_as_value_to_boolean (cx, argv[i]);
 	}
 	break;
       case 'i':

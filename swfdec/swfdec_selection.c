@@ -120,7 +120,7 @@ swfdec_actor_can_grab_focus (SwfdecActor *actor)
     if (!swfdec_as_object_get_variable (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (actor)),
 	SWFDEC_AS_STR_focusEnabled, &val))
       return swfdec_actor_get_mouse_events (actor);
-    return swfdec_as_value_to_boolean (swfdec_gc_object_get_context (actor), &val);
+    return swfdec_as_value_to_boolean (swfdec_gc_object_get_context (actor), val);
   } else if (SWFDEC_IS_TEXT_FIELD_MOVIE (actor)) {
     /* cool that you can select all textfields, eh? */
     return TRUE;

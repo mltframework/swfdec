@@ -209,7 +209,7 @@ swfdec_xml_set_ignoreWhite (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   xml->ignore_white =
-    swfdec_as_value_to_boolean (cx, &argv[0]);
+    swfdec_as_value_to_boolean (cx, argv[0]);
 }
 
 static void
@@ -326,7 +326,7 @@ swfdec_xml_set_loaded (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (&xml->loaded,
-      swfdec_as_value_to_boolean (cx, &argv[0]));
+      swfdec_as_value_to_boolean (cx, argv[0]));
 }
 
 static void

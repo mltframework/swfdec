@@ -197,7 +197,7 @@ swfdec_text_format_set_boolean (SwfdecAsObject *object,
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, property);
   } else {
     G_STRUCT_MEMBER (gboolean, format, property_offsets[property]) =
-      swfdec_as_value_to_boolean (context, &argv[0]);
+      swfdec_as_value_to_boolean (context, argv[0]);
     SWFDEC_TEXT_ATTRIBUTE_SET (format->values_set, property);
   }
 }

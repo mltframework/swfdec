@@ -69,7 +69,7 @@ swfdec_net_stream_pause (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc == 0) {
     playing = !swfdec_net_stream_get_playing (stream);
   } else {
-    playing = !swfdec_as_value_to_boolean (cx, &argv[0]);
+    playing = !swfdec_as_value_to_boolean (cx, argv[0]);
   }
   SWFDEC_LOG ("%s stream %p", playing ? "playing" : "pausing", stream);
   swfdec_net_stream_set_playing (stream, playing);

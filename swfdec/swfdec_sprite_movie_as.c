@@ -637,7 +637,7 @@ swfdec_sprite_movie_startDrag (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_ACTOR, &actor, "");
 
   if (argc > 0) {
-    center = swfdec_as_value_to_boolean (cx, &argv[0]);
+    center = swfdec_as_value_to_boolean (cx, argv[0]);
   }
   if (argc >= 5) {
     SwfdecRect rect;

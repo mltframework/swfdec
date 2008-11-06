@@ -452,7 +452,7 @@ swfdec_as_value_to_number (SwfdecAsContext *context, SwfdecAsValue value)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), 0.0);
 
-  swfdec_as_value_to_primitive (&value);
+  value = swfdec_as_value_to_primitive (value);
 
   switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_UNDEFINED:
@@ -650,15 +650,18 @@ swfdec_as_value_to_boolean (SwfdecAsContext *context, SwfdecAsValue value)
 * values are values that are not objects. If the value is an object, the 
 * object's valueOf function is called. If the result of that function is still 
 * an object, it is returned nonetheless.
+*
+* Returns: The primitive value for &value
 **/
-void
-swfdec_as_value_to_primitive (SwfdecAsValue *value)
+SwfdecAsValue
+swfdec_as_value_to_primitive (SwfdecAsValue value)
 {
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (*value)) {
-    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (*value), SWFDEC_AS_STR_valueOf,
-	0, NULL, value);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
+    swfdec_as_object_call (SWFDEC_AS_VALUE_GET_OBJECT (value), SWFDEC_AS_STR_valueOf,
+	0, NULL, &value);
   }
+  return value;
 }
 
 /**

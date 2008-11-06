@@ -1020,14 +1020,14 @@ swfdec_action_new_comparison (SwfdecAsContext *cx, guint action, const guint8 *d
     rval = tmp;
   }
   /* comparison with object is always false */
-  swfdec_as_value_to_primitive (lval);
+  *lval = swfdec_as_value_to_primitive (*lval);
   if (SWFDEC_AS_VALUE_IS_OBJECT (*lval)) {
     swfdec_as_stack_pop (cx);
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), FALSE);
     return;
   }
   /* same for the rval */
-  swfdec_as_value_to_primitive (rval);
+  *rval = swfdec_as_value_to_primitive (*rval);
   if (SWFDEC_AS_VALUE_IS_OBJECT (*rval)) {
     swfdec_as_stack_pop (cx);
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), FALSE);
@@ -1420,10 +1420,8 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 
   rval = swfdec_as_stack_peek (cx, 1);
   lval = swfdec_as_stack_peek (cx, 2);
-  rtmp = *rval;
-  ltmp = *lval;
-  swfdec_as_value_to_primitive (&rtmp);
-  swfdec_as_value_to_primitive (&ltmp);
+  rtmp = swfdec_as_value_to_primitive (*rval);
+  ltmp = swfdec_as_value_to_primitive (*lval);
   ltype = SWFDEC_AS_VALUE_GET_TYPE (ltmp);
   rtype = SWFDEC_AS_VALUE_GET_TYPE (rtmp);
   
@@ -1433,14 +1431,14 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
       if (rtype == SWFDEC_AS_TYPE_MOVIE) {
 	rval = &rtmp;
       } else {
-	swfdec_as_value_to_primitive (rval);
+	*rval = swfdec_as_value_to_primitive (*rval);
       }
       cond = SWFDEC_AS_VALUE_IS_MOVIE (*rval) && 
 	SWFDEC_AS_VALUE_GET_MOVIE (ltmp) == SWFDEC_AS_VALUE_GET_MOVIE (*rval);
       goto out;
     }
     if (rtype == SWFDEC_AS_TYPE_MOVIE) {
-      swfdec_as_value_to_primitive (lval);
+      *lval = swfdec_as_value_to_primitive (*lval);
       cond = SWFDEC_AS_VALUE_IS_MOVIE (*lval) && 
 	SWFDEC_AS_VALUE_GET_MOVIE (rtmp) == SWFDEC_AS_VALUE_GET_MOVIE (*lval);
       goto out;
@@ -1504,8 +1502,8 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     cond = SWFDEC_AS_VALUE_GET_OBJECT (*lval) == SWFDEC_AS_VALUE_GET_OBJECT (*rval);
     goto out;
   }
-  swfdec_as_value_to_primitive (lval);
-  swfdec_as_value_to_primitive (rval);
+  *lval = swfdec_as_value_to_primitive (*lval);
+  *rval = swfdec_as_value_to_primitive (*rval);
   
   /* check if we have equal movieclips */
   if (SWFDEC_AS_VALUE_IS_MOVIE (*lval)) {

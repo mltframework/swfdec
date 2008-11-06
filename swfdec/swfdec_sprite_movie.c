@@ -682,7 +682,7 @@ G_DEFINE_TYPE (SwfdecSpriteMovie, swfdec_sprite_movie, SWFDEC_TYPE_ACTOR)
 static void
 swfdec_sprite_movie_dispose (GObject *object)
 {
-  SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (object);
+  G_GNUC_UNUSED SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (object);
 
   g_assert (movie->sound_stream == NULL);
 

@@ -26,7 +26,13 @@
 
 G_BEGIN_DECLS
 
-
+/* About the name SwfdecBots:
+ * We were (actually, we still are) looking for a good name to match 
+ * SwfdecBits, but couldn't come up with anything. So we just translated "bits"
+ * as "Binary Input Token Stream", and as this struct is for output, the name
+ * Bots == "Binary Output Token Stream" suddenly made a lot of sense.
+ * If you find a more natural name, tell us.
+ */
 typedef struct _SwfdecBots SwfdecBots;
 
 struct _SwfdecBots {

@@ -352,16 +352,17 @@ swfdec_as_string_mark (const char *string)
 void
 swfdec_as_value_mark (SwfdecAsValue *value)
 {
+  SwfdecAsGcable *gcable = SWFDEC_AS_VALUE_GET_VALUE (value);
   if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
-    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_MARK))
-      swfdec_as_object_mark ((SwfdecAsObject *) value->value.gcable);
+    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (gcable, SWFDEC_AS_GC_MARK))
+      swfdec_as_object_mark ((SwfdecAsObject *) gcable);
   } else if (SWFDEC_AS_VALUE_IS_MOVIE (value)) {
-    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_MARK))
-      swfdec_as_movie_value_mark ((SwfdecAsMovieValue *) value->value.gcable);
+    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (gcable, SWFDEC_AS_GC_MARK))
+      swfdec_as_movie_value_mark ((SwfdecAsMovieValue *) gcable);
   } else if (SWFDEC_AS_VALUE_IS_STRING (value) ||
       SWFDEC_AS_VALUE_IS_NUMBER (value)) {
-    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (value->value.gcable, SWFDEC_AS_GC_ROOT | SWFDEC_AS_GC_MARK))
-      SWFDEC_AS_GCABLE_SET_FLAG (value->value.gcable, SWFDEC_AS_GC_MARK);
+    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (gcable, SWFDEC_AS_GC_ROOT | SWFDEC_AS_GC_MARK))
+      SWFDEC_AS_GCABLE_SET_FLAG (gcable, SWFDEC_AS_GC_MARK);
   }
 }
 

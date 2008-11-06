@@ -28,13 +28,13 @@ G_BEGIN_DECLS
 /* fundamental types */
 typedef enum {
   SWFDEC_AS_TYPE_UNDEFINED = 0,
-  SWFDEC_AS_TYPE_BOOLEAN,
-  SWFDEC_AS_TYPE_INT, /* unimplemented, but reserved if someone wants it */
-  SWFDEC_AS_TYPE_NUMBER,
-  SWFDEC_AS_TYPE_STRING,
-  SWFDEC_AS_TYPE_NULL,
-  SWFDEC_AS_TYPE_OBJECT,
-  SWFDEC_AS_TYPE_MOVIE
+  SWFDEC_AS_TYPE_NULL = 1,
+  SWFDEC_AS_TYPE_BOOLEAN = 2,
+  SWFDEC_AS_TYPE_INT = 3, /* unimplemented, but reserved if someone wants it */
+  SWFDEC_AS_TYPE_NUMBER = 4,
+  SWFDEC_AS_TYPE_STRING = 5,
+  SWFDEC_AS_TYPE_OBJECT = 6,
+  SWFDEC_AS_TYPE_MOVIE = 7
 } SwfdecAsValueType;
 
 typedef struct _SwfdecAsContext SwfdecAsContext;
@@ -47,7 +47,7 @@ typedef struct _SwfdecAsObject SwfdecAsObject;
 typedef struct _SwfdecAsRelay SwfdecAsRelay;
 typedef struct _SwfdecAsScope SwfdecAsScope;
 typedef struct _SwfdecAsStack SwfdecAsStack;
-typedef struct _SwfdecAsValue SwfdecAsValue;
+typedef gsize SwfdecAsValue;
 typedef void (* SwfdecAsNative) (SwfdecAsContext *	context, 
 				 SwfdecAsObject *	thisp,
 				 guint			argc,
@@ -58,29 +58,27 @@ typedef struct _SwfdecScript SwfdecScript;
 
 
 /* IMPORTANT: a SwfdecAsValue memset to 0 is a valid undefined value */
-struct _SwfdecAsValue {
-  SwfdecAsValueType	type;
-  /*< private >*/
-  union {
-    gboolean		boolean;
-    SwfdecAsGcable *	gcable;
-    SwfdecAsObject *	object;
-  } value;
-};
+#define SWFDEC_AS_VALUE_TYPE_BITS (3)
+#define SWFDEC_AS_VALUE_TYPE_MASK ((1 << SWFDEC_AS_VALUE_TYPE_BITS) - 1)
+#define SWFDEC_AS_VALUE_VALUE_MASK (~SWFDEC_AS_VALUE_TYPE_MASK)
 
-#define SWFDEC_AS_VALUE_GET_TYPE(val) ((val)->type)
+#define SWFDEC_AS_VALUE_GET_TYPE(val) (*(val) & SWFDEC_AS_VALUE_TYPE_MASK)
+#define SWFDEC_AS_VALUE_GET_VALUE(val) GSIZE_TO_POINTER (*(val) & SWFDEC_AS_VALUE_VALUE_MASK)
+#define SWFDEC_AS_VALUE_COMBINE(val, type) (GPOINTER_TO_SIZE (val) | type)
 
+#define SWFDEC_AS_VALUE_UNDEFINED SWFDEC_AS_VALUE_COMBINE (NULL, SWFDEC_AS_TYPE_UNDEFINED)
 #define SWFDEC_AS_VALUE_IS_UNDEFINED(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_UNDEFINED)
-#define SWFDEC_AS_VALUE_SET_UNDEFINED(val) (val)->type = SWFDEC_AS_TYPE_UNDEFINED
+#define SWFDEC_AS_VALUE_SET_UNDEFINED(val) *(val) = SWFDEC_AS_VALUE_UNDEFINED
 
+#define SWFDEC_AS_VALUE_FALSE SWFDEC_AS_VALUE_COMBINE(NULL, SWFDEC_AS_TYPE_BOOLEAN)
+#define SWFDEC_AS_VALUE_TRUE SWFDEC_AS_VALUE_COMBINE(GSIZE_TO_POINTER (1 << SWFDEC_AS_VALUE_TYPE_BITS), SWFDEC_AS_TYPE_BOOLEAN)
 #define SWFDEC_AS_VALUE_IS_BOOLEAN(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_BOOLEAN)
-#define SWFDEC_AS_VALUE_GET_BOOLEAN(val) ((val)->value.boolean)
+#define SWFDEC_AS_VALUE_GET_BOOLEAN(val) (SWFDEC_AS_VALUE_GET_VALUE (val) != NULL)
+#define SWFDEC_AS_VALUE_FROM_BOOLEAN(b) (b ? SWFDEC_AS_VALUE_TRUE : SWFDEC_AS_VALUE_FALSE)
 #define SWFDEC_AS_VALUE_SET_BOOLEAN(val,b) G_STMT_START { \
-  SwfdecAsValue *__val = (val); \
   gboolean __tmp = (b); \
   g_assert (__tmp == TRUE || __tmp == FALSE); \
-  (__val)->value.boolean = __tmp; \
-  (__val)->type = SWFDEC_AS_TYPE_BOOLEAN; \
+  *(val) = SWFDEC_AS_VALUE_FROM_BOOLEAN(__tmp); \
 } G_STMT_END
 
 struct _SwfdecAsDoubleValue {
@@ -89,28 +87,27 @@ struct _SwfdecAsDoubleValue {
 };
 
 #define SWFDEC_AS_VALUE_IS_NUMBER(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_NUMBER)
-#define SWFDEC_AS_VALUE_GET_NUMBER(val) (((SwfdecAsDoubleValue *) (val)->value.gcable)->number)
+#define SWFDEC_AS_VALUE_GET_NUMBER(val) (((SwfdecAsDoubleValue *) SWFDEC_AS_VALUE_GET_VALUE(val))->number)
 
 #define SWFDEC_AS_VALUE_IS_STRING(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_STRING)
-#define SWFDEC_AS_VALUE_GET_STRING(val) (((SwfdecAsStringValue *) (val)->value.gcable)->string)
+#define SWFDEC_AS_VALUE_GET_STRING(val) (((SwfdecAsStringValue *) SWFDEC_AS_VALUE_GET_VALUE(val))->string)
+#define SWFDEC_AS_VALUE_FROM_STRING(s) SWFDEC_AS_VALUE_COMBINE (((guint8 *) (s) - G_STRUCT_OFFSET (SwfdecAsStringValue, string)), SWFDEC_AS_TYPE_STRING)
 #define SWFDEC_AS_VALUE_SET_STRING(val,s) G_STMT_START { \
-  SwfdecAsValue *__val = (val); \
-  (__val)->value.gcable = (SwfdecAsGcable *) (gpointer) ((guint8 *) (s) - G_STRUCT_OFFSET (SwfdecAsStringValue, string)); \
-  (__val)->type = SWFDEC_AS_TYPE_STRING; \
+  *(val) = SWFDEC_AS_VALUE_FROM_STRING (s); \
 } G_STMT_END
 
+#define SWFDEC_AS_VALUE_NULL SWFDEC_AS_VALUE_COMBINE (NULL, SWFDEC_AS_TYPE_NULL)
 #define SWFDEC_AS_VALUE_IS_NULL(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_NULL)
-#define SWFDEC_AS_VALUE_SET_NULL(val) (val)->type = SWFDEC_AS_TYPE_NULL
+#define SWFDEC_AS_VALUE_SET_NULL(val) *(val) = SWFDEC_AS_VALUE_NULL
 
 #define SWFDEC_AS_VALUE_IS_OBJECT(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_OBJECT)
-#define SWFDEC_AS_VALUE_GET_OBJECT(val) ((SwfdecAsObject *) (val)->value.gcable)
+#define SWFDEC_AS_VALUE_GET_OBJECT(val) ((SwfdecAsObject *) SWFDEC_AS_VALUE_GET_VALUE (val))
+#define SWFDEC_AS_VALUE_FROM_OBJECT(o) SWFDEC_AS_VALUE_COMBINE (o, SWFDEC_AS_TYPE_OBJECT)
 #define SWFDEC_AS_VALUE_SET_OBJECT(val,o) G_STMT_START { \
-  SwfdecAsValue *__val = (val); \
   SwfdecAsObject *__o = (o); \
   g_assert (__o != NULL); \
   g_assert (!__o->movie); \
-  (__val)->type = SWFDEC_AS_TYPE_OBJECT; \
-  (__val)->value.gcable = (SwfdecAsGcable *) __o; \
+  *(val) = SWFDEC_AS_VALUE_FROM_OBJECT (__o); \
 } G_STMT_END
 
 /* value setters */

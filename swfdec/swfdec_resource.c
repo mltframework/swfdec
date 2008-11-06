@@ -131,7 +131,7 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
       return;
     }
     if (name == SWFDEC_AS_STR_onLoadInit &&
-	(SwfdecAsGcable *) movie->as_value != resource->movie.value.gcable) {
+	movie->as_value != SWFDEC_AS_VALUE_GET_VALUE (&resource->movie)) {
       SWFDEC_INFO ("not emitting onLoadInit - the movie is different");
       return;
     }

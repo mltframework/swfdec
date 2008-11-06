@@ -203,8 +203,7 @@ swfdec_as_value_set_number (SwfdecAsContext *context, SwfdecAsValue *val,
   SWFDEC_AS_GCABLE_SET_NEXT (dval, context->numbers);
   context->numbers = dval;
 
-  val->type = SWFDEC_AS_TYPE_NUMBER;
-  val->value.gcable = (SwfdecAsGcable *) dval;
+  *val = SWFDEC_AS_VALUE_COMBINE (dval, SWFDEC_AS_TYPE_NUMBER);
 }
 
 /**

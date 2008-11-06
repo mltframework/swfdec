@@ -69,7 +69,7 @@ static guint signals[LAST_SIGNAL] = { 0, };
 static void
 swfdec_audio_dispose (GObject *object)
 {
-  SwfdecAudio *audio = SWFDEC_AUDIO (object);
+  G_GNUC_UNUSED SwfdecAudio *audio = SWFDEC_AUDIO (object);
 
   g_assert (audio->actor == NULL);
   g_assert (audio->player == NULL);

@@ -51,8 +51,8 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
     return;
   }
 
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&argv[0]) ||
-      (object = SWFDEC_AS_VALUE_GET_COMPOSITE (&argv[0])) == NULL) {
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (*&argv[0]) ||
+      (object = SWFDEC_AS_VALUE_GET_COMPOSITE (*&argv[0])) == NULL) {
     SWFDEC_WARNING ("first argument to setInterval is not an object");
     return;
   }
@@ -331,13 +331,13 @@ swfdec_player_object_registerClass (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (0, NULL, "s", &name);
 
-  if (argc < 2 || !SWFDEC_AS_VALUE_IS_OBJECT (&argv[1])) {
+  if (argc < 2 || !SWFDEC_AS_VALUE_IS_OBJECT (*&argv[1])) {
     SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
     return;
   }
   
   swfdec_player_set_export_class (SWFDEC_PLAYER (cx), name, 
-      SWFDEC_AS_VALUE_GET_OBJECT (&argv[1]));
+      SWFDEC_AS_VALUE_GET_OBJECT (*&argv[1]));
   SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
 }
 

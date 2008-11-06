@@ -137,14 +137,14 @@ swfdec_video_movie_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_Video, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
     return;
-  video = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  video = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
 
   swfdec_as_object_get_variable (video, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
 
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_width, 
       swfdec_video_get_width, NULL);

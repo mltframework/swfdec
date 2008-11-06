@@ -451,7 +451,7 @@ swfdec_sound_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object, guin
   sound = g_object_new (SWFDEC_TYPE_SOUND_OBJECT, "context", cx, NULL);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (sound));
 
-  if (argc == 0 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
+  if (argc == 0 || SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0])) {
     sound->target = NULL;
   } else {
     sound->target = swfdec_as_value_to_string (cx, argv[0]);

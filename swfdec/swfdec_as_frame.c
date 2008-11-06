@@ -341,7 +341,7 @@ void
 swfdec_as_frame_set_this (SwfdecAsFrame *frame, SwfdecAsObject *thisp)
 {
   g_return_if_fail (frame != NULL);
-  g_return_if_fail (SWFDEC_AS_VALUE_IS_UNDEFINED (&frame->thisp));
+  g_return_if_fail (SWFDEC_AS_VALUE_IS_UNDEFINED (*&frame->thisp));
   g_return_if_fail (thisp != NULL);
 
   g_assert (!SWFDEC_IS_AS_SUPER (thisp));

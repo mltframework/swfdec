@@ -106,9 +106,9 @@ swfdec_net_connection_do_connect (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_CONNECTION, &conn, "v", &val);
 
-  if (SWFDEC_AS_VALUE_IS_STRING (&val)) {
-    url = SWFDEC_AS_VALUE_GET_STRING (&val);
-  } else if (SWFDEC_AS_VALUE_IS_NULL (&val)) {
+  if (SWFDEC_AS_VALUE_IS_STRING (*&val)) {
+    url = SWFDEC_AS_VALUE_GET_STRING (*&val);
+  } else if (SWFDEC_AS_VALUE_IS_NULL (*&val)) {
     url = NULL;
   } else {
     SWFDEC_FIXME ("untested argument to NetConnection.connect: type %u",

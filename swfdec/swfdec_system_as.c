@@ -306,11 +306,11 @@ swfdec_system_query (SwfdecAsContext *cx, SwfdecAsObject *object,
     queries[i].get (player, &val);
     swfdec_as_object_set_variable (object, queries[i].name, &val);
     if (queries[i].name == SWFDEC_AS_STR_screenResolutionY) {
-      g_string_append_printf (server, "x%d", (int) SWFDEC_AS_VALUE_GET_NUMBER (&val));
+      g_string_append_printf (server, "x%d", (int) SWFDEC_AS_VALUE_GET_NUMBER (*&val));
     } else if (queries[i].name == SWFDEC_AS_STR_pixelAspectRatio) {
       char buffer[10];
       g_ascii_formatd (buffer, sizeof (buffer), "%.1f",
-	  SWFDEC_AS_VALUE_GET_NUMBER (&val));
+	  SWFDEC_AS_VALUE_GET_NUMBER (*&val));
       g_string_append (server, "&AR=");
       g_string_append (server, buffer);
     } else if (queries[i].name == SWFDEC_AS_STR_manufacturer) {
@@ -323,12 +323,12 @@ swfdec_system_query (SwfdecAsContext *cx, SwfdecAsObject *object,
 	g_string_append_c (server, '&');
       g_string_append (server, queries[i].server_string);
       g_string_append_c (server, '=');
-      if (SWFDEC_AS_VALUE_IS_BOOLEAN (&val)) {
-	g_string_append_c (server, SWFDEC_AS_VALUE_GET_BOOLEAN (&val) ? 't' : 'f');
-      } else if (SWFDEC_AS_VALUE_IS_NUMBER (&val)) {
-	g_string_append_printf (server, "%d", (int) SWFDEC_AS_VALUE_GET_NUMBER (&val));
-      } else if (SWFDEC_AS_VALUE_IS_STRING (&val)) {
-	char *s = swfdec_as_string_escape (cx, SWFDEC_AS_VALUE_GET_STRING (&val));
+      if (SWFDEC_AS_VALUE_IS_BOOLEAN (*&val)) {
+	g_string_append_c (server, SWFDEC_AS_VALUE_GET_BOOLEAN (*&val) ? 't' : 'f');
+      } else if (SWFDEC_AS_VALUE_IS_NUMBER (*&val)) {
+	g_string_append_printf (server, "%d", (int) SWFDEC_AS_VALUE_GET_NUMBER (*&val));
+      } else if (SWFDEC_AS_VALUE_IS_STRING (*&val)) {
+	char *s = swfdec_as_string_escape (cx, SWFDEC_AS_VALUE_GET_STRING (*&val));
 	g_string_append (server, s);
 	g_free (s);
       } else {

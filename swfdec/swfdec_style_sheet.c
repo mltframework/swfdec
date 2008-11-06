@@ -334,12 +334,12 @@ swfdec_style_sheet_get_format (SwfdecStyleSheet *style, const char *name)
   swfdec_as_object_get_variable (swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (style)),
       SWFDEC_AS_STR__styles, &val);
   swfdec_as_value_get_variable (swfdec_gc_object_get_context (style), &val, name, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
     return NULL;
-  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay))
+  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (*&val)->relay))
     return NULL;
 
-  return SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay);
+  return SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (*&val)->relay);
 }
 
 SwfdecTextFormat *

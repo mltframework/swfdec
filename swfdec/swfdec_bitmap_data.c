@@ -238,9 +238,9 @@ swfdec_bitmap_data_get_rectangle (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_flash, args);
   swfdec_as_value_get_variable (cx, args, SWFDEC_AS_STR_geom, args);
   swfdec_as_value_get_variable (cx, args, SWFDEC_AS_STR_Rectangle, args);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (args))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*args))
     return;
-  o = SWFDEC_AS_VALUE_GET_OBJECT (args);
+  o = SWFDEC_AS_VALUE_GET_OBJECT (*args);
   if (!SWFDEC_IS_AS_FUNCTION (o->relay))
     return;
 

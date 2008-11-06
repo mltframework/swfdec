@@ -295,8 +295,8 @@ swfdec_net_stream_construct (SwfdecAsContext *cx, SwfdecAsObject *obj, guint arg
 
   swfdec_net_stream_setup (cx, obj, 0, NULL, rval);
   if (argc == 0 ||
-      !SWFDEC_AS_VALUE_IS_OBJECT (&argv[0]) || 
-      !SWFDEC_IS_NET_CONNECTION ((conn = (SwfdecNetConnection *) SWFDEC_AS_VALUE_GET_OBJECT (&argv[0])))) {
+      !SWFDEC_AS_VALUE_IS_OBJECT (*&argv[0]) || 
+      !SWFDEC_IS_NET_CONNECTION ((conn = (SwfdecNetConnection *) SWFDEC_AS_VALUE_GET_OBJECT (*&argv[0])))) {
     SWFDEC_WARNING ("no connection passed to NetStream ()");
     return;
   }
@@ -326,8 +326,8 @@ swfdec_net_stream_init_context (SwfdecPlayer *player)
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   swfdec_as_object_get_variable (context->global, SWFDEC_AS_STR_Object, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&val)) {
-    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (&val),
+  if (SWFDEC_AS_VALUE_IS_OBJECT (*&val)) {
+    swfdec_as_object_get_variable (SWFDEC_AS_VALUE_GET_OBJECT (*&val),
 	SWFDEC_AS_STR_prototype, &val);
     swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__, &val,
 	SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);

@@ -306,8 +306,8 @@ swfdec_text_field_movie_set_restrict (SwfdecAsContext *cx,
   if (text->restrict_ == NULL && value == SWFDEC_AS_STR_EMPTY)
     return;
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (*&argv[0])) {
     text->restrict_ = NULL;
   } else {
     text->restrict_ = value;
@@ -411,8 +411,8 @@ swfdec_text_field_movie_do_set_variable (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_NULL (&argv[0]) || value == SWFDEC_AS_STR_EMPTY) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (*&argv[0]) || value == SWFDEC_AS_STR_EMPTY) {
     value = NULL;
   }
 
@@ -752,8 +752,8 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
   if (argc < 1)
     return;
 
-  if (SWFDEC_AS_VALUE_IS_BOOLEAN (&argv[0])) {
-    if (SWFDEC_AS_VALUE_GET_BOOLEAN (&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_BOOLEAN (*&argv[0])) {
+    if (SWFDEC_AS_VALUE_GET_BOOLEAN (*&argv[0])) {
       text->auto_size = SWFDEC_AUTO_SIZE_LEFT;
     } else {
       text->auto_size = SWFDEC_AUTO_SIZE_NONE;
@@ -903,8 +903,8 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
 
   swfdec_as_value_to_number (cx, &argv[0]);
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[0])) {
-    value = SWFDEC_AS_VALUE_GET_OBJECT (&argv[0]);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (*&argv[0])) {
+    value = SWFDEC_AS_VALUE_GET_OBJECT (*&argv[0]);
   } else {
     value = NULL;
   }
@@ -1138,12 +1138,12 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
   if (start == end)
     return;
 
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[i]))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&argv[i]))
     return;
-  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i])->relay))
+  if (!SWFDEC_IS_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (*&argv[i])->relay))
     return;
 
-  format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (&argv[i])->relay);
+  format = SWFDEC_TEXT_FORMAT (SWFDEC_AS_VALUE_GET_OBJECT (*&argv[i])->relay);
   start = g_utf8_offset_to_pointer (string, start) - string;
   end = g_utf8_offset_to_pointer (string, end) - string;
 
@@ -1391,9 +1391,9 @@ swfdec_text_field_movie_createTextField (SwfdecAsContext *cx,
   swfdec_movie_update (movie);
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
     return;
-  fun_object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  fun_object = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
   if (!SWFDEC_IS_AS_FUNCTION (fun_object->relay))
     return;
   fun = SWFDEC_AS_FUNCTION (fun_object->relay);
@@ -1432,13 +1432,13 @@ swfdec_text_field_movie_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextField, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
     return;
-  object = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  object = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
   swfdec_as_object_get_variable (object, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
 
   // text
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_text,

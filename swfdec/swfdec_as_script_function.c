@@ -64,7 +64,7 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     frame.original_target = script->target;
   }
   /* second check especially for super object */
-  if (thisp != NULL && SWFDEC_AS_VALUE_IS_UNDEFINED (&frame.thisp)) {
+  if (thisp != NULL && SWFDEC_AS_VALUE_IS_UNDEFINED (*&frame.thisp)) {
     swfdec_as_frame_set_this (&frame, swfdec_as_object_resolve (thisp));
   }
   frame.argc = n_args;
@@ -173,8 +173,8 @@ swfdec_as_script_function_new (SwfdecAsContext *context, SwfdecMovie *target,
   swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR_constructor,
       &val, SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
   tmp = swfdec_as_object_peek_variable (context->global, SWFDEC_AS_STR_Object);
-  if (tmp && SWFDEC_AS_VALUE_IS_OBJECT (tmp)) {
-    tmp = swfdec_as_object_peek_variable (SWFDEC_AS_VALUE_GET_OBJECT (tmp),
+  if (tmp && SWFDEC_AS_VALUE_IS_OBJECT (*tmp)) {
+    tmp = swfdec_as_object_peek_variable (SWFDEC_AS_VALUE_GET_OBJECT (*tmp),
 	SWFDEC_AS_STR_prototype);
     if (tmp) {
       swfdec_as_object_set_variable_and_flags (proto, SWFDEC_AS_STR___proto__,

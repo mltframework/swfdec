@@ -422,8 +422,8 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   cx = swfdec_gc_object_get_context (movie);
   actor = SWFDEC_ACTOR (movie);
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val) ||
-      SWFDEC_AS_VALUE_IS_NULL (val)) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*val) ||
+      SWFDEC_AS_VALUE_IS_NULL (*val)) {
     if (movie->parent == NULL)
       return;
     b = SWFDEC_FLASH_MAYBE;

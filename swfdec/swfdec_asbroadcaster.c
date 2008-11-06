@@ -51,10 +51,10 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
   argc--;
 
   swfdec_as_object_get_variable (object, SWFDEC_AS_STR__listeners, &val);
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (*&val))
     return;
 
-  listeners = SWFDEC_AS_VALUE_GET_COMPOSITE (&val);
+  listeners = SWFDEC_AS_VALUE_GET_COMPOSITE (*&val);
   swfdec_as_object_get_variable (listeners, SWFDEC_AS_STR_length, &val);
   length = swfdec_as_value_to_integer (cx, &val);
 

@@ -115,7 +115,7 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
   } else {
     /* we check that the relay's type is correct upon adding the interval */
     swfdec_as_function_call (SWFDEC_AS_FUNCTION (
-	  SWFDEC_AS_VALUE_GET_OBJECT (&interval->args[0])->relay),
+	  SWFDEC_AS_VALUE_GET_OBJECT (*&interval->args[0])->relay),
 	NULL, interval->n_args, &interval->args[1], &ret);
   }
   swfdec_sandbox_unuse (interval->sandbox);

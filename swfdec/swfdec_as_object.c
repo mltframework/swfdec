@@ -752,8 +752,8 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
   }
 
   if (variable == SWFDEC_AS_STR___proto__) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT(value)) {
-      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (value);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (*value)) {
+      object->prototype = SWFDEC_AS_VALUE_GET_OBJECT (*value);
       object->prototype_flags = var->flags;
     } else {
       object->prototype = NULL;
@@ -922,7 +922,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
     if (resolve == NULL) {
       var = swfdec_as_object_hash_lookup (cur, SWFDEC_AS_STR___resolve);
 
-      if (var != NULL && (context->version <= 6 || SWFDEC_AS_VALUE_IS_COMPOSITE (&var->value)))
+      if (var != NULL && (context->version <= 6 || SWFDEC_AS_VALUE_IS_COMPOSITE (*&var->value)))
 	resolve = cur;
     }
     cur = swfdec_as_object_get_prototype_internal (cur);
@@ -945,9 +945,9 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
 
     var = swfdec_as_object_hash_lookup (resolve, SWFDEC_AS_STR___resolve);
     g_assert (var != NULL);
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (&var->value))
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (*&var->value))
       return FALSE;
-    fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&var->value)->relay);
+    fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (*&var->value)->relay);
     if (!SWFDEC_IS_AS_FUNCTION (fun))
       return FALSE;
     SWFDEC_AS_VALUE_SET_STRING (&argv, variable);
@@ -1250,9 +1250,9 @@ swfdec_as_object_call (SwfdecAsObject *object, const char *name, guint argc,
   if (return_value)
     SWFDEC_AS_VALUE_SET_UNDEFINED (return_value);
   swfdec_as_object_get_variable (object, name, &tmp);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&tmp))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&tmp))
     return FALSE;
-  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (&tmp)->relay;
+  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (*&tmp)->relay;
   if (!SWFDEC_IS_AS_FUNCTION (fun))
     return FALSE;
   swfdec_as_function_call (fun, object, argc, argv, return_value ? return_value : &tmp);
@@ -1331,11 +1331,11 @@ swfdec_as_object_set_constructor_by_namev (SwfdecAsObject *object,
   do {
     val = swfdec_as_object_peek_variable (cur, name);
     if (val == NULL ||
-	!SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+	!SWFDEC_AS_VALUE_IS_OBJECT (*val)) {
       SWFDEC_WARNING ("could not find constructor %s", name);
       return NULL;
     }
-    cur = SWFDEC_AS_VALUE_GET_OBJECT (val);
+    cur = SWFDEC_AS_VALUE_GET_OBJECT (*val);
     name = va_arg (args, const char *);
   } while (name != NULL);
   swfdec_as_object_set_constructor (object, cur);
@@ -1445,14 +1445,14 @@ swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 3)
     return;
   name = swfdec_as_value_to_string (cx, argv[0]);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]) ||
-      !SWFDEC_IS_AS_FUNCTION ((get = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1])->relay))))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&argv[1]) ||
+      !SWFDEC_IS_AS_FUNCTION ((get = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (*&argv[1])->relay))))
     return;
-  if (SWFDEC_AS_VALUE_IS_OBJECT (&argv[2])) {
-    set = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&argv[2])->relay);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (*&argv[2])) {
+    set = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (*&argv[2])->relay);
     if (!SWFDEC_IS_AS_FUNCTION (set))
       return;
-  } else if (SWFDEC_AS_VALUE_IS_NULL (&argv[2])) {
+  } else if (SWFDEC_AS_VALUE_IS_NULL (*&argv[2])) {
     set = NULL;
   } else {
     return;
@@ -1684,7 +1684,7 @@ swfdec_as_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   if (argc > 0) {
-    if (SWFDEC_AS_VALUE_IS_MOVIE (&argv[0])) {
+    if (SWFDEC_AS_VALUE_IS_MOVIE (*&argv[0])) {
       *ret = argv[0];
       return;
     } else {

@@ -1139,9 +1139,9 @@ swfdec_player_broadcast (SwfdecPlayer *player, const char *object_name,
     SwfdecSandbox *sandbox = walk->data;
     swfdec_sandbox_use (sandbox);
     swfdec_as_object_get_variable (SWFDEC_AS_CONTEXT (player)->global, object_name, &vals[0]);
-    if (!SWFDEC_AS_VALUE_IS_COMPOSITE (&vals[0]))
+    if (!SWFDEC_AS_VALUE_IS_COMPOSITE (*&vals[0]))
       return;
-    obj = SWFDEC_AS_VALUE_GET_COMPOSITE (&vals[0]);
+    obj = SWFDEC_AS_VALUE_GET_COMPOSITE (*&vals[0]);
     if (obj == NULL)
       return;
     SWFDEC_AS_VALUE_SET_STRING (&vals[0], signal_name);
@@ -1514,7 +1514,7 @@ swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
 	/* Flash queries again - why not? :/ */
 	swfdec_as_object_get_variable (object, SWFDEC_AS_STR_tabEnabled, &val);
 	ret = g_list_prepend (ret, actor);
-      } else if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val) && 
+      } else if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&val) && 
 	  swfdec_actor_get_mouse_events (actor)) {
 	ret = g_list_prepend (ret, actor);
       }
@@ -1525,7 +1525,7 @@ swfdec_player_get_tab_movies (SwfdecPlayer *player, const GList *current)
     else
       swfdec_as_object_get_variable (object, SWFDEC_AS_STR_tabChildren, &val);
 
-    if (SWFDEC_AS_VALUE_IS_UNDEFINED (&val) ||
+    if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&val) ||
 	swfdec_as_value_to_boolean (SWFDEC_AS_CONTEXT (player), &val)) {
       GList *list;
       swfdec_sandbox_unuse (SWFDEC_MOVIE (actor)->resource->sandbox);

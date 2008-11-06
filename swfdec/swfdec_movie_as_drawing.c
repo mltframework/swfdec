@@ -88,7 +88,7 @@ swfdec_sprite_movie_beginFill (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "|ii", &color, &alpha);
   movie->draw_fill = NULL;
   
-  if (argc == 0 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
+  if (argc == 0 || SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0])) {
     color = 0;
   } else {
     color = color & 0xFFFFFF;
@@ -219,20 +219,20 @@ swfdec_sprite_movie_beginGradientFill (SwfdecAsContext *cx, SwfdecAsObject *obje
     if (check > i) {
       const char *name = swfdec_as_integer_to_string (cx, i);
       if (swfdec_as_object_get_variable (colors, name, &v)
-	  && SWFDEC_AS_VALUE_IS_NUMBER (&v))
+	  && SWFDEC_AS_VALUE_IS_NUMBER (*&v))
 	c = swfdec_as_value_to_integer (cx, &v);
       else
 	c = 0;
       if (!swfdec_as_object_get_variable (alphas, name, &v)) {
 	a = c;
-      } else if (!SWFDEC_AS_VALUE_IS_NUMBER (&v)) {
+      } else if (!SWFDEC_AS_VALUE_IS_NUMBER (*&v)) {
 	a = 0;
       } else {
 	a = swfdec_as_value_to_integer (cx, &v);
       }
       if (!swfdec_as_object_get_variable (ratios, name, &v))
 	r = CLAMP (a, 0, 255);
-      else if (!SWFDEC_AS_VALUE_IS_NUMBER (&v))
+      else if (!SWFDEC_AS_VALUE_IS_NUMBER (*&v))
 	r = 0;
       else
 	r = swfdec_as_value_to_integer (cx, &v);
@@ -360,7 +360,7 @@ swfdec_sprite_movie_lineStyle (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "i|ii", &width, &color, &alpha);
 
   movie->draw_line = NULL;
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]))
     return;
   if (argc > 3) {
     SWFDEC_FIXME ("implement Flash 8 arguments to lineStyle");

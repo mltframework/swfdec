@@ -95,11 +95,11 @@ swfdec_xml_node_get_child (SwfdecXmlNode *node, gint32 index_)
 
   swfdec_as_array_get_value (node->children, index_, &val);
 
-  g_return_val_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (&val), NULL);
+  g_return_val_if_fail (SWFDEC_AS_VALUE_IS_OBJECT (*&val), NULL);
   g_return_val_if_fail (SWFDEC_IS_VALID_XML_NODE (
-	SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay), NULL);
+	SWFDEC_AS_VALUE_GET_OBJECT (*&val)->relay), NULL);
 
-  return SWFDEC_XML_NODE (SWFDEC_AS_VALUE_GET_OBJECT (&val)->relay);
+  return SWFDEC_XML_NODE (SWFDEC_AS_VALUE_GET_OBJECT (*&val)->relay);
 }
 
 static gint32
@@ -178,7 +178,7 @@ swfdec_xml_node_getNamespaceForPrefix (SwfdecXmlNode *node, const char *prefix)
 
   do {
     swfdec_as_object_get_variable (node->attributes, var, &val);
-    if (!SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
+    if (!SWFDEC_AS_VALUE_IS_UNDEFINED (*&val)) {
       return swfdec_as_value_to_string (swfdec_gc_object_get_context (node), val);
     }
     node = node->parent;
@@ -330,7 +330,7 @@ swfdec_xml_node_set_nodeName (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   // special case
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]))
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]))
     return;
 
   node->name = name;
@@ -1026,14 +1026,14 @@ swfdec_xml_node_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_XMLNode, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
     return;
-  node = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  node = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
 
   swfdec_as_object_get_variable (node, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (&val);
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
 
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_nodeType,
       swfdec_xml_node_get_nodeType, NULL);
@@ -1109,8 +1109,8 @@ swfdec_xml_node_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (0, NULL, "is", &type, &value);
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1]))
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
+      SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[1]))
     return;
 
   swfdec_xml_node_init_properties (cx);

@@ -62,7 +62,7 @@ swfdec_text_field_movie_set_readonly (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "");
 
   if (argc > 0)
-    swfdec_as_value_to_number (cx, &argv[0]);
+    swfdec_as_value_to_number (cx, *&argv[0]);
 }
 
 /*
@@ -124,7 +124,7 @@ swfdec_text_field_movie_set_html (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   text->html = value;
 
@@ -210,7 +210,7 @@ swfdec_text_field_movie_set_condenseWhite (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   text->condense_white = value;
 }
@@ -243,7 +243,7 @@ swfdec_text_field_movie_set_maxChars (SwfdecAsContext *cx,
   if (argc < 1)
     return;
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
   text->max_chars = swfdec_as_value_to_integer (cx, &argv[0]);
 }
 
@@ -269,7 +269,7 @@ swfdec_text_field_movie_set_multiline (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   text->multiline = value;
 }
@@ -299,7 +299,7 @@ swfdec_text_field_movie_set_restrict (SwfdecAsContext *cx,
   const char *value;
 
   if (argc > 0)
-    swfdec_as_value_to_number (cx, &argv[0]);
+    swfdec_as_value_to_number (cx, *&argv[0]);
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
@@ -336,7 +336,7 @@ swfdec_text_field_movie_set_selectable (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   text->selectable = value;
 
@@ -368,7 +368,7 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
   const char *value;
 
   if (argc > 0)
-    swfdec_as_value_to_number (cx, &argv[0]);
+    swfdec_as_value_to_number (cx, *&argv[0]);
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
@@ -407,7 +407,7 @@ swfdec_text_field_movie_do_set_variable (SwfdecAsContext *cx,
   const char *value;
 
   if (argc > 0)
-    swfdec_as_value_to_number (cx, &argv[0]);
+    swfdec_as_value_to_number (cx, *&argv[0]);
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
@@ -477,7 +477,7 @@ swfdec_text_field_movie_set_background (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   if (text->background != value) {
     text->background = value;
@@ -540,7 +540,7 @@ swfdec_text_field_movie_set_border (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   if (text->border != value) {
     text->border = value;
@@ -673,7 +673,7 @@ swfdec_text_field_movie_set_mouseWheelEnabled (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   text->mouse_wheel_enabled = value;
 }
@@ -759,7 +759,7 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
       text->auto_size = SWFDEC_AUTO_SIZE_NONE;
     }
   } else {
-    swfdec_as_value_to_number (cx, &argv[0]);
+    swfdec_as_value_to_number (cx, *&argv[0]);
     s = swfdec_as_value_to_string (cx, argv[0]);
 
     if (!g_ascii_strcasecmp (s, "left")) {
@@ -796,7 +796,7 @@ swfdec_text_field_movie_set_password (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   swfdec_text_layout_set_password (text->layout, value);
   swfdec_movie_invalidate_last (SWFDEC_MOVIE (text));
@@ -825,7 +825,7 @@ swfdec_text_field_movie_set_wordWrap (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   swfdec_text_layout_set_word_wrap (text->layout, value);
 }
@@ -855,7 +855,7 @@ swfdec_text_field_movie_set_embedFonts (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "b", &value);
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   if (!text->embed_fonts && value)
     SWFDEC_FIXME ("Using embed fonts in TextField not supported");
@@ -901,7 +901,7 @@ swfdec_text_field_movie_set_styleSheet (SwfdecAsContext *cx,
   if (argc < 1)
     return;
 
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_OBJECT (argv[0])) {
     value = SWFDEC_AS_VALUE_GET_OBJECT (argv[0]);

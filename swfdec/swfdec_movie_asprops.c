@@ -98,7 +98,7 @@ mc_xscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   double d;
 
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
     return;
@@ -122,7 +122,7 @@ mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
   double d;
 
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set yscale to a non-finite value, ignoring");
     return;
@@ -160,7 +160,7 @@ mc_alpha_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   double d;
   int alpha;
 
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set alpha to a non-finite value, ignoring");
     return;
@@ -209,7 +209,7 @@ mc_width_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   /* property was readonly in Flash 4 and before */
   if (swfdec_gc_object_get_context (movie)->version < 5)
     return;
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set width to a non-finite value, ignoring");
     return;
@@ -251,7 +251,7 @@ mc_height_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   /* property was readonly in Flash 4 and before */
   if (swfdec_gc_object_get_context (movie)->version < 5)
     return;
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
     return;
@@ -286,7 +286,7 @@ mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   double d;
 
   /* FIXME: Flash 4 handles this differently */
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
   if (isnan (d)) {
     SWFDEC_WARNING ("setting rotation to NaN - not allowed");
     return;
@@ -429,7 +429,7 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
     b = SWFDEC_FLASH_MAYBE;
   } else {
     if (movie->parent == NULL) {
-      double d = swfdec_as_value_to_number (cx, val);
+      double d = swfdec_as_value_to_number (cx, *val);
       if (isnan (d))
 	return;
       b = d ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;

@@ -123,7 +123,7 @@ gboolean	swfdec_as_value_to_boolean	(SwfdecAsContext *	context,
 int		swfdec_as_value_to_integer	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 double		swfdec_as_value_to_number	(SwfdecAsContext *	context,
-						 const SwfdecAsValue *	value);
+						 SwfdecAsValue		value);
 SwfdecAsObject *swfdec_as_value_to_object	(SwfdecAsContext *	context,
 						 const SwfdecAsValue *	value);
 void		swfdec_as_value_to_primitive	(SwfdecAsValue *	value);

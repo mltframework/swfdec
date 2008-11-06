@@ -354,7 +354,7 @@ swfdec_xml_set_status (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]))
     return;
 
-  d = swfdec_as_value_to_number (cx, &argv[0]);
+  d = swfdec_as_value_to_number (cx, *&argv[0]);
   if (!isfinite (d))
     xml->status = 0;
   else

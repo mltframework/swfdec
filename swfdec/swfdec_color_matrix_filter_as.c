@@ -69,7 +69,7 @@ swfdec_color_matrix_filter_do_set_matrix (SwfdecColorMatrixFilter *cm,
     if (!swfdec_as_object_get_variable (array, swfdec_as_integer_to_string (cx, i), &val)) {
       cm->matrix[i] = 0;
     } else {
-      cm->matrix[i] = swfdec_as_value_to_number (cx, &val);
+      cm->matrix[i] = swfdec_as_value_to_number (cx, *&val);
     }
   }
 }

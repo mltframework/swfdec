@@ -448,23 +448,20 @@ swfdec_as_value_to_string (SwfdecAsContext *context, SwfdecAsValue value)
  * Returns: a double value. It can be NaN or +-Infinity. It will not be -0.0.
  **/
 double
-swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
+swfdec_as_value_to_number (SwfdecAsContext *context, SwfdecAsValue value)
 {
-  SwfdecAsValue tmp;
-
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), 0.0);
 
-  tmp = *value;
-  swfdec_as_value_to_primitive (&tmp);
+  swfdec_as_value_to_primitive (&value);
 
-  switch (SWFDEC_AS_VALUE_GET_TYPE (tmp)) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_UNDEFINED:
     case SWFDEC_AS_TYPE_NULL:
       return (context->version >= 7) ? NAN : 0.0;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      return SWFDEC_AS_VALUE_GET_BOOLEAN (tmp) ? 1 : 0;
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (value) ? 1 : 0;
     case SWFDEC_AS_TYPE_NUMBER:
-      return SWFDEC_AS_VALUE_GET_NUMBER (tmp);
+      return SWFDEC_AS_VALUE_GET_NUMBER (value);
     case SWFDEC_AS_TYPE_STRING:
       {
 	const char *s;
@@ -472,7 +469,7 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	double d;
 	
 	// FIXME: We should most likely copy Tamarin's code here (MathUtils.cpp)
-	s = SWFDEC_AS_VALUE_GET_STRING (tmp);
+	s = SWFDEC_AS_VALUE_GET_STRING (value);
 	if (s == SWFDEC_AS_STR_EMPTY)
 	  return (context->version >= 5) ? NAN : 0.0;
 	if (context->version > 5 && s[0] == '0' &&
@@ -540,7 +537,7 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value
 {
   double d;
   
-  d = swfdec_as_value_to_number (context, value);
+  d = swfdec_as_value_to_number (context, *value);
   return swfdec_as_double_to_integer (d);
 }
 
@@ -630,7 +627,7 @@ swfdec_as_value_to_boolean (SwfdecAsContext *context, SwfdecAsValue value)
       }
     case SWFDEC_AS_TYPE_STRING:
       if (context->version <= 6) {
-	double d = swfdec_as_value_to_number (context, &value);
+	double d = swfdec_as_value_to_number (context, *&value);
 	return d != 0.0 && !isnan (d);
       } else {
 	return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;
@@ -709,7 +706,7 @@ swfdec_as_value_to_twips (SwfdecAsContext *context, const SwfdecAsValue *val,
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (*val) || SWFDEC_AS_VALUE_IS_NULL (*val))
     return FALSE;
 
-  d = swfdec_as_value_to_number (context, val);
+  d = swfdec_as_value_to_number (context, *val);
   if (isnan (d))
     return FALSE;
   if (is_length && d < 0)

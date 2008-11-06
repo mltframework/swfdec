@@ -250,7 +250,7 @@ static gboolean
 swfdec_as_date_value_to_number_and_integer_floor (SwfdecAsContext *context,
     const SwfdecAsValue *value, double *d, int *num)
 {
-  *d = swfdec_as_value_to_number (context, value);
+  *d = swfdec_as_value_to_number (context, *value);
   if (!isfinite (*d)) {
     *num = 0;
     return FALSE;
@@ -272,7 +272,7 @@ swfdec_as_date_value_to_number_and_integer (SwfdecAsContext *context,
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (*value)) {
     *d = NAN;
   } else {
-    *d = swfdec_as_value_to_number (context, value);
+    *d = swfdec_as_value_to_number (context, *value);
   }
   if (!isfinite (*d)) {
     *num = 0;
@@ -444,7 +444,7 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   if (!swfdec_as_date_is_valid (date))
-    swfdec_as_value_to_number (cx, &argv[0]); // calls valueOf
+    swfdec_as_value_to_number (cx, *&argv[0]); // calls valueOf
 
   if (swfdec_as_date_is_valid (date) && argc > 0)
   {
@@ -764,7 +764,7 @@ swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc > 0 &&
       (cx->version > 6 || !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]))) {
-    d = swfdec_as_value_to_number (cx, &argv[0]);
+    d = swfdec_as_value_to_number (cx, *&argv[0]);
   } else {
     d = NAN;
   }
@@ -1096,7 +1096,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   else if (argc == 1) // milliseconds from epoch, local
   {
     // need to save directly to keep fractions of a milliseconds
-    date->milliseconds = swfdec_as_value_to_number (cx, &argv[0]);
+    date->milliseconds = swfdec_as_value_to_number (cx, *&argv[0]);
   }
   else // year, month etc. local
   {

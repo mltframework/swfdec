@@ -352,7 +352,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case 'n':
 	{
 	  double *d = va_arg (varargs, double *);
-	  *d = swfdec_as_value_to_number (cx, &argv[i]);
+	  *d = swfdec_as_value_to_number (cx, *&argv[i]);
 	}
 	break;
       case 's':

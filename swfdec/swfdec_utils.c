@@ -85,31 +85,31 @@ swfdec_matrix_from_as_object (cairo_matrix_t *matrix, SwfdecAsObject *object)
 
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_a);
   if (val == NULL ||
-      !isfinite (matrix->xx = swfdec_as_value_to_number (cx, val)))
+      !isfinite (matrix->xx = swfdec_as_value_to_number (cx, *val)))
     return FALSE;
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_b);
   if (val == NULL ||
-      !isfinite (matrix->yx = swfdec_as_value_to_number (cx, val)))
+      !isfinite (matrix->yx = swfdec_as_value_to_number (cx, *val)))
     return FALSE;
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_c);
   if (val == NULL ||
-      !isfinite (matrix->xy = swfdec_as_value_to_number (cx, val)))
+      !isfinite (matrix->xy = swfdec_as_value_to_number (cx, *val)))
     return FALSE;
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_d);
   if (val == NULL ||
-      !isfinite (matrix->yy = swfdec_as_value_to_number (cx, val)))
+      !isfinite (matrix->yy = swfdec_as_value_to_number (cx, *val)))
     return FALSE;
 
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_tx);
   if (val == NULL)
       return FALSE;
-  matrix->x0 = swfdec_as_value_to_number (cx, val);
+  matrix->x0 = swfdec_as_value_to_number (cx, *val);
   if (!isfinite (matrix->x0))
     matrix->x0 = 0;
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_ty);
   if (val == NULL)
       return FALSE;
-  matrix->y0 = swfdec_as_value_to_number (cx, val);
+  matrix->y0 = swfdec_as_value_to_number (cx, *val);
   if (!isfinite (matrix->y0))
     matrix->y0 = 0;
 

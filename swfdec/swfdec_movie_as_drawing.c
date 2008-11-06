@@ -138,15 +138,15 @@ swfdec_sprite_movie_extract_matrix (SwfdecAsObject *o, cairo_matrix_t *mat)
       double x, y, w, h, r;
       cairo_matrix_t input;
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_x, &val);
-      x = swfdec_as_value_to_number (cx, &val);
+      x = swfdec_as_value_to_number (cx, *&val);
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_y, &val);
-      y = swfdec_as_value_to_number (cx, &val);
+      y = swfdec_as_value_to_number (cx, *&val);
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_w, &val);
-      w = swfdec_as_value_to_number (cx, &val);
+      w = swfdec_as_value_to_number (cx, *&val);
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_h, &val);
-      h = swfdec_as_value_to_number (cx, &val);
+      h = swfdec_as_value_to_number (cx, *&val);
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_r, &val);
-      r = swfdec_as_value_to_number (cx, &val);
+      r = swfdec_as_value_to_number (cx, *&val);
       cairo_matrix_init_translate (&input, (x + w) / 2, (y + h) / 2);
       cairo_matrix_scale (&input, w, h);
       cairo_matrix_rotate (&input, r);
@@ -160,17 +160,17 @@ swfdec_sprite_movie_extract_matrix (SwfdecAsObject *o, cairo_matrix_t *mat)
   } else {
     cairo_matrix_t input;
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_a, &val);
-    input.xx = swfdec_as_value_to_number (cx, &val);
+    input.xx = swfdec_as_value_to_number (cx, *&val);
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_b, &val);
-    input.yx = swfdec_as_value_to_number (cx, &val);
+    input.yx = swfdec_as_value_to_number (cx, *&val);
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_d, &val);
-    input.xy = swfdec_as_value_to_number (cx, &val);
+    input.xy = swfdec_as_value_to_number (cx, *&val);
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_e, &val);
-    input.yy = swfdec_as_value_to_number (cx, &val);
+    input.yy = swfdec_as_value_to_number (cx, *&val);
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_g, &val);
-    input.x0 = swfdec_as_value_to_number (cx, &val) * SWFDEC_TWIPS_SCALE_FACTOR;
+    input.x0 = swfdec_as_value_to_number (cx, *&val) * SWFDEC_TWIPS_SCALE_FACTOR;
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_h, &val);
-    input.y0 = swfdec_as_value_to_number (cx, &val) * SWFDEC_TWIPS_SCALE_FACTOR;
+    input.y0 = swfdec_as_value_to_number (cx, *&val) * SWFDEC_TWIPS_SCALE_FACTOR;
     cairo_matrix_init_scale (mat, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0);
     cairo_matrix_multiply (mat, mat, &input);
   }

@@ -173,7 +173,7 @@ swfdec_value_to_frame (SwfdecAsContext *cx, SwfdecSpriteMovie *movie, SwfdecAsVa
       SWFDEC_ERROR ("FIXME: handle targets");
     }
     /* treat valid encoded numbers as numbers, otherwise assume it's a frame label */
-    d = swfdec_as_value_to_number (cx, val);
+    d = swfdec_as_value_to_number (cx, *val);
     if (isnan (d))
       frame = swfdec_sprite_get_frame (movie->sprite, name) + 1;
     else
@@ -915,8 +915,8 @@ swfdec_action_binary (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 {
   double l, r;
 
-  r = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1));
-  l = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 2));
+  r = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 1));
+  l = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 2));
   switch (action) {
     case SWFDEC_AS_ACTION_ADD:
       l = l + r;
@@ -996,8 +996,8 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
     SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx, 1), lstr);
   } else {
     double d, d2;
-    d = swfdec_as_value_to_number (cx, lval);
-    d2 = swfdec_as_value_to_number (cx, rval);
+    d = swfdec_as_value_to_number (cx, *lval);
+    d2 = swfdec_as_value_to_number (cx, *rval);
     d += d2;
     swfdec_as_stack_pop (cx);
     swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), d);
@@ -1058,8 +1058,8 @@ swfdec_action_new_comparison (SwfdecAsContext *cx, guint action, const guint8 *d
     return;
   }
   /* convert to numbers and compare those */
-  l = swfdec_as_value_to_number (cx, lval);
-  r = swfdec_as_value_to_number (cx, rval);
+  l = swfdec_as_value_to_number (cx, *lval);
+  r = swfdec_as_value_to_number (cx, *rval);
   swfdec_as_stack_pop (cx);
   /* NaN results in undefined */
   if (isnan (l) || isnan (r)) {
@@ -1073,7 +1073,7 @@ static void
 swfdec_action_not (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   if (cx->version <= 4) {
-    double d = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1));
+    double d = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 1));
     swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1), d == 0 ? 1 : 0);
   } else {
     SWFDEC_AS_VALUE_SET_BOOLEAN (swfdec_as_stack_peek (cx, 1), 
@@ -1114,7 +1114,7 @@ swfdec_action_decrement (SwfdecAsContext *cx, guint action, const guint8 *data, 
   SwfdecAsValue *val;
 
   val = swfdec_as_stack_peek (cx, 1);
-  swfdec_as_value_set_number (cx, val, swfdec_as_value_to_number (cx, val) - 1);
+  swfdec_as_value_set_number (cx, val, swfdec_as_value_to_number (cx, *val) - 1);
 }
 
 static void
@@ -1123,7 +1123,7 @@ swfdec_action_increment (SwfdecAsContext *cx, guint action, const guint8 *data, 
   SwfdecAsValue *val;
 
   val = swfdec_as_stack_peek (cx, 1);
-  swfdec_as_value_set_number (cx, val, swfdec_as_value_to_number (cx, val) + 1);
+  swfdec_as_value_set_number (cx, val, swfdec_as_value_to_number (cx, *val) + 1);
 }
 
 static void
@@ -1319,8 +1319,8 @@ swfdec_action_old_compare (SwfdecAsContext *cx, guint action, const guint8 *data
   double l, r;
   gboolean cond;
 
-  l = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 2));
-  r = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1));
+  l = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 2));
+  r = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 1));
   switch (action) {
     case SWFDEC_AS_ACTION_EQUALS:
       cond = l == r;
@@ -1458,14 +1458,14 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 
   /* convert to numbers */
   if (SWFDEC_AS_VALUE_IS_OBJECT (ltmp)) {
-    l = swfdec_as_value_to_number (cx, lval);
+    l = swfdec_as_value_to_number (cx, *lval);
   } else {
-    l = swfdec_as_value_to_number (cx, &ltmp);
+    l = swfdec_as_value_to_number (cx, *&ltmp);
   }
   if (SWFDEC_AS_VALUE_IS_OBJECT (rtmp)) {
-    r = swfdec_as_value_to_number (cx, rval);
+    r = swfdec_as_value_to_number (cx, *rval);
   } else {
-    r = swfdec_as_value_to_number (cx, &rtmp);
+    r = swfdec_as_value_to_number (cx, *&rtmp);
   }
 
   /* get rid of undefined and null */
@@ -1540,8 +1540,8 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   }
 
   /* else compare as numbers */
-  l = swfdec_as_value_to_number (cx, lval);
-  r = swfdec_as_value_to_number (cx, rval);
+  l = swfdec_as_value_to_number (cx, *lval);
+  r = swfdec_as_value_to_number (cx, *rval);
 
   if (isnan (l) && isnan (r)) {
     cond = (ltype == SWFDEC_AS_TYPE_NUMBER && *lval == *rval);
@@ -1662,12 +1662,12 @@ swfdec_action_start_drag (SwfdecAsContext *cx, guint action, const guint8 *data,
 
   swfdec_as_stack_ensure_size (cx, 3);
   center = swfdec_as_value_to_boolean (cx, *swfdec_as_stack_peek (cx, 2));
-  if (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 3))) {
+  if (swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 3))) {
     swfdec_as_stack_ensure_size (cx, 7);
-    rect.x0 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 7));
-    rect.y0 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 6));
-    rect.x1 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 5));
-    rect.y1 = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 4));
+    rect.x0 = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 7));
+    rect.y0 = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 6));
+    rect.x1 = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 5));
+    rect.y1 = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 4));
     swfdec_rect_scale (&rect, &rect, SWFDEC_TWIPS_SCALE_FACTOR);
     stack_size = 7;
     rectp = &rect;
@@ -2110,8 +2110,8 @@ swfdec_action_modulo (SwfdecAsContext *cx, guint action, const guint8 *data, gui
 {
   double x, y;
 
-  y = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1));
-  x = swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 2));
+  y = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 1));
+  x = swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 2));
   /* yay, we're portable! */
   if (y == 0.0) {
     x = NAN;
@@ -2136,7 +2136,7 @@ static void
 swfdec_action_to_number (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   swfdec_as_value_set_number (cx, swfdec_as_stack_peek (cx, 1),
-      swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1)));
+      swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 1)));
 }
 
 static void
@@ -2460,11 +2460,11 @@ swfdec_action_logical (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   gboolean l, r;
 
   if (cx->version <= 4) {
-    l = (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 1)) != 0);
+    l = (swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 1)) != 0);
     // don't call second parameter if not necessary
     if ((action == SWFDEC_AS_ACTION_AND && !l) ||
 	(action != SWFDEC_AS_ACTION_AND && l)) {
-      r = (swfdec_as_value_to_number (cx, swfdec_as_stack_peek (cx, 2)) != 0);
+      r = (swfdec_as_value_to_number (cx, *swfdec_as_stack_peek (cx, 2)) != 0);
     } else {
       r = FALSE;
     }

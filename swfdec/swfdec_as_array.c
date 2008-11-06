@@ -873,8 +873,8 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
     } else if (!SWFDEC_AS_VALUE_IS_NUMBER (*b)) {
       retval = -1;
     } else {
-      double an = swfdec_as_value_to_number (cx, a);
-      double bn = swfdec_as_value_to_number (cx, b);
+      double an = swfdec_as_value_to_number (cx, *a);
+      double bn = swfdec_as_value_to_number (cx, *b);
       retval = (an < bn ? -1 : (an > bn ? 1 : 0));
     }
   }

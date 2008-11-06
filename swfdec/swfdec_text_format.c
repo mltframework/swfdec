@@ -137,7 +137,7 @@ swfdec_text_format_set_string (SwfdecAsObject *object,
 
   context = swfdec_gc_object_get_context (format);
   swfdec_as_value_to_integer (context, &argv[0]);
-  swfdec_as_value_to_number (context, &argv[0]);
+  swfdec_as_value_to_number (context, *&argv[0]);
   s = swfdec_as_value_to_string (context, argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
@@ -189,7 +189,7 @@ swfdec_text_format_set_boolean (SwfdecAsObject *object,
 
   context = swfdec_gc_object_get_context (format);
   swfdec_as_value_to_integer (context, &argv[0]);
-  swfdec_as_value_to_number (context, &argv[0]);
+  swfdec_as_value_to_number (context, *&argv[0]);
   swfdec_as_value_to_string (context, argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
@@ -229,7 +229,7 @@ swfdec_text_format_value_to_integer (SwfdecAsContext *cx, SwfdecAsValue *val,
   int n;
 
   n = swfdec_as_value_to_integer (cx, val);
-  d = swfdec_as_value_to_number (cx, val);
+  d = swfdec_as_value_to_number (cx, *val);
   swfdec_as_value_to_string (cx, *val);
 
   if (cx->version >= 8) {
@@ -334,7 +334,7 @@ swfdec_text_format_do_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   swfdec_as_value_to_integer (cx, &argv[0]);
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
   s = swfdec_as_value_to_string (cx, argv[0]);
 
   if (!g_ascii_strcasecmp (s, "left")) {
@@ -483,7 +483,7 @@ swfdec_text_format_do_set_display (SwfdecAsContext *cx, SwfdecAsObject *object,
   format = SWFDEC_TEXT_FORMAT (object->relay);
 
   swfdec_as_value_to_integer (cx, &argv[0]);
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
   swfdec_as_value_to_string (cx, argv[0]);
   s = swfdec_as_value_to_string (cx, argv[0]); // oh yes, let's call it twice
 
@@ -621,7 +621,7 @@ swfdec_text_format_do_set_letter_spacing (SwfdecAsContext *cx,
     return;
 
   swfdec_as_value_to_integer (cx, &argv[0]);
-  d = swfdec_as_value_to_number (cx, &argv[0]);
+  d = swfdec_as_value_to_number (cx, *&argv[0]);
   swfdec_as_value_to_string (cx, argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
@@ -711,7 +711,7 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
     return;
 
   swfdec_as_value_to_integer (cx, &argv[0]);
-  swfdec_as_value_to_number (cx, &argv[0]);
+  swfdec_as_value_to_number (cx, *&argv[0]);
   swfdec_as_value_to_string (cx, argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||

@@ -1118,7 +1118,7 @@ swfdec_as_context_isFinite (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  d = swfdec_as_value_to_number (cx, &argv[0]);
+  d = swfdec_as_value_to_number (cx, *&argv[0]);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isfinite (d) ? TRUE : FALSE);
 }
 
@@ -1132,7 +1132,7 @@ swfdec_as_context_isNaN (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  d = swfdec_as_value_to_number (cx, &argv[0]);
+  d = swfdec_as_value_to_number (cx, *&argv[0]);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isnan (d) ? TRUE : FALSE);
 }
 

@@ -641,10 +641,10 @@ swfdec_sprite_movie_startDrag (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   if (argc >= 5) {
     SwfdecRect rect;
-    rect.x0 = swfdec_as_value_to_number (cx, &argv[1]);
-    rect.y0 = swfdec_as_value_to_number (cx, &argv[2]);
-    rect.x1 = swfdec_as_value_to_number (cx, &argv[3]);
-    rect.y1 = swfdec_as_value_to_number (cx, &argv[4]);
+    rect.x0 = swfdec_as_value_to_number (cx, *&argv[1]);
+    rect.y0 = swfdec_as_value_to_number (cx, *&argv[2]);
+    rect.x1 = swfdec_as_value_to_number (cx, *&argv[3]);
+    rect.y1 = swfdec_as_value_to_number (cx, *&argv[4]);
     swfdec_rect_scale (&rect, &rect, SWFDEC_TWIPS_SCALE_FACTOR);
     swfdec_player_set_drag_movie (player, actor, center, &rect);
   } else {

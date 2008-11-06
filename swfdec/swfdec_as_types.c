@@ -382,27 +382,27 @@ swfdec_as_double_to_string (SwfdecAsContext *context, double d)
  *          never be %NULL.
  **/
 const char *
-swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
+swfdec_as_value_to_string (SwfdecAsContext *context, SwfdecAsValue value)
 {
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), SWFDEC_AS_STR_EMPTY);
 
-  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (&value)) {
     case SWFDEC_AS_TYPE_STRING:
-      return SWFDEC_AS_VALUE_GET_STRING (value);
+      return SWFDEC_AS_VALUE_GET_STRING (&value);
     case SWFDEC_AS_TYPE_UNDEFINED:
       if (context->version > 6)
 	return SWFDEC_AS_STR_undefined;
       else
 	return SWFDEC_AS_STR_EMPTY;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      return SWFDEC_AS_VALUE_GET_BOOLEAN (value) ? SWFDEC_AS_STR_true : SWFDEC_AS_STR_false;
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (&value) ? SWFDEC_AS_STR_true : SWFDEC_AS_STR_false;
     case SWFDEC_AS_TYPE_NULL:
       return SWFDEC_AS_STR_null;
     case SWFDEC_AS_TYPE_NUMBER:
-      return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
+      return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (&value));
     case SWFDEC_AS_TYPE_OBJECT:
       {
-	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (value);
+	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (&value);
 	if (SWFDEC_IS_AS_STRING (object->relay)) {
 	  return SWFDEC_AS_STRING (object->relay)->string;
 	} else {
@@ -420,7 +420,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, const SwfdecAsValue *value)
       }
     case SWFDEC_AS_TYPE_MOVIE:
       {
-	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (value);
+	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (&value);
 	char *str;
 
 	if (movie == NULL)

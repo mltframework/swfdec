@@ -47,5 +47,5 @@ swfdec_loadvars_decode (SwfdecAsContext *cx, SwfdecAsObject *obj,
     return;
   }
 
-  swfdec_as_object_decode (obj, swfdec_as_value_to_string (cx, &argv[0]));
+  swfdec_as_object_decode (obj, swfdec_as_value_to_string (cx, argv[0]));
 }

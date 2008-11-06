@@ -1439,7 +1439,7 @@ swfdec_as_object_addProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
   if (argc < 3)
     return;
-  name = swfdec_as_value_to_string (cx, &argv[0]);
+  name = swfdec_as_value_to_string (cx, argv[0]);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]) ||
       !SWFDEC_IS_AS_FUNCTION ((get = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1])->relay))))
     return;
@@ -1469,12 +1469,7 @@ swfdec_as_object_hasOwnProperty (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
-
-  // return false even if no params
-  if (argc < 1)
-    return;
-
-  name = swfdec_as_value_to_string (cx, &argv[0]);
+  SWFDEC_AS_CHECK (0, NULL, "s", &name);
 
   if (!(var = swfdec_as_object_hash_lookup (object, name)))
     return;
@@ -1499,12 +1494,7 @@ swfdec_as_object_isPropertyEnumerable (SwfdecAsContext *cx,
     return;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
-
-  // return false even if no params
-  if (argc < 1)
-    return;
-
-  name = swfdec_as_value_to_string (cx, &argv[0]);
+  SWFDEC_AS_CHECK (0, NULL, "s", &name);
 
   if (!(var = swfdec_as_object_hash_lookup (object, name)))
     return;
@@ -1549,20 +1539,16 @@ swfdec_as_object_watch (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)
 {
   SwfdecAsWatch *watch;
+  SwfdecAsObject *o;
+  SwfdecAsFunction *fun;
   const char *name;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
+  SWFDEC_AS_CHECK (0, NULL, "so", &name, &o);
 
-  if (argc < 2)
+  if (!SWFDEC_IS_AS_FUNCTION (o->relay))
     return;
-
-  name = swfdec_as_value_to_string (cx, &argv[0]);
-
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (&argv[1]))
-    return;
-
-  if (!SWFDEC_IS_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1])->relay))
-    return;
+  fun = SWFDEC_AS_FUNCTION (o->relay);
 
   if (object->watches == NULL) {
     object->watches = g_hash_table_new_full (g_direct_hash, g_direct_equal, 
@@ -1572,12 +1558,10 @@ swfdec_as_object_watch (SwfdecAsContext *cx, SwfdecAsObject *object,
     watch = g_hash_table_lookup (object->watches, name);
   }
   if (watch == NULL) {
-    watch = swfdec_as_watch_new (SWFDEC_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1])->relay));
-    if (watch == NULL)
-      return;
+    watch = swfdec_as_watch_new (fun);
     g_hash_table_insert (object->watches, (char *) name, watch);
   } else {
-    watch->watch = SWFDEC_AS_FUNCTION (SWFDEC_AS_VALUE_GET_OBJECT (&argv[1])->relay);
+    watch->watch = fun;
   }
 
   if (argc >= 3) {
@@ -1601,11 +1585,7 @@ swfdec_as_object_unwatch (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, FALSE);
-
-  if (argc < 1)
-    return;
-
-  name = swfdec_as_value_to_string (cx, &argv[0]);
+  SWFDEC_AS_CHECK (0, NULL, "s", &name);
 
   // special case: can't unwatch native properties
   if ((var = swfdec_as_object_hash_lookup (object, name))&& var->get != NULL)

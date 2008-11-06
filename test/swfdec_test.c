@@ -214,7 +214,7 @@ main (int argc, char **argv)
     swfdec_as_context_get_string (context, "filenames"), &val);
   swfdec_as_object_run (context->global, script);
   if (swfdec_as_context_catch (context, &val)) {
-    g_print ("ERROR: %s\n", swfdec_as_value_to_string (context, &val));
+    g_print ("ERROR: %s\n", swfdec_as_value_to_string (context, val));
     ret = EXIT_FAILURE;
   } else {
     g_print ("SUCCESS\n");

@@ -454,7 +454,7 @@ swfdec_sound_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object, guin
   if (argc == 0 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     sound->target = NULL;
   } else {
-    sound->target = swfdec_as_value_to_string (cx, &argv[0]);
+    sound->target = swfdec_as_value_to_string (cx, argv[0]);
   }
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);

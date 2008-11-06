@@ -131,7 +131,7 @@ swfdec_sprite_movie_extract_matrix (SwfdecAsObject *o, cairo_matrix_t *mat)
 
   /* FIXME: This function does not call valueOf in the right order */
   if (swfdec_as_object_get_variable (o, SWFDEC_AS_STR_matrixType, &val)) {
-    const char *s = swfdec_as_value_to_string (cx, &val);
+    const char *s = swfdec_as_value_to_string (cx, val);
     cairo_matrix_init_translate (mat, SWFDEC_TWIPS_SCALE_FACTOR / 2.0, SWFDEC_TWIPS_SCALE_FACTOR / 2.0);
     cairo_matrix_scale (mat, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0);
     if (s == SWFDEC_AS_STR_box) {

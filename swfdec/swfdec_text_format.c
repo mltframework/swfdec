@@ -138,7 +138,7 @@ swfdec_text_format_set_string (SwfdecAsObject *object,
   context = swfdec_gc_object_get_context (format);
   swfdec_as_value_to_integer (context, &argv[0]);
   swfdec_as_value_to_number (context, &argv[0]);
-  s = swfdec_as_value_to_string (context, &argv[0]);
+  s = swfdec_as_value_to_string (context, argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
@@ -190,7 +190,7 @@ swfdec_text_format_set_boolean (SwfdecAsObject *object,
   context = swfdec_gc_object_get_context (format);
   swfdec_as_value_to_integer (context, &argv[0]);
   swfdec_as_value_to_number (context, &argv[0]);
-  swfdec_as_value_to_string (context, &argv[0]);
+  swfdec_as_value_to_string (context, argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0])) {
@@ -230,7 +230,7 @@ swfdec_text_format_value_to_integer (SwfdecAsContext *cx, SwfdecAsValue *val,
 
   n = swfdec_as_value_to_integer (cx, val);
   d = swfdec_as_value_to_number (cx, val);
-  swfdec_as_value_to_string (cx, val);
+  swfdec_as_value_to_string (cx, *val);
 
   if (cx->version >= 8) {
     if (isnan (d))
@@ -335,7 +335,7 @@ swfdec_text_format_do_set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   swfdec_as_value_to_integer (cx, &argv[0]);
   swfdec_as_value_to_number (cx, &argv[0]);
-  s = swfdec_as_value_to_string (cx, &argv[0]);
+  s = swfdec_as_value_to_string (cx, argv[0]);
 
   if (!g_ascii_strcasecmp (s, "left")) {
     format->attr.align = SWFDEC_TEXT_ALIGN_LEFT;
@@ -434,7 +434,7 @@ swfdec_text_format_do_set_color (SwfdecAsContext *cx, SwfdecAsObject *object,
   } else {
     format->attr.color = (unsigned) swfdec_as_value_to_integer (cx, &argv[0]);
     swfdec_as_value_to_integer (cx, &argv[0]);
-    swfdec_as_value_to_string (cx, &argv[0]);
+    swfdec_as_value_to_string (cx, argv[0]);
 
     SWFDEC_TEXT_ATTRIBUTE_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_COLOR);
   }
@@ -484,8 +484,8 @@ swfdec_text_format_do_set_display (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   swfdec_as_value_to_integer (cx, &argv[0]);
   swfdec_as_value_to_number (cx, &argv[0]);
-  swfdec_as_value_to_string (cx, &argv[0]);
-  s = swfdec_as_value_to_string (cx, &argv[0]); // oh yes, let's call it twice
+  swfdec_as_value_to_string (cx, argv[0]);
+  s = swfdec_as_value_to_string (cx, argv[0]); // oh yes, let's call it twice
 
   if (!g_ascii_strcasecmp (s, "none")) {
     format->attr.display = SWFDEC_TEXT_DISPLAY_NONE;
@@ -622,7 +622,7 @@ swfdec_text_format_do_set_letter_spacing (SwfdecAsContext *cx,
 
   swfdec_as_value_to_integer (cx, &argv[0]);
   d = swfdec_as_value_to_number (cx, &argv[0]);
-  swfdec_as_value_to_string (cx, &argv[0]);
+  swfdec_as_value_to_string (cx, argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0]))
@@ -712,7 +712,7 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
 
   swfdec_as_value_to_integer (cx, &argv[0]);
   swfdec_as_value_to_number (cx, &argv[0]);
-  swfdec_as_value_to_string (cx, &argv[0]);
+  swfdec_as_value_to_string (cx, argv[0]);
 
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0]) ||
       SWFDEC_AS_VALUE_IS_NULL (&argv[0]))

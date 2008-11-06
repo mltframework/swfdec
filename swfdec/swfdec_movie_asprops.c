@@ -144,7 +144,7 @@ mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
 static void
 mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 {
-  movie->name = swfdec_as_value_to_string (swfdec_gc_object_get_context (movie), val);
+  movie->name = swfdec_as_value_to_string (swfdec_gc_object_get_context (movie), *val);
 }
 
 static void

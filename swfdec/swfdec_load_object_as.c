@@ -134,7 +134,7 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
   {
     g_ptr_array_add (array_names, g_strdup (SWFDEC_AS_STR_Content_Type));
     g_ptr_array_add (array_values,
-	g_strdup (swfdec_as_value_to_string (cx, &val)));
+	g_strdup (swfdec_as_value_to_string (cx, val)));
   }
 
   if (!swfdec_as_object_get_variable (object, SWFDEC_AS_STR__customHeaders,
@@ -155,9 +155,9 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
     swfdec_as_object_get_variable (list, swfdec_as_integer_to_string (cx, i),
 	&val);
     if (name == NULL) {
-      name = swfdec_as_value_to_string (cx, &val);
+      name = swfdec_as_value_to_string (cx, val);
     } else {
-      const char *value = swfdec_as_value_to_string (cx, &val);
+      const char *value = swfdec_as_value_to_string (cx, val);
       for (j = 0; j < G_N_ELEMENTS (disallowed_names); j++) {
 	if (g_ascii_strcasecmp (name, disallowed_names[j]) == 0)
 	  break;
@@ -206,7 +206,7 @@ swfdec_load_object_as_send (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
-  data = swfdec_as_value_to_string (cx, &val);
+  data = swfdec_as_value_to_string (cx, val);
 
   if (method == NULL || g_ascii_strcasecmp (method, "GET") == 0) {
     url = swfdec_as_context_give_string (cx,
@@ -244,7 +244,7 @@ swfdec_load_object_as_sendAndLoad (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
 
   SWFDEC_AS_VALUE_SET_COMPOSITE (&val, object);
-  data = swfdec_as_value_to_string (cx, &val);
+  data = swfdec_as_value_to_string (cx, val);
 
   if (method != NULL && g_ascii_strcasecmp (method, "GET") == 0) {
     url = swfdec_as_context_give_string (cx,

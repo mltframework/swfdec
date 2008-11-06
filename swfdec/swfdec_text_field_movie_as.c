@@ -760,7 +760,7 @@ swfdec_text_field_movie_set_autoSize (SwfdecAsContext *cx,
     }
   } else {
     swfdec_as_value_to_number (cx, &argv[0]);
-    s = swfdec_as_value_to_string (cx, &argv[0]);
+    s = swfdec_as_value_to_string (cx, argv[0]);
 
     if (!g_ascii_strcasecmp (s, "left")) {
       text->auto_size = SWFDEC_AUTO_SIZE_LEFT;

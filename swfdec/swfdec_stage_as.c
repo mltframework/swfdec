@@ -65,9 +65,8 @@ set_scaleMode (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *s;
   SwfdecScaleMode mode;
 
-  if (argc == 0)
-    return;
-  s = swfdec_as_value_to_string (cx, &argv[0]);
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+
   if (g_ascii_strcasecmp (s, SWFDEC_AS_STR_noBorder) == 0) {
     mode = SWFDEC_SCALE_NO_BORDER;
   } else if (g_ascii_strcasecmp (s, SWFDEC_AS_STR_exactFit) == 0) {
@@ -111,10 +110,8 @@ set_align (SwfdecAsContext *cx, SwfdecAsObject *object,
   guint flags = 0;
   const char *s;
 
-  if (argc == 0)
-    return;
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
 
-  s = swfdec_as_value_to_string (cx, &argv[0]);
   if (strchr (s, 'l') || strchr (s, 'L'))
     flags |= SWFDEC_ALIGN_FLAG_LEFT;
   if (strchr (s, 't') || strchr (s, 'T'))

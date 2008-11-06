@@ -1081,7 +1081,7 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_object_foreach (obj, swfdec_as_context_ASSetPropFlags_foreach, flags);
   } else {
     char **split =
-      g_strsplit (swfdec_as_value_to_string (cx, &argv[1]), ",", -1);
+      g_strsplit (swfdec_as_value_to_string (cx, argv[1]), ",", -1);
     guint i;
     for (i = 0; split[i]; i++) {
       swfdec_as_context_ASSetPropFlags_set_one_flag (obj, 
@@ -1197,7 +1197,7 @@ swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   // we need to remove everything after x or I, since strtod parses hexadecimal
   // numbers and Infinity
-  s = g_strdup (swfdec_as_value_to_string (cx, &argv[0]));
+  s = g_strdup (swfdec_as_value_to_string (cx, argv[0]));
   if ((p = strpbrk (s, "xXiI")) != NULL) {
     *p = '\0';
   }

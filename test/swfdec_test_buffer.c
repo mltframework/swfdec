@@ -277,7 +277,7 @@ swfdec_test_buffer_from_args (SwfdecAsContext *cx, guint argc, SwfdecAsValue *ar
       b->data[0] = swfdec_as_value_to_integer (cx, &argv[i]);
     }
     if (b == NULL) {
-      const char *s = swfdec_as_value_to_string (cx, &argv[i]);
+      const char *s = swfdec_as_value_to_string (cx, argv[i]);
       gsize len = strlen (s);
       /* no terminating 0 byte on purpose here - use new Buffer (string, 0); to get that */
       b = swfdec_buffer_new (len);

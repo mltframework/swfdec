@@ -530,7 +530,7 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
     return;
 
   if (argc > 0) {
-    sep = swfdec_as_value_to_string (cx, &argv[0]);
+    sep = swfdec_as_value_to_string (cx, argv[0]);
   } else {
     sep = SWFDEC_AS_STR_COMMA;
   }
@@ -539,12 +539,12 @@ swfdec_as_array_join (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   if (swfdec_as_array_get_length (object) > 0) {
     GString *string;
     swfdec_as_object_get_variable (object, SWFDEC_AS_STR_0, &val);
-    str = swfdec_as_value_to_string (cx, &val);
+    str = swfdec_as_value_to_string (cx, val);
     string = g_string_new (str);
     for (i = 1; i < swfdec_as_array_get_length (object); i++) {
       var = swfdec_as_integer_to_string (cx, i);
       swfdec_as_object_get_variable (object, var, &val);
-      var = swfdec_as_value_to_string (cx, &val);
+      var = swfdec_as_value_to_string (cx, val);
       g_string_append (string, sep);
       g_string_append (string, var);
     }
@@ -882,8 +882,8 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
   {
     // can't pass swfdec_as_value_to_string calls directly to compare
     // functions, since the order of these is important
-    const char *a_str = swfdec_as_value_to_string (cx, a);
-    const char *b_str = swfdec_as_value_to_string (cx, b);
+    const char *a_str = swfdec_as_value_to_string (cx, *a);
+    const char *b_str = swfdec_as_value_to_string (cx, *b);
 
     if (options & SORT_OPTION_CASEINSENSITIVE) {
       retval = g_strcasecmp (a_str, b_str);
@@ -1227,7 +1227,7 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
     fields = g_new (const char *, num_fields + 1);
     for (i = 0; i < num_fields; i++) {
       swfdec_as_array_get_value (array, i, &val);
-      fields[i] = swfdec_as_value_to_string (cx, &val);
+      fields[i] = swfdec_as_value_to_string (cx, val);
     }
 
     fields[i] = NULL;
@@ -1237,7 +1237,7 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
     num_fields = 1;
     fields = g_new (const char *, num_fields + 1);
-    fields[0] = swfdec_as_value_to_string (cx, &argv[0]);
+    fields[0] = swfdec_as_value_to_string (cx, argv[0]);
     fields[1] = NULL;
   }
 

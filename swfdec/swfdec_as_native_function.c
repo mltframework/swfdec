@@ -358,7 +358,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case 's':
 	{
 	  const char **s = va_arg (varargs, const char **);
-	  *s = swfdec_as_value_to_string (cx, &argv[i]);
+	  *s = swfdec_as_value_to_string (cx, argv[i]);
 	}
 	break;
       case 'o':

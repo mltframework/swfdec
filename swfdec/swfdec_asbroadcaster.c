@@ -46,7 +46,7 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc < 1)
     return;
-  name = swfdec_as_value_to_string (cx, &argv[0]);
+  name = swfdec_as_value_to_string (cx, argv[0]);
   argv += 1;
   argc--;
 

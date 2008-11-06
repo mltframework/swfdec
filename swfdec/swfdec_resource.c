@@ -636,7 +636,7 @@ swfdec_resource_load_request (gpointer loadp, gpointer playerp)
   /* fscommand? */
   if (g_ascii_strncasecmp (load->url, "FSCommand:", 10) == 0) {
     char *command = load->url + 10;
-    const char *target = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), &load->target);
+    const char *target = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), load->target);
     if (SWFDEC_AS_VALUE_IS_MOVIE (&load->target)) {
       SWFDEC_FIXME ("Adobe 9.0.124.0 and later don't emit fscommands here. "
 	  "We just do for compatibility reasons with the testsuite.");
@@ -710,13 +710,13 @@ swfdec_resource_load_movie (SwfdecPlayer *player, const SwfdecAsValue *target,
       swfdec_resource_load_internal (player, &val, url, buffer, loader);
       return TRUE;
     } else if (SWFDEC_AS_VALUE_IS_STRING (target) || SWFDEC_AS_VALUE_IS_MOVIE(target)) {
-      s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), target);
+      s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), *target);
     } else {
       SWFDEC_WARNING ("target does not reference a movie, not loading %s", url);
       return FALSE;
     }
   } else {
-    s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), target);
+    s = swfdec_as_value_to_string (SWFDEC_AS_CONTEXT (player), *target);
   }
   if (swfdec_player_get_level (player, s, SWFDEC_AS_CONTEXT (player)->version) >= 0) {
     /* lowercase the string, so we can do case insensitive level lookups later on */

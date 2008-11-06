@@ -1035,7 +1035,7 @@ swfdec_text_field_movie_variable_listener_callback (gpointer data,
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (data);
 
   swfdec_text_field_movie_set_text (text,
-      swfdec_as_value_to_string (swfdec_gc_object_get_context (text), val), text->html);
+      swfdec_as_value_to_string (swfdec_gc_object_get_context (text), *val), text->html);
 }
 
 void
@@ -1065,7 +1065,7 @@ swfdec_text_field_movie_set_listen_variable (SwfdecTextFieldMovie *text,
 	&name);
     if (object != NULL && swfdec_as_object_get_variable (object, name, &val)) {
       swfdec_text_field_movie_set_text (text,
-	  swfdec_as_value_to_string (swfdec_gc_object_get_context (text), &val),
+	  swfdec_as_value_to_string (swfdec_gc_object_get_context (text), val),
 	  text->html);
     } else if (text_field != NULL && text_field->input != NULL) {
       // Set to the original value from the tag, not current value

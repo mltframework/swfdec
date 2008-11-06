@@ -154,7 +154,7 @@ swfdec_xml_node_get_attribute (SwfdecXmlNode *node, const char *name)
   g_return_val_if_fail (name != NULL, NULL);
 
   if (swfdec_as_object_get_variable (node->attributes, name, &val)) {
-    return swfdec_as_value_to_string (swfdec_gc_object_get_context (node), &val);
+    return swfdec_as_value_to_string (swfdec_gc_object_get_context (node), val);
   } else {
     return NULL;
   }
@@ -179,7 +179,7 @@ swfdec_xml_node_getNamespaceForPrefix (SwfdecXmlNode *node, const char *prefix)
   do {
     swfdec_as_object_get_variable (node->attributes, var, &val);
     if (!SWFDEC_AS_VALUE_IS_UNDEFINED (&val)) {
-      return swfdec_as_value_to_string (swfdec_gc_object_get_context (node), &val);
+      return swfdec_as_value_to_string (swfdec_gc_object_get_context (node), val);
     }
     node = node->parent;
   } while (node != NULL);
@@ -210,7 +210,7 @@ swfdec_xml_node_foreach_find_namespace (SwfdecAsObject *object,
     return TRUE;
 
   // ok, now check if the uri is the one we are searching for
-  uri = swfdec_as_value_to_string (object->context, value);
+  uri = swfdec_as_value_to_string (object->context, *value);
   if (!g_ascii_strcasecmp (uri, fdata->namespace)) {
     fdata->variable = variable;
     return FALSE;
@@ -892,7 +892,7 @@ swfdec_xml_node_foreach_string_append_attribute (SwfdecAsObject *object,
   string = g_string_append (string, variable);
   string = g_string_append (string, "=\"");
   escaped =
-    swfdec_xml_escape (swfdec_as_value_to_string (object->context, value));
+    swfdec_xml_escape (swfdec_as_value_to_string (object->context, *value));
   string = g_string_append (string, escaped);
   g_free (escaped);
   string = g_string_append (string, "\"");

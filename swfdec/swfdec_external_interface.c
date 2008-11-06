@@ -94,9 +94,10 @@ swfdec_external_interface__evalJS (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *s;
   
   SWFDEC_AS_VALUE_SET_NULL (ret);
-  if (scripting == NULL || argc == 0)
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+  if (scripting == NULL)
     return;
-  s = swfdec_as_value_to_string (cx, &argv[0]);
+
   klass = SWFDEC_PLAYER_SCRIPTING_GET_CLASS (scripting);
   if (klass->js_call) {
     char *t = klass->js_call (scripting, player, s);
@@ -118,9 +119,9 @@ swfdec_external_interface__callOut (SwfdecAsContext *cx,
   const char *s;
   
   SWFDEC_AS_VALUE_SET_NULL (ret);
-  if (scripting == NULL || argc == 0)
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+  if (scripting == NULL)
     return;
-  s = swfdec_as_value_to_string (cx, &argv[0]);
   klass = SWFDEC_PLAYER_SCRIPTING_GET_CLASS (scripting);
   if (klass->xml_call) {
     char *t = klass->xml_call (scripting, player, s);
@@ -138,11 +139,10 @@ swfdec_external_interface__escapeXML (SwfdecAsContext *cx,
 {
   const char *s;
 
-  if (argc == 0 ||
-      (s = swfdec_as_value_to_string (cx, &argv[0])) == SWFDEC_AS_STR_EMPTY) {
-    SWFDEC_AS_VALUE_SET_NULL (ret);
+  SWFDEC_AS_VALUE_SET_NULL (ret);
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+  if (s == SWFDEC_AS_STR_EMPTY)
     return;
-  }
 
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, swfdec_xml_escape (s)));
 }
@@ -155,11 +155,10 @@ swfdec_external_interface__unescapeXML (SwfdecAsContext *cx,
 {
   const char *s;
 
-  if (argc == 0 ||
-      (s = swfdec_as_value_to_string (cx, &argv[0])) == SWFDEC_AS_STR_EMPTY) {
-    SWFDEC_AS_VALUE_SET_NULL (ret);
+  SWFDEC_AS_VALUE_SET_NULL (ret);
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+  if (s == SWFDEC_AS_STR_EMPTY)
     return;
-  }
 
   SWFDEC_AS_VALUE_SET_STRING (ret, swfdec_as_context_give_string (cx, 
 	swfdec_xml_unescape_len (cx, s, strlen (s), FALSE)));
@@ -175,11 +174,10 @@ swfdec_external_interface__jsQuoteString (SwfdecAsContext *cx,
   GString *str;
   size_t len;
 
-  if (argc == 0 ||
-      (s = swfdec_as_value_to_string (cx, &argv[0])) == SWFDEC_AS_STR_EMPTY) {
-    SWFDEC_AS_VALUE_SET_NULL (ret);
+  SWFDEC_AS_VALUE_SET_NULL (ret);
+  SWFDEC_AS_CHECK (0, NULL, "s", &s);
+  if (s == SWFDEC_AS_STR_EMPTY)
     return;
-  }
 
   str = g_string_new ("");
   do {

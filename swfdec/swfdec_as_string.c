@@ -64,7 +64,7 @@ swfdec_as_string_init (SwfdecAsString *string)
   if (object) {\
     SwfdecAsValue _tmp; \
     SWFDEC_AS_VALUE_SET_COMPOSITE (&_tmp, object); \
-    *(result) = swfdec_as_value_to_string (cx, &_tmp);\
+    *(result) = swfdec_as_value_to_string (cx, _tmp);\
   } else {\
     *(result) = SWFDEC_AS_STR_undefined; \
   }\
@@ -282,7 +282,7 @@ swfdec_as_string_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *s;
 
   if (argc > 0) {
-    s = swfdec_as_value_to_string (cx, &argv[0]);
+    s = swfdec_as_value_to_string (cx, argv[0]);
   } else {
     s = SWFDEC_AS_STR_EMPTY;
   }
@@ -345,7 +345,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[0])) {
     delim = SWFDEC_AS_STR_COMMA;
   } else {
-    delim = swfdec_as_value_to_string (cx, &argv[0]);
+    delim = swfdec_as_value_to_string (cx, argv[0]);
   }
   if (delim == SWFDEC_AS_STR_EMPTY) {
     SWFDEC_AS_VALUE_SET_STRING (&val, str);
@@ -353,7 +353,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (&argv[1])) {
-    swfdec_as_value_to_string (cx, &argv[0]);
+    swfdec_as_value_to_string (cx, argv[0]);
     count = swfdec_as_value_to_integer (cx, &argv[1]);
   } else {
     count = G_MAXINT;
@@ -399,7 +399,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_push (arr, &val);
     return;
   }
-  delim = swfdec_as_value_to_string (cx, &argv[0]);
+  delim = swfdec_as_value_to_string (cx, argv[0]);
   if (str == SWFDEC_AS_STR_EMPTY) {
     if (strlen (delim) > 0) {
       SWFDEC_AS_VALUE_SET_STRING (&val, str);
@@ -490,7 +490,7 @@ swfdec_as_string_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
   string = g_string_new (s);
 
   for (i = 0; i < argc; i++) {
-    string = g_string_append (string, swfdec_as_value_to_string (cx, &argv[i]));
+    string = g_string_append (string, swfdec_as_value_to_string (cx, argv[i]));
   }
 
   SWFDEC_AS_VALUE_SET_STRING (ret,

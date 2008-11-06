@@ -557,7 +557,7 @@ swfdec_player_get_movie_from_value (SwfdecPlayer *player, SwfdecAsValue *val)
   g_return_val_if_fail (SWFDEC_IS_PLAYER (player), NULL);
 
   cx = SWFDEC_AS_CONTEXT (player);
-  s = swfdec_as_value_to_string (cx, val);
+  s = swfdec_as_value_to_string (cx, *val);
   return swfdec_player_get_movie_from_string (player, s);
 }
 
@@ -650,7 +650,7 @@ swfdec_action_get_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
   SwfdecAsObject *object;
 
   val = swfdec_as_stack_peek (cx, 1);
-  s = swfdec_as_value_to_string (cx, val);
+  s = swfdec_as_value_to_string (cx, *val);
   if (swfdec_action_get_movie_by_path (cx, s, &object, &s)) {
     if (object) {
       if (s) {
@@ -675,7 +675,7 @@ swfdec_action_set_variable (SwfdecAsContext *cx, guint action, const guint8 *dat
   const char *s, *rest;
   SwfdecAsObject *object;
 
-  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  s = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
   if (swfdec_action_get_movie_by_path (cx, s, &object, &rest)) {
     if (object && rest) {
       swfdec_as_object_set_variable (object, swfdec_as_context_get_string (cx, rest), 
@@ -748,7 +748,7 @@ swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data,
   SwfdecAsObject *object = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 2));
   if (object) {
     const char *name;
-    name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+    name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
     swfdec_as_object_get_variable (object, name, swfdec_as_stack_peek (cx, 2));
 #ifdef SWFDEC_WARN_MISSING_PROPERTIES
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (swfdec_as_stack_peek (cx, 2))) {
@@ -765,7 +765,7 @@ swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data,
 static void
 swfdec_action_set_member (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  const char *name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  const char *name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
   if (SWFDEC_AS_VALUE_IS_COMPOSITE (swfdec_as_stack_peek (cx, 3))) {
     SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_COMPOSITE (swfdec_as_stack_peek (cx, 3));
     if (o)
@@ -784,7 +784,7 @@ swfdec_action_trace (SwfdecAsContext *cx, guint action, const guint8 *data, guin
   if (SWFDEC_AS_VALUE_IS_UNDEFINED (val)) {
     s = SWFDEC_AS_STR_undefined;
   } else {
-    s = swfdec_as_value_to_string (cx, val);
+    s = swfdec_as_value_to_string (cx, *val);
   }
   swfdec_as_stack_pop (cx);
   g_signal_emit_by_name (cx, "trace", s);
@@ -839,7 +839,7 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   
   swfdec_as_stack_ensure_size (cx, 2);
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
-  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+  name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
   thisp = swfdec_as_stack_peek (cx, 2);
   fun = swfdec_as_stack_peek (cx, 1);
   obj = swfdec_as_frame_get_variable (cx, frame, name, fun);
@@ -868,7 +868,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 3));
   val = swfdec_as_stack_peek (cx, 1);
   if (obj) {
-    name = swfdec_as_value_to_string (cx, val);
+    name = swfdec_as_value_to_string (cx, *val);
     if (SWFDEC_AS_VALUE_IS_UNDEFINED (val) ||
 	name == SWFDEC_AS_STR_EMPTY) {
       SWFDEC_AS_VALUE_SET_UNDEFINED (swfdec_as_stack_peek (cx, 3));
@@ -989,8 +989,8 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
 
   if (SWFDEC_AS_VALUE_IS_STRING (lval) || SWFDEC_AS_VALUE_IS_STRING (rval)) {
     const char *lstr, *rstr;
-    lstr = swfdec_as_value_to_string (cx, lval);
-    rstr = swfdec_as_value_to_string (cx, rval);
+    lstr = swfdec_as_value_to_string (cx, *lval);
+    rstr = swfdec_as_value_to_string (cx, *rval);
     lstr = swfdec_as_str_concat (cx, lstr, rstr);
     swfdec_as_stack_pop (cx);
     SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx, 1), lstr);
@@ -1191,7 +1191,7 @@ swfdec_as_interpret_encode_variables_foreach (SwfdecAsObject *object,
   g_string_append_c (variables, '=');
 
   escaped = swfdec_as_string_escape (context,
-      swfdec_as_value_to_string (context, value));
+      swfdec_as_value_to_string (context, *value));
   g_string_append (variables, escaped);
   g_free (escaped);
 
@@ -1231,7 +1231,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   internal = data[0] & 64;
   variables = data[0] & 128;
 
-  url = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  url = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
   buffer = NULL;
 
   if (method == 1 || method == 2) {
@@ -1260,7 +1260,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
   } else if (variables) {
     SwfdecMovie *movie;
     
-    target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+    target = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
     movie = swfdec_player_get_movie_from_string (SWFDEC_PLAYER (cx), target);
     if (movie != NULL) {
       SWFDEC_AS_VALUE_SET_MOVIE (&val, movie);
@@ -1271,7 +1271,7 @@ swfdec_action_get_url2 (SwfdecAsContext *cx, guint action, const guint8 *data, g
     swfdec_resource_load_movie (SWFDEC_PLAYER (cx), swfdec_as_stack_peek (cx, 1), 
 	url, NULL, NULL);
   } else {
-    target = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+    target = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
     swfdec_resource_load (SWFDEC_PLAYER (cx), target, url, buffer);
   }
 
@@ -1283,8 +1283,8 @@ swfdec_action_string_add (SwfdecAsContext *cx, guint action, const guint8 *data,
 {
   const char *lval, *rval;
 
-  rval = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
-  lval = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  rval = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
+  lval = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
   lval = swfdec_as_str_concat (cx, lval, rval);
   SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx, 2), lval);
   swfdec_as_stack_pop (cx);
@@ -1348,7 +1348,7 @@ swfdec_action_string_extract (SwfdecAsContext *cx, guint action, const guint8 *d
 
   n = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
   start = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
-  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 3));
+  s = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 3));
   swfdec_as_stack_pop_n (cx, 2);
   left = g_utf8_strlen (s, -1);
   if (start > left) {
@@ -1374,7 +1374,7 @@ swfdec_action_string_length (SwfdecAsContext *cx, guint action, const guint8 *da
   SwfdecAsValue *v;
 
   v = swfdec_as_stack_peek (cx, 1);
-  s = swfdec_as_value_to_string (cx, v);
+  s = swfdec_as_value_to_string (cx, *v);
   swfdec_as_value_set_integer (cx, v, g_utf8_strlen (s, -1));  
 }
 
@@ -1384,8 +1384,8 @@ swfdec_action_string_compare (SwfdecAsContext *cx, guint action, const guint8 *d
   const char *l, *r;
   gboolean cond;
 
-  r = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
-  l = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  r = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
+  l = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
   switch (action) {
     case SWFDEC_AS_ACTION_STRING_EQUALS:
       cond = l == r;
@@ -1647,7 +1647,7 @@ swfdec_action_set_target2 (SwfdecAsContext *cx, guint action, const guint8 *data
 {
   const char *s;
 
-  s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+  s = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
   swfdec_action_do_set_target (cx, s, s + strlen (s));
   swfdec_as_stack_pop (cx);
 }
@@ -1739,7 +1739,7 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
   const char *name;
 
   swfdec_as_stack_ensure_size (cx, 3);
-  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+  name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
 
   constructor = swfdec_as_stack_peek (cx, 2);
   n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 3));
@@ -1789,7 +1789,7 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
   object = swfdec_as_object_new (cx, NULL);
   swfdec_as_object_set_constructor_by_name (object, SWFDEC_AS_STR_Object, NULL);
   for (i = 0; i < n_args; i++) {
-    const char *s = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+    const char *s = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
     swfdec_as_object_set_variable (object, s, swfdec_as_stack_peek (cx, 1));
     swfdec_as_stack_pop_n (cx, 2);
   }
@@ -2031,7 +2031,7 @@ swfdec_action_define_local (SwfdecAsContext *cx, guint action, const guint8 *dat
 {
   const char *name;
 
-  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
   swfdec_as_frame_set_variable (cx, cx->frame, name, swfdec_as_stack_peek (cx, 1),
       TRUE, TRUE);
   swfdec_as_stack_pop_n (cx, 2);
@@ -2043,7 +2043,7 @@ swfdec_action_define_local2 (SwfdecAsContext *cx, guint action, const guint8 *da
   SwfdecAsValue val = { 0, };
   const char *name;
 
-  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+  name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
   swfdec_as_frame_set_variable (cx, cx->frame, name, &val, FALSE, TRUE);
   swfdec_as_stack_pop (cx);
 }
@@ -2067,7 +2067,7 @@ swfdec_action_delete (SwfdecAsContext *cx, guint action, const guint8 *data, gui
   const char *name;
   gboolean success = FALSE;
   
-  name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1));
+  name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
   val = swfdec_as_stack_peek (cx, 2);
   if (SWFDEC_AS_VALUE_IS_COMPOSITE (val)) {
     SwfdecAsObject *o = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
@@ -2086,7 +2086,7 @@ swfdec_action_delete2 (SwfdecAsContext *cx, guint action, const guint8 *data, gu
   gboolean success = FALSE;
   
   val = swfdec_as_stack_peek (cx, 1);
-  name = swfdec_as_value_to_string (cx, val);
+  name = swfdec_as_value_to_string (cx, *val);
   success = swfdec_as_frame_delete_variable (cx, cx->frame, name) == SWFDEC_AS_DELETE_DELETED;
   SWFDEC_AS_VALUE_SET_BOOLEAN (val, success);
 }
@@ -2143,7 +2143,7 @@ static void
 swfdec_action_to_string (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SWFDEC_AS_VALUE_SET_STRING (swfdec_as_stack_peek (cx, 1),
-      swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 1)));
+      swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1)));
 }
 
 static void
@@ -2482,7 +2482,7 @@ static void
 swfdec_action_char_to_ascii (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
   SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
-  const char *s = swfdec_as_value_to_string (cx, val);
+  const char *s = swfdec_as_value_to_string (cx, *val);
 
   if (cx->version <= 5) {
     char *ascii = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
@@ -2804,7 +2804,7 @@ swfdec_action_clone_sprite (SwfdecAsContext *cx, guint action, const guint8 *dat
   int depth;
 
   depth = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1)) - 16384;
-  new_name = swfdec_as_value_to_string (cx, swfdec_as_stack_peek (cx, 2));
+  new_name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
   if (target == NULL) {
     SWFDEC_FIXME ("target is not a movie in CloneSprite");
   } else if (!SWFDEC_IS_PLAYER (cx)) {

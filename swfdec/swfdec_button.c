@@ -134,7 +134,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     guint states, gid;
     gboolean has_blend_mode, has_filters;
 
-    /* we parse the placement info into buffers each containing one palcement */
+    /* we parse the placement info into buffers each containing one placement */
     tmp = bits;
 
     if (s->version >= 8) {
@@ -170,7 +170,7 @@ tag_func_define_button_2 (SwfdecSwfDecoder * s, guint tag)
     if (has_filters)
       swfdec_filter_skip (&bits);
     if (has_blend_mode) {
-      guint blend_mode = swfdec_bits_get_u8 (&bits);
+      G_GNUC_UNUSED guint blend_mode = swfdec_bits_get_u8 (&bits);
       SWFDEC_LOG ("  blend mode = %u", blend_mode);
     }
     buffer = swfdec_bits_get_buffer (&tmp, (swfdec_bits_left (&tmp) - swfdec_bits_left (&bits)) / 8);

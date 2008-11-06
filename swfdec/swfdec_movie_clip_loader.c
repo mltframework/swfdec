@@ -119,11 +119,11 @@ swfdec_movie_clip_loader_getProgress (SwfdecAsContext *cx, SwfdecAsObject *objec
   SWFDEC_AS_VALUE_SET_OBJECT (rval, ret);
   resource = swfdec_movie_get_own_resource (movie);
   if (resource == NULL || resource->decoder == NULL) {
-    swfdec_as_value_set_integer (cx, &loaded, 0);
-    swfdec_as_value_set_integer (cx, &total, 0);
+    loaded = swfdec_as_value_from_integer (cx, 0);
+    total = swfdec_as_value_from_integer (cx, 0);
   } else {
-    swfdec_as_value_set_integer (cx, &loaded, resource->decoder->bytes_loaded);
-    swfdec_as_value_set_integer (cx, &total, resource->decoder->bytes_total);
+    loaded = swfdec_as_value_from_integer (cx, resource->decoder->bytes_loaded);
+    total = swfdec_as_value_from_integer (cx, resource->decoder->bytes_total);
   }
   swfdec_as_object_set_variable (ret, SWFDEC_AS_STR_bytesLoaded, &loaded);
   swfdec_as_object_set_variable (ret, SWFDEC_AS_STR_bytesTotal, &total);

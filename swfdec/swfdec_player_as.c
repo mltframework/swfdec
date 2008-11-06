@@ -78,7 +78,7 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
     }
     id = swfdec_interval_new_object (player, msecs, repeat, &argv[0], name, argc - 3, &argv[3]);
   }
-  swfdec_as_value_set_integer (cx, rval, id);
+  *rval = swfdec_as_value_from_integer (cx, id);
 }
 
 SWFDEC_AS_NATIVE (2, 0, swfdec_player_ASnew)

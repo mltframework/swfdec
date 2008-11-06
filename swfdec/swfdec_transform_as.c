@@ -77,19 +77,19 @@ swfdec_transform_as_get_matrix (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_set_constructor_by_name (o, SWFDEC_AS_STR_flash,
 	SWFDEC_AS_STR_geom, SWFDEC_AS_STR_Matrix, NULL);
 
-  swfdec_as_value_set_number (cx, &val, matrix->xx);
+  val = swfdec_as_value_from_number (cx, matrix->xx);
   swfdec_as_object_set_variable (o, SWFDEC_AS_STR_a, &val);
-  swfdec_as_value_set_number (cx, &val, matrix->yx);
+  val = swfdec_as_value_from_number (cx, matrix->yx);
   swfdec_as_object_set_variable (o, SWFDEC_AS_STR_b, &val);
-  swfdec_as_value_set_number (cx, &val, matrix->xy);
+  val = swfdec_as_value_from_number (cx, matrix->xy);
   swfdec_as_object_set_variable (o, SWFDEC_AS_STR_c, &val);
-  swfdec_as_value_set_number (cx, &val, matrix->yy);
+  val = swfdec_as_value_from_number (cx, matrix->yy);
   swfdec_as_object_set_variable (o, SWFDEC_AS_STR_d, &val);
-  swfdec_as_value_set_number (cx, &val, matrix->yy);
+  val = swfdec_as_value_from_number (cx, matrix->yy);
   swfdec_as_object_set_variable (o, SWFDEC_AS_STR_d, &val);
-  swfdec_as_value_set_number (cx, &val, SWFDEC_TWIPS_TO_DOUBLE (matrix->x0));
+  val = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE (matrix->x0));
   swfdec_as_object_set_variable (o, SWFDEC_AS_STR_tx, &val);
-  swfdec_as_value_set_number (cx, &val, SWFDEC_TWIPS_TO_DOUBLE (matrix->y0));
+  val = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE (matrix->y0));
   swfdec_as_object_set_variable (o, SWFDEC_AS_STR_ty, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, o);

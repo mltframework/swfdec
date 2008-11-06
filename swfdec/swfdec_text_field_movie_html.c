@@ -179,7 +179,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
       SwfdecAsValue val_number;
 
       if (value_length != 7 || *value != '#') {
-	swfdec_as_value_set_number (cx, &val_number, 0);
+	val_number = swfdec_as_value_from_number (cx, 0);
       } else {
 	int number;
 	char *tail;
@@ -187,7 +187,7 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
 	number = g_ascii_strtoll (value + 1, &tail, 16);
 	if (tail != value + 7)
 	  number = 0;
-	swfdec_as_value_set_number (cx, &val_number, number);
+	val_number = swfdec_as_value_from_number (cx, number);
       }
 
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_color, &val_number);

@@ -64,7 +64,7 @@ swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (num));
     SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
   } else {
-    swfdec_as_value_set_number (cx, ret, d);
+    *ret = swfdec_as_value_from_number (cx, d);
   }
 }
 
@@ -126,7 +126,7 @@ swfdec_as_number_toString (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (radix == 10 || radix < 2 || radix > 36 || isinf (num->number) ||
       isnan (num->number)) {
-    swfdec_as_value_set_number (cx, &val, num->number);
+    val = swfdec_as_value_from_number (cx, num->number);
     s = swfdec_as_value_to_string (cx, val);
   } else {
     s = swfdec_as_number_toStringRadix (cx, num->number, radix);
@@ -143,7 +143,7 @@ swfdec_as_number_valueOf (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_NUMBER, &num, "");
 
-  swfdec_as_value_set_number (cx, ret, num->number);
+  *ret = swfdec_as_value_from_number (cx, num->number);
 }
 
 // only available as ASnative

@@ -180,11 +180,12 @@ swfdec_test_buffer_find (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEST_BUFFER, &buffer, "i", &c);
 
-  swfdec_as_value_set_integer (cx, retval, -1);
 
   found = memchr (buffer->buffer->data, c, buffer->buffer->length);
   if (found)
-    swfdec_as_value_set_integer (cx, retval, found - buffer->buffer->data);
+    *retval = swfdec_as_value_from_integer (cx, found - buffer->buffer->data);
+  else
+    *retval = swfdec_as_value_from_integer (cx, -1);
 }
 
 SWFDEC_TEST_FUNCTION ("Buffer_load", swfdec_test_buffer_load)

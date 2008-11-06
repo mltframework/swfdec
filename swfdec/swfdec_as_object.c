@@ -660,7 +660,7 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
 
     guint prop_id = swfdec_movie_property_lookup (variable);
     if (prop_id != G_MAXUINT) {
-      swfdec_movie_property_set (movie, prop_id, value);
+      swfdec_movie_property_set (movie, prop_id, *value);
       return;
     }
 
@@ -775,7 +775,7 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
       length = swfdec_as_value_to_integer (context, tmp);
       if (l >= length) {
 	object->array = FALSE;
-	swfdec_as_value_set_integer (context, &tmp, l + 1);
+	tmp = swfdec_as_value_from_integer (context, l + 1);
 	swfdec_as_object_set_variable_and_flags (object, SWFDEC_AS_STR_length, &tmp,
 	    SWFDEC_AS_VARIABLE_HIDDEN | SWFDEC_AS_VARIABLE_PERMANENT);
 	object->array = TRUE;
@@ -912,7 +912,7 @@ swfdec_as_object_get_variable_and_flags (SwfdecAsObject *object,
 
       prop_id = swfdec_movie_property_lookup (variable);
       if (prop_id != G_MAXUINT) {
-	swfdec_movie_property_get (movie, prop_id, value);
+	*value = swfdec_movie_property_get (movie, prop_id);
 	*flags = 0;
 	*pobject = cur;
 	return TRUE;

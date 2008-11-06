@@ -288,8 +288,8 @@ swfdec_sprite_movie_localToGlobal (SwfdecAsContext *cx, SwfdecAsObject *object,
   x = swfdec_as_double_to_integer (x * SWFDEC_TWIPS_SCALE_FACTOR);
   y = swfdec_as_double_to_integer (y * SWFDEC_TWIPS_SCALE_FACTOR);
   swfdec_movie_local_to_global (movie, &x, &y);
-  swfdec_as_value_set_number (cx, xv, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) x));
-  swfdec_as_value_set_number (cx, yv, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) y));
+  *xv = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) x));
+  *yv = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) y));
 }
 
 SWFDEC_AS_NATIVE (900, 3, swfdec_sprite_movie_globalToLocal)
@@ -316,8 +316,8 @@ swfdec_sprite_movie_globalToLocal (SwfdecAsContext *cx, SwfdecAsObject *object,
   x = swfdec_as_double_to_integer (x * SWFDEC_TWIPS_SCALE_FACTOR);
   y = swfdec_as_double_to_integer (y * SWFDEC_TWIPS_SCALE_FACTOR);
   swfdec_movie_global_to_local (movie, &x, &y);
-  swfdec_as_value_set_number (cx, xv, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) x));
-  swfdec_as_value_set_number (cx, yv, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) y));
+  *xv = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) x));
+  *yv = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) y));
 }
 
 SWFDEC_AS_NATIVE (900, 8, swfdec_sprite_movie_attachAudio)
@@ -365,10 +365,10 @@ swfdec_sprite_movie_getSWFVersion (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   if (object != NULL && object->movie) {
-    swfdec_as_value_set_integer (cx, rval,
+    *rval = swfdec_as_value_from_integer (cx,
 	swfdec_movie_get_version (SWFDEC_MOVIE (object->relay)));
   } else {
-    swfdec_as_value_set_integer (cx, rval, -1);
+    *rval = swfdec_as_value_from_integer (cx, -1);
   }
 }
 
@@ -445,9 +445,9 @@ swfdec_sprite_movie_getBytesLoaded (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   resource = swfdec_movie_get_own_resource (movie);
   if (resource && resource->decoder) {
-    swfdec_as_value_set_integer (cx, rval, resource->decoder->bytes_loaded);
+    *rval = swfdec_as_value_from_integer (cx, resource->decoder->bytes_loaded);
   } else {
-    swfdec_as_value_set_integer (cx, rval, 0);
+    *rval = swfdec_as_value_from_integer (cx, 0);
   }
 }
 
@@ -464,12 +464,12 @@ swfdec_sprite_movie_getBytesTotal (SwfdecAsContext *cx, SwfdecAsObject *object,
   resource = swfdec_movie_get_own_resource (movie);
   if (resource) {
     if (resource->decoder) {
-      swfdec_as_value_set_integer (cx, rval, resource->decoder->bytes_total);
+      *rval = swfdec_as_value_from_integer (cx, resource->decoder->bytes_total);
     } else {
-      swfdec_as_value_set_integer (cx, rval, -1);
+      *rval = swfdec_as_value_from_integer (cx, -1);
     }
   } else {
-    swfdec_as_value_set_integer (cx, rval, 0);
+    *rval = swfdec_as_value_from_integer (cx, 0);
   }
 }
 
@@ -490,7 +490,7 @@ swfdec_sprite_movie_getNextHighestDepth (SwfdecAsContext *cx, SwfdecAsObject *ob
   } else {
     depth = 0;
   }
-  swfdec_as_value_set_integer (cx, rval, depth);
+  *rval = swfdec_as_value_from_integer (cx, depth);
 }
 
 static void
@@ -880,7 +880,7 @@ swfdec_sprite_movie_getDepth (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "");
 
-  swfdec_as_value_set_integer (cx, rval, movie->depth);
+  *rval = swfdec_as_value_from_integer (cx, movie->depth);
 }
 
 SWFDEC_AS_NATIVE (900, 5, swfdec_sprite_movie_getBounds)
@@ -922,13 +922,13 @@ swfdec_sprite_movie_getBounds (SwfdecAsContext *cx, SwfdecAsObject *object,
     x1 = rect.x1;
     y1 = rect.y1;
   }
-  swfdec_as_value_set_number (cx, &val, SWFDEC_TWIPS_TO_DOUBLE (x0));
+  val = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE (x0));
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_xMin, &val);
-  swfdec_as_value_set_number (cx, &val, SWFDEC_TWIPS_TO_DOUBLE (y0));
+  val = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE (y0));
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_yMin, &val);
-  swfdec_as_value_set_number (cx, &val, SWFDEC_TWIPS_TO_DOUBLE (x1));
+  val = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE (x1));
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_xMax, &val);
-  swfdec_as_value_set_number (cx, &val, SWFDEC_TWIPS_TO_DOUBLE (y1));
+  val = swfdec_as_value_from_number (cx, SWFDEC_TWIPS_TO_DOUBLE (y1));
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_yMax, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (rval, obj);

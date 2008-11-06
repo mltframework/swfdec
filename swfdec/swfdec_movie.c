@@ -1677,26 +1677,24 @@ swfdec_movie_get_own_resource (SwfdecMovie *movie)
 }
 
 void
-swfdec_movie_property_set (SwfdecMovie *movie, guint id, const SwfdecAsValue *val)
+swfdec_movie_property_set (SwfdecMovie *movie, guint id, SwfdecAsValue val)
 {
   SwfdecMovieClass *klass;
 
   g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (val != NULL);
 
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
   klass->property_set (movie, id, val);
 }
 
-void
-swfdec_movie_property_get (SwfdecMovie *movie, guint id, SwfdecAsValue *val)
+SwfdecAsValue
+swfdec_movie_property_get (SwfdecMovie *movie, guint id)
 {
   SwfdecMovieClass *klass;
 
-  g_return_if_fail (SWFDEC_IS_MOVIE (movie));
-  g_return_if_fail (val != NULL);
+  g_return_val_if_fail (SWFDEC_IS_MOVIE (movie), SWFDEC_AS_VALUE_UNDEFINED);
 
   klass = SWFDEC_MOVIE_GET_CLASS (movie);
-  klass->property_get (movie, id, val);
+  return klass->property_get (movie, id);
 }
 

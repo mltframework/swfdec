@@ -851,9 +851,8 @@ swfdec_text_field_movie_key_release (SwfdecActor *actor, guint keycode, guint ch
   //SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (actor);
 }
 
-static void
-swfdec_text_field_movie_property_get (SwfdecMovie *movie, guint prop_id, 
-    SwfdecAsValue *val)
+static SwfdecAsValue
+swfdec_text_field_movie_property_get (SwfdecMovie *movie, guint prop_id)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecAsContext *cx = swfdec_gc_object_get_context (text);
@@ -864,14 +863,12 @@ swfdec_text_field_movie_property_get (SwfdecMovie *movie, guint prop_id,
       swfdec_text_field_movie_autosize (text);
       swfdec_movie_update (movie);
       d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0 + text->extents.x0);
-      swfdec_as_value_set_number (cx, val, d);
-      return;
+      return swfdec_as_value_from_number (cx, d);
     case SWFDEC_MOVIE_PROPERTY_Y:
       swfdec_text_field_movie_autosize (text);
       swfdec_movie_update (movie);
       d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0 + text->extents.y0);
-      swfdec_as_value_set_number (cx, val, d);
-      return;
+      return swfdec_as_value_from_number (cx, d);
     case SWFDEC_MOVIE_PROPERTY_WIDTH:
     case SWFDEC_MOVIE_PROPERTY_HEIGHT:
       swfdec_text_field_movie_autosize (text);
@@ -880,12 +877,12 @@ swfdec_text_field_movie_property_get (SwfdecMovie *movie, guint prop_id,
       break;
   }
 
-  SWFDEC_MOVIE_CLASS (swfdec_text_field_movie_parent_class)->property_get (movie, prop_id, val);
+  return SWFDEC_MOVIE_CLASS (swfdec_text_field_movie_parent_class)->property_get (movie, prop_id);
 }
 
 static void
 swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id, 
-    const SwfdecAsValue *val)
+    SwfdecAsValue val)
 {
   SwfdecTextFieldMovie *text = SWFDEC_TEXT_FIELD_MOVIE (movie);
   SwfdecAsContext *cx = swfdec_gc_object_get_context (movie);
@@ -893,7 +890,7 @@ swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id,
 
   switch (prop_id) {
     case SWFDEC_MOVIE_PROPERTY_X:
-      if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), val, FALSE, &twips))
+      if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), &val, FALSE, &twips))
 	return;
       movie->modified = TRUE;
       twips -= text->extents.x0;
@@ -904,7 +901,7 @@ swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id,
       }
       return;
     case SWFDEC_MOVIE_PROPERTY_Y:
-      if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), val, FALSE, &twips))
+      if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), &val, FALSE, &twips))
 	return;
       movie->modified = TRUE;
       twips -= text->extents.y0;
@@ -915,7 +912,7 @@ swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id,
       }
       return;
     case SWFDEC_MOVIE_PROPERTY_WIDTH:
-      if (swfdec_as_value_to_twips (cx, val, TRUE, &twips)) {
+      if (swfdec_as_value_to_twips (cx, &val, TRUE, &twips)) {
 	movie->modified = TRUE;
 	if (text->extents.x1 != text->extents.x0 + twips) {
 	  swfdec_movie_invalidate_next (movie);
@@ -927,7 +924,7 @@ swfdec_text_field_movie_property_set (SwfdecMovie *movie, guint prop_id,
       return;
     case SWFDEC_MOVIE_PROPERTY_HEIGHT:
       movie->modified = TRUE;
-      if (swfdec_as_value_to_twips (cx, val, TRUE, &twips)) {
+      if (swfdec_as_value_to_twips (cx, &val, TRUE, &twips)) {
 	movie->modified = TRUE;
 	if (text->extents.y1 != text->extents.y0 + twips) {
 	  swfdec_movie_invalidate_next (movie);

@@ -1149,14 +1149,14 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (0, NULL, "s|i", &s, &radix);
 
   if (argc >= 2 && (radix < 2 || radix > 36)) {
-    swfdec_as_value_set_number (cx, retval, NAN);
+    *retval = swfdec_as_value_from_number (cx, NAN);
     return;
   }
 
   // special case, don't allow sign in front of the 0x
   if ((s[0] == '-' || s[0] == '+') && s[1] == '0' &&
       (s[2] == 'x' || s[2] == 'X')) {
-    swfdec_as_value_set_number (cx, retval, NAN);
+    *retval = swfdec_as_value_from_number (cx, NAN);
     return;
   }
 
@@ -1182,7 +1182,7 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
     if (skip != s && (skip[0] == '-' || skip[0] == '+'))
       skip++;
     if (skip != s && skip[0] == '0' && (skip[1] == 'x' || skip[1] == 'X')) {
-      swfdec_as_value_set_number (cx, retval, 0);
+      *retval = swfdec_as_value_from_number (cx, 0);
       return;
     }
   }
@@ -1190,14 +1190,14 @@ swfdec_as_context_parseInt (SwfdecAsContext *cx, SwfdecAsObject *object,
   i = g_ascii_strtoll (s, &tail, radix);
 
   if (tail == s) {
-    swfdec_as_value_set_number (cx, retval, NAN);
+    *retval = swfdec_as_value_from_number (cx, NAN);
     return;
   }
 
   if (i > G_MAXINT32 || i < G_MININT32) {
-    swfdec_as_value_set_number (cx, retval, i);
+    *retval = swfdec_as_value_from_number (cx, i);
   } else {
-    swfdec_as_value_set_integer (cx, retval, i);
+    *retval = swfdec_as_value_from_integer (cx, i);
   }
 }
 
@@ -1222,9 +1222,9 @@ swfdec_as_context_parseFloat (SwfdecAsContext *cx, SwfdecAsObject *object,
   d = g_ascii_strtod (s, &tail);
 
   if (tail == s) {
-    swfdec_as_value_set_number (cx, retval, NAN);
+    *retval = swfdec_as_value_from_number (cx, NAN);
   } else {
-    swfdec_as_value_set_number (cx, retval, d);
+    *retval = swfdec_as_value_from_number (cx, d);
   }
 
   g_free (s);
@@ -1235,9 +1235,9 @@ swfdec_as_context_init_global (SwfdecAsContext *context)
 {
   SwfdecAsValue val;
 
-  swfdec_as_value_set_number (context, &val, NAN);
+  val = swfdec_as_value_from_number (context, NAN);
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_NaN, &val);
-  swfdec_as_value_set_number (context, &val, HUGE_VAL);
+  val = swfdec_as_value_from_number (context, HUGE_VAL);
   swfdec_as_object_set_variable (context->global, SWFDEC_AS_STR_Infinity, &val);
 }
 

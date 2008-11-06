@@ -112,9 +112,8 @@ struct _SwfdecAsDoubleValue {
 } G_STMT_END
 
 /* value setters */
-#define swfdec_as_value_set_integer(cx, val, i) swfdec_as_value_set_number((cx), (val), (int) (i))
-void		swfdec_as_value_set_number	(SwfdecAsContext *	context,
-						 SwfdecAsValue *	value,
+#define swfdec_as_value_from_integer(cx, i) swfdec_as_value_from_number((cx), (int) (i))
+SwfdecAsValue	swfdec_as_value_from_number	(SwfdecAsContext *	context,
 						 double			number);
 
 /* value conversion functions */

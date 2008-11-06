@@ -158,13 +158,13 @@ swfdec_net_stream_get_time (SwfdecAsContext *cx, SwfdecAsObject *object, guint a
 
   if (stream->flvdecoder == NULL ||
       !swfdec_flv_decoder_get_video_info (stream->flvdecoder, &msecs, NULL)) {
-    swfdec_as_value_set_integer (cx, ret, 0);
+    *ret = swfdec_as_value_from_integer (cx, 0);
   } else {
     if (msecs >= stream->current_time)
       msecs = 0;
     else 
       msecs = stream->current_time - msecs;
-    swfdec_as_value_set_number (cx, ret, msecs / 1000.);
+    *ret = swfdec_as_value_from_number (cx, msecs / 1000.);
   }
 }
 
@@ -177,9 +177,9 @@ swfdec_net_stream_get_bytesLoaded (SwfdecAsContext *cx, SwfdecAsObject *object, 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_NET_STREAM, &stream, "");
 
   if (stream->loader == NULL)
-    swfdec_as_value_set_integer (cx, ret, 0);
+    *ret = swfdec_as_value_from_integer (cx, 0);
   else
-    swfdec_as_value_set_number (cx, ret, swfdec_loader_get_loaded (stream->loader));
+    *ret = swfdec_as_value_from_number (cx, swfdec_loader_get_loaded (stream->loader));
 }
 
 static void
@@ -198,7 +198,7 @@ swfdec_net_stream_get_bytesTotal (SwfdecAsContext *cx, SwfdecAsObject *object, g
     if (bytes < 0)
       bytes = swfdec_loader_get_loaded (stream->loader);
   }
-  swfdec_as_value_set_number (cx, ret, bytes);
+  *ret = swfdec_as_value_from_number (cx, bytes);
 }
 
 static void

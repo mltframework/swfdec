@@ -303,7 +303,7 @@ swfdec_style_sheet_parseColor (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (*tail != '\0')
     return;
 
-  swfdec_as_value_set_integer (cx, rval, result);
+  *rval = swfdec_as_value_from_integer (cx, result);
 }
 
 SWFDEC_AS_NATIVE (113, 0, swfdec_style_sheet_construct)

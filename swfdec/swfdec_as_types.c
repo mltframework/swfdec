@@ -175,35 +175,37 @@
  * @val: value to set
  * @i: integer value to set
  *
+ * Creates a garbage-collected value representing @i and returns it.
  * Sets @val to the given value. Currently this function is a macro that calls
  * swfdec_as_value_set_number(), but this may change in future versions of
  * Swfdec.
+ *
+ * Returns: The new value representing @i
  */
 
 /**
  * swfdec_as_value_set_number:
  * @context: The context to use
- * @val: value to set
  * @number: double value to set
  *
- * Sets @val to the given value. If you are sure the value is a valid
- * integer value, use wfdec_as_value_set_int() instead.
+ * Creates a garbage-collected value representing @number and returns it.
+ *
+ * Returns: The new value representing @number
  */
-void
-swfdec_as_value_set_number (SwfdecAsContext *context, SwfdecAsValue *val,
+SwfdecAsValue
+swfdec_as_value_from_number (SwfdecAsContext *context,
     double d)
 {
   SwfdecAsDoubleValue *dval;
 
-  g_return_if_fail (SWFDEC_IS_AS_CONTEXT (context));
-  g_return_if_fail (val != NULL);
+  g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), SWFDEC_AS_VALUE_UNDEFINED);
 
   dval = swfdec_as_gcable_new (context, SwfdecAsDoubleValue);
   dval->number = d;
   SWFDEC_AS_GCABLE_SET_NEXT (dval, context->numbers);
   context->numbers = dval;
 
-  *val = SWFDEC_AS_VALUE_COMBINE (dval, SWFDEC_AS_TYPE_NUMBER);
+  return SWFDEC_AS_VALUE_COMBINE (dval, SWFDEC_AS_TYPE_NUMBER);
 }
 
 /**

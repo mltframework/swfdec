@@ -44,13 +44,13 @@ swfdec_selection_getBeginIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *s;
 
   if (!SWFDEC_IS_TEXT_FIELD_MOVIE (priv->focus)) {
-    swfdec_as_value_set_integer (cx, ret, -1);
+    *ret = swfdec_as_value_from_integer (cx, -1);
     return;
   }
   text = SWFDEC_TEXT_FIELD_MOVIE (priv->focus);
   swfdec_text_buffer_get_selection (text->text, &start, &end);
   s = swfdec_text_buffer_get_text (text->text);
-  swfdec_as_value_set_integer (cx, ret, g_utf8_pointer_to_offset (s, s + start));
+  *ret = swfdec_as_value_from_integer (cx, g_utf8_pointer_to_offset (s, s + start));
 }
 
 SWFDEC_AS_NATIVE (600, 1, swfdec_selection_getEndIndex)
@@ -64,13 +64,13 @@ swfdec_selection_getEndIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *s;
 
   if (!SWFDEC_IS_TEXT_FIELD_MOVIE (priv->focus)) {
-    swfdec_as_value_set_integer (cx, ret, -1);
+    *ret = swfdec_as_value_from_integer (cx, -1);
     return;
   }
   text = SWFDEC_TEXT_FIELD_MOVIE (priv->focus);
   swfdec_text_buffer_get_selection (text->text, &start, &end);
   s = swfdec_text_buffer_get_text (text->text);
-  swfdec_as_value_set_integer (cx, ret, g_utf8_pointer_to_offset (s, s + end));
+  *ret = swfdec_as_value_from_integer (cx, g_utf8_pointer_to_offset (s, s + end));
 }
 
 SWFDEC_AS_NATIVE (600, 2, swfdec_selection_getCaretIndex)
@@ -83,12 +83,12 @@ swfdec_selection_getCaretIndex (SwfdecAsContext *cx, SwfdecAsObject *object,
   const char *s;
 
   if (!SWFDEC_IS_TEXT_FIELD_MOVIE (priv->focus)) {
-    swfdec_as_value_set_integer (cx, ret, -1);
+    *ret = swfdec_as_value_from_integer (cx, -1);
     return;
   }
   text = SWFDEC_TEXT_FIELD_MOVIE (priv->focus);
   s = swfdec_text_buffer_get_text (text->text);
-  swfdec_as_value_set_integer (cx, ret, g_utf8_pointer_to_offset (s, 
+  *ret = swfdec_as_value_from_integer (cx, g_utf8_pointer_to_offset (s, 
 	s + swfdec_text_buffer_get_cursor (text->text)));
 }
 

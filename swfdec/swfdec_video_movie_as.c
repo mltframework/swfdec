@@ -74,7 +74,7 @@ swfdec_video_get_width (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   } else {
     w = 0;
   }
-  swfdec_as_value_set_integer (cx, rval, w);
+  *rval = swfdec_as_value_from_integer (cx, w);
 }
 
 static void
@@ -91,7 +91,7 @@ swfdec_video_get_height (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc
   } else {
     h = 0;
   }
-  swfdec_as_value_set_integer (cx, rval, h);
+  *rval = swfdec_as_value_from_integer (cx, h);
 }
 
 static void
@@ -99,7 +99,7 @@ swfdec_video_get_deblocking (SwfdecAsContext *cx, SwfdecAsObject *object, guint 
     SwfdecAsValue *argv, SwfdecAsValue *rval)
 {
   SWFDEC_STUB ("Video.deblocking (get)");
-  swfdec_as_value_set_integer (cx, rval, 0);
+  *rval = swfdec_as_value_from_integer (cx, 0);
 }
 
 static void

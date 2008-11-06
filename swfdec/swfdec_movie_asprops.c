@@ -37,22 +37,24 @@
 #include "swfdec_sprite_movie.h"
 #include "swfdec_resource.h"
 
-static void
-mc_x_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_x_get (SwfdecMovie *movie)
 {
   double d;
+  SwfdecAsValue rval;
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.x0);
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, d);
+  rval = swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), d);
+  return rval;
 }
 
 static void
-mc_x_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_x_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   SwfdecTwips x;
 
-  if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), val, FALSE, &x))
+  if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), &val, FALSE, &x))
     return;
   movie->modified = TRUE;
   if (x != movie->matrix.x0) {
@@ -62,22 +64,22 @@ mc_x_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
 }
 
-static void
-mc_y_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_y_get (SwfdecMovie *movie)
 {
   double d;
 
   swfdec_movie_update (movie);
   d = SWFDEC_TWIPS_TO_DOUBLE (movie->matrix.y0);
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, d);
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), d);
 }
 
 static void
-mc_y_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_y_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   SwfdecTwips y;
 
-  if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), val, FALSE, &y))
+  if (!swfdec_as_value_to_twips (swfdec_gc_object_get_context (movie), &val, FALSE, &y))
     return;
   movie->modified = TRUE;
   if (y != movie->matrix.y0) {
@@ -87,18 +89,18 @@ mc_y_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
 }
 
-static void
-mc_xscale_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_xscale_get (SwfdecMovie *movie)
 {
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, movie->xscale);
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), movie->xscale);
 }
 
 static void
-mc_xscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_xscale_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   double d;
 
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set xscale to a non-finite value, ignoring");
     return;
@@ -111,18 +113,18 @@ mc_xscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
 }
 
-static void
-mc_yscale_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_yscale_get (SwfdecMovie *movie)
 {
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, movie->yscale);
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), movie->yscale);
 }
 
 static void
-mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_yscale_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   double d;
 
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set yscale to a non-finite value, ignoring");
     return;
@@ -135,32 +137,32 @@ mc_yscale_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
 }
 
-static void
-mc_name_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_name_get (SwfdecMovie *movie)
 {
-  SWFDEC_AS_VALUE_SET_STRING (rval, movie->name);
+  return SWFDEC_AS_VALUE_FROM_STRING (movie->name);
 }
 
 static void
-mc_name_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_name_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
-  movie->name = swfdec_as_value_to_string (swfdec_gc_object_get_context (movie), *val);
+  movie->name = swfdec_as_value_to_string (swfdec_gc_object_get_context (movie), val);
 }
 
-static void
-mc_alpha_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_alpha_get (SwfdecMovie *movie)
 {
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval,
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie),
       movie->color_transform.aa * 100.0 / 256.0);
 }
 
 static void
-mc_alpha_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_alpha_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   double d;
   int alpha;
 
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set alpha to a non-finite value, ignoring");
     return;
@@ -172,44 +174,44 @@ mc_alpha_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
 }
 
-static void
-mc_visible_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_visible_get (SwfdecMovie *movie)
 {
-  SWFDEC_AS_VALUE_SET_BOOLEAN (rval, movie->visible);
+  return SWFDEC_AS_VALUE_FROM_BOOLEAN (movie->visible);
 }
 
 static void
-mc_visible_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_visible_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   gboolean b;
 
-  b = swfdec_as_value_to_boolean (swfdec_gc_object_get_context (movie), *val);
+  b = swfdec_as_value_to_boolean (swfdec_gc_object_get_context (movie), val);
   if (b != movie->visible) {
     movie->visible = b;
     swfdec_movie_invalidate_last (movie);
   }
 }
 
-static void
-mc_width_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_width_get (SwfdecMovie *movie)
 {
   double d;
 
   swfdec_movie_update (movie);
   d = rint (movie->extents.x1 - movie->extents.x0);
   d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) d);
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, d);
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), d);
 }
 
 static void
-mc_width_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_width_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   double d, cur;
 
   /* property was readonly in Flash 4 and before */
   if (swfdec_gc_object_get_context (movie)->version < 5)
     return;
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set width to a non-finite value, ignoring");
     return;
@@ -232,26 +234,26 @@ mc_width_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   swfdec_movie_end_update_matrix (movie);
 }
 
-static void
-mc_height_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_height_get (SwfdecMovie *movie)
 {
   double d;
 
   swfdec_movie_update (movie);
   d = rint (movie->extents.y1 - movie->extents.y0);
   d = SWFDEC_TWIPS_TO_DOUBLE ((SwfdecTwips) d);
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, d);
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), d);
 }
 
 static void
-mc_height_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_height_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   double d, cur;
 
   /* property was readonly in Flash 4 and before */
   if (swfdec_gc_object_get_context (movie)->version < 5)
     return;
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (!isfinite (d)) {
     SWFDEC_WARNING ("trying to set height to a non-finite value, ignoring");
     return;
@@ -274,19 +276,19 @@ mc_height_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   swfdec_movie_end_update_matrix (movie);
 }
 
-static void
-mc_rotation_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_rotation_get (SwfdecMovie *movie)
 {
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, movie->rotation);
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), movie->rotation);
 }
 
 static void
-mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_rotation_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   double d;
 
   /* FIXME: Flash 4 handles this differently */
-  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), *val);
+  d = swfdec_as_value_to_number (swfdec_gc_object_get_context (movie), val);
   if (isnan (d)) {
     SWFDEC_WARNING ("setting rotation to NaN - not allowed");
     return;
@@ -309,45 +311,45 @@ mc_rotation_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   }
 }
 
-static void
-mc_xmouse_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_xmouse_get (SwfdecMovie *movie)
 {
   double x, y;
 
   swfdec_movie_get_mouse (movie, &x, &y);
   x = SWFDEC_TWIPS_TO_DOUBLE (rint (x));
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, x);
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), x);
 }
 
-static void
-mc_ymouse_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_ymouse_get (SwfdecMovie *movie)
 {
   double x, y;
 
   swfdec_movie_get_mouse (movie, &x, &y);
   y = SWFDEC_TWIPS_TO_DOUBLE (rint (y));
-  swfdec_as_value_set_number (swfdec_gc_object_get_context (movie), rval, y);
+  return swfdec_as_value_from_number (swfdec_gc_object_get_context (movie), y);
 }
 
-static void
-mc_parent (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_parent (SwfdecMovie *movie)
 {
   if (movie->parent) {
-    SWFDEC_AS_VALUE_SET_MOVIE (rval, movie->parent);
+    return SWFDEC_AS_VALUE_FROM_MOVIE (movie->parent);
   } else {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (rval);
+    return SWFDEC_AS_VALUE_UNDEFINED;
   }
 }
 
-static void
-mc_root (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_root (SwfdecMovie *movie)
 {
   movie = swfdec_movie_get_root (movie);
-  SWFDEC_AS_VALUE_SET_MOVIE (rval, movie);
+  return SWFDEC_AS_VALUE_FROM_MOVIE (movie);
 }
 
-static void
-mc_target_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_target_get (SwfdecMovie *movie)
 {
   GString *s;
 
@@ -358,31 +360,31 @@ mc_target_get (SwfdecMovie *movie, SwfdecAsValue *rval)
     movie = movie->parent;
   }
   if (s->len == 0) {
-    SWFDEC_AS_VALUE_SET_STRING (rval, SWFDEC_AS_STR_SLASH);
     g_string_free (s, TRUE);
+    return SWFDEC_AS_VALUE_FROM_STRING (SWFDEC_AS_STR_SLASH);
   } else {
-    SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_give_string (
+    return SWFDEC_AS_VALUE_FROM_STRING (swfdec_as_context_give_string (
 	  swfdec_gc_object_get_context (movie), g_string_free (s, FALSE)));
   }
 }
 
-static void
-mc_url_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_url_get (SwfdecMovie *movie)
 {
-  SWFDEC_AS_VALUE_SET_STRING (rval, swfdec_as_context_get_string (
+  return SWFDEC_AS_VALUE_FROM_STRING (swfdec_as_context_get_string (
 	swfdec_gc_object_get_context (movie),
 	swfdec_url_get_url (swfdec_loader_get_url (movie->resource->loader))));
 }
 
-static void
-mc_focusrect_get (SwfdecMovie *movie, SwfdecAsValue *rval)
+static SwfdecAsValue
+mc_focusrect_get (SwfdecMovie *movie)
 {
   SwfdecAsContext *cx;
   SwfdecActor *actor;
   
   if (!SWFDEC_IS_ACTOR (movie)) {
     SWFDEC_FIXME ("should not be possible to get _focusrect on non-actors");
-    return;
+    return SWFDEC_AS_VALUE_UNDEFINED;
   }
   actor = SWFDEC_ACTOR (movie);
   cx = swfdec_gc_object_get_context (actor);
@@ -390,26 +392,27 @@ mc_focusrect_get (SwfdecMovie *movie, SwfdecAsValue *rval)
   switch (actor->focusrect) {
     case SWFDEC_FLASH_YES:
       if (cx->version > 5)
-	SWFDEC_AS_VALUE_SET_BOOLEAN (rval, TRUE);
+	return SWFDEC_AS_VALUE_TRUE;
       else
-	swfdec_as_value_set_integer (cx, rval, 1);
+	return swfdec_as_value_from_integer (cx, 1);
       break;
     case SWFDEC_FLASH_NO:
       if (cx->version > 5)
-	SWFDEC_AS_VALUE_SET_BOOLEAN (rval, FALSE);
+	return SWFDEC_AS_VALUE_FALSE;
       else
-	swfdec_as_value_set_integer (cx, rval, 0);
+	return swfdec_as_value_from_integer (cx, 0);
       break;
     case SWFDEC_FLASH_MAYBE:
-      SWFDEC_AS_VALUE_SET_NULL (rval);
+      return SWFDEC_AS_VALUE_NULL;
       break;
     default:
       g_assert_not_reached();
+      return SWFDEC_AS_VALUE_UNDEFINED;
   }
 }
 
 static void
-mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
+mc_focusrect_set (SwfdecMovie *movie, SwfdecAsValue val)
 {
   SwfdecAsContext *cx;
   SwfdecActor *actor;
@@ -422,19 +425,19 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
   cx = swfdec_gc_object_get_context (movie);
   actor = SWFDEC_ACTOR (movie);
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*val) ||
-      SWFDEC_AS_VALUE_IS_NULL (*val)) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (val) ||
+      SWFDEC_AS_VALUE_IS_NULL (val)) {
     if (movie->parent == NULL)
       return;
     b = SWFDEC_FLASH_MAYBE;
   } else {
     if (movie->parent == NULL) {
-      double d = swfdec_as_value_to_number (cx, *val);
+      double d = swfdec_as_value_to_number (cx, val);
       if (isnan (d))
 	return;
       b = d ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
     } else {
-      b = swfdec_as_value_to_boolean (cx, *val) ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
+      b = swfdec_as_value_to_boolean (cx, val) ? SWFDEC_FLASH_YES : SWFDEC_FLASH_NO;
     }
   }
 
@@ -448,9 +451,9 @@ mc_focusrect_set (SwfdecMovie *movie, const SwfdecAsValue *val)
 }
 
 struct {
-  const char *name;
-  void (* get) (SwfdecMovie *movie, SwfdecAsValue *ret);
-  void (* set) (SwfdecMovie *movie, const SwfdecAsValue *val);
+  const char *	name;
+  SwfdecAsValue	(* get) (SwfdecMovie *movie);
+  void		(* set) (SwfdecMovie *movie, SwfdecAsValue val);
 } swfdec_movieclip_props[] = {
   { SWFDEC_AS_STR__x,		mc_x_get,	    mc_x_set },
   { SWFDEC_AS_STR__y,		mc_y_get,	    mc_y_set },
@@ -490,21 +493,20 @@ swfdec_movie_property_lookup (const char *name)
   return G_MAXUINT;
 }
 
-void
-swfdec_movie_property_do_get (SwfdecMovie *movie, guint id, 
-    SwfdecAsValue *val)
+SwfdecAsValue
+swfdec_movie_property_do_get (SwfdecMovie *movie, guint id)
 {
   if (id >= G_N_ELEMENTS (swfdec_movieclip_props) ||
       swfdec_movieclip_props[id].get == NULL) {
-    SWFDEC_AS_VALUE_SET_UNDEFINED (val);
+    return SWFDEC_AS_VALUE_UNDEFINED;
   } else {
-    swfdec_movieclip_props[id].get (movie, val);
+    return swfdec_movieclip_props[id].get (movie);
   }
 }
 
 void
 swfdec_movie_property_do_set (SwfdecMovie *movie, guint id, 
-    const SwfdecAsValue *val)
+    SwfdecAsValue val)
 {
   if (id < G_N_ELEMENTS (swfdec_movieclip_props) &&
       swfdec_movieclip_props[id].set != NULL) {

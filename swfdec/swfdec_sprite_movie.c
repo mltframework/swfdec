@@ -770,25 +770,24 @@ swfdec_sprite_movie_finish_movie (SwfdecMovie *mov)
   }
 }
 
-static void
-swfdec_sprite_movie_property_get (SwfdecMovie *mov, guint prop_id, SwfdecAsValue *val)
+static SwfdecAsValue
+swfdec_sprite_movie_property_get (SwfdecMovie *mov, guint prop_id)
 {
   SwfdecSpriteMovie *movie = SWFDEC_SPRITE_MOVIE (mov);
   SwfdecAsContext *cx = swfdec_gc_object_get_context (mov);
 
   switch (prop_id) {
     case SWFDEC_MOVIE_PROPERTY_CURRENTFRAME:
-      swfdec_as_value_set_integer (cx, val, movie->frame);
+      return swfdec_as_value_from_integer (cx, movie->frame);
       break;
     case SWFDEC_MOVIE_PROPERTY_FRAMESLOADED:
-      swfdec_as_value_set_integer (cx, val, swfdec_sprite_movie_get_frames_loaded (movie));
+      return swfdec_as_value_from_integer (cx, swfdec_sprite_movie_get_frames_loaded (movie));
       break;
     case SWFDEC_MOVIE_PROPERTY_TOTALFRAMES:
-      swfdec_as_value_set_integer (cx, val, swfdec_sprite_movie_get_frames_total (movie));
+      return swfdec_as_value_from_integer (cx, swfdec_sprite_movie_get_frames_total (movie));
       break;
     default:
-      SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->property_get (mov, prop_id, val);
-      break;
+      return SWFDEC_MOVIE_CLASS (swfdec_sprite_movie_parent_class)->property_get (mov, prop_id);
   }
 }
 

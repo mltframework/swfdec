@@ -45,7 +45,7 @@ swfdec_color_matrix_filter_get_matrix (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_COLOR_MATRIX_FILTER, &cm, "");
 
   for (i = 0; i < 20; i++) {
-    swfdec_as_value_set_number (cx, &val[i], cm->matrix[i]);
+    val[i] = swfdec_as_value_from_number (cx, cm->matrix[i]);
   }
   array = swfdec_as_array_new (cx);
   swfdec_as_array_append (array, 20, val);

@@ -62,7 +62,7 @@ swfdec_movie_color_getRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
   result = (movie->color_transform.rb << 16) |
 	   ((movie->color_transform.gb % 256) << 8) | 
 	   (movie->color_transform.bb % 256);
-  swfdec_as_value_set_integer (cx, ret, result);
+  *ret = swfdec_as_value_from_integer (cx, result);
 }
 
 static void
@@ -70,7 +70,7 @@ add_variable (SwfdecAsObject *obj, const char *name, double value)
 {
   SwfdecAsValue val;
 
-  swfdec_as_value_set_number (obj->context, &val, value);
+  val = swfdec_as_value_from_number (obj->context, value);
   swfdec_as_object_set_variable (obj, name, &val);
 }
 

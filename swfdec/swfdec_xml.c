@@ -337,7 +337,7 @@ swfdec_xml_get_status (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_XML, &xml, "");
 
-  swfdec_as_value_set_integer (cx, ret, xml->status);
+  *ret = swfdec_as_value_from_integer (cx, xml->status);
 }
 
 static void

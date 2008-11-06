@@ -35,7 +35,7 @@ swfdec_blur_filter_get_blurX (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BLUR_FILTER, &filter, "");
 
-  swfdec_as_value_set_number (cx, ret, filter->x);
+  *ret = swfdec_as_value_from_number (cx, filter->x);
 }
 
 SWFDEC_AS_NATIVE (1102, 2, swfdec_blur_filter_set_blurX)
@@ -61,7 +61,7 @@ swfdec_blur_filter_get_blurY (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BLUR_FILTER, &filter, "");
 
-  swfdec_as_value_set_number (cx, ret, filter->y);
+  *ret = swfdec_as_value_from_number (cx, filter->y);
 }
 
 SWFDEC_AS_NATIVE (1102, 4, swfdec_blur_filter_set_blurY)
@@ -87,7 +87,7 @@ swfdec_blur_filter_get_quality (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_BLUR_FILTER, &filter, "");
 
-  swfdec_as_value_set_integer (cx, ret, filter->quality);
+  *ret = swfdec_as_value_from_integer (cx, filter->quality);
 }
 
 SWFDEC_AS_NATIVE (1102, 6, swfdec_blur_filter_set_quality)

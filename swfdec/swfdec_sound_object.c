@@ -137,7 +137,7 @@ swfdec_sound_object_getPan (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (matrix == NULL)
     return;
 
-  swfdec_as_value_set_integer (cx, ret, swfdec_sound_matrix_get_pan (matrix));
+  *ret = swfdec_as_value_from_integer (cx, swfdec_sound_matrix_get_pan (matrix));
 }
 
 SWFDEC_AS_NATIVE (500, 1, swfdec_sound_object_getTransform)
@@ -158,13 +158,13 @@ swfdec_sound_object_getTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   obj = swfdec_as_object_new (cx, SWFDEC_AS_STR_Object, NULL);
 
-  swfdec_as_value_set_integer (cx, &val, matrix->ll);
+  val = swfdec_as_value_from_integer (cx, matrix->ll);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_ll, &val);
-  swfdec_as_value_set_integer (cx, &val, matrix->lr);
+  val = swfdec_as_value_from_integer (cx, matrix->lr);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_lr, &val);
-  swfdec_as_value_set_integer (cx, &val, matrix->rl);
+  val = swfdec_as_value_from_integer (cx, matrix->rl);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_rl, &val);
-  swfdec_as_value_set_integer (cx, &val, matrix->rr);
+  val = swfdec_as_value_from_integer (cx, matrix->rr);
   swfdec_as_object_set_variable (obj, SWFDEC_AS_STR_rr, &val);
 
   SWFDEC_AS_VALUE_SET_OBJECT (ret, obj);
@@ -184,7 +184,7 @@ swfdec_sound_object_getVolume (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (matrix == NULL)
     return;
 
-  swfdec_as_value_set_integer (cx, ret, matrix->volume);
+  *ret = swfdec_as_value_from_integer (cx, matrix->volume);
 }
 
 SWFDEC_AS_NATIVE (500, 3, swfdec_sound_object_setPan)

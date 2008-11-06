@@ -508,7 +508,7 @@ swfdec_as_date_set_field (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
   }
 
-  swfdec_as_value_set_number (cx, ret, date->milliseconds);
+  *ret = swfdec_as_value_from_number (cx, date->milliseconds);
 }
 
 static void
@@ -522,7 +522,7 @@ swfdec_as_date_get_field (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   if (!swfdec_as_date_is_valid (date)) {
-    swfdec_as_value_set_number (cx, ret, NAN);
+    *ret = swfdec_as_value_from_number (cx, NAN);
     return;
   }
 
@@ -532,7 +532,7 @@ swfdec_as_date_get_field (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (field == FIELD_FULL_YEAR)
     number += 1900;
 
-  swfdec_as_value_set_integer (cx, ret, number);
+  *ret = swfdec_as_value_from_integer (cx, number);
 }
 
 /*** AS CODE ***/
@@ -580,7 +580,7 @@ swfdec_as_date_getTime (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
-  swfdec_as_value_set_number (cx, ret, date->milliseconds);
+  *ret = swfdec_as_value_from_number (cx, date->milliseconds);
 }
 
 SWFDEC_AS_NATIVE (103, 18, swfdec_as_date_getTimezoneOffset)
@@ -593,7 +593,7 @@ swfdec_as_date_getTimezoneOffset (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   // reverse of utc_offset
-  swfdec_as_value_set_number (cx, ret, -(date->utc_offset));
+  *ret = swfdec_as_value_from_number (cx, -(date->utc_offset));
 }
 
 // get* functions
@@ -774,7 +774,7 @@ swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_date_set_milliseconds_utc (date, NAN);
   }
 
-  swfdec_as_value_set_number (cx, ret, date->milliseconds);
+  *ret = swfdec_as_value_from_number (cx, date->milliseconds);
 }
 
 SWFDEC_AS_NATIVE (103, 15, swfdec_as_date_setMilliseconds)
@@ -989,7 +989,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 	  &num)) {
       brokentime.day_of_month = num;
     } else {
-      swfdec_as_value_set_number (cx, ret, d);
+      *ret = swfdec_as_value_from_number (cx, d);
       return;
     }
   } else {
@@ -1001,7 +1001,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 	  &num)) {
       brokentime.hours = num;
     } else {
-      swfdec_as_value_set_number (cx, ret, d);
+      *ret = swfdec_as_value_from_number (cx, d);
       return;
     }
   }
@@ -1011,7 +1011,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 	  &num)) {
       brokentime.minutes = num;
     } else {
-      swfdec_as_value_set_number (cx, ret, d);
+      *ret = swfdec_as_value_from_number (cx, d);
       return;
     }
   }
@@ -1021,7 +1021,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 	  &num)) {
       brokentime.seconds = num;
     } else {
-      swfdec_as_value_set_number (cx, ret, d);
+      *ret = swfdec_as_value_from_number (cx, d);
       return;
     }
   }
@@ -1037,12 +1037,12 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 	  &num)) {
       brokentime.milliseconds = num;
     } else {
-      swfdec_as_value_set_number (cx, ret, d);
+      *ret = swfdec_as_value_from_number (cx, d);
       return;
     }
   }
 
-  swfdec_as_value_set_number (cx, ret,
+  *ret = swfdec_as_value_from_number (cx,
       swfdec_as_date_brokentime_to_milliseconds (&brokentime));
 }
 

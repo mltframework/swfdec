@@ -187,12 +187,11 @@ struct _SwfdecMovieClass {
   /* general vfuncs */
   void			(* init_movie)		(SwfdecMovie *		movie);
   void			(* finish_movie)	(SwfdecMovie *		movie);
-  void			(* property_get)	(SwfdecMovie *		movie,
-						 guint			prop_id,
-						 SwfdecAsValue *	value);
+  SwfdecAsValue		(* property_get)	(SwfdecMovie *		movie,
+						 guint			prop_id);
   void			(* property_set)	(SwfdecMovie *		movie,
 						 guint			prop_id,
-						 const SwfdecAsValue *	value);
+						 SwfdecAsValue		value);
   void			(* replace)		(SwfdecMovie *		movie,
 						 SwfdecGraphic *	graphic);
   void			(* set_ratio)		(SwfdecMovie *		movie);
@@ -231,10 +230,9 @@ SwfdecMovie *	swfdec_movie_get_by_name	(SwfdecMovie *		movie,
 SwfdecMovie *	swfdec_movie_get_root		(SwfdecMovie *		movie);
 void		swfdec_movie_property_set	(SwfdecMovie *		movie,
 						 guint			id, 
-						 const SwfdecAsValue *	val);
-void		swfdec_movie_property_get	(SwfdecMovie *		movie,
-						 guint			id, 
-						 SwfdecAsValue *	val);
+						 SwfdecAsValue		val);
+SwfdecAsValue	swfdec_movie_property_get	(SwfdecMovie *		movie,
+						 guint			id);
 void		swfdec_movie_call_variable_listeners 
 						(SwfdecMovie *		movie,
 						 const char *		name,
@@ -304,10 +302,9 @@ SwfdecDepthClass
 guint		swfdec_movie_property_lookup	(const char *		name);
 void		swfdec_movie_property_do_set	(SwfdecMovie *		movie,
 						 guint			id, 
-						 const SwfdecAsValue *	val);
-void		swfdec_movie_property_do_get	(SwfdecMovie *		movie,
-						 guint			id, 
-						 SwfdecAsValue *	val);
+						 SwfdecAsValue		val);
+SwfdecAsValue	swfdec_movie_property_do_get	(SwfdecMovie *		movie,
+						 guint			id);
 
 void		swfdec_movie_add_variable_listener (SwfdecMovie *	movie,
 						 gpointer		data,

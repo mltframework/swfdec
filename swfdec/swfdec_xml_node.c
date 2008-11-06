@@ -129,7 +129,7 @@ swfdec_xml_node_update_child_nodes (SwfdecXmlNode *node)
   g_return_if_fail (SWFDEC_IS_VALID_XML_NODE (node));
 
   // remove old
-  swfdec_as_value_set_integer (swfdec_gc_object_get_context (node), &val, 0);
+  val = swfdec_as_value_from_integer (swfdec_gc_object_get_context (node), 0);
   swfdec_as_object_set_variable (node->child_nodes,
       SWFDEC_AS_STR_length, &val);
 
@@ -262,7 +262,7 @@ swfdec_xml_node_get_nodeType (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_IS_VALID_XML_NODE (node))
     return;
 
-  swfdec_as_value_set_integer (cx, ret, node->type);
+  *ret = swfdec_as_value_from_integer (cx, node->type);
 }
 
 static void

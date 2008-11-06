@@ -150,11 +150,11 @@ swfdec_resource_emit_signal (SwfdecResource *resource, const char *name, gboolea
       res = NULL;
     if (res && res->decoder) {
       SwfdecDecoder *dec = res->decoder;
-      swfdec_as_value_set_integer (cx, &vals[2], dec->bytes_loaded);
-      swfdec_as_value_set_integer (cx, &vals[3], dec->bytes_total);
+      vals[2] = swfdec_as_value_from_integer (cx, dec->bytes_loaded);
+      vals[3] = swfdec_as_value_from_integer (cx, dec->bytes_total);
     } else {
-      swfdec_as_value_set_integer (cx, &vals[2], 0);
-      swfdec_as_value_set_integer (cx, &vals[3], 0);
+      vals[2] = swfdec_as_value_from_integer (cx, 0);
+      vals[3] = swfdec_as_value_from_integer (cx, 0);
     }
   }
   if (n_args)
@@ -172,7 +172,7 @@ swfdec_resource_emit_error (SwfdecResource *resource, const char *message)
   SwfdecAsValue vals[2];
 
   SWFDEC_AS_VALUE_SET_STRING (&vals[0], message);
-  swfdec_as_value_set_integer (swfdec_gc_object_get_context (resource), &vals[1], 0);
+  vals[1] = swfdec_as_value_from_integer (swfdec_gc_object_get_context (resource), 0);
 
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadError, FALSE, vals, 2);
 }
@@ -326,7 +326,7 @@ swfdec_resource_stream_target_close (SwfdecStreamTarget *target, SwfdecStream *s
       swfdec_loader_set_data_type (SWFDEC_LOADER (stream), dec->data_type);
   }
 
-  swfdec_as_value_set_integer (swfdec_gc_object_get_context (resource), &val, 0); /* FIXME */
+  val = swfdec_as_value_from_integer (swfdec_gc_object_get_context (resource), 0); /* FIXME */
   swfdec_resource_emit_signal (resource, SWFDEC_AS_STR_onLoadComplete, FALSE, &val, 1);
   resource->state = SWFDEC_RESOURCE_COMPLETE;
   if (swfdec_resource_abort_if_not_initialized (resource))

@@ -231,6 +231,11 @@ swfdec_as_object_mark_watch (gpointer key, gpointer value, gpointer unused)
 void
 swfdec_as_object_mark (SwfdecAsObject *object)
 {
+  g_return_if_fail (object != NULL);
+
+  if (SWFDEC_AS_GCABLE_FLAG_IS_SET ((SwfdecAsGcable *) object, SWFDEC_AS_GC_MARK))
+    return;
+
   SWFDEC_AS_GCABLE_SET_FLAG ((SwfdecAsGcable *) object, SWFDEC_AS_GC_MARK);
 
   if (object->prototype)

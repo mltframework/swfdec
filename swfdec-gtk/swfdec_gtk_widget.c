@@ -580,9 +580,7 @@ swfdec_gtk_widget_unrealize (GtkWidget *widget)
 static void
 swfdec_gtk_widget_map (GtkWidget *gtkwidget)
 {
-  SwfdecGtkWidgetPrivate *priv = SWFDEC_GTK_WIDGET (gtkwidget)->priv;
-
-  g_assert (gdk_region_empty (priv->invalid));
+  g_assert (gdk_region_empty (SWFDEC_GTK_WIDGET (gtkwidget)->priv->invalid));
 
   GTK_WIDGET_CLASS (swfdec_gtk_widget_parent_class)->map (gtkwidget);
 }

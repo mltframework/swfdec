@@ -91,7 +91,7 @@ swfdec_button_translate_conditions (guint conditions, gboolean menu)
   guint i, ret;
 
   ret = 0;
-  for (i = 0; i <= G_N_ELEMENTS (events); i++) {
+  for (i = 0; i < G_N_ELEMENTS (events); i++) {
     if (conditions & (1 << i))
       ret |= events[i][menu ? 1 : 0];
   }

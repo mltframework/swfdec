@@ -116,7 +116,7 @@ swfdec_movie_color_setRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (movie == NULL)
     return;
 
-  color = swfdec_as_value_to_integer (cx, &argv[0]);
+  color = swfdec_as_value_to_integer (cx, *&argv[0]);
 
   movie->color_transform.ra = 0;
   movie->color_transform.rb = (color & 0xFF0000) >> 16;

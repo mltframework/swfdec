@@ -58,7 +58,7 @@ swfdec_key_isDown (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  id = swfdec_as_value_to_integer (cx, &argv[0]);
+  id = swfdec_as_value_to_integer (cx, *&argv[0]);
   if (id >= 256) {
     SWFDEC_FIXME ("id %u too big for a keycode", id);
     id %= 256;

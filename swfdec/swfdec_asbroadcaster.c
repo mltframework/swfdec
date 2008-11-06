@@ -56,7 +56,7 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   listeners = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
   swfdec_as_object_get_variable (listeners, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (cx, &val);
+  length = swfdec_as_value_to_integer (cx, *&val);
 
   /* return undefined if we won't try to call anything */
   if (length <= 0)

@@ -274,7 +274,7 @@ swfdec_test_buffer_from_args (SwfdecAsContext *cx, guint argc, SwfdecAsValue *ar
 	b = swfdec_buffer_ref (SWFDEC_TEST_BUFFER (o->relay)->buffer);
     } else if (SWFDEC_AS_VALUE_IS_NUMBER (argv[i])) {
       b = swfdec_buffer_new (1);
-      b->data[0] = swfdec_as_value_to_integer (cx, &argv[i]);
+      b->data[0] = swfdec_as_value_to_integer (cx, argv[i]);
     }
     if (b == NULL) {
       const char *s = swfdec_as_value_to_string (cx, argv[i]);

@@ -76,7 +76,7 @@ swfdec_as_array_length_as_integer (SwfdecAsObject *object)
   g_return_val_if_fail (object != NULL, 0);
 
   swfdec_as_object_get_variable (object, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (object->context, &val);
+  length = swfdec_as_value_to_integer (object->context, *&val);
 
   return length;
 }
@@ -751,7 +751,7 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   length = swfdec_as_array_get_length (object);
 
   if (argc > 0) {
-    start_index = swfdec_as_value_to_integer (cx, &argv[0]);
+    start_index = swfdec_as_value_to_integer (cx, *&argv[0]);
     if (start_index < 0)
       start_index = length + start_index;
     start_index = CLAMP (start_index, 0, length);
@@ -760,7 +760,7 @@ swfdec_as_array_slice (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   }
 
   if (argc > 1) {
-    gint32 endIndex = swfdec_as_value_to_integer (cx, &argv[1]);
+    gint32 endIndex = swfdec_as_value_to_integer (cx, *&argv[1]);
     if (endIndex < 0)
       endIndex = length + endIndex;
     endIndex = CLAMP (endIndex, start_index, length);
@@ -789,13 +789,13 @@ swfdec_as_array_splice (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   length = swfdec_as_array_get_length (object);
 
-  start_index = swfdec_as_value_to_integer (cx, &argv[0]);
+  start_index = swfdec_as_value_to_integer (cx, *&argv[0]);
   if (start_index < 0)
     start_index = length + start_index;
   start_index = CLAMP (start_index, 0, length);
 
   if (argc > 1) {
-    int tmp = swfdec_as_value_to_integer (cx, &argv[1]);
+    int tmp = swfdec_as_value_to_integer (cx, *&argv[1]);
     if (tmp < 0)
       return;
     num_remove = MIN (tmp, length - start_index);
@@ -860,7 +860,7 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
     SwfdecAsValue argv[2] = { *a, *b };
     SwfdecAsValue ret;
     swfdec_as_function_call (custom_function, NULL, 2, argv, &ret);
-    retval = swfdec_as_value_to_integer (cx, &ret);
+    retval = swfdec_as_value_to_integer (cx, *&ret);
   }
   else if (options & SORT_OPTION_NUMERIC &&
       (SWFDEC_AS_VALUE_IS_NUMBER (*a) ||
@@ -1185,7 +1185,7 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
   }
 
   if (argc > pos) {
-    options = swfdec_as_value_to_integer (cx, &argv[pos]) & MASK_SORT_OPTION;
+    options = swfdec_as_value_to_integer (cx, *&argv[pos]) & MASK_SORT_OPTION;
   } else {
     options = 0;
   }
@@ -1252,12 +1252,12 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
 	for (i = 0; i < num_fields; i++) {
 	  swfdec_as_array_get_value (array, i, &val);
 	  options[i] =
-	    swfdec_as_value_to_integer (cx, &val) & MASK_SORT_OPTION;
+	    swfdec_as_value_to_integer (cx, *&val) & MASK_SORT_OPTION;
 	}
       }
     } else {
       options[0] =
-	swfdec_as_value_to_integer (cx, &argv[1]) & MASK_SORT_OPTION;
+	swfdec_as_value_to_integer (cx, *&argv[1]) & MASK_SORT_OPTION;
       for (i = 1; i < num_fields; i++) {
 	options[i] = options[0];
       }
@@ -1285,7 +1285,7 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   object->array = TRUE;
 
   if (argc == 1 && SWFDEC_AS_VALUE_IS_NUMBER (argv[0])) {
-    int l = swfdec_as_value_to_integer (cx, &argv[0]);
+    int l = swfdec_as_value_to_integer (cx, *&argv[0]);
     swfdec_as_array_set_length (object, l < 0 ? 0 : l);
   } else if (argc > 0) {
     swfdec_as_array_append (object, argc, argv);

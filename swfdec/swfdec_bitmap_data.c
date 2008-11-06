@@ -356,13 +356,13 @@ swfdec_rectangle_from_as_object (SwfdecRectangle *rect, SwfdecAsObject *object)
 
   /* FIXME: This function is untested */
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_x);
-  rect->x = swfdec_as_value_to_integer (cx, val);
+  rect->x = swfdec_as_value_to_integer (cx, *val);
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_y);
-  rect->y = swfdec_as_value_to_integer (cx, val);
+  rect->y = swfdec_as_value_to_integer (cx, *val);
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_width);
-  rect->width = swfdec_as_value_to_integer (cx, val);
+  rect->width = swfdec_as_value_to_integer (cx, *val);
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_height);
-  rect->height = swfdec_as_value_to_integer (cx, val);
+  rect->height = swfdec_as_value_to_integer (cx, *val);
   return rect->width > 0 && rect->height > 0;
 }
 
@@ -374,9 +374,9 @@ swfdec_point_from_as_object (int *x, int *y, SwfdecAsObject *object)
 
   /* FIXME: This function is untested */
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_x);
-  *x = swfdec_as_value_to_integer (cx, val);
+  *x = swfdec_as_value_to_integer (cx, *val);
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_y);
-  *y = swfdec_as_value_to_integer (cx, val);
+  *y = swfdec_as_value_to_integer (cx, *val);
 }
 
 SWFDEC_AS_NATIVE (1100, 4, swfdec_bitmap_data_copyPixels)

@@ -106,7 +106,7 @@ swfdec_sprite_movie_gradient_fill_get_length (SwfdecAsObject *o)
   SwfdecAsValue val;
 
   swfdec_as_object_get_variable (o, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (o->context, &val);
+  length = swfdec_as_value_to_integer (o->context, *&val);
   return MAX (length, 0);
 }
 
@@ -220,7 +220,7 @@ swfdec_sprite_movie_beginGradientFill (SwfdecAsContext *cx, SwfdecAsObject *obje
       const char *name = swfdec_as_integer_to_string (cx, i);
       if (swfdec_as_object_get_variable (colors, name, &v)
 	  && SWFDEC_AS_VALUE_IS_NUMBER (v))
-	c = swfdec_as_value_to_integer (cx, &v);
+	c = swfdec_as_value_to_integer (cx, *&v);
       else
 	c = 0;
       if (!swfdec_as_object_get_variable (alphas, name, &v)) {
@@ -228,14 +228,14 @@ swfdec_sprite_movie_beginGradientFill (SwfdecAsContext *cx, SwfdecAsObject *obje
       } else if (!SWFDEC_AS_VALUE_IS_NUMBER (v)) {
 	a = 0;
       } else {
-	a = swfdec_as_value_to_integer (cx, &v);
+	a = swfdec_as_value_to_integer (cx, *&v);
       }
       if (!swfdec_as_object_get_variable (ratios, name, &v))
 	r = CLAMP (a, 0, 255);
       else if (!SWFDEC_AS_VALUE_IS_NUMBER (v))
 	r = 0;
       else
-	r = swfdec_as_value_to_integer (cx, &v);
+	r = swfdec_as_value_to_integer (cx, *&v);
     } else {
       c = a = r = 0;
     }

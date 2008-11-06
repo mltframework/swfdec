@@ -244,7 +244,7 @@ swfdec_text_field_movie_set_maxChars (SwfdecAsContext *cx,
     return;
 
   swfdec_as_value_to_number (cx, *&argv[0]);
-  text->max_chars = swfdec_as_value_to_integer (cx, &argv[0]);
+  text->max_chars = swfdec_as_value_to_integer (cx, *&argv[0]);
 }
 
 static void
@@ -1118,7 +1118,7 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
     end = length;
     i = 0;
   } else {
-    val = swfdec_as_value_to_integer (cx, &argv[0]);
+    val = swfdec_as_value_to_integer (cx, *&argv[0]);
     start = MAX (val, 0);
     start = MIN (start, length);
     if (argc <= 2) {
@@ -1129,7 +1129,7 @@ swfdec_text_field_movie_setTextFormat (SwfdecAsContext *cx,
       }
       i = 1;
     } else {
-      val = swfdec_as_value_to_integer (cx, &argv[1]);
+      val = swfdec_as_value_to_integer (cx, *&argv[1]);
       end = MAX (val, 0);
       end = CLAMP (end, start, length);
       i = 2;
@@ -1187,7 +1187,7 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
     start = 0;
     end = length;
   } else {
-    val = swfdec_as_value_to_integer (cx, &argv[0]);
+    val = swfdec_as_value_to_integer (cx, *&argv[0]);
     start = MAX (val, 0);
     start = MIN (start, length);
     if (argc == 1) {
@@ -1197,7 +1197,7 @@ swfdec_text_field_movie_getTextFormat (SwfdecAsContext *cx,
 	end = MIN (start + 1, length);
       }
     } else {
-      val = swfdec_as_value_to_integer (cx, &argv[1]);
+      val = swfdec_as_value_to_integer (cx, *&argv[1]);
       end = MAX (val, 0);
       end = CLAMP (end, start, length);
     }

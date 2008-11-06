@@ -57,7 +57,7 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
     return;
   }
   if (SWFDEC_IS_AS_FUNCTION (object->relay)) {
-    msecs = swfdec_as_value_to_integer (cx, &argv[1]);
+    msecs = swfdec_as_value_to_integer (cx, *&argv[1]);
     if (msecs < MIN_INTERVAL_TIME) {
       SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
       msecs = MIN_INTERVAL_TIME;
@@ -71,7 +71,7 @@ swfdec_player_do_set_interval (gboolean repeat, SwfdecAsContext *cx, guint argc,
       return;
     }
     name = swfdec_as_value_to_string (cx, argv[1]);
-    msecs = swfdec_as_value_to_integer (cx, &argv[2]);
+    msecs = swfdec_as_value_to_integer (cx, *&argv[2]);
     if (msecs < MIN_INTERVAL_TIME) {
       SWFDEC_INFO ("interval duration is %u, making it %u msecs", msecs, MIN_INTERVAL_TIME);
       msecs = MIN_INTERVAL_TIME;
@@ -248,7 +248,7 @@ ASSetNative (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (0, NULL, "ois", &target, &x, &s);
 
   if (argc > 3)
-    y = swfdec_as_value_to_integer (cx, &argv[3]);
+    y = swfdec_as_value_to_integer (cx, *&argv[3]);
   else
     y = 0;
   names = g_strsplit (s, ",", -1);

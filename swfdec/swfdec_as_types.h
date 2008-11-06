@@ -121,7 +121,7 @@ void		swfdec_as_value_set_number	(SwfdecAsContext *	context,
 gboolean	swfdec_as_value_to_boolean	(SwfdecAsContext *	context,
 						 SwfdecAsValue		value);
 int		swfdec_as_value_to_integer	(SwfdecAsContext *	context,
-						 const SwfdecAsValue *	value);
+						 SwfdecAsValue		value);
 double		swfdec_as_value_to_number	(SwfdecAsContext *	context,
 						 SwfdecAsValue		value);
 SwfdecAsObject *swfdec_as_value_to_object	(SwfdecAsContext *	context,

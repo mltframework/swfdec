@@ -157,7 +157,7 @@ swfdec_sprite_movie_set_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_movie_invalidate_next (movie);
 
   swfdec_as_object_get_variable (array, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (cx, &val);
+  length = swfdec_as_value_to_integer (cx, *&val);
 
   list = NULL;
   for (i = 0; i < length; i++) {
@@ -509,7 +509,7 @@ swfdec_sprite_movie_do_goto (SwfdecSpriteMovie *movie, SwfdecAsValue *target)
       return;
     frame++;
   } else {
-    frame = swfdec_as_value_to_integer (swfdec_gc_object_get_context (movie), target);
+    frame = swfdec_as_value_to_integer (swfdec_gc_object_get_context (movie), *target);
   }
   /* FIXME: how to handle overflow? */
   frame = CLAMP (frame, 1, (int) movie->n_frames);
@@ -682,7 +682,7 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
       return;
     depth = other->depth;
   } else {
-    depth = swfdec_as_value_to_integer (cx, &value);
+    depth = swfdec_as_value_to_integer (cx, *&value);
     if (movie->parent) {
       other = swfdec_movie_find (movie->parent, depth);
     } else {

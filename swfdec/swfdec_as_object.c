@@ -733,7 +733,7 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
 	  SWFDEC_AS_STR_length))
     {
       gint32 length_old = swfdec_as_array_get_length (object);
-      gint32 length_new = swfdec_as_value_to_integer (context, value);
+      gint32 length_new = swfdec_as_value_to_integer (context, *value);
       length_new = MAX (0, length_new);
       if (length_old > length_new) {
 	swfdec_as_array_remove_range (object, length_new,
@@ -772,7 +772,7 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
       SwfdecAsValue tmp;
       gint32 length;
       swfdec_as_object_get_variable (object, SWFDEC_AS_STR_length, &tmp);
-      length = swfdec_as_value_to_integer (context, &tmp);
+      length = swfdec_as_value_to_integer (context, *&tmp);
       if (l >= length) {
 	object->array = FALSE;
 	swfdec_as_value_set_integer (context, &tmp, l + 1);

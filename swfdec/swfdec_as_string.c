@@ -92,7 +92,7 @@ swfdec_as_string_lastIndexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_STRING_CHECK (&string, "s", &s);
 
   if (argc == 2) {
-    int offset = swfdec_as_value_to_integer (cx, &argv[1]);
+    int offset = swfdec_as_value_to_integer (cx, *&argv[1]);
     const char *tmp;
     if (offset < 0) {
       swfdec_as_value_set_integer (cx, ret, -1);
@@ -126,7 +126,7 @@ swfdec_as_string_indexOf (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_STRING_CHECK (&string, "s", &s);
 
   if (argc == 2)
-    offset = swfdec_as_value_to_integer (cx, &argv[1]);
+    offset = swfdec_as_value_to_integer (cx, *&argv[1]);
   if (offset < 0)
     offset = 0;
   len = g_utf8_strlen (string, -1);
@@ -206,7 +206,7 @@ swfdec_as_string_fromCharCode_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   if (argc > 0) {
     for (i = 0; i < argc; i++) {
-      c = ((guint) swfdec_as_value_to_integer (cx, &argv[i])) % 65536;
+      c = ((guint) swfdec_as_value_to_integer (cx, *&argv[i])) % 65536;
       if (c > 255) {
 	append = c / 256;
 	g_byte_array_append (array, &append, 1);
@@ -246,7 +246,7 @@ swfdec_as_string_fromCharCode_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
     chars = g_new (gunichar, argc);
 
   for (i = 0; i < argc; i++) {
-    chars[i] = ((guint) swfdec_as_value_to_integer (cx, &argv[i])) % 65536;
+    chars[i] = ((guint) swfdec_as_value_to_integer (cx, *&argv[i])) % 65536;
   }
 
   s = g_ucs4_to_utf8 (chars, argc, NULL, NULL, &error);
@@ -354,7 +354,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[1])) {
     swfdec_as_value_to_string (cx, argv[0]);
-    count = swfdec_as_value_to_integer (cx, &argv[1]);
+    count = swfdec_as_value_to_integer (cx, *&argv[1]);
   } else {
     count = G_MAXINT;
   }
@@ -408,7 +408,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[1]))
-    count = swfdec_as_value_to_integer (cx, &argv[1]);
+    count = swfdec_as_value_to_integer (cx, *&argv[1]);
   else
     count = G_MAXINT;
   if (count <= 0)
@@ -464,7 +464,7 @@ swfdec_as_string_slice (SwfdecAsContext *cx, SwfdecAsObject *object,
   start = CLAMP (start, 0, length);
 
   if (argc > 1) {
-    end = swfdec_as_value_to_integer (cx, &argv[1]);
+    end = swfdec_as_value_to_integer (cx, *&argv[1]);
     if (end < 0)
       end += length;
     end = CLAMP (end, start, length);
@@ -521,7 +521,7 @@ swfdec_as_string_substr (SwfdecAsContext *cx, SwfdecAsObject *object,
   len = g_utf8_strlen (string, -1);
   
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[1])) {
-    to = swfdec_as_value_to_integer (cx, &argv[1]);
+    to = swfdec_as_value_to_integer (cx, *&argv[1]);
     /* FIXME: wtf? */
     if (to < 0) {
       if (-to <= from)
@@ -555,7 +555,7 @@ swfdec_as_string_substring (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   len = g_utf8_strlen (string, -1);
   if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[1])) {
-    to = swfdec_as_value_to_integer (cx, &argv[1]);
+    to = swfdec_as_value_to_integer (cx, *&argv[1]);
   } else {
     to = len;
   }

@@ -331,7 +331,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case 'i':
 	{
 	  int *j = va_arg (varargs, int *);
-	  *j = swfdec_as_value_to_integer (cx, &argv[i]);
+	  *j = swfdec_as_value_to_integer (cx, *&argv[i]);
 	}
 	break;
       case 'm':

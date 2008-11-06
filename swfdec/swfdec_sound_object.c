@@ -224,28 +224,28 @@ swfdec_sound_object_setTransform (SwfdecAsContext *cx, SwfdecAsObject *object,
   /* ll */
   val = swfdec_as_object_peek_variable (trans, SWFDEC_AS_STR_ll);
   if (val) {
-    matrix->ll = swfdec_as_value_to_integer (cx, val);
+    matrix->ll = swfdec_as_value_to_integer (cx, *val);
   } else if (swfdec_as_object_has_variable (trans, SWFDEC_AS_STR_ll) == trans) {
     matrix->ll = 0;
   }
   /* lr */
   val = swfdec_as_object_peek_variable (trans, SWFDEC_AS_STR_lr);
   if (val) {
-    matrix->lr = swfdec_as_value_to_integer (cx, val);
+    matrix->lr = swfdec_as_value_to_integer (cx, *val);
   } else if (swfdec_as_object_has_variable (trans, SWFDEC_AS_STR_lr) == trans) {
     matrix->lr = 0;
   }
   /* rr */
   val = swfdec_as_object_peek_variable (trans, SWFDEC_AS_STR_rr);
   if (val) {
-    matrix->rr = swfdec_as_value_to_integer (cx, val);
+    matrix->rr = swfdec_as_value_to_integer (cx, *val);
   } else if (swfdec_as_object_has_variable (trans, SWFDEC_AS_STR_rr) == trans) {
     matrix->rr = 0;
   }
   /* rl */
   val = swfdec_as_object_peek_variable (trans, SWFDEC_AS_STR_rl);
   if (val) {
-    matrix->rl = swfdec_as_value_to_integer (cx, val);
+    matrix->rl = swfdec_as_value_to_integer (cx, *val);
   } else if (swfdec_as_object_has_variable (trans, SWFDEC_AS_STR_rl) == trans) {
     matrix->rl = 0;
   }

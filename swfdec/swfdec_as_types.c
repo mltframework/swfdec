@@ -533,11 +533,11 @@ swfdec_as_double_to_integer (double d)
  * Returns: An Integer that can be represented in 32 bits.
  **/
 int
-swfdec_as_value_to_integer (SwfdecAsContext *context, const SwfdecAsValue *value)
+swfdec_as_value_to_integer (SwfdecAsContext *context, SwfdecAsValue value)
 {
   double d;
   
-  d = swfdec_as_value_to_number (context, *value);
+  d = swfdec_as_value_to_number (context, value);
   return swfdec_as_double_to_integer (d);
 }
 

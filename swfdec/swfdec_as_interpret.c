@@ -179,7 +179,7 @@ swfdec_value_to_frame (SwfdecAsContext *cx, SwfdecSpriteMovie *movie, SwfdecAsVa
     else
       frame = d;
   } else if (SWFDEC_AS_VALUE_IS_NUMBER (*val)) {
-    frame = swfdec_as_value_to_integer (cx, val);
+    frame = swfdec_as_value_to_integer (cx, *val);
   } else {
     SWFDEC_WARNING ("cannot convert value to frame number");
     /* FIXME: how do we treat undefined etc? */
@@ -698,7 +698,7 @@ swfdec_action_get_property (SwfdecAsContext *cx, guint action, const guint8 *dat
   SwfdecMovie *movie;
   guint id;
 
-  id = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
+  id = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 1));
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_INFO ("tried using GetProperty in a non-SwfdecPlayer context");
     movie = NULL;
@@ -724,7 +724,7 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
   SwfdecMovie *movie;
   guint id;
 
-  id = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
+  id = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 2));
   if (!SWFDEC_IS_PLAYER (cx)) {
     SWFDEC_INFO ("tried using GetProperty in a non-SwfdecPlayer context");
     movie = NULL;
@@ -838,7 +838,7 @@ swfdec_action_call_function (SwfdecAsContext *cx, guint action, const guint8 *da
   SwfdecAsValue *fun, *thisp;
   
   swfdec_as_stack_ensure_size (cx, 2);
-  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
+  n_args = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 2));
   name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
   thisp = swfdec_as_stack_peek (cx, 2);
   fun = swfdec_as_stack_peek (cx, 1);
@@ -865,7 +865,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   
   swfdec_as_stack_ensure_size (cx, 3);
   obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 2));
-  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 3));
+  n_args = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 3));
   val = swfdec_as_stack_peek (cx, 1);
   if (obj) {
     name = swfdec_as_value_to_string (cx, *val);
@@ -1305,7 +1305,7 @@ swfdec_action_random_number (SwfdecAsContext *cx, guint action, const guint8 *da
   SwfdecAsValue *val;
 
   val = swfdec_as_stack_peek (cx, 1);
-  max = swfdec_as_value_to_integer (cx, val);
+  max = swfdec_as_value_to_integer (cx, *val);
   
   if (max <= 0)
     swfdec_as_value_set_number (cx, val, 0);
@@ -1346,8 +1346,8 @@ swfdec_action_string_extract (SwfdecAsContext *cx, guint action, const guint8 *d
   int start, n, left;
   const char *s;
 
-  n = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
-  start = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
+  n = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 1));
+  start = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 2));
   s = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 3));
   swfdec_as_stack_pop_n (cx, 2);
   left = g_utf8_strlen (s, -1);
@@ -1713,7 +1713,7 @@ swfdec_action_new_object (SwfdecAsContext *cx, guint action, const guint8 *data,
   swfdec_as_stack_ensure_size (cx, 2);
   swfdec_action_get_variable (cx, action, data, len);
   constructor = swfdec_as_stack_peek (cx, 1);
-  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
+  n_args = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 2));
   n_args = MIN (swfdec_as_stack_get_size (cx) - 2, n_args);
   if (!SWFDEC_AS_VALUE_IS_OBJECT (*constructor) ||
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (*constructor)->relay)) {
@@ -1742,7 +1742,7 @@ swfdec_action_new_method (SwfdecAsContext *cx, guint action, const guint8 *data,
   name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
 
   constructor = swfdec_as_stack_peek (cx, 2);
-  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 3));
+  n_args = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 3));
   n_args = MIN (swfdec_as_stack_get_size (cx) - 3, n_args);
   if (name == SWFDEC_AS_STR_EMPTY ||
       SWFDEC_AS_VALUE_IS_UNDEFINED (*swfdec_as_stack_peek (cx, 1))) {
@@ -1775,7 +1775,7 @@ swfdec_action_init_object (SwfdecAsContext *cx, guint action, const guint8 *data
   SwfdecAsObject *object;
   guint i, n_args, size;
 
-  n_args = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
+  n_args = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 1));
   swfdec_as_stack_pop (cx);
   if (n_args * 2 > swfdec_as_stack_get_size (cx)) {
     size = swfdec_as_stack_get_size (cx);
@@ -1804,7 +1804,7 @@ swfdec_action_init_array (SwfdecAsContext *cx, guint action, const guint8 *data,
   SwfdecAsObject *array;
 
   swfdec_as_stack_ensure_size (cx, 1);
-  n = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
+  n = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 1));
   swfdec_as_stack_pop (cx);
   array = swfdec_as_array_new (cx);
   /* NB: we can't increase the stack here, as the number can easily be MAXINT */
@@ -1953,8 +1953,8 @@ swfdec_action_bitwise (SwfdecAsContext *cx, guint action, const guint8 *data, gu
 {
   int a, b;
 
-  a = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
-  b = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
+  a = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 1));
+  b = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 2));
 
   switch (action) {
     case 0x60:
@@ -1980,9 +1980,9 @@ swfdec_action_shift (SwfdecAsContext *cx, guint action, const guint8 *data, guin
 {
   int amount, value;
 
-  amount = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1));
+  amount = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 1));
   amount &= 31;
-  value = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 2));
+  value = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 2));
 
   switch (action) {
     case 0x63:
@@ -2007,7 +2007,7 @@ swfdec_action_to_integer (SwfdecAsContext *cx, guint action, const guint8 *data,
 {
   SwfdecAsValue *val = swfdec_as_stack_peek (cx, 1);
 
-  swfdec_as_value_set_integer (cx, val, swfdec_as_value_to_integer (cx, val));
+  swfdec_as_value_set_integer (cx, val, swfdec_as_value_to_integer (cx, *val));
 }
 
 static void
@@ -2333,7 +2333,7 @@ swfdec_action_implements (SwfdecAsContext *cx, guint action,
   }
 
   val = swfdec_as_stack_pop (cx);
-  argc = swfdec_as_value_to_integer (cx, val);
+  argc = swfdec_as_value_to_integer (cx, *val);
 
   if (argc > 0) {
     swfdec_as_stack_ensure_size (cx, argc);
@@ -2520,12 +2520,12 @@ swfdec_action_ascii_to_char (SwfdecAsContext *cx, guint action, const guint8 *da
     guint i;
 
     if (action == SWFDEC_AS_ACTION_ASCII_TO_CHAR) {
-      s[0] = ((guint) swfdec_as_value_to_integer (cx, val)) % 256;
+      s[0] = ((guint) swfdec_as_value_to_integer (cx, *val)) % 256;
       s[1] = 0;
     } else {
       g_assert (action == SWFDEC_AS_ACTION_MB_ASCII_TO_CHAR);
 
-      i = ((guint) swfdec_as_value_to_integer (cx, val));
+      i = ((guint) swfdec_as_value_to_integer (cx, *val));
       if (i > 255) {
 	s[0] = i / 256;
 	s[1] = i % 256;
@@ -2546,7 +2546,7 @@ swfdec_action_ascii_to_char (SwfdecAsContext *cx, guint action, const guint8 *da
     }
   } else {
     char *s;
-    gunichar c = ((guint) swfdec_as_value_to_integer (cx, val)) % 65536;
+    gunichar c = ((guint) swfdec_as_value_to_integer (cx, *val)) % 65536;
 
     s = g_ucs4_to_utf8 (&c, 1, NULL, NULL, NULL);
     if (s == NULL) {
@@ -2803,7 +2803,7 @@ swfdec_action_clone_sprite (SwfdecAsContext *cx, guint action, const guint8 *dat
   const char *new_name;
   int depth;
 
-  depth = swfdec_as_value_to_integer (cx, swfdec_as_stack_peek (cx, 1)) - 16384;
+  depth = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 1)) - 16384;
   new_name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 2));
   if (target == NULL) {
     SWFDEC_FIXME ("target is not a movie in CloneSprite");

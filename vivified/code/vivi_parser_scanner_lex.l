@@ -24,6 +24,9 @@
 extern YY_DECL;
 
 #define YY_EXTRA_TYPE ViviParserScanner *
+
+/* stupid lex can't define it to not throw an unused_result error */
+#define ECHO 
 }
 
 %{

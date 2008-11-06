@@ -165,6 +165,7 @@ swfdec_text_field_movie_autosize (SwfdecTextFieldMovie *text)
       break;
     case SWFDEC_AUTO_SIZE_NONE:
     default:
+      x0 = 0;
       g_assert_not_reached ();
   }
   z0 = 0;

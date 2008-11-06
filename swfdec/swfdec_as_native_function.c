@@ -339,8 +339,8 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
 	{
 	  SwfdecMovie *m;
 	  SwfdecMovie **arg = va_arg (varargs, SwfdecMovie **);
-	  if (SWFDEC_AS_VALUE_IS_MOVIE (*&argv[i])) {
-	    m = SWFDEC_AS_VALUE_GET_MOVIE (*&argv[i]);
+	  if (SWFDEC_AS_VALUE_IS_MOVIE (argv[i])) {
+	    m = SWFDEC_AS_VALUE_GET_MOVIE (argv[i]);
 	  } else {
 	    m = NULL;
 	  }

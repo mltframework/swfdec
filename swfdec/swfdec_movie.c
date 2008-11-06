@@ -1312,7 +1312,7 @@ swfdec_movie_constructor (GType type, guint n_construct_properties,
     movie->as_value = swfdec_as_movie_value_new (movie, name);
 
   /* make the resource ours if it doesn't belong to anyone yet */
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&movie->resource->movie)) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (movie->resource->movie)) {
     g_assert (SWFDEC_IS_SPRITE_MOVIE (movie));
     SWFDEC_AS_VALUE_SET_MOVIE (&movie->resource->movie, movie);
   }
@@ -1670,7 +1670,7 @@ swfdec_movie_get_own_resource (SwfdecMovie *movie)
   if (!SWFDEC_IS_SPRITE_MOVIE (movie))
     return NULL;
 
-  if (SWFDEC_AS_VALUE_GET_MOVIE (*&movie->resource->movie) != movie)
+  if (SWFDEC_AS_VALUE_GET_MOVIE (movie->resource->movie) != movie)
     return NULL;
 
   return movie->resource;

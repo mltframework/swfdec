@@ -388,28 +388,28 @@ swfdec_as_value_to_string (SwfdecAsContext *context, SwfdecAsValue value)
 
   switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_STRING:
-      return SWFDEC_AS_VALUE_GET_STRING (*&value);
+      return SWFDEC_AS_VALUE_GET_STRING (value);
     case SWFDEC_AS_TYPE_UNDEFINED:
       if (context->version > 6)
 	return SWFDEC_AS_STR_undefined;
       else
 	return SWFDEC_AS_STR_EMPTY;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      return SWFDEC_AS_VALUE_GET_BOOLEAN (*&value) ? SWFDEC_AS_STR_true : SWFDEC_AS_STR_false;
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (value) ? SWFDEC_AS_STR_true : SWFDEC_AS_STR_false;
     case SWFDEC_AS_TYPE_NULL:
       return SWFDEC_AS_STR_null;
     case SWFDEC_AS_TYPE_NUMBER:
-      return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (*&value));
+      return swfdec_as_double_to_string (context, SWFDEC_AS_VALUE_GET_NUMBER (value));
     case SWFDEC_AS_TYPE_OBJECT:
       {
-	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (*&value);
+	SwfdecAsObject *object = SWFDEC_AS_VALUE_GET_OBJECT (value);
 	if (SWFDEC_IS_AS_STRING (object->relay)) {
 	  return SWFDEC_AS_STRING (object->relay)->string;
 	} else {
 	  SwfdecAsValue ret;
 	  swfdec_as_object_call (object, SWFDEC_AS_STR_toString, 0, NULL, &ret);
-	  if (SWFDEC_AS_VALUE_IS_STRING (*&ret))
-	    return SWFDEC_AS_VALUE_GET_STRING (*&ret);
+	  if (SWFDEC_AS_VALUE_IS_STRING (ret))
+	    return SWFDEC_AS_VALUE_GET_STRING (ret);
 	  else if (SWFDEC_IS_AS_SUPER (object->relay))
 	    return SWFDEC_AS_STR__type_Object_;
 	  else if (SWFDEC_IS_AS_FUNCTION (object->relay))
@@ -420,7 +420,7 @@ swfdec_as_value_to_string (SwfdecAsContext *context, SwfdecAsValue value)
       }
     case SWFDEC_AS_TYPE_MOVIE:
       {
-	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (*&value);
+	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (value);
 	char *str;
 
 	if (movie == NULL)
@@ -462,9 +462,9 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
     case SWFDEC_AS_TYPE_NULL:
       return (context->version >= 7) ? NAN : 0.0;
     case SWFDEC_AS_TYPE_BOOLEAN:
-      return SWFDEC_AS_VALUE_GET_BOOLEAN (*&tmp) ? 1 : 0;
+      return SWFDEC_AS_VALUE_GET_BOOLEAN (tmp) ? 1 : 0;
     case SWFDEC_AS_TYPE_NUMBER:
-      return SWFDEC_AS_VALUE_GET_NUMBER (*&tmp);
+      return SWFDEC_AS_VALUE_GET_NUMBER (tmp);
     case SWFDEC_AS_TYPE_STRING:
       {
 	const char *s;
@@ -472,7 +472,7 @@ swfdec_as_value_to_number (SwfdecAsContext *context, const SwfdecAsValue *value)
 	double d;
 	
 	// FIXME: We should most likely copy Tamarin's code here (MathUtils.cpp)
-	s = SWFDEC_AS_VALUE_GET_STRING (*&tmp);
+	s = SWFDEC_AS_VALUE_GET_STRING (tmp);
 	if (s == SWFDEC_AS_STR_EMPTY)
 	  return (context->version >= 5) ? NAN : 0.0;
 	if (context->version > 5 && s[0] == '0' &&
@@ -589,12 +589,12 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
   }
 
   swfdec_as_object_get_variable (context->global, s, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val) ||
-      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (*&val)->relay)))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val) ||
+      !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (val)->relay)))
     return NULL;
   swfdec_as_object_create (fun, 1, value, &val);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (*&val)) {
-    return SWFDEC_AS_VALUE_GET_OBJECT (*&val);
+  if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
+    return SWFDEC_AS_VALUE_GET_OBJECT (val);
   } else {
     SWFDEC_ERROR ("did not construct an object");
     return NULL;

@@ -140,11 +140,11 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
   if (!swfdec_as_object_get_variable (object, SWFDEC_AS_STR__customHeaders,
 	&val))
     goto end;
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (*&val)) {
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (val)) {
     SWFDEC_WARNING ("_customHeaders is not an object");
     goto end;
   }
-  list = SWFDEC_AS_VALUE_GET_COMPOSITE (*&val);
+  list = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
 
   swfdec_as_object_get_variable (list, SWFDEC_AS_STR_length, &val);
   length = swfdec_as_value_to_integer (cx, &val);

@@ -64,7 +64,7 @@ swfdec_as_script_function_call (SwfdecAsFunction *function, SwfdecAsObject *this
     frame.original_target = script->target;
   }
   /* second check especially for super object */
-  if (thisp != NULL && SWFDEC_AS_VALUE_IS_UNDEFINED (*&frame.thisp)) {
+  if (thisp != NULL && SWFDEC_AS_VALUE_IS_UNDEFINED (frame.thisp)) {
     swfdec_as_frame_set_this (&frame, swfdec_as_object_resolve (thisp));
   }
   frame.argc = n_args;

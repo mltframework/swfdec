@@ -113,8 +113,8 @@ swfdec_file_reference_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_STUB ("FileReference");
 
-  if (argc > 0 && SWFDEC_AS_VALUE_IS_COMPOSITE (*&argv[0])) {
-    target = SWFDEC_AS_VALUE_GET_COMPOSITE (*&argv[0]);
+  if (argc > 0 && SWFDEC_AS_VALUE_IS_COMPOSITE (argv[0])) {
+    target = SWFDEC_AS_VALUE_GET_COMPOSITE (argv[0]);
   } else {
     target = object;
   }

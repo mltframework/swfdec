@@ -140,8 +140,8 @@ swfdec_text_format_set_string (SwfdecAsObject *object,
   swfdec_as_value_to_number (context, &argv[0]);
   s = swfdec_as_value_to_string (context, argv[0]);
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_NULL (*&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (argv[0])) {
     /* FIXME: reset to defaults here? */
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, property);
   } else {
@@ -192,8 +192,8 @@ swfdec_text_format_set_boolean (SwfdecAsObject *object,
   swfdec_as_value_to_number (context, &argv[0]);
   swfdec_as_value_to_string (context, argv[0]);
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_NULL (*&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (argv[0])) {
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, property);
   } else {
     G_STRUCT_MEMBER (gboolean, format, property_offsets[property]) =
@@ -275,8 +275,8 @@ swfdec_text_format_set_integer (SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_NULL (*&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (argv[0])) {
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, property);
   } else {
     G_STRUCT_MEMBER (int, format, property_offsets[property]) =
@@ -428,8 +428,8 @@ swfdec_text_format_do_set_color (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_NULL (*&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (argv[0])) {
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_COLOR);
   } else {
     format->attr.color = (unsigned) swfdec_as_value_to_integer (cx, &argv[0]);
@@ -624,8 +624,8 @@ swfdec_text_format_do_set_letter_spacing (SwfdecAsContext *cx,
   d = swfdec_as_value_to_number (cx, &argv[0]);
   swfdec_as_value_to_string (cx, argv[0]);
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_NULL (*&argv[0]))
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (argv[0]))
   {
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set,
 	SWFDEC_TEXT_ATTRIBUTE_LETTER_SPACING);
@@ -714,23 +714,23 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
   swfdec_as_value_to_number (cx, &argv[0]);
   swfdec_as_value_to_string (cx, argv[0]);
 
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]) ||
-      SWFDEC_AS_VALUE_IS_NULL (*&argv[0]))
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]) ||
+      SWFDEC_AS_VALUE_IS_NULL (argv[0]))
   {
     g_free (format->attr.tab_stops);
     format->attr.tab_stops = NULL;
     format->attr.n_tab_stops = 0;
     SWFDEC_TEXT_ATTRIBUTE_UNSET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS);
   }
-  else if (SWFDEC_AS_VALUE_IS_OBJECT (*&argv[0]) &&
-	SWFDEC_AS_VALUE_GET_OBJECT (*&argv[0])->array)
+  else if (SWFDEC_AS_VALUE_IS_OBJECT (argv[0]) &&
+	SWFDEC_AS_VALUE_GET_OBJECT (argv[0])->array)
   {
     SwfdecAsObject *array;
     SwfdecAsValue val;
     guint i;
     int len;
 
-    array = SWFDEC_AS_VALUE_GET_OBJECT (*&argv[0]);
+    array = SWFDEC_AS_VALUE_GET_OBJECT (argv[0]);
     len = swfdec_as_array_get_length (array);
 
     if (!SWFDEC_TEXT_ATTRIBUTE_IS_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS)) {
@@ -748,12 +748,12 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
       format->attr.tab_stops[i] = swfdec_text_format_value_to_integer (cx, &val, TRUE);
     }
   }
-  else if (SWFDEC_AS_VALUE_IS_STRING (*&argv[0]))
+  else if (SWFDEC_AS_VALUE_IS_STRING (argv[0]))
   {
     gsize i;
 
     // special case: empty strings mean null
-    if (SWFDEC_AS_VALUE_GET_STRING (*&argv[0]) == SWFDEC_AS_STR_EMPTY) {
+    if (SWFDEC_AS_VALUE_GET_STRING (argv[0]) == SWFDEC_AS_STR_EMPTY) {
       g_free (format->attr.tab_stops);
       format->attr.tab_stops = NULL;
       format->attr.n_tab_stops = 0;
@@ -761,7 +761,7 @@ swfdec_text_format_do_set_tab_stops (SwfdecAsContext *cx,
     } else {
       int n = cx->version >= 8 ? G_MININT : 0;
       SWFDEC_TEXT_ATTRIBUTE_SET (format->values_set, SWFDEC_TEXT_ATTRIBUTE_TAB_STOPS);
-      format->attr.n_tab_stops = strlen (SWFDEC_AS_VALUE_GET_STRING (*&argv[0]));
+      format->attr.n_tab_stops = strlen (SWFDEC_AS_VALUE_GET_STRING (argv[0]));
       format->attr.tab_stops = g_new (guint, format->attr.n_tab_stops);
       for (i = 0; i < format->attr.n_tab_stops; i++) {
 	format->attr.tab_stops[i] = n;
@@ -950,13 +950,13 @@ swfdec_text_format_init_properties (SwfdecAsContext *cx)
   g_return_if_fail (SWFDEC_IS_AS_CONTEXT (cx));
 
   swfdec_as_object_get_variable (cx->global, SWFDEC_AS_STR_TextFormat, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (val);
   swfdec_as_object_get_variable (proto, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val))
     return;
-  proto = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
+  proto = SWFDEC_AS_VALUE_GET_OBJECT (val);
 
   swfdec_as_object_add_native_variable (proto, SWFDEC_AS_STR_align,
       swfdec_text_format_do_get_align, swfdec_text_format_do_set_align);

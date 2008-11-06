@@ -253,7 +253,7 @@ swfdec_transform_as_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (0, NULL, "M", &movie);
 
   trans = g_object_new (SWFDEC_TYPE_TRANSFORM_AS, "context", cx, NULL);
-  trans->target = SWFDEC_AS_VALUE_GET_MOVIE (*&argv[0]);
+  trans->target = SWFDEC_AS_VALUE_GET_MOVIE (argv[0]);
   swfdec_as_object_set_relay (object, SWFDEC_AS_RELAY (trans));
   SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
 }

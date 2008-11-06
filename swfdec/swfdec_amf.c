@@ -70,7 +70,7 @@ swfdec_amf_parse_properties (SwfdecAsContext *context, SwfdecBits *bits, SwfdecA
 
     if (!swfdec_amf_parse_string (context, bits, &val))
       return FALSE;
-    name = SWFDEC_AS_VALUE_GET_STRING (*&val);
+    name = SWFDEC_AS_VALUE_GET_STRING (val);
     type = swfdec_bits_get_u8 (bits);
     if (type == SWFDEC_AMF_END_OBJECT)
       break;

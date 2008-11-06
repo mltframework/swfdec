@@ -763,7 +763,7 @@ swfdec_as_date_setTime (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_AS_DATE, &date, "");
 
   if (argc > 0 &&
-      (cx->version > 6 || !SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]))) {
+      (cx->version > 6 || !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]))) {
     d = swfdec_as_value_to_number (cx, &argv[0]);
   } else {
     d = NAN;
@@ -950,7 +950,7 @@ swfdec_as_date_UTC (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   // special case: ignore undefined and everything after it
   for (i = 0; i < argc; i++) {
-    if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[i])) {
+    if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[i])) {
       argc = i;
       break;
     }
@@ -1076,7 +1076,7 @@ swfdec_as_date_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   // special case: ignore undefined and everything after it
   for (i = 0; i < argc; i++) {
-    if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[i])) {
+    if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[i])) {
       argc = i;
       break;
     }

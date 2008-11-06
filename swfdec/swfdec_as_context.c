@@ -1082,9 +1082,9 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 3)
     return;
 
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (*&argv[0]))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (argv[0]))
     return;
-  obj = SWFDEC_AS_VALUE_GET_COMPOSITE (*&argv[0]);
+  obj = SWFDEC_AS_VALUE_GET_COMPOSITE (argv[0]);
   flags[0] = swfdec_as_value_to_integer (cx, &argv[2]);
   flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, &argv[3]) : 0;
 
@@ -1094,7 +1094,7 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
     return;
   }
 
-  if (SWFDEC_AS_VALUE_IS_NULL (*&argv[1])) {
+  if (SWFDEC_AS_VALUE_IS_NULL (argv[1])) {
     swfdec_as_object_foreach (obj, swfdec_as_context_ASSetPropFlags_foreach, flags);
   } else {
     char **split =

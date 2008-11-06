@@ -163,10 +163,10 @@ swfdec_sprite_movie_set_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
   for (i = 0; i < length; i++) {
     if (!swfdec_as_object_get_variable (array, 
 	  swfdec_as_integer_to_string (cx, i), &val) ||
-	!SWFDEC_AS_VALUE_IS_OBJECT (*&val) ||
-	!SWFDEC_IS_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (*&val)->relay))
+	!SWFDEC_AS_VALUE_IS_OBJECT (val) ||
+	!SWFDEC_IS_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (val)->relay))
       continue;
-    filter = SWFDEC_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (*&val)->relay);
+    filter = SWFDEC_FILTER (SWFDEC_AS_VALUE_GET_OBJECT (val)->relay);
     filter = swfdec_filter_clone (filter);
     list = g_slist_prepend (list, filter);
   }
@@ -241,18 +241,18 @@ swfdec_sprite_movie_set_blendMode (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "v", &val);
 
-  if (SWFDEC_AS_VALUE_IS_NUMBER (*&val)) {
-    blend_mode = SWFDEC_AS_VALUE_GET_NUMBER (*&val);
-  } else if (SWFDEC_AS_VALUE_IS_STRING (*&val)) {
+  if (SWFDEC_AS_VALUE_IS_NUMBER (val)) {
+    blend_mode = SWFDEC_AS_VALUE_GET_NUMBER (val);
+  } else if (SWFDEC_AS_VALUE_IS_STRING (val)) {
     blend_mode = 0;
-    str = SWFDEC_AS_VALUE_GET_STRING (*&val);
+    str = SWFDEC_AS_VALUE_GET_STRING (val);
     for (i = 0; i < num_blend_mode_names; i++) {
       if (str == blend_mode_names[i]) { // case-sensitive
 	blend_mode = i + 1;
 	break;
       }
     }
-  } else if (SWFDEC_AS_VALUE_IS_OBJECT (*&val)) {
+  } else if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     blend_mode = 0;
   } else {
     blend_mode = 1;
@@ -348,7 +348,7 @@ swfdec_sprite_movie_getInstanceAtDepth (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "i", &depth);
 
   // special case
-  if (SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0]))
+  if (SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0]))
     return;
 
   movie = swfdec_movie_find (movie, depth);
@@ -676,8 +676,8 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (movie->parent == NULL)
     SWFDEC_FIXME ("swapDepths on root movie, should do something weird");
 
-  if (SWFDEC_AS_VALUE_IS_MOVIE (*&value)) {
-    other = SWFDEC_AS_VALUE_GET_MOVIE (*&value);
+  if (SWFDEC_AS_VALUE_IS_MOVIE (value)) {
+    other = SWFDEC_AS_VALUE_GET_MOVIE (value);
     if (other == NULL || other->parent != movie->parent)
       return;
     depth = other->depth;
@@ -944,7 +944,7 @@ swfdec_sprite_movie_setMask (SwfdecAsContext *cx, SwfdecAsObject *object,
   /* yes, this works with regular movies */
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "M", &mask);
 
-  if (argc > 0 && mask == NULL && !SWFDEC_AS_VALUE_IS_NULL (*&argv[0])) {
+  if (argc > 0 && mask == NULL && !SWFDEC_AS_VALUE_IS_NULL (argv[0])) {
     SWFDEC_FIXME ("mask is not a movie and not null, what now?");
     mask = NULL;
   }

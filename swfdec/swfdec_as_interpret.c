@@ -419,9 +419,9 @@ super_special_movie_lookup_magic (SwfdecAsContext *cx, SwfdecAsObject *o, const 
   }
   if (!swfdec_as_object_get_variable (o, name, &val))
     return NULL;
-  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (*&val))
+  if (!SWFDEC_AS_VALUE_IS_COMPOSITE (val))
     return NULL;
-  return SWFDEC_AS_VALUE_GET_COMPOSITE (*&val);
+  return SWFDEC_AS_VALUE_GET_COMPOSITE (val);
 }
 
 static SwfdecAsObject *
@@ -981,10 +981,10 @@ swfdec_action_add2 (SwfdecAsContext *cx, guint action, const guint8 *data, guint
   rtmp = *rval;
   ltmp = *lval;
   swfdec_action_add2_to_primitive (&rtmp);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&rtmp))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (rtmp))
     rval = &rtmp;
   swfdec_action_add2_to_primitive (&ltmp);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&ltmp))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (ltmp))
     lval = &ltmp;
 
   if (SWFDEC_AS_VALUE_IS_STRING (*lval) || SWFDEC_AS_VALUE_IS_STRING (*rval)) {
@@ -1427,7 +1427,7 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   ltype = SWFDEC_AS_VALUE_GET_TYPE (ltmp);
   rtype = SWFDEC_AS_VALUE_GET_TYPE (rtmp);
   
-  if (SWFDEC_AS_VALUE_IS_COMPOSITE (*&ltmp) && SWFDEC_AS_VALUE_IS_COMPOSITE (*&rtmp)) {
+  if (SWFDEC_AS_VALUE_IS_COMPOSITE (ltmp) && SWFDEC_AS_VALUE_IS_COMPOSITE (rtmp)) {
     /* get movies compared */
     if (ltype == SWFDEC_AS_TYPE_MOVIE) {
       if (rtype == SWFDEC_AS_TYPE_MOVIE) {
@@ -1436,13 +1436,13 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 	swfdec_as_value_to_primitive (rval);
       }
       cond = SWFDEC_AS_VALUE_IS_MOVIE (*rval) && 
-	SWFDEC_AS_VALUE_GET_MOVIE (*&ltmp) == SWFDEC_AS_VALUE_GET_MOVIE (*rval);
+	SWFDEC_AS_VALUE_GET_MOVIE (ltmp) == SWFDEC_AS_VALUE_GET_MOVIE (*rval);
       goto out;
     }
     if (rtype == SWFDEC_AS_TYPE_MOVIE) {
       swfdec_as_value_to_primitive (lval);
       cond = SWFDEC_AS_VALUE_IS_MOVIE (*lval) && 
-	SWFDEC_AS_VALUE_GET_MOVIE (*&rtmp) == SWFDEC_AS_VALUE_GET_MOVIE (*lval);
+	SWFDEC_AS_VALUE_GET_MOVIE (rtmp) == SWFDEC_AS_VALUE_GET_MOVIE (*lval);
       goto out;
     }
 
@@ -1452,17 +1452,17 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
 
   /* compare strings */
   if (ltype == SWFDEC_AS_TYPE_STRING && rtype == SWFDEC_AS_TYPE_STRING) {
-    cond = SWFDEC_AS_VALUE_GET_STRING (*&ltmp) == SWFDEC_AS_VALUE_GET_STRING (*&rtmp);
+    cond = SWFDEC_AS_VALUE_GET_STRING (ltmp) == SWFDEC_AS_VALUE_GET_STRING (rtmp);
     goto out;
   }
 
   /* convert to numbers */
-  if (SWFDEC_AS_VALUE_IS_OBJECT (*&ltmp)) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (ltmp)) {
     l = swfdec_as_value_to_number (cx, lval);
   } else {
     l = swfdec_as_value_to_number (cx, &ltmp);
   }
-  if (SWFDEC_AS_VALUE_IS_OBJECT (*&rtmp)) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (rtmp)) {
     r = swfdec_as_value_to_number (cx, rval);
   } else {
     r = swfdec_as_value_to_number (cx, &rtmp);
@@ -2171,7 +2171,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
       break;
     case SWFDEC_AS_TYPE_OBJECT:
       {
-	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
+	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
 	if (SWFDEC_IS_AS_FUNCTION (obj->relay)) {
 	  type = SWFDEC_AS_STR_function;
 	} else {
@@ -2181,7 +2181,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
       break;
     case SWFDEC_AS_TYPE_MOVIE:
       {
-	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (*&val);
+	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (val);
 	if (SWFDEC_IS_TEXT_FIELD_MOVIE (movie) &&
 	    movie->state == SWFDEC_MOVIE_STATE_RUNNING) {
 	  type = SWFDEC_AS_STR_object;
@@ -2227,9 +2227,9 @@ swfdec_action_is_instance_of (SwfdecAsObject *object,
 
   // FIXME: propflag tests are wrong, and we shouldn't get __proto__.prototype
   swfdec_as_object_get_variable (constructor, SWFDEC_AS_STR_prototype, &val);
-  if (!SWFDEC_AS_VALUE_IS_OBJECT (*&val))
+  if (!SWFDEC_AS_VALUE_IS_OBJECT (val))
     return FALSE;
-  prototype = SWFDEC_AS_VALUE_GET_OBJECT (*&val);
+  prototype = SWFDEC_AS_VALUE_GET_OBJECT (val);
 
   class = object;
   while ((class = swfdec_as_object_get_prototype (class)) != NULL) {

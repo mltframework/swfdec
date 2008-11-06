@@ -721,11 +721,11 @@ swfdec_as_array_concat (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_array_append_array (array_new, object);
 
   for (j = 0; j < argc; j++) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (*&argv[j]) &&
-	SWFDEC_AS_VALUE_GET_OBJECT (*&argv[j])->array)
+    if (SWFDEC_AS_VALUE_IS_OBJECT (argv[j]) &&
+	SWFDEC_AS_VALUE_GET_OBJECT (argv[j])->array)
     {
       swfdec_as_array_append_array (array_new,
-	  SWFDEC_AS_VALUE_GET_OBJECT (*&argv[j]));
+	  SWFDEC_AS_VALUE_GET_OBJECT (argv[j]));
     }
     else
     {
@@ -1172,11 +1172,11 @@ swfdec_as_array_sort (SwfdecAsContext *cx, SwfdecAsObject *object, guint argc,
 
   pos = 0;
 
-  if (argc > pos && !SWFDEC_AS_VALUE_IS_NUMBER (*&argv[pos])) {
+  if (argc > pos && !SWFDEC_AS_VALUE_IS_NUMBER (argv[pos])) {
     SwfdecAsFunction *fun;
-    if (!SWFDEC_AS_VALUE_IS_OBJECT (*&argv[pos]) ||
+    if (!SWFDEC_AS_VALUE_IS_OBJECT (argv[pos]) ||
 	!SWFDEC_IS_AS_FUNCTION (
-	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (*&argv[pos])->relay))
+	  fun = (SwfdecAsFunction *) SWFDEC_AS_VALUE_GET_OBJECT (argv[pos])->relay))
 	return;
     custom_function = fun;
     pos++;
@@ -1210,9 +1210,9 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  if (SWFDEC_AS_VALUE_IS_OBJECT (*&argv[0])) {
+  if (SWFDEC_AS_VALUE_IS_OBJECT (argv[0])) {
 
-    array = SWFDEC_AS_VALUE_GET_OBJECT (*&argv[0]);
+    array = SWFDEC_AS_VALUE_GET_OBJECT (argv[0]);
     if (!array->array) {
       SWFDEC_AS_VALUE_SET_OBJECT (ret, object);
       return;
@@ -1232,7 +1232,7 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
 
     fields[i] = NULL;
   } else {
-    if (SWFDEC_AS_VALUE_IS_MOVIE (*&argv[0])) {
+    if (SWFDEC_AS_VALUE_IS_MOVIE (argv[0])) {
       SWFDEC_FIXME ("how do we treat movies here?");
     }
     num_fields = 1;
@@ -1244,8 +1244,8 @@ swfdec_as_array_sortOn (SwfdecAsContext *cx, SwfdecAsObject *object,
   options = g_new0 (SortOption, num_fields);
 
   if (argc > 1) {
-    if (SWFDEC_AS_VALUE_IS_OBJECT (*&argv[1])) {
-      array = SWFDEC_AS_VALUE_GET_OBJECT (*&argv[1]);
+    if (SWFDEC_AS_VALUE_IS_OBJECT (argv[1])) {
+      array = SWFDEC_AS_VALUE_GET_OBJECT (argv[1]);
 
       if (array->array &&
 	swfdec_as_array_get_length (array) == num_fields) {
@@ -1284,7 +1284,7 @@ swfdec_as_array_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_as_object_set_relay (object, NULL);
   object->array = TRUE;
 
-  if (argc == 1 && SWFDEC_AS_VALUE_IS_NUMBER (*&argv[0])) {
+  if (argc == 1 && SWFDEC_AS_VALUE_IS_NUMBER (argv[0])) {
     int l = swfdec_as_value_to_integer (cx, &argv[0]);
     swfdec_as_array_set_length (object, l < 0 ? 0 : l);
   } else if (argc > 0) {

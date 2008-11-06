@@ -342,7 +342,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
   arr = swfdec_as_array_new (cx);
   SWFDEC_AS_VALUE_SET_OBJECT (ret, arr);
   /* hi, i'm the special case */
-  if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0])) {
+  if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0])) {
     delim = SWFDEC_AS_STR_COMMA;
   } else {
     delim = swfdec_as_value_to_string (cx, argv[0]);
@@ -352,7 +352,7 @@ swfdec_as_string_split_5 (SwfdecAsContext *cx, SwfdecAsObject *object,
     swfdec_as_array_push (arr, &val);
     return;
   }
-  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[1])) {
+  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[1])) {
     swfdec_as_value_to_string (cx, argv[0]);
     count = swfdec_as_value_to_integer (cx, &argv[1]);
   } else {
@@ -394,7 +394,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
   arr = swfdec_as_array_new (cx);
   SWFDEC_AS_VALUE_SET_OBJECT (ret, arr);
   /* hi, i'm the special case */
-  if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[0])) {
+  if (argc < 1 || SWFDEC_AS_VALUE_IS_UNDEFINED (argv[0])) {
     SWFDEC_AS_VALUE_SET_STRING (&val, str);
     swfdec_as_array_push (arr, &val);
     return;
@@ -407,7 +407,7 @@ swfdec_as_string_split_6 (SwfdecAsContext *cx, SwfdecAsObject *object,
     }
     return;
   }
-  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[1]))
+  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[1]))
     count = swfdec_as_value_to_integer (cx, &argv[1]);
   else
     count = G_MAXINT;
@@ -520,7 +520,7 @@ swfdec_as_string_substr (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   len = g_utf8_strlen (string, -1);
   
-  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[1])) {
+  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[1])) {
     to = swfdec_as_value_to_integer (cx, &argv[1]);
     /* FIXME: wtf? */
     if (to < 0) {
@@ -554,7 +554,7 @@ swfdec_as_string_substring (SwfdecAsContext *cx, SwfdecAsObject *object,
   SWFDEC_AS_STRING_CHECK (&string, "i", &from);
 
   len = g_utf8_strlen (string, -1);
-  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (*&argv[1])) {
+  if (argc > 1 && !SWFDEC_AS_VALUE_IS_UNDEFINED (argv[1])) {
     to = swfdec_as_value_to_integer (cx, &argv[1]);
   } else {
     to = len;

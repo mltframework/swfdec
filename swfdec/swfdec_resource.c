@@ -72,7 +72,8 @@ swfdec_resource_stream_target_image (SwfdecResource *instance)
   SwfdecPlayer *player = SWFDEC_PLAYER (swfdec_gc_object_get_context (instance));
   SwfdecSpriteMovie *movie = (SwfdecSpriteMovie *) SWFDEC_AS_VALUE_GET_MOVIE (instance->movie);
 
-  if (!SWFDEC_IS_SPRITE_MOVIE (movie) || movie->sprite != NULL)
+  if (!SWFDEC_IS_SPRITE_MOVIE (movie) || movie->sprite != NULL ||
+      swfdec_movie_get_own_resource (SWFDEC_MOVIE (movie)) != instance)
     return;
 
   if (SWFDEC_IS_SWF_DECODER (instance->decoder)) {

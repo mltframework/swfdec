@@ -53,7 +53,7 @@ swfdec_as_number_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
   double d;
 
   if (argc > 0) {
-    d = swfdec_as_value_to_number (cx, *&argv[0]);
+    d = swfdec_as_value_to_number (cx, argv[0]);
   } else {
     d = 0;
   }

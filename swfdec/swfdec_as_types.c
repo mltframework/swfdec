@@ -627,7 +627,7 @@ swfdec_as_value_to_boolean (SwfdecAsContext *context, SwfdecAsValue value)
       }
     case SWFDEC_AS_TYPE_STRING:
       if (context->version <= 6) {
-	double d = swfdec_as_value_to_number (context, *&value);
+	double d = swfdec_as_value_to_number (context, value);
 	return d != 0.0 && !isnan (d);
       } else {
 	return SWFDEC_AS_VALUE_GET_STRING (value) != SWFDEC_AS_STR_EMPTY;

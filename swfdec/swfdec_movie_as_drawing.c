@@ -106,7 +106,7 @@ swfdec_sprite_movie_gradient_fill_get_length (SwfdecAsObject *o)
   SwfdecAsValue val;
 
   swfdec_as_object_get_variable (o, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (o->context, *&val);
+  length = swfdec_as_value_to_integer (o->context, val);
   return MAX (length, 0);
 }
 
@@ -138,15 +138,15 @@ swfdec_sprite_movie_extract_matrix (SwfdecAsObject *o, cairo_matrix_t *mat)
       double x, y, w, h, r;
       cairo_matrix_t input;
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_x, &val);
-      x = swfdec_as_value_to_number (cx, *&val);
+      x = swfdec_as_value_to_number (cx, val);
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_y, &val);
-      y = swfdec_as_value_to_number (cx, *&val);
+      y = swfdec_as_value_to_number (cx, val);
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_w, &val);
-      w = swfdec_as_value_to_number (cx, *&val);
+      w = swfdec_as_value_to_number (cx, val);
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_h, &val);
-      h = swfdec_as_value_to_number (cx, *&val);
+      h = swfdec_as_value_to_number (cx, val);
       swfdec_as_object_get_variable (o, SWFDEC_AS_STR_r, &val);
-      r = swfdec_as_value_to_number (cx, *&val);
+      r = swfdec_as_value_to_number (cx, val);
       cairo_matrix_init_translate (&input, (x + w) / 2, (y + h) / 2);
       cairo_matrix_scale (&input, w, h);
       cairo_matrix_rotate (&input, r);
@@ -160,17 +160,17 @@ swfdec_sprite_movie_extract_matrix (SwfdecAsObject *o, cairo_matrix_t *mat)
   } else {
     cairo_matrix_t input;
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_a, &val);
-    input.xx = swfdec_as_value_to_number (cx, *&val);
+    input.xx = swfdec_as_value_to_number (cx, val);
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_b, &val);
-    input.yx = swfdec_as_value_to_number (cx, *&val);
+    input.yx = swfdec_as_value_to_number (cx, val);
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_d, &val);
-    input.xy = swfdec_as_value_to_number (cx, *&val);
+    input.xy = swfdec_as_value_to_number (cx, val);
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_e, &val);
-    input.yy = swfdec_as_value_to_number (cx, *&val);
+    input.yy = swfdec_as_value_to_number (cx, val);
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_g, &val);
-    input.x0 = swfdec_as_value_to_number (cx, *&val) * SWFDEC_TWIPS_SCALE_FACTOR;
+    input.x0 = swfdec_as_value_to_number (cx, val) * SWFDEC_TWIPS_SCALE_FACTOR;
     swfdec_as_object_get_variable (o, SWFDEC_AS_STR_h, &val);
-    input.y0 = swfdec_as_value_to_number (cx, *&val) * SWFDEC_TWIPS_SCALE_FACTOR;
+    input.y0 = swfdec_as_value_to_number (cx, val) * SWFDEC_TWIPS_SCALE_FACTOR;
     cairo_matrix_init_scale (mat, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0, SWFDEC_TWIPS_SCALE_FACTOR / 32768.0);
     cairo_matrix_multiply (mat, mat, &input);
   }
@@ -220,7 +220,7 @@ swfdec_sprite_movie_beginGradientFill (SwfdecAsContext *cx, SwfdecAsObject *obje
       const char *name = swfdec_as_integer_to_string (cx, i);
       if (swfdec_as_object_get_variable (colors, name, &v)
 	  && SWFDEC_AS_VALUE_IS_NUMBER (v))
-	c = swfdec_as_value_to_integer (cx, *&v);
+	c = swfdec_as_value_to_integer (cx, v);
       else
 	c = 0;
       if (!swfdec_as_object_get_variable (alphas, name, &v)) {
@@ -228,14 +228,14 @@ swfdec_sprite_movie_beginGradientFill (SwfdecAsContext *cx, SwfdecAsObject *obje
       } else if (!SWFDEC_AS_VALUE_IS_NUMBER (v)) {
 	a = 0;
       } else {
-	a = swfdec_as_value_to_integer (cx, *&v);
+	a = swfdec_as_value_to_integer (cx, v);
       }
       if (!swfdec_as_object_get_variable (ratios, name, &v))
 	r = CLAMP (a, 0, 255);
       else if (!SWFDEC_AS_VALUE_IS_NUMBER (v))
 	r = 0;
       else
-	r = swfdec_as_value_to_integer (cx, *&v);
+	r = swfdec_as_value_to_integer (cx, v);
     } else {
       c = a = r = 0;
     }

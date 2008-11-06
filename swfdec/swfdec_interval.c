@@ -107,7 +107,7 @@ swfdec_interval_trigger (SwfdecTimeout *timeout)
   }
   swfdec_sandbox_use (interval->sandbox);
   if (interval->fun_name) {
-    SwfdecAsObject *object = swfdec_as_value_to_object (context, *&interval->args[0]);
+    SwfdecAsObject *object = swfdec_as_value_to_object (context, interval->args[0]);
     if (object) {
       swfdec_as_object_call (object,
 	  interval->fun_name, interval->n_args, interval->args, &ret);

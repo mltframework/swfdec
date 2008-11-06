@@ -772,7 +772,7 @@ swfdec_as_object_set_variable_and_flags (SwfdecAsObject *object,
       SwfdecAsValue tmp;
       gint32 length;
       swfdec_as_object_get_variable (object, SWFDEC_AS_STR_length, &tmp);
-      length = swfdec_as_value_to_integer (context, *&tmp);
+      length = swfdec_as_value_to_integer (context, tmp);
       if (l >= length) {
 	object->array = FALSE;
 	swfdec_as_value_set_integer (context, &tmp, l + 1);
@@ -1524,7 +1524,7 @@ swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
   if (argc < 1)
     return;
 
-  class = swfdec_as_value_to_object (cx, *&argv[0]);
+  class = swfdec_as_value_to_object (cx, argv[0]);
   if (class == NULL)
     return;
 
@@ -1688,7 +1688,7 @@ swfdec_as_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       *ret = argv[0];
       return;
     } else {
-      SwfdecAsObject *result = swfdec_as_value_to_object (cx, *&argv[0]);
+      SwfdecAsObject *result = swfdec_as_value_to_object (cx, argv[0]);
       if (result != NULL) {
 	SWFDEC_AS_VALUE_SET_OBJECT (ret, result);
 	return;

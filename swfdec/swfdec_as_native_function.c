@@ -331,7 +331,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case 'i':
 	{
 	  int *j = va_arg (varargs, int *);
-	  *j = swfdec_as_value_to_integer (cx, *&argv[i]);
+	  *j = swfdec_as_value_to_integer (cx, argv[i]);
 	}
 	break;
       case 'm':
@@ -352,7 +352,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case 'n':
 	{
 	  double *d = va_arg (varargs, double *);
-	  *d = swfdec_as_value_to_number (cx, *&argv[i]);
+	  *d = swfdec_as_value_to_number (cx, argv[i]);
 	}
 	break;
       case 's':
@@ -365,7 +365,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case 'O':
 	{
 	  SwfdecAsObject **o = va_arg (varargs, SwfdecAsObject **);
-	  *o = swfdec_as_value_to_object (cx, *&argv[i]);
+	  *o = swfdec_as_value_to_object (cx, argv[i]);
 	  if (*o == NULL && *args != 'O')
 	    return FALSE;
 	}

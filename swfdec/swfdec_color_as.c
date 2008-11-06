@@ -116,7 +116,7 @@ swfdec_movie_color_setRGB (SwfdecAsContext *cx, SwfdecAsObject *obj,
   if (movie == NULL)
     return;
 
-  color = swfdec_as_value_to_integer (cx, *&argv[0]);
+  color = swfdec_as_value_to_integer (cx, argv[0]);
 
   movie->color_transform.ra = 0;
   movie->color_transform.rb = (color & 0xFF0000) >> 16;
@@ -135,7 +135,7 @@ parse_property (SwfdecAsObject *obj, const char *name, int *target, gboolean sca
 
   if (!swfdec_as_object_get_variable (obj, name, &val))
     return;
-  d = swfdec_as_value_to_number (obj->context, *&val);
+  d = swfdec_as_value_to_number (obj->context, val);
   if (scale) {
     *target = d * 256.0 / 100.0;
   } else {

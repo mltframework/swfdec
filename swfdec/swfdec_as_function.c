@@ -146,7 +146,7 @@ swfdec_as_function_apply (SwfdecAsContext *cx, SwfdecAsObject *object,
     array = SWFDEC_AS_VALUE_GET_COMPOSITE (argv[1]);
 
     swfdec_as_object_get_variable (array, SWFDEC_AS_STR_length, &val);
-    length = swfdec_as_value_to_integer (cx, *&val);
+    length = swfdec_as_value_to_integer (cx, val);
 
     if (length > 0) {
       /* FIXME: find a smarter way to do this, like providing argv not as an array */

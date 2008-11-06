@@ -1085,8 +1085,8 @@ swfdec_as_context_ASSetPropFlags (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!SWFDEC_AS_VALUE_IS_COMPOSITE (argv[0]))
     return;
   obj = SWFDEC_AS_VALUE_GET_COMPOSITE (argv[0]);
-  flags[0] = swfdec_as_value_to_integer (cx, *&argv[2]);
-  flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, *&argv[3]) : 0;
+  flags[0] = swfdec_as_value_to_integer (cx, argv[2]);
+  flags[1] = (argc > 3) ? swfdec_as_value_to_integer (cx, argv[3]) : 0;
 
   if (flags[0] == 0 && flags[1] == 0) {
     // we should add autosizing length attribute here
@@ -1118,7 +1118,7 @@ swfdec_as_context_isFinite (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  d = swfdec_as_value_to_number (cx, *&argv[0]);
+  d = swfdec_as_value_to_number (cx, argv[0]);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isfinite (d) ? TRUE : FALSE);
 }
 
@@ -1132,7 +1132,7 @@ swfdec_as_context_isNaN (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (argc < 1)
     return;
 
-  d = swfdec_as_value_to_number (cx, *&argv[0]);
+  d = swfdec_as_value_to_number (cx, argv[0]);
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, isnan (d) ? TRUE : FALSE);
 }
 

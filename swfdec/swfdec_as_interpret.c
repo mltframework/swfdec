@@ -1458,12 +1458,12 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   if (SWFDEC_AS_VALUE_IS_OBJECT (ltmp)) {
     l = swfdec_as_value_to_number (cx, *lval);
   } else {
-    l = swfdec_as_value_to_number (cx, *&ltmp);
+    l = swfdec_as_value_to_number (cx, ltmp);
   }
   if (SWFDEC_AS_VALUE_IS_OBJECT (rtmp)) {
     r = swfdec_as_value_to_number (cx, *rval);
   } else {
-    r = swfdec_as_value_to_number (cx, *&rtmp);
+    r = swfdec_as_value_to_number (cx, rtmp);
   }
 
   /* get rid of undefined and null */

@@ -56,7 +56,7 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
 
   listeners = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
   swfdec_as_object_get_variable (listeners, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (cx, *&val);
+  length = swfdec_as_value_to_integer (cx, val);
 
   /* return undefined if we won't try to call anything */
   if (length <= 0)
@@ -65,7 +65,7 @@ broadcastMessage (SwfdecAsContext *cx, SwfdecAsObject *object,
   /* FIXME: solve this wth foreach, so it gets faster for weird cases */
   for (i = 0; i < length; i++) {
     swfdec_as_object_get_variable (listeners, swfdec_as_integer_to_string (cx, i), &val);
-    o = swfdec_as_value_to_object (cx, *&val);
+    o = swfdec_as_value_to_object (cx, val);
     if (o == NULL)
       continue;
     list = g_slist_prepend (list, o);

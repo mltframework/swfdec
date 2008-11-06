@@ -157,7 +157,7 @@ swfdec_sprite_movie_set_filters (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_movie_invalidate_next (movie);
 
   swfdec_as_object_get_variable (array, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (cx, *&val);
+  length = swfdec_as_value_to_integer (cx, val);
 
   list = NULL;
   for (i = 0; i < length; i++) {
@@ -641,10 +641,10 @@ swfdec_sprite_movie_startDrag (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
   if (argc >= 5) {
     SwfdecRect rect;
-    rect.x0 = swfdec_as_value_to_number (cx, *&argv[1]);
-    rect.y0 = swfdec_as_value_to_number (cx, *&argv[2]);
-    rect.x1 = swfdec_as_value_to_number (cx, *&argv[3]);
-    rect.y1 = swfdec_as_value_to_number (cx, *&argv[4]);
+    rect.x0 = swfdec_as_value_to_number (cx, argv[1]);
+    rect.y0 = swfdec_as_value_to_number (cx, argv[2]);
+    rect.x1 = swfdec_as_value_to_number (cx, argv[3]);
+    rect.y1 = swfdec_as_value_to_number (cx, argv[4]);
     swfdec_rect_scale (&rect, &rect, SWFDEC_TWIPS_SCALE_FACTOR);
     swfdec_player_set_drag_movie (player, actor, center, &rect);
   } else {
@@ -682,7 +682,7 @@ swfdec_sprite_movie_swapDepths (SwfdecAsContext *cx, SwfdecAsObject *object,
       return;
     depth = other->depth;
   } else {
-    depth = swfdec_as_value_to_integer (cx, *&value);
+    depth = swfdec_as_value_to_integer (cx, value);
     if (movie->parent) {
       other = swfdec_movie_find (movie->parent, depth);
     } else {

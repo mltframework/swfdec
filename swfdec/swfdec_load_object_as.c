@@ -147,7 +147,7 @@ swfdec_load_object_as_get_headers (SwfdecAsObject *object, guint *header_count,
   list = SWFDEC_AS_VALUE_GET_COMPOSITE (val);
 
   swfdec_as_object_get_variable (list, SWFDEC_AS_STR_length, &val);
-  length = swfdec_as_value_to_integer (cx, *&val);
+  length = swfdec_as_value_to_integer (cx, val);
 
   /* FIXME: solve this with foreach, so it gets faster for weird cases */
   name = NULL;

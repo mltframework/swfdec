@@ -112,7 +112,7 @@ swfdec_net_connection_do_connect (SwfdecAsContext *cx, SwfdecAsObject *object,
     url = NULL;
   } else {
     SWFDEC_FIXME ("untested argument to NetConnection.connect: type %u",
-	SWFDEC_AS_VALUE_GET_TYPE (&val));
+	SWFDEC_AS_VALUE_GET_TYPE (val));
     url = NULL;
   }
   swfdec_net_connection_connect (conn, url);

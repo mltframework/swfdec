@@ -1424,8 +1424,8 @@ swfdec_action_equals2_5 (SwfdecAsContext *cx, guint action, const guint8 *data, 
   ltmp = *lval;
   swfdec_as_value_to_primitive (&rtmp);
   swfdec_as_value_to_primitive (&ltmp);
-  ltype = SWFDEC_AS_VALUE_GET_TYPE (&ltmp);
-  rtype = SWFDEC_AS_VALUE_GET_TYPE (&rtmp);
+  ltype = SWFDEC_AS_VALUE_GET_TYPE (ltmp);
+  rtype = SWFDEC_AS_VALUE_GET_TYPE (rtmp);
   
   if (SWFDEC_AS_VALUE_IS_COMPOSITE (&ltmp) && SWFDEC_AS_VALUE_IS_COMPOSITE (&rtmp)) {
     /* get movies compared */
@@ -1521,8 +1521,8 @@ swfdec_action_equals2_6 (SwfdecAsContext *cx, guint action, const guint8 *data, 
     goto out;
   }
 
-  ltype = SWFDEC_AS_VALUE_GET_TYPE (lval);
-  rtype = SWFDEC_AS_VALUE_GET_TYPE (rval);
+  ltype = SWFDEC_AS_VALUE_GET_TYPE (*lval);
+  rtype = SWFDEC_AS_VALUE_GET_TYPE (*rval);
 
   /* get rid of undefined and null */
   cond = rtype == SWFDEC_AS_TYPE_UNDEFINED || rtype == SWFDEC_AS_TYPE_NULL;
@@ -1573,10 +1573,10 @@ swfdec_action_strict_equals (SwfdecAsContext *cx, guint action, const guint8 *da
   rval = swfdec_as_stack_peek (cx, 1);
   lval = swfdec_as_stack_peek (cx, 2);
 
-  if (SWFDEC_AS_VALUE_GET_TYPE (rval) != SWFDEC_AS_VALUE_GET_TYPE (lval)) {
+  if (SWFDEC_AS_VALUE_GET_TYPE (*rval) != SWFDEC_AS_VALUE_GET_TYPE (*lval)) {
     cond = FALSE;
   } else {
-    switch (SWFDEC_AS_VALUE_GET_TYPE (rval)) {
+    switch (SWFDEC_AS_VALUE_GET_TYPE (*rval)) {
       case SWFDEC_AS_TYPE_UNDEFINED:
       case SWFDEC_AS_TYPE_NULL:
 	cond = TRUE;
@@ -2149,10 +2149,10 @@ swfdec_action_to_string (SwfdecAsContext *cx, guint action, const guint8 *data, 
 static void
 swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsValue *val;
+  SwfdecAsValue val;
   const char *type;
 
-  val = swfdec_as_stack_peek (cx, 1);
+  val = *swfdec_as_stack_peek (cx, 1);
   switch (SWFDEC_AS_VALUE_GET_TYPE (val)) {
     case SWFDEC_AS_TYPE_NUMBER:
       type = SWFDEC_AS_STR_number;
@@ -2171,7 +2171,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
       break;
     case SWFDEC_AS_TYPE_OBJECT:
       {
-	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (val);
+	SwfdecAsObject *obj = SWFDEC_AS_VALUE_GET_OBJECT (&val);
 	if (SWFDEC_IS_AS_FUNCTION (obj->relay)) {
 	  type = SWFDEC_AS_STR_function;
 	} else {
@@ -2181,7 +2181,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
       break;
     case SWFDEC_AS_TYPE_MOVIE:
       {
-	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (val);
+	SwfdecMovie *movie = SWFDEC_AS_VALUE_GET_MOVIE (&val);
 	if (SWFDEC_IS_TEXT_FIELD_MOVIE (movie) &&
 	    movie->state == SWFDEC_MOVIE_STATE_RUNNING) {
 	  type = SWFDEC_AS_STR_object;
@@ -2196,7 +2196,7 @@ swfdec_action_type_of (SwfdecAsContext *cx, guint action, const guint8 *data, gu
       type = SWFDEC_AS_STR_EMPTY;
       break;
   }
-  SWFDEC_AS_VALUE_SET_STRING (val, type);
+  SWFDEC_AS_VALUE_SET_STRING (&val, type);
 }
 
 static void

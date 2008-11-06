@@ -37,7 +37,7 @@ G_BEGIN_DECLS
 #define SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT 256
 
 /* swfdec_as_types.h */
-#define SWFDEC_AS_VALUE_IS_COMPOSITE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) >= SWFDEC_AS_TYPE_OBJECT)
+#define SWFDEC_AS_VALUE_IS_COMPOSITE(val) (SWFDEC_AS_VALUE_GET_TYPE (*(val)) >= SWFDEC_AS_TYPE_OBJECT)
 #define SWFDEC_AS_VALUE_IS_PRIMITIVE(val) (!SWFDEC_AS_VALUE_IS_COMPOSITE(val))
 /* FIXME: ugly macro */
 #define SWFDEC_AS_VALUE_GET_COMPOSITE(val) (SWFDEC_AS_VALUE_IS_OBJECT (val) ? \
@@ -52,9 +52,9 @@ G_BEGIN_DECLS
   } \
 } G_STMT_END
 
-#define SWFDEC_AS_VALUE_IS_MOVIE(val) (SWFDEC_AS_VALUE_GET_TYPE (val) == SWFDEC_AS_TYPE_MOVIE)
-#define SWFDEC_AS_VALUE_GET_MOVIE(val) (((SwfdecAsMovieValue *) SWFDEC_AS_VALUE_GET_VALUE (val))->movie ? \
-    ((SwfdecAsMovieValue *) SWFDEC_AS_VALUE_GET_VALUE (val))->movie : swfdec_as_movie_value_get (SWFDEC_AS_VALUE_GET_VALUE (val)))
+#define SWFDEC_AS_VALUE_IS_MOVIE(val) (SWFDEC_AS_VALUE_GET_TYPE (*(val)) == SWFDEC_AS_TYPE_MOVIE)
+#define SWFDEC_AS_VALUE_GET_MOVIE(val) (((SwfdecAsMovieValue *) SWFDEC_AS_VALUE_GET_VALUE (*(val)))->movie ? \
+    ((SwfdecAsMovieValue *) SWFDEC_AS_VALUE_GET_VALUE (*(val)))->movie : swfdec_as_movie_value_get (SWFDEC_AS_VALUE_GET_VALUE (*(val))))
 #define SWFDEC_AS_VALUE_FROM_MOVIE(m) SWFDEC_AS_VALUE_COMBINE (m->as_value, SWFDEC_AS_TYPE_MOVIE)
 #define SWFDEC_AS_VALUE_SET_MOVIE(val,m) G_STMT_START { \
   SwfdecMovie *__m = (m); \

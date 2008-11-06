@@ -352,17 +352,34 @@ swfdec_as_string_mark (const char *string)
 void
 swfdec_as_value_mark (SwfdecAsValue *value)
 {
-  SwfdecAsGcable *gcable = SWFDEC_AS_VALUE_GET_VALUE (value);
-  if (SWFDEC_AS_VALUE_IS_OBJECT (value)) {
-    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (gcable, SWFDEC_AS_GC_MARK))
-      swfdec_as_object_mark ((SwfdecAsObject *) gcable);
-  } else if (SWFDEC_AS_VALUE_IS_MOVIE (value)) {
-    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (gcable, SWFDEC_AS_GC_MARK))
-      swfdec_as_movie_value_mark ((SwfdecAsMovieValue *) gcable);
-  } else if (SWFDEC_AS_VALUE_IS_STRING (value) ||
-      SWFDEC_AS_VALUE_IS_NUMBER (value)) {
-    if (!SWFDEC_AS_GCABLE_FLAG_IS_SET (gcable, SWFDEC_AS_GC_ROOT | SWFDEC_AS_GC_MARK))
+  SwfdecAsGcable *gcable;
+  SwfdecAsValueType type = SWFDEC_AS_VALUE_GET_TYPE (*value);
+  
+  if (!SWFDEC_AS_TYPE_IS_GCABLE (type))
+    return;
+
+  gcable = SWFDEC_AS_VALUE_GET_VALUE (*value);
+  if (SWFDEC_AS_GCABLE_FLAG_IS_SET (gcable, SWFDEC_AS_GC_ROOT | SWFDEC_AS_GC_MARK))
+    return;
+
+  switch (type) {
+    case SWFDEC_AS_TYPE_STRING:
+    case SWFDEC_AS_TYPE_NUMBER:
       SWFDEC_AS_GCABLE_SET_FLAG (gcable, SWFDEC_AS_GC_MARK);
+      break;
+    case SWFDEC_AS_TYPE_OBJECT:
+      swfdec_as_object_mark ((SwfdecAsObject *) gcable);
+      break;
+    case SWFDEC_AS_TYPE_MOVIE:
+      swfdec_as_movie_value_mark ((SwfdecAsMovieValue *) gcable);
+      break;
+    case SWFDEC_AS_TYPE_UNDEFINED:
+    case SWFDEC_AS_TYPE_NULL:
+    case SWFDEC_AS_TYPE_BOOLEAN:
+    case SWFDEC_AS_TYPE_INT:
+    default:
+      g_assert_not_reached ();
+      break;
   }
 }
 

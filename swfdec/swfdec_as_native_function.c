@@ -365,7 +365,7 @@ swfdec_as_native_function_checkv (SwfdecAsContext *cx, SwfdecAsObject *object,
       case 'O':
 	{
 	  SwfdecAsObject **o = va_arg (varargs, SwfdecAsObject **);
-	  *o = swfdec_as_value_to_object (cx, &argv[i]);
+	  *o = swfdec_as_value_to_object (cx, *&argv[i]);
 	  if (*o == NULL && *args != 'O')
 	    return FALSE;
 	}

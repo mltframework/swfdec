@@ -555,7 +555,7 @@ swfdec_as_value_to_integer (SwfdecAsContext *context, SwfdecAsValue value)
  * Returns: object representing @value or %NULL.
  **/
 SwfdecAsObject *
-swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
+swfdec_as_value_to_object (SwfdecAsContext *context, SwfdecAsValue value)
 {
   SwfdecAsFunction *fun;
   SwfdecAsValue val;
@@ -563,7 +563,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
 
   g_return_val_if_fail (SWFDEC_IS_AS_CONTEXT (context), NULL);
 
-  switch (SWFDEC_AS_VALUE_GET_TYPE (*value)) {
+  switch (SWFDEC_AS_VALUE_GET_TYPE (value)) {
     case SWFDEC_AS_TYPE_UNDEFINED:
     case SWFDEC_AS_TYPE_NULL:
       return NULL;
@@ -578,7 +578,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
       break;
     case SWFDEC_AS_TYPE_OBJECT:
     case SWFDEC_AS_TYPE_MOVIE:
-      return SWFDEC_AS_VALUE_GET_COMPOSITE (*value);
+      return SWFDEC_AS_VALUE_GET_COMPOSITE (value);
     case SWFDEC_AS_TYPE_INT:
     default:
       g_assert_not_reached ();
@@ -589,7 +589,7 @@ swfdec_as_value_to_object (SwfdecAsContext *context, const SwfdecAsValue *value)
   if (!SWFDEC_AS_VALUE_IS_OBJECT (val) ||
       !SWFDEC_IS_AS_FUNCTION (fun = (SwfdecAsFunction *) (SWFDEC_AS_VALUE_GET_OBJECT (val)->relay)))
     return NULL;
-  swfdec_as_object_create (fun, 1, value, &val);
+  swfdec_as_object_create (fun, 1, &value, &val);
   if (SWFDEC_AS_VALUE_IS_OBJECT (val)) {
     return SWFDEC_AS_VALUE_GET_OBJECT (val);
   } else {
@@ -684,7 +684,7 @@ swfdec_as_value_get_variable (SwfdecAsContext *cx, const SwfdecAsValue *value,
   g_return_if_fail (name != NULL);
   g_return_if_fail (ret != NULL);
 
-  object = swfdec_as_value_to_object (cx, value);
+  object = swfdec_as_value_to_object (cx, *value);
   if (object == NULL) {
     SWFDEC_AS_VALUE_SET_UNDEFINED (ret);
     return;

@@ -1524,7 +1524,7 @@ swfdec_as_object_isPrototypeOf (SwfdecAsContext *cx,
   if (argc < 1)
     return;
 
-  class = swfdec_as_value_to_object (cx, &argv[0]);
+  class = swfdec_as_value_to_object (cx, *&argv[0]);
   if (class == NULL)
     return;
 
@@ -1688,7 +1688,7 @@ swfdec_as_object_construct (SwfdecAsContext *cx, SwfdecAsObject *object,
       *ret = argv[0];
       return;
     } else {
-      SwfdecAsObject *result = swfdec_as_value_to_object (cx, &argv[0]);
+      SwfdecAsObject *result = swfdec_as_value_to_object (cx, *&argv[0]);
       if (result != NULL) {
 	SWFDEC_AS_VALUE_SET_OBJECT (ret, result);
 	return;

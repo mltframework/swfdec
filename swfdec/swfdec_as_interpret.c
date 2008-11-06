@@ -745,7 +745,7 @@ swfdec_action_set_property (SwfdecAsContext *cx, guint action, const guint8 *dat
 static void
 swfdec_action_get_member (SwfdecAsContext *cx, guint action, const guint8 *data, guint len)
 {
-  SwfdecAsObject *object = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 2));
+  SwfdecAsObject *object = swfdec_as_value_to_object (cx, *swfdec_as_stack_peek (cx, 2));
   if (object) {
     const char *name;
     name = swfdec_as_value_to_string (cx, *swfdec_as_stack_peek (cx, 1));
@@ -864,7 +864,7 @@ swfdec_action_call_method (SwfdecAsContext *cx, guint action, const guint8 *data
   const char *name;
   
   swfdec_as_stack_ensure_size (cx, 3);
-  obj = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 2));
+  obj = swfdec_as_value_to_object (cx, *swfdec_as_stack_peek (cx, 2));
   n_args = swfdec_as_value_to_integer (cx, *swfdec_as_stack_peek (cx, 3));
   val = swfdec_as_stack_peek (cx, 1);
   if (obj) {
@@ -2762,7 +2762,7 @@ swfdec_action_with (SwfdecAsContext *cx, guint action, const guint8 *data, guint
     return;
   }
   offset = data[0] | (data[1] << 8);
-  object = swfdec_as_value_to_object (cx, swfdec_as_stack_peek (cx, 1));
+  object = swfdec_as_value_to_object (cx, *swfdec_as_stack_peek (cx, 1));
   if (object == NULL) {
     SWFDEC_INFO ("With called without an object, skipping");
     cx->frame->pc = (guint8 *) data + len + offset;

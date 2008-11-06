@@ -931,14 +931,14 @@ swfdec_as_array_sort_compare (gconstpointer a_ptr, gconstpointer b_ptr,
 
     i = 0;
     do {
-      object = swfdec_as_value_to_object (data->context, a);
+      object = swfdec_as_value_to_object (data->context, *a);
       if (object) {
 	swfdec_as_object_get_variable (object, data->fields[i], &a_comp);
       } else {
 	SWFDEC_AS_VALUE_SET_UNDEFINED (&a_comp);
       }
 
-      object = swfdec_as_value_to_object (data->context, b);
+      object = swfdec_as_value_to_object (data->context, *b);
       if (object) {
 	swfdec_as_object_get_variable (object, data->fields[i], &b_comp);
       } else {

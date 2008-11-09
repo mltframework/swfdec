@@ -710,7 +710,7 @@ swfdec_as_string_escape (SwfdecAsContext *cx, const char *s)
   array = g_byte_array_new ();
   if (cx->version <= 5) {
     in = g_convert (s, -1, "LATIN1", "UTF-8", NULL, NULL, NULL);
-    if (s == NULL) {
+    if (in == NULL) {
       SWFDEC_FIXME ("%s can not be converted to utf8 - is this Flash 5 or what?", s);
       return NULL;
     } else {

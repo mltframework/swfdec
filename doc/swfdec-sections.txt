@@ -415,8 +415,6 @@ SWFDEC_AS_VALUE_SET_BOOLEAN
 SWFDEC_AS_VALUE_GET_NUMBER
 swfdec_as_value_to_number
 swfdec_as_value_to_integer
-SWFDEC_AS_VALUE_SET_INT
-SWFDEC_AS_VALUE_SET_NUMBER
 SWFDEC_AS_VALUE_GET_STRING
 swfdec_as_value_to_string
 SWFDEC_AS_VALUE_SET_STRING
@@ -425,13 +423,11 @@ SWFDEC_AS_VALUE_GET_OBJECT
 swfdec_as_value_to_object
 SWFDEC_AS_VALUE_SET_OBJECT
 swfdec_as_value_to_primitive
-swfdec_as_value_to_debug
 swfdec_as_double_to_integer
 swfdec_as_double_to_string
 swfdec_as_integer_to_string
 swfdec_as_str_concat
 <SUBSECTION Standard>
-SWFDEC_IS_AS_VALUE
 SWFDEC_AS_VALUE_IS_UNDEFINED
 SWFDEC_AS_VALUE_IS_BOOLEAN
 SWFDEC_AS_VALUE_IS_NUMBER
@@ -495,23 +491,12 @@ swfdec_as_object_run
 swfdec_as_object_call
 swfdec_as_object_add_function
 swfdec_as_object_add_constructor
-swfdec_as_object_get_debug
 swfdec_as_object_resolve
-<SUBSECTION Standard>
-swfdec_as_object_get_type
-SwfdecAsObjectClass
-SWFDEC_AS_OBJECT
-SWFDEC_AS_OBJECT_CLASS
-SWFDEC_AS_OBJECT_GET_CLASS
-SWFDEC_IS_AS_OBJECT
-SWFDEC_IS_AS_OBJECT_CLASS
-SWFDEC_TYPE_AS_OBJECT
 </SECTION>
 
 <SECTION>
 <FILE>SwfdecAsArray</FILE>
 <TITLE>SwfdecAsArray</TITLE>
-SwfdecAsArray
 swfdec_as_array_new
 swfdec_as_array_append
 swfdec_as_array_append_with_flags
@@ -524,15 +509,6 @@ swfdec_as_array_set_length
 swfdec_as_array_get_value
 swfdec_as_array_set_value
 swfdec_as_array_remove
-<SUBSECTION Standard>
-swfdec_as_array_get_type
-SwfdecAsArrayClass
-SWFDEC_AS_ARRAY
-SWFDEC_AS_ARRAY_CLASS
-SWFDEC_AS_ARRAY_GET_CLASS
-SWFDEC_IS_AS_ARRAY
-SWFDEC_IS_AS_ARRAY_CLASS
-SWFDEC_TYPE_AS_ARRAY
 </SECTION>
 
 <SECTION>
@@ -544,7 +520,6 @@ SwfdecAsNativeFunction
 swfdec_as_function_call
 swfdec_as_function_call_full
 swfdec_as_native_function_new
-swfdec_as_native_function_set_construct_type
 swfdec_as_native_function_check
 swfdec_as_native_function_checkv
 SWFDEC_AS_CHECK
@@ -573,7 +548,6 @@ SWFDEC_TYPE_AS_NATIVE_FUNCTION
 SwfdecAsFrame
 swfdec_as_frame_get_next
 swfdec_as_frame_get_script
-swfdec_as_frame_get_this
 SwfdecAsStackIterator
 swfdec_as_stack_iterator_init
 swfdec_as_stack_iterator_init_arguments

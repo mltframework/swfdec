@@ -56,9 +56,11 @@ IGNORE_HFILES= \
 	swfdec_as_boolean.h \
 	swfdec_as_date.h \
 	swfdec_as_frame_internal.h \
+	swfdec_as_gcable.h \
 	swfdec_as_internal.h \
 	swfdec_as_interpret.h \
 	swfdec_as_math.h \
+	swfdec_as_movie_value.h \
 	swfdec_as_number.h \
 	swfdec_as_scope.h \
 	swfdec_as_script_function.h \
@@ -82,6 +84,7 @@ IGNORE_HFILES= \
 	swfdec_bitmap_movie.h \
 	swfdec_bitmap_pattern.h \
 	swfdec_bits.h \
+	swfdec_blur_filter.h \
 	swfdec_bots.h \
 	swfdec_button.h \
 	swfdec_button_movie.h \
@@ -93,12 +96,17 @@ IGNORE_HFILES= \
 	swfdec_codec_gst.h \
 	swfdec_color.h \
 	swfdec_color_as.h \
+	swfdec_color_matrix_filter.h \
 	swfdec_color_transform_as.h \
+	swfdec_convolution_matrix.h \
 	swfdec_constant_pool.h \
 	swfdec_debug.h \
 	swfdec_debugger.h \
 	swfdec_decoder.h \
+	swfdec_display_object.h \
+	swfdec_display_object_container.h \
 	swfdec_draw.h \
+	swfdec_event_dispatcher.h \
 	swfdec_text_field.h \
 	swfdec_text_field_movie.h \
 	swfdec_enums.h \
@@ -112,6 +120,7 @@ IGNORE_HFILES= \
 	swfdec_graphic_movie.h \
 	swfdec_image.h \
 	swfdec_image_decoder.h \
+	swfdec_interactive_object.h \
 	swfdec_internal.h \
 	swfdec_interval.h \
 	swfdec_js.h \

@@ -40,7 +40,7 @@
 /**
  * SECTION:Arrays
  * @title: arrays
- * @short_description: the array object
+ * @short_description: utility functions for treating objects as arrays
  *
  * The array object provides some convenience functions for creating and
  * modifying arrays.

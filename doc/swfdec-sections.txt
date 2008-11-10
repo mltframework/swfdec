@@ -509,8 +509,8 @@ SWFDEC_AS_RELAY_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>SwfdecAsArray</FILE>
-<TITLE>SwfdecAsArray</TITLE>
+<FILE>Arrays</FILE>
+<TITLE>Arrays</TITLE>
 swfdec_as_array_new
 swfdec_as_array_append
 swfdec_as_array_append_with_flags

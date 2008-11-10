@@ -37,6 +37,7 @@
     <xi:include href="xml/SwfdecAsValue.xml"/>
     <xi:include href="xml/SwfdecAsContext.xml"/>
     <xi:include href="xml/SwfdecAsObject.xml"/>
+    <xi:include href="xml/SwfdecAsRelay.xml"/>
     <xi:include href="xml/SwfdecAsArray.xml"/>
     <xi:include href="xml/SwfdecAsFunction.xml"/>
     <xi:include href="xml/SwfdecAsFrame.xml"/>

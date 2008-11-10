@@ -495,6 +495,20 @@ swfdec_as_object_resolve
 </SECTION>
 
 <SECTION>
+<FILE>SwfdecAsRelay</FILE>
+<TITLE>SwfdecAsRelay</TITLE>
+SwfdecAsRelay
+SwfdecAsRelayClass
+swfdec_as_relay_call
+swfdec_as_relay_get_as_object
+<SUBSECTION Standard>
+swfdec_as_relay_get_type
+SWFDEC_AS_RELAY
+SWFDEC_AS_RELAY_CLASS
+SWFDEC_AS_RELAY_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>SwfdecAsArray</FILE>
 <TITLE>SwfdecAsArray</TITLE>
 swfdec_as_array_new

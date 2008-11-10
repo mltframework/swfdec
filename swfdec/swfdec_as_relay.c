@@ -28,6 +28,30 @@
 #include "swfdec_as_object.h"
 #include "swfdec_as_function.h"
 
+/**
+ * SECTION:SwfdecAsRelay
+ * @title: SwfdecAsRelay
+ * @short_description: object for attaching to Actionscript objects
+ *
+ * #SwfdecAsRelay objects can be attached to a #SwfdecAsObject using
+ * swfdec_as_object_relay(). You can then query an object for its relay in
+ * your own native function and use it there, for example by using 
+ * SWFDEC_AS_CHECK().
+ */
+
+/**
+ * SwfdecAsRelay:
+ *
+ * This object has no public members.
+ */
+
+/**
+ * SwfdecAsRelayClass:
+ *
+ * This is the base class for all objects that can be attached to a 
+ * #SwfdecAsObject. It has no virtual functions.
+ */
+
 G_DEFINE_ABSTRACT_TYPE (SwfdecAsRelay, swfdec_as_relay, SWFDEC_TYPE_GC_OBJECT)
 
 static void
@@ -56,7 +80,7 @@ swfdec_as_relay_init (SwfdecAsRelay *object)
 
 /**
  * swfdec_as_relay_get_as_object:
- * @object: a #SwfdecAsRelay.
+ * @relay: a #SwfdecAsRelay.
  *
  * Gets the Actionscript object associated with this object.
  *
@@ -73,7 +97,7 @@ swfdec_as_relay_get_as_object (SwfdecAsRelay *relay)
 
 /**
  * swfdec_as_relay_call:
- * @object: a #SwfdecAsRelay
+ * @relay: a #SwfdecAsRelay
  * @name: garbage-collected string naming the function to call. 
  * @argc: number of arguments to provide to function
  * @argv: arguments or %NULL when @argc is 0

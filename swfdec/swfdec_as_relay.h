@@ -37,6 +37,7 @@ typedef struct _SwfdecAsRelayClass SwfdecAsRelayClass;
 struct _SwfdecAsRelay {
   /*< protected >*/
   SwfdecGcObject	object;
+  /*< private >*/
   SwfdecAsObject *	relay;
 };
 

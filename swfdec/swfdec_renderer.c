@@ -449,6 +449,7 @@ swfdec_renderer_transform (SwfdecRenderer *renderer, cairo_surface_t *surface,
     }
     data += stride;
   }
+  cairo_surface_mark_dirty (target);
 
   return target;
 }

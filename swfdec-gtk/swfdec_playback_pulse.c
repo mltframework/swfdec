@@ -74,7 +74,7 @@ stream_write_callback (pa_stream *pa,
   /* Adjust to our rounded-down number */
   bytes = samples * SAMPLESIZE * CHANNELS;
 
-  frag = malloc (bytes);
+  frag = g_try_malloc0 (bytes);
   if (frag == NULL) {
     g_printerr ("Failed to allocate fragment of size %d\n", (int)bytes);
     return;
@@ -96,7 +96,7 @@ stream_write_callback (pa_stream *pa,
   /* Advance playback pointer */
   stream->offset += samples;
 
-  free(frag);
+  g_free (frag);
 }
 
 static void

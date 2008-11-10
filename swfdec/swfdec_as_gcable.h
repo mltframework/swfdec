@@ -30,6 +30,7 @@ G_BEGIN_DECLS
 #define SWFDEC_AS_GC_ROOT (1 << 1)
 #define SWFDEC_AS_GC_ALIGN (1 << 2)
 
+typedef struct _SwfdecAsGcable SwfdecAsGcable;
 struct _SwfdecAsGcable {
   SwfdecAsGcable *	next;
 };

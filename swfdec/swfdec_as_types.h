@@ -36,14 +36,12 @@ typedef enum {
   SWFDEC_AS_TYPE_OBJECT = 6,
   SWFDEC_AS_TYPE_MOVIE = 7
 } SwfdecAsValueType;
-#define SWFDEC_AS_TYPE_IS_GCABLE(type) ((type) & 4)
 
 typedef struct _SwfdecAsContext SwfdecAsContext;
 typedef struct _SwfdecAsDebugger SwfdecAsDebugger;
 typedef struct _SwfdecAsDoubleValue SwfdecAsDoubleValue;
 typedef struct _SwfdecAsFrame SwfdecAsFrame;
 typedef struct _SwfdecAsFunction SwfdecAsFunction;
-typedef struct _SwfdecAsGcable SwfdecAsGcable;
 typedef struct _SwfdecAsObject SwfdecAsObject;
 typedef struct _SwfdecAsRelay SwfdecAsRelay;
 typedef struct _SwfdecAsScope SwfdecAsScope;
@@ -83,7 +81,7 @@ typedef struct _SwfdecScript SwfdecScript;
 } G_STMT_END
 
 struct _SwfdecAsDoubleValue {
-  SwfdecAsGcable *	next;
+  SwfdecAsDoubleValue *	next;
   double		number;
 };
 

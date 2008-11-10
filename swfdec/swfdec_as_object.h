@@ -49,7 +49,7 @@ typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object,
 
 struct _SwfdecAsObject {
   /*< private >*/
-  SwfdecAsGcable *	next;		/* GC management */
+  SwfdecAsObject *	next;		/* GC management */
   SwfdecAsContext *	context;	/* the context that manages the object */
   gboolean		array:1;	/* TRUE if object is an array */
   gboolean		super:1;	/* TRUE if object is a super object */

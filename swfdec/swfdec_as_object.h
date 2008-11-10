@@ -44,7 +44,6 @@ typedef enum {
   SWFDEC_AS_DELETE_NOT_DELETED
 } SwfdecAsDeleteReturn;
 
-typedef struct _SwfdecAsObjectClass SwfdecAsObjectClass;
 typedef gboolean (* SwfdecAsVariableForeach) (SwfdecAsObject *object, 
     const char *variable, SwfdecAsValue *value, guint flags, gpointer data);
 

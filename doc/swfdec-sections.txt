@@ -490,7 +490,6 @@ swfdec_as_object_foreach
 swfdec_as_object_run
 swfdec_as_object_call
 swfdec_as_object_add_function
-swfdec_as_object_add_constructor
 swfdec_as_object_resolve
 </SECTION>
 

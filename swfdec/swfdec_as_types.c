@@ -62,6 +62,7 @@
 /**
  * SwfdecAsValueType:
  * @SWFDEC_AS_TYPE_UNDEFINED: the special undefined value
+ * @SWFDEC_AS_TYPE_NULL: the spaecial null value
  * @SWFDEC_AS_TYPE_BOOLEAN: a boolean value - true or false
  * @SWFDEC_AS_TYPE_INT: reserved value for integers. Should the need arise for
  *                      performance enhancements - especially on embedded 
@@ -70,8 +71,9 @@
  *                      it will cause Swfdec to crash.
  * @SWFDEC_AS_TYPE_NUMBER: a double value - also used for integer numbers
  * @SWFDEC_AS_TYPE_STRING: a string. Strings are garbage-collected and unique.
- * @SWFDEC_AS_TYPE_NULL: the spaecial null value
  * @SWFDEC_AS_TYPE_OBJECT: an object - must be of type #SwfdecAsObject
+ * @SWFDEC_AS_TYPE_MOVIE: an internal type used only inside #SwfdecPlayer 
+ *                        objects. It is not exported in the API.
  *
  * These are the possible values the Swfdec Actionscript engine knows about.
  */

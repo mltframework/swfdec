@@ -391,6 +391,7 @@ SwfdecGcObject
 SwfdecGcObjectClass
 swfdec_gc_object_get_context
 swfdec_gc_object_mark
+swfdec_as_object_mark
 swfdec_as_string_mark
 swfdec_as_value_mark
 <SUBSECTION Standard>
@@ -408,21 +409,32 @@ SWFDEC_TYPE_GC_OBJECT
 <TITLE>SwfdecAsValue</TITLE>
 SwfdecAsValueType
 SwfdecAsValue
+SWFDEC_AS_VALUE_GET_TYPE
+SWFDEC_AS_VALUE_UNDEFINED
 SWFDEC_AS_VALUE_SET_UNDEFINED
+SWFDEC_AS_VALUE_FALSE
+SWFDEC_AS_VALUE_TRUE
+SWFDEC_AS_VALUE_FROM_BOOLEAN
 SWFDEC_AS_VALUE_GET_BOOLEAN
 swfdec_as_value_to_boolean
 SWFDEC_AS_VALUE_SET_BOOLEAN
 SWFDEC_AS_VALUE_GET_NUMBER
+swfdec_as_value_from_number
 swfdec_as_value_to_number
+swfdec_as_value_from_integer
 swfdec_as_value_to_integer
+SWFDEC_AS_VALUE_FROM_STRING
 SWFDEC_AS_VALUE_GET_STRING
 swfdec_as_value_to_string
 SWFDEC_AS_VALUE_SET_STRING
+SWFDEC_AS_VALUE_NULL
 SWFDEC_AS_VALUE_SET_NULL
+SWFDEC_AS_VALUE_FROM_OBJECT
 SWFDEC_AS_VALUE_GET_OBJECT
 swfdec_as_value_to_object
 SWFDEC_AS_VALUE_SET_OBJECT
 swfdec_as_value_to_primitive
+swfdec_as_value_get_variable
 swfdec_as_double_to_integer
 swfdec_as_double_to_string
 swfdec_as_integer_to_string
@@ -434,6 +446,13 @@ SWFDEC_AS_VALUE_IS_NUMBER
 SWFDEC_AS_VALUE_IS_STRING
 SWFDEC_AS_VALUE_IS_NULL
 SWFDEC_AS_VALUE_IS_OBJECT
+SWFDEC_AS_VALUE_COMBINE
+SWFDEC_AS_VALUE_TYPE_BITS
+SWFDEC_AS_VALUE_TYPE_MASK
+SWFDEC_AS_VALUE_VALUE_MASK
+SWFDEC_AS_VALUE_GET_VALUE
+SwfdecAsDoubleValue
+SwfdecAsStringValue
 </SECTION>
 
 <SECTION>
@@ -489,6 +508,9 @@ SwfdecAsVariableForeach
 swfdec_as_object_foreach
 swfdec_as_object_run
 swfdec_as_object_call
+swfdec_as_object_set_constructor_by_name
+swfdec_as_object_set_constructor_by_namev
+swfdec_as_object_set_relay
 swfdec_as_object_add_function
 swfdec_as_object_resolve
 </SECTION>

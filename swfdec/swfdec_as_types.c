@@ -84,9 +84,21 @@
  *
  * This is the type used to present an opaque value in the Actionscript 
  * engine. See #SwfdecAsValueType for possible types. It's similar in 
- * spirit to #GValue. The value held is garbage-collected. Apart from the type 
- * member, use the provided macros to access this structure.
- * <note>If you memset a SwfdecAsValue to 0, it is a valid undefined value.</note>
+ * spirit to #GValue. Use the provided macros to access this structure.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_GET_TYPE:
+ * @val: The value to extract the type from
+ *
+ * Extracts the type from a given value.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_UNDEFINED:
+ *
+ * The special "undefined" value. Use SWFDEC_AS_VALUE_IS_UNDEFINED() to
+ * check if a value equals this value.
  */
 
 /**
@@ -98,6 +110,18 @@
  */
 
 /**
+ * SWFDEC_AS_VALUE_FALSE:
+ *
+ * The boolean value false.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_TRUE:
+ *
+ * The boolean value true.
+ */
+
+/**
  * SWFDEC_AS_VALUE_GET_BOOLEAN:
  * @val: value to get, the value must reference a boolean
  *
@@ -105,6 +129,17 @@
  * a boolean, use swfdec_as_value_to_boolean () instead.
  *
  * Returns: %TRUE or %FALSE
+ */
+
+/**
+ * SWFDEC_AS_VALUE_FROM_BOOLEAN:
+ * @b: boolean to convert
+ *
+ * Converts the given value to a boolean #SwfdecAsValue. When knowing the value
+ * at compile-time, use the static values such as %SWFDEC_AS_VALUE_TRUE instead
+ * of SWFDEC_AS_VALUE_FROM_BOOLEAN(%TRUE).
+ *
+ * Returns: %SWFDEC_AS_VALUE_TRUE or %SWFDEC_AS_VALUE_FALSE
  */
 
 /**
@@ -137,11 +172,27 @@
  */
 
 /**
+ * SWFDEC_AS_VALUE_FROM_STRING:
+ * @s: garbage-collected string to convert
+ *
+ * Converts the given string to a #SwfdecAsValue.
+ *
+ * Returns: a SwfdecAsValue representing the given string
+ */
+
+/**
  * SWFDEC_AS_VALUE_SET_STRING:
  * @val: value to set
  * @s: garbage-collected string to use
  *
  * Sets @val to the given string value.
+ */
+
+/**
+ * SWFDEC_AS_VALUE_NULL:
+ *
+ * The special "null" value. Use SWFDEC_AS_VALUE_IS_NULL() to
+ * check if a value equals this value.
  */
 
 /**
@@ -162,6 +213,15 @@
  */
 
 /**
+ * SWFDEC_AS_VALUE_FROM_OBJECT:
+ * @o: the #SwfdecAsObject to convert
+ *
+ * Converts the given object to a #SwfdecAsValue.
+ *
+ * Returns: a SwfdecAsValue representing the given object
+ */
+
+/**
  * SWFDEC_AS_VALUE_SET_OBJECT:
  * @val: value to set
  * @o: garbage-collected #SwfdecAsObject to use
@@ -173,20 +233,19 @@
 /*** actual code ***/
 
 /**
- * swfdec_as_value_set_int:
- * @val: value to set
+ * swfdec_as_value_from_integer:
+ * @cx: The context to use
  * @i: integer value to set
  *
  * Creates a garbage-collected value representing @i and returns it.
- * Sets @val to the given value. Currently this function is a macro that calls
- * swfdec_as_value_set_number(), but this may change in future versions of
- * Swfdec.
+ * Currently this function is a macro that calls swfdec_as_value_set_number(),
+ * but this may change in future versions of Swfdec.
  *
  * Returns: The new value representing @i
  */
 
 /**
- * swfdec_as_value_set_number:
+ * swfdec_as_value_from_number:
  * @context: The context to use
  * @number: double value to set
  *

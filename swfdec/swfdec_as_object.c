@@ -228,6 +228,13 @@ swfdec_as_object_mark_watch (gpointer key, gpointer value, gpointer unused)
   swfdec_as_value_mark (&watch->watch_data);
 }
 
+/**
+ * swfdec_as_object_mark:
+ * @object: the object to mark
+ *
+ * Mark @object as being in use. Calling this function is only valid during
+ * the marking phase of garbage collection.
+ **/
 void
 swfdec_as_object_mark (SwfdecAsObject *object)
 {
@@ -1300,6 +1307,20 @@ swfdec_as_object_create (SwfdecAsFunction *fun, guint n_args,
   swfdec_as_function_call_full (fun, new, TRUE, new->prototype, n_args, args, return_value);
 }
 
+/**
+ * swfdec_as_object_set_constructor_by_name:
+ * @object: the object to set a constructor on
+ * @name: first variable name for getting the constructor
+ * @...: %NULL-terminated list of further variables to get
+ *
+ * Sets the constructor of @object to be the objet you get when you get the 
+ * variables given by @name and further arguments on the global object. It is
+ * equivalent to calling swfdec_as_object_get_variable() with the names first 
+ * and then calling swfdec_as_object_set_constructor() on @object with the 
+ * final result.
+ *
+ * Returns: The actual constructor that was set or %NULL on failure
+ **/
 SwfdecAsObject *
 swfdec_as_object_set_constructor_by_name (SwfdecAsObject *object, const char *name, ...)
 {
@@ -1315,6 +1336,17 @@ swfdec_as_object_set_constructor_by_name (SwfdecAsObject *object, const char *na
   return ret;
 }
 
+/**
+ * swfdec_as_object_set_constructor_by_namev:
+ * @object: the object to set a constructor on
+ * @name: first variable name for getting the constructor
+ * @args: va_list of further name arguments
+ *
+ * This is the va_list version of swfdec_as_object_set_constructor_by_name().
+ * See that function for details.
+ *
+ * Returns: The actual constructor that was set or %NULL on failure
+ **/
 SwfdecAsObject *
 swfdec_as_object_set_constructor_by_namev (SwfdecAsObject *object, 
     const char *name, va_list args)
@@ -1785,10 +1817,20 @@ swfdec_as_object_resolve (SwfdecAsObject *object)
   return object;
 }
 
+/**
+ * swfdec_as_object_set_relay:
+ * @object: The object to set a new relay on
+ * @relay: The relay to set
+ *
+ * Associates @object and @relay. This allows you to associate your own data 
+ * with a given #SwfdecAsObject, so you can write native functions making use
+ * of this. See #SwfdecAsRelay documentation for details about relays.
+ **/
 void
 swfdec_as_object_set_relay (SwfdecAsObject *object, SwfdecAsRelay *relay)
 {
   g_return_if_fail (object != NULL);
+
   if (relay) {
     g_return_if_fail (SWFDEC_IS_AS_RELAY (relay));
     g_return_if_fail (relay->relay == NULL);

@@ -278,7 +278,7 @@ SWFDEC_GTK_LIBS="\$(top_builddir)/swfdec-gtk/libswfdec-gtk-$SWFDEC_MAJORMINOR.la
 AC_SUBST(SWFDEC_GTK_LIBS)
 AC_SUBST(SWFDEC_GTK_CFLAGS)
 
-GTK_DOC_CHECK([1.6])
+GTK_DOC_CHECK([1.10])
 
 if test "x${prefix}" = "xNONE"; then
   PACKAGE_PREFIX=${ac_default_prefix}

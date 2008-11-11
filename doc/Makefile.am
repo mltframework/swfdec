@@ -223,4 +223,7 @@ include $(top_srcdir)/gtk-doc.make
 EXTRA_DIST += 
 
 # Comment this out if you want your docs-status tested during 'make check'
-#TESTS = $(GTKDOC_CHECK)
+check-local:
+	(cd $(srcdir) \
+	 && $(GTKDOC_CHECK))
+

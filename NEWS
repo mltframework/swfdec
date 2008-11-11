@@ -1,4 +1,17 @@
 
+ 0.9.2 ("Bloxorz")
+
+Yes, we are breaking things again. The first unstable release leading to
+Swfdec 0.10 contains:
+- rewrite the script interpreter for performance and correctness
+- add a new Movie script value that looks up the correct movie
+- remove most of Vivified and the test suite's HTTP handling as it was unused
+- implement Blur and ColorMatrix filter
+- improve various policy file checks, so files actually load
+- initial support for new video/audio codecs (AAC audio is still missing)
+- lots of memory leaks plugged
+- vast amount of other bugfixes
+
  0.8.2 ("Gametrailers")
 
 Here's the first stable release.

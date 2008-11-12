@@ -302,6 +302,12 @@ swfdec_as_context_collect_movie (SwfdecAsContext *context, gpointer gc)
   swfdec_as_movie_value_free ((SwfdecAsMovieValue *) gc);
 }
 
+static gboolean
+swfdec_as_context_collect_pools (gpointer mem, gpointer pool, gpointer cx)
+{
+  return swfdec_constant_pool_collect (pool);
+}
+
 static void
 swfdec_as_context_collect (SwfdecAsContext *context)
 {
@@ -318,6 +324,9 @@ swfdec_as_context_collect (SwfdecAsContext *context)
       swfdec_as_context_collect_double);
   context->movies = swfdec_as_gcable_collect (context, context->movies,
       swfdec_as_context_collect_movie);
+
+  g_hash_table_foreach_remove (context->constant_pools, 
+      swfdec_as_context_collect_pools, context);
 
   SWFDEC_INFO (">> done collecting garbage");
 }

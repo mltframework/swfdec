@@ -35,6 +35,7 @@ SwfdecConstantPool *	swfdec_constant_pool_new	(SwfdecAsContext *	context,
 							 guint			version);
 SwfdecConstantPool *	swfdec_constant_pool_ref      	(SwfdecConstantPool *	pool);
 void			swfdec_constant_pool_unref     	(SwfdecConstantPool *	pool);
+gboolean		swfdec_constant_pool_collect	(SwfdecConstantPool *	pool);
 
 guint			swfdec_constant_pool_size	(SwfdecConstantPool *	pool);
 const char *	  	swfdec_constant_pool_get	(SwfdecConstantPool *	pool,

@@ -92,6 +92,7 @@ swfdec_constant_pool_new (SwfdecAsContext *context, SwfdecBuffer *buffer, guint 
   if (context) {
     pool->context = context;
     g_hash_table_insert (context->constant_pools, buffer->data, pool);
+    swfdec_constant_pool_ref (pool);
   }
   return pool;
 }
@@ -131,9 +132,7 @@ swfdec_constant_pool_unref (SwfdecConstantPool *pool)
   if (pool->refcount)
     return;
 
-  if (pool->context) {
-    g_hash_table_remove (pool->context->constant_pools, pool->buffer->data);
-  } else {
+  if (pool->context == NULL) {
     guint i;
     for (i = 0; i < pool->n_strings; i++) {
       g_free (pool->strings[i]);
@@ -141,6 +140,16 @@ swfdec_constant_pool_unref (SwfdecConstantPool *pool)
   }
   swfdec_buffer_unref (pool->buffer);
   g_slice_free1 (sizeof (SwfdecConstantPool) + (MAX (1, pool->n_strings) - 1) * sizeof (char *), pool);
+}
+
+gboolean
+swfdec_constant_pool_collect (SwfdecConstantPool *pool)
+{
+  if (pool->refcount) {
+    swfdec_constant_pool_unref (pool);
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**

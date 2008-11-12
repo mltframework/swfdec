@@ -1022,6 +1022,15 @@ EXTRA_DIST = \
 	crash-0.8.0-huffmann-table-8.swf \
 	crash-0.8.0-huffmann-table-8.swf.trace \
 	crash-0.8.0-huffmann-table.xml \
+	crash-0.8.2-copyPixels-5.swf \
+	crash-0.8.2-copyPixels-5.swf.trace \
+	crash-0.8.2-copyPixels-6.swf \
+	crash-0.8.2-copyPixels-6.swf.trace \
+	crash-0.8.2-copyPixels-7.swf \
+	crash-0.8.2-copyPixels-7.swf.trace \
+	crash-0.8.2-copyPixels-8.swf \
+	crash-0.8.2-copyPixels-8.swf.trace \
+	crash-0.8.2-copyPixels.as \
 	crash-0.8.2-gotoAndPlay-5.swf \
 	crash-0.8.2-gotoAndPlay-5.swf.trace \
 	crash-0.8.2-gotoAndPlay-6.swf \

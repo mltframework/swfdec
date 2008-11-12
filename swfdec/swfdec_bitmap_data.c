@@ -366,13 +366,25 @@ swfdec_rectangle_from_as_object (SwfdecRectangle *rect, SwfdecAsObject *object)
 
   /* FIXME: This function is untested */
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_x);
-  rect->x = swfdec_as_value_to_integer (cx, val);
+  if (val)
+    rect->x = swfdec_as_value_to_integer (cx, val);
+  else
+    rect->x = 0;
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_y);
-  rect->y = swfdec_as_value_to_integer (cx, val);
+  if (val)
+    rect->y = swfdec_as_value_to_integer (cx, val);
+  else
+    rect->y = 0;
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_width);
-  rect->width = swfdec_as_value_to_integer (cx, val);
+  if (val)
+    rect->width = swfdec_as_value_to_integer (cx, val);
+  else
+    rect->width = 0;
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_height);
-  rect->height = swfdec_as_value_to_integer (cx, val);
+  if (val)
+    rect->height = swfdec_as_value_to_integer (cx, val);
+  else
+    rect->height = 0;
   return rect->width > 0 && rect->height > 0;
 }
 
@@ -395,19 +407,20 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
 {
   SwfdecBitmapData *bitmap, *source, *alpha = NULL;
-  SwfdecAsObject *recto, *pt, *apt = NULL;
+  SwfdecAsObject *recto = NULL, *pt, *apt = NULL, *so, *ao = NULL;
   SwfdecRectangle rect;
   gboolean copy_alpha = FALSE;
   cairo_t *cr;
   int x, y;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ooo|OOb", &source, &recto, &pt,
-      &alpha, &apt, &copy_alpha);
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ooo|oob", &so, &recto, &pt,
+      &ao, &apt, &copy_alpha);
 
   if (bitmap->surface == NULL ||
-      !SWFDEC_IS_BITMAP_DATA (source) ||
-      source->surface == NULL ||
-      (argc > 3 && (!SWFDEC_IS_BITMAP_DATA (alpha) || alpha->surface == NULL)) ||
+      !SWFDEC_IS_BITMAP_DATA (so) ||
+      (source = SWFDEC_BITMAP_DATA (so))->surface == NULL ||
+      (ao != NULL && (!SWFDEC_IS_BITMAP_DATA (ao) || 
+		    (alpha = SWFDEC_BITMAP_DATA (ao))->surface == NULL)) ||
       !swfdec_rectangle_from_as_object (&rect, recto))
     return;
 

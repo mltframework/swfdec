@@ -213,7 +213,10 @@ swfdec_resource_stream_target_open (SwfdecStreamTarget *target, SwfdecStream *st
 
   g_assert (SWFDEC_AS_VALUE_IS_MOVIE (instance->movie));
   movie = SWFDEC_AS_VALUE_GET_MOVIE (instance->movie);
-  g_assert (movie);
+  if (movie == NULL) {
+    SWFDEC_FIXME ("no movie, what now?");
+    return;
+  }
   object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (movie));
   query = swfdec_url_get_query (swfdec_loader_get_url (loader));
   if (query) {

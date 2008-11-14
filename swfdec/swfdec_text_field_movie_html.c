@@ -59,8 +59,8 @@ swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag,
   g_return_if_fail (tag != NULL);
 
   if (data->multiline && !end &&
-      ((tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)) ||
-       (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2))))
+      ((tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "p", 1)) ||
+       (tag->name_length == 2 && !g_ascii_strncasecmp (tag->name, "li", 2))))
   {
     GSList *iter;
 
@@ -68,7 +68,7 @@ swfdec_text_field_movie_html_parse_close_tag (ParserData *data, ParserTag *tag,
       ParserTag *f = iter->data;
       if (f->end_index < tag->index)
 	break;
-      if (f->name_length == 4 && !g_strncasecmp (f->name, "font", 4)) {
+      if (f->name_length == 4 && !g_ascii_strncasecmp (f->name, "font", 4)) {
 	ParserTag *n = g_new0 (ParserTag, 1);
 	n->name = f->name;
 	n->name_length = f->name_length;
@@ -133,48 +133,48 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
   SWFDEC_AS_VALUE_SET_STRING (&val, swfdec_as_context_give_string (
 	cx, g_strndup (value, value_length)));
 
-  if (tag->name_length == 10 && !g_strncasecmp (tag->name, "textformat", 10))
+  if (tag->name_length == 10 && !g_ascii_strncasecmp (tag->name, "textformat", 10))
   {
-    if (name_length == 10 && !g_strncasecmp (name, "leftmargin", 10))
+    if (name_length == 10 && !g_ascii_strncasecmp (name, "leftmargin", 10))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_leftMargin, &val);
     }
-    else if (name_length == 11 && !g_strncasecmp (name, "rightmargin", 11))
+    else if (name_length == 11 && !g_ascii_strncasecmp (name, "rightmargin", 11))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_rightMargin, &val);
     }
-    else if (name_length == 6 && !g_strncasecmp (name, "indent", 6))
+    else if (name_length == 6 && !g_ascii_strncasecmp (name, "indent", 6))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_indent, &val);
     }
-    else if (name_length == 11 && !g_strncasecmp (name, "blockindent", 11))
+    else if (name_length == 11 && !g_ascii_strncasecmp (name, "blockindent", 11))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_blockIndent, &val);
     }
-    else if (name_length == 8 && !g_strncasecmp (name, "tabstops", 8))
+    else if (name_length == 8 && !g_ascii_strncasecmp (name, "tabstops", 8))
     {
       // FIXME
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_tabStops, &val);
     }
   }
-  else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1))
+  else if (tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "p", 1))
   {
-    if (name_length == 5 && !g_strncasecmp (name, "align", 5))
+    if (name_length == 5 && !g_ascii_strncasecmp (name, "align", 5))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_align, &val);
     }
   }
-  else if (tag->name_length == 4 && !g_strncasecmp (tag->name, "font", 4))
+  else if (tag->name_length == 4 && !g_ascii_strncasecmp (tag->name, "font", 4))
   {
-    if (name_length == 4 && !g_strncasecmp (name, "face", 4))
+    if (name_length == 4 && !g_ascii_strncasecmp (name, "face", 4))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_font, &val);
     }
-    else if (name_length == 4 && !g_strncasecmp (name, "size", 4))
+    else if (name_length == 4 && !g_ascii_strncasecmp (name, "size", 4))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_size, &val);
     }
-    else if (name_length == 5 && !g_strncasecmp (name, "color", 5))
+    else if (name_length == 5 && !g_ascii_strncasecmp (name, "color", 5))
     {
       SwfdecAsValue val_number;
 
@@ -192,31 +192,31 @@ swfdec_text_field_movie_html_tag_set_attribute (ParserData *data,
 
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_color, &val_number);
     }
-    else if (name_length == 13 && !g_strncasecmp (name, "letterspacing", 13))
+    else if (name_length == 13 && !g_ascii_strncasecmp (name, "letterspacing", 13))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_letterSpacing,
 	  &val);
     }
     // special case: Don't parse kerning
   }
-  else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "a", 1))
+  else if (tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "a", 1))
   {
-    if (name_length == 4 && !g_strncasecmp (name, "href", 4))
+    if (name_length == 4 && !g_ascii_strncasecmp (name, "href", 4))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_url, &val);
     }
-    else if (name_length == 6 && !g_strncasecmp (name, "target", 6))
+    else if (name_length == 6 && !g_ascii_strncasecmp (name, "target", 6))
     {
       swfdec_as_object_set_variable (object, SWFDEC_AS_STR_target, &val);
     }
   }
 
   if (data->style_sheet &&
-      ((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
-      (tag->name_length == 4 && !g_strncasecmp (tag->name, "span", 4)) ||
-      (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1))))
+      ((tag->name_length == 2 && !g_ascii_strncasecmp (tag->name, "li", 2)) ||
+      (tag->name_length == 4 && !g_ascii_strncasecmp (tag->name, "span", 4)) ||
+      (tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "p", 1))))
   {
-    if (name_length == 5 && !g_strncasecmp (name, "class", 5)) {
+    if (name_length == 5 && !g_ascii_strncasecmp (name, "class", 5)) {
       SwfdecTextFormat *format = swfdec_style_sheet_get_class_format (
 	  data->style_sheet, swfdec_as_context_give_string (data->cx,
 	      g_strndup (value, value_length)));
@@ -315,14 +315,14 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 
   if (close)
   {
-    if (name_length == 1 && !g_strncasecmp (name, "p", 1)) {
+    if (name_length == 1 && !g_ascii_strncasecmp (name, "p", 1)) {
       GSList *iter, *found;
 
       found = NULL;
       iter = data->tags_open;
       while (iter != NULL) {
 	tag = iter->data;
-	if (tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1))
+	if (tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "p", 1))
 	  found = iter;
 	iter = iter->next;
       }
@@ -332,9 +332,9 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
 	while (iter != found) {
 	  tag = iter->data;
 	  iter = iter->next;
-	  if ((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
+	  if ((tag->name_length == 2 && !g_ascii_strncasecmp (tag->name, "li", 2)) ||
 	      (tag->name_length == 10 &&
-	       !g_strncasecmp (tag->name, "textformat", 10)))
+	       !g_ascii_strncasecmp (tag->name, "textformat", 10)))
 	    continue;
 	  swfdec_text_field_movie_html_parse_close_tag (data, tag, TRUE);
 	}
@@ -347,7 +347,7 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
       if (data->tags_open != NULL) {
 	tag = data->tags_open->data;
 	if (name_length == tag->name_length &&
-	    !g_strncasecmp (name, tag->name, name_length))
+	    !g_ascii_strncasecmp (name, tag->name, name_length))
 	  swfdec_text_field_movie_html_parse_close_tag (data, tag, FALSE);
       }
     }
@@ -361,15 +361,15 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
     SwfdecAsObject *object;
     SwfdecAsValue val;
 
-    if (name_length == 3 && !g_strncasecmp (name, "tab", 3))
+    if (name_length == 3 && !g_ascii_strncasecmp (name, "tab", 3))
       swfdec_text_buffer_append_text (data->text, "\t");
 
     if (data->multiline) {
-      if (name_length == 2 && !g_strncasecmp (name, "br", 2))
+      if (name_length == 2 && !g_ascii_strncasecmp (name, "br", 2))
       {
 	swfdec_text_buffer_append_text (data->text, "\n");
       }
-      else if (name_length == 2 && !g_strncasecmp (name, "li", 1))
+      else if (name_length == 2 && !g_ascii_strncasecmp (name, "li", 1))
       {
 	gsize length = swfdec_text_buffer_get_length (data->text);
 	const char *s = swfdec_text_buffer_get_text (data->text);
@@ -391,24 +391,24 @@ swfdec_text_field_movie_html_parse_tag (ParserData *data, const char *p)
       object = swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (tag->format));
       SWFDEC_AS_VALUE_SET_BOOLEAN (&val, TRUE);
 
-      if (tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) {
+      if (tag->name_length == 2 && !g_ascii_strncasecmp (tag->name, "li", 2)) {
 	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bullet, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "b", 1)) {
+      } else if (tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "b", 1)) {
 	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_bold, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "i", 1)) {
+      } else if (tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "i", 1)) {
 	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_italic, &val);
-      } else if (tag->name_length == 1 && !g_strncasecmp (tag->name, "u", 1)) {
+      } else if (tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "u", 1)) {
 	swfdec_as_object_set_variable (object, SWFDEC_AS_STR_underline, &val);
       }
-      else if (tag->name_length == 3 && !g_strncasecmp (tag->name, "img", 3))
+      else if (tag->name_length == 3 && !g_ascii_strncasecmp (tag->name, "img", 3))
       {
 	SWFDEC_FIXME ("IMG tag support for TextField's HTML input missing");
       }
     }
 
     if (data->style_sheet &&
-	((tag->name_length == 2 && !g_strncasecmp (tag->name, "li", 2)) ||
-	(tag->name_length == 1 && !g_strncasecmp (tag->name, "p", 1)))) {
+	((tag->name_length == 2 && !g_ascii_strncasecmp (tag->name, "li", 2)) ||
+	(tag->name_length == 1 && !g_ascii_strncasecmp (tag->name, "p", 1)))) {
       SwfdecTextFormat *format = swfdec_style_sheet_get_tag_format (
 	  data->style_sheet, swfdec_as_context_give_string (data->cx,
 	      g_strndup (tag->name, tag->name_length)));

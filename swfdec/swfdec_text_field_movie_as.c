@@ -372,9 +372,9 @@ swfdec_text_field_movie_do_set_type (SwfdecAsContext *cx,
 
   SWFDEC_AS_CHECK (SWFDEC_TYPE_TEXT_FIELD_MOVIE, &text, "s", &value);
 
-  if (!g_strcasecmp (value, SWFDEC_AS_STR_input)) {
+  if (!g_ascii_strcasecmp (value, SWFDEC_AS_STR_input)) {
     text->editable = TRUE;
-  } else if (!g_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
+  } else if (!g_ascii_strcasecmp (value, SWFDEC_AS_STR_dynamic)) {
     text->editable = FALSE;
   }
   /* else ignore */

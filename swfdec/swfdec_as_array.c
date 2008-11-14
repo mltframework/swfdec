@@ -886,7 +886,7 @@ swfdec_as_array_sort_compare_values (SwfdecAsContext *cx,
     const char *b_str = swfdec_as_value_to_string (cx, *b);
 
     if (options & SORT_OPTION_CASEINSENSITIVE) {
-      retval = g_strcasecmp (a_str, b_str);
+      retval = g_ascii_strcasecmp (a_str, b_str);
     } else {
       retval = strcmp (a_str, b_str);
     }

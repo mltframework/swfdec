@@ -399,14 +399,16 @@ swfdec_bitmap_data_fillRect (SwfdecAsContext *cx, SwfdecAsObject *object,
   if (!swfdec_rectangle_from_as_object (&rect, recto) || bitmap->surface == NULL)
     return;
 
-  /* We can treat a guint as a SwfdecColor */
-  if (SWFDEC_COLOR_ALPHA (color) == 0)
+  if (!swfdec_surface_has_alpha(bitmap->surface))
+    /* We can treat a guint as a SwfdecColor */
     color = SWFDEC_COLOR_OPAQUE (color);
 
   cr = cairo_create (bitmap->surface);
   swfdec_color_set_source (cr, color);
   cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_fill (cr);
+  cairo_destroy(cr);
   swfdec_bitmap_data_invalidate (bitmap, rect.x, rect.y, rect.width, rect.height);
 }
 

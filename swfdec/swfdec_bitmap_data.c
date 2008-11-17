@@ -340,14 +340,6 @@ swfdec_bitmap_data_setPixel (SwfdecAsContext *cx, SwfdecAsObject *object,
   swfdec_bitmap_data_set_pixel (bitmap, x, y, color);
 }
 
-SWFDEC_AS_NATIVE (1100, 3, swfdec_bitmap_data_fillRect)
-void
-swfdec_bitmap_data_fillRect (SwfdecAsContext *cx, SwfdecAsObject *object,
-    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
-{
-  SWFDEC_STUB ("BitmapData.fillRect");
-}
-
 static gboolean
 swfdec_rectangle_from_as_object (SwfdecRectangle *rect, SwfdecAsObject *object)
 {
@@ -389,6 +381,33 @@ swfdec_point_from_as_object (int *x, int *y, SwfdecAsObject *object)
   *x = swfdec_as_value_to_integer (cx, *val);
   val = swfdec_as_object_peek_variable (object, SWFDEC_AS_STR_y);
   *y = swfdec_as_value_to_integer (cx, *val);
+}
+
+SWFDEC_AS_NATIVE (1100, 3, swfdec_bitmap_data_fillRect)
+void
+swfdec_bitmap_data_fillRect (SwfdecAsContext *cx, SwfdecAsObject *object,
+    guint argc, SwfdecAsValue *argv, SwfdecAsValue *ret)
+{
+  SwfdecBitmapData *bitmap;
+  guint color;
+  SwfdecAsObject *recto;
+  SwfdecRectangle rect;
+  cairo_t *cr;
+
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "oi", &recto, &color);
+
+  if (!swfdec_rectangle_from_as_object (&rect, recto) || bitmap->surface == NULL)
+    return;
+
+  /* We can treat a guint as a SwfdecColor */
+  if (SWFDEC_COLOR_ALPHA (color) == 0)
+    color = SWFDEC_COLOR_OPAQUE (color);
+
+  cr = cairo_create (bitmap->surface);
+  swfdec_color_set_source (cr, color);
+  cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+  cairo_fill (cr);
+  swfdec_bitmap_data_invalidate (bitmap, rect.x, rect.y, rect.width, rect.height);
 }
 
 SWFDEC_AS_NATIVE (1100, 4, swfdec_bitmap_data_copyPixels)

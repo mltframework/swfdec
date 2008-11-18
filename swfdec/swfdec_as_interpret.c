@@ -2384,36 +2384,13 @@ fail:
   swfdec_as_stack_pop_n (cx, 2);
 }
 
-static gboolean
-swfdec_action_enumerate_foreach (SwfdecAsObject *object, const char *variable,
-    SwfdecAsValue *value, guint flags, gpointer listp)
-{
-  GSList **list = listp;
-
-  if (flags & SWFDEC_AS_VARIABLE_HIDDEN)
-    return TRUE;
-
-  *list = g_slist_remove (*list, variable);
-  *list = g_slist_prepend (*list, (gpointer) variable);
-  return TRUE;
-}
-
 static void
 swfdec_action_do_enumerate (SwfdecAsContext *cx, SwfdecAsObject *object)
 {
   guint i;
-  GSList *walk, *list = NULL;
+  GSList *walk, *list;
   
-  for (i = 0; i < 256 && object; i++) {
-    swfdec_as_object_foreach (object, swfdec_action_enumerate_foreach, &list);
-    object = swfdec_as_object_get_prototype (object);
-  }
-  if (i == 256) {
-    swfdec_as_context_abort (cx, "Prototype recursion limit exceeded");
-    g_slist_free (list);
-    return;
-  }
-  list = g_slist_reverse (list);
+  list = swfdec_as_object_enumerate (object);
   i = 0;
   for (walk = list; walk; walk = walk->next) {
     /* 8 is an arbitrary value */

@@ -1149,6 +1149,56 @@ swfdec_as_object_foreach (SwfdecAsObject *object, SwfdecAsVariableForeach func,
 
 /*** SIMPLIFICATIONS ***/
 
+static gboolean
+swfdec_as_object_enumerate_foreach (SwfdecAsObject *object, const char *variable,
+    SwfdecAsValue *value, guint flags, gpointer listp)
+{
+  GSList **list = listp;
+
+  if (flags & SWFDEC_AS_VARIABLE_HIDDEN)
+    return TRUE;
+
+  *list = g_slist_remove (*list, variable);
+  *list = g_slist_prepend (*list, (gpointer) variable);
+  return TRUE;
+}
+
+/**
+ * swfdec_as_object_enumerate:
+ * @object: the object to enumerate
+ *
+ * Enumerates all non-hidden properties of a given object and its prototypes
+ * and returns their names as garbage-collected strings in a list. This 
+ * function is a special case of swfdec_as_object_foreach().
+ *
+ * Returns: a GSList of all properties of the object. You need to 
+ *          g_slist_free() the list after use.
+ **/
+GSList *
+swfdec_as_object_enumerate (SwfdecAsObject *object)
+{
+  guint i;
+  GSList *list = NULL;
+  
+  for (i = 0; i < SWFDEC_AS_OBJECT_PROTOTYPE_RECURSION_LIMIT && object; i++) {
+    swfdec_as_object_foreach (object, swfdec_as_object_enumerate_foreach, &list);
+    object = swfdec_as_object_get_prototype (object);
+  }
+  if (i == 256) {
+    swfdec_as_context_abort (object->context, "Prototype recursion limit exceeded");
+    g_slist_free (list);
+    return NULL;
+  }
+#if 0
+  list = g_slist_reverse (list);
+#else 
+  /* we force an alphabetical order into the list for now. This is wrong, 
+   * but at least ensures reproducability */
+  list = g_slist_sort (list, (GCompareFunc) strcmp);
+#endif
+  return list;
+}
+
 static void
 swfdec_as_object_do_nothing (SwfdecAsContext *cx, SwfdecAsObject *object,
     guint argc, SwfdecAsValue *argv, SwfdecAsValue *retval)

@@ -126,6 +126,7 @@ void		swfdec_as_object_unset_variable_flags
 gboolean	swfdec_as_object_foreach	(SwfdecAsObject *       object,
 						 SwfdecAsVariableForeach func,
 						 gpointer		data);
+GSList *	swfdec_as_object_enumerate	(SwfdecAsObject *	object);
 
 SwfdecAsFunction *swfdec_as_object_add_function	(SwfdecAsObject *	object,
 						 const char *		name,

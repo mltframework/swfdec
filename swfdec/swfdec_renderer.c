@@ -424,7 +424,8 @@ swfdec_renderer_transform (SwfdecRenderer *renderer, cairo_surface_t *surface,
 
   /* FIXME: This function should likely be a vfunc. 
    * Or better: it should compile to a shader */
-  if (cairo_surface_get_content (surface) & CAIRO_CONTENT_ALPHA) {
+  if (cairo_surface_get_content (surface) & CAIRO_CONTENT_ALPHA ||
+      trans->aa < 256 || trans->ab < 0) {
     target = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, rect->width, rect->height);
     mask = 0;
   } else {

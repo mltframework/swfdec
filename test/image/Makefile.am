@@ -416,6 +416,15 @@ EXTRA_DIST = \
 	placeobject-ratio.swf \
 	placeobject-ratio.swf.png \
 	placeobject-ratio.xml \
+	regression-0.9.2-transform-opaque-5.swf \
+	regression-0.9.2-transform-opaque-5.swf.png \
+	regression-0.9.2-transform-opaque-6.swf \
+	regression-0.9.2-transform-opaque-6.swf.png \
+	regression-0.9.2-transform-opaque-7.swf \
+	regression-0.9.2-transform-opaque-7.swf.png \
+	regression-0.9.2-transform-opaque-8.swf \
+	regression-0.9.2-transform-opaque-8.swf.png \
+	regression-0.9.2-transform-opaque.as \
 	replace.c \
 	replace-button-button-5.swf \
 	replace-button-button-5.swf.png \

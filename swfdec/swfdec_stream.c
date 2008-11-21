@@ -470,3 +470,36 @@ swfdec_stream_close (SwfdecStream *stream)
   swfdec_stream_queue_processing (stream);
 }
 
+/* FIXME: put in right file */
+static void
+swfdec_socket_process_writable (gpointer streamp, gpointer unused)
+{
+  SwfdecStream *stream = streamp;
+  SwfdecStreamPrivate *priv = stream->priv;
+
+  g_assert (priv->target);
+
+  swfdec_stream_target_writable (priv->target, stream);
+}
+
+/**
+ * swfdec_socket_signal_writable:
+ * @sock: the socket that has become writable
+ *
+ * Signals to Swfdec that it should try writing to the given socket again.
+ **/
+void
+swfdec_socket_signal_writable (SwfdecSocket *sock)
+{
+  SwfdecStreamPrivate *priv;
+  
+  g_return_if_fail (SWFDEC_IS_SOCKET (sock));
+
+  priv = SWFDEC_STREAM (sock)->priv;
+  if (priv->target) {
+    g_assert (priv->player);
+    swfdec_player_add_external_action (priv->player, sock,
+	swfdec_socket_process_writable, NULL);
+  }
+}
+

@@ -52,11 +52,13 @@ struct _SwfdecSocketClass
 						 const char *	hostname,
 						 guint		port);
 
-  void			(* send)		(SwfdecSocket *	socket,
+  gsize			(* send)		(SwfdecSocket *	socket,
 						 SwfdecBuffer *	buffer);
 };
 
 GType		swfdec_socket_get_type		(void);
+
+void		swfdec_socket_signal_writable	(SwfdecSocket *	sock);
 
 
 G_END_DECLS

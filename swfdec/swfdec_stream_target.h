@@ -47,6 +47,8 @@ struct _SwfdecStreamTargetInterface {
 						 SwfdecStream *		stream);
   void			(* error)		(SwfdecStreamTarget *   target,
 						 SwfdecStream *		stream);
+  void			(* writable)		(SwfdecStreamTarget *	target,
+						 SwfdecStream *		stream);
 };
 
 GType		swfdec_stream_target_get_type		(void) G_GNUC_CONST;
@@ -59,6 +61,8 @@ gboolean	swfdec_stream_target_parse		(SwfdecStreamTarget *	target,
 void		swfdec_stream_target_close		(SwfdecStreamTarget *	target,
 							 SwfdecStream *		stream);
 void		swfdec_stream_target_error		(SwfdecStreamTarget *	target,
+							 SwfdecStream *		stream);
+void		swfdec_stream_target_writable		(SwfdecStreamTarget *	target,
 							 SwfdecStream *		stream);
 
 

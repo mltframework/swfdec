@@ -55,9 +55,11 @@
  *           port. If you encounter an error, call swfdec_stream_error(), but 
  *           still make sure the socket object does not break.
  * @send: Called to send data down the given socket. This function will only be
- *        called when the socket is open. You get passed a reference to the 
- *        buffer, so it is your responsibility to call swfdec_buffer_unref() on
- *        it when you are done with it.
+ *        called when the socket is open. The function is supposed to write as
+ *        much data as possible to the socket and return the amount of data
+ *        written. If not all data could be written, the socket is assumed to
+ *        be full and no attempt at writing to it will be made until you call
+ *	  swfdec_socket_signal_writable().
  *
  * This is the socket class. When you create a subclass, you need to implement 
  * the functions listed above.
@@ -74,10 +76,10 @@ swfdec_socket_do_connect (SwfdecSocket *socket, SwfdecPlayer *player,
   swfdec_stream_error (SWFDEC_STREAM (socket), "no socket implementation exists");
 }
 
-static void
+static gsize
 swfdec_socket_do_send (SwfdecSocket *socket, SwfdecBuffer *buffer)
 {
-  swfdec_buffer_unref (buffer);
+  return 0;
 }
 
 static const char *
@@ -106,20 +108,23 @@ swfdec_socket_init (SwfdecSocket *socket)
 /**
  * swfdec_socket_send:
  * @sock: a #SwfdecSocket
- * @buffer: data to send to the stream
+ * @buffer: data to send to the stream, no reference will be taken.
  *
- * Pushes the given @buffer down the stream.
+ * Tries to push the data of @buffer down the stream. If all of the data could 
+ * be sent, @buffer->length will be returned. Otherwise the amount of data
+ * written will be returned and when more data can be written, the stream 
+ * target's writable vfunc will be called.
  **/
-void
+gsize
 swfdec_socket_send (SwfdecSocket *sock, SwfdecBuffer *buffer)
 {
   SwfdecSocketClass *klass;
 
-  g_return_if_fail (SWFDEC_IS_SOCKET (sock));
-  g_return_if_fail (swfdec_stream_is_open (SWFDEC_STREAM (sock)));
-  g_return_if_fail (buffer != NULL);
+  g_return_val_if_fail (SWFDEC_IS_SOCKET (sock), 0);
+  g_return_val_if_fail (swfdec_stream_is_open (SWFDEC_STREAM (sock)), 0);
+  g_return_val_if_fail (buffer != NULL, 0);
 
   klass = SWFDEC_SOCKET_GET_CLASS (sock);
-  klass->send (sock, buffer);
+  return klass->send (sock, buffer);
 }
 

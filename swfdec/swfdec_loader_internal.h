@@ -37,7 +37,7 @@ void			swfdec_loader_set_data_type	(SwfdecLoader *		loader,
 							 SwfdecLoaderDataType	type);
 
 /* swfdec_socket.c */
-void			swfdec_socket_send		(SwfdecSocket *		sock,
+gsize			swfdec_socket_send		(SwfdecSocket *		sock,
 							 SwfdecBuffer *		buffer);
 
 

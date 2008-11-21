@@ -40,6 +40,7 @@ swfdec_xml_socket_ensure_closed (SwfdecXmlSocket *xml)
   if (xml->socket == NULL)
     return;
 
+  swfdec_buffer_queue_clear (xml->send_queue);
   swfdec_stream_set_target (SWFDEC_STREAM (xml->socket), NULL);
   g_object_unref (xml->socket);
   xml->socket = NULL;
@@ -146,6 +147,30 @@ swfdec_xml_socket_stream_target_close (SwfdecStreamTarget *target,
 }
 
 static void
+swfdec_xml_socket_do_write (SwfdecXmlSocket *xml)
+{
+  SwfdecBuffer *buffer;
+  gsize written, length;
+
+  do {
+    buffer = swfdec_buffer_queue_peek_buffer (xml->send_queue);
+    if (buffer == NULL)
+      break;
+    length = buffer->length;
+    written = swfdec_socket_send (xml->socket, buffer);
+    swfdec_buffer_unref (buffer);
+    swfdec_buffer_queue_flush (xml->send_queue, written);
+  } while (written == length);
+}
+
+static void
+swfdec_xml_socket_stream_target_writable (SwfdecStreamTarget *target,
+    SwfdecStream *stream)
+{
+  swfdec_xml_socket_do_write (SWFDEC_XML_SOCKET (target));
+}
+
+static void
 swfdec_xml_socket_stream_target_init (SwfdecStreamTargetInterface *iface)
 {
   iface->get_player = swfdec_xml_socket_stream_target_get_player;
@@ -153,6 +178,7 @@ swfdec_xml_socket_stream_target_init (SwfdecStreamTargetInterface *iface)
   iface->parse = swfdec_xml_socket_stream_target_parse;
   iface->close = swfdec_xml_socket_stream_target_close;
   iface->error = swfdec_xml_socket_stream_target_error;
+  iface->writable = swfdec_xml_socket_stream_target_writable;
 }
 
 /*** SWFDEC_XML_SOCKET ***/
@@ -181,6 +207,10 @@ swfdec_xml_socket_dispose (GObject *object)
     swfdec_buffer_queue_unref (xml->queue);
     xml->queue = NULL;
   }
+  if (xml->send_queue) {
+    swfdec_buffer_queue_unref (xml->send_queue);
+    xml->send_queue = NULL;
+  }
 
   G_OBJECT_CLASS (swfdec_xml_socket_parent_class)->dispose (object);
 }
@@ -200,6 +230,7 @@ static void
 swfdec_xml_socket_init (SwfdecXmlSocket *xml)
 {
   xml->queue = swfdec_buffer_queue_new ();
+  xml->send_queue = swfdec_buffer_queue_new ();
 }
 
 static SwfdecXmlSocket *
@@ -297,10 +328,14 @@ swfdec_xml_socket_send (SwfdecAsContext *cx, SwfdecAsObject *object,
   }
 
   len = strlen (send) + 1;
-  buf = swfdec_buffer_new (len);
-  memcpy (buf->data, send, len);
+  buf = swfdec_buffer_new_for_data (g_memdup (send, len), len);
 
-  swfdec_socket_send (xml->socket, buf);
+  if (swfdec_buffer_queue_get_depth (xml->send_queue) == 0) {
+    swfdec_buffer_queue_push (xml->send_queue, buf);
+    swfdec_xml_socket_do_write (xml);
+  } else {
+    swfdec_buffer_queue_push (xml->send_queue, buf);
+  }
 }
 
 SWFDEC_AS_NATIVE (400, 2, swfdec_xml_socket_close)

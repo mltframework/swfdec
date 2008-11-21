@@ -139,3 +139,18 @@ swfdec_stream_target_error (SwfdecStreamTarget *target, SwfdecStream *stream)
     iface->error (target, stream);
 }
 
+void
+swfdec_stream_target_writable (SwfdecStreamTarget *target, SwfdecStream *stream)
+{
+  SwfdecStreamTargetInterface *iface;
+  
+  g_return_if_fail (SWFDEC_IS_STREAM_TARGET (target));
+  g_return_if_fail (SWFDEC_IS_STREAM (stream));
+
+  SWFDEC_LOG ("writable on %s", swfdec_stream_describe (stream));
+
+  iface = SWFDEC_STREAM_TARGET_GET_INTERFACE (target);
+  if (iface->writable)
+    iface->writable (target, stream);
+}
+

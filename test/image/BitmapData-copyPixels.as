@@ -1,4 +1,4 @@
-// makeswf -v 7 -s 200x150 -r 1 -o BitmapData-copyPixels.swf BitmapData-copyPixels.as
+// makeswf -v 7 -s 300x150 -r 1 -o BitmapData-copyPixels.swf BitmapData-copyPixels.as
 
 trans = new flash.display.BitmapData (50, 50, true, 0);
 for (x = 0; x < 17; x++) {
@@ -33,12 +33,14 @@ for (y = 1; y < 50; y *= 2) {
 array = [ trans, opa, mask ];
 
 for (y = 0; y < 3; y++) {
-  for (x = 0; x < 4; x++) {
+  for (x = 0; x < 6; x++) {
     bm = array[y].clone ();
     if (x < 2)
       bm.copyPixels (array[x % 2], { x: 20, y: 20, width: 20, height: 20 }, { x: 11, y: 11 });
-    else
+    else if (x < 4)
       bm.copyPixels (trans, { x: 20, y: 20, width: 20, height: 20 }, { x: 11, y: 11 }, mask, { x: 0, y: 0}, x == 3);
+    else
+      bm.copyPixels (trans, { x: 20, y: 20, width: 20, height: 20 }, { x: 11, y: 11 }, null, null, x == 5);
     a = createEmptyMovieClip ("image" + getNextHighestDepth (), getNextHighestDepth ());
     a.attachBitmap (bm, 0);
     a._x = x * 50;

@@ -426,7 +426,7 @@ swfdec_bitmap_data_copyPixels (SwfdecAsContext *cx, SwfdecAsObject *object,
   cairo_t *cr;
   int x, y;
 
-  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ooo|oob", &so, &recto, &pt,
+  SWFDEC_AS_CHECK (SWFDEC_TYPE_BITMAP_DATA, &bitmap, "ooo|OOb", &so, &recto, &pt,
       &ao, &apt, &copy_alpha);
 
   if (bitmap->surface == NULL ||

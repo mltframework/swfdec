@@ -30,7 +30,7 @@ typedef struct _SwfdecTestPluginSocket SwfdecTestPluginSocket;
 struct _SwfdecTestPluginSocket {
   /* initialized by player while call to request_socket() */
   void *	data;
-  void		(* send)		(SwfdecTestPluginSocket *	sock,
+  unsigned long	(* send)		(SwfdecTestPluginSocket *	sock,
 					 unsigned char *		data,
 					 unsigned long			length);
   void		(* close)		(SwfdecTestPluginSocket *	sock);

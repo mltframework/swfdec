@@ -149,7 +149,7 @@ swfdec_test_socket_get_closed (SwfdecAsContext *cx, SwfdecAsObject *object, guin
   SWFDEC_AS_VALUE_SET_BOOLEAN (retval, sock->plugin == NULL);
 }
 
-static void 
+static unsigned long
 swfdec_test_socket_plugin_send (SwfdecTestPluginSocket *plugin, unsigned char *data,
     unsigned long length)
 {
@@ -162,6 +162,7 @@ swfdec_test_socket_plugin_send (SwfdecTestPluginSocket *plugin, unsigned char *d
   SWFDEC_AS_VALUE_SET_OBJECT (&val, swfdec_as_relay_get_as_object (SWFDEC_AS_RELAY (buffer)));
   swfdec_as_relay_call (SWFDEC_AS_RELAY (sock), swfdec_as_context_get_string (cx, "onData"),
       1, &val, NULL);
+  return length;
 }
 
 static void

@@ -812,8 +812,7 @@ swfdec_as_object_peek_variable (SwfdecAsObject *object, const char *name)
   SwfdecAsVariable *var;
   
   var = swfdec_as_object_hash_lookup (object, name);
-  if (var == NULL ||
-      var->get != NULL)
+  if (var == NULL)
     return NULL;
 
   return &var->value;

@@ -34,7 +34,7 @@ swfdec_video_decoder_screen_prepare (guint codec, char **missing)
 }
 
 static SwfdecVideoDecoder *
-swfdec_video_decoder_screen_create (guint codec, SwfdecBuffer *buffer)
+swfdec_video_decoder_screen_create (guint codec)
 {
   if (codec != SWFDEC_VIDEO_CODEC_SCREEN)
     return NULL;

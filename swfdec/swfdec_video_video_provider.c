@@ -99,7 +99,7 @@ swfdec_video_video_provider_get_image (SwfdecVideoProvider *prov,
     if (provider->decoder != NULL) {
       g_object_unref (provider->decoder);
     }
-    provider->decoder = swfdec_video_decoder_new (provider->video->format, NULL);
+    provider->decoder = swfdec_video_decoder_new (provider->video->format);
     if (provider->decoder == NULL)
       return NULL;
     frame = &g_array_index (provider->video->images, SwfdecVideoFrame, 0);

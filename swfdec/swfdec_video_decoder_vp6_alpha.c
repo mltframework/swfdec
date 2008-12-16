@@ -38,7 +38,7 @@ swfdec_video_decoder_vp6_alpha_prepare (guint codec, char **missing)
 }
 
 static SwfdecVideoDecoder *
-swfdec_video_decoder_vp6_alpha_create (guint codec, SwfdecBuffer *buffer)
+swfdec_video_decoder_vp6_alpha_create (guint codec)
 {
   if (codec != SWFDEC_VIDEO_CODEC_VP6_ALPHA)
     return NULL;
@@ -128,8 +128,8 @@ swfdec_video_decoder_vp6_alpha_class_init (SwfdecVideoDecoderVp6AlphaClass *klas
 static void
 swfdec_video_decoder_vp6_alpha_init (SwfdecVideoDecoderVp6Alpha *vp6)
 {
-  vp6->image = swfdec_video_decoder_new (SWFDEC_VIDEO_CODEC_VP6, NULL);
-  vp6->mask = swfdec_video_decoder_new (SWFDEC_VIDEO_CODEC_VP6, NULL);
+  vp6->image = swfdec_video_decoder_new (SWFDEC_VIDEO_CODEC_VP6);
+  vp6->mask = swfdec_video_decoder_new (SWFDEC_VIDEO_CODEC_VP6);
 
   if (swfdec_video_decoder_get_error (vp6->image) ||
       swfdec_video_decoder_get_error (vp6->mask)) {

@@ -65,7 +65,6 @@ swfdec_video_codec_get_format (guint codec)
     case SWFDEC_VIDEO_CODEC_H263:
     case SWFDEC_VIDEO_CODEC_VP6:
     case SWFDEC_VIDEO_CODEC_VP6_ALPHA:
-    case SWFDEC_VIDEO_CODEC_H264:
       return SWFDEC_VIDEO_FORMAT_I420;
     case SWFDEC_VIDEO_CODEC_UNDEFINED:
     case SWFDEC_VIDEO_CODEC_SCREEN:
@@ -112,8 +111,6 @@ swfdec_video_decoder_prepare (guint codec, char **missing)
 /**
  * swfdec_video_decoder_new:
  * @codec: codec id
- * @data: initialization data for the video codec or %NULL if none. Currently 
- *        only used for H264
  *
  * Creates a decoder suitable for decoding @format. If no decoder is available
  * for the given for mat, %NULL is returned.
@@ -121,14 +118,14 @@ swfdec_video_decoder_prepare (guint codec, char **missing)
  * Returns: a new decoder or %NULL
  **/
 SwfdecVideoDecoder *
-swfdec_video_decoder_new (guint codec, SwfdecBuffer *buffer)
+swfdec_video_decoder_new (guint codec)
 {
   SwfdecVideoDecoder *ret = NULL;
   GSList *walk;
   
   for (walk = video_codecs; walk; walk = walk->next) {
     SwfdecVideoDecoderClass *klass = g_type_class_ref (GPOINTER_TO_SIZE (walk->data));
-    ret = klass->create (codec, buffer);
+    ret = klass->create (codec);
     g_type_class_unref (klass);
     if (ret)
       break;

@@ -29,7 +29,7 @@
 #include "swfdec_debug.h"
 
 static GstCaps *
-swfdec_video_decoder_get_caps (guint codec, SwfdecBuffer *buffer)
+swfdec_video_decoder_get_caps (guint codec)
 {
   GstCaps *caps;
 
@@ -39,17 +39,6 @@ swfdec_video_decoder_get_caps (guint codec, SwfdecBuffer *buffer)
       break;
     case SWFDEC_VIDEO_CODEC_VP6:
       caps = gst_caps_from_string ("video/x-vp6-flash");
-      break;
-    case SWFDEC_VIDEO_CODEC_H264:
-      caps = gst_caps_from_string ("video/x-h264");
-      if (buffer) {
-	GstBuffer *gstbuf;
-	
-	swfdec_buffer_ref (buffer);
-	gstbuf = swfdec_gst_buffer_new (buffer);
-	gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, gstbuf, NULL);
-	gst_buffer_unref (gstbuf);
-      }
       break;
     default:
       return NULL;
@@ -86,7 +75,7 @@ swfdec_video_decoder_gst_prepare (guint codec, char **missing)
   GstCaps *caps;
 
   /* Check if we can handle the format at all. If not, no plugin will help us. */
-  caps = swfdec_video_decoder_get_caps (codec, NULL);
+  caps = swfdec_video_decoder_get_caps (codec);
   if (caps == NULL)
     return FALSE;
 
@@ -105,12 +94,12 @@ swfdec_video_decoder_gst_prepare (guint codec, char **missing)
 }
 
 static SwfdecVideoDecoder *
-swfdec_video_decoder_gst_create (guint codec, SwfdecBuffer *buffer)
+swfdec_video_decoder_gst_create (guint codec)
 {
   SwfdecVideoDecoderGst *player;
   GstCaps *srccaps, *sinkcaps;
 
-  srccaps = swfdec_video_decoder_get_caps (codec, buffer);
+  srccaps = swfdec_video_decoder_get_caps (codec);
   if (srccaps == NULL)
     return NULL;
   sinkcaps = swfdec_video_decoder_get_sink_caps (codec);

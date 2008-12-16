@@ -28,8 +28,17 @@
 G_DEFINE_TYPE (SwfdecAudioDecoder, swfdec_audio_decoder, G_TYPE_OBJECT)
 
 static void
+swfdec_audio_decoder_do_set_codec_data (SwfdecAudioDecoder *decoder,
+    SwfdecBuffer *buffer)
+{
+  SWFDEC_WARNING ("%s does not implement codec data", 
+      G_OBJECT_TYPE_NAME (decoder));
+}
+
+static void
 swfdec_audio_decoder_class_init (SwfdecAudioDecoderClass *klass)
 {
+  klass->set_codec_data = swfdec_audio_decoder_do_set_codec_data;
 }
 
 static void
@@ -114,6 +123,28 @@ swfdec_audio_decoder_new (guint codec, SwfdecAudioFormat format)
   ret->format = format;
 
   return ret;
+}
+
+/**
+ * swfdec_audio_decoder_set_codec_data:
+ * @decoder: an audio decoder
+ * @buffer: setup data for the decoder. May be %NULL
+ *
+ * Provides setup data for the audio decoder. This function is usually called 
+ * on initialization, but can be called at any time. Currently this 
+ * functionality is only used for AAC audio.
+ **/
+void
+swfdec_audio_decoder_set_codec_data (SwfdecAudioDecoder *decoder, SwfdecBuffer *buffer)
+{
+  SwfdecAudioDecoderClass *klass;
+
+  g_return_if_fail (SWFDEC_IS_AUDIO_DECODER (decoder));
+
+  if (decoder->error)
+    return;
+  klass = SWFDEC_AUDIO_DECODER_GET_CLASS (decoder);
+  klass->set_codec_data (decoder, buffer);
 }
 
 /**

@@ -30,8 +30,14 @@ G_BEGIN_DECLS
 #define SWFDEC_AUDIO_CODEC_ADPCM 1
 #define SWFDEC_AUDIO_CODEC_MP3 2
 #define SWFDEC_AUDIO_CODEC_UNCOMPRESSED 3
+#define SWFDEC_AUDIO_CODEC_NELLYMOSER_16KHZ 4
 #define SWFDEC_AUDIO_CODEC_NELLYMOSER_8KHZ 5
 #define SWFDEC_AUDIO_CODEC_NELLYMOSER 6
+#define SWFDEC_AUDIO_CODEC_ALAW 7
+#define SWFDEC_AUDIO_CODEC_MULAW 8
+#define SWFDEC_AUDIO_CODEC_AAC 10
+#define SWFDEC_AUDIO_CODEC_SPEEX 11
+#define SWFDEC_AUDIO_CODEC_MP3_8KHZ 14
 
 
 typedef struct _SwfdecAudioDecoder SwfdecAudioDecoder;
@@ -66,6 +72,9 @@ struct _SwfdecAudioDecoderClass
   SwfdecAudioDecoder *	(* create)	(guint                  codec,
 					 SwfdecAudioFormat      format);
 
+  void			(* set_codec_data)
+					(SwfdecAudioDecoder *	decoder,
+					 SwfdecBuffer *		buffer);
   void			(* push)	(SwfdecAudioDecoder *	decoder,
 					 SwfdecBuffer *		buffer);
   SwfdecBuffer *	(* pull)	(SwfdecAudioDecoder *	decoder);
@@ -81,6 +90,9 @@ gboolean		swfdec_audio_decoder_prepare	(guint			codec,
 SwfdecAudioDecoder *   	swfdec_audio_decoder_new      	(guint			codec,
 							 SwfdecAudioFormat	format);
 
+void			swfdec_audio_decoder_set_codec_data
+							(SwfdecAudioDecoder *	decoder,
+							 SwfdecBuffer *		buffer);
 void			swfdec_audio_decoder_push	(SwfdecAudioDecoder *	decoder,
 							 SwfdecBuffer *		buffer);
 SwfdecBuffer *		swfdec_audio_decoder_pull	(SwfdecAudioDecoder *	decoder);

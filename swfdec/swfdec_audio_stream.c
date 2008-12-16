@@ -203,7 +203,7 @@ swfdec_audio_stream_use_decoder (SwfdecAudioStream *stream,
     /* FIXME: send NULL buffer */
     g_object_unref (stream->decoder);
   }
-  stream->decoder = swfdec_audio_decoder_new (codec, format, NULL);
+  stream->decoder = swfdec_audio_decoder_new (codec, format);
 }
 
 void

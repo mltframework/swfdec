@@ -192,7 +192,7 @@ swfdec_sound_get_decoded (SwfdecSound *sound)
   if (sound->encoded == NULL)
     return NULL;
 
-  decoder = swfdec_audio_decoder_new (sound->codec, sound->format, NULL);
+  decoder = swfdec_audio_decoder_new (sound->codec, sound->format);
   if (decoder == NULL)
     return NULL;
 

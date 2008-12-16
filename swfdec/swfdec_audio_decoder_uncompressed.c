@@ -35,7 +35,7 @@ swfdec_audio_decoder_uncompressed_prepare (guint codec, SwfdecAudioFormat format
 }
 
 static SwfdecAudioDecoder *
-swfdec_audio_decoder_uncompressed_create (guint codec, SwfdecAudioFormat format, SwfdecBuffer *data)
+swfdec_audio_decoder_uncompressed_create (guint codec, SwfdecAudioFormat format)
 {
   if (codec != SWFDEC_AUDIO_CODEC_UNDEFINED &&
       codec != SWFDEC_AUDIO_CODEC_UNCOMPRESSED)

@@ -30,8 +30,17 @@
 G_DEFINE_TYPE (SwfdecVideoDecoder, swfdec_video_decoder, G_TYPE_OBJECT)
 
 static void
+swfdec_video_decoder_do_set_codec_data (SwfdecVideoDecoder *decoder,
+    SwfdecBuffer *buffer)
+{
+  SWFDEC_WARNING ("%s does not implement codec data", 
+      G_OBJECT_TYPE_NAME (decoder));
+}
+
+static void
 swfdec_video_decoder_class_init (SwfdecVideoDecoderClass *klass)
 {
+  klass->set_codec_data = swfdec_video_decoder_do_set_codec_data;
 }
 
 static void
@@ -65,6 +74,7 @@ swfdec_video_codec_get_format (guint codec)
     case SWFDEC_VIDEO_CODEC_H263:
     case SWFDEC_VIDEO_CODEC_VP6:
     case SWFDEC_VIDEO_CODEC_VP6_ALPHA:
+    case SWFDEC_VIDEO_CODEC_H264:
       return SWFDEC_VIDEO_FORMAT_I420;
     case SWFDEC_VIDEO_CODEC_UNDEFINED:
     case SWFDEC_VIDEO_CODEC_SCREEN:
@@ -139,6 +149,28 @@ swfdec_video_decoder_new (guint codec)
   ret->codec = codec;
 
   return ret;
+}
+
+/**
+ * swfdec_video_decoder_set_codec_data:
+ * @decoder: a video decoder
+ * @buffer: setup data for the decoder. May be %NULL
+ *
+ * Provides setup data for the video decoder. This function is usually called 
+ * on initialization, but can be called at any time. Currently this 
+ * functionality is only used for H264.
+ **/
+void
+swfdec_video_decoder_set_codec_data (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffer)
+{
+  SwfdecVideoDecoderClass *klass;
+
+  g_return_if_fail (SWFDEC_IS_VIDEO_DECODER (decoder));
+
+  if (decoder->error)
+    return;
+  klass = SWFDEC_VIDEO_DECODER_GET_CLASS (decoder);
+  klass->set_codec_data (decoder, buffer);
 }
 
 /**

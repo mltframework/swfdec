@@ -38,6 +38,9 @@ gboolean	swfdec_gst_decoder_init		(SwfdecGstDecoder *	dec,
 						 GstCaps *		srccaps,
 						 GstCaps *		sinkcaps,
 						 ...) G_GNUC_NULL_TERMINATED;
+void		swfdec_gst_decoder_set_codec_data
+						(SwfdecGstDecoder *	dec,
+						 GstBuffer *		buffer);
 void		swfdec_gst_decoder_push_eos	(SwfdecGstDecoder *	dec);
 GstBuffer *	swfdec_gst_decoder_pull		(SwfdecGstDecoder *	dec);
 gboolean	swfdec_gst_decoder_push		(SwfdecGstDecoder *	dec,

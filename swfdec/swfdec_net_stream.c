@@ -100,6 +100,35 @@ swfdec_net_stream_decode_video (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffe
       decoder->width -= wsub;
       decoder->height -= hsub;
     }
+  } else if (decoder->codec == SWFDEC_VIDEO_CODEC_H264) {
+    SwfdecBits bits;
+    guint type;
+    SwfdecBuffer *data;
+    swfdec_bits_init (&bits, buffer);
+    type = swfdec_bits_get_u8 (&bits);
+    /* composition_time_offset = */ swfdec_bits_get_bu24 (&bits);
+    switch (type) {
+      case 0:
+	data = swfdec_bits_get_buffer (&bits, -1);
+	if (data) {
+	  swfdec_video_decoder_set_codec_data (decoder, data);
+	  swfdec_buffer_unref (data);
+	}
+	break;
+      case 1:
+	data = swfdec_bits_get_buffer (&bits, -1);
+	if (data) {
+	  swfdec_video_decoder_decode (decoder, data);
+	} else {
+	  SWFDEC_ERROR ("no data in H264 buffer?");
+	}
+	break;
+      case 2:
+	break;
+      default:
+	SWFDEC_ERROR ("H264 data type %u not supported", type);
+	break;
+      }
   } else {
     swfdec_video_decoder_decode (decoder, buffer);
   }

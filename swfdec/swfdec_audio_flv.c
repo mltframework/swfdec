@@ -95,6 +95,18 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
       flv->decoder = swfdec_audio_decoder_new (flv->format, flv->in);
       if (flv->decoder == NULL)
 	return NULL;
+      /* This is a hack that ensures AAC codec data is always present, even if
+       * the decoder gets initialized in the middle of the stream */
+      if (format == SWFDEC_AUDIO_CODEC_AAC) {
+	SwfdecBuffer *tmp = swfdec_flv_decoder_get_audio (flv->flvdecoder,
+	    0, &format, NULL, NULL, NULL);
+	if (format == SWFDEC_AUDIO_CODEC_AAC && tmp->data[0] == 0 &&
+	    tmp->length > 1) {
+	  tmp = swfdec_buffer_new_subbuffer (tmp, 1, tmp->length - 1);
+	  swfdec_audio_decoder_set_codec_data (flv->decoder, tmp);
+	  swfdec_buffer_unref (tmp);
+	}
+      }
     } else if (format != flv->format ||
 	in != flv->in) {
       SWFDEC_ERROR ("FIXME: format change not implemented");

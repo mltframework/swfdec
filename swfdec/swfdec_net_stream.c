@@ -165,14 +165,11 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   } else {
     guint next;
 
-    if (stream->decoder && swfdec_video_decoder_get_codec (stream->decoder) != format) {
-      g_object_unref (stream->decoder);
-      stream->decoder = NULL;
-    }
     if (stream->decoder != NULL &&
-	(stream->decoder_time >= stream->current_time)) {
-      g_object_unref (stream->decoder);
-      stream->decoder = NULL;
+	stream->decoder_time >= stream->current_time) {
+      buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, 
+	  stream->current_time, TRUE, &format, &stream->decoder_time,
+	  &next);
     }
 
     if (stream->decoder == NULL) {
@@ -731,10 +728,6 @@ swfdec_net_stream_seek (SwfdecNetStream *stream, double secs)
   if (!swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last)) {
     SWFDEC_ERROR ("FIXME: implement seeking in audio only NetStream");
     return;
-  }
-  if (stream->decoder) {
-    g_object_unref (stream->decoder);
-    stream->decoder = NULL;
   }
   msecs = secs * 1000;
   msecs += first;

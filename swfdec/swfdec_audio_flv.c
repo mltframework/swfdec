@@ -102,7 +102,36 @@ swfdec_audio_flv_decode_one (SwfdecAudioFlv *flv)
     } else if (flv->decoder == NULL) {
       return NULL;
     }
-    swfdec_audio_decoder_push (flv->decoder, buffer);
+    if (format == SWFDEC_AUDIO_CODEC_AAC) {
+      SwfdecBuffer *data;
+      SwfdecBits bits;
+      guint type;
+      swfdec_bits_init (&bits, buffer);
+      type = swfdec_bits_get_u8 (&bits);
+      switch (type) {
+	case 0:
+	  data = swfdec_bits_get_buffer (&bits, -1);
+	  if (data) {
+	    swfdec_audio_decoder_set_codec_data (flv->decoder, data);
+	    swfdec_buffer_unref (data);
+	  }
+	  break;
+	case 1:
+	  data = swfdec_bits_get_buffer (&bits, -1);
+	  if (data) {
+	    swfdec_audio_decoder_push (flv->decoder, data);
+	    swfdec_buffer_unref (data);
+	  } else {
+	    SWFDEC_ERROR ("no data in AAC data buffer?");
+	  }
+	  break;
+	default:
+	  SWFDEC_FIXME ("handle AAC type %u", type);
+	  break;
+      }
+    } else {
+      swfdec_audio_decoder_push (flv->decoder, buffer);
+    }
     if (flv->next_timestamp == 0)
       swfdec_audio_decoder_push (flv->decoder, NULL);
     buffer = swfdec_audio_decoder_pull (flv->decoder);

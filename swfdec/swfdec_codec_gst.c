@@ -278,6 +278,7 @@ swfdec_gst_decoder_set_codec_data (SwfdecGstDecoder *dec,
   GstCaps *caps;
 
   caps = gst_pad_get_caps (dec->src);
+  caps = gst_caps_make_writable (caps);
   if (buffer) {
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
   } else {

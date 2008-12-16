@@ -126,11 +126,14 @@ swfdec_video_decoder_gst_set_codec_data (SwfdecVideoDecoder *dec,
     SwfdecBuffer *buffer)
 {
   SwfdecVideoDecoderGst *player = SWFDEC_VIDEO_DECODER_GST (dec);
-  GstBuffer *buf;
 
-  buf = swfdec_gst_buffer_new (swfdec_buffer_ref (buffer));
-  swfdec_gst_decoder_set_codec_data (&player->dec, buf);
-  gst_buffer_unref (buf);
+  if (buffer) {
+    GstBuffer *buf = swfdec_gst_buffer_new (swfdec_buffer_ref (buffer));
+    swfdec_gst_decoder_set_codec_data (&player->dec, buf);
+    gst_buffer_unref (buf);
+  } else {
+    swfdec_gst_decoder_set_codec_data (&player->dec, NULL);
+  }
 }
 
 static void

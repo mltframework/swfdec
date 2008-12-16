@@ -40,6 +40,9 @@ swfdec_video_decoder_get_caps (guint codec)
     case SWFDEC_VIDEO_CODEC_VP6:
       caps = gst_caps_from_string ("video/x-vp6-flash");
       break;
+    case SWFDEC_VIDEO_CODEC_H264:
+      caps = gst_caps_from_string ("video/x-h264");
+      break;
     default:
       return NULL;
   }
@@ -116,6 +119,21 @@ swfdec_video_decoder_gst_create (guint codec)
   gst_caps_unref (srccaps);
   gst_caps_unref (sinkcaps);
   return &player->decoder;
+}
+
+static void
+swfdec_video_decoder_gst_set_codec_data (SwfdecVideoDecoder *dec,
+    SwfdecBuffer *buffer)
+{
+  SwfdecVideoDecoderGst *player = SWFDEC_VIDEO_DECODER_GST (dec);
+
+  if (buffer) {
+    GstBuffer *buf = swfdec_gst_buffer_new (swfdec_buffer_ref (buffer));
+    swfdec_gst_decoder_set_codec_data (&player->dec, buf);
+    gst_buffer_unref (buf);
+  } else {
+    swfdec_gst_decoder_set_codec_data (&player->dec, NULL);
+  }
 }
 
 static void
@@ -201,6 +219,7 @@ swfdec_video_decoder_gst_class_init (SwfdecVideoDecoderGstClass *klass)
 
   decoder_class->prepare = swfdec_video_decoder_gst_prepare;
   decoder_class->create = swfdec_video_decoder_gst_create;
+  decoder_class->set_codec_data = swfdec_video_decoder_gst_set_codec_data;
   decoder_class->decode = swfdec_video_decoder_gst_decode;
 }
 

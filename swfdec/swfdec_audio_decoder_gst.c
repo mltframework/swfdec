@@ -47,6 +47,9 @@ swfdec_audio_decoder_get_caps (guint codec, SwfdecAudioFormat format)
 	  swfdec_audio_format_get_rate (format), 
 	  swfdec_audio_format_get_channels (format));
       break;
+    case SWFDEC_AUDIO_CODEC_AAC:
+      s = g_strdup_printf ("audio/mpeg, mpegversion=4");
+      break;
     default:
       return NULL;
   }
@@ -142,6 +145,20 @@ error:
 }
 
 static void
+swfdec_audio_decoder_gst_set_codec_data (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
+{
+  SwfdecAudioDecoderGst *player = SWFDEC_AUDIO_DECODER_GST (dec);
+
+  if (buffer) {
+    GstBuffer *buf = swfdec_gst_buffer_new (swfdec_buffer_ref (buffer));
+    swfdec_gst_decoder_set_codec_data (&player->dec, buf);
+    gst_buffer_unref (buf);
+  } else {
+    swfdec_gst_decoder_set_codec_data (&player->dec, NULL);
+  }
+}
+
+static void
 swfdec_audio_decoder_gst_push (SwfdecAudioDecoder *dec, SwfdecBuffer *buffer)
 {
   SwfdecAudioDecoderGst *player = SWFDEC_AUDIO_DECODER_GST (dec);
@@ -189,6 +206,7 @@ swfdec_audio_decoder_gst_class_init (SwfdecAudioDecoderGstClass *klass)
 
   decoder_class->prepare = swfdec_audio_decoder_gst_prepare;
   decoder_class->create = swfdec_audio_decoder_gst_create;
+  decoder_class->set_codec_data = swfdec_audio_decoder_gst_set_codec_data;
   decoder_class->pull = swfdec_audio_decoder_gst_pull;
   decoder_class->push = swfdec_audio_decoder_gst_push;
 }

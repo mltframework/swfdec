@@ -271,6 +271,24 @@ swfdec_gst_decoder_finish (SwfdecGstDecoder *dec)
   }
 }
 
+void
+swfdec_gst_decoder_set_codec_data (SwfdecGstDecoder *dec,
+    GstBuffer *buffer)
+{
+  GstCaps *caps;
+
+  caps = gst_pad_get_caps (dec->src);
+  caps = gst_caps_make_writable (caps);
+  if (buffer) {
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+  } else {
+    GstStructure *structure = gst_caps_get_structure (caps, 0);
+    gst_structure_remove_field (structure, "codec_data");
+  }
+  gst_pad_set_caps (dec->src, caps);
+  gst_caps_unref (caps);
+}
+
 gboolean
 swfdec_gst_decoder_push (SwfdecGstDecoder *dec, GstBuffer *buffer)
 {

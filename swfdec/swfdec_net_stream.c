@@ -103,6 +103,35 @@ swfdec_net_stream_decode_video (SwfdecVideoDecoder *decoder, SwfdecBuffer *buffe
       decoder->width -= wsub;
       decoder->height -= hsub;
     }
+  } else if (decoder->codec == SWFDEC_VIDEO_CODEC_H264) {
+    SwfdecBits bits;
+    guint type;
+    SwfdecBuffer *data;
+    swfdec_bits_init (&bits, buffer);
+    type = swfdec_bits_get_u8 (&bits);
+    /* composition_time_offset = */ swfdec_bits_get_bu24 (&bits);
+    switch (type) {
+      case 0:
+	data = swfdec_bits_get_buffer (&bits, -1);
+	if (data) {
+	  swfdec_video_decoder_set_codec_data (decoder, data);
+	  swfdec_buffer_unref (data);
+	}
+	break;
+      case 1:
+	data = swfdec_bits_get_buffer (&bits, -1);
+	if (data) {
+	  swfdec_video_decoder_decode (decoder, data);
+	} else {
+	  SWFDEC_ERROR ("no data in H264 buffer?");
+	}
+	break;
+      case 2:
+	break;
+      default:
+	SWFDEC_ERROR ("H264 data type %u not supported", type);
+	break;
+      }
   } else {
     swfdec_video_decoder_decode (decoder, buffer);
   }
@@ -139,14 +168,11 @@ swfdec_net_stream_video_goto (SwfdecNetStream *stream, guint timestamp)
   } else {
     guint next;
 
-    if (stream->decoder && swfdec_video_decoder_get_codec (stream->decoder) != format) {
-      g_object_unref (stream->decoder);
-      stream->decoder = NULL;
-    }
     if (stream->decoder != NULL &&
-	(stream->decoder_time >= stream->current_time)) {
-      g_object_unref (stream->decoder);
-      stream->decoder = NULL;
+	stream->decoder_time >= stream->current_time) {
+      buffer = swfdec_flv_decoder_get_video (stream->flvdecoder, 
+	  stream->current_time, TRUE, &format, &stream->decoder_time,
+	  &next);
     }
 
     if (stream->decoder == NULL) {
@@ -640,10 +666,6 @@ swfdec_net_stream_seek (SwfdecNetStream *stream, double secs)
   if (!swfdec_flv_decoder_get_video_info (stream->flvdecoder, &first, &last)) {
     SWFDEC_ERROR ("FIXME: implement seeking in audio only NetStream");
     return;
-  }
-  if (stream->decoder) {
-    g_object_unref (stream->decoder);
-    stream->decoder = NULL;
   }
   msecs = secs * 1000;
   msecs += first;

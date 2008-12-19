@@ -41,13 +41,22 @@ check_cairo (gboolean verbose)
 #define CAIRO_MIN_MAJOR 1
 #define CAIRO_MIN_MINOR 7
 #define CAIRO_MIN_MICRO 1
-  if (CAIRO_VERSION < CAIRO_VERSION_ENCODE (CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO)) {
+#define CAIRO_MAX_MAJOR 1
+#define CAIRO_MAX_MINOR 9
+#define CAIRO_MAX_MICRO 0
+  if (cairo_version () < CAIRO_VERSION_ENCODE (CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO)) {
     g_print ("ERROR: Cairo version %s cannot be used to run tests; must be at least %u.%u.%u.\n",
-	CAIRO_VERSION_STRING, CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO);
+	cairo_version_string (), CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO);
     return FALSE;
+#ifdef CAIRO_MAX_MAJOR
+  } else if (cairo_version () >= CAIRO_VERSION_ENCODE (CAIRO_MAX_MAJOR, CAIRO_MAX_MINOR, CAIRO_MAX_MICRO)) {
+    g_print ("ERROR: Cairo version %s cannot be used to run tests; must be less than %u.%u.%u.\n",
+	cairo_version_string (), CAIRO_MAX_MAJOR, CAIRO_MAX_MINOR, CAIRO_MAX_MICRO);
+    return FALSE;
+#endif
   } else if (verbose) {
     g_print ("   OK: Cairo version %s is ok; must be at least %u.%u.%u.\n",
-	CAIRO_VERSION_STRING, CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO);
+	cairo_version_string (), CAIRO_MIN_MAJOR, CAIRO_MIN_MINOR, CAIRO_MIN_MICRO);
   }
   return TRUE;
 }

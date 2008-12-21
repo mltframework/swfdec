@@ -2,7 +2,7 @@ AC_PREREQ([2.58])
 
 m4_define(swfdec_major, 0)
 m4_define(swfdec_minor, 8)
-m4_define(swfdec_micro, 4)
+m4_define(swfdec_micro, 5)
 AC_INIT(swfdec,[swfdec_major.swfdec_minor.swfdec_micro])
 
 SWFDEC_VERSION_MAJOR=swfdec_major

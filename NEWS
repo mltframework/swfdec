@@ -12,6 +12,17 @@ Swfdec 0.10 contains:
 - lots of memory leaks plugged
 - vast amount of other bugfixes
 
+ 0.8.4 ("H264")
+
+Another stable release.
+- support H264, so all Youtube videos play again
+- fix various portability issues for ARM
+- fix rare crash with gotoAndPlay() function
+- fix rare crasher with setTarget() function
+- fix crashes in BitmapData.copyPixels()
+- zero memory before rendering in PulseAudio backend
+- improve Cairo check in testsuite
+
  0.8.2 ("Gametrailers")
 
 Here's the first stable release.

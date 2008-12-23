@@ -31,7 +31,7 @@ dnl decide on error flags
 dnl if we support them, we set them unconditionally
 dnl FIXME: I want this but stupid headers don't let me: -Wshadow
 dnl FIXME: readd -Wlogical-op when http://gcc.gnu.org/bugzilla/show_bug.cgi?id=36513 is solved
-AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wswitch-default -Winit-self -Wmissing-include-dirs -Wundef -Waddress -Waggregate-return -Wmissing-format-attribute -Wno-multichar -Wnested-externs")
+AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wswitch-default -Winit-self -Wmissing-include-dirs -Wundef -Waggregate-return -Wmissing-format-attribute -Wnested-externs")
 dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_DEVEL = xyes ; then
   AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-Werror")

@@ -222,8 +222,9 @@ include $(top_srcdir)/gtk-doc.make
 # e.g. EXTRA_DIST += version.xml.in
 EXTRA_DIST += 
 
+if ENABLE_GTK_DOC
 # Comment this out if you want your docs-status tested during 'make check'
 check-local:
 	(cd $(srcdir) \
 	 && $(GTKDOC_CHECK))
-
+endif

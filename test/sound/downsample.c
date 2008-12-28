@@ -82,22 +82,20 @@ cut_silence (char *data, guint length, guint steps)
 {
   guint i, new;
 
-  new = length * steps;
-  while (new > 0) {
+  for (new = length; new > 0; new--) {
     for (i = 0; i < steps; i++) {
-      if (data[new - 1 - i] != 0)
+      if (data[new * steps - 1 - i] != 0)
 	goto out;
     }
-    new -= steps;
   }
 
 out:
-  if (new / steps < length) {
-    g_print ("Info: Cut %u zero sample(s) at end of file\n", length - new / steps);
+  if (new < length) {
+    g_print ("Info: Cut %u zero sample(s) at end of file\n", length - new);
   } else {
     g_print ("Info: No zero samples cut at end of file\n");
   }
-  return length;
+  return length - new;
 }
 
 int

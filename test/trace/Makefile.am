@@ -1095,6 +1095,15 @@ EXTRA_DIST = \
 	crash-0.9.1-getvariable-shapes-8.swf \
 	crash-0.9.1-getvariable-shapes-8.swf.trace \
 	crash-0.9.1-getvariable-shapes.xml \
+	crash-0.9.2-beginBitmapFill-5.swf \
+	crash-0.9.2-beginBitmapFill-5.swf.trace \
+	crash-0.9.2-beginBitmapFill-6.swf \
+	crash-0.9.2-beginBitmapFill-6.swf.trace \
+	crash-0.9.2-beginBitmapFill-7.swf \
+	crash-0.9.2-beginBitmapFill-7.swf.trace \
+	crash-0.9.2-beginBitmapFill-8.swf \
+	crash-0.9.2-beginBitmapFill-8.swf.trace \
+	crash-0.9.2-beginBitmapFill.as \
 	createEmptyMovieClip-events.sc \
 	createEmptyMovieClip-events.swf \
 	createEmptyMovieClip-events.swf.trace \

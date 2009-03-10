@@ -443,7 +443,7 @@ swfdec_sprite_movie_beginBitmapFill (SwfdecAsContext *cx,
   SWFDEC_AS_CHECK (SWFDEC_TYPE_MOVIE, &movie, "O|Obb", 
       &bitmap, &mat, &repeat, &smoothing);
   movie->draw_fill = NULL;
-  if (!SWFDEC_IS_BITMAP_DATA (bitmap->relay))
+  if (bitmap == NULL || !SWFDEC_IS_BITMAP_DATA (bitmap->relay))
     return;
   
   pattern = swfdec_bitmap_pattern_new (SWFDEC_BITMAP_DATA (bitmap->relay));

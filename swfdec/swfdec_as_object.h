@@ -99,7 +99,7 @@ void		swfdec_as_object_add_variable	(SwfdecAsObject *	object,
 						 const char *		variable, 
 						 SwfdecAsFunction *	get,
 						 SwfdecAsFunction *	set,
-						 SwfdecAsVariableFlag	default_flags);
+						 guint                  default_flags);
 #define swfdec_as_object_get_variable(object, variable, value) \
   swfdec_as_object_get_variable_and_flags (object, variable, value, NULL, NULL)
 gboolean	swfdec_as_object_get_variable_and_flags

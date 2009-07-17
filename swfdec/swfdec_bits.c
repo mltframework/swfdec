@@ -722,7 +722,7 @@ swfdec_bits_decompress (SwfdecBits *bits, int compressed, int decompressed)
 	  buffer->length += compressed;
 	  z.next_out = buffer->data + z.total_out;
 	  z.avail_out = buffer->length - z.total_out;
-	  goto out;
+          break;
 	}
 	/* else fall through */
       default:

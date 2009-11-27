@@ -459,23 +459,26 @@ vivi_decompile_function_call (ViviDecompilerBlock *block, ViviDecompilerState *s
   if (name)
     g_object_unref (name);
 
-  if (!VIVI_IS_CODE_NUMBER (args) || 
-      ((count = d = vivi_code_number_get_value (VIVI_CODE_NUMBER (args))) != d)) {
-    vivi_decompiler_block_add_error (block, state, "could not determine function argument count");
-    g_object_unref (args);
-    g_object_unref (call);
-    return NULL;
-  }
-  g_object_unref (args);
+  if (VIVI_IS_CODE_NUMBER (args)) {
+    count = d = vivi_code_number_get_value (VIVI_CODE_NUMBER (args));
+    if (count == d) {
+      g_object_unref (args);
 
-  count = MIN (count, vivi_decompiler_state_get_stack_depth (state));
-  for (i = 0; i < count; i++) {
-    value = vivi_decompiler_state_pop (state);
-    vivi_code_function_call_add_argument (VIVI_CODE_FUNCTION_CALL (call), value);
-    g_object_unref (value);
+      count = MIN (count, vivi_decompiler_state_get_stack_depth (state));
+      for (i = 0; i < count; i++) {
+	value = vivi_decompiler_state_pop (state);
+	vivi_code_function_call_add_argument (VIVI_CODE_FUNCTION_CALL (call), value);
+	g_object_unref (value);
+      }
+      vivi_decompiler_state_push (state, call);
+      return call;
+    }
   }
-  vivi_decompiler_state_push (state, call);
-  return call;
+  /* Invalid code number, or problem getting a value for the code number */
+  vivi_decompiler_block_add_error (block, state, "could not determine function argument count");
+  g_object_unref (args);
+  g_object_unref (call);
+  return NULL;
 }
 
 static gboolean
@@ -651,25 +654,29 @@ vivi_decompile_init_object (ViviDecompilerBlock *block, ViviDecompilerState *sta
   guint i, count;
 
   args = vivi_decompiler_state_pop (state);
-  if (!VIVI_IS_CODE_NUMBER (args) || 
-      ((count = d = vivi_code_number_get_value (VIVI_CODE_NUMBER (args))) != d)) {
-    vivi_decompiler_block_add_error (block, state, "could not determine init object argument count");
-    g_object_unref (args);
-    return FALSE;
-  }
-  g_object_unref (args);
-  count = MIN (count, (vivi_decompiler_state_get_stack_depth (state) + 1) / 2);
+  if (VIVI_IS_CODE_NUMBER (args)) {
+    count = d = vivi_code_number_get_value (VIVI_CODE_NUMBER (args));
+    if (count == d) {
+      /* All is well */
+      g_object_unref (args);
+      count = MIN (count, (vivi_decompiler_state_get_stack_depth (state) + 1) / 2);
 
-  init = vivi_code_init_object_new ();
-  for (i = 0; i < count; i++) {
-    value = vivi_decompiler_state_pop (state);
-    name = vivi_decompiler_state_pop (state);
-    vivi_code_init_object_add_variable (VIVI_CODE_INIT_OBJECT (init), name, value);
-    g_object_unref (name);
-    g_object_unref (value);
+      init = vivi_code_init_object_new ();
+      for (i = 0; i < count; i++) {
+	value = vivi_decompiler_state_pop (state);
+	name = vivi_decompiler_state_pop (state);
+	vivi_code_init_object_add_variable (VIVI_CODE_INIT_OBJECT (init), name, value);
+	g_object_unref (name);
+	g_object_unref (value);
+      }
+      vivi_decompiler_state_push (state, init);
+      return TRUE;
+    }
   }
-  vivi_decompiler_state_push (state, init);
-  return TRUE;
+  /* Invalid code number, or problem getting a value for the code number */
+  vivi_decompiler_block_add_error (block, state, "could not determine init object argument count");
+  g_object_unref (args);
+  return FALSE;
 }
 
 static DecompileFunc decompile_funcs[256] = {

@@ -1952,7 +1952,7 @@ swfdec_player_update_focusrect (SwfdecPlayer *player)
     return;
 
   movie = SWFDEC_MOVIE (priv->focus);
-  g_assert (movie->state == SWFDEC_MOVIE_UP_TO_DATE);
+  g_assert (movie->state == (SwfdecMovieState) SWFDEC_MOVIE_UP_TO_DATE);
   priv->focusrect = movie->extents;
   if (movie->parent)
     swfdec_movie_rect_local_to_global (movie->parent, &priv->focusrect);

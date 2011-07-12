@@ -32,7 +32,7 @@ dnl if we support them, we set them unconditionally
 AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -Wold-style-definition -Wdeclaration-after-statement -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wswitch-default -Winit-self -Wmissing-include-dirs -Wundef -Waggregate-return -Wmissing-format-attribute -Wnested-externs -Wunsafe-loop-optimizations -Wpacked -Winvalid-pch -Wsync-nand")
 dnl if we're in nano >= 1, add -Werror if supported
 if test x$SWFDEC_DEVEL = xyes ; then
-  AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-Werror")
+  dnl AS_COMPILER_FLAGS(GLOBAL_CFLAGS, "-Werror")
   DEFAULT_DEBUG_LEVEL="SWFDEC_LEVEL_WARNING"
 else
   DEFAULT_DEBUG_LEVEL="SWFDEC_LEVEL_ERROR"
